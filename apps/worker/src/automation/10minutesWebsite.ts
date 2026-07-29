@@ -189,26 +189,6 @@ async function createArticleDraft(
   await dialog.waitFor({ state: "hidden", timeout: NAV_TIMEOUT_MS });
 }
 
-// EXPERIMENTO (29/7/2026): en vez de usar el prompt de imagen que
-// 10minutesWebsite genera automáticamente, armamos uno propio a partir del
-// título y contenido reales del artículo, pidiendo explícitamente que sea
-// puramente gráfico y sin texto. Si el resultado no mejora las imágenes,
-// revertir este bloque (basta con quitar el "fill" del prompt y dejar que
-// el botón "Generar imagen" use el prompt automático de la plataforma).
-function buildImagePrompt(titleText: string, contentText: string): string {
-  const context = contentText.slice(0, 500);
-  return (
-    `Fotografía realista que ilustra exactamente este tema: "${titleText}". ` +
-    `Contexto del artículo: ${context}. ` +
-    "Debe ser una fotografía fotorrealista (no ilustración, no render, no dibujo), " +
-    "con iluminación y ambientación natural, coherente y específica con la escena descrita arriba. " +
-    "La imagen debe ser puramente gráfica: NO debe incluir texto, palabras, letras, números, " +
-    "logotipos, marcas de agua ni señalización de ningún tipo. Si fuera absolutamente " +
-    "imprescindible algo de texto, que sea mínimo e ilegible en miniatura. " +
-    "Enfoca el elemento principal en el área central para permitir un recorte seguro."
-  );
-}
-
 async function generateImage(page: Page, onStep: OnStep): Promise<void> {
   await onStep("Generando imagen con inteligencia artificial (puede tardar un minuto)...");
   await page.getByText("Creación de imágenes con inteligencia artificial", { exact: false }).first().click();
@@ -217,24 +197,6 @@ async function generateImage(page: Page, onStep: OnStep): Promise<void> {
     hasText: "Generar imagen",
   });
   await generarImagenBtn.waitFor({ state: "visible", timeout: NAV_TIMEOUT_MS });
-
-  // Reemplazamos el prompt automático por el nuestro (ver comentario EXPERIMENTO arriba).
-  const titleText = await page.inputValue("#titlees").catch(() => "");
-  const contentText = await page
-    .evaluate(() => {
-      const ck = (window as unknown as { CKEDITOR?: { instances?: Record<string, { getData(): string }> } })
-        .CKEDITOR;
-      const html = ck?.instances?.contentes?.getData() ?? "";
-      return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-    })
-    .catch(() => "");
-  const customPrompt = buildImagePrompt(titleText, contentText);
-
-  const promptTextarea = generarImagenBtn.locator("xpath=preceding::textarea[1]");
-  if (await promptTextarea.count()) {
-    await promptTextarea.fill(customPrompt);
-  }
-
   await generarImagenBtn.click();
 
   // La generación de imagen es asíncrona: hay que esperar a que aparezca la
