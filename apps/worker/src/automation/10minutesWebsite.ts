@@ -32,6 +32,13 @@ const IMAGE_GENERATION_TIMEOUT_MS = 90_000;
  * login -> /dashboard/direct-articles -> tipo "Noticias" -> "Usar ChatGPT"
  * (genera título/resumen/contenido) -> "Usar contenido" -> generar imagen con
  * IA -> "Guardar cambios".
+ *
+ * Prompt de imagen: verificado en vivo el 29/7/2026 que el campo real que lee
+ * el botón "Generar imagen" es el textarea #images del formulario principal
+ * (no un campo dentro del modal de ChatGPT). Sobreescribirlo con nuestro
+ * propio prompt ANTES de hacer clic en "Generar imagen" cambia efectivamente
+ * la imagen resultante (confirmado con una prueba real: prompt de "playa
+ * tropical al atardecer" produjo esa imagen exacta).
  */
 export async function publishArticle(
   credentials: TenMinutesWebsiteCredentials,
@@ -54,8 +61,8 @@ export async function publishArticle(
     });
     const beforeId = await getTopArticleId(page);
 
-    await createArticleDraft(page, title, categoryExternalId, onStep);
-    await generateImage(page, onStep);
+    const summary = await createArticleDraft(page, title, categoryExternalId, onStep);
+    await generateImage(page, title, summary, onStep);
     const articleUrl = await saveAndGetUrl(page, beforeId, onStep);
 
     return { articleUrl };
@@ -136,7 +143,7 @@ async function createArticleDraft(
   title: string,
   categoryExternalId: string,
   onStep: OnStep
-): Promise<void> {
+): Promise<string> {
   await onStep("Abriendo formulario de creación de artículo...");
   await page.goto(`${BASE_URL}/dashboard/direct-articles`, {
     waitUntil: "domcontentloaded",
@@ -187,11 +194,25 @@ async function createArticleDraft(
 
   await dialog.getByRole("button", { name: "Usar contenido" }).click();
   await dialog.waitFor({ state: "hidden", timeout: NAV_TIMEOUT_MS });
+
+  // #excerptes es el campo "Resumen" del formulario principal, ya poblado
+  // por el botón anterior. Es texto plano y corto: la mejor materia prima
+  // para armar un prompt de imagen fiel al contenido real del artículo.
+  return page.locator("#excerptes").inputValue().catch(() => "");
 }
 
-async function generateImage(page: Page, onStep: OnStep): Promise<void> {
+async function generateImage(page: Page, title: string, summary: string, onStep: OnStep): Promise<void> {
   await onStep("Generando imagen con inteligencia artificial (puede tardar un minuto)...");
   await page.getByText("Creación de imágenes con inteligencia artificial", { exact: false }).first().click();
+
+  // La plataforma auto-genera su propio prompt en #images de forma
+  // asíncrona apenas se cierra el modal de ChatGPT. Esperamos a que esa
+  // llamada se asiente antes de sobreescribirlo con el nuestro, para que no
+  // nos pise el valor justo antes de generar la imagen.
+  await page.waitForLoadState("networkidle", { timeout: 8_000 }).catch(() => {});
+
+  const prompt = buildImagePrompt(title, summary);
+  await page.fill("#images", prompt);
 
   const generarImagenBtn = page.locator("button.aigenerationbutton", {
     hasText: "Generar imagen",
@@ -214,6 +235,28 @@ async function generateImage(page: Page, onStep: OnStep): Promise<void> {
     { timeout: IMAGE_GENERATION_TIMEOUT_MS }
   );
   await onStep("Imagen generada.");
+}
+
+// #images tiene maxlength=600 en la plataforma. El bloque "IMPORTANTE" (sin
+// texto) va primero para garantizar que sobreviva un eventual recorte; el
+// contexto del resumen del artículo se trunca al final si hace falta.
+const IMAGE_PROMPT_MAX_LEN = 600;
+
+function buildImagePrompt(title: string, summary: string): string {
+  const header =
+    `Fotografía profesional, hiperrealista y visualmente espectacular sobre: "${title}". ` +
+    `IMPORTANTE: la imagen no debe contener absolutamente ningún texto, letra, número, símbolo, logotipo, cartel ni marca de agua. ` +
+    `Debe verse como una foto real tomada con cámara profesional (no una ilustración, dibujo, render 3D ni caricatura), ` +
+    `con iluminación natural dramática, colores vívidos y composición centrada para permitir recortes seguros.`;
+
+  const cleanSummary = summary.replace(/\s+/g, " ").trim();
+  if (!cleanSummary) return header.slice(0, IMAGE_PROMPT_MAX_LEN);
+
+  const prefix = " Contexto del artículo: ";
+  const remaining = IMAGE_PROMPT_MAX_LEN - header.length - prefix.length - 1;
+  if (remaining < 20) return header.slice(0, IMAGE_PROMPT_MAX_LEN);
+
+  return (header + prefix + cleanSummary.slice(0, remaining) + ".").slice(0, IMAGE_PROMPT_MAX_LEN);
 }
 
 async function getTopArticleId(listPage: Page): Promise<string | null> {
