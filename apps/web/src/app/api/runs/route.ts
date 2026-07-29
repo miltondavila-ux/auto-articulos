@@ -22,7 +22,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const userId = await getCurrentUserId();
-  const { titlesText, categoryId } = await request.json();
+  const { titlesText, categoryId, disableIndexing } = await request.json();
 
   if (typeof titlesText !== "string") {
     return NextResponse.json({ error: "titlesText es requerido" }, { status: 400 });
@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
       userId,
       categoryId: category.id,
       status: "running",
+      disableIndexing: disableIndexing === true,
       titles: {
         create: titles.map((text: string, index: number) => ({ text, order: index })),
       },

@@ -83,12 +83,13 @@ enum RunStatus {
 }
 
 model Run {
-  id         String    @id @default(cuid())
-  userId     String
-  categoryId String
-  status     RunStatus @default(pending)
-  createdAt  DateTime  @default(now())
-  finishedAt DateTime?
+  id              String    @id @default(cuid())
+  userId          String
+  categoryId      String
+  status          RunStatus @default(pending)
+  disableIndexing Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  finishedAt      DateTime?
 
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   category Category @relation(fields: [categoryId], references: [id])
