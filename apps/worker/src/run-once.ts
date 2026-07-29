@@ -6,7 +6,7 @@ import { processNextCategorySync } from "./categorySync";
 // 24/7 como index.ts. Procesa todo el trabajo pendiente hasta que no quede
 // nada, o hasta agotar el presupuesto de tiempo (para no exceder el límite
 // del job y dejar que la siguiente corrida programada continúe).
-const BUDGET_MS = 12 * 60 * 1000;
+const BUDGET_MS = 18 * 60 * 1000;
 
 async function main() {
   const deadline = Date.now() + BUDGET_MS;
