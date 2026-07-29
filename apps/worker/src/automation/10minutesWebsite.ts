@@ -26,7 +26,6 @@ const ARTICLE_TYPE_NOTICIAS = "2";
 const NAV_TIMEOUT_MS = 30_000;
 const CONTENT_GENERATION_TIMEOUT_MS = 90_000;
 const IMAGE_GENERATION_TIMEOUT_MS = 90_000;
-const SAVE_VERIFICATION_TIMEOUT_MS = 90_000;
 const MAX_IMAGE_ATTEMPTS = 3;
 
 /**
@@ -428,12 +427,8 @@ async function saveAndGetUrl(
   // texto: esperamos a que cambie el N° de artículo en la primera fila
   // respecto al que anotamos antes de crear el borrador, y tomamos su enlace
   // "Ver" (clase "consultar"), el permalink público real.
-  //
-  // Usamos una ventana más amplia que NAV_TIMEOUT_MS aquí: con el reintento
-  // de imagen y el widget FAQ, el guardado real puede tardar más en
-  // reflejarse en el listado que los 30s que bastaban antes.
   await onStep("Buscando el enlace del artículo publicado...");
-  const deadline = Date.now() + SAVE_VERIFICATION_TIMEOUT_MS;
+  const deadline = Date.now() + NAV_TIMEOUT_MS;
   while (Date.now() < deadline) {
     await page.goto(`${BASE_URL}/dashboard/user_buyer_seller_articles.php`, {
       waitUntil: "domcontentloaded",
