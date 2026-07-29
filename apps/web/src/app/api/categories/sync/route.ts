@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
+import { triggerWorkerNow } from "@/lib/trigger-worker";
 
 export async function POST() {
   const userId = await getCurrentUserId();
@@ -25,6 +26,8 @@ export async function POST() {
   const job = await prisma.categorySyncJob.create({
     data: { userId },
   });
+
+  await triggerWorkerNow();
 
   return NextResponse.json({ job });
 }

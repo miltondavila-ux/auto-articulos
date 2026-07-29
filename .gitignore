@@ -10,3 +10,5 @@ build/
 /packages/db/generated/
 .claude/
 *.tsbuildinfo
+.vercel
+.env*

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
+import { triggerWorkerNow } from "@/lib/trigger-worker";
 
 export async function GET() {
   const userId = await getCurrentUserId();
@@ -77,6 +78,8 @@ export async function POST(request: NextRequest) {
     },
     include: { titles: true, category: true },
   });
+
+  await triggerWorkerNow();
 
   return NextResponse.json({ run });
 }
