@@ -65,6 +65,15 @@ export async function processNext(): Promise<boolean> {
       onStep
     );
 
+    // Si no se pudo confirmar el enlace real, no lo reportamos como éxito:
+    // así se reintenta o se detiene el run, en vez de quedar "Publicado"
+    // con un enlace vacío sin que nadie se entere.
+    if (!result.articleUrl) {
+      throw new Error(
+        "El artículo no aparece en el listado tras guardar: es probable que no se haya publicado."
+      );
+    }
+
     await prisma.title.update({
       where: { id: nextTitle.id },
       data: {
