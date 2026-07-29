@@ -163,6 +163,12 @@ export default function ConfiguracionPage() {
             Guarda primero tus credenciales para poder sincronizar categorías.
           </p>
         )}
+        {syncInProgress && (
+          <p style={{ fontSize: 13, color: "#e8c777", marginTop: 8 }}>
+            ⏳ En cola para procesarse. El worker corre por horario y puede tardar hasta 15 minutos
+            en recogerlo — esta pantalla se actualiza sola cuando termine.
+          </p>
+        )}
         {lastSyncStatus === "error" && (
           <p style={{ fontSize: 13, color: "#ff8787", marginTop: 8 }}>
             La última sincronización falló. Intenta de nuevo.

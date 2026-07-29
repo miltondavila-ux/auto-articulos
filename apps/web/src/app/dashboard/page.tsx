@@ -129,6 +129,7 @@ function LiveProgress({ run }: { run: RunRow }) {
   const total = run.titles.length;
   const doneCount = run.titles.filter((t) => t.status === "success" || t.status === "error").length;
   const percent = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+  const nothingStartedYet = run.titles.every((t) => t.status === "pending" && t.events.length === 0);
 
   return (
     <section style={readySectionStyle(true)}>
@@ -138,6 +139,12 @@ function LiveProgress({ run }: { run: RunRow }) {
           {doneCount}/{total} completados — <strong style={{ color: "#e6e6e6" }}>{percent}%</strong>
         </span>
       </div>
+      {nothingStartedYet && (
+        <p style={{ fontSize: 13, color: "#e8c777", margin: "8px 0 0" }}>
+          ⏳ En cola para procesarse. El worker corre por horario y puede tardar hasta 15 minutos en
+          recogerlo — esta pantalla se actualiza sola cuando arranque.
+        </p>
+      )}
       <div
         style={{
           height: 8,
