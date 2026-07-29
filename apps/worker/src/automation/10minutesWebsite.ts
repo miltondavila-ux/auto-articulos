@@ -232,7 +232,22 @@ async function createArticleDraft(
   // #excerptes es el campo "Resumen" del formulario principal, ya poblado
   // por el botón anterior. Es texto plano y corto: la mejor materia prima
   // para armar el FAQ de forma legible.
-  const summary = await page.locator("#excerptes").inputValue().catch(() => "");
+  //
+  // Bug real encontrado el 29/7/2026: la IA a veces escribe el resumen por
+  // encima del límite de 300 caracteres del campo. La plataforma no lanza
+  // ningún error visible para Playwright: solo deshabilita "Guardar cambios"
+  // en silencio (queda con clase "error-article"), y ese estado no se
+  // revierte solo aunque se corrija el valor después — hay que corregirlo
+  // ANTES de guardar. Esta es la causa real de los "Publicado" con enlace
+  // vacío vistos en varias corridas, no un problema de las funciones nuevas.
+  const excerptField = page.locator("#excerptes");
+  const summary = await excerptField.inputValue().catch(() => "");
+  if (summary.length >= 300) {
+    const trimmed = summary.slice(0, 280);
+    await excerptField.fill(trimmed);
+    await onStep("Resumen recortado para respetar el límite de 300 caracteres de la plataforma.");
+    return { summary: trimmed, contentHtml };
+  }
 
   return { summary, contentHtml };
 }
