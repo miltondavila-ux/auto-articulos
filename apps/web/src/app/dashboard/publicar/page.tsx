@@ -16,7 +16,6 @@ import type { CategoryRow } from "@/types/dashboard";
 export default function PublicarPage() {
   const router = useRouter();
   const [titlesText, setTitlesText] = useState("");
-  const [disableIndexing, setDisableIndexing] = useState(false);
   const [credentialsConfigured, setCredentialsConfigured] = useState(false);
   const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
@@ -63,7 +62,7 @@ export default function PublicarPage() {
       const res = await fetch("/api/runs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ titlesText, categoryId: selectedCategoryId, disableIndexing }),
+        body: JSON.stringify({ titlesText, categoryId: selectedCategoryId }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -157,25 +156,6 @@ export default function PublicarPage() {
           disabled={hasActiveRun}
           style={{ ...inputStyle, width: "100%", resize: "vertical", fontFamily: "inherit" }}
         />
-        <label
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            marginTop: 12,
-            fontSize: 13,
-            color: "#9aa1ac",
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={disableIndexing}
-            onChange={(e) => setDisableIndexing(e.target.checked)}
-            disabled={hasActiveRun}
-          />
-          Desactivar indexación en buscadores para este lote (por defecto queda activada, como en
-          10minutesWebsite)
-        </label>
         <button
           onClick={handleIniciar}
           disabled={starting || hasActiveRun || titlesText.trim().length === 0 || !selectedCategoryId}

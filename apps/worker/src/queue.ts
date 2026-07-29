@@ -62,7 +62,6 @@ export async function processNext(): Promise<boolean> {
       { username, password },
       nextTitle.text,
       run.category.externalId,
-      { disableIndexing: run.disableIndexing },
       onStep
     );
 
