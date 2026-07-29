@@ -187,6 +187,19 @@ async function createArticleDraft(
 
   await dialog.getByRole("button", { name: "Usar contenido" }).click();
   await dialog.waitFor({ state: "hidden", timeout: NAV_TIMEOUT_MS });
+
+  // Bug real encontrado el 29/7/2026: la IA a veces escribe el resumen por
+  // encima del límite de 300 caracteres del campo #excerptes. La plataforma
+  // no lanza ningún error visible para Playwright: solo deshabilita
+  // "Guardar cambios" en silencio (clase "error-article"), y ese estado no
+  // se revierte solo aunque se corrija el valor después — hay que corregirlo
+  // ANTES de guardar.
+  const excerptField = page.locator("#excerptes");
+  const summary = await excerptField.inputValue().catch(() => "");
+  if (summary.length >= 300) {
+    await excerptField.fill(summary.slice(0, 280));
+    await onStep("Resumen recortado para respetar el límite de 300 caracteres de la plataforma.");
+  }
 }
 
 async function generateImage(page: Page, onStep: OnStep): Promise<void> {
