@@ -1,0 +1,22 @@
+{
+  "name": "@auto-articulos/worker",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "run-once": "tsx src/run-once.ts"
+  },
+  "dependencies": {
+    "@auto-articulos/db": "*",
+    "@auto-articulos/shared": "*",
+    "dotenv": "^16.4.5",
+    "playwright": "^1.47.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.0",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.0"
+  }
+}
