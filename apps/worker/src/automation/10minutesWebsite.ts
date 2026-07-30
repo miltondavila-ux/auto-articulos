@@ -327,6 +327,30 @@ async function generateImage(
  * existe o falla, no se bloquea el artículo.
  */
 async function confirmImageCrop(page: Page): Promise<void> {
+  // Intento 1 (30/7/2026, primera versión): mover el slider de Zoom con
+  // eventos sintéticos. Confirmado con evidencia real que NO funciona — el
+  // popup de error sigue apareciendo igual. La librería de recorte
+  // probablemente solo actualiza su estado interno con un arrastre real del
+  // mouse sobre la imagen, no con eventos "input"/"change" sintéticos.
+  // Intento 2: simular ese arrastre real con page.mouse sobre la vista
+  // previa de la imagen. Se mantiene también el intento 1 por si acaso,
+  // ninguno de los dos bloquea el artículo si falla.
+  try {
+    const cropImage = page.locator('img[alt="Preview"]').first();
+    const box = await cropImage.boundingBox();
+    if (box) {
+      const centerX = box.x + box.width / 2;
+      const centerY = box.y + box.height / 2;
+      await page.mouse.move(centerX, centerY);
+      await page.mouse.down();
+      await page.mouse.move(centerX + 20, centerY + 20, { steps: 8 });
+      await page.mouse.move(centerX, centerY, { steps: 8 });
+      await page.mouse.up();
+    }
+  } catch {
+    // no bloqueamos el artículo si esto falla
+  }
+
   await page
     .evaluate(() => {
       const sliders = Array.from(
