@@ -11,8 +11,9 @@ import {
   tdStyle,
   disabledStyle,
   runStatusLabel,
+  statusLabel,
 } from "@/components/dashboard-ui";
-import type { RunStatus } from "@/types/dashboard";
+import type { RunStatus, TitleStatus } from "@/types/dashboard";
 
 interface UserRow {
   id: string;
@@ -394,13 +395,23 @@ function UserRowItem({
   );
 }
 
+interface AdminTitleSummary {
+  id: string;
+  text: string;
+  status: string;
+  attempts: number;
+  articleUrl: string | null;
+  finalTitle: string | null;
+  errorMessage: string | null;
+}
+
 interface AdminRunSummary {
   id: string;
   status: string;
   createdAt: string;
   finishedAt: string | null;
   category: { name: string } | null;
-  titles: { status: string }[];
+  titles: AdminTitleSummary[];
 }
 
 function UserHistorial({ email }: { email: string }) {
@@ -442,15 +453,12 @@ function UserHistorial({ email }: { email: string }) {
         </p>
       )}
       {runs && runs.length > 0 && (
-        <ul
+        <div
           style={{
             marginTop: 6,
-            paddingLeft: 18,
-            fontSize: 12,
-            color: "#c7ccd1",
             display: "flex",
             flexDirection: "column",
-            gap: 4,
+            gap: 8,
           }}
         >
           {runs.map((run) => {
@@ -458,14 +466,86 @@ function UserHistorial({ email }: { email: string }) {
               (t) => t.status === "success",
             ).length;
             return (
-              <li key={run.id}>
-                {new Date(run.createdAt).toLocaleString()} —{" "}
-                {run.category?.name ?? "—"} — {successCount}/{run.titles.length}{" "}
-                publicados — {runStatusLabel(run.status as RunStatus)}
-              </li>
+              <details
+                key={run.id}
+                style={{
+                  background: "#0a0c10",
+                  border: "1px solid #2a2f3a",
+                  borderRadius: 6,
+                  padding: "6px 10px",
+                }}
+              >
+                <summary
+                  style={{ cursor: "pointer", fontSize: 12, color: "#c7ccd1" }}
+                >
+                  {new Date(run.createdAt).toLocaleString()} —{" "}
+                  {run.category?.name ?? "—"} — {successCount}/
+                  {run.titles.length} publicados —{" "}
+                  {runStatusLabel(run.status as RunStatus)}
+                </summary>
+                <table
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    fontSize: 11,
+                    marginTop: 6,
+                  }}
+                >
+                  <thead>
+                    <tr style={{ textAlign: "left", color: "#9aa1ac" }}>
+                      <th style={thStyle}>Título</th>
+                      <th style={thStyle}>Estado</th>
+                      <th style={thStyle}>Intentos</th>
+                      <th style={thStyle}>Enlace / Error</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {run.titles.map((title) => (
+                      <tr
+                        key={title.id}
+                        style={{ borderTop: "1px solid #2a2f3a" }}
+                      >
+                        <td style={tdStyle}>
+                          {title.text}
+                          {title.finalTitle &&
+                            title.finalTitle !== title.text && (
+                              <div
+                                style={{
+                                  fontSize: 10,
+                                  color: "#9aa1ac",
+                                  marginTop: 2,
+                                }}
+                              >
+                                Publicado como: {title.finalTitle}
+                              </div>
+                            )}
+                        </td>
+                        <td style={tdStyle}>
+                          {statusLabel(title.status as TitleStatus)}
+                        </td>
+                        <td style={tdStyle}>{title.attempts}</td>
+                        <td style={tdStyle}>
+                          {title.articleUrl ? (
+                            <a
+                              href={title.articleUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{ color: "#7fd99a", fontWeight: 600 }}
+                            >
+                              Ver artículo
+                            </a>
+                          ) : (
+                            (title.errorMessage ?? "—")
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </details>
             );
           })}
-        </ul>
+        </div>
       )}
     </details>
   );
