@@ -1,4 +1,5 @@
 import { chromium, type Page } from "playwright";
+import { buildImagePrompt, isImageRelevant } from "../imagePrompt";
 
 export interface TenMinutesWebsiteCredentials {
   username: string;
@@ -55,7 +56,7 @@ export async function publishArticle(
       disableIndexing,
       onStep,
     );
-    await generateImage(page, onStep);
+    await generateImage(page, finalTitle, summary, onStep);
     await fillFaqWidget(page, title, summary, contentHtml, onStep);
     const articleUrl = await saveAndGetUrl(page, finalTitle, onStep);
 
@@ -249,7 +250,14 @@ async function createArticleDraft(
   return { summary, contentHtml, finalTitle };
 }
 
-async function generateImage(page: Page, onStep: OnStep): Promise<void> {
+const MAX_IMAGE_ATTEMPTS = 3;
+
+async function generateImage(
+  page: Page,
+  title: string,
+  summary: string,
+  onStep: OnStep,
+): Promise<void> {
   await onStep(
     "Generando imagen con inteligencia artificial (puede tardar un minuto)...",
   );
@@ -264,25 +272,68 @@ async function generateImage(page: Page, onStep: OnStep): Promise<void> {
     hasText: "Generar imagen",
   });
   await generarImagenBtn.waitFor({ state: "visible", timeout: NAV_TIMEOUT_MS });
-  await generarImagenBtn.click();
 
-  // La generación de imagen es asíncrona: hay que esperar a que aparezca la
-  // vista previa dentro del recorte de foto antes de continuar.
-  await page.waitForSelector('img[alt="Preview"]', {
-    state: "attached",
-    timeout: IMAGE_GENERATION_TIMEOUT_MS,
-  });
-  await page.waitForFunction(
-    () => {
-      const preview = document.querySelector(
-        'img[alt="Preview"]',
-      ) as HTMLImageElement | null;
-      return Boolean(preview && preview.naturalWidth > 0);
-    },
-    undefined,
-    { timeout: IMAGE_GENERATION_TIMEOUT_MS },
-  );
-  await onStep("Imagen generada.");
+  for (let attempt = 1; attempt <= MAX_IMAGE_ATTEMPTS; attempt++) {
+    // #images es el textarea real que lee "Generar imagen" (verificado en
+    // vivo el 29/7/2026): escribimos ahí nuestro propio prompt, basado en el
+    // título y resumen reales, justo antes de generar.
+    const prompt = await buildImagePrompt(title, summary);
+    await page.fill("#images", prompt).catch(() => {});
+    await generarImagenBtn.click();
+
+    // La generación de imagen es asíncrona: hay que esperar a que aparezca la
+    // vista previa dentro del recorte de foto antes de continuar.
+    await page.waitForSelector('img[alt="Preview"]', {
+      state: "attached",
+      timeout: IMAGE_GENERATION_TIMEOUT_MS,
+    });
+    await page.waitForFunction(
+      () => {
+        const preview = document.querySelector(
+          'img[alt="Preview"]',
+        ) as HTMLImageElement | null;
+        return Boolean(preview && preview.naturalWidth > 0);
+      },
+      undefined,
+      { timeout: IMAGE_GENERATION_TIMEOUT_MS },
+    );
+
+    const relevant = await checkPreviewRelevant(page, title, summary);
+    if (relevant || attempt === MAX_IMAGE_ATTEMPTS) {
+      await onStep(
+        attempt === 1
+          ? "Imagen generada."
+          : `Imagen generada (intento ${attempt} de ${MAX_IMAGE_ATTEMPTS}).`,
+      );
+      return;
+    }
+    await onStep(
+      `La imagen no parece corresponder al tema del artículo, generando una nueva (intento ${attempt + 1} de ${MAX_IMAGE_ATTEMPTS})...`,
+    );
+  }
+}
+
+/**
+ * Descarga la imagen de vista previa y le pregunta a un modelo con visión
+ * (ver imagePrompt.ts) si corresponde al tema. Si algo falla al descargarla
+ * o al consultar la IA, se acepta la imagen sin bloquear el artículo — es
+ * una validación adicional, no un requisito para publicar.
+ */
+async function checkPreviewRelevant(
+  page: Page,
+  title: string,
+  summary: string,
+): Promise<boolean> {
+  try {
+    const src = await page.getAttribute('img[alt="Preview"]', "src");
+    if (!src) return true;
+    const response = await page.request.get(src);
+    if (!response.ok()) return true;
+    const buffer = await response.body();
+    return await isImageRelevant(buffer.toString("base64"), title, summary);
+  } catch {
+    return true;
+  }
 }
 
 /**
