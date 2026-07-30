@@ -21,6 +21,7 @@ const ARTICLE_TYPE_NOTICIAS = "2";
 const NAV_TIMEOUT_MS = 30_000;
 const CONTENT_GENERATION_TIMEOUT_MS = 90_000;
 const IMAGE_GENERATION_TIMEOUT_MS = 90_000;
+const SAVE_VERIFICATION_TIMEOUT_MS = 90_000;
 
 /**
  * Automatiza la creación y publicación de un artículo en 10minutesWebsite a
@@ -347,8 +348,12 @@ async function saveAndGetUrl(
   // texto: esperamos a que cambie el N° de artículo en la primera fila
   // respecto al que anotamos antes de crear el borrador, y tomamos su enlace
   // "Ver" (clase "consultar"), el permalink público real.
+  // Log real del 29-30/7/2026: el paso de guardado tardaba ~32s en reflejarse
+  // en el listado, apenas por encima de los 30s que daba NAV_TIMEOUT_MS acá,
+  // causando el mismo "no aparece en el listado" en corridas donde el
+  // artículo probablemente sí se guardó. Le damos más margen.
   await onStep("Buscando el enlace del artículo publicado...");
-  const deadline = Date.now() + NAV_TIMEOUT_MS;
+  const deadline = Date.now() + SAVE_VERIFICATION_TIMEOUT_MS;
   while (Date.now() < deadline) {
     await page.goto(`${BASE_URL}/dashboard/user_buyer_seller_articles.php`, {
       waitUntil: "domcontentloaded",
