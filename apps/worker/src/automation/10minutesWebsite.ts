@@ -7,6 +7,7 @@ export interface TenMinutesWebsiteCredentials {
 
 export interface PublishResult {
   articleUrl: string | null;
+  finalTitle: string;
 }
 
 export interface RemoteCategory {
@@ -58,7 +59,7 @@ export async function publishArticle(
     await fillFaqWidget(page, title, summary, contentHtml, onStep);
     const articleUrl = await saveAndGetUrl(page, finalTitle, onStep);
 
-    return { articleUrl };
+    return { articleUrl, finalTitle };
   } finally {
     await browser.close();
   }

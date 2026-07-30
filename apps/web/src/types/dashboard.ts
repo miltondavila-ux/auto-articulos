@@ -15,6 +15,7 @@ export interface TitleRow {
   status: TitleStatus;
   attempts: number;
   articleUrl: string | null;
+  finalTitle: string | null;
   errorMessage: string | null;
   events: TitleEventRow[];
 }

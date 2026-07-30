@@ -2,7 +2,12 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
-import { sectionStyle, h2Style, readySectionStyle, buttonStyle } from "@/components/dashboard-ui";
+import {
+  sectionStyle,
+  h2Style,
+  readySectionStyle,
+  buttonStyle,
+} from "@/components/dashboard-ui";
 import type { RunRow, TitleRow } from "@/types/dashboard";
 
 interface PublishedNotification {
@@ -13,12 +18,16 @@ interface PublishedNotification {
 
 export default function InicioPage() {
   const [runs, setRuns] = useState<RunRow[]>([]);
-  const [notifications, setNotifications] = useState<PublishedNotification[]>([]);
+  const [notifications, setNotifications] = useState<PublishedNotification[]>(
+    [],
+  );
 
   const knownTitleStatusRef = useRef<Map<string, string>>(new Map());
   const initializedRef = useRef(false);
 
-  const activeRun = runs.find((r) => r.status === "pending" || r.status === "running");
+  const activeRun = runs.find(
+    (r) => r.status === "pending" || r.status === "running",
+  );
 
   const loadRuns = useCallback(async () => {
     const res = await fetch("/api/runs");
@@ -32,7 +41,11 @@ export default function InicioPage() {
           for (const title of run.titles) {
             const prevStatus = knownTitleStatusRef.current.get(title.id);
             if (title.status === "success" && prevStatus !== "success") {
-              newlyPublished.push({ id: title.id, text: title.text, url: title.articleUrl });
+              newlyPublished.push({
+                id: title.id,
+                text: title.text,
+                url: title.articleUrl,
+              });
             }
           }
         }
@@ -70,7 +83,14 @@ export default function InicioPage() {
   return (
     <div>
       {notifications.length > 0 && (
-        <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 8 }}>
+        <div
+          style={{
+            marginTop: 20,
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+          }}
+        >
           {notifications.map((n) => (
             <div
               key={n.id}
@@ -91,7 +111,12 @@ export default function InicioPage() {
                 {n.url && (
                   <>
                     {" — "}
-                    <a href={n.url} target="_blank" rel="noreferrer" style={{ color: "#4f7cff" }}>
+                    <a
+                      href={n.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ color: "#4f7cff" }}
+                    >
                       Ver artículo
                     </a>
                   </>
@@ -99,7 +124,12 @@ export default function InicioPage() {
               </span>
               <button
                 onClick={() => dismissNotification(n.id)}
-                style={{ background: "none", border: "none", color: "#9aa1ac", cursor: "pointer" }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#9aa1ac",
+                  cursor: "pointer",
+                }}
               >
                 ✕
               </button>
@@ -114,7 +144,8 @@ export default function InicioPage() {
         <section style={{ ...sectionStyle, textAlign: "center" }}>
           <h2 style={h2Style}>No hay ninguna ejecución en curso</h2>
           <p style={{ fontSize: 13, color: "#9aa1ac" }}>
-            Ve a "Publicar" para elegir una categoría, pegar títulos e iniciar una nueva tanda.
+            Ve a "Publicar" para elegir una categoría, pegar títulos e iniciar
+            una nueva tanda.
           </p>
           <Link href="/dashboard/publicar" style={{ textDecoration: "none" }}>
             <button style={buttonStyle}>Ir a Publicar</button>
@@ -127,22 +158,34 @@ export default function InicioPage() {
 
 function LiveProgress({ run }: { run: RunRow }) {
   const total = run.titles.length;
-  const doneCount = run.titles.filter((t) => t.status === "success" || t.status === "error").length;
+  const doneCount = run.titles.filter(
+    (t) => t.status === "success" || t.status === "error",
+  ).length;
   const percent = total > 0 ? Math.round((doneCount / total) * 100) : 0;
-  const nothingStartedYet = run.titles.every((t) => t.status === "pending" && t.events.length === 0);
+  const nothingStartedYet = run.titles.every(
+    (t) => t.status === "pending" && t.events.length === 0,
+  );
 
   return (
     <section style={readySectionStyle(true)}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "baseline",
+        }}
+      >
         <h2 style={h2Style}>Publicando — {run.category?.name ?? "—"}</h2>
         <span style={{ fontSize: 12, color: "#9aa1ac" }}>
-          {doneCount}/{total} completados — <strong style={{ color: "#e6e6e6" }}>{percent}%</strong>
+          {doneCount}/{total} completados —{" "}
+          <strong style={{ color: "#e6e6e6" }}>{percent}%</strong>
         </span>
       </div>
       {nothingStartedYet && (
         <p style={{ fontSize: 13, color: "#e8c777", margin: "8px 0 0" }}>
-          ⏳ En cola para procesarse. El worker corre por horario y puede tardar hasta 15 minutos en
-          recogerlo — esta pantalla se actualiza sola cuando arranque.
+          ⏳ En cola para procesarse. El worker corre por horario y puede tardar
+          hasta 15 minutos en recogerlo — esta pantalla se actualiza sola cuando
+          arranque.
         </p>
       )}
       <div
@@ -172,7 +215,13 @@ function LiveProgress({ run }: { run: RunRow }) {
   );
 }
 
-function TitleProgressRow({ index, title }: { index: number; title: TitleRow }) {
+function TitleProgressRow({
+  index,
+  title,
+}: {
+  index: number;
+  title: TitleRow;
+}) {
   const icon =
     title.status === "success"
       ? "✅"
@@ -181,7 +230,10 @@ function TitleProgressRow({ index, title }: { index: number; title: TitleRow }) 
         : title.status === "processing"
           ? "⏳"
           : "⬜";
-  const lastStep = title.events.length > 0 ? title.events[title.events.length - 1].message : null;
+  const lastStep =
+    title.events.length > 0
+      ? title.events[title.events.length - 1].message
+      : null;
 
   return (
     <div
@@ -192,7 +244,14 @@ function TitleProgressRow({ index, title }: { index: number; title: TitleRow }) 
         padding: "10px 14px",
       }}
     >
-      <div style={{ display: "flex", gap: 8, alignItems: "baseline", fontSize: 13 }}>
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          alignItems: "baseline",
+          fontSize: 13,
+        }}
+      >
         <span>{icon}</span>
         <span style={{ fontWeight: 600 }}>
           {index + 1}. {title.text}
@@ -200,7 +259,9 @@ function TitleProgressRow({ index, title }: { index: number; title: TitleRow }) 
       </div>
 
       {title.status === "processing" && lastStep && (
-        <p style={{ margin: "6px 0 0 24px", fontSize: 13, color: "#9aa1ac" }}>{lastStep}</p>
+        <p style={{ margin: "6px 0 0 24px", fontSize: 13, color: "#9aa1ac" }}>
+          {lastStep}
+        </p>
       )}
 
       {title.status === "success" && title.articleUrl && (
@@ -209,20 +270,33 @@ function TitleProgressRow({ index, title }: { index: number; title: TitleRow }) 
             href={title.articleUrl}
             target="_blank"
             rel="noreferrer"
-            style={{ color: "#7fd99a", fontWeight: 600, textDecoration: "none" }}
+            style={{
+              color: "#7fd99a",
+              fontWeight: 600,
+              textDecoration: "none",
+            }}
           >
             🔗 Ver artículo publicado
           </a>
+          {title.finalTitle && title.finalTitle !== title.text && (
+            <span style={{ display: "block", fontSize: 11, color: "#9aa1ac" }}>
+              Publicado como: {title.finalTitle}
+            </span>
+          )}
         </p>
       )}
 
       {title.status === "error" && title.errorMessage && (
-        <p style={{ margin: "6px 0 0 24px", fontSize: 13, color: "#ff8787" }}>{title.errorMessage}</p>
+        <p style={{ margin: "6px 0 0 24px", fontSize: 13, color: "#ff8787" }}>
+          {title.errorMessage}
+        </p>
       )}
 
       {title.events.length > 1 && (
         <details style={{ marginTop: 8, marginLeft: 24 }}>
-          <summary style={{ cursor: "pointer", fontSize: 11, color: "#9aa1ac" }}>
+          <summary
+            style={{ cursor: "pointer", fontSize: 11, color: "#9aa1ac" }}
+          >
             Ver todos los pasos
           </summary>
           <ol
@@ -234,14 +308,40 @@ function TitleProgressRow({ index, title }: { index: number; title: TitleRow }) 
               display: "flex",
               flexDirection: "column",
               gap: 4,
+              maxWidth: "100%",
+              overflowWrap: "anywhere",
             }}
           >
-            {title.events.map((event) => (
-              <li key={event.id}>
-                <span style={{ color: "#9aa1ac" }}>{new Date(event.createdAt).toLocaleTimeString()}</span>{" "}
-                {event.message}
-              </li>
-            ))}
+            {title.events.map((event) => {
+              const imageMatch = event.message.match(
+                /^DIAGNÓSTICO \[(.+)\]: (data:image\/[a-z]+;base64,.+)$/,
+              );
+              return (
+                <li key={event.id} style={{ overflowWrap: "anywhere" }}>
+                  <span style={{ color: "#9aa1ac" }}>
+                    {new Date(event.createdAt).toLocaleTimeString()}
+                  </span>{" "}
+                  {imageMatch ? (
+                    <>
+                      {imageMatch[1]}
+                      <br />
+                      <img
+                        src={imageMatch[2]}
+                        alt={imageMatch[1]}
+                        style={{
+                          maxWidth: "100%",
+                          marginTop: 4,
+                          borderRadius: 6,
+                          border: "1px solid #2a2f3a",
+                        }}
+                      />
+                    </>
+                  ) : (
+                    event.message
+                  )}
+                </li>
+              );
+            })}
           </ol>
         </details>
       )}

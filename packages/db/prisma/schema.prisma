@@ -114,6 +114,7 @@ model Title {
   status       TitleStatus @default(pending)
   attempts     Int         @default(0)
   articleUrl   String?
+  finalTitle   String?
   errorMessage String?
   processedAt  DateTime?
 

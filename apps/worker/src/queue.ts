@@ -88,6 +88,7 @@ export async function processNext(): Promise<boolean> {
       data: {
         status: "success",
         articleUrl: result.articleUrl,
+        finalTitle: result.finalTitle,
         processedAt: new Date(),
         errorMessage: null,
       },

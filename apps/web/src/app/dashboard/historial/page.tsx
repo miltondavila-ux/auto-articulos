@@ -152,7 +152,14 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
   // el paso a paso incluso de títulos ya publicados con éxito.
   return (
     <tr style={{ borderTop: "1px solid #2a2f3a" }}>
-      <td style={tdStyle}>{title.text}</td>
+      <td style={tdStyle}>
+        {title.text}
+        {title.finalTitle && title.finalTitle !== title.text && (
+          <div style={{ fontSize: 11, color: "#9aa1ac", marginTop: 4 }}>
+            Publicado como: {title.finalTitle}
+          </div>
+        )}
+      </td>
       <td style={tdStyle}>{statusLabel(title.status)}</td>
       <td style={tdStyle}>{title.attempts}</td>
       <td style={tdStyle}>
