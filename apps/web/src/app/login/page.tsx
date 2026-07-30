@@ -44,7 +44,9 @@ export default function LoginPage() {
       <form
         onSubmit={handleSubmit}
         style={{
-          background: "#181b21",
+          background: "#ffffff",
+          border: "1px solid #e5e8ec",
+          boxShadow: "0 1px 3px rgba(16, 24, 40, 0.06)",
           padding: 32,
           borderRadius: 12,
           width: 320,
@@ -53,7 +55,9 @@ export default function LoginPage() {
           gap: 12,
         }}
       >
-        <h1 style={{ fontSize: 20, margin: 0, marginBottom: 8 }}>Auto Artículos</h1>
+        <h1 style={{ fontSize: 20, margin: 0, marginBottom: 8 }}>
+          Auto Artículos
+        </h1>
         <input
           type="email"
           placeholder="Correo"
@@ -70,7 +74,9 @@ export default function LoginPage() {
           required
           style={inputStyle}
         />
-        {error && <p style={{ color: "#ff6b6b", margin: 0, fontSize: 14 }}>{error}</p>}
+        {error && (
+          <p style={{ color: "#d64545", margin: 0, fontSize: 14 }}>{error}</p>
+        )}
         <button type="submit" disabled={loading} style={buttonStyle}>
           {loading ? "Entrando..." : "Entrar"}
         </button>
@@ -82,9 +88,9 @@ export default function LoginPage() {
 const inputStyle: CSSProperties = {
   padding: "10px 12px",
   borderRadius: 8,
-  border: "1px solid #2a2f3a",
-  background: "#0f1115",
-  color: "#e6e6e6",
+  border: "1px solid #dfe3e8",
+  background: "#f7f8fa",
+  color: "#16181d",
   fontSize: 14,
 };
 
@@ -92,7 +98,7 @@ const buttonStyle: CSSProperties = {
   padding: "10px 12px",
   borderRadius: 8,
   border: "none",
-  background: "#4f7cff",
+  background: "#2f5fdb",
   color: "white",
   fontWeight: 600,
   cursor: "pointer",

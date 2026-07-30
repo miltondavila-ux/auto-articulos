@@ -28,7 +28,14 @@ export default function DashboardNav() {
   const tabs = isAdmin ? [...BASE_TABS, ADMIN_TAB] : BASE_TABS;
 
   return (
-    <nav style={{ display: "flex", gap: 4, marginTop: 20, borderBottom: "1px solid #2a2f3a" }}>
+    <nav
+      style={{
+        display: "flex",
+        gap: 4,
+        marginTop: 20,
+        borderBottom: "1px solid #dfe3e8",
+      }}
+    >
       {tabs.map((tab) => {
         const active = pathname === tab.href;
         const style: CSSProperties = {
@@ -36,8 +43,8 @@ export default function DashboardNav() {
           fontSize: 14,
           fontWeight: 600,
           textDecoration: "none",
-          color: active ? "#e6e6e6" : "#9aa1ac",
-          borderBottom: active ? "2px solid #4f7cff" : "2px solid transparent",
+          color: active ? "#16181d" : "#6b7280",
+          borderBottom: active ? "2px solid #2f5fdb" : "2px solid transparent",
         };
         return (
           <Link key={tab.href} href={tab.href} style={style}>

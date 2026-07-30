@@ -126,12 +126,12 @@ export default function InicioPage() {
                 gap: 12,
                 padding: "10px 14px",
                 borderRadius: 8,
-                background: "#142a1b",
-                border: "1px solid #2f6b46",
+                background: "#eafaf0",
+                border: "1px solid #a8dfc0",
                 fontSize: 13,
               }}
             >
-              <span style={{ color: "#7fd99a" }}>
+              <span style={{ color: "#1e8a4b" }}>
                 ✓ Artículo publicado: <strong>{n.text}</strong>
                 {n.url && (
                   <>
@@ -140,7 +140,7 @@ export default function InicioPage() {
                       href={n.url}
                       target="_blank"
                       rel="noreferrer"
-                      style={{ color: "#4f7cff" }}
+                      style={{ color: "#2f5fdb" }}
                     >
                       Ver artículo
                     </a>
@@ -152,7 +152,7 @@ export default function InicioPage() {
                 style={{
                   background: "none",
                   border: "none",
-                  color: "#9aa1ac",
+                  color: "#6b7280",
                   cursor: "pointer",
                 }}
               >
@@ -174,7 +174,7 @@ export default function InicioPage() {
       ) : (
         <section style={{ ...sectionStyle, textAlign: "center" }}>
           <h2 style={h2Style}>No hay ninguna ejecución en curso</h2>
-          <p style={{ fontSize: 13, color: "#9aa1ac" }}>
+          <p style={{ fontSize: 13, color: "#6b7280" }}>
             Ve a "Publicar" para elegir una categoría, pegar títulos e iniciar
             una nueva tanda.
           </p>
@@ -232,7 +232,7 @@ function OnboardingWizard({
           style={{
             cursor: "pointer",
             fontSize: 13,
-            color: "#7fd99a",
+            color: "#1e8a4b",
             fontWeight: 600,
           }}
         >
@@ -248,7 +248,7 @@ function OnboardingWizard({
   return (
     <section style={sectionStyle}>
       <h2 style={h2Style}>¡Bienvenido a Auto Artículos! 👋</h2>
-      <p style={{ fontSize: 13, color: "#9aa1ac", marginTop: -6 }}>
+      <p style={{ fontSize: 13, color: "#6b7280", marginTop: -6 }}>
         Estos son los primeros pasos para dejar todo listo. Puedes volver a esta
         lista cuando quieras si te pierdes en el camino.
       </p>
@@ -279,8 +279,8 @@ function OnboardingSteps({
             gap: 12,
             padding: "10px 14px",
             borderRadius: 8,
-            background: step.done ? "#132018" : "#0f1115",
-            border: step.done ? "1px solid #2f6b46" : "1px solid #2a2f3a",
+            background: step.done ? "#f3fbf6" : "#f7f8fa",
+            border: step.done ? "1px solid #a8dfc0" : "1px solid #dfe3e8",
           }}
         >
           <span
@@ -298,12 +298,12 @@ function OnboardingSteps({
                 margin: 0,
                 fontSize: 14,
                 fontWeight: 600,
-                color: step.done ? "#7fd99a" : "#e6e6e6",
+                color: step.done ? "#1e8a4b" : "#16181d",
               }}
             >
               {step.title}
             </p>
-            <p style={{ margin: "4px 0 0", fontSize: 12, color: "#9aa1ac" }}>
+            <p style={{ margin: "4px 0 0", fontSize: 12, color: "#6b7280" }}>
               {step.description}
             </p>
             {!step.done && (
@@ -313,7 +313,7 @@ function OnboardingSteps({
                   display: "inline-block",
                   marginTop: 8,
                   fontSize: 12,
-                  color: "#4f7cff",
+                  color: "#2f5fdb",
                   textDecoration: "none",
                   fontWeight: 600,
                 }}
@@ -392,22 +392,22 @@ function LiveProgress({
             marginLeft: "auto",
           }}
         >
-          <span style={{ fontSize: 12, color: "#9aa1ac" }}>
+          <span style={{ fontSize: 12, color: "#6b7280" }}>
             {doneCount}/{total} completados —{" "}
-            <strong style={{ color: "#e6e6e6" }}>{percent}%</strong>
+            <strong style={{ color: "#16181d" }}>{percent}%</strong>
           </span>
           {confirmingCancel ? (
             <>
-              <span style={{ fontSize: 12, color: "#e8c777" }}>
+              <span style={{ fontSize: 12, color: "#8a6d1a" }}>
                 ¿Cancelar todo el lote?
               </span>
               <button
                 onClick={handleCancel}
                 disabled={cancelling}
                 style={{
-                  background: "#5c1f1f",
-                  color: "#ff8787",
-                  border: "1px solid #7a2b2b",
+                  background: "#fde8e8",
+                  color: "#d64545",
+                  border: "1px solid #e8b4b4",
                   borderRadius: 6,
                   padding: "4px 10px",
                   fontSize: 12,
@@ -422,8 +422,8 @@ function LiveProgress({
                 disabled={cancelling}
                 style={{
                   background: "none",
-                  color: "#9aa1ac",
-                  border: "1px solid #2a2f3a",
+                  color: "#6b7280",
+                  border: "1px solid #dfe3e8",
                   borderRadius: 6,
                   padding: "4px 10px",
                   fontSize: 12,
@@ -438,8 +438,8 @@ function LiveProgress({
               onClick={() => setConfirmingCancel(true)}
               style={{
                 background: "none",
-                color: "#ff8787",
-                border: "1px solid #5c1f1f",
+                color: "#d64545",
+                border: "1px solid #fde8e8",
                 borderRadius: 6,
                 padding: "4px 10px",
                 fontSize: 12,
@@ -453,7 +453,7 @@ function LiveProgress({
         </div>
       </div>
       {cancelError && (
-        <p style={{ fontSize: 12, color: "#ff8787", margin: "6px 0 0" }}>
+        <p style={{ fontSize: 12, color: "#d64545", margin: "6px 0 0" }}>
           {cancelError}
         </p>
       )}
@@ -461,7 +461,7 @@ function LiveProgress({
         <p
           style={{
             fontSize: 13,
-            color: "#e8c777",
+            color: "#8a6d1a",
             margin: "8px 0 0",
             display: "flex",
             alignItems: "center",
@@ -474,8 +474,8 @@ function LiveProgress({
               display: "inline-block",
               width: 14,
               height: 14,
-              border: "2px solid #4a4326",
-              borderTopColor: "#e8c777",
+              border: "2px solid #f5e6c8",
+              borderTopColor: "#8a6d1a",
               borderRadius: "50%",
               animation: "auto-articulos-spin 0.8s linear infinite",
               flexShrink: 0,
@@ -488,7 +488,7 @@ function LiveProgress({
       <div
         style={{
           height: 8,
-          background: "#0f1115",
+          background: "#f7f8fa",
           borderRadius: 999,
           overflow: "hidden",
           margin: "10px 0 16px",
@@ -498,7 +498,7 @@ function LiveProgress({
           style={{
             height: "100%",
             width: `${percent}%`,
-            background: "#4f7cff",
+            background: "#2f5fdb",
             transition: "width 0.4s ease",
           }}
         />
@@ -600,8 +600,8 @@ function TitleProgressRow({
   return (
     <div
       style={{
-        background: "#0f1115",
-        border: "1px solid #2a2f3a",
+        background: "#f7f8fa",
+        border: "1px solid #dfe3e8",
         borderRadius: 8,
         padding: "10px 14px",
       }}
@@ -627,7 +627,7 @@ function TitleProgressRow({
               display: "flex",
               justifyContent: "space-between",
               fontSize: 11,
-              color: "#9aa1ac",
+              color: "#6b7280",
               marginBottom: 3,
             }}
           >
@@ -637,7 +637,7 @@ function TitleProgressRow({
           <div
             style={{
               height: 5,
-              background: "#1a1d24",
+              background: "#e9ecf1",
               borderRadius: 999,
               overflow: "hidden",
             }}
@@ -646,7 +646,7 @@ function TitleProgressRow({
               style={{
                 height: "100%",
                 width: `${titlePercent}%`,
-                background: "#e8c777",
+                background: "#8a6d1a",
                 transition: "width 0.4s ease",
               }}
             />
@@ -661,7 +661,7 @@ function TitleProgressRow({
             target="_blank"
             rel="noreferrer"
             style={{
-              color: "#7fd99a",
+              color: "#1e8a4b",
               fontWeight: 600,
               textDecoration: "none",
             }}
@@ -669,7 +669,7 @@ function TitleProgressRow({
             🔗 Ver artículo publicado
           </a>
           {title.finalTitle && title.finalTitle !== title.text && (
-            <span style={{ display: "block", fontSize: 11, color: "#9aa1ac" }}>
+            <span style={{ display: "block", fontSize: 11, color: "#6b7280" }}>
               Publicado como: {title.finalTitle}
             </span>
           )}
@@ -677,7 +677,7 @@ function TitleProgressRow({
       )}
 
       {title.status === "error" && title.errorMessage && (
-        <p style={{ margin: "6px 0 0 24px", fontSize: 13, color: "#ff8787" }}>
+        <p style={{ margin: "6px 0 0 24px", fontSize: 13, color: "#d64545" }}>
           {title.errorMessage}
         </p>
       )}
@@ -692,12 +692,12 @@ function TitleProgressRow({
           }}
         >
           <summary
-            style={{ cursor: "pointer", fontSize: 11, color: "#9aa1ac" }}
+            style={{ cursor: "pointer", fontSize: 11, color: "#6b7280" }}
           >
             Ver todos los pasos
           </summary>
           {loadingEvents && !fullEvents && (
-            <p style={{ fontSize: 11, color: "#9aa1ac", marginTop: 6 }}>
+            <p style={{ fontSize: 11, color: "#6b7280", marginTop: 6 }}>
               Cargando...
             </p>
           )}
@@ -707,7 +707,7 @@ function TitleProgressRow({
                 marginTop: 6,
                 paddingLeft: 16,
                 fontSize: 11,
-                color: "#c7ccd1",
+                color: "#374151",
                 display: "flex",
                 flexDirection: "column",
                 gap: 4,
@@ -721,7 +721,7 @@ function TitleProgressRow({
                 );
                 return (
                   <li key={event.id} style={{ overflowWrap: "anywhere" }}>
-                    <span style={{ color: "#9aa1ac" }}>
+                    <span style={{ color: "#6b7280" }}>
                       {new Date(event.createdAt).toLocaleTimeString()}
                     </span>{" "}
                     {imageMatch ? (
@@ -735,7 +735,7 @@ function TitleProgressRow({
                             maxWidth: "100%",
                             marginTop: 4,
                             borderRadius: 6,
-                            border: "1px solid #2a2f3a",
+                            border: "1px solid #dfe3e8",
                           }}
                         />
                       </>

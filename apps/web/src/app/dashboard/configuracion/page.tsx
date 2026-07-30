@@ -125,7 +125,7 @@ export default function ConfiguracionPage() {
               alignItems: "center",
             }}
           >
-            <p style={{ fontSize: 13, color: "#9aa1ac", margin: 0 }}>
+            <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>
               Ya tienes credenciales guardadas de forma cifrada.
             </p>
             <button
@@ -174,14 +174,14 @@ export default function ConfiguracionPage() {
           </form>
         )}
         {showCredentialsForm && (
-          <p style={{ fontSize: 12, color: "#9aa1ac", marginTop: 10 }}>
+          <p style={{ fontSize: 12, color: "#6b7280", marginTop: 10 }}>
             Son tu usuario y contraseña de 10minutesWebsite, no los de Auto
             Artículos. Si no recuerdas tu contraseña de 10minutesWebsite,{" "}
             <a
               href="https://10minuteswebsite.net/dashboard/forgot-password.php"
               target="_blank"
               rel="noreferrer"
-              style={{ color: "#4f7cff" }}
+              style={{ color: "#2f5fdb" }}
             >
               recupérala con tu correo aquí
             </a>
@@ -190,7 +190,7 @@ export default function ConfiguracionPage() {
               href="https://www.10minuteswebsite.com/ayuda"
               target="_blank"
               rel="noreferrer"
-              style={{ color: "#4f7cff" }}
+              style={{ color: "#2f5fdb" }}
             >
               servicio al cliente de 10minutesWebsite
             </a>
@@ -201,7 +201,7 @@ export default function ConfiguracionPage() {
 
       <section style={sectionStyle}>
         <h2 style={h2Style}>Categorías</h2>
-        <p style={{ fontSize: 13, color: "#9aa1ac" }}>
+        <p style={{ fontSize: 13, color: "#6b7280" }}>
           Sincroniza las categorías reales de tu cuenta de 10minutesWebsite.
           Solo hace falta repetirlo si agregas o cambias categorías allá.
         </p>
@@ -218,7 +218,7 @@ export default function ConfiguracionPage() {
             : "Sincronizar categorías"}
         </button>
         {!credentialsConfigured && (
-          <p style={{ fontSize: 13, color: "#9aa1ac", marginTop: 8 }}>
+          <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
             Guarda primero tus credenciales para poder sincronizar categorías.
           </p>
         )}
@@ -226,7 +226,7 @@ export default function ConfiguracionPage() {
           <p
             style={{
               fontSize: 13,
-              color: "#e8c777",
+              color: "#8a6d1a",
               marginTop: 8,
               display: "flex",
               alignItems: "center",
@@ -244,8 +244,8 @@ export default function ConfiguracionPage() {
                 display: "inline-block",
                 width: 14,
                 height: 14,
-                border: "2px solid #4a4326",
-                borderTopColor: "#e8c777",
+                border: "2px solid #f5e6c8",
+                borderTopColor: "#8a6d1a",
                 borderRadius: "50%",
                 animation: "auto-articulos-spin 0.8s linear infinite",
                 flexShrink: 0,
@@ -256,7 +256,7 @@ export default function ConfiguracionPage() {
           </p>
         )}
         {lastSyncStatus === "error" && (
-          <p style={{ fontSize: 13, color: "#ff8787", marginTop: 8 }}>
+          <p style={{ fontSize: 13, color: "#d64545", marginTop: 8 }}>
             La última sincronización falló. Intenta de nuevo.
           </p>
         )}
@@ -266,7 +266,7 @@ export default function ConfiguracionPage() {
               marginTop: 12,
               paddingLeft: 18,
               fontSize: 13,
-              color: "#c7ccd1",
+              color: "#374151",
             }}
           >
             {categories.map((c) => (
@@ -282,8 +282,8 @@ export default function ConfiguracionPage() {
             padding: 12,
             borderRadius: 8,
             marginTop: 20,
-            background: banner.type === "error" ? "#3a1414" : "#142a1b",
-            color: banner.type === "error" ? "#ff8787" : "#7fd99a",
+            background: banner.type === "error" ? "#fdecec" : "#eafaf0",
+            color: banner.type === "error" ? "#d64545" : "#1e8a4b",
             fontSize: 14,
           }}
         >

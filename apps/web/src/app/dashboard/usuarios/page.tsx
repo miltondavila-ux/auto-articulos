@@ -81,7 +81,7 @@ export default function UsuariosPage() {
     return (
       <section style={sectionStyle}>
         <h2 style={h2Style}>Usuarios</h2>
-        <p style={{ fontSize: 13, color: "#9aa1ac" }}>
+        <p style={{ fontSize: 13, color: "#6b7280" }}>
           Esta sección es solo para administradores.
         </p>
       </section>
@@ -92,7 +92,7 @@ export default function UsuariosPage() {
     <div>
       <section style={sectionStyle}>
         <h2 style={h2Style}>Agregar usuario</h2>
-        <p style={{ fontSize: 13, color: "#9aa1ac" }}>
+        <p style={{ fontSize: 13, color: "#6b7280" }}>
           Crea una cuenta para dar acceso a otra persona. Cada usuario tiene sus
           propias credenciales de 10minutesWebsite y su propio historial,
           completamente separados.
@@ -129,8 +129,8 @@ export default function UsuariosPage() {
               padding: 12,
               borderRadius: 8,
               marginTop: 12,
-              background: banner.type === "error" ? "#3a1414" : "#142a1b",
-              color: banner.type === "error" ? "#ff8787" : "#7fd99a",
+              background: banner.type === "error" ? "#fdecec" : "#eafaf0",
+              color: banner.type === "error" ? "#d64545" : "#1e8a4b",
               fontSize: 14,
             }}
           >
@@ -145,7 +145,7 @@ export default function UsuariosPage() {
           style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}
         >
           <thead>
-            <tr style={{ textAlign: "left", color: "#9aa1ac" }}>
+            <tr style={{ textAlign: "left", color: "#6b7280" }}>
               <th style={thStyle}>Correo</th>
               <th style={thStyle}>Rol</th>
               <th style={thStyle}>Límite mensual de artículos</th>
@@ -246,7 +246,7 @@ function UserRowItem({
 
   return (
     <>
-      <tr style={{ borderTop: "1px solid #2a2f3a" }}>
+      <tr style={{ borderTop: "1px solid #dfe3e8" }}>
         <td style={tdStyle}>{user.email}</td>
         <td style={tdStyle}>
           {user.role === "admin" ? "Administrador" : "Usuario"}
@@ -291,8 +291,8 @@ function UserRowItem({
                 onClick={() => setConfirmingDelete(true)}
                 style={{
                   background: "none",
-                  color: "#ff8787",
-                  border: "1px solid #5c1f1f",
+                  color: "#d64545",
+                  border: "1px solid #fde8e8",
                   borderRadius: 6,
                   padding: "4px 10px",
                   fontSize: 12,
@@ -303,14 +303,14 @@ function UserRowItem({
               </button>
             ) : (
               <>
-                <span style={{ fontSize: 12, color: "#e8c777" }}>¿Seguro?</span>
+                <span style={{ fontSize: 12, color: "#8a6d1a" }}>¿Seguro?</span>
                 <button
                   onClick={handleDelete}
                   disabled={deleting}
                   style={{
-                    background: "#5c1f1f",
-                    color: "#ff8787",
-                    border: "1px solid #7a2b2b",
+                    background: "#fde8e8",
+                    color: "#d64545",
+                    border: "1px solid #e8b4b4",
                     borderRadius: 6,
                     padding: "4px 10px",
                     fontSize: 12,
@@ -325,8 +325,8 @@ function UserRowItem({
                   disabled={deleting}
                   style={{
                     background: "none",
-                    color: "#9aa1ac",
-                    border: "1px solid #2a2f3a",
+                    color: "#6b7280",
+                    border: "1px solid #dfe3e8",
                     borderRadius: 6,
                     padding: "4px 10px",
                     fontSize: 12,
@@ -339,14 +339,14 @@ function UserRowItem({
             )}
           </div>
           {deleteError && (
-            <div style={{ fontSize: 11, color: "#ff8787", marginTop: 4 }}>
+            <div style={{ fontSize: 11, color: "#d64545", marginTop: 4 }}>
               {deleteError}
             </div>
           )}
         </td>
       </tr>
       {editing && (
-        <tr style={{ background: "#0f1115" }}>
+        <tr style={{ background: "#f7f8fa" }}>
           <td colSpan={5} style={{ ...tdStyle, padding: "10px 8px" }}>
             <div
               style={{
@@ -379,7 +379,7 @@ function UserRowItem({
               </button>
             </div>
             {editError && (
-              <p style={{ fontSize: 12, color: "#ff8787", marginTop: 6 }}>
+              <p style={{ fontSize: 12, color: "#d64545", marginTop: 6 }}>
                 {editError}
               </p>
             )}
@@ -439,16 +439,16 @@ function UserHistorial({ email }: { email: string }) {
         if ((e.target as HTMLDetailsElement).open && !runs) loadHistorial();
       }}
     >
-      <summary style={{ cursor: "pointer", fontSize: 12, color: "#9aa1ac" }}>
+      <summary style={{ cursor: "pointer", fontSize: 12, color: "#6b7280" }}>
         Ver historial
       </summary>
       {loading && !runs && (
-        <p style={{ fontSize: 12, color: "#9aa1ac", marginTop: 6 }}>
+        <p style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
           Cargando...
         </p>
       )}
       {runs && runs.length === 0 && (
-        <p style={{ fontSize: 12, color: "#9aa1ac", marginTop: 6 }}>
+        <p style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
           Todavía no tiene ejecuciones.
         </p>
       )}
@@ -469,14 +469,14 @@ function UserHistorial({ email }: { email: string }) {
               <details
                 key={run.id}
                 style={{
-                  background: "#0a0c10",
-                  border: "1px solid #2a2f3a",
+                  background: "#f3f4f6",
+                  border: "1px solid #dfe3e8",
                   borderRadius: 6,
                   padding: "6px 10px",
                 }}
               >
                 <summary
-                  style={{ cursor: "pointer", fontSize: 12, color: "#c7ccd1" }}
+                  style={{ cursor: "pointer", fontSize: 12, color: "#374151" }}
                 >
                   {new Date(run.createdAt).toLocaleString()} —{" "}
                   {run.category?.name ?? "—"} — {successCount}/
@@ -492,7 +492,7 @@ function UserHistorial({ email }: { email: string }) {
                   }}
                 >
                   <thead>
-                    <tr style={{ textAlign: "left", color: "#9aa1ac" }}>
+                    <tr style={{ textAlign: "left", color: "#6b7280" }}>
                       <th style={thStyle}>Título</th>
                       <th style={thStyle}>Estado</th>
                       <th style={thStyle}>Intentos</th>
@@ -503,7 +503,7 @@ function UserHistorial({ email }: { email: string }) {
                     {run.titles.map((title) => (
                       <tr
                         key={title.id}
-                        style={{ borderTop: "1px solid #2a2f3a" }}
+                        style={{ borderTop: "1px solid #dfe3e8" }}
                       >
                         <td style={tdStyle}>
                           {title.text}
@@ -512,7 +512,7 @@ function UserHistorial({ email }: { email: string }) {
                               <div
                                 style={{
                                   fontSize: 10,
-                                  color: "#9aa1ac",
+                                  color: "#6b7280",
                                   marginTop: 2,
                                 }}
                               >
@@ -530,7 +530,7 @@ function UserHistorial({ email }: { email: string }) {
                               href={title.articleUrl}
                               target="_blank"
                               rel="noreferrer"
-                              style={{ color: "#7fd99a", fontWeight: 600 }}
+                              style={{ color: "#1e8a4b", fontWeight: 600 }}
                             >
                               Ver artículo
                             </a>

@@ -69,16 +69,16 @@ export default function HistorialPage() {
         {hasDeletableRuns &&
           (confirmingDelete ? (
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 12, color: "#e8c777" }}>
+              <span style={{ fontSize: 12, color: "#8a6d1a" }}>
                 ¿Borrar todo el historial? No se puede deshacer.
               </span>
               <button
                 onClick={handleDeleteHistory}
                 disabled={deleting}
                 style={{
-                  background: "#5c1f1f",
-                  color: "#ff8787",
-                  border: "1px solid #7a2b2b",
+                  background: "#fde8e8",
+                  color: "#d64545",
+                  border: "1px solid #e8b4b4",
                   borderRadius: 6,
                   padding: "4px 10px",
                   fontSize: 12,
@@ -93,8 +93,8 @@ export default function HistorialPage() {
                 disabled={deleting}
                 style={{
                   background: "none",
-                  color: "#9aa1ac",
-                  border: "1px solid #2a2f3a",
+                  color: "#6b7280",
+                  border: "1px solid #dfe3e8",
                   borderRadius: 6,
                   padding: "4px 10px",
                   fontSize: 12,
@@ -109,8 +109,8 @@ export default function HistorialPage() {
               onClick={() => setConfirmingDelete(true)}
               style={{
                 background: "none",
-                color: "#ff8787",
-                border: "1px solid #5c1f1f",
+                color: "#d64545",
+                border: "1px solid #fde8e8",
                 borderRadius: 6,
                 padding: "4px 10px",
                 fontSize: 12,
@@ -123,12 +123,12 @@ export default function HistorialPage() {
           ))}
       </div>
       {deleteError && (
-        <p style={{ fontSize: 12, color: "#ff8787", marginTop: 6 }}>
+        <p style={{ fontSize: 12, color: "#d64545", marginTop: 6 }}>
           {deleteError}
         </p>
       )}
       {runs.length === 0 && (
-        <p style={{ fontSize: 13, color: "#9aa1ac", marginTop: 12 }}>
+        <p style={{ fontSize: 13, color: "#6b7280", marginTop: 12 }}>
           Todavía no hay ejecuciones.
         </p>
       )}
@@ -153,8 +153,8 @@ function HistoryEntry({
       open={defaultOpen}
       style={{
         marginBottom: 10,
-        background: "#0f1115",
-        border: "1px solid #2a2f3a",
+        background: "#f7f8fa",
+        border: "1px solid #dfe3e8",
         borderRadius: 8,
         padding: "10px 14px",
       }}
@@ -170,14 +170,14 @@ function HistoryEntry({
           flexWrap: "wrap",
         }}
       >
-        <span style={{ color: "#e6e6e6", fontWeight: 600 }}>
+        <span style={{ color: "#16181d", fontWeight: 600 }}>
           {new Date(run.createdAt).toLocaleString()}
         </span>
-        <span style={{ color: "#9aa1ac" }}>— {run.category?.name ?? "—"}</span>
-        <span style={{ color: "#9aa1ac" }}>
+        <span style={{ color: "#6b7280" }}>— {run.category?.name ?? "—"}</span>
+        <span style={{ color: "#6b7280" }}>
           — {successCount}/{run.titles.length} publicados
         </span>
-        <span style={{ color: "#9aa1ac" }}>
+        <span style={{ color: "#6b7280" }}>
           — duración: {formatDuration(run.createdAt, run.finishedAt)}
         </span>
         <RunStatusBadge status={run.status} />
@@ -209,16 +209,16 @@ function formatDuration(startIso: string, endIso: string | null): string {
 function RunStatusBadge({ status }: { status: RunStatus }) {
   const color =
     status === "halted"
-      ? "#ff8787"
+      ? "#d64545"
       : status === "cancelled"
-        ? "#9aa1ac"
-        : "#7fd99a";
+        ? "#6b7280"
+        : "#1e8a4b";
   const background =
     status === "halted"
-      ? "#3a1414"
+      ? "#fdecec"
       : status === "cancelled"
-        ? "#2a2f3a"
-        : "#1c3324";
+        ? "#dfe3e8"
+        : "#dff5e6";
   return (
     <span
       style={{
@@ -240,7 +240,7 @@ function RunTable({ titles }: { titles: TitleRow[] }) {
   return (
     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
       <thead>
-        <tr style={{ textAlign: "left", color: "#9aa1ac" }}>
+        <tr style={{ textAlign: "left", color: "#6b7280" }}>
           <th style={thStyle}>Título</th>
           <th style={thStyle}>Estado</th>
           <th style={thStyle}>Intentos</th>
@@ -280,11 +280,11 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
   }
 
   return (
-    <tr style={{ borderTop: "1px solid #2a2f3a" }}>
+    <tr style={{ borderTop: "1px solid #dfe3e8" }}>
       <td style={tdStyle}>
         {title.text}
         {title.finalTitle && title.finalTitle !== title.text && (
-          <div style={{ fontSize: 11, color: "#9aa1ac", marginTop: 4 }}>
+          <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>
             Publicado como: {title.finalTitle}
           </div>
         )}
@@ -298,7 +298,7 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
             target="_blank"
             rel="noreferrer"
             style={{
-              color: "#7fd99a",
+              color: "#1e8a4b",
               fontWeight: 600,
               textDecoration: "none",
               display: "inline-flex",
@@ -321,11 +321,11 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
               }
             }}
           >
-            <summary style={{ cursor: "pointer", color: "#9aa1ac" }}>
+            <summary style={{ cursor: "pointer", color: "#6b7280" }}>
               Ver log
             </summary>
             {loadingEvents && !fullEvents && (
-              <p style={{ fontSize: 12, color: "#9aa1ac", marginTop: 8 }}>
+              <p style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>
                 Cargando...
               </p>
             )}
@@ -334,7 +334,7 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
                 style={{
                   margin: "8px 0 0",
                   paddingLeft: 18,
-                  color: "#9aa1ac",
+                  color: "#6b7280",
                   fontSize: 12,
                 }}
               >
@@ -344,7 +344,7 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
                   );
                   return (
                     <li key={e.id} style={{ marginBottom: 4 }}>
-                      <span style={{ color: "#6c7280" }}>
+                      <span style={{ color: "#6b7280" }}>
                         {new Date(e.createdAt).toLocaleTimeString()}
                       </span>{" "}
                       {imageMatch ? (
@@ -358,7 +358,7 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
                               maxWidth: "100%",
                               marginTop: 6,
                               borderRadius: 6,
-                              border: "1px solid #2a2f3a",
+                              border: "1px solid #dfe3e8",
                             }}
                           />
                         </>

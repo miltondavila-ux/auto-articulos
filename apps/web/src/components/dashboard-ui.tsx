@@ -2,10 +2,12 @@ import type { CSSProperties } from "react";
 import type { RunStatus, TitleStatus } from "@/types/dashboard";
 
 export const sectionStyle: CSSProperties = {
-  background: "#181b21",
+  background: "#ffffff",
+  border: "1px solid #e5e8ec",
   borderRadius: 12,
   padding: 20,
   marginTop: 20,
+  boxShadow: "0 1px 2px rgba(16, 24, 40, 0.04)",
 };
 
 export const h2Style: CSSProperties = { fontSize: 16, marginTop: 0 };
@@ -13,9 +15,9 @@ export const h2Style: CSSProperties = { fontSize: 16, marginTop: 0 };
 export const inputStyle: CSSProperties = {
   padding: "10px 12px",
   borderRadius: 8,
-  border: "1px solid #2a2f3a",
-  background: "#0f1115",
-  color: "#e6e6e6",
+  border: "1px solid #dfe3e8",
+  background: "#f7f8fa",
+  color: "#16181d",
   fontSize: 14,
 };
 
@@ -24,7 +26,7 @@ export const buttonStyle: CSSProperties = {
   padding: "10px 16px",
   borderRadius: 8,
   border: "none",
-  background: "#4f7cff",
+  background: "#2f5fdb",
   color: "white",
   fontWeight: 600,
   cursor: "pointer",
@@ -33,9 +35,9 @@ export const buttonStyle: CSSProperties = {
 export const secondaryButtonStyle: CSSProperties = {
   padding: "10px 16px",
   borderRadius: 8,
-  border: "none",
-  background: "#2a2f3a",
-  color: "white",
+  border: "1px solid #dfe3e8",
+  background: "#f7f8fa",
+  color: "#16181d",
   fontWeight: 600,
   cursor: "pointer",
 };
@@ -47,8 +49,8 @@ export function readySectionStyle(ready: boolean): CSSProperties {
   if (!ready) return sectionStyle;
   return {
     ...sectionStyle,
-    background: "#132018",
-    border: "1px solid #2f6b46",
+    background: "#f3fbf6",
+    border: "1px solid #a8dfc0",
   };
 }
 
@@ -66,8 +68,8 @@ export function ReadyBadge() {
       style={{
         fontSize: 11,
         fontWeight: 600,
-        color: "#7fd99a",
-        background: "#1c3324",
+        color: "#1e8a4b",
+        background: "#dff5e6",
         padding: "2px 8px",
         borderRadius: 999,
         marginLeft: 8,

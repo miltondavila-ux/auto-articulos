@@ -12,6 +12,11 @@ export default async function DashboardLayout({
 
   return (
     <main style={{ maxWidth: 820, margin: "0 auto", padding: "32px 20px" }}>
+      <style>{`
+        @media (min-width: 700px) {
+          .mobile-notice { display: none; }
+        }
+      `}</style>
       <div
         style={{
           display: "flex",
@@ -21,10 +26,25 @@ export default async function DashboardLayout({
       >
         <h1 style={{ fontSize: 22, margin: 0 }}>Auto Artículos</h1>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 13, color: "#9aa1ac" }}>{user.email}</span>
+          <span style={{ fontSize: 13, color: "#6b7280" }}>{user.email}</span>
           <LogoutButton />
         </div>
       </div>
+      <p
+        className="mobile-notice"
+        style={{
+          fontSize: 12,
+          color: "#8a6d1a",
+          background: "#fff8e6",
+          border: "1px solid #f0deac",
+          borderRadius: 8,
+          padding: "8px 12px",
+          marginTop: 12,
+        }}
+      >
+        📱 Esta aplicación funciona en el celular, pero se recomienda usarla
+        desde una computadora para una mejor experiencia.
+      </p>
       <DashboardNav />
       {children}
     </main>

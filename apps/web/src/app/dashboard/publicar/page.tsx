@@ -97,13 +97,13 @@ export default function PublicarPage() {
             marginTop: 20,
             padding: "12px 16px",
             borderRadius: 8,
-            background: "#3a2f14",
-            color: "#e8c777",
+            background: "#f5e6c8",
+            color: "#8a6d1a",
             fontSize: 13,
           }}
         >
           Primero conecta tu cuenta de 10minutesWebsite en{" "}
-          <Link href="/dashboard/configuracion" style={{ color: "#4f7cff" }}>
+          <Link href="/dashboard/configuracion" style={{ color: "#2f5fdb" }}>
             Configuración
           </Link>
           .
@@ -116,13 +116,13 @@ export default function PublicarPage() {
             marginTop: 20,
             padding: "12px 16px",
             borderRadius: 8,
-            background: "#142a1b",
-            color: "#7fd99a",
+            background: "#eafaf0",
+            color: "#1e8a4b",
             fontSize: 13,
           }}
         >
           Ya hay una ejecución en curso.{" "}
-          <Link href="/dashboard" style={{ color: "#4f7cff" }}>
+          <Link href="/dashboard" style={{ color: "#2f5fdb" }}>
             Ver progreso en Inicio
           </Link>
           .
@@ -131,7 +131,7 @@ export default function PublicarPage() {
 
       <section style={readySectionStyle(Boolean(selectedCategoryId))}>
         <h2 style={h2Style}>Categoría</h2>
-        <p style={{ fontSize: 13, color: "#9aa1ac" }}>
+        <p style={{ fontSize: 13, color: "#6b7280" }}>
           Elige primero la categoría bajo la que se publicarán los artículos de
           esta ejecución.
         </p>
@@ -153,9 +153,9 @@ export default function PublicarPage() {
           ))}
         </select>
         {categories.length === 0 && (
-          <p style={{ fontSize: 13, color: "#9aa1ac", marginTop: 8 }}>
+          <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
             Sincroniza tus categorías desde{" "}
-            <Link href="/dashboard/configuracion" style={{ color: "#4f7cff" }}>
+            <Link href="/dashboard/configuracion" style={{ color: "#2f5fdb" }}>
               Configuración
             </Link>
             .
@@ -186,7 +186,7 @@ export default function PublicarPage() {
             alignItems: "center",
             gap: 8,
             fontSize: 13,
-            color: "#9aa1ac",
+            color: "#6b7280",
             margin: "10px 0",
           }}
         >
@@ -222,7 +222,7 @@ export default function PublicarPage() {
               : "Iniciar"}
         </button>
         {!selectedCategoryId && !hasActiveRun && (
-          <p style={{ fontSize: 13, color: "#9aa1ac", marginTop: 8 }}>
+          <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
             Elige una categoría arriba antes de iniciar.
           </p>
         )}
@@ -234,8 +234,8 @@ export default function PublicarPage() {
             padding: 12,
             borderRadius: 8,
             marginTop: 8,
-            background: banner.type === "error" ? "#3a1414" : "#142a1b",
-            color: banner.type === "error" ? "#ff8787" : "#7fd99a",
+            background: banner.type === "error" ? "#fdecec" : "#eafaf0",
+            color: banner.type === "error" ? "#d64545" : "#1e8a4b",
             fontSize: 14,
           }}
         >
