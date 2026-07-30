@@ -46,15 +46,6 @@ export async function publishArticle(
 
     await login(page, credentials, onStep);
 
-    // Anotamos el N° de artículo más reciente ANTES de crear el nuevo, para
-    // luego poder confirmar cuál es el artículo recién publicado (el título
-    // final puede diferir del que enviamos, porque la IA lo reescribe).
-    await page.goto(`${BASE_URL}/dashboard/user_buyer_seller_articles.php`, {
-      waitUntil: "domcontentloaded",
-      timeout: NAV_TIMEOUT_MS,
-    });
-    const beforeId = await getTopArticleId(page);
-
     const { summary, contentHtml, finalTitle } = await createArticleDraft(
       page,
       title,
@@ -63,7 +54,7 @@ export async function publishArticle(
     );
     await generateImage(page, onStep);
     await fillFaqWidget(page, title, summary, contentHtml, onStep);
-    const articleUrl = await saveAndGetUrl(page, beforeId, finalTitle, onStep);
+    const articleUrl = await saveAndGetUrl(page, finalTitle, onStep);
 
     return { articleUrl };
   } finally {
@@ -195,10 +186,8 @@ async function createArticleDraft(
   // Leemos el Contenido (HTML) aquí, mientras el modal sigue abierto, para
   // usarlo como base del FAQ que se agrega más adelante. También guardamos
   // el Título final que la IA le puso al artículo (índice 3: idea, contenido,
-  // resumen, título, prompt de imagen) — no lo usamos para buscar el
-  // artículo (la detección es por N° de artículo, no por texto), pero queda
-  // en el log de cada intento para verificar a simple vista qué título quedó
-  // asignado de verdad.
+  // resumen, título, prompt de imagen): es justamente el que se usa después
+  // para localizar el artículo ya publicado (ver findArticleByTitle).
   const contentHtml = await dialog.locator("textarea").nth(1).inputValue().catch(() => "");
   const finalTitle = (await dialog.locator("textarea").nth(3).inputValue().catch(() => "")) || title;
   await onStep(`Título asignado por la IA: "${finalTitle}"`);
@@ -367,14 +356,30 @@ async function getNewestRow(listPage: Page): Promise<ArticleRow | null> {
   return best;
 }
 
-async function getTopArticleId(listPage: Page): Promise<string | null> {
-  const row = await getNewestRow(listPage);
-  return row?.id ?? null;
+/**
+ * Busca el artículo por el título REAL que la IA le asignó (guardado antes
+ * de guardar el formulario), usando el buscador del propio listado en vez de
+ * confiar en la posición o el N° de fila. Usamos la API de DataTables por
+ * `page.evaluate` en vez de escribir en el input de búsqueda: se verificó en
+ * vivo que asignar el valor y disparar eventos de teclado no siempre activa
+ * el filtro de DataTables de forma confiable, mientras que llamar a su API
+ * (`.search().draw()`) sí funciona siempre. Si la búsqueda encuentra más de
+ * una fila (por ejemplo coincidencias parciales), nos quedamos con el N° de
+ * artículo más alto entre los resultados filtrados.
+ */
+async function findArticleByTitle(page: Page, title: string): Promise<string | null> {
+  await page.evaluate((searchText) => {
+    const jq = (window as unknown as { jQuery?: (s: string) => { DataTable: () => { search: (s: string) => { draw: () => void } } } }).jQuery;
+    jq?.("table").DataTable().search(searchText).draw();
+  }, title);
+  await page.waitForTimeout(800);
+
+  const row = await getNewestRow(page);
+  return row?.href ?? null;
 }
 
 async function saveAndGetUrl(
   page: Page,
-  beforeId: string | null,
   expectedTitle: string,
   onStep: OnStep
 ): Promise<string | null> {
@@ -382,23 +387,18 @@ async function saveAndGetUrl(
   await page.getByRole("button", { name: "Guardar cambios" }).first().click();
   await page.waitForLoadState("networkidle", { timeout: NAV_TIMEOUT_MS }).catch(() => {});
 
-  // El título publicado puede diferir del que enviamos (la IA lo reescribe:
-  // "expectedTitle" queda solo como referencia en el log para verificar esto
-  // a simple vista), así que no buscamos por texto: esperamos a que aparezca
-  // un N° de artículo mayor al que anotamos antes de crear el borrador (ver
-  // getNewestRow), y tomamos su enlace "Ver" (clase "consultar").
-  await onStep(`Buscando el artículo publicado (título asignado por la IA: "${expectedTitle}")...`);
+  // Localizamos el artículo por el título real que la IA le asignó (guardado
+  // en createArticleDraft), no por posición de fila ni por comparar N° antes
+  // vs. después: se pidió explícitamente localizarlo así.
+  await onStep(`Buscando el artículo publicado por su título: "${expectedTitle}"...`);
   const deadline = Date.now() + SAVE_VERIFICATION_TIMEOUT_MS;
-  const beforeNum = beforeId ? Number.parseInt(beforeId, 10) : null;
   while (Date.now() < deadline) {
     await page.goto(`${BASE_URL}/dashboard/user_buyer_seller_articles.php`, {
       waitUntil: "domcontentloaded",
       timeout: NAV_TIMEOUT_MS,
     });
-    const newest = await getNewestRow(page);
-    if (newest && (beforeNum === null || newest.num > beforeNum)) {
-      return newest.href;
-    }
+    const href = await findArticleByTitle(page, expectedTitle);
+    if (href) return href;
     await page.waitForTimeout(1500);
   }
   return null;
