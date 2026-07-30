@@ -277,7 +277,7 @@ async function generateImage(
     // #images es el textarea real que lee "Generar imagen" (verificado en
     // vivo el 29/7/2026): escribimos ahí nuestro propio prompt, basado en el
     // título y resumen reales, justo antes de generar.
-    const prompt = await buildImagePrompt(title, summary);
+    const prompt = buildImagePrompt(summary);
     await page.fill("#images", prompt).catch(() => {});
     await generarImagenBtn.click();
 
