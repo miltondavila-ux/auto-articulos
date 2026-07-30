@@ -9,7 +9,12 @@ import {
   statusLabel,
   runStatusLabel,
 } from "@/components/dashboard-ui";
-import type { RunRow, RunStatus, TitleRow } from "@/types/dashboard";
+import type {
+  RunRow,
+  RunStatus,
+  TitleEventRow,
+  TitleRow,
+} from "@/types/dashboard";
 
 export default function HistorialPage() {
   const [runs, setRuns] = useState<RunRow[]>([]);
@@ -161,7 +166,26 @@ function RunTable({ titles }: { titles: TitleRow[] }) {
 
 function TitleRowWithLog({ title }: { title: TitleRow }) {
   // El log queda visible siempre (no solo en errores): sirve para revisar
-  // el paso a paso incluso de títulos ya publicados con éxito.
+  // el paso a paso incluso de títulos ya publicados con éxito. El log
+  // completo (con imágenes de diagnóstico) se trae bajo demanda al abrir
+  // "Ver log", no en la carga inicial del historial — ver el comentario en
+  // /api/runs/route.ts sobre el consumo de transferencia de datos.
+  const [fullEvents, setFullEvents] = useState<TitleEventRow[] | null>(null);
+  const [loadingEvents, setLoadingEvents] = useState(false);
+
+  async function loadFullEvents() {
+    setLoadingEvents(true);
+    try {
+      const res = await fetch(`/api/titles/${title.id}/events`);
+      if (res.ok) {
+        const data = await res.json();
+        setFullEvents(data.events);
+      }
+    } finally {
+      setLoadingEvents(false);
+    }
+  }
+
   return (
     <tr style={{ borderTop: "1px solid #2a2f3a" }}>
       <td style={tdStyle}>
@@ -196,50 +220,63 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
         )}
       </td>
       <td style={tdStyle}>
-        {title.events.length > 0 && (
-          <details>
+        {title.attempts > 0 && (
+          <details
+            onToggle={(e) => {
+              if ((e.target as HTMLDetailsElement).open && !fullEvents) {
+                loadFullEvents();
+              }
+            }}
+          >
             <summary style={{ cursor: "pointer", color: "#9aa1ac" }}>
-              Ver log ({title.events.length})
+              Ver log
             </summary>
-            <ul
-              style={{
-                margin: "8px 0 0",
-                paddingLeft: 18,
-                color: "#9aa1ac",
-                fontSize: 12,
-              }}
-            >
-              {title.events.map((e) => {
-                const imageMatch = e.message.match(
-                  /^DIAGNÓSTICO \[(.+)\]: (data:image\/[a-z]+;base64,.+)$/,
-                );
-                return (
-                  <li key={e.id} style={{ marginBottom: 4 }}>
-                    <span style={{ color: "#6c7280" }}>
-                      {new Date(e.createdAt).toLocaleTimeString()}
-                    </span>{" "}
-                    {imageMatch ? (
-                      <>
-                        — {imageMatch[1]}
-                        <br />
-                        <img
-                          src={imageMatch[2]}
-                          alt={imageMatch[1]}
-                          style={{
-                            maxWidth: "100%",
-                            marginTop: 6,
-                            borderRadius: 6,
-                            border: "1px solid #2a2f3a",
-                          }}
-                        />
-                      </>
-                    ) : (
-                      <>— {e.message}</>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
+            {loadingEvents && !fullEvents && (
+              <p style={{ fontSize: 12, color: "#9aa1ac", marginTop: 8 }}>
+                Cargando...
+              </p>
+            )}
+            {fullEvents && (
+              <ul
+                style={{
+                  margin: "8px 0 0",
+                  paddingLeft: 18,
+                  color: "#9aa1ac",
+                  fontSize: 12,
+                }}
+              >
+                {fullEvents.map((e) => {
+                  const imageMatch = e.message.match(
+                    /^DIAGNÓSTICO \[(.+)\]: (data:image\/[a-z]+;base64,.+)$/,
+                  );
+                  return (
+                    <li key={e.id} style={{ marginBottom: 4 }}>
+                      <span style={{ color: "#6c7280" }}>
+                        {new Date(e.createdAt).toLocaleTimeString()}
+                      </span>{" "}
+                      {imageMatch ? (
+                        <>
+                          — {imageMatch[1]}
+                          <br />
+                          <img
+                            src={imageMatch[2]}
+                            alt={imageMatch[1]}
+                            style={{
+                              maxWidth: "100%",
+                              marginTop: 6,
+                              borderRadius: 6,
+                              border: "1px solid #2a2f3a",
+                            }}
+                          />
+                        </>
+                      ) : (
+                        <>— {e.message}</>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </details>
         )}
       </td>

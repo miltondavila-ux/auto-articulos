@@ -8,7 +8,7 @@ import {
   readySectionStyle,
   buttonStyle,
 } from "@/components/dashboard-ui";
-import type { RunRow, TitleRow } from "@/types/dashboard";
+import type { RunRow, TitleEventRow, TitleRow } from "@/types/dashboard";
 
 interface PublishedNotification {
   id: string;
@@ -76,7 +76,10 @@ export default function InicioPage() {
 
   useEffect(() => {
     if (!activeRun) return;
-    const interval = setInterval(loadRuns, 2000);
+    // 4s en vez de 2s: reduce a la mitad el volumen de polling (ver también
+    // el recorte de eventos en /api/runs) para no agotar la cuota gratuita
+    // de transferencia de datos de Neon.
+    const interval = setInterval(loadRuns, 4000);
     return () => clearInterval(interval);
   }, [activeRun, loadRuns]);
 
@@ -406,6 +409,25 @@ function TitleProgressRow({
       : null;
   const titlePercent = estimateTitleProgress(title);
 
+  // El log completo (con imágenes de diagnóstico) se trae bajo demanda, no
+  // en cada poll: ver el comentario en /api/runs/route.ts sobre el consumo
+  // de transferencia de datos que esto evita.
+  const [fullEvents, setFullEvents] = useState<TitleEventRow[] | null>(null);
+  const [loadingEvents, setLoadingEvents] = useState(false);
+
+  async function loadFullEvents() {
+    setLoadingEvents(true);
+    try {
+      const res = await fetch(`/api/titles/${title.id}/events`);
+      if (res.ok) {
+        const data = await res.json();
+        setFullEvents(data.events);
+      }
+    } finally {
+      setLoadingEvents(false);
+    }
+  }
+
   return (
     <div
       style={{
@@ -491,57 +513,71 @@ function TitleProgressRow({
         </p>
       )}
 
-      {title.events.length > 1 && (
-        <details style={{ marginTop: 8, marginLeft: 24 }}>
+      {title.attempts > 0 && (
+        <details
+          style={{ marginTop: 8, marginLeft: 24 }}
+          onToggle={(e) => {
+            if ((e.target as HTMLDetailsElement).open && !fullEvents) {
+              loadFullEvents();
+            }
+          }}
+        >
           <summary
             style={{ cursor: "pointer", fontSize: 11, color: "#9aa1ac" }}
           >
             Ver todos los pasos
           </summary>
-          <ol
-            style={{
-              marginTop: 6,
-              paddingLeft: 16,
-              fontSize: 11,
-              color: "#c7ccd1",
-              display: "flex",
-              flexDirection: "column",
-              gap: 4,
-              maxWidth: "100%",
-              overflowWrap: "anywhere",
-            }}
-          >
-            {title.events.map((event) => {
-              const imageMatch = event.message.match(
-                /^DIAGNÓSTICO \[(.+)\]: (data:image\/[a-z]+;base64,.+)$/,
-              );
-              return (
-                <li key={event.id} style={{ overflowWrap: "anywhere" }}>
-                  <span style={{ color: "#9aa1ac" }}>
-                    {new Date(event.createdAt).toLocaleTimeString()}
-                  </span>{" "}
-                  {imageMatch ? (
-                    <>
-                      {imageMatch[1]}
-                      <br />
-                      <img
-                        src={imageMatch[2]}
-                        alt={imageMatch[1]}
-                        style={{
-                          maxWidth: "100%",
-                          marginTop: 4,
-                          borderRadius: 6,
-                          border: "1px solid #2a2f3a",
-                        }}
-                      />
-                    </>
-                  ) : (
-                    event.message
-                  )}
-                </li>
-              );
-            })}
-          </ol>
+          {loadingEvents && !fullEvents && (
+            <p style={{ fontSize: 11, color: "#9aa1ac", marginTop: 6 }}>
+              Cargando...
+            </p>
+          )}
+          {fullEvents && (
+            <ol
+              style={{
+                marginTop: 6,
+                paddingLeft: 16,
+                fontSize: 11,
+                color: "#c7ccd1",
+                display: "flex",
+                flexDirection: "column",
+                gap: 4,
+                maxWidth: "100%",
+                overflowWrap: "anywhere",
+              }}
+            >
+              {fullEvents.map((event) => {
+                const imageMatch = event.message.match(
+                  /^DIAGNÓSTICO \[(.+)\]: (data:image\/[a-z]+;base64,.+)$/,
+                );
+                return (
+                  <li key={event.id} style={{ overflowWrap: "anywhere" }}>
+                    <span style={{ color: "#9aa1ac" }}>
+                      {new Date(event.createdAt).toLocaleTimeString()}
+                    </span>{" "}
+                    {imageMatch ? (
+                      <>
+                        {imageMatch[1]}
+                        <br />
+                        <img
+                          src={imageMatch[2]}
+                          alt={imageMatch[1]}
+                          style={{
+                            maxWidth: "100%",
+                            marginTop: 4,
+                            borderRadius: 6,
+                            border: "1px solid #2a2f3a",
+                          }}
+                        />
+                      </>
+                    ) : (
+                      event.message
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          )}
         </details>
       )}
     </div>

@@ -3,6 +3,14 @@ import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
 import { triggerWorkerNow } from "@/lib/trigger-worker";
 
+// Bug de consumo de datos encontrado el 30/7/2026: este endpoint se
+// consulta con polling frecuente (Inicio) y en cada visita al Historial, y
+// antes traía TODOS los eventos de TODOS los títulos (incluidas las
+// capturas de diagnóstico en base64, de cientos de KB cada una) — eso
+// agotó la cuota gratuita de transferencia de datos de Neon. Ahora solo se
+// trae el último evento de cada título (suficiente para mostrar el paso
+// actual); el log completo con imágenes se trae aparte, bajo demanda, solo
+// cuando alguien expande "Ver todos los pasos" (ver /api/titles/[id]/events).
 export async function GET() {
   const userId = await getCurrentUserId();
   const runs = await prisma.run.findMany({
@@ -11,7 +19,9 @@ export async function GET() {
     include: {
       titles: {
         orderBy: { order: "asc" },
-        include: { events: { orderBy: { createdAt: "asc" } } },
+        include: {
+          events: { orderBy: { createdAt: "desc" }, take: 1 },
+        },
       },
       category: true,
     },

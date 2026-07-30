@@ -656,11 +656,14 @@ async function saveAndGetUrl(
   await onStep(
     `Diagnóstico de guardado: sigue en el formulario=${stillOnForm}, botón deshabilitado=${buttonDisabled}, mensajes visibles="${alertText}"`,
   );
-  await emitScreenshot(
-    page,
-    "Estado justo después de hacer clic en Guardar cambios",
-    onStep,
-  );
+  // Bug de consumo de datos encontrado el 30/7/2026: esta captura se estaba
+  // guardando SIEMPRE, incluso cuando el artículo se publica bien (que es el
+  // caso normal). Cada captura pesa cientos de KB en base64, y el dashboard
+  // la vuelve a transferir cada vez que alguien mira el progreso en vivo o el
+  // historial — eso agotó la cuota gratuita de transferencia de Neon. Ahora
+  // se captura en memoria pero solo se guarda en la base de datos si
+  // realmente no se encuentra el artículo después (más abajo).
+  const postSaveScreenshot = await captureScreenshotBase64(page);
 
   // Localizamos el artículo por el título real que la IA le asignó (guardado
   // en createArticleDraft), no por posición de fila ni por comparar N° antes
@@ -679,8 +682,14 @@ async function saveAndGetUrl(
     await page.waitForTimeout(1500);
   }
 
-  // No se encontró dentro del plazo: guardamos una última captura del
-  // listado tal como quedó, para diagnosticar sin adivinar.
+  // No se encontró dentro del plazo: recién aquí vale la pena guardar la
+  // captura de justo después de guardar, más una última del listado tal
+  // como quedó, para diagnosticar sin adivinar.
+  if (postSaveScreenshot) {
+    await onStep(
+      `DIAGNÓSTICO [Estado justo después de hacer clic en Guardar cambios]: data:image/jpeg;base64,${postSaveScreenshot}`,
+    );
+  }
   await emitScreenshot(
     page,
     "Listado de artículos al agotarse el plazo de búsqueda",
@@ -689,16 +698,19 @@ async function saveAndGetUrl(
   return null;
 }
 
+async function captureScreenshotBase64(page: Page): Promise<string | null> {
+  const buffer = await page
+    .screenshot({ type: "jpeg", quality: 40, fullPage: true })
+    .catch(() => null);
+  return buffer ? buffer.toString("base64") : null;
+}
+
 async function emitScreenshot(
   page: Page,
   label: string,
   onStep: OnStep,
 ): Promise<void> {
-  const buffer = await page
-    .screenshot({ type: "jpeg", quality: 40, fullPage: true })
-    .catch(() => null);
-  if (!buffer) return;
-  await onStep(
-    `DIAGNÓSTICO [${label}]: data:image/jpeg;base64,${buffer.toString("base64")}`,
-  );
+  const base64 = await captureScreenshotBase64(page);
+  if (!base64) return;
+  await onStep(`DIAGNÓSTICO [${label}]: data:image/jpeg;base64,${base64}`);
 }
