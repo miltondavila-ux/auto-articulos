@@ -297,6 +297,63 @@ async function openImageSection(page: Page) {
   return generarImagenBtn.first();
 }
 
+const IMAGE_DISCLAIMER_CHECK_TIMEOUT_MS = 4_000;
+
+/**
+ * Reportado por el usuario el 30/7/2026 (con captura real): la PRIMERA vez
+ * que una cuenta de 10minutesWebsite usa el generador de imágenes con IA (o
+ * cada ~15 días si no se marca "no mostrar"), aparece un modal de aviso
+ * ("Generación de imágenes mediante IA") que bloquea la página hasta que se
+ * acepta. Muy probablemente esto explica los cuelgues vistos antes al
+ * intentar interactuar con "Generar imagen" (el botón deja de ser
+ * ":visible" mientras el modal está abierto). Si aparece, hay que marcar
+ * "No mostrar este mensaje durante 15 días" y aceptar con "OK"; si por
+ * algún motivo no se puede, no seguimos adivinando — se informa el motivo
+ * real al usuario en vez de fallar con un error genérico de timeout.
+ */
+async function dismissImageGenerationDisclaimer(
+  page: Page,
+  onStep: OnStep,
+): Promise<void> {
+  const dialog = page.locator(".modal", {
+    hasText: "Generación de imágenes mediante IA",
+  });
+  const appeared = await dialog
+    .first()
+    .waitFor({ state: "visible", timeout: IMAGE_DISCLAIMER_CHECK_TIMEOUT_MS })
+    .then(() => true)
+    .catch(() => false);
+  if (!appeared) return;
+
+  const checkedOk = await dialog
+    .locator('input[type="checkbox"]')
+    .first()
+    .check({ force: true })
+    .then(() => true)
+    .catch(() => false);
+
+  const clickedOk = await dialog
+    .getByRole("button", { name: "OK" })
+    .first()
+    .click({ force: true })
+    .then(() => true)
+    .catch(() => false);
+
+  await dialog
+    .first()
+    .waitFor({ state: "hidden", timeout: NAV_TIMEOUT_MS })
+    .catch(() => {});
+
+  if (!checkedOk || !clickedOk) {
+    throw new Error(
+      "Apareció el aviso 'Generación de imágenes mediante IA' de 10minutesWebsite y no se pudo cerrar (marcar 'No mostrar este mensaje durante 15 días' y aceptar 'OK'); no se pudo continuar con la generación de la imagen.",
+    );
+  }
+  await onStep(
+    "Aviso de 'Generación de imágenes mediante IA' de 10minutesWebsite cerrado (no volverá a salir por 15 días).",
+  );
+}
+
 async function generateImage(
   page: Page,
   title: string,
@@ -306,7 +363,9 @@ async function generateImage(
   await onStep(
     "Generando imagen con inteligencia artificial (puede tardar un minuto)...",
   );
+  await dismissImageGenerationDisclaimer(page, onStep);
   const generarImagenBtn = await openImageSection(page);
+  await dismissImageGenerationDisclaimer(page, onStep);
 
   for (let attempt = 1; attempt <= MAX_IMAGE_ATTEMPTS; attempt++) {
     // #images es el textarea real que lee "Generar imagen" (verificado en
@@ -326,6 +385,7 @@ async function generateImage(
     // que siga visible/estable en ese instante exacto.
     await generarImagenBtn.scrollIntoViewIfNeeded().catch(() => {});
     await generarImagenBtn.click({ force: true });
+    await dismissImageGenerationDisclaimer(page, onStep);
 
     // La generación de imagen es asíncrona: hay que esperar a que aparezca la
     // vista previa dentro del recorte de foto antes de continuar.
