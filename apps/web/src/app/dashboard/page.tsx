@@ -168,6 +168,11 @@ function LiveProgress({ run }: { run: RunRow }) {
 
   return (
     <section style={readySectionStyle(true)}>
+      <style>{`
+        @keyframes auto-articulos-spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
       <div
         style={{
           display: "flex",
@@ -182,10 +187,31 @@ function LiveProgress({ run }: { run: RunRow }) {
         </span>
       </div>
       {nothingStartedYet && (
-        <p style={{ fontSize: 13, color: "#e8c777", margin: "8px 0 0" }}>
-          ⏳ En cola para procesarse. El worker corre por horario y puede tardar
-          hasta 15 minutos en recogerlo — esta pantalla se actualiza sola cuando
-          arranque.
+        <p
+          style={{
+            fontSize: 13,
+            color: "#e8c777",
+            margin: "8px 0 0",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <span
+            aria-hidden
+            style={{
+              display: "inline-block",
+              width: 14,
+              height: 14,
+              border: "2px solid #4a4326",
+              borderTopColor: "#e8c777",
+              borderRadius: "50%",
+              animation: "auto-articulos-spin 0.8s linear infinite",
+              flexShrink: 0,
+            }}
+          />
+          En cola para procesarse. El worker está arrancando — esta pantalla se
+          actualiza sola cuando comience.
         </p>
       )}
       <div
@@ -215,6 +241,49 @@ function LiveProgress({ run }: { run: RunRow }) {
   );
 }
 
+// Pasos reales que va reportando la automatización (ver onStep(...) en
+// apps/worker/src/automation/10minutesWebsite.ts), en orden, con un % estimado
+// de avance de UN artículo — para poder mostrar una barra de progreso
+// individual mientras se está creando, no solo el % del lote completo.
+const TITLE_PROGRESS_STEPS: {
+  match: (msg: string) => boolean;
+  percent: number;
+}[] = [
+  { match: (m) => m.startsWith("Intento"), percent: 2 },
+  { match: (m) => m.startsWith("Iniciando sesión"), percent: 5 },
+  {
+    match: (m) =>
+      m.startsWith("Sesión iniciada") || m.startsWith("Sesión ya activa"),
+    percent: 10,
+  },
+  { match: (m) => m.startsWith("Abriendo formulario"), percent: 15 },
+  { match: (m) => m.startsWith("Categoría seleccionada"), percent: 20 },
+  { match: (m) => m.startsWith("Indexación en buscadores"), percent: 22 },
+  { match: (m) => m.startsWith("Generando contenido"), percent: 28 },
+  { match: (m) => m.startsWith("Contenido generado"), percent: 50 },
+  { match: (m) => m.startsWith("Título asignado"), percent: 53 },
+  { match: (m) => m.startsWith("Resumen recortado"), percent: 55 },
+  { match: (m) => m.startsWith("Generando imagen"), percent: 60 },
+  { match: (m) => m.includes("no parece corresponder al tema"), percent: 65 },
+  { match: (m) => m.startsWith("Imagen generada"), percent: 78 },
+  { match: (m) => m.startsWith("Preguntas frecuentes"), percent: 85 },
+  { match: (m) => m.startsWith("Guardando y publicando"), percent: 90 },
+  { match: (m) => m.startsWith("Diagnóstico de guardado"), percent: 92 },
+  { match: (m) => m.startsWith("Buscando el artículo publicado"), percent: 96 },
+  { match: (m) => m.startsWith("Artículo publicado con éxito"), percent: 100 },
+];
+
+function estimateTitleProgress(title: TitleRow): number {
+  if (title.status === "success") return 100;
+  if (title.status === "pending") return 0;
+  for (let i = title.events.length - 1; i >= 0; i--) {
+    const msg = title.events[i].message;
+    const step = TITLE_PROGRESS_STEPS.find((s) => s.match(msg));
+    if (step) return step.percent;
+  }
+  return title.events.length > 0 ? 5 : 0;
+}
+
 function TitleProgressRow({
   index,
   title,
@@ -234,6 +303,7 @@ function TitleProgressRow({
     title.events.length > 0
       ? title.events[title.events.length - 1].message
       : null;
+  const titlePercent = estimateTitleProgress(title);
 
   return (
     <div
@@ -258,10 +328,38 @@ function TitleProgressRow({
         </span>
       </div>
 
-      {title.status === "processing" && lastStep && (
-        <p style={{ margin: "6px 0 0 24px", fontSize: 13, color: "#9aa1ac" }}>
-          {lastStep}
-        </p>
+      {title.status === "processing" && (
+        <div style={{ margin: "6px 0 0 24px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: 11,
+              color: "#9aa1ac",
+              marginBottom: 3,
+            }}
+          >
+            {lastStep && <span>{lastStep}</span>}
+            <span style={{ marginLeft: "auto" }}>{titlePercent}%</span>
+          </div>
+          <div
+            style={{
+              height: 5,
+              background: "#1a1d24",
+              borderRadius: 999,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                height: "100%",
+                width: `${titlePercent}%`,
+                background: "#e8c777",
+                transition: "width 0.4s ease",
+              }}
+            />
+          </div>
+        </div>
       )}
 
       {title.status === "success" && title.articleUrl && (

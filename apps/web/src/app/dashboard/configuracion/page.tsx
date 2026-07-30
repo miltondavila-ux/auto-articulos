@@ -21,9 +21,13 @@ export default function ConfiguracionPage() {
   const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [lastSyncStatus, setLastSyncStatus] = useState<SyncStatus | null>(null);
   const [syncing, setSyncing] = useState(false);
-  const [banner, setBanner] = useState<{ type: "error" | "info"; text: string } | null>(null);
+  const [banner, setBanner] = useState<{
+    type: "error" | "info";
+    text: string;
+  } | null>(null);
 
-  const syncInProgress = lastSyncStatus === "pending" || lastSyncStatus === "running";
+  const syncInProgress =
+    lastSyncStatus === "pending" || lastSyncStatus === "running";
 
   const loadCredentialsStatus = useCallback(async () => {
     const res = await fetch("/api/credentials");
@@ -65,13 +69,19 @@ export default function ConfiguracionPage() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setBanner({ type: "error", text: data.error ?? "Error al guardar credenciales" });
+        setBanner({
+          type: "error",
+          text: data.error ?? "Error al guardar credenciales",
+        });
         return;
       }
       setUsername("");
       setPassword("");
       setEditingCredentials(false);
-      setBanner({ type: "info", text: "Credenciales guardadas de forma cifrada." });
+      setBanner({
+        type: "info",
+        text: "Credenciales guardadas de forma cifrada.",
+      });
       loadCredentialsStatus();
     } finally {
       setSavingCreds(false);
@@ -85,7 +95,10 @@ export default function ConfiguracionPage() {
       const res = await fetch("/api/categories/sync", { method: "POST" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setBanner({ type: "error", text: data.error ?? "Error al sincronizar categorías" });
+        setBanner({
+          type: "error",
+          text: data.error ?? "Error al sincronizar categorías",
+        });
         return;
       }
       loadCategories();
@@ -100,22 +113,35 @@ export default function ConfiguracionPage() {
     <div>
       <section style={readySectionStyle(credentialsConfigured)}>
         <h2 style={h2Style}>
-          Credenciales de 10minutesWebsite {credentialsConfigured && <ReadyBadge />}
+          Credenciales de 10minutesWebsite{" "}
+          {credentialsConfigured && <ReadyBadge />}
         </h2>
 
         {!showCredentialsForm && (
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             <p style={{ fontSize: 13, color: "#9aa1ac", margin: 0 }}>
               Ya tienes credenciales guardadas de forma cifrada.
             </p>
-            <button onClick={() => setEditingCredentials(true)} style={secondaryButtonStyle}>
+            <button
+              onClick={() => setEditingCredentials(true)}
+              style={secondaryButtonStyle}
+            >
               Actualizar
             </button>
           </div>
         )}
 
         {showCredentialsForm && (
-          <form onSubmit={handleSaveCredentials} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <form
+            onSubmit={handleSaveCredentials}
+            style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+          >
             <input
               placeholder="Usuario de 10minutesWebsite"
               value={username}
@@ -129,7 +155,11 @@ export default function ConfiguracionPage() {
               onChange={(e) => setPassword(e.target.value)}
               style={inputStyle}
             />
-            <button type="submit" disabled={savingCreds} style={disabledStyle(secondaryButtonStyle, savingCreds)}>
+            <button
+              type="submit"
+              disabled={savingCreds}
+              style={disabledStyle(secondaryButtonStyle, savingCreds)}
+            >
               {savingCreds ? "Guardando..." : "Guardar"}
             </button>
             {credentialsConfigured && (
@@ -148,15 +178,20 @@ export default function ConfiguracionPage() {
       <section style={sectionStyle}>
         <h2 style={h2Style}>Categorías</h2>
         <p style={{ fontSize: 13, color: "#9aa1ac" }}>
-          Sincroniza las categorías reales de tu cuenta de 10minutesWebsite. Solo hace falta repetirlo
-          si agregas o cambias categorías allá.
+          Sincroniza las categorías reales de tu cuenta de 10minutesWebsite.
+          Solo hace falta repetirlo si agregas o cambias categorías allá.
         </p>
         <button
           onClick={handleSyncCategories}
           disabled={syncing || syncInProgress || !credentialsConfigured}
-          style={disabledStyle(secondaryButtonStyle, syncing || syncInProgress || !credentialsConfigured)}
+          style={disabledStyle(
+            secondaryButtonStyle,
+            syncing || syncInProgress || !credentialsConfigured,
+          )}
         >
-          {syncing || syncInProgress ? "Sincronizando..." : "Sincronizar categorías"}
+          {syncing || syncInProgress
+            ? "Sincronizando..."
+            : "Sincronizar categorías"}
         </button>
         {!credentialsConfigured && (
           <p style={{ fontSize: 13, color: "#9aa1ac", marginTop: 8 }}>
@@ -164,9 +199,36 @@ export default function ConfiguracionPage() {
           </p>
         )}
         {syncInProgress && (
-          <p style={{ fontSize: 13, color: "#e8c777", marginTop: 8 }}>
-            ⏳ En cola para procesarse. El worker corre por horario y puede tardar hasta 15 minutos
-            en recogerlo — esta pantalla se actualiza sola cuando termine.
+          <p
+            style={{
+              fontSize: 13,
+              color: "#e8c777",
+              marginTop: 8,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <style>{`
+              @keyframes auto-articulos-spin {
+                to { transform: rotate(360deg); }
+              }
+            `}</style>
+            <span
+              aria-hidden
+              style={{
+                display: "inline-block",
+                width: 14,
+                height: 14,
+                border: "2px solid #4a4326",
+                borderTopColor: "#e8c777",
+                borderRadius: "50%",
+                animation: "auto-articulos-spin 0.8s linear infinite",
+                flexShrink: 0,
+              }}
+            />
+            En cola para procesarse. El worker está arrancando — esta pantalla
+            se actualiza sola cuando termine.
           </p>
         )}
         {lastSyncStatus === "error" && (
@@ -175,7 +237,14 @@ export default function ConfiguracionPage() {
           </p>
         )}
         {categories.length > 0 && (
-          <ul style={{ marginTop: 12, paddingLeft: 18, fontSize: 13, color: "#c7ccd1" }}>
+          <ul
+            style={{
+              marginTop: 12,
+              paddingLeft: 18,
+              fontSize: 13,
+              color: "#c7ccd1",
+            }}
+          >
             {categories.map((c) => (
               <li key={c.id}>{c.name}</li>
             ))}

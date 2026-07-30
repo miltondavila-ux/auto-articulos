@@ -313,8 +313,19 @@ async function generateImage(
     // vivo el 29/7/2026): escribimos ahí nuestro propio prompt, basado en el
     // título y resumen reales, justo antes de generar.
     const prompt = buildImagePrompt(summary);
-    await page.fill("#images", prompt).catch(() => {});
-    await generarImagenBtn.click();
+    await page
+      .locator("#images")
+      .fill(prompt, { force: true })
+      .catch(() => {});
+
+    // Bug real encontrado el 30/7/2026: aunque openImageSection() ya
+    // confirmó que el botón está visible, para cuando llegamos a hacer clic
+    // (justo después de escribir en #images) a veces vuelve a quedar oculto
+    // un instante (visibilidad inestable en esta sección), y el click normal
+    // agota su espera de actionability. Usamos "force" para no depender de
+    // que siga visible/estable en ese instante exacto.
+    await generarImagenBtn.scrollIntoViewIfNeeded().catch(() => {});
+    await generarImagenBtn.click({ force: true });
 
     // La generación de imagen es asíncrona: hay que esperar a que aparezca la
     // vista previa dentro del recorte de foto antes de continuar.
