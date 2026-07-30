@@ -461,17 +461,44 @@ async function saveAndGetUrl(
   onStep: OnStep,
 ): Promise<string | null> {
   await onStep("Guardando y publicando el artículo...");
-  await page.getByRole("button", { name: "Guardar cambios" }).first().click();
+  const saveBtn = page.getByRole("button", { name: "Guardar cambios" }).first();
+  await saveBtn.click();
   await page
     .waitForLoadState("networkidle", { timeout: NAV_TIMEOUT_MS })
     .catch(() => {});
 
   // Diagnóstico: se han visto fallos repetidos de guardado SOLO en la
   // ejecución automatizada (nunca al reproducir el mismo flujo a mano), sin
-  // ninguna pista visible en el log de texto. Guardamos una captura de lo
-  // que se ve justo después de hacer clic en "Guardar cambios", como evento
-  // normal (no error), para poder verla en el Historial y entender qué pasa
-  // realmente en ese momento la próxima vez que falle.
+  // ninguna pista visible en el log de texto. La primera vez que se capturó
+  // esto (30/7/2026), la captura mostró que seguíamos en el formulario de
+  // edición (no se redirigió a la lista) apenas ~1s después del clic —
+  // sospecha de que el clic no disparó el guardado real o de que hay algún
+  // mensaje de error fuera del viewport. Por eso: página completa + estado
+  // real del botón + cualquier texto tipo alerta/error visible en ese
+  // momento, como evento normal (no error) para verlo en el Historial.
+  const stillOnForm = await page
+    .getByRole("button", { name: "Guardar cambios" })
+    .first()
+    .isVisible()
+    .catch(() => false);
+  const buttonDisabled = await saveBtn.isDisabled().catch(() => null);
+  const alertText = await page
+    .evaluate(() => {
+      const candidates = Array.from(
+        document.querySelectorAll(
+          '[class*="alert" i], [class*="error" i], [class*="toast" i], [role="alert"]',
+        ),
+      ).filter((el) => (el as HTMLElement).offsetParent !== null);
+      return candidates
+        .map((el) => (el.textContent ?? "").trim())
+        .filter((t) => t.length > 0)
+        .slice(0, 5)
+        .join(" | ");
+    })
+    .catch(() => "");
+  await onStep(
+    `Diagnóstico de guardado: sigue en el formulario=${stillOnForm}, botón deshabilitado=${buttonDisabled}, mensajes visibles="${alertText}"`,
+  );
   await emitScreenshot(
     page,
     "Estado justo después de hacer clic en Guardar cambios",
@@ -511,7 +538,7 @@ async function emitScreenshot(
   onStep: OnStep,
 ): Promise<void> {
   const buffer = await page
-    .screenshot({ type: "jpeg", quality: 40 })
+    .screenshot({ type: "jpeg", quality: 40, fullPage: true })
     .catch(() => null);
   if (!buffer) return;
   await onStep(
