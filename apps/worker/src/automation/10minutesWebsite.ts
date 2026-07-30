@@ -54,8 +54,9 @@ export async function publishArticle(
     });
     const beforeId = await getTopArticleId(page);
 
-    await createArticleDraft(page, title, categoryExternalId, onStep);
+    const { summary, contentHtml } = await createArticleDraft(page, title, categoryExternalId, onStep);
     await generateImage(page, onStep);
+    await fillFaqWidget(page, title, summary, contentHtml, onStep);
     const articleUrl = await saveAndGetUrl(page, beforeId, onStep);
 
     return { articleUrl };
@@ -136,7 +137,7 @@ async function createArticleDraft(
   title: string,
   categoryExternalId: string,
   onStep: OnStep
-): Promise<void> {
+): Promise<{ summary: string; contentHtml: string }> {
   await onStep("Abriendo formulario de creación de artículo...");
   await page.goto(`${BASE_URL}/dashboard/direct-articles`, {
     waitUntil: "domcontentloaded",
@@ -185,6 +186,10 @@ async function createArticleDraft(
   );
   await onStep("Contenido generado. Aplicándolo al artículo...");
 
+  // Leemos el Contenido (HTML) aquí, mientras el modal sigue abierto, para
+  // usarlo como base del FAQ que se agrega más adelante.
+  const contentHtml = await dialog.locator("textarea").nth(1).inputValue().catch(() => "");
+
   await dialog.getByRole("button", { name: "Usar contenido" }).click();
   await dialog.waitFor({ state: "hidden", timeout: NAV_TIMEOUT_MS });
 
@@ -195,11 +200,14 @@ async function createArticleDraft(
   // se revierte solo aunque se corrija el valor después — hay que corregirlo
   // ANTES de guardar.
   const excerptField = page.locator("#excerptes");
-  const summary = await excerptField.inputValue().catch(() => "");
+  let summary = await excerptField.inputValue().catch(() => "");
   if (summary.length >= 300) {
-    await excerptField.fill(summary.slice(0, 280));
+    summary = summary.slice(0, 280);
+    await excerptField.fill(summary);
     await onStep("Resumen recortado para respetar el límite de 300 caracteres de la plataforma.");
   }
+
+  return { summary, contentHtml };
 }
 
 async function generateImage(page: Page, onStep: OnStep): Promise<void> {
@@ -227,6 +235,92 @@ async function generateImage(page: Page, onStep: OnStep): Promise<void> {
     { timeout: IMAGE_GENERATION_TIMEOUT_MS }
   );
   await onStep("Imagen generada.");
+}
+
+/**
+ * Arma un bloque de Preguntas Frecuentes (visible + schema.org FAQPage en
+ * JSON-LD) a partir del título y el contenido real generado para el
+ * artículo, y lo coloca en el campo "Widget (opcional)" (#widgetcode) al pie
+ * del formulario. Es un textarea de texto libre sin validaciones (verificado
+ * en vivo el 29/7/2026: escribir aquí no afecta el guardado del artículo,
+ * a diferencia del campo de imagen).
+ */
+async function fillFaqWidget(
+  page: Page,
+  title: string,
+  summary: string,
+  contentHtml: string,
+  onStep: OnStep
+): Promise<void> {
+  const widgetHtml = buildFaqWidgetHtml(title, summary, contentHtml);
+  await page.fill("#widgetcode", widgetHtml);
+  await onStep("Preguntas frecuentes (FAQ) agregadas al artículo.");
+}
+
+function buildFaqWidgetHtml(title: string, summary: string, contentHtml: string): string {
+  const plainContent = stripHtml(contentHtml);
+  const sentences = [...splitIntoSentences(summary), ...splitIntoSentences(plainContent)];
+
+  const faqs = [
+    {
+      q: `¿Qué debo saber sobre "${title}"?`,
+      a: sentences[0] ?? summary.trim() ?? title,
+    },
+    {
+      q: "¿Qué opciones tengo disponibles?",
+      a: sentences[1] ?? "Existen varias opciones disponibles según tu situación particular.",
+    },
+    {
+      q: "¿Cómo puedo tomar la mejor decisión en mi caso?",
+      a: sentences[2] ?? "Es recomendable comparar los detalles de cada opción antes de decidir.",
+    },
+    {
+      q: "¿A quién puedo contactar para recibir asesoría personalizada?",
+      a: "Puedes contactar a un agente certificado de seguros de salud para recibir orientación personalizada según tu situación.",
+    },
+  ];
+
+  const visibleHtml = [
+    '<div class="auto-articulos-faq">',
+    "<h3>Preguntas frecuentes</h3>",
+    ...faqs.map((f) => `<p><strong>${escapeHtml(f.q)}</strong><br>${escapeHtml(f.a)}</p>`),
+    "</div>",
+  ].join("\n");
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+
+  return `${visibleHtml}\n<script type="application/ld+json">${JSON.stringify(schema)}</script>`;
+}
+
+function stripHtml(html: string): string {
+  return html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function splitIntoSentences(text: string): string[] {
+  return text
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 25);
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 async function getTopArticleId(listPage: Page): Promise<string | null> {
