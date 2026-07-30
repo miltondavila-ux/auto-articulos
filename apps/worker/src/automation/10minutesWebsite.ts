@@ -55,10 +55,15 @@ export async function publishArticle(
     });
     const beforeId = await getTopArticleId(page);
 
-    const { summary, contentHtml } = await createArticleDraft(page, title, categoryExternalId, onStep);
+    const { summary, contentHtml, finalTitle } = await createArticleDraft(
+      page,
+      title,
+      categoryExternalId,
+      onStep
+    );
     await generateImage(page, onStep);
     await fillFaqWidget(page, title, summary, contentHtml, onStep);
-    const articleUrl = await saveAndGetUrl(page, beforeId, onStep);
+    const articleUrl = await saveAndGetUrl(page, beforeId, finalTitle, onStep);
 
     return { articleUrl };
   } finally {
@@ -138,7 +143,7 @@ async function createArticleDraft(
   title: string,
   categoryExternalId: string,
   onStep: OnStep
-): Promise<{ summary: string; contentHtml: string }> {
+): Promise<{ summary: string; contentHtml: string; finalTitle: string }> {
   await onStep("Abriendo formulario de creación de artículo...");
   await page.goto(`${BASE_URL}/dashboard/direct-articles`, {
     waitUntil: "domcontentloaded",
@@ -188,8 +193,15 @@ async function createArticleDraft(
   await onStep("Contenido generado. Aplicándolo al artículo...");
 
   // Leemos el Contenido (HTML) aquí, mientras el modal sigue abierto, para
-  // usarlo como base del FAQ que se agrega más adelante.
+  // usarlo como base del FAQ que se agrega más adelante. También guardamos
+  // el Título final que la IA le puso al artículo (índice 3: idea, contenido,
+  // resumen, título, prompt de imagen) — no lo usamos para buscar el
+  // artículo (la detección es por N° de artículo, no por texto), pero queda
+  // en el log de cada intento para verificar a simple vista qué título quedó
+  // asignado de verdad.
   const contentHtml = await dialog.locator("textarea").nth(1).inputValue().catch(() => "");
+  const finalTitle = (await dialog.locator("textarea").nth(3).inputValue().catch(() => "")) || title;
+  await onStep(`Título asignado por la IA: "${finalTitle}"`);
 
   await dialog.getByRole("button", { name: "Usar contenido" }).click();
   await dialog.waitFor({ state: "hidden", timeout: NAV_TIMEOUT_MS });
@@ -208,7 +220,7 @@ async function createArticleDraft(
     await onStep("Resumen recortado para respetar el límite de 300 caracteres de la plataforma.");
   }
 
-  return { summary, contentHtml };
+  return { summary, contentHtml, finalTitle };
 }
 
 async function generateImage(page: Page, onStep: OnStep): Promise<void> {
@@ -324,50 +336,68 @@ function escapeHtml(text: string): string {
     .replace(/"/g, "&quot;");
 }
 
+interface ArticleRow {
+  id: string;
+  num: number;
+  href: string | null;
+}
+
+/**
+ * El listado normalmente ordena por más reciente primero, PERO se verificó
+ * en vivo el 30/7/2026 que el orden de esa tabla puede quedar "pegado" en
+ * otro criterio (estado persistido del lado del sitio), haciendo que la
+ * primera fila NO sea la más nueva. Por eso no confiamos en la posición de
+ * la fila: recorremos las filas visibles y nos quedamos con el N° de
+ * artículo más alto, que es el único dato realmente monótono.
+ */
+async function getNewestRow(listPage: Page): Promise<ArticleRow | null> {
+  const rows = listPage.locator("table tbody tr");
+  const count = await rows.count();
+  let best: ArticleRow | null = null;
+  for (let i = 0; i < count; i++) {
+    const row = rows.nth(i);
+    const idText = (await row.locator("td").first().innerText().catch(() => "")).trim();
+    const num = Number.parseInt(idText, 10);
+    if (Number.isNaN(num)) continue;
+    if (!best || num > best.num) {
+      const href = await row.locator("a.consultar").first().getAttribute("href").catch(() => null);
+      best = { id: idText, num, href };
+    }
+  }
+  return best;
+}
+
 async function getTopArticleId(listPage: Page): Promise<string | null> {
-  return listPage
-    .locator("table tbody tr")
-    .first()
-    .locator("td")
-    .first()
-    .innerText()
-    .catch(() => null);
+  const row = await getNewestRow(listPage);
+  return row?.id ?? null;
 }
 
 async function saveAndGetUrl(
   page: Page,
   beforeId: string | null,
+  expectedTitle: string,
   onStep: OnStep
 ): Promise<string | null> {
   await onStep("Guardando y publicando el artículo...");
   await page.getByRole("button", { name: "Guardar cambios" }).first().click();
   await page.waitForLoadState("networkidle", { timeout: NAV_TIMEOUT_MS }).catch(() => {});
 
-  // El listado ordena por más reciente primero, y el título publicado puede
-  // diferir del que enviamos (la IA lo reescribe), así que no buscamos por
-  // texto: esperamos a que cambie el N° de artículo en la primera fila
-  // respecto al que anotamos antes de crear el borrador, y tomamos su enlace
-  // "Ver" (clase "consultar"), el permalink público real.
-  // Log real del 29-30/7/2026: el paso de guardado tardaba ~32s en reflejarse
-  // en el listado, apenas por encima de los 30s que daba NAV_TIMEOUT_MS acá,
-  // causando el mismo "no aparece en el listado" en corridas donde el
-  // artículo probablemente sí se guardó. Le damos más margen.
-  await onStep("Buscando el enlace del artículo publicado...");
+  // El título publicado puede diferir del que enviamos (la IA lo reescribe:
+  // "expectedTitle" queda solo como referencia en el log para verificar esto
+  // a simple vista), así que no buscamos por texto: esperamos a que aparezca
+  // un N° de artículo mayor al que anotamos antes de crear el borrador (ver
+  // getNewestRow), y tomamos su enlace "Ver" (clase "consultar").
+  await onStep(`Buscando el artículo publicado (título asignado por la IA: "${expectedTitle}")...`);
   const deadline = Date.now() + SAVE_VERIFICATION_TIMEOUT_MS;
+  const beforeNum = beforeId ? Number.parseInt(beforeId, 10) : null;
   while (Date.now() < deadline) {
     await page.goto(`${BASE_URL}/dashboard/user_buyer_seller_articles.php`, {
       waitUntil: "domcontentloaded",
       timeout: NAV_TIMEOUT_MS,
     });
-    const currentId = await getTopArticleId(page);
-    if (currentId && currentId !== beforeId) {
-      return await page
-        .locator("table tbody tr")
-        .first()
-        .locator("a.consultar")
-        .first()
-        .getAttribute("href")
-        .catch(() => null);
+    const newest = await getNewestRow(page);
+    if (newest && (beforeNum === null || newest.num > beforeNum)) {
+      return newest.href;
     }
     await page.waitForTimeout(1500);
   }
