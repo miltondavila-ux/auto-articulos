@@ -30,7 +30,9 @@ export default function HistorialPage() {
     <section style={sectionStyle}>
       <h2 style={h2Style}>Historial de ejecuciones</h2>
       {runs.length === 0 && (
-        <p style={{ fontSize: 13, color: "#9aa1ac" }}>Todavía no hay ejecuciones.</p>
+        <p style={{ fontSize: 13, color: "#9aa1ac" }}>
+          Todavía no hay ejecuciones.
+        </p>
       )}
       {runs.map((run, index) => (
         <HistoryEntry key={run.id} run={run} defaultOpen={index === 0} />
@@ -39,7 +41,13 @@ export default function HistorialPage() {
   );
 }
 
-function HistoryEntry({ run, defaultOpen }: { run: RunRow; defaultOpen: boolean }) {
+function HistoryEntry({
+  run,
+  defaultOpen,
+}: {
+  run: RunRow;
+  defaultOpen: boolean;
+}) {
   const successCount = run.titles.filter((t) => t.status === "success").length;
 
   return (
@@ -85,7 +93,12 @@ function HistoryEntry({ run, defaultOpen }: { run: RunRow; defaultOpen: boolean 
 
 function formatDuration(startIso: string, endIso: string | null): string {
   if (!endIso) return "en curso";
-  const totalSeconds = Math.max(0, Math.round((new Date(endIso).getTime() - new Date(startIso).getTime()) / 1000));
+  const totalSeconds = Math.max(
+    0,
+    Math.round(
+      (new Date(endIso).getTime() - new Date(startIso).getTime()) / 1000,
+    ),
+  );
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
@@ -122,38 +135,73 @@ function RunTable({ titles }: { titles: TitleRow[] }) {
           <th style={thStyle}>Estado</th>
           <th style={thStyle}>Intentos</th>
           <th style={thStyle}>Enlace / Error</th>
+          <th style={thStyle}>Log</th>
         </tr>
       </thead>
       <tbody>
         {titles.map((title) => (
-          <tr key={title.id} style={{ borderTop: "1px solid #2a2f3a" }}>
-            <td style={tdStyle}>{title.text}</td>
-            <td style={tdStyle}>{statusLabel(title.status)}</td>
-            <td style={tdStyle}>{title.attempts}</td>
-            <td style={tdStyle}>
-              {title.articleUrl ? (
-                <a
-                  href={title.articleUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    color: "#7fd99a",
-                    fontWeight: 600,
-                    textDecoration: "none",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 4,
-                  }}
-                >
-                  🔗 Ver artículo publicado
-                </a>
-              ) : (
-                title.errorMessage ?? "—"
-              )}
-            </td>
-          </tr>
+          <TitleRowWithLog key={title.id} title={title} />
         ))}
       </tbody>
     </table>
+  );
+}
+
+function TitleRowWithLog({ title }: { title: TitleRow }) {
+  // El log queda visible siempre (no solo en errores): sirve para revisar
+  // el paso a paso incluso de títulos ya publicados con éxito.
+  return (
+    <tr style={{ borderTop: "1px solid #2a2f3a" }}>
+      <td style={tdStyle}>{title.text}</td>
+      <td style={tdStyle}>{statusLabel(title.status)}</td>
+      <td style={tdStyle}>{title.attempts}</td>
+      <td style={tdStyle}>
+        {title.articleUrl ? (
+          <a
+            href={title.articleUrl}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              color: "#7fd99a",
+              fontWeight: 600,
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            🔗 Ver artículo publicado
+          </a>
+        ) : (
+          (title.errorMessage ?? "—")
+        )}
+      </td>
+      <td style={tdStyle}>
+        {title.events.length > 0 && (
+          <details>
+            <summary style={{ cursor: "pointer", color: "#9aa1ac" }}>
+              Ver log ({title.events.length})
+            </summary>
+            <ul
+              style={{
+                margin: "8px 0 0",
+                paddingLeft: 18,
+                color: "#9aa1ac",
+                fontSize: 12,
+              }}
+            >
+              {title.events.map((e) => (
+                <li key={e.id} style={{ marginBottom: 4 }}>
+                  <span style={{ color: "#6c7280" }}>
+                    {new Date(e.createdAt).toLocaleTimeString()}
+                  </span>{" "}
+                  — {e.message}
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
+      </td>
+    </tr>
   );
 }
