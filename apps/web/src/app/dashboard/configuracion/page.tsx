@@ -173,6 +173,30 @@ export default function ConfiguracionPage() {
             )}
           </form>
         )}
+        {showCredentialsForm && (
+          <p style={{ fontSize: 12, color: "#9aa1ac", marginTop: 10 }}>
+            Son tu usuario y contraseña de 10minutesWebsite, no los de Auto
+            Artículos. Si no recuerdas tu contraseña de 10minutesWebsite,{" "}
+            <a
+              href="https://10minuteswebsite.net/dashboard/forgot-password.php"
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: "#4f7cff" }}
+            >
+              recupérala con tu correo aquí
+            </a>
+            . Si aun así no logras entrar, escribe al{" "}
+            <a
+              href="https://www.10minuteswebsite.com/ayuda"
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: "#4f7cff" }}
+            >
+              servicio al cliente de 10minutesWebsite
+            </a>
+            .
+          </p>
+        )}
       </section>
 
       <section style={sectionStyle}>
