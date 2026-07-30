@@ -190,14 +190,36 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
                 fontSize: 12,
               }}
             >
-              {title.events.map((e) => (
-                <li key={e.id} style={{ marginBottom: 4 }}>
-                  <span style={{ color: "#6c7280" }}>
-                    {new Date(e.createdAt).toLocaleTimeString()}
-                  </span>{" "}
-                  — {e.message}
-                </li>
-              ))}
+              {title.events.map((e) => {
+                const imageMatch = e.message.match(
+                  /^DIAGNÓSTICO \[(.+)\]: (data:image\/[a-z]+;base64,.+)$/,
+                );
+                return (
+                  <li key={e.id} style={{ marginBottom: 4 }}>
+                    <span style={{ color: "#6c7280" }}>
+                      {new Date(e.createdAt).toLocaleTimeString()}
+                    </span>{" "}
+                    {imageMatch ? (
+                      <>
+                        — {imageMatch[1]}
+                        <br />
+                        <img
+                          src={imageMatch[2]}
+                          alt={imageMatch[1]}
+                          style={{
+                            maxWidth: "100%",
+                            marginTop: 6,
+                            borderRadius: 6,
+                            border: "1px solid #2a2f3a",
+                          }}
+                        />
+                      </>
+                    ) : (
+                      <>— {e.message}</>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </details>
         )}

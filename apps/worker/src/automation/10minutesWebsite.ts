@@ -466,6 +466,18 @@ async function saveAndGetUrl(
     .waitForLoadState("networkidle", { timeout: NAV_TIMEOUT_MS })
     .catch(() => {});
 
+  // Diagnóstico: se han visto fallos repetidos de guardado SOLO en la
+  // ejecución automatizada (nunca al reproducir el mismo flujo a mano), sin
+  // ninguna pista visible en el log de texto. Guardamos una captura de lo
+  // que se ve justo después de hacer clic en "Guardar cambios", como evento
+  // normal (no error), para poder verla en el Historial y entender qué pasa
+  // realmente en ese momento la próxima vez que falle.
+  await emitScreenshot(
+    page,
+    "Estado justo después de hacer clic en Guardar cambios",
+    onStep,
+  );
+
   // Localizamos el artículo por el título real que la IA le asignó (guardado
   // en createArticleDraft), no por posición de fila ni por comparar N° antes
   // vs. después: se pidió explícitamente localizarlo así.
@@ -482,5 +494,27 @@ async function saveAndGetUrl(
     if (href) return href;
     await page.waitForTimeout(1500);
   }
+
+  // No se encontró dentro del plazo: guardamos una última captura del
+  // listado tal como quedó, para diagnosticar sin adivinar.
+  await emitScreenshot(
+    page,
+    "Listado de artículos al agotarse el plazo de búsqueda",
+    onStep,
+  );
   return null;
+}
+
+async function emitScreenshot(
+  page: Page,
+  label: string,
+  onStep: OnStep,
+): Promise<void> {
+  const buffer = await page
+    .screenshot({ type: "jpeg", quality: 40 })
+    .catch(() => null);
+  if (!buffer) return;
+  await onStep(
+    `DIAGNÓSTICO [${label}]: data:image/jpeg;base64,${buffer.toString("base64")}`,
+  );
 }
