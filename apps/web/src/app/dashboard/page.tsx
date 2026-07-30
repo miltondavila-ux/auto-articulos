@@ -139,7 +139,7 @@ export default function InicioPage() {
       )}
 
       {activeRun ? (
-        <LiveProgress run={activeRun} />
+        <LiveProgress run={activeRun} onCancelled={loadRuns} />
       ) : (
         <section style={{ ...sectionStyle, textAlign: "center" }}>
           <h2 style={h2Style}>No hay ninguna ejecución en curso</h2>
@@ -156,7 +156,13 @@ export default function InicioPage() {
   );
 }
 
-function LiveProgress({ run }: { run: RunRow }) {
+function LiveProgress({
+  run,
+  onCancelled,
+}: {
+  run: RunRow;
+  onCancelled: () => void;
+}) {
   const total = run.titles.length;
   const doneCount = run.titles.filter(
     (t) => t.status === "success" || t.status === "error",
@@ -165,6 +171,29 @@ function LiveProgress({ run }: { run: RunRow }) {
   const nothingStartedYet = run.titles.every(
     (t) => t.status === "pending" && t.events.length === 0,
   );
+
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
+
+  async function handleCancel() {
+    setCancelling(true);
+    setCancelError(null);
+    try {
+      const res = await fetch(`/api/runs/${run.id}/cancel`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setCancelError(data.error ?? "No se pudo cancelar la ejecución.");
+        return;
+      }
+      setConfirmingCancel(false);
+      onCancelled();
+    } finally {
+      setCancelling(false);
+    }
+  }
 
   return (
     <section style={readySectionStyle(true)}>
@@ -178,14 +207,84 @@ function LiveProgress({ run }: { run: RunRow }) {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "baseline",
+          gap: 12,
+          flexWrap: "wrap",
         }}
       >
         <h2 style={h2Style}>Publicando — {run.category?.name ?? "—"}</h2>
-        <span style={{ fontSize: 12, color: "#9aa1ac" }}>
-          {doneCount}/{total} completados —{" "}
-          <strong style={{ color: "#e6e6e6" }}>{percent}%</strong>
-        </span>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            marginLeft: "auto",
+          }}
+        >
+          <span style={{ fontSize: 12, color: "#9aa1ac" }}>
+            {doneCount}/{total} completados —{" "}
+            <strong style={{ color: "#e6e6e6" }}>{percent}%</strong>
+          </span>
+          {confirmingCancel ? (
+            <>
+              <span style={{ fontSize: 12, color: "#e8c777" }}>
+                ¿Cancelar todo el lote?
+              </span>
+              <button
+                onClick={handleCancel}
+                disabled={cancelling}
+                style={{
+                  background: "#5c1f1f",
+                  color: "#ff8787",
+                  border: "1px solid #7a2b2b",
+                  borderRadius: 6,
+                  padding: "4px 10px",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: cancelling ? "default" : "pointer",
+                }}
+              >
+                {cancelling ? "Cancelando..." : "Sí, cancelar"}
+              </button>
+              <button
+                onClick={() => setConfirmingCancel(false)}
+                disabled={cancelling}
+                style={{
+                  background: "none",
+                  color: "#9aa1ac",
+                  border: "1px solid #2a2f3a",
+                  borderRadius: 6,
+                  padding: "4px 10px",
+                  fontSize: 12,
+                  cursor: cancelling ? "default" : "pointer",
+                }}
+              >
+                No
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setConfirmingCancel(true)}
+              style={{
+                background: "none",
+                color: "#ff8787",
+                border: "1px solid #5c1f1f",
+                borderRadius: 6,
+                padding: "4px 10px",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              ✕ Cancelar
+            </button>
+          )}
+        </div>
       </div>
+      {cancelError && (
+        <p style={{ fontSize: 12, color: "#ff8787", margin: "6px 0 0" }}>
+          {cancelError}
+        </p>
+      )}
       {nothingStartedYet && (
         <p
           style={{
@@ -296,9 +395,11 @@ function TitleProgressRow({
       ? "✅"
       : title.status === "error"
         ? "❌"
-        : title.status === "processing"
-          ? "⏳"
-          : "⬜";
+        : title.status === "cancelled"
+          ? "🚫"
+          : title.status === "processing"
+            ? "⏳"
+            : "⬜";
   const lastStep =
     title.events.length > 0
       ? title.events[title.events.length - 1].message

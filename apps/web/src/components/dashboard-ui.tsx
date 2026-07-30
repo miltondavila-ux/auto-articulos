@@ -52,7 +52,10 @@ export function readySectionStyle(ready: boolean): CSSProperties {
   };
 }
 
-export function disabledStyle(style: CSSProperties, disabled: boolean): CSSProperties {
+export function disabledStyle(
+  style: CSSProperties,
+  disabled: boolean,
+): CSSProperties {
   if (!disabled) return style;
   return { ...style, opacity: 0.4, cursor: "not-allowed" };
 }
@@ -86,6 +89,8 @@ export function statusLabel(status: TitleStatus) {
       return "Publicado";
     case "error":
       return "Error";
+    case "cancelled":
+      return "Cancelado";
   }
 }
 
@@ -99,5 +104,7 @@ export function runStatusLabel(status: RunStatus) {
       return "Completado";
     case "halted":
       return "Detenido";
+    case "cancelled":
+      return "Cancelado";
   }
 }

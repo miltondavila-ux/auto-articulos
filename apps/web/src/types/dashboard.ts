@@ -1,5 +1,7 @@
-export type TitleStatus = "pending" | "processing" | "success" | "error";
-export type RunStatus = "pending" | "running" | "success" | "halted";
+export type TitleStatus =
+  "pending" | "processing" | "success" | "error" | "cancelled";
+export type RunStatus =
+  "pending" | "running" | "success" | "halted" | "cancelled";
 export type SyncStatus = "pending" | "running" | "success" | "error";
 
 export interface TitleEventRow {

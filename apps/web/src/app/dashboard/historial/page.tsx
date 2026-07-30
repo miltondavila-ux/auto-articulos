@@ -109,6 +109,18 @@ function formatDuration(startIso: string, endIso: string | null): string {
 }
 
 function RunStatusBadge({ status }: { status: RunStatus }) {
+  const color =
+    status === "halted"
+      ? "#ff8787"
+      : status === "cancelled"
+        ? "#9aa1ac"
+        : "#7fd99a";
+  const background =
+    status === "halted"
+      ? "#3a1414"
+      : status === "cancelled"
+        ? "#2a2f3a"
+        : "#1c3324";
   return (
     <span
       style={{
@@ -117,8 +129,8 @@ function RunStatusBadge({ status }: { status: RunStatus }) {
         fontWeight: 600,
         padding: "2px 8px",
         borderRadius: 999,
-        color: status === "halted" ? "#ff8787" : "#7fd99a",
-        background: status === "halted" ? "#3a1414" : "#1c3324",
+        color,
+        background,
       }}
     >
       {runStatusLabel(status)}

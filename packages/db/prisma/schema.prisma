@@ -81,6 +81,7 @@ enum RunStatus {
   running
   success
   halted
+  cancelled
 }
 
 model Run {
@@ -104,6 +105,7 @@ enum TitleStatus {
   processing
   success
   error
+  cancelled
 }
 
 model Title {

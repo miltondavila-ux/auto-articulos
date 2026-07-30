@@ -7,8 +7,11 @@ async function haltRun(runId: string, titleId: string, message: string) {
     where: { id: titleId },
     data: { status: "error", errorMessage: message, processedAt: new Date() },
   });
-  await prisma.run.update({
-    where: { id: runId },
+  // updateMany con guard de status: si el usuario ya canceló este run desde
+  // el dashboard mientras este título estaba en curso, no queremos pisar
+  // "cancelled" con "halted".
+  await prisma.run.updateMany({
+    where: { id: runId, status: { in: ["pending", "running"] } },
     data: { status: "halted", finishedAt: new Date() },
   });
 }
@@ -28,8 +31,8 @@ export async function processNext(): Promise<boolean> {
   });
 
   if (!nextTitle) {
-    await prisma.run.update({
-      where: { id: run.id },
+    await prisma.run.updateMany({
+      where: { id: run.id, status: { in: ["pending", "running"] } },
       data: { status: "success", finishedAt: new Date() },
     });
     return true;
@@ -96,12 +99,20 @@ export async function processNext(): Promise<boolean> {
     await onStep("Artículo publicado con éxito.");
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    const fresh = await prisma.title.findUniqueOrThrow({
-      where: { id: nextTitle.id },
-    });
+    const [fresh, freshRun] = await Promise.all([
+      prisma.title.findUniqueOrThrow({ where: { id: nextTitle.id } }),
+      prisma.run.findUniqueOrThrow({ where: { id: run.id } }),
+    ]);
     await onStep(`Error: ${message}`);
 
-    if (fresh.attempts >= MAX_ATTEMPTS) {
+    if (freshRun.status === "cancelled") {
+      // El usuario canceló el run mientras este título estaba en curso: no
+      // lo reintentamos ni lo marcamos como error, queda como cancelado.
+      await prisma.title.update({
+        where: { id: nextTitle.id },
+        data: { status: "cancelled", errorMessage: message },
+      });
+    } else if (fresh.attempts >= MAX_ATTEMPTS) {
       await haltRun(run.id, nextTitle.id, message);
     } else {
       // Vuelve a "pending" para reintentar desde el inicio en el próximo ciclo.
