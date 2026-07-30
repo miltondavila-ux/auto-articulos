@@ -138,3 +138,16 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ run });
 }
+
+// Borra el historial del usuario (los Title/TitleEvent caen en cascada). Se
+// excluyen los runs "pending"/"running": si hay uno en curso, no se toca,
+// para no interrumpir al worker a mitad de una automatización.
+export async function DELETE() {
+  const userId = await getCurrentUserId();
+
+  const { count } = await prisma.run.deleteMany({
+    where: { userId, status: { notIn: ["pending", "running"] } },
+  });
+
+  return NextResponse.json({ deleted: count });
+}

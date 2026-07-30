@@ -18,6 +18,9 @@ import type {
 
 export default function HistorialPage() {
   const [runs, setRuns] = useState<RunRow[]>([]);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const loadRuns = useCallback(async () => {
     const res = await fetch("/api/runs");
@@ -31,11 +34,101 @@ export default function HistorialPage() {
     loadRuns();
   }, [loadRuns]);
 
+  async function handleDeleteHistory() {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch("/api/runs", { method: "DELETE" });
+      if (!res.ok) {
+        setDeleteError("No se pudo borrar el historial.");
+        return;
+      }
+      setConfirmingDelete(false);
+      await loadRuns();
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  const hasDeletableRuns = runs.some(
+    (r) => r.status !== "pending" && r.status !== "running",
+  );
+
   return (
     <section style={sectionStyle}>
-      <h2 style={h2Style}>Historial de ejecuciones</h2>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 8,
+        }}
+      >
+        <h2 style={h2Style}>Historial de ejecuciones</h2>
+        {hasDeletableRuns &&
+          (confirmingDelete ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 12, color: "#e8c777" }}>
+                ¿Borrar todo el historial? No se puede deshacer.
+              </span>
+              <button
+                onClick={handleDeleteHistory}
+                disabled={deleting}
+                style={{
+                  background: "#5c1f1f",
+                  color: "#ff8787",
+                  border: "1px solid #7a2b2b",
+                  borderRadius: 6,
+                  padding: "4px 10px",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: deleting ? "default" : "pointer",
+                }}
+              >
+                {deleting ? "Borrando..." : "Sí, borrar"}
+              </button>
+              <button
+                onClick={() => setConfirmingDelete(false)}
+                disabled={deleting}
+                style={{
+                  background: "none",
+                  color: "#9aa1ac",
+                  border: "1px solid #2a2f3a",
+                  borderRadius: 6,
+                  padding: "4px 10px",
+                  fontSize: 12,
+                  cursor: deleting ? "default" : "pointer",
+                }}
+              >
+                No
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmingDelete(true)}
+              style={{
+                background: "none",
+                color: "#ff8787",
+                border: "1px solid #5c1f1f",
+                borderRadius: 6,
+                padding: "4px 10px",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              🗑 Borrar historial
+            </button>
+          ))}
+      </div>
+      {deleteError && (
+        <p style={{ fontSize: 12, color: "#ff8787", marginTop: 6 }}>
+          {deleteError}
+        </p>
+      )}
       {runs.length === 0 && (
-        <p style={{ fontSize: 13, color: "#9aa1ac" }}>
+        <p style={{ fontSize: 13, color: "#9aa1ac", marginTop: 12 }}>
           Todavía no hay ejecuciones.
         </p>
       )}
