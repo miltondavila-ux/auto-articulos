@@ -300,6 +300,7 @@ async function generateImage(
 
     const relevant = await checkPreviewRelevant(page, title, summary);
     if (relevant || attempt === MAX_IMAGE_ATTEMPTS) {
+      await confirmImageCrop(page);
       await onStep(
         attempt === 1
           ? "Imagen generada."
@@ -311,6 +312,40 @@ async function generateImage(
       `La imagen no parece corresponder al tema del artículo, generando una nueva (intento ${attempt + 1} de ${MAX_IMAGE_ATTEMPTS})...`,
     );
   }
+}
+
+/**
+ * Detectado el 30/7/2026 en la cuenta de otro usuario (Broward County Real
+ * Estate): en algunas cuentas, la plataforma exige "confirmar" el recorte de
+ * la imagen (mover el control de Zoom) antes de permitir guardar, aunque la
+ * imagen generada por IA ya se haya cargado en la vista previa — si no, al
+ * hacer clic en "Guardar cambios" aparece un popup de error ("You must load
+ * and crop an image for the optimized method") que bloquea el guardado en
+ * silencio para Playwright. No se vio este requisito en la cuenta original
+ * donde se mapeó el flujo, así que aquí solo se "toca" el control de Zoom
+ * (si existe y es visible) para registrar el recorte como confirmado; si no
+ * existe o falla, no se bloquea el artículo.
+ */
+async function confirmImageCrop(page: Page): Promise<void> {
+  await page
+    .evaluate(() => {
+      const sliders = Array.from(
+        document.querySelectorAll('input[type="range"]'),
+      ) as HTMLInputElement[];
+      for (const el of sliders) {
+        if (el.offsetParent === null) continue;
+        const step = Number(el.step) || 1;
+        const original = el.value;
+        const nudged = String(Number(el.value) + step);
+        el.value = nudged;
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+        el.value = original;
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    })
+    .catch(() => {});
 }
 
 /**
