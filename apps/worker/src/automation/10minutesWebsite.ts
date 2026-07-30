@@ -251,6 +251,51 @@ async function createArticleDraft(
 }
 
 const MAX_IMAGE_ATTEMPTS = 3;
+const IMAGE_SECTION_RETRY_TIMEOUT_MS = 12_000;
+const IMAGE_SECTION_OPEN_ATTEMPTS = 3;
+
+/**
+ * Bug real encontrado el 30/7/2026 (reproducido con varias cuentas distintas,
+ * no es específico de una): el selector "button.aigenerationbutton" con texto
+ * "Generar imagen" puede tener DECENAS de coincidencias en la página (el
+ * artículo generado por IA incluye botones de "Generar imagen" embebidos por
+ * cada bloque de contenido, además del botón de la imagen principal), y casi
+ * todas están ocultas. Un solo click sobre el encabezado "Creación de
+ * imágenes..." a veces no llega a abrir/mostrar el botón correcto a tiempo
+ * (UI flakiness), así que reintentamos el click varias veces antes de fallar,
+ * y acotamos el locator a ":visible" para no quedar esperando sobre alguno de
+ * los botones ocultos de otros bloques.
+ */
+async function openImageSection(page: Page) {
+  const generarImagenBtn = page.locator("button.aigenerationbutton:visible", {
+    hasText: "Generar imagen",
+  });
+
+  for (let attempt = 1; attempt <= IMAGE_SECTION_OPEN_ATTEMPTS; attempt++) {
+    await page
+      .getByText("Creación de imágenes con inteligencia artificial", {
+        exact: false,
+      })
+      .first()
+      .click()
+      .catch(() => {});
+
+    const isLastAttempt = attempt === IMAGE_SECTION_OPEN_ATTEMPTS;
+    const becameVisible = await generarImagenBtn
+      .first()
+      .waitFor({
+        state: "visible",
+        timeout: isLastAttempt
+          ? NAV_TIMEOUT_MS
+          : IMAGE_SECTION_RETRY_TIMEOUT_MS,
+      })
+      .then(() => true)
+      .catch(() => false);
+    if (becameVisible) break;
+  }
+
+  return generarImagenBtn.first();
+}
 
 async function generateImage(
   page: Page,
@@ -261,17 +306,7 @@ async function generateImage(
   await onStep(
     "Generando imagen con inteligencia artificial (puede tardar un minuto)...",
   );
-  await page
-    .getByText("Creación de imágenes con inteligencia artificial", {
-      exact: false,
-    })
-    .first()
-    .click();
-
-  const generarImagenBtn = page.locator("button.aigenerationbutton", {
-    hasText: "Generar imagen",
-  });
-  await generarImagenBtn.waitFor({ state: "visible", timeout: NAV_TIMEOUT_MS });
+  const generarImagenBtn = await openImageSection(page);
 
   for (let attempt = 1; attempt <= MAX_IMAGE_ATTEMPTS; attempt++) {
     // #images es el textarea real que lee "Generar imagen" (verificado en
