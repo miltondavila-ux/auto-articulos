@@ -6,10 +6,13 @@ import {
   h2Style,
   inputStyle,
   buttonStyle,
+  secondaryButtonStyle,
   thStyle,
   tdStyle,
   disabledStyle,
+  runStatusLabel,
 } from "@/components/dashboard-ui";
+import type { RunStatus } from "@/types/dashboard";
 
 interface UserRow {
   id: string;
@@ -146,6 +149,7 @@ export default function UsuariosPage() {
               <th style={thStyle}>Rol</th>
               <th style={thStyle}>Límite mensual de artículos</th>
               <th style={thStyle}>Creado</th>
+              <th style={thStyle}>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -170,8 +174,15 @@ function UserRowItem({
     user.monthlyArticleLimit === null ? "" : String(user.monthlyArticleLimit),
   );
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editEmail, setEditEmail] = useState(user.email);
+  const [newPassword, setNewPassword] = useState("");
+  const [editError, setEditError] = useState<string | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  async function handleSave() {
+  async function handleSaveLimit() {
     setSaving(true);
     try {
       const monthlyArticleLimit = value.trim() === "" ? null : Number(value);
@@ -186,35 +197,276 @@ function UserRowItem({
     }
   }
 
+  async function handleSaveEdit() {
+    setSaving(true);
+    setEditError(null);
+    try {
+      const body: Record<string, unknown> = { userId: user.id };
+      if (editEmail.trim() !== user.email) body.email = editEmail.trim();
+      if (newPassword.trim() !== "") body.newPassword = newPassword.trim();
+
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setEditError(data.error ?? "No se pudo guardar.");
+        return;
+      }
+      setNewPassword("");
+      setEditing(false);
+      onUpdated();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setDeleteError(data.error ?? "No se pudo eliminar.");
+        return;
+      }
+      onUpdated();
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
-    <tr style={{ borderTop: "1px solid #2a2f3a" }}>
-      <td style={tdStyle}>{user.email}</td>
-      <td style={tdStyle}>
-        {user.role === "admin" ? "Administrador" : "Usuario"}
-      </td>
-      <td style={tdStyle}>
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <input
-            type="number"
-            min={0}
-            placeholder="Sin límite"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            style={{ ...inputStyle, width: 100 }}
-          />
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            style={disabledStyle(
-              { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
-              saving,
+    <>
+      <tr style={{ borderTop: "1px solid #2a2f3a" }}>
+        <td style={tdStyle}>{user.email}</td>
+        <td style={tdStyle}>
+          {user.role === "admin" ? "Administrador" : "Usuario"}
+        </td>
+        <td style={tdStyle}>
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <input
+              type="number"
+              min={0}
+              placeholder="Sin límite"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              style={{ ...inputStyle, width: 100 }}
+            />
+            <button
+              onClick={handleSaveLimit}
+              disabled={saving}
+              style={disabledStyle(
+                { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
+                saving,
+              )}
+            >
+              {saving ? "..." : "Guardar"}
+            </button>
+          </div>
+        </td>
+        <td style={tdStyle}>{new Date(user.createdAt).toLocaleDateString()}</td>
+        <td style={tdStyle}>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            <button
+              onClick={() => setEditing((v) => !v)}
+              style={{
+                ...secondaryButtonStyle,
+                padding: "4px 10px",
+                fontSize: 12,
+              }}
+            >
+              {editing ? "Cancelar" : "Editar"}
+            </button>
+            {!confirmingDelete ? (
+              <button
+                onClick={() => setConfirmingDelete(true)}
+                style={{
+                  background: "none",
+                  color: "#ff8787",
+                  border: "1px solid #5c1f1f",
+                  borderRadius: 6,
+                  padding: "4px 10px",
+                  fontSize: 12,
+                  cursor: "pointer",
+                }}
+              >
+                Eliminar
+              </button>
+            ) : (
+              <>
+                <span style={{ fontSize: 12, color: "#e8c777" }}>¿Seguro?</span>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  style={{
+                    background: "#5c1f1f",
+                    color: "#ff8787",
+                    border: "1px solid #7a2b2b",
+                    borderRadius: 6,
+                    padding: "4px 10px",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: deleting ? "default" : "pointer",
+                  }}
+                >
+                  {deleting ? "..." : "Sí"}
+                </button>
+                <button
+                  onClick={() => setConfirmingDelete(false)}
+                  disabled={deleting}
+                  style={{
+                    background: "none",
+                    color: "#9aa1ac",
+                    border: "1px solid #2a2f3a",
+                    borderRadius: 6,
+                    padding: "4px 10px",
+                    fontSize: 12,
+                    cursor: deleting ? "default" : "pointer",
+                  }}
+                >
+                  No
+                </button>
+              </>
             )}
-          >
-            {saving ? "..." : "Guardar"}
-          </button>
-        </div>
-      </td>
-      <td style={tdStyle}>{new Date(user.createdAt).toLocaleDateString()}</td>
-    </tr>
+          </div>
+          {deleteError && (
+            <div style={{ fontSize: 11, color: "#ff8787", marginTop: 4 }}>
+              {deleteError}
+            </div>
+          )}
+        </td>
+      </tr>
+      {editing && (
+        <tr style={{ background: "#0f1115" }}>
+          <td colSpan={5} style={{ ...tdStyle, padding: "10px 8px" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                flexWrap: "wrap",
+                alignItems: "center",
+              }}
+            >
+              <input
+                type="email"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+                style={{ ...inputStyle, width: 220 }}
+                placeholder="Correo"
+              />
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                style={{ ...inputStyle, width: 200 }}
+                placeholder="Nueva contraseña (opcional)"
+              />
+              <button
+                onClick={handleSaveEdit}
+                disabled={saving}
+                style={disabledStyle({ ...buttonStyle, marginTop: 0 }, saving)}
+              >
+                {saving ? "Guardando..." : "Guardar cambios"}
+              </button>
+            </div>
+            {editError && (
+              <p style={{ fontSize: 12, color: "#ff8787", marginTop: 6 }}>
+                {editError}
+              </p>
+            )}
+          </td>
+        </tr>
+      )}
+      <tr>
+        <td colSpan={5} style={{ padding: "0 8px 8px" }}>
+          <UserHistorial email={user.email} />
+        </td>
+      </tr>
+    </>
+  );
+}
+
+interface AdminRunSummary {
+  id: string;
+  status: string;
+  createdAt: string;
+  finishedAt: string | null;
+  category: { name: string } | null;
+  titles: { status: string }[];
+}
+
+function UserHistorial({ email }: { email: string }) {
+  const [runs, setRuns] = useState<AdminRunSummary[] | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function loadHistorial() {
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `/api/admin/inspect-runs?email=${encodeURIComponent(email)}`,
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setRuns(data.runs);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <details
+      onToggle={(e) => {
+        if ((e.target as HTMLDetailsElement).open && !runs) loadHistorial();
+      }}
+    >
+      <summary style={{ cursor: "pointer", fontSize: 12, color: "#9aa1ac" }}>
+        Ver historial
+      </summary>
+      {loading && !runs && (
+        <p style={{ fontSize: 12, color: "#9aa1ac", marginTop: 6 }}>
+          Cargando...
+        </p>
+      )}
+      {runs && runs.length === 0 && (
+        <p style={{ fontSize: 12, color: "#9aa1ac", marginTop: 6 }}>
+          Todavía no tiene ejecuciones.
+        </p>
+      )}
+      {runs && runs.length > 0 && (
+        <ul
+          style={{
+            marginTop: 6,
+            paddingLeft: 18,
+            fontSize: 12,
+            color: "#c7ccd1",
+            display: "flex",
+            flexDirection: "column",
+            gap: 4,
+          }}
+        >
+          {runs.map((run) => {
+            const successCount = run.titles.filter(
+              (t) => t.status === "success",
+            ).length;
+            return (
+              <li key={run.id}>
+                {new Date(run.createdAt).toLocaleString()} —{" "}
+                {run.category?.name ?? "—"} — {successCount}/{run.titles.length}{" "}
+                publicados — {runStatusLabel(run.status as RunStatus)}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </details>
   );
 }

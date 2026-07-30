@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
-import { requireAdmin } from "@/lib/current-user";
+import { getCurrentUserId, requireAdmin } from "@/lib/current-user";
 
 export async function GET() {
   try {
@@ -30,27 +30,61 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
-  const { userId, monthlyArticleLimit } = await request.json();
+  const body = await request.json();
+  const { userId, monthlyArticleLimit, email, newPassword } = body;
 
   if (typeof userId !== "string" || !userId) {
     return NextResponse.json({ error: "userId es requerido" }, { status: 400 });
   }
-  if (
-    monthlyArticleLimit !== null &&
-    (typeof monthlyArticleLimit !== "number" || monthlyArticleLimit < 0)
-  ) {
-    return NextResponse.json(
-      {
-        error:
-          "monthlyArticleLimit debe ser un número mayor o igual a 0, o null (sin límite)",
-      },
-      { status: 400 },
-    );
+
+  const data: {
+    monthlyArticleLimit?: number | null;
+    email?: string;
+    passwordHash?: string;
+  } = {};
+
+  if ("monthlyArticleLimit" in body) {
+    if (
+      monthlyArticleLimit !== null &&
+      (typeof monthlyArticleLimit !== "number" || monthlyArticleLimit < 0)
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "monthlyArticleLimit debe ser un número mayor o igual a 0, o null (sin límite)",
+        },
+        { status: 400 },
+      );
+    }
+    data.monthlyArticleLimit = monthlyArticleLimit;
+  }
+
+  if (typeof email === "string" && email.trim()) {
+    const existing = await prisma.user.findUnique({
+      where: { email: email.trim() },
+    });
+    if (existing && existing.id !== userId) {
+      return NextResponse.json(
+        { error: "Ya existe otro usuario con ese correo" },
+        { status: 400 },
+      );
+    }
+    data.email = email.trim();
+  }
+
+  if (typeof newPassword === "string" && newPassword.length > 0) {
+    if (newPassword.length < 8) {
+      return NextResponse.json(
+        { error: "La contraseña debe tener al menos 8 caracteres" },
+        { status: 400 },
+      );
+    }
+    data.passwordHash = await bcrypt.hash(newPassword, 12);
   }
 
   const user = await prisma.user.update({
     where: { id: userId },
-    data: { monthlyArticleLimit },
+    data,
     select: {
       id: true,
       email: true,
@@ -61,6 +95,30 @@ export async function PATCH(request: NextRequest) {
   });
 
   return NextResponse.json({ user });
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    await requireAdmin();
+  } catch {
+    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  }
+
+  const { userId } = await request.json();
+  if (typeof userId !== "string" || !userId) {
+    return NextResponse.json({ error: "userId es requerido" }, { status: 400 });
+  }
+
+  const currentUserId = await getCurrentUserId();
+  if (userId === currentUserId) {
+    return NextResponse.json(
+      { error: "No puedes eliminar tu propio usuario." },
+      { status: 400 },
+    );
+  }
+
+  await prisma.user.delete({ where: { id: userId } });
+  return NextResponse.json({ ok: true });
 }
 
 export async function POST(request: NextRequest) {
