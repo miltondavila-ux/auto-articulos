@@ -38,7 +38,8 @@ export async function publishArticle(
   credentials: TenMinutesWebsiteCredentials,
   title: string,
   categoryExternalId: string,
-  onStep: OnStep
+  disableIndexing: boolean,
+  onStep: OnStep,
 ): Promise<PublishResult> {
   const browser = await chromium.launch({ headless: true });
   try {
@@ -50,7 +51,8 @@ export async function publishArticle(
       page,
       title,
       categoryExternalId,
-      onStep
+      disableIndexing,
+      onStep,
     );
     await generateImage(page, onStep);
     await fillFaqWidget(page, title, summary, contentHtml, onStep);
@@ -68,7 +70,7 @@ export async function publishArticle(
  * pegar títulos. Son específicas de cada cuenta de 10minutesWebsite.
  */
 export async function fetchCategories(
-  credentials: TenMinutesWebsiteCredentials
+  credentials: TenMinutesWebsiteCredentials,
 ): Promise<RemoteCategory[]> {
   const browser = await chromium.launch({ headless: true });
   try {
@@ -86,14 +88,18 @@ export async function fetchCategories(
           externalId: (o as HTMLOptionElement).value,
           name: (o as HTMLOptionElement).dataset.content ?? "",
         }))
-        .filter((c) => c.externalId && c.name)
+        .filter((c) => c.externalId && c.name),
     );
   } finally {
     await browser.close();
   }
 }
 
-async function login(page: Page, credentials: TenMinutesWebsiteCredentials, onStep: OnStep): Promise<void> {
+async function login(
+  page: Page,
+  credentials: TenMinutesWebsiteCredentials,
+  onStep: OnStep,
+): Promise<void> {
   await onStep("Iniciando sesión en 10minutesWebsite...");
   await page.goto(`${BASE_URL}/dashboard/start.php`, {
     waitUntil: "domcontentloaded",
@@ -133,7 +139,8 @@ async function createArticleDraft(
   page: Page,
   title: string,
   categoryExternalId: string,
-  onStep: OnStep
+  disableIndexing: boolean,
+  onStep: OnStep,
 ): Promise<{ summary: string; contentHtml: string; finalTitle: string }> {
   await onStep("Abriendo formulario de creación de artículo...");
   await page.goto(`${BASE_URL}/dashboard/direct-articles`, {
@@ -150,6 +157,18 @@ async function createArticleDraft(
   await page.dispatchEvent("#user_label_list_article", "change");
   await onStep("Categoría seleccionada.");
 
+  // #activate_indexing es un checkbox real disfrazado de switch (Materialize):
+  // viene marcado (indexación activada) por defecto, igual que en el sitio.
+  // Se verificó en vivo que el checkbox queda con opacity:0 y width:0 (el
+  // "lever" visual lo tapa), por eso hace falta "force" para des/marcarlo.
+  if (disableIndexing) {
+    await page
+      .locator("#activate_indexing")
+      .setChecked(false, { force: true })
+      .catch(() => {});
+    await onStep("Indexación en buscadores desactivada para este artículo.");
+  }
+
   await page.getByRole("button", { name: "Usar ChatGPT" }).click();
 
   // Selector específico: la página también tiene un widget de chat en vivo
@@ -163,15 +182,21 @@ async function createArticleDraft(
   await ideaTextarea.fill(title);
 
   await dialog.getByRole("button", { name: "Generar" }).click();
-  await onStep("Generando contenido con inteligencia artificial (puede tardar un minuto)...");
+  await onStep(
+    "Generando contenido con inteligencia artificial (puede tardar un minuto)...",
+  );
 
   // El generador escribe Contenido, Resumen y Título en ese orden (streaming).
   // Esperamos a que el campo Título dentro del modal tenga texto real
   // (no el placeholder "Please wait we are getting the data...").
   await page.waitForFunction(
     () => {
-      const chatGptDialog = Array.from(document.querySelectorAll(".modal")).find((el) =>
-        (el.textContent ?? "").includes("Generador de artículos usando Inteligencia Artificial")
+      const chatGptDialog = Array.from(
+        document.querySelectorAll(".modal"),
+      ).find((el) =>
+        (el.textContent ?? "").includes(
+          "Generador de artículos usando Inteligencia Artificial",
+        ),
       );
       if (!chatGptDialog) return false;
       const fields = Array.from(chatGptDialog.querySelectorAll("textarea"));
@@ -179,7 +204,7 @@ async function createArticleDraft(
       return Boolean(last && last.value && !last.value.includes("Please wait"));
     },
     undefined,
-    { timeout: CONTENT_GENERATION_TIMEOUT_MS }
+    { timeout: CONTENT_GENERATION_TIMEOUT_MS },
   );
   await onStep("Contenido generado. Aplicándolo al artículo...");
 
@@ -188,8 +213,17 @@ async function createArticleDraft(
   // el Título final que la IA le puso al artículo (índice 3: idea, contenido,
   // resumen, título, prompt de imagen): es justamente el que se usa después
   // para localizar el artículo ya publicado (ver findArticleByTitle).
-  const contentHtml = await dialog.locator("textarea").nth(1).inputValue().catch(() => "");
-  const finalTitle = (await dialog.locator("textarea").nth(3).inputValue().catch(() => "")) || title;
+  const contentHtml = await dialog
+    .locator("textarea")
+    .nth(1)
+    .inputValue()
+    .catch(() => "");
+  const finalTitle =
+    (await dialog
+      .locator("textarea")
+      .nth(3)
+      .inputValue()
+      .catch(() => "")) || title;
   await onStep(`Título asignado por la IA: "${finalTitle}"`);
 
   await dialog.getByRole("button", { name: "Usar contenido" }).click();
@@ -206,15 +240,24 @@ async function createArticleDraft(
   if (summary.length >= 300) {
     summary = summary.slice(0, 280);
     await excerptField.fill(summary);
-    await onStep("Resumen recortado para respetar el límite de 300 caracteres de la plataforma.");
+    await onStep(
+      "Resumen recortado para respetar el límite de 300 caracteres de la plataforma.",
+    );
   }
 
   return { summary, contentHtml, finalTitle };
 }
 
 async function generateImage(page: Page, onStep: OnStep): Promise<void> {
-  await onStep("Generando imagen con inteligencia artificial (puede tardar un minuto)...");
-  await page.getByText("Creación de imágenes con inteligencia artificial", { exact: false }).first().click();
+  await onStep(
+    "Generando imagen con inteligencia artificial (puede tardar un minuto)...",
+  );
+  await page
+    .getByText("Creación de imágenes con inteligencia artificial", {
+      exact: false,
+    })
+    .first()
+    .click();
 
   const generarImagenBtn = page.locator("button.aigenerationbutton", {
     hasText: "Generar imagen",
@@ -230,11 +273,13 @@ async function generateImage(page: Page, onStep: OnStep): Promise<void> {
   });
   await page.waitForFunction(
     () => {
-      const preview = document.querySelector('img[alt="Preview"]') as HTMLImageElement | null;
+      const preview = document.querySelector(
+        'img[alt="Preview"]',
+      ) as HTMLImageElement | null;
       return Boolean(preview && preview.naturalWidth > 0);
     },
     undefined,
-    { timeout: IMAGE_GENERATION_TIMEOUT_MS }
+    { timeout: IMAGE_GENERATION_TIMEOUT_MS },
   );
   await onStep("Imagen generada.");
 }
@@ -252,16 +297,23 @@ async function fillFaqWidget(
   title: string,
   summary: string,
   contentHtml: string,
-  onStep: OnStep
+  onStep: OnStep,
 ): Promise<void> {
   const widgetHtml = buildFaqWidgetHtml(title, summary, contentHtml);
   await page.fill("#widgetcode", widgetHtml);
   await onStep("Preguntas frecuentes (FAQ) agregadas al artículo.");
 }
 
-function buildFaqWidgetHtml(title: string, summary: string, contentHtml: string): string {
+function buildFaqWidgetHtml(
+  title: string,
+  summary: string,
+  contentHtml: string,
+): string {
   const plainContent = stripHtml(contentHtml);
-  const sentences = [...splitIntoSentences(summary), ...splitIntoSentences(plainContent)];
+  const sentences = [
+    ...splitIntoSentences(summary),
+    ...splitIntoSentences(plainContent),
+  ];
 
   const faqs = [
     {
@@ -270,11 +322,15 @@ function buildFaqWidgetHtml(title: string, summary: string, contentHtml: string)
     },
     {
       q: "¿Qué opciones tengo disponibles?",
-      a: sentences[1] ?? "Existen varias opciones disponibles según tu situación particular.",
+      a:
+        sentences[1] ??
+        "Existen varias opciones disponibles según tu situación particular.",
     },
     {
       q: "¿Cómo puedo tomar la mejor decisión en mi caso?",
-      a: sentences[2] ?? "Es recomendable comparar los detalles de cada opción antes de decidir.",
+      a:
+        sentences[2] ??
+        "Es recomendable comparar los detalles de cada opción antes de decidir.",
     },
     {
       q: "¿A quién puedo contactar para recibir asesoría personalizada?",
@@ -285,7 +341,9 @@ function buildFaqWidgetHtml(title: string, summary: string, contentHtml: string)
   const visibleHtml = [
     '<div class="auto-articulos-faq">',
     "<h3>Preguntas frecuentes</h3>",
-    ...faqs.map((f) => `<p><strong>${escapeHtml(f.q)}</strong><br>${escapeHtml(f.a)}</p>`),
+    ...faqs.map(
+      (f) => `<p><strong>${escapeHtml(f.q)}</strong><br>${escapeHtml(f.a)}</p>`,
+    ),
     "</div>",
   ].join("\n");
 
@@ -345,11 +403,21 @@ async function getNewestRow(listPage: Page): Promise<ArticleRow | null> {
   let best: ArticleRow | null = null;
   for (let i = 0; i < count; i++) {
     const row = rows.nth(i);
-    const idText = (await row.locator("td").first().innerText().catch(() => "")).trim();
+    const idText = (
+      await row
+        .locator("td")
+        .first()
+        .innerText()
+        .catch(() => "")
+    ).trim();
     const num = Number.parseInt(idText, 10);
     if (Number.isNaN(num)) continue;
     if (!best || num > best.num) {
-      const href = await row.locator("a.consultar").first().getAttribute("href").catch(() => null);
+      const href = await row
+        .locator("a.consultar")
+        .first()
+        .getAttribute("href")
+        .catch(() => null);
       best = { id: idText, num, href };
     }
   }
@@ -367,9 +435,18 @@ async function getNewestRow(listPage: Page): Promise<ArticleRow | null> {
  * una fila (por ejemplo coincidencias parciales), nos quedamos con el N° de
  * artículo más alto entre los resultados filtrados.
  */
-async function findArticleByTitle(page: Page, title: string): Promise<string | null> {
+async function findArticleByTitle(
+  page: Page,
+  title: string,
+): Promise<string | null> {
   await page.evaluate((searchText) => {
-    const jq = (window as unknown as { jQuery?: (s: string) => { DataTable: () => { search: (s: string) => { draw: () => void } } } }).jQuery;
+    const jq = (
+      window as unknown as {
+        jQuery?: (s: string) => {
+          DataTable: () => { search: (s: string) => { draw: () => void } };
+        };
+      }
+    ).jQuery;
     jq?.("table").DataTable().search(searchText).draw();
   }, title);
   await page.waitForTimeout(800);
@@ -381,16 +458,20 @@ async function findArticleByTitle(page: Page, title: string): Promise<string | n
 async function saveAndGetUrl(
   page: Page,
   expectedTitle: string,
-  onStep: OnStep
+  onStep: OnStep,
 ): Promise<string | null> {
   await onStep("Guardando y publicando el artículo...");
   await page.getByRole("button", { name: "Guardar cambios" }).first().click();
-  await page.waitForLoadState("networkidle", { timeout: NAV_TIMEOUT_MS }).catch(() => {});
+  await page
+    .waitForLoadState("networkidle", { timeout: NAV_TIMEOUT_MS })
+    .catch(() => {});
 
   // Localizamos el artículo por el título real que la IA le asignó (guardado
   // en createArticleDraft), no por posición de fila ni por comparar N° antes
   // vs. después: se pidió explícitamente localizarlo así.
-  await onStep(`Buscando el artículo publicado por su título: "${expectedTitle}"...`);
+  await onStep(
+    `Buscando el artículo publicado por su título: "${expectedTitle}"...`,
+  );
   const deadline = Date.now() + SAVE_VERIFICATION_TIMEOUT_MS;
   while (Date.now() < deadline) {
     await page.goto(`${BASE_URL}/dashboard/user_buyer_seller_articles.php`, {

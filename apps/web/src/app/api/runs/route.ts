@@ -22,13 +22,19 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const userId = await getCurrentUserId();
-  const { titlesText, categoryId } = await request.json();
+  const { titlesText, categoryId, disableIndexing } = await request.json();
 
   if (typeof titlesText !== "string") {
-    return NextResponse.json({ error: "titlesText es requerido" }, { status: 400 });
+    return NextResponse.json(
+      { error: "titlesText es requerido" },
+      { status: 400 },
+    );
   }
   if (typeof categoryId !== "string" || !categoryId) {
-    return NextResponse.json({ error: "Debes elegir una categoría" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Debes elegir una categoría" },
+      { status: 400 },
+    );
   }
 
   const titles = titlesText
@@ -37,7 +43,10 @@ export async function POST(request: NextRequest) {
     .filter((line: string) => line.length > 0);
 
   if (titles.length === 0) {
-    return NextResponse.json({ error: "No se encontraron títulos" }, { status: 400 });
+    return NextResponse.json(
+      { error: "No se encontraron títulos" },
+      { status: 400 },
+    );
   }
 
   const credential = await prisma.credential.findUnique({
@@ -46,7 +55,7 @@ export async function POST(request: NextRequest) {
   if (!credential) {
     return NextResponse.json(
       { error: "Primero debes guardar tus credenciales de 10minutesWebsite" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -62,9 +71,41 @@ export async function POST(request: NextRequest) {
   });
   if (existingRunning) {
     return NextResponse.json(
-      { error: "Ya hay una ejecución en curso. Espera a que termine o se detenga." },
-      { status: 409 }
+      {
+        error:
+          "Ya hay una ejecución en curso. Espera a que termine o se detenga.",
+      },
+      { status: 409 },
     );
+  }
+
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { monthlyArticleLimit: true },
+  });
+  if (user.monthlyArticleLimit !== null) {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+    const publishedThisMonth = await prisma.title.count({
+      where: {
+        status: "success",
+        processedAt: { gte: startOfMonth },
+        run: { userId },
+      },
+    });
+    const remaining = user.monthlyArticleLimit - publishedThisMonth;
+    if (titles.length > remaining) {
+      return NextResponse.json(
+        {
+          error:
+            remaining <= 0
+              ? `Ya alcanzaste tu límite mensual de ${user.monthlyArticleLimit} artículos.`
+              : `Solo puedes publicar ${remaining} artículo(s) más este mes (límite mensual: ${user.monthlyArticleLimit}).`,
+        },
+        { status: 403 },
+      );
+    }
   }
 
   const run = await prisma.run.create({
@@ -72,8 +113,12 @@ export async function POST(request: NextRequest) {
       userId,
       categoryId: category.id,
       status: "running",
+      disableIndexing: Boolean(disableIndexing),
       titles: {
-        create: titles.map((text: string, index: number) => ({ text, order: index })),
+        create: titles.map((text: string, index: number) => ({
+          text,
+          order: index,
+        })),
       },
     },
     include: { titles: true, category: true },

@@ -14,16 +14,17 @@ enum UserRole {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  role         UserRole @default(user)
-  createdAt    DateTime @default(now())
+  id                  String   @id @default(cuid())
+  email               String   @unique
+  passwordHash        String
+  role                UserRole @default(user)
+  monthlyArticleLimit Int?
+  createdAt           DateTime @default(now())
 
-  credentials       Credential[]
-  runs              Run[]
-  categories        Category[]
-  categorySyncJobs  CategorySyncJob[]
+  credentials      Credential[]
+  runs             Run[]
+  categories       Category[]
+  categorySyncJobs CategorySyncJob[]
 }
 
 model Credential {
@@ -83,12 +84,13 @@ enum RunStatus {
 }
 
 model Run {
-  id         String    @id @default(cuid())
-  userId     String
-  categoryId String
-  status     RunStatus @default(pending)
-  createdAt  DateTime  @default(now())
-  finishedAt DateTime?
+  id              String    @id @default(cuid())
+  userId          String
+  categoryId      String
+  status          RunStatus @default(pending)
+  disableIndexing Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  finishedAt      DateTime?
 
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   category Category @relation(fields: [categoryId], references: [id])
@@ -105,15 +107,15 @@ enum TitleStatus {
 }
 
 model Title {
-  id            String      @id @default(cuid())
-  runId         String
-  text          String
-  order         Int
-  status        TitleStatus @default(pending)
-  attempts      Int         @default(0)
-  articleUrl    String?
-  errorMessage  String?
-  processedAt   DateTime?
+  id           String      @id @default(cuid())
+  runId        String
+  text         String
+  order        Int
+  status       TitleStatus @default(pending)
+  attempts     Int         @default(0)
+  articleUrl   String?
+  errorMessage String?
+  processedAt  DateTime?
 
   run    Run          @relation(fields: [runId], references: [id], onDelete: Cascade)
   events TitleEvent[]

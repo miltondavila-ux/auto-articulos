@@ -36,11 +36,17 @@ export async function processNext(): Promise<boolean> {
   }
 
   const credential = await prisma.credential.findUnique({
-    where: { userId_platform: { userId: run.userId, platform: "10minutesWebsite" } },
+    where: {
+      userId_platform: { userId: run.userId, platform: "10minutesWebsite" },
+    },
   });
 
   if (!credential) {
-    await haltRun(run.id, nextTitle.id, "No se encontraron credenciales de 10minutesWebsite para este usuario.");
+    await haltRun(
+      run.id,
+      nextTitle.id,
+      "No se encontraron credenciales de 10minutesWebsite para este usuario.",
+    );
     return true;
   }
 
@@ -50,7 +56,9 @@ export async function processNext(): Promise<boolean> {
   });
 
   const onStep = async (message: string) => {
-    await prisma.titleEvent.create({ data: { titleId: nextTitle.id, message } });
+    await prisma.titleEvent.create({
+      data: { titleId: nextTitle.id, message },
+    });
   };
 
   await onStep(`Intento ${updated.attempts} de ${MAX_ATTEMPTS}...`);
@@ -62,7 +70,8 @@ export async function processNext(): Promise<boolean> {
       { username, password },
       nextTitle.text,
       run.category.externalId,
-      onStep
+      run.disableIndexing,
+      onStep,
     );
 
     // Si no se pudo confirmar el enlace real, no lo reportamos como éxito:
@@ -70,7 +79,7 @@ export async function processNext(): Promise<boolean> {
     // con un enlace vacío sin que nadie se entere.
     if (!result.articleUrl) {
       throw new Error(
-        "El artículo no aparece en el listado tras guardar: es probable que no se haya publicado."
+        "El artículo no aparece en el listado tras guardar: es probable que no se haya publicado.",
       );
     }
 
@@ -86,7 +95,9 @@ export async function processNext(): Promise<boolean> {
     await onStep("Artículo publicado con éxito.");
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    const fresh = await prisma.title.findUniqueOrThrow({ where: { id: nextTitle.id } });
+    const fresh = await prisma.title.findUniqueOrThrow({
+      where: { id: nextTitle.id },
+    });
     await onStep(`Error: ${message}`);
 
     if (fresh.attempts >= MAX_ATTEMPTS) {

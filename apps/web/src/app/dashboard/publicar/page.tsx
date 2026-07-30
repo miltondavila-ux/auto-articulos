@@ -19,9 +19,13 @@ export default function PublicarPage() {
   const [credentialsConfigured, setCredentialsConfigured] = useState(false);
   const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
-  const [banner, setBanner] = useState<{ type: "error" | "info"; text: string } | null>(null);
+  const [banner, setBanner] = useState<{
+    type: "error" | "info";
+    text: string;
+  } | null>(null);
   const [starting, setStarting] = useState(false);
   const [hasActiveRun, setHasActiveRun] = useState(false);
+  const [disableIndexing, setDisableIndexing] = useState(false);
 
   const loadCredentialsStatus = useCallback(async () => {
     const res = await fetch("/api/credentials");
@@ -44,7 +48,10 @@ export default function PublicarPage() {
     if (res.ok) {
       const data = await res.json();
       setHasActiveRun(
-        data.runs.some((r: { status: string }) => r.status === "pending" || r.status === "running")
+        data.runs.some(
+          (r: { status: string }) =>
+            r.status === "pending" || r.status === "running",
+        ),
       );
     }
   }, []);
@@ -62,11 +69,18 @@ export default function PublicarPage() {
       const res = await fetch("/api/runs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ titlesText, categoryId: selectedCategoryId }),
+        body: JSON.stringify({
+          titlesText,
+          categoryId: selectedCategoryId,
+          disableIndexing,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setBanner({ type: "error", text: data.error ?? "Error al iniciar la ejecución" });
+        setBanner({
+          type: "error",
+          text: data.error ?? "Error al iniciar la ejecución",
+        });
         return;
       }
       router.push("/dashboard");
@@ -118,7 +132,8 @@ export default function PublicarPage() {
       <section style={readySectionStyle(Boolean(selectedCategoryId))}>
         <h2 style={h2Style}>Categoría</h2>
         <p style={{ fontSize: 13, color: "#9aa1ac" }}>
-          Elige primero la categoría bajo la que se publicarán los artículos de esta ejecución.
+          Elige primero la categoría bajo la que se publicarán los artículos de
+          esta ejecución.
         </p>
         <select
           value={selectedCategoryId}
@@ -127,7 +142,9 @@ export default function PublicarPage() {
           style={{ ...inputStyle, minWidth: 260 }}
         >
           <option value="">
-            {categories.length === 0 ? "Sin categorías sincronizadas" : "Elige una categoría"}
+            {categories.length === 0
+              ? "Sin categorías sincronizadas"
+              : "Elige una categoría"}
           </option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
@@ -151,20 +168,58 @@ export default function PublicarPage() {
         <textarea
           value={titlesText}
           onChange={(e) => setTitlesText(e.target.value)}
-          placeholder={"Un título por línea\nEj:\n5 consejos para vender tu casa rápido\nCómo elegir el mejor vecindario"}
+          placeholder={
+            "Un título por línea\nEj:\n5 consejos para vender tu casa rápido\nCómo elegir el mejor vecindario"
+          }
           rows={8}
           disabled={hasActiveRun}
-          style={{ ...inputStyle, width: "100%", resize: "vertical", fontFamily: "inherit" }}
+          style={{
+            ...inputStyle,
+            width: "100%",
+            resize: "vertical",
+            fontFamily: "inherit",
+          }}
         />
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            fontSize: 13,
+            color: "#9aa1ac",
+            margin: "10px 0",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={disableIndexing}
+            disabled={hasActiveRun}
+            onChange={(e) => setDisableIndexing(e.target.checked)}
+          />
+          Desactivar indexación en buscadores para este lote (por defecto queda
+          activada, como en 10minutesWebsite)
+        </label>
         <button
           onClick={handleIniciar}
-          disabled={starting || hasActiveRun || titlesText.trim().length === 0 || !selectedCategoryId}
+          disabled={
+            starting ||
+            hasActiveRun ||
+            titlesText.trim().length === 0 ||
+            !selectedCategoryId
+          }
           style={disabledStyle(
             buttonStyle,
-            starting || hasActiveRun || titlesText.trim().length === 0 || !selectedCategoryId
+            starting ||
+              hasActiveRun ||
+              titlesText.trim().length === 0 ||
+              !selectedCategoryId,
           )}
         >
-          {hasActiveRun ? "Ejecución en curso..." : starting ? "Iniciando..." : "Iniciar"}
+          {hasActiveRun
+            ? "Ejecución en curso..."
+            : starting
+              ? "Iniciando..."
+              : "Iniciar"}
         </button>
         {!selectedCategoryId && !hasActiveRun && (
           <p style={{ fontSize: 13, color: "#9aa1ac", marginTop: 8 }}>
