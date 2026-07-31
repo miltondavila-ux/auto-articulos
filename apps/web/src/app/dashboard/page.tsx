@@ -9,6 +9,7 @@ import {
   buttonStyle,
 } from "@/components/dashboard-ui";
 import type { RunRow, TitleEventRow, TitleRow } from "@/types/dashboard";
+import GoogleIndexingStatus from "@/components/GoogleIndexingStatus";
 
 interface PublishedNotification {
   id: string;
@@ -694,7 +695,7 @@ function TitleProgressRow({
       )}
 
       {title.status === "success" && title.articleUrl && (
-        <p style={{ margin: "6px 0 0 24px" }}>
+        <div style={{ margin: "6px 0 0 24px" }}>
           <a
             href={title.articleUrl}
             target="_blank"
@@ -712,7 +713,8 @@ function TitleProgressRow({
               Publicado como: {title.finalTitle}
             </span>
           )}
-        </p>
+          <GoogleIndexingStatus title={title} />
+        </div>
       )}
 
       {title.status === "error" && title.errorMessage && (

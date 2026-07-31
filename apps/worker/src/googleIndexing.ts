@@ -2,6 +2,7 @@ import { prisma } from "@auto-articulos/db";
 import {
   decryptSecret,
   getGoogleAccessToken,
+  inspectGoogleUrl,
   submitGoogleSitemap,
 } from "@auto-articulos/shared";
 
@@ -25,11 +26,21 @@ export async function notifyGoogle(titleId: string, userId: string) {
       integration.siteUrl,
       integration.sitemapUrl,
     );
+    const title = await prisma.title.findUnique({
+      where: { id: titleId },
+      select: { articleUrl: true },
+    });
+    const inspection = title?.articleUrl
+      ? await inspectGoogleUrl(token, integration.siteUrl, title.articleUrl)
+      : null;
+    const indexed = inspection?.verdict === "PASS";
     await prisma.title.update({
       where: { id: titleId },
       data: {
-        googleIndexingStatus: "sitemap_submitted",
-        googleIndexingMessage: "Sitemap enviado a Google Search Console.",
+        googleIndexingStatus: indexed ? "indexed" : "inspection_pending",
+        googleIndexingMessage: indexed
+          ? `Google informa que la URL está indexada${inspection?.coverageState ? `: ${inspection.coverageState}` : "."}`
+          : `Sitemap enviado. Google todavía no reporta la URL como indexada${inspection?.coverageState ? `: ${inspection.coverageState}` : "."}`,
         googleIndexingAt: new Date(),
       },
     });

@@ -65,3 +65,40 @@ export async function submitGoogleSitemap(
     );
   }
 }
+
+export interface GoogleUrlInspectionResult {
+  verdict?: string;
+  coverageState?: string;
+  indexingState?: string;
+  pageFetchState?: string;
+  lastCrawlTime?: string;
+}
+
+export async function inspectGoogleUrl(
+  accessToken: string,
+  siteUrl: string,
+  inspectionUrl: string,
+) {
+  const response = await fetch(
+    "https://searchconsole.googleapis.com/v1/urlInspection/index:inspect",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ inspectionUrl, siteUrl, languageCode: "es" }),
+    },
+  );
+  const data = (await response.json()) as {
+    inspectionResult?: { indexStatusResult?: GoogleUrlInspectionResult };
+    error?: { message?: string };
+  };
+  if (!response.ok) {
+    throw new Error(
+      data.error?.message ??
+        `La inspección de Google respondió ${response.status}.`,
+    );
+  }
+  return data.inspectionResult?.indexStatusResult ?? {};
+}

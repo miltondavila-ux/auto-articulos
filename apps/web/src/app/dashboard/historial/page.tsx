@@ -15,6 +15,7 @@ import type {
   TitleEventRow,
   TitleRow,
 } from "@/types/dashboard";
+import GoogleIndexingStatus from "@/components/GoogleIndexingStatus";
 
 export default function HistorialPage() {
   const [runs, setRuns] = useState<RunRow[]>([]);
@@ -341,21 +342,24 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
       <td style={tdStyle}>{title.attempts}</td>
       <td style={tdStyle}>
         {title.articleUrl ? (
-          <a
-            href={title.articleUrl}
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              color: "#031537",
-              fontWeight: 600,
-              textDecoration: "none",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-            }}
-          >
-            🔗 Ver artículo publicado
-          </a>
+          <div>
+            <a
+              href={title.articleUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                color: "#031537",
+                fontWeight: 600,
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
+              🔗 Ver artículo publicado
+            </a>
+            <GoogleIndexingStatus title={title} />
+          </div>
         ) : (
           (title.errorMessage ?? "—")
         )}

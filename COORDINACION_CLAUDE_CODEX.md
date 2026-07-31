@@ -61,7 +61,7 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
      (categorías son más rápidas que publicar, pedido explícito de que no
      hagan esperar tanto).
   6. `.github/workflows/worker.yml`: agregado `strategy.matrix: shard:
-     [1,2,3,4,5]` en el job `procesar` — 5 shards paralelos por corrida,
+[1,2,3,4,5]` en el job `procesar` — 5 shards paralelos por corrida,
      manteniendo el `concurrency: group: auto-articulos-worker` existente
      (evita que dos TANDAS de 5 se superpongan, no bloquea los 5 shards
      entre sí dentro de la misma tanda).
@@ -91,8 +91,8 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Codex
 
-- **Estado:** ACTIVO, limitado a Google Search Console sin tocar el área del
-  worker que Claude mantiene reservada.
+- **Estado:** ACTIVO. Claude liberó el worker; Codex reservó la integración
+  Google en web/shared/worker hasta terminar su despliegue.
 - **Tarea:** integración multiusuario con Google Search Console.
 - **Área reservada cuando se reanude:** OAuth/API/UI de Google y migración
   `20260731210000_add_google_search_console`.
@@ -116,10 +116,10 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
   consentimiento desde producción. Esto confirma OAuth, callback, cifrado y
   persistencia multiusuario, y confirma que la migración Google ya está
   aplicada en la base de producción. No se publicó ningún artículo de prueba.
-- **Reserva actual:** configuración OAuth externa, rutas/componentes Google en
-  `apps/web` y verificación de solo lectura del estado de la migración. Codex no
-  tocará `apps/worker/**`, `worker.yml` ni `schema.prisma` mientras Claude no
-  libere expresamente esa área en este tablero.
+- **Reserva actual:** rutas/componentes Google en `apps/web`, helper de Search
+  Console en `packages/shared` y `apps/worker/src/googleIndexing.ts`. Se agregó
+  consulta automática con URL Inspection API y UI para actualizar el estado y
+  abrir la solicitud manual en Search Console. No se disparó publicación.
 
 ## Zona compartida: requiere coordinación explícita
 

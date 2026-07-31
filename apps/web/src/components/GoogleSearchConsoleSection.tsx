@@ -108,9 +108,10 @@ export default function GoogleSearchConsoleSection() {
       )}
       {message && <p style={{ fontSize: 13, color: "#1e8a4b" }}>{message}</p>}
       <p style={{ fontSize: 12, color: "#6b7280" }}>
-        Google no permite solicitar indexación individual de artículos normales.
-        La app enviará tu sitemap después de publicar; Google decide si rastrea
-        e indexa cada URL.
+        Después de publicar, la app enviará tu sitemap y consultará el estado de
+        cada URL. Si Google todavía no la indexó, verás un acceso directo para
+        abrir Search Console y pulsar “Solicitar indexación” manualmente; Google
+        no ofrece ese último botón mediante API.
       </p>
     </section>
   );

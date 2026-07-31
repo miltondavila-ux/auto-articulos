@@ -48,7 +48,7 @@ creados en el sistema (1 admin + 44 usuarios normales, incluida Sandra).
   disparos repetidos (varias personas actuando casi al mismo tiempo)
   cancelaban la corrida en cola anterior entre sí ("guerra de disparos",
   visto en vivo esa misma noche). El `concurrency: group:
-  auto-articulos-worker` de `worker.yml` sigue existiendo para evitar que
+auto-articulos-worker` de `worker.yml` sigue existiendo para evitar que
   dos TANDAS de 5 shards se disparen una encima de la otra, pero los 5
   shards DENTRO de una misma tanda corren en paralelo sin problema.
 - **Base de datos**: PostgreSQL en **Supabase Pro** (pagado). Prisma como ORM
@@ -457,29 +457,49 @@ Avance posterior confirmado por el usuario:
   del artículo. También se añadieron los secretos Google al entorno del
   workflow del worker. Prisma format/generate, Prettier de TS/Markdown,
   `tsc --noEmit` para web y worker y ambos builds terminaron correctamente.
-  La migración está creada pero todavía no aplicada ni desplegada; falta crear
-  el cliente OAuth real y cargar sus secretos antes de habilitar la conexión.
+  La migración quedó aplicada en producción (confirmado operativamente porque
+  OAuth persistió la integración de Lorena).
+- Google Auth Platform quedó como app externa en Production con scope
+  `webmasters`. El cliente OAuth definitivo tiene el origen y callback de
+  producción. Un secreto anterior apareció en una captura y se descartó; el
+  usuario creó un tercer cliente limpio y descargó su JSON. Sus credenciales
+  se cargaron directamente como secretos cifrados en Vercel Production y
+  GitHub Actions, sin imprimirlos ni copiarlos al repo. Deploy confirmado:
+  `dpl_H3bRf2vBJETpmUX2pz192PwYzdu7`.
+- `lorenalvarez30@gmail.com` completó OAuth correctamente. Esto valida la
+  separación por usuario, callback, cifrado y persistencia. Falta que Lorena
+  elija su propiedad y sitemap.
+- Aclaración solicitada por el usuario: el flujo manual más rápido es
+  Inspeccionar URL → Probar URL publicada → Solicitar indexación, pero Google
+  no expone por API la prueba publicada ni el botón Solicitar indexación para
+  artículos normales. Se implementó el máximo flujo oficial: tras publicar,
+  reenviar sitemap, consultar automáticamente el estado individual con URL
+  Inspection API y guardar el resultado; Inicio e Historial muestran
+  “Actualizar estado” y un acceso directo a Search Console para que el usuario
+  pulse manualmente Solicitar indexación. No se usa Indexing API porque Google
+  la restringe a `JobPosting`/`BroadcastEvent`. Validado con Prettier,
+  `tsc --noEmit` y builds completos de web/worker; todavía falta commit/deploy.
 
 ## Pendiente / próximos pasos
 
-1. En Google Auth Platform configurar Público externo, alcance
-   `https://www.googleapis.com/auth/webmasters`, publicar en Production y crear
-   el cliente web con callback
-   `https://auto-articulos-web.vercel.app/api/search-integrations/google/callback`.
-   Guardar ID/secreto en Vercel y GitHub sin pegarlos en archivos ni chat.
-2. Aplicar la migración `20260731210000_add_google_search_console`, desplegar
-   web+worker y validar solamente el login OAuth y listado de propiedades; no
+1. Commit/push/deploy del estado individual de URL + acceso manual a Search
+   Console. Validarlo con un artículo ya existente si está disponible, sin
    disparar una publicación automática.
-3. Implementar Bing después de cerrar y validar Google.
-4. Corregir el registro de usuario cuyo correo aparece con el prefijo
+2. Lorena debe seleccionar su propiedad y guardar su sitemap. Después, cada
+   usuario deberá completar esa misma configuración una sola vez.
+3. El usuario puede borrar de su Desktop el JSON OAuth definitivo después de
+   confirmar que los secretos funcionan; ya existe copia cifrada en
+   Vercel/GitHub y no debe subirse al repo.
+4. Implementar Bing después de cerrar y validar Google.
+5. Corregir el registro de usuario cuyo correo aparece con el prefijo
    accidental `Ahora :` en la pestaña de accesos y en uso de base de datos.
-5. Confirmar operativamente que los usuarios recién creados guarden sus
+6. Confirmar operativamente que los usuarios recién creados guarden sus
    propias credenciales de 10minutesWebsite y sincronicen categorías (esto
    es trabajo de cada usuario final, no de código).
-6. `CODEX_PROMPT.md` y este `HANDOFF.md` ya quedaron commiteados en git por
+7. `CODEX_PROMPT.md` y este `HANDOFF.md` ya quedaron commiteados en git por
    Codex (antes eran solo locales) — ya no hay riesgo de perderlos si se
    borran del disco, están en el historial de `main`.
-7. ~~Verificar que el rollout de los 5 shards funcione~~ — **HECHO y
+8. ~~Verificar que el rollout de los 5 shards funcione~~ — **HECHO y
    confirmado en vivo el 31/7/2026 21:47 UTC** (ver ítem 21 del changelog):
    5 jobs paralelos confirmados, lote de Milton y de Lizzammar avanzaron
    correctamente sin errores. Área del worker liberada para Codex en
