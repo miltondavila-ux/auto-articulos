@@ -277,22 +277,31 @@ function RunStatusBadge({ status }: { status: RunStatus }) {
 
 function RunTable({ titles }: { titles: TitleRow[] }) {
   return (
-    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-      <thead>
-        <tr style={{ textAlign: "left", color: "#6b7280" }}>
-          <th style={thStyle}>Título</th>
-          <th style={thStyle}>Estado</th>
-          <th style={thStyle}>Intentos</th>
-          <th style={thStyle}>Enlace / Error</th>
-          <th style={thStyle}>Log</th>
-        </tr>
-      </thead>
-      <tbody>
-        {titles.map((title) => (
-          <TitleRowWithLog key={title.id} title={title} />
-        ))}
-      </tbody>
-    </table>
+    <div style={{ overflowX: "auto" }}>
+      <table
+        style={{
+          width: "100%",
+          minWidth: 600,
+          borderCollapse: "collapse",
+          fontSize: 13,
+        }}
+      >
+        <thead>
+          <tr style={{ textAlign: "left", color: "#6b7280" }}>
+            <th style={thStyle}>Título</th>
+            <th style={thStyle}>Estado</th>
+            <th style={thStyle}>Intentos</th>
+            <th style={thStyle}>Enlace / Error</th>
+            <th style={thStyle}>Log</th>
+          </tr>
+        </thead>
+        <tbody>
+          {titles.map((title) => (
+            <TitleRowWithLog key={title.id} title={title} />
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

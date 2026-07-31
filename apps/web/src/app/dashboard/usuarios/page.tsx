@@ -261,57 +261,60 @@ export default function UsuariosPage() {
                 />
               </div>
             </div>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                fontSize: 13,
-                marginTop: 14,
-              }}
-            >
-              <thead>
-                <tr style={{ textAlign: "left", color: "#6b7280" }}>
-                  <th style={thStyle}>Usuario</th>
-                  <th style={thStyle}>Ejecuciones</th>
-                  <th style={thStyle}>Títulos</th>
-                  <th style={thStyle}>Eventos de log</th>
-                  <th style={thStyle}>Peso estimado</th>
-                  <th style={thStyle}>% del contenido total</th>
-                  <th style={thStyle}>Riesgo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {usage.perUser.map((row) => (
-                  <tr
-                    key={row.userId}
-                    style={{ borderTop: "1px solid #dfe3e8" }}
-                  >
-                    <td style={tdStyle}>{row.email}</td>
-                    <td style={tdStyle}>{row.runs}</td>
-                    <td style={tdStyle}>{row.titles}</td>
-                    <td style={tdStyle}>{row.events}</td>
-                    <td style={tdStyle}>{formatBytes(row.estimatedBytes)}</td>
-                    <td style={tdStyle}>
-                      {(row.shareOfContent * 100).toFixed(1)}%
-                    </td>
-                    <td style={tdStyle}>
-                      <span
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 600,
-                          padding: "2px 8px",
-                          borderRadius: 999,
-                          background: riskColors[row.risk].bg,
-                          color: riskColors[row.risk].color,
-                        }}
-                      >
-                        {row.risk}
-                      </span>
-                    </td>
+            <div style={{ overflowX: "auto" }}>
+              <table
+                style={{
+                  width: "100%",
+                  minWidth: 640,
+                  borderCollapse: "collapse",
+                  fontSize: 13,
+                  marginTop: 14,
+                }}
+              >
+                <thead>
+                  <tr style={{ textAlign: "left", color: "#6b7280" }}>
+                    <th style={thStyle}>Usuario</th>
+                    <th style={thStyle}>Ejecuciones</th>
+                    <th style={thStyle}>Títulos</th>
+                    <th style={thStyle}>Eventos de log</th>
+                    <th style={thStyle}>Peso estimado</th>
+                    <th style={thStyle}>% del contenido total</th>
+                    <th style={thStyle}>Riesgo</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {usage.perUser.map((row) => (
+                    <tr
+                      key={row.userId}
+                      style={{ borderTop: "1px solid #dfe3e8" }}
+                    >
+                      <td style={tdStyle}>{row.email}</td>
+                      <td style={tdStyle}>{row.runs}</td>
+                      <td style={tdStyle}>{row.titles}</td>
+                      <td style={tdStyle}>{row.events}</td>
+                      <td style={tdStyle}>{formatBytes(row.estimatedBytes)}</td>
+                      <td style={tdStyle}>
+                        {(row.shareOfContent * 100).toFixed(1)}%
+                      </td>
+                      <td style={tdStyle}>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 600,
+                            padding: "2px 8px",
+                            borderRadius: 999,
+                            background: riskColors[row.risk].bg,
+                            color: riskColors[row.risk].color,
+                          }}
+                        >
+                          {row.risk}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </>
         )}
       </section>
@@ -527,7 +530,7 @@ function UserRowItem({
         </td>
       </tr>
       {editing && (
-        <tr style={{ background: "#f7f8fa" }}>
+        <tr style={{ background: "#f7f8fa", color: "#16181d" }}>
           <td colSpan={6} style={{ ...tdStyle, padding: "10px 8px" }}>
             <div
               style={{

@@ -3,6 +3,11 @@ import type { RunStatus, TitleStatus } from "@/types/dashboard";
 
 export const sectionStyle: CSSProperties = {
   background: "#ffffff",
+  // El fondo general de la app ahora es navy con texto claro (#e8ecf5) —
+  // sin este color explícito, cualquier texto de la tarjeta que no fije su
+  // propio color heredaba ese claro y se volvía casi invisible sobre
+  // blanco (ej. el título "Publicando" en Inicio).
+  color: "#16181d",
   border: "1px solid #e5e8ec",
   borderRadius: 12,
   padding: 20,

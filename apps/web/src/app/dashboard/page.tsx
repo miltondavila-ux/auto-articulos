@@ -611,6 +611,7 @@ function TitleProgressRow({
     <div
       style={{
         background: "#f7f8fa",
+        color: "#16181d",
         border: "1px solid #dfe3e8",
         borderRadius: 8,
         padding: "10px 14px",
