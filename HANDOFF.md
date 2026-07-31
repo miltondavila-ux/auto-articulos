@@ -328,6 +328,44 @@ No se modificó código ni base de datos todavía: primero se documentó la
 limitación real para no construir una integración de Google prohibida ni
 guardar contraseñas de usuarios.
 
+### Inicio de configuración Google Cloud (costo cero)
+
+El usuario confirmó que la integración no debe generar ningún costo. La
+documentación oficial de Google indica que **todo uso de Search Console API
+es gratuito**, sujeto únicamente a cuotas. No se habilitarán Compute Engine,
+Vertex AI, almacenamiento, bases de datos ni otros productos facturables, y
+no se aceptará ninguna activación de pago.
+
+Estado al pausar:
+
+- Se abrió `https://console.cloud.google.com/` en el navegador seguro.
+- Google mostró la pantalla oficial de inicio de sesión; la sesión todavía no
+  está autenticada.
+- No se creó proyecto, no se habilitó API, no se configuró OAuth y no se
+  vinculó facturación.
+- Próximo paso: el usuario debe iniciar sesión personalmente en esa pestaña
+  (sin compartir su contraseña) y avisar cuando vea Google Cloud Console.
+
+Avance posterior confirmado por el usuario:
+
+- Inició sesión desde su navegador habitual.
+- Creó un proyecto separado llamado **Auto Artículos Search Console**, para
+  no mezclar esta integración con su proyecto existente "Drive - files to
+  share".
+- La creación del proyecto no habilitó servicios facturables. Siguiente paso:
+  habilitar únicamente Google Search Console API desde APIs y servicios.
+- Captura del usuario confirmó después que **Google Search Console API**
+  (`searchconsole.googleapis.com`) quedó habilitada dentro de **Auto
+  Artículos Search Console**. No se habilitó facturación ni otro servicio.
+  Siguiente paso: configurar la pantalla/identidad de consentimiento OAuth.
+- En Información de la marca, Google mostró como requisitos las URLs públicas
+  de inicio, privacidad y condiciones. Se crearon sin servicios adicionales:
+  `/acerca-de`, `/privacidad` y `/terminos`, con navegación común, contacto,
+  descripción clara del uso de datos de Google, separación multi-tenant,
+  revocación/eliminación y aclaración de que no se garantiza indexación. Se
+  agregaron a `PUBLIC_PATHS` en `apps/web/src/proxy.ts`. El logotipo se omitió
+  por ahora porque es opcional y puede añadir revisión de marca innecesaria.
+
 ## Pendiente / próximos pasos
 
 1. Crear/configurar los clientes OAuth de Google y Bing descritos arriba y
