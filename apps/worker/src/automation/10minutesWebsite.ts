@@ -1,5 +1,6 @@
 import { chromium, type Page } from "playwright";
 import { buildImagePrompt, isImageRelevant } from "../imagePrompt";
+import { generateFaqs, type Faq } from "../faqPrompt";
 
 export interface TenMinutesWebsiteCredentials {
   username: string;
@@ -57,7 +58,7 @@ export async function publishArticle(
       onStep,
     );
     await generateImage(page, finalTitle, summary, onStep);
-    await fillFaqWidget(page, title, summary, contentHtml, onStep);
+    await fillFaqWidget(page, finalTitle, summary, contentHtml, onStep);
     const articleUrl = await saveAndGetUrl(page, finalTitle, onStep);
 
     return { articleUrl, finalTitle };
@@ -540,12 +541,16 @@ async function checkPreviewRelevant(
 }
 
 /**
- * Arma un bloque de Preguntas Frecuentes (visible + schema.org FAQPage en
- * JSON-LD) a partir del título y el contenido real generado para el
- * artículo, y lo coloca en el campo "Widget (opcional)" (#widgetcode) al pie
- * del formulario. Es un textarea de texto libre sin validaciones (verificado
- * en vivo el 29/7/2026: escribir aquí no afecta el guardado del artículo,
- * a diferencia del campo de imagen).
+ * Genera preguntas frecuentes reales con IA a partir del título y el
+ * contenido real generado para el artículo (ver faqPrompt.ts), y coloca el
+ * schema.org FAQPage (JSON-LD) en el campo "Widget (opcional)" (#widgetcode)
+ * al pie del formulario. Es un textarea de texto libre sin validaciones
+ * (verificado en vivo el 29/7/2026: escribir aquí no afecta el guardado del
+ * artículo, a diferencia del campo de imagen).
+ *
+ * Pedido explícito del usuario (31/7/2026): el FAQ debe quedar SOLO en el
+ * código (para SEO) y no debe verse nada en la página — por eso acá solo se
+ * inserta el <script type="application/ld+json">, nunca HTML visible.
  */
 async function fillFaqWidget(
   page: Page,
@@ -554,54 +559,24 @@ async function fillFaqWidget(
   contentHtml: string,
   onStep: OnStep,
 ): Promise<void> {
-  const widgetHtml = buildFaqWidgetHtml(title, summary, contentHtml);
+  const plainContent = stripHtml(contentHtml);
+  const faqs = await generateFaqs(title, summary, plainContent);
+
+  if (faqs.length === 0) {
+    await onStep(
+      "No se generaron preguntas frecuentes de calidad para este artículo; se omite el FAQ.",
+    );
+    return;
+  }
+
+  const widgetHtml = buildFaqSchema(faqs);
   await page.fill("#widgetcode", widgetHtml);
-  await onStep("Preguntas frecuentes (FAQ) agregadas al artículo.");
+  await onStep(
+    `Preguntas frecuentes (FAQ) generadas con IA a partir del contenido real (${faqs.length}).`,
+  );
 }
 
-function buildFaqWidgetHtml(
-  title: string,
-  summary: string,
-  contentHtml: string,
-): string {
-  const plainContent = stripHtml(contentHtml);
-  const sentences = [
-    ...splitIntoSentences(summary),
-    ...splitIntoSentences(plainContent),
-  ];
-
-  const faqs = [
-    {
-      q: `¿Qué debo saber sobre "${title}"?`,
-      a: sentences[0] ?? summary.trim() ?? title,
-    },
-    {
-      q: "¿Qué opciones tengo disponibles?",
-      a:
-        sentences[1] ??
-        "Existen varias opciones disponibles según tu situación particular.",
-    },
-    {
-      q: "¿Cómo puedo tomar la mejor decisión en mi caso?",
-      a:
-        sentences[2] ??
-        "Es recomendable comparar los detalles de cada opción antes de decidir.",
-    },
-    {
-      q: "¿A quién puedo contactar para recibir asesoría personalizada?",
-      a: "Puedes contactar a un agente certificado de seguros de salud para recibir orientación personalizada según tu situación.",
-    },
-  ];
-
-  const visibleHtml = [
-    '<div class="auto-articulos-faq">',
-    "<h3>Preguntas frecuentes</h3>",
-    ...faqs.map(
-      (f) => `<p><strong>${escapeHtml(f.q)}</strong><br>${escapeHtml(f.a)}</p>`,
-    ),
-    "</div>",
-  ].join("\n");
-
+function buildFaqSchema(faqs: Faq[]): string {
   const schema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -612,7 +587,7 @@ function buildFaqWidgetHtml(
     })),
   };
 
-  return `${visibleHtml}\n<script type="application/ld+json">${JSON.stringify(schema)}</script>`;
+  return `<script type="application/ld+json">${JSON.stringify(schema)}</script>`;
 }
 
 function stripHtml(html: string): string {
@@ -621,21 +596,6 @@ function stripHtml(html: string): string {
     .replace(/&nbsp;/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-}
-
-function splitIntoSentences(text: string): string[] {
-  return text
-    .split(/(?<=[.!?])\s+/)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 25);
-}
-
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }
 
 interface ArticleRow {
