@@ -27,21 +27,30 @@ creados en el sistema (1 admin + 44 usuarios normales, incluida Sandra).
 - **Worker**: Node/TypeScript con Playwright, corre en **GitHub Actions**
   (`.github/workflows/worker.yml`), disparado por cron cada 5 min Y por
   `workflow_dispatch` instantáneo desde la API (`triggerWorkerNow()` en
-  `apps/web/src/lib/trigger-worker.ts`). Repo: `apps/worker`. Solo un
-  proceso de `run-once.ts` corre a la vez a nivel de GitHub Actions
-  (`concurrency: group: auto-articulos-worker`, `cancel-in-progress: false`,
-  sin cambios), pero DENTRO de ese proceso ahora hay concurrencia real: 2
-  "lanes" de publicación de artículos + 1 lane de sincronización de
-  categorías corren en paralelo (`Promise.all` en `run-once.ts`), cada uno
-  tomando el usuario más antiguo que no esté ya en uso — `reservation.ts`
-  (reserva en memoria por `userId`) garantiza que nunca dos lanes abran
-  sesión contra la MISMA cuenta de 10minutesWebsite al mismo tiempo (eso
-  podría invalidar la sesión y romper el trabajo en curso), pero sí permite
-  que usuarios distintos avancen a la vez sin esperarse entre sí. Pedido
-  explícito del usuario (31/7/2026). `TITLE_LANE_CONCURRENCY = 2` en
-  `run-once.ts` es a propósito conservador (el runner de GitHub Actions
-  tiene solo 2 vCPU) — subirlo es seguro de intentar si se ve estable, solo
-  cambiar esa constante.
+  `apps/web/src/lib/trigger-worker.ts`). Repo: `apps/worker`.
+  **Actualizado 31/7/2026 (noche), carga real de ~40 usuarios activos**:
+  ahora corren **5 shards en paralelo** por corrida (`strategy.matrix` en
+  `worker.yml`), cada uno un proceso de Node completamente separado, y
+  dentro de cada shard 2 "lanes" de publicación de artículos + 2 lanes de
+  sincronización de categorías (`TITLE_LANE_CONCURRENCY` /
+  `SYNC_LANE_CONCURRENCY` en `run-once.ts`). El bloqueo por usuario
+  (`reservation.ts`) YA NO es en memoria (eso solo servía dentro de un
+  mismo proceso) — es un **claim atómico en la base de datos**
+  (`User.workerBusyUntil`, `UPDATE` condicional con vencimiento de 5 min
+  como red de seguridad si un proceso muere sin liberarlo), probado bajo
+  concurrencia simulada antes de desplegar: de 3 intentos simultáneos por
+  el mismo usuario, exactamente uno gana el claim. Esto garantiza que nunca
+  dos shards/lanes abran sesión contra la MISMA cuenta de 10minutesWebsite
+  a la vez (podría invalidar la sesión), pero permite que usuarios
+  distintos avancen todos en paralelo a través de los 5 shards. Además,
+  `triggerWorkerNow()` ahora chequea primero si ya hay una corrida
+  `in_progress`/`queued` en GitHub Actions antes de disparar otra — antes,
+  disparos repetidos (varias personas actuando casi al mismo tiempo)
+  cancelaban la corrida en cola anterior entre sí ("guerra de disparos",
+  visto en vivo esa misma noche). El `concurrency: group:
+  auto-articulos-worker` de `worker.yml` sigue existiendo para evitar que
+  dos TANDAS de 5 shards se disparen una encima de la otra, pero los 5
+  shards DENTRO de una misma tanda corren en paralelo sin problema.
 - **Base de datos**: PostgreSQL en **Supabase Pro** (pagado). Prisma como ORM
   (`packages/db`).
 - **Automatización**: Playwright headless controla un navegador con las
@@ -119,12 +128,15 @@ Campos agregados a `User` a lo largo de esta sesión y la anterior:
   ya muestra nombre y apellido también para Milton, Mario y Lorena.
 - `phone String?` — backfillado para los usuarios que lo tenían en la
   planilla original.
-- `monthlyArticleLimit Int? @default(300)` y `dailyArticleLimit Int? @default(40)`
+- `monthlyArticleLimit Int? @default(300)` y `dailyArticleLimit Int? @default(95)`
   — límites estándar aplicados a **todos** los usuarios actuales (pedido
-  explícito del 31/7/2026), editables individualmente desde Usuarios. Se
-  validan al crear una corrida (`POST /api/runs`, `apps/web/src/app/api/runs/route.ts`):
-  si se supera el límite mensual o el diario, la API devuelve 403 con el
-  mensaje explicando cuánto queda.
+  explícito del 31/7/2026; el diario empezó en 40 y se subió a 95 el mismo
+  día), editables individualmente desde Usuarios. Se validan al crear una
+  corrida (`POST /api/runs`, `apps/web/src/app/api/runs/route.ts`): si se
+  supera el límite mensual o el diario, la API devuelve 403 con el mensaje
+  explicando cuánto queda.
+- `workerBusyUntil DateTime?` — bloqueo entre procesos del worker (ver
+  Arquitectura arriba), NO relacionado con límites de artículos.
 
 ## Cambios importantes de esta sesión (31/7/2026), en orden
 
@@ -173,13 +185,12 @@ Campos agregados a `User` a lo largo de esta sesión y la anterior:
    deshabilitado cuando no hay clave recuperable guardada.
 10. **Límite diario subido a 95** (era 40 al principio) — mismo mecanismo
     que el mensual, aplicado a los 45 usuarios.
-11. **Worker con concurrencia real por usuario** (ver sección Arquitectura
-    arriba) — antes todo el trabajo de todos los usuarios pasaba por una
-    cola secuencial de a uno; ahora varios usuarios distintos avanzan en
-    paralelo (`apps/worker/src/reservation.ts`,
-    `apps/worker/src/run-once.ts`, cambios en `queue.ts`/`categorySync.ts`).
-    Sin cambios en `worker.yml` — sigue siendo un solo proceso de GitHub
-    Actions a la vez, la concurrencia es interna a ese proceso.
+11. **Worker con concurrencia real por usuario, primera versión** (en
+    memoria, dentro de un solo proceso) — antes todo el trabajo de todos los
+    usuarios pasaba por una cola secuencial de a uno; esta primera versión
+    dejó avanzar varios usuarios en paralelo pero solo DENTRO de un mismo
+    proceso de `run-once.ts`. **Superada la misma noche por el ítem 18**
+    (multi-proceso real) al ver que no alcanzaba para ~40 usuarios activos.
 12. **FAQ generado con IA en vez de plantilla fija**
     (`apps/worker/src/faqPrompt.ts`, nuevo): antes el widget FAQ usaba
     preguntas de relleno genéricas ("¿Qué opciones tengo disponibles?",
@@ -251,6 +262,28 @@ type="application/ld+json">` (schema.org FAQPage) en el campo Widget,
     `<details>`**: antes quedaba anidado junto con el texto explicativo
     dentro de "¿Parece atascado?" (solo visible al expandir); ahora es un
     botón independiente, siempre visible.
+18. **Multi-proceso real: 5 shards de GitHub Actions en paralelo** (ver
+    sección Arquitectura arriba para el detalle completo). Encontrado en
+    vivo esa misma noche con ~40 usuarios activos: la corrida única con
+    lanes en memoria (ítem 11) se veía forzada a encolar/cancelar corridas
+    entre sí cuando muchas personas disparaban el worker casi al mismo
+    tiempo, dejando trabajo esperando de más (el sync de categorías de
+    Lizzammar Oropeza quedó "pending" varios minutos por esto). Se
+    diagnosticó comparando `gh run list --workflow=worker.yml` (columna
+    `headSha`/`status`/`conclusion`) contra los `CategorySyncJob` en la
+    base — varias corridas "cancelled" seguidas en segundos, superponiéndose
+    entre sí. Solución: `worker.yml` con `strategy.matrix: shard: [1..5]` +
+    bloqueo por usuario movido a la base de datos (`reservation.ts`,
+    `User.workerBusyUntil`) para que sea seguro entre procesos separados.
+    Probado con 3 intentos simultáneos de reserva sobre el mismo usuario
+    antes de desplegar (exactamente uno ganó).
+19. **`triggerWorkerNow()` ya no dispara si ya hay una corrida activa**
+    (`apps/web/src/lib/trigger-worker.ts`, función `isWorkerAlreadyActive`):
+    consulta la API de GitHub por corridas `in_progress`/`queued` de
+    `worker.yml` antes de disparar una nueva — evita la "guerra de
+    disparos" descrita en el ítem 18. La corrida activa vuelve a revisar la
+    base de datos en cada vuelta de su loop, así que igual recoge el
+    trabajo nuevo sin necesidad de un disparo adicional.
 
 ## Aclaración: "Artículos publicados" vs. "Títulos" en Usuarios
 
@@ -414,9 +447,17 @@ Avance posterior confirmado por el usuario:
 5. Confirmar operativamente que los usuarios recién creados guarden sus
    propias credenciales de 10minutesWebsite y sincronicen categorías (esto
    es trabajo de cada usuario final, no de código).
-6. `CODEX_PROMPT.md` se recreó en esta sesión (ver ese archivo) para poder
-   continuar desde Codex leyendo únicamente este HANDOFF — si se vuelve a
-   borrar y hace falta, recrearlo con el mismo patrón.
+6. `CODEX_PROMPT.md` y este `HANDOFF.md` ya quedaron commiteados en git por
+   Codex (antes eran solo locales) — ya no hay riesgo de perderlos si se
+   borran del disco, están en el historial de `main`.
+7. **Verificar que el rollout de los 5 shards (ítem 18) funcione como se
+   espera** en la próxima corrida real: confirmar con
+   `gh run list --workflow=worker.yml` que aparecen 5 jobs paralelos por
+   corrida, y que el `CategorySyncJob` pendiente de Lizzammar Oropeza
+   (`lizzaoropezarealtor@gmail.com`) termina en `success` o `error` en vez
+   de quedar `pending`.
+   Si algo falla, `reservation.ts`/`run-once.ts` son los archivos a revisar
+   primero.
 
 ## Reglas y preferencias del usuario (NO ignorar)
 
