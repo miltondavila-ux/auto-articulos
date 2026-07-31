@@ -13,6 +13,8 @@ import {
 } from "@/components/dashboard-ui";
 import type { CategoryRow } from "@/types/dashboard";
 
+const MAX_TITLES_PER_BATCH = 20;
+
 export default function PublicarPage() {
   const router = useRouter();
   const [titlesText, setTitlesText] = useState("");
@@ -61,6 +63,12 @@ export default function PublicarPage() {
     loadCategories();
     checkActiveRun();
   }, [loadCredentialsStatus, loadCategories, checkActiveRun]);
+
+  const titleCount = titlesText
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0).length;
+  const overLimit = titleCount > MAX_TITLES_PER_BATCH;
 
   async function handleIniciar() {
     setStarting(true);
@@ -165,6 +173,10 @@ export default function PublicarPage() {
 
       <section style={sectionStyle}>
         <h2 style={h2Style}>Títulos a publicar</h2>
+        <p style={{ fontSize: 13, color: "#6b7280" }}>
+          Un título por línea. Máximo {MAX_TITLES_PER_BATCH} por lote — si
+          tienes más, divídelos en varios lotes.
+        </p>
         <textarea
           value={titlesText}
           onChange={(e) => setTitlesText(e.target.value)}
@@ -180,6 +192,18 @@ export default function PublicarPage() {
             fontFamily: "inherit",
           }}
         />
+        <p
+          style={{
+            fontSize: 12,
+            marginTop: 6,
+            color: overLimit ? "#d64545" : "#6b7280",
+            fontWeight: overLimit ? 600 : 400,
+          }}
+        >
+          {titleCount} / {MAX_TITLES_PER_BATCH} títulos
+          {overLimit &&
+            ` — quita ${titleCount - MAX_TITLES_PER_BATCH} para poder iniciar`}
+        </p>
         <label
           style={{
             display: "flex",
@@ -205,14 +229,16 @@ export default function PublicarPage() {
             starting ||
             hasActiveRun ||
             titlesText.trim().length === 0 ||
-            !selectedCategoryId
+            !selectedCategoryId ||
+            overLimit
           }
           style={disabledStyle(
             buttonStyle,
             starting ||
               hasActiveRun ||
               titlesText.trim().length === 0 ||
-              !selectedCategoryId,
+              !selectedCategoryId ||
+              overLimit,
           )}
         >
           {hasActiveRun
