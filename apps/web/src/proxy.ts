@@ -6,7 +6,16 @@ const PUBLIC_PATHS = ["/login", "/api/auth/login"];
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (PUBLIC_PATHS.some((path) => pathname === path) || pathname.startsWith("/_next")) {
+  // Bug real encontrado el 31/7/2026: el matcher de abajo excluye
+  // _next/static pero NO los archivos estáticos servidos directamente
+  // desde /public (como la imagen del login) — sin esta línea, la imagen
+  // se pedía sin sesión válida y el middleware la redirigía al login en
+  // vez de servirla, así que nunca se veía.
+  if (
+    PUBLIC_PATHS.some((path) => pathname === path) ||
+    pathname.startsWith("/_next") ||
+    /\.(jpg|jpeg|png|webp|gif|svg|ico)$/i.test(pathname)
+  ) {
     return NextResponse.next();
   }
 
