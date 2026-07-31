@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { processNext } from "./queue";
 import { processNextCategorySync } from "./categorySync";
+import { cleanupOldEvents } from "./cleanup";
 
 // Pensado para correr en un runner efímero (GitHub Actions), no como proceso
 // 24/7 como index.ts. Procesa todo el trabajo pendiente hasta que no quede
@@ -20,7 +21,14 @@ async function main() {
     didAnyWork = true;
   }
 
-  console.log(didAnyWork ? "Trabajo pendiente procesado." : "No había trabajo pendiente.");
+  const deletedEvents = await cleanupOldEvents();
+  if (deletedEvents > 0) {
+    console.log(`Limpieza: ${deletedEvents} eventos de log viejos borrados.`);
+  }
+
+  console.log(
+    didAnyWork ? "Trabajo pendiente procesado." : "No había trabajo pendiente.",
+  );
 }
 
 main()
