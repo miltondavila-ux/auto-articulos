@@ -78,7 +78,8 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Codex
 
-- **Estado:** PAUSADO por indicación del usuario hasta que Claude termine.
+- **Estado:** ACTIVO, limitado a Google Search Console sin tocar el área del
+  worker que Claude mantiene reservada.
 - **Tarea:** integración multiusuario con Google Search Console.
 - **Área reservada cuando se reanude:** OAuth/API/UI de Google y migración
   `20260731210000_add_google_search_console`.
@@ -94,6 +95,10 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
   (workflow temporal de migración).
 - **Estado externo:** web desplegada; migración de producción iniciada antes de
   la pausa; faltan las credenciales reales del cliente OAuth de Google.
+- **Reserva actual:** configuración OAuth externa, rutas/componentes Google en
+  `apps/web` y verificación de solo lectura del estado de la migración. Codex no
+  tocará `apps/worker/**`, `worker.yml` ni `schema.prisma` mientras Claude no
+  libere expresamente esa área en este tablero.
 
 ## Zona compartida: requiere coordinación explícita
 

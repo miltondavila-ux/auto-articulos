@@ -1,6 +1,9 @@
 import { prisma, Prisma } from "@auto-articulos/db";
 import { decryptSecret, MAX_ATTEMPTS } from "@auto-articulos/shared";
-import { publishArticle } from "./automation/10minutesWebsite";
+import {
+  publishArticle,
+  DailyLimitReachedError,
+} from "./automation/10minutesWebsite";
 import { tryReserveUser, releaseUser } from "./reservation";
 import { notifyGoogle } from "./googleIndexing";
 
@@ -151,6 +154,18 @@ async function processRunTitle(
       await prisma.title.update({
         where: { id: nextTitle.id },
         data: { status: "cancelled", errorMessage: message },
+      });
+    } else if (err instanceof DailyLimitReachedError) {
+      // Límite diario de artículos confirmado por el propio sitio (no una
+      // hipótesis): NINGÚN otro título de este lote puede avanzar hoy, así
+      // que se detiene todo de una vez en vez de reintentar título por
+      // título contra el mismo límite (desperdiciando turnos del worker que
+      // podrían usar otros usuarios) — mismo tratamiento que credenciales
+      // faltantes.
+      await markTitleError(nextTitle.id, message);
+      await prisma.run.updateMany({
+        where: { id: run.id, status: { in: ["pending", "running"] } },
+        data: { status: "halted", finishedAt: new Date() },
       });
     } else if (fresh.attempts >= MAX_ATTEMPTS) {
       // Se acabaron los intentos para ESTE título, pero el lote sigue: el

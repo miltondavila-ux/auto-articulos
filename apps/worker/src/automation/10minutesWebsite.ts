@@ -19,6 +19,17 @@ export interface RemoteCategory {
 
 export type OnStep = (message: string) => Promise<void>;
 
+/**
+ * Encontrado en vivo el 31/7/2026 (cuenta de Lizzammar Oropeza): el sitio
+ * limita a 10 artículos por día para cuentas normales, algo que no debería
+ * aplicar al programa de posicionamiento. Cuando se detecta ese mensaje
+ * exacto, TODO el lote se detiene de una vez (ver queue.ts) — reintentar
+ * título por título contra un límite que no se levanta hasta el día
+ * siguiente solo desperdicia turnos del worker que podrían usar otros
+ * usuarios, y deja al usuario adivinando por qué fallan uno por uno.
+ */
+export class DailyLimitReachedError extends Error {}
+
 const BASE_URL = "https://10minuteswebsite.net";
 const ARTICLE_TYPE_NOTICIAS = "2";
 const NAV_TIMEOUT_MS = 30_000;
@@ -206,6 +217,23 @@ async function createArticleDraft(
           .join(" | ");
       })
       .catch(() => "");
+
+    // El sitio muestra este texto exacto (visto en vivo con la cuenta de
+    // Lizzammar Oropeza) cuando el límite diario de artículos está activo.
+    // Si lo detectamos, es un hecho confirmado, no una hipótesis — se marca
+    // con un error especial para que TODO el lote se detenga de inmediato
+    // en vez de reintentar título por título contra el mismo límite.
+    if (/límite diario/i.test(alertText)) {
+      throw new DailyLimitReachedError(
+        `Se alcanzó el límite diario de artículos de esta cuenta en 10minutesWebsite: "${alertText}". ` +
+          "Esto no debería aplicar a cuentas del programa de posicionamiento — " +
+          "escribe al servicio al cliente de 10minutesWebsite " +
+          "(https://www.10minuteswebsite.com/ayuda) para que eliminen esa " +
+          "restricción para esta cuenta. Mientras tanto, el resto de los " +
+          "artículos de este lote no se pueden crear hoy.",
+      );
+    }
+
     throw new Error(
       "No se pudo abrir el formulario de creación de artículo (el sitio no " +
         'mostró el campo "Tipo" a tiempo)' +
