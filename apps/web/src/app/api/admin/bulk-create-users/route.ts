@@ -79,13 +79,26 @@ export async function POST() {
     name: string;
     email: string;
     password: string | null;
-    status: "created" | "already_existed";
+    status: "created" | "name_filled" | "already_existed";
   }[] = [];
 
   for (const { name, email } of USERS) {
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
-      results.push({ name, email, password: null, status: "already_existed" });
+      if (!existing.name) {
+        await prisma.user.update({
+          where: { id: existing.id },
+          data: { name },
+        });
+        results.push({ name, email, password: null, status: "name_filled" });
+      } else {
+        results.push({
+          name,
+          email,
+          password: null,
+          status: "already_existed",
+        });
+      }
       continue;
     }
 
@@ -94,7 +107,13 @@ export async function POST() {
     const initialPasswordEncrypted = encryptSecret(password);
 
     await prisma.user.create({
-      data: { email, passwordHash, initialPasswordEncrypted, role: "user" },
+      data: {
+        name,
+        email,
+        passwordHash,
+        initialPasswordEncrypted,
+        role: "user",
+      },
     });
 
     results.push({ name, email, password, status: "created" });

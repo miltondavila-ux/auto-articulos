@@ -20,6 +20,7 @@ export async function GET() {
     prisma.user.findMany({
       select: {
         id: true,
+        name: true,
         email: true,
         role: true,
         monthlyArticleLimit: true,
@@ -69,7 +70,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { userId, monthlyArticleLimit, email, newPassword } = body;
+  const { userId, monthlyArticleLimit, email, newPassword, name } = body;
 
   if (typeof userId !== "string" || !userId) {
     return NextResponse.json({ error: "userId es requerido" }, { status: 400 });
@@ -78,9 +79,14 @@ export async function PATCH(request: NextRequest) {
   const data: {
     monthlyArticleLimit?: number | null;
     email?: string;
+    name?: string;
     passwordHash?: string;
     initialPasswordEncrypted?: string;
   } = {};
+
+  if (typeof name === "string") {
+    data.name = name.trim();
+  }
 
   if ("monthlyArticleLimit" in body) {
     if (
@@ -127,6 +133,7 @@ export async function PATCH(request: NextRequest) {
     data,
     select: {
       id: true,
+      name: true,
       email: true,
       role: true,
       monthlyArticleLimit: true,
@@ -168,7 +175,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
-  const { email, password } = await request.json();
+  const { email, password, name } = await request.json();
 
   if (typeof email !== "string" || !email.trim()) {
     return NextResponse.json(
@@ -194,8 +201,14 @@ export async function POST(request: NextRequest) {
   const passwordHash = await bcrypt.hash(password, 12);
   const initialPasswordEncrypted = encryptSecret(password);
   const user = await prisma.user.create({
-    data: { email, passwordHash, initialPasswordEncrypted, role: "user" },
-    select: { id: true, email: true, role: true, createdAt: true },
+    data: {
+      email,
+      name: typeof name === "string" && name.trim() ? name.trim() : null,
+      passwordHash,
+      initialPasswordEncrypted,
+      role: "user",
+    },
+    select: { id: true, name: true, email: true, role: true, createdAt: true },
   });
 
   return NextResponse.json({ user });

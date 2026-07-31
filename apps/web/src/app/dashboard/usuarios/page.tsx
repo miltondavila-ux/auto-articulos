@@ -17,6 +17,7 @@ import type { RunStatus, TitleStatus } from "@/types/dashboard";
 
 interface UserRow {
   id: string;
+  name: string | null;
   email: string;
   role: "admin" | "user";
   monthlyArticleLimit: number | null;
@@ -65,6 +66,7 @@ function formatBytes(bytes: number): string {
 export default function UsuariosPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [forbidden, setForbidden] = useState(false);
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [creating, setCreating] = useState(false);
@@ -112,7 +114,7 @@ export default function UsuariosPage() {
       const res = await fetch("/api/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ name, email, password }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -122,6 +124,7 @@ export default function UsuariosPage() {
         });
         return;
       }
+      setName("");
       setEmail("");
       setPassword("");
       setBanner({ type: "info", text: `Usuario ${data.user.email} creado.` });
@@ -155,6 +158,13 @@ export default function UsuariosPage() {
           onSubmit={handleCreate}
           style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
         >
+          <input
+            type="text"
+            placeholder="Nombre"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            style={inputStyle}
+          />
           <input
             type="email"
             placeholder="Correo"
@@ -329,6 +339,7 @@ export default function UsuariosPage() {
         >
           <thead>
             <tr style={{ textAlign: "left", color: "#6b7280" }}>
+              <th style={thStyle}>Nombre</th>
               <th style={thStyle}>Correo</th>
               <th style={thStyle}>Rol</th>
               <th style={thStyle}>Artículos publicados</th>
@@ -360,6 +371,7 @@ function UserRowItem({
   );
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState(user.name ?? "");
   const [editEmail, setEditEmail] = useState(user.email);
   const [newPassword, setNewPassword] = useState("");
   const [editError, setEditError] = useState<string | null>(null);
@@ -396,6 +408,7 @@ function UserRowItem({
     try {
       const body: Record<string, unknown> = { userId: user.id };
       if (editEmail.trim() !== user.email) body.email = editEmail.trim();
+      if (editName.trim() !== (user.name ?? "")) body.name = editName.trim();
       if (newPassword.trim() !== "") body.newPassword = newPassword.trim();
 
       const res = await fetch("/api/admin/users", {
@@ -439,6 +452,7 @@ function UserRowItem({
   return (
     <>
       <tr style={{ borderTop: "1px solid #dfe3e8" }}>
+        <td style={tdStyle}>{user.name ?? "—"}</td>
         <td style={tdStyle}>{user.email}</td>
         <td style={tdStyle}>
           {user.role === "admin" ? "Administrador" : "Usuario"}
@@ -565,7 +579,7 @@ function UserRowItem({
       </tr>
       {editing && (
         <tr style={{ background: "#f7f8fa", color: "#16181d" }}>
-          <td colSpan={6} style={{ ...tdStyle, padding: "10px 8px" }}>
+          <td colSpan={7} style={{ ...tdStyle, padding: "10px 8px" }}>
             <div
               style={{
                 display: "flex",
@@ -574,6 +588,13 @@ function UserRowItem({
                 alignItems: "center",
               }}
             >
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                style={{ ...inputStyle, width: 180 }}
+                placeholder="Nombre"
+              />
               <input
                 type="email"
                 value={editEmail}
@@ -605,7 +626,7 @@ function UserRowItem({
         </tr>
       )}
       <tr>
-        <td colSpan={6} style={{ padding: "0 8px 8px" }}>
+        <td colSpan={7} style={{ padding: "0 8px 8px" }}>
           <UserHistorial email={user.email} />
         </td>
       </tr>
