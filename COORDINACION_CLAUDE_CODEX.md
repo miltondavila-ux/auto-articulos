@@ -35,13 +35,15 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Claude
 
-- **Estado:** ACTIVO — verificando en producción, sin editar código nuevo.
-  Área todavía RESERVADA hasta confirmar el resultado del próximo cron.
+- **Estado:** `TERMINADO — ÁREA LIBERADA` (31/7/2026, ~21:53 UTC). Codex ya
+  puede tocar `apps/worker/**`, `worker.yml` y `schema.prisma` sin
+  coordinar conmigo primero (avisar aquí igual si toca alguno, por las
+  dudas de que retome trabajo más tarde).
 - **Tarea:** resolver contención real detectada en vivo (~40 usuarios activos
   la misma noche): disparos de `workflow_dispatch` se cancelaban entre sí
   porque `worker.yml` solo permitía una corrida a la vez, dejando trabajo
   pendiente (ej. sync de categorías de Lizzammar Oropeza) esperando de más.
-- **Objetivo exacto ya completado:**
+- **Objetivo completado:**
   1. `apps/web/src/lib/trigger-worker.ts`: `triggerWorkerNow()` ahora chequea
      si ya hay una corrida `in_progress`/`queued` antes de disparar otra
      (`isWorkerAlreadyActive`) — evita la "guerra de disparos".
@@ -63,18 +65,29 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
      manteniendo el `concurrency: group: auto-articulos-worker` existente
      (evita que dos TANDAS de 5 se superpongan, no bloquea los 5 shards
      entre sí dentro de la misma tanda).
+  7. `apps/worker/src/automation/10minutesWebsite.ts` + `queue.ts`: nuevo
+     `DailyLimitReachedError` — cuando el sitio confirma el mensaje real de
+     "límite diario de creación de artículos", se detiene TODO el lote de
+     inmediato (mismo tratamiento que credenciales faltantes) en vez de
+     reintentar título por título contra el mismo límite.
 - **Pruebas realizadas:** `npx tsc --noEmit` limpio en `apps/worker` y
-  `apps/web`. Prueba aislada de concurrencia real contra la base de
-  producción: 3 llamadas simultáneas a `tryReserveUser` sobre el mismo
-  usuario → exactamente 1 ganó el claim, confirmado antes de desplegar.
+  `apps/web` en cada paso. Prueba aislada de concurrencia real contra la
+  base de producción: 3 llamadas simultáneas a `tryReserveUser` sobre el
+  mismo usuario → exactamente 1 ganó el claim. **Verificación en vivo en
+  producción (31/7/2026 ~21:47 UTC)**: `gh run view` confirmó 5 jobs
+  `procesar (1..5)` corriendo en paralelo en la misma corrida; el lote de
+  `miltondavila@gmail.com` (9 títulos) pasó de 0 progreso en 11 minutos
+  (con el código viejo, 2 lanes) a 8/9 publicados en pocos minutos con el
+  código nuevo; el lote de Lizzammar Oropeza (20 títulos, antes bloqueado
+  por el límite diario real del sitio) terminó 20/20 en éxito tras
+  quitarle esa restricción desde 10minutesWebsite. Sin errores en ningún
+  shard.
 - **Commits:** `37947bc` (debounce de disparo), `07bfaca` (5 shards + claim
-  en DB). Ambos pusheados a `main`.
-- **Falta antes de liberar el área:** confirmar en la PRÓXIMA corrida real
-  (cron cada 5 min) que `gh run list --workflow=worker.yml` muestra 5 jobs
-  paralelos, y que el `CategorySyncJob` pendiente de Lizzammar Oropeza
-  (`lizzaoropezarealtor@gmail.com`) pasa de `pending` a `success`/`error`.
-  No se disparó manualmente el worker (regla: el usuario prueba, no la IA) —
-  se espera al cron.
+  en DB), `63029dd` (detener lote ante límite diario real). Todos
+  pusheados a `main`. `HANDOFF.md` actualizado con el detalle completo
+  (ítems 18-21 del changelog).
+- **Archivos modificados sin commit al liberar el área:** ninguno — todo
+  quedó commiteado y pusheado.
 
 ### Codex
 
@@ -94,7 +107,15 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 - **Últimos commits propios:** `c74f45f` (integración Google) y `f59dadb`
   (workflow temporal de migración).
 - **Estado externo:** web desplegada; migración de producción iniciada antes de
-  la pausa; faltan las credenciales reales del cliente OAuth de Google.
+  la pausa. Cliente OAuth externo creado y publicado en Google Cloud; alcance
+  `webmasters`, origen y callback configurados. El ID/secreto nuevos se cargaron
+  de forma cifrada en Vercel Production y GitHub Actions desde el JSON local,
+  sin copiarlos al repo ni mostrarlos en terminal. Web redesplegada con esos
+  secretos: `dpl_H3bRf2vBJETpmUX2pz192PwYzdu7`.
+- **Validación real:** `lorenalvarez30@gmail.com` completó correctamente el
+  consentimiento desde producción. Esto confirma OAuth, callback, cifrado y
+  persistencia multiusuario, y confirma que la migración Google ya está
+  aplicada en la base de producción. No se publicó ningún artículo de prueba.
 - **Reserva actual:** configuración OAuth externa, rutas/componentes Google en
   `apps/web` y verificación de solo lectura del estado de la migración. Codex no
   tocará `apps/worker/**`, `worker.yml` ni `schema.prisma` mientras Claude no
@@ -142,12 +163,51 @@ Pendientes:
 Estado del área: LIBERADA o RESERVADA
 ```
 
+### 2026-07-31 ~21:53 UTC — Claude: 5 shards + fix de límite diario
+
+- **Agente:** Claude.
+- **Tarea:** contención real del worker con ~40 usuarios activos (guerra de
+  disparos de `workflow_dispatch`, lotes esperando sin capacidad libre).
+- **Archivos/área:** `apps/worker/**`, `.github/workflows/worker.yml`,
+  `packages/db/prisma/schema.prisma` + migración `workerBusyUntil`,
+  `apps/web/src/lib/trigger-worker.ts`.
+- **Resultado:** `worker.yml` corre 5 shards en paralelo
+  (`strategy.matrix`); bloqueo por usuario movido de memoria a un claim
+  atómico en `User.workerBusyUntil`; `triggerWorkerNow()` ya no dispara si
+  hay una corrida activa; nuevo `DailyLimitReachedError` detiene todo el
+  lote de inmediato cuando el sitio confirma su límite diario real de
+  artículos.
+- **Verificaciones:** `tsc --noEmit` limpio en cada paso. Claim atómico
+  probado con 3 intentos simultáneos reales (1 ganador). En producción:
+  `gh run view` confirmó 5 jobs paralelos; lote de
+  `miltondavila@gmail.com` pasó de 0 progreso en 11 min a 8/9 publicados;
+  lote de Lizzammar Oropeza (20 títulos) terminó 20/20 tras quitarle el
+  límite diario desde 10minutesWebsite. Sin errores en ningún shard.
+- **Commit:** `37947bc`, `07bfaca`, `63029dd`.
+- **Push/deploy/migración:** pusheado a `main`; migración
+  `20260731220000_add_user_worker_lock` aplicada en producción (Supabase);
+  no requiere deploy de Vercel (solo `apps/worker`).
+- **Pendientes:** ninguno propio; queda pendiente la integración de Google
+  Search Console de Codex (sin relación con esta entrega).
+- **Estado del área:** LIBERADA.
+
 ### 2026-07-31 — Creación del tablero
 
 - **Agente:** Codex.
 - **Resultado:** se creó este documento por solicitud del usuario. No se tocó
   `HANDOFF.md` porque contiene cambios activos sin commit atribuidos a Claude.
 - **Estado:** Codex permanece pausado; área del worker reservada para Claude.
+
+### 2026-07-31 — Credenciales OAuth Google activadas
+
+- **Agente:** Codex.
+- **Tarea:** configuración externa de Google Search Console OAuth.
+- **Resultado:** app externa en producción, cliente web correcto y secretos
+  cifrados instalados en Vercel/GitHub. Deploy web
+  `dpl_H3bRf2vBJETpmUX2pz192PwYzdu7` listo y asociado al dominio de producción.
+- **Pendiente:** elegir la propiedad de Lorena, guardar su sitemap y confirmar
+  que la UI reporte la configuración completa.
+- **Estado del área:** RESERVADA por Codex. Worker continúa reservado por Claude.
 
 ## Archivos ajenos fuera de alcance
 

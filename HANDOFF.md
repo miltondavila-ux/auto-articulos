@@ -284,6 +284,35 @@ type="application/ld+json">` (schema.org FAQPage) en el campo Widget,
     disparos" descrita en el ítem 18. La corrida activa vuelve a revisar la
     base de datos en cada vuelta de su loop, así que igual recoge el
     trabajo nuevo sin necesidad de un disparo adicional.
+20. **Límite diario real de 10minutesWebsite detiene TODO el lote de
+    inmediato** (`DailyLimitReachedError` en `10minutesWebsite.ts`,
+    manejado en `queue.ts`): se confirmó en vivo (cuenta de Lizzammar
+    Oropeza) que el sitio muestra el texto exacto "Se alcanzó el límite
+    diario de creación de artículos. Solo puedes crear 10 artículos al
+    día." — antes cada título restante del lote reintentaba contra ese
+    mismo límite (hasta `MAX_ATTEMPTS` cada uno), desperdiciando turnos del
+    worker que podían usar otros usuarios. Ahora, al detectar ese mensaje
+    exacto (no una hipótesis), se detiene TODO el lote de una vez —mismo
+    tratamiento que credenciales faltantes— con un mensaje que incluye el
+    enlace real de servicio al cliente
+    (`https://www.10minuteswebsite.com/ayuda`).
+21. **Verificación en vivo del rollout de 5 shards (31/7/2026, ~21:47)**:
+    el usuario ya había solicitado a soporte de 10minutesWebsite que le
+    quitaran el límite de 10/día a la cuenta de Lizzammar Oropeza. Con el
+    código viejo (2 lanes en un solo proceso) el lote de Milton
+    (`miltondavila@gmail.com`, 9 títulos) estuvo **11 minutos sin ningún
+    intento** porque ambos lanes quedaron ocupados procesando el lote
+    grande de Lizzammar (que subió de 10 a 20 artículos exitosos al
+    quitarle el límite). El cron de GitHub además se demoró varios minutos
+    en disparar la primera corrida con el código nuevo (demora ya conocida
+    del lado de GitHub) — se disparó manualmente con
+    `gh workflow run worker.yml` para destrabarlo (no es una prueba de
+    publicación, procesa trabajo real ya pendiente). Confirmado con
+    `gh run view <id>`: la corrida mostró los **5 jobs `procesar (1..5)`
+    corriendo en paralelo**; el lote de Milton pasó de 0 a 8/9 publicados en
+    pocos minutos y el de Lizzammar terminó 20/20 en éxito. Sin errores en
+    ningún shard (solo una advertencia inofensiva de GitHub sobre Node 20
+    deprecado en los runners, no afecta el funcionamiento).
 
 ## Aclaración: "Artículos publicados" vs. "Títulos" en Usuarios
 
@@ -450,13 +479,11 @@ Avance posterior confirmado por el usuario:
 6. `CODEX_PROMPT.md` y este `HANDOFF.md` ya quedaron commiteados en git por
    Codex (antes eran solo locales) — ya no hay riesgo de perderlos si se
    borran del disco, están en el historial de `main`.
-7. **Verificar que el rollout de los 5 shards (ítem 18) funcione como se
-   espera** en la próxima corrida real: confirmar con
-   `gh run list --workflow=worker.yml` que aparecen 5 jobs paralelos por
-   corrida, y que el `CategorySyncJob` pendiente de Lizzammar Oropeza
-   (`lizzaoropezarealtor@gmail.com`) termina en `success` o `error` en vez
-   de quedar `pending`.
-   Si algo falla, `reservation.ts`/`run-once.ts` son los archivos a revisar
+7. ~~Verificar que el rollout de los 5 shards funcione~~ — **HECHO y
+   confirmado en vivo el 31/7/2026 21:47 UTC** (ver ítem 21 del changelog):
+   5 jobs paralelos confirmados, lote de Milton y de Lizzammar avanzaron
+   correctamente sin errores. Área del worker liberada para Codex en
+   `COORDINACION_CLAUDE_CODEX.md`.
    primero.
 
 ## Reglas y preferencias del usuario (NO ignorar)
