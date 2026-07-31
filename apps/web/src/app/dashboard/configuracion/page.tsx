@@ -280,6 +280,30 @@ export default function ConfiguracionPage() {
                 {lastSyncError}
               </p>
             )}
+            <p style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>
+              Si el error menciona el usuario o la contraseña, primero
+              actualízalos arriba en &quot;Credenciales de
+              10minutesWebsite&quot;. Si no recuerdas tu contraseña de
+              10minutesWebsite,{" "}
+              <a
+                href="https://10minuteswebsite.net/dashboard/forgot-password.php"
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: "#2f5fdb" }}
+              >
+                recupérala con tu correo aquí
+              </a>
+              . Si aun así no logras entrar, escribe al{" "}
+              <a
+                href="https://www.10minuteswebsite.com/ayuda"
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: "#2f5fdb" }}
+              >
+                servicio al cliente de 10minutesWebsite
+              </a>
+              .
+            </p>
           </div>
         )}
         {categories.length > 0 && (
