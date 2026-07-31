@@ -41,6 +41,7 @@ interface UsagePerUser {
   estimatedBytes: number;
   shareOfContent: number;
   risk: "alto" | "medio" | "bajo";
+  active: boolean;
 }
 
 interface UsageData {
@@ -304,9 +305,29 @@ export default function UsuariosPage() {
                   {usage.perUser.map((row) => (
                     <tr
                       key={row.userId}
-                      style={{ borderTop: "1px solid #dfe3e8" }}
+                      style={{
+                        borderTop: "1px solid #dfe3e8",
+                        background: row.active ? "#e6f4ff" : undefined,
+                      }}
                     >
-                      <td style={tdStyle}>{row.email}</td>
+                      <td style={tdStyle}>
+                        {row.email}
+                        {row.active && (
+                          <span
+                            style={{
+                              marginLeft: 8,
+                              fontSize: 10,
+                              fontWeight: 700,
+                              padding: "2px 8px",
+                              borderRadius: 999,
+                              background: "#2f5fdb",
+                              color: "#fff",
+                            }}
+                          >
+                            ● En uso ahora
+                          </span>
+                        )}
+                      </td>
                       <td style={tdStyle}>{row.runs}</td>
                       <td style={tdStyle}>{row.titles}</td>
                       <td style={tdStyle}>{row.events}</td>

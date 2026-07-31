@@ -42,7 +42,7 @@ export async function GET() {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
-  const [dbSize, perUserTitles, perUserEvents] = await Promise.all([
+  const [dbSize, perUserTitles, perUserEvents, activeRuns] = await Promise.all([
     prisma.$queryRaw<
       DbSizeRow[]
     >`SELECT pg_database_size(current_database()) as bytes`,
@@ -71,7 +71,14 @@ export async function GET() {
       LEFT JOIN "TitleEvent" e ON e."titleId" = t.id
       GROUP BY u.id
     `,
+    prisma.run.findMany({
+      where: { status: { in: ["running", "pending"] } },
+      select: { userId: true },
+      distinct: ["userId"],
+    }),
   ]);
+
+  const activeUserIds = new Set(activeRuns.map((r) => r.userId));
 
   const eventsByUser = new Map(
     perUserEvents.map((row) => [
@@ -112,6 +119,7 @@ export async function GET() {
       ...u,
       shareOfContent,
       risk: riskLevel(shareOfContent),
+      active: activeUserIds.has(u.userId),
     };
   });
 
