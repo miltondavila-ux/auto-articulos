@@ -105,7 +105,7 @@ export function runStatusLabel(status: RunStatus) {
     case "success":
       return "Completado";
     case "halted":
-      return "Detenido";
+      return "Con errores";
     case "cancelled":
       return "Cancelado";
   }

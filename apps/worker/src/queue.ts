@@ -2,17 +2,10 @@ import { prisma } from "@auto-articulos/db";
 import { decryptSecret, MAX_ATTEMPTS } from "@auto-articulos/shared";
 import { publishArticle } from "./automation/10minutesWebsite";
 
-async function haltRun(runId: string, titleId: string, message: string) {
+async function markTitleError(titleId: string, message: string) {
   await prisma.title.update({
     where: { id: titleId },
     data: { status: "error", errorMessage: message, processedAt: new Date() },
-  });
-  // updateMany con guard de status: si el usuario ya canceló este run desde
-  // el dashboard mientras este título estaba en curso, no queremos pisar
-  // "cancelled" con "halted".
-  await prisma.run.updateMany({
-    where: { id: runId, status: { in: ["pending", "running"] } },
-    data: { status: "halted", finishedAt: new Date() },
   });
 }
 
@@ -31,9 +24,20 @@ export async function processNext(): Promise<boolean> {
   });
 
   if (!nextTitle) {
+    // Ya no quedan títulos pendientes: el lote terminó. Si alguno quedó en
+    // "error", el run pasa a "halted" — no porque se haya detenido a mitad
+    // de camino (ya se procesaron todos los que se podían), sino para que
+    // quede a la espera de que el usuario decida si reintenta esos títulos
+    // puntuales (botón "Reintentar" en Inicio/Historial).
+    const errorCount = await prisma.title.count({
+      where: { runId: run.id, status: "error" },
+    });
     await prisma.run.updateMany({
       where: { id: run.id, status: { in: ["pending", "running"] } },
-      data: { status: "success", finishedAt: new Date() },
+      data: {
+        status: errorCount > 0 ? "halted" : "success",
+        finishedAt: new Date(),
+      },
     });
     return true;
   }
@@ -45,11 +49,17 @@ export async function processNext(): Promise<boolean> {
   });
 
   if (!credential) {
-    await haltRun(
-      run.id,
+    // Sin credenciales, NINGÚN título de este lote puede avanzar — este sí
+    // es un caso real para detener todo de una vez, en vez de ir marcando
+    // título por título el mismo error.
+    await markTitleError(
       nextTitle.id,
       "No se encontraron credenciales de 10minutesWebsite para este usuario.",
     );
+    await prisma.run.updateMany({
+      where: { id: run.id, status: { in: ["pending", "running"] } },
+      data: { status: "halted", finishedAt: new Date() },
+    });
     return true;
   }
 
@@ -113,7 +123,9 @@ export async function processNext(): Promise<boolean> {
         data: { status: "cancelled", errorMessage: message },
       });
     } else if (fresh.attempts >= MAX_ATTEMPTS) {
-      await haltRun(run.id, nextTitle.id, message);
+      // Se acabaron los intentos para ESTE título, pero el lote sigue: el
+      // worker continúa con los demás títulos pendientes del mismo run.
+      await markTitleError(nextTitle.id, message);
     } else {
       // Vuelve a "pending" para reintentar desde el inicio en el próximo ciclo.
       await prisma.title.update({

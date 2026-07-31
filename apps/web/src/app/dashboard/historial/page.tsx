@@ -133,7 +133,12 @@ export default function HistorialPage() {
         </p>
       )}
       {runs.map((run, index) => (
-        <HistoryEntry key={run.id} run={run} defaultOpen={index === 0} />
+        <HistoryEntry
+          key={run.id}
+          run={run}
+          defaultOpen={index === 0}
+          onRetried={loadRuns}
+        />
       ))}
     </section>
   );
@@ -142,19 +147,34 @@ export default function HistorialPage() {
 function HistoryEntry({
   run,
   defaultOpen,
+  onRetried,
 }: {
   run: RunRow;
   defaultOpen: boolean;
+  onRetried: () => void;
 }) {
   const successCount = run.titles.filter((t) => t.status === "success").length;
+  const hasErrors = run.status === "halted";
+  const [retrying, setRetrying] = useState(false);
+
+  async function handleRetryRun(e: React.MouseEvent) {
+    e.preventDefault();
+    setRetrying(true);
+    try {
+      await fetch(`/api/runs/${run.id}/retry`, { method: "POST" });
+      onRetried();
+    } finally {
+      setRetrying(false);
+    }
+  }
 
   return (
     <details
       open={defaultOpen}
       style={{
         marginBottom: 10,
-        background: "#f7f8fa",
-        border: "1px solid #dfe3e8",
+        background: hasErrors ? "#fff8e6" : "#f7f8fa",
+        border: hasErrors ? "1px solid #f0deac" : "1px solid #dfe3e8",
         borderRadius: 8,
         padding: "10px 14px",
       }}
@@ -180,6 +200,25 @@ function HistoryEntry({
         <span style={{ color: "#6b7280" }}>
           — duración: {formatDuration(run.createdAt, run.finishedAt)}
         </span>
+        {hasErrors && (
+          <button
+            onClick={handleRetryRun}
+            disabled={retrying}
+            style={{
+              background: "#8a6d1a",
+              color: "#fff8e6",
+              border: "none",
+              borderRadius: 6,
+              padding: "3px 10px",
+              fontSize: 11,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              cursor: retrying ? "default" : "pointer",
+            }}
+          >
+            {retrying ? "Reintentando..." : "Reintentar"}
+          </button>
+        )}
         <RunStatusBadge status={run.status} />
       </summary>
       <div style={{ marginTop: 12 }}>
@@ -209,13 +248,13 @@ function formatDuration(startIso: string, endIso: string | null): string {
 function RunStatusBadge({ status }: { status: RunStatus }) {
   const color =
     status === "halted"
-      ? "#d64545"
+      ? "#8a6d1a"
       : status === "cancelled"
         ? "#6b7280"
         : "#1e8a4b";
   const background =
     status === "halted"
-      ? "#fdecec"
+      ? "#fff8e6"
       : status === "cancelled"
         ? "#dfe3e8"
         : "#dff5e6";

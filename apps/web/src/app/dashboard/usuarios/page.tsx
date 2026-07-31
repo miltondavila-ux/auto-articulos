@@ -21,6 +21,7 @@ interface UserRow {
   role: "admin" | "user";
   monthlyArticleLimit: number | null;
   createdAt: string;
+  articlesPublished: number;
 }
 
 interface UsagePerUser {
@@ -324,6 +325,7 @@ export default function UsuariosPage() {
             <tr style={{ textAlign: "left", color: "#6b7280" }}>
               <th style={thStyle}>Correo</th>
               <th style={thStyle}>Rol</th>
+              <th style={thStyle}>Artículos publicados</th>
               <th style={thStyle}>Límite mensual de artículos</th>
               <th style={thStyle}>Creado</th>
               <th style={thStyle}>Acciones</th>
@@ -427,6 +429,9 @@ function UserRowItem({
         <td style={tdStyle}>
           {user.role === "admin" ? "Administrador" : "Usuario"}
         </td>
+        <td style={{ ...tdStyle, fontWeight: 600 }}>
+          {user.articlesPublished}
+        </td>
         <td style={tdStyle}>
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <input
@@ -523,7 +528,7 @@ function UserRowItem({
       </tr>
       {editing && (
         <tr style={{ background: "#f7f8fa" }}>
-          <td colSpan={5} style={{ ...tdStyle, padding: "10px 8px" }}>
+          <td colSpan={6} style={{ ...tdStyle, padding: "10px 8px" }}>
             <div
               style={{
                 display: "flex",
@@ -563,7 +568,7 @@ function UserRowItem({
         </tr>
       )}
       <tr>
-        <td colSpan={5} style={{ padding: "0 8px 8px" }}>
+        <td colSpan={6} style={{ padding: "0 8px 8px" }}>
           <UserHistorial email={user.email} />
         </td>
       </tr>

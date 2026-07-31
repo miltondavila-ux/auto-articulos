@@ -583,6 +583,7 @@ function TitleProgressRow({
   // de transferencia de datos que esto evita.
   const [fullEvents, setFullEvents] = useState<TitleEventRow[] | null>(null);
   const [loadingEvents, setLoadingEvents] = useState(false);
+  const [retrying, setRetrying] = useState(false);
 
   async function loadFullEvents() {
     setLoadingEvents(true);
@@ -594,6 +595,15 @@ function TitleProgressRow({
       }
     } finally {
       setLoadingEvents(false);
+    }
+  }
+
+  async function handleRetry() {
+    setRetrying(true);
+    try {
+      await fetch(`/api/titles/${title.id}/retry`, { method: "POST" });
+    } finally {
+      setRetrying(false);
     }
   }
 
@@ -651,6 +661,33 @@ function TitleProgressRow({
               }}
             />
           </div>
+          <details style={{ marginTop: 6 }}>
+            <summary
+              style={{ cursor: "pointer", fontSize: 11, color: "#6b7280" }}
+            >
+              ¿Parece atascado?
+            </summary>
+            <p style={{ fontSize: 11, color: "#6b7280", margin: "4px 0" }}>
+              Si lleva mucho rato sin avanzar (por ejemplo, por una caída de
+              conexión), puedes forzar un reintento.
+            </p>
+            <button
+              onClick={handleRetry}
+              disabled={retrying}
+              style={{
+                background: "#fff8e6",
+                color: "#8a6d1a",
+                border: "1px solid #f0deac",
+                borderRadius: 6,
+                padding: "4px 10px",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: retrying ? "default" : "pointer",
+              }}
+            >
+              {retrying ? "Reintentando..." : "Reintentar ahora"}
+            </button>
+          </details>
         </div>
       )}
 
@@ -677,9 +714,28 @@ function TitleProgressRow({
       )}
 
       {title.status === "error" && title.errorMessage && (
-        <p style={{ margin: "6px 0 0 24px", fontSize: 13, color: "#d64545" }}>
-          {title.errorMessage}
-        </p>
+        <div style={{ margin: "6px 0 0 24px" }}>
+          <p style={{ fontSize: 13, color: "#d64545", margin: 0 }}>
+            {title.errorMessage}
+          </p>
+          <button
+            onClick={handleRetry}
+            disabled={retrying}
+            style={{
+              marginTop: 6,
+              background: "#fde8e8",
+              color: "#d64545",
+              border: "1px solid #e8b4b4",
+              borderRadius: 6,
+              padding: "4px 10px",
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: retrying ? "default" : "pointer",
+            }}
+          >
+            {retrying ? "Reintentando..." : "Reintentar"}
+          </button>
+        </div>
       )}
 
       {title.attempts > 0 && (

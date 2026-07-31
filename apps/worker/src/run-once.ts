@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { processNext } from "./queue";
 import { processNextCategorySync } from "./categorySync";
-import { cleanupOldEvents } from "./cleanup";
+import { cleanupOldEvents, recoverStuckTitles } from "./cleanup";
 
 // Pensado para correr en un runner efímero (GitHub Actions), no como proceso
 // 24/7 como index.ts. Procesa todo el trabajo pendiente hasta que no quede
@@ -10,6 +10,13 @@ import { cleanupOldEvents } from "./cleanup";
 const BUDGET_MS = 18 * 60 * 1000;
 
 async function main() {
+  const recovered = await recoverStuckTitles();
+  if (recovered > 0) {
+    console.log(
+      `Recuperados ${recovered} título(s) atascado(s) en "processing".`,
+    );
+  }
+
   const deadline = Date.now() + BUDGET_MS;
   let didAnyWork = false;
 

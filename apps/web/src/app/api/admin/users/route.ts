@@ -3,6 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId, requireAdmin } from "@/lib/current-user";
 
+interface PublishedCountRow {
+  userId: string;
+  count: bigint;
+}
+
 export async function GET() {
   try {
     await requireAdmin();
@@ -10,17 +15,36 @@ export async function GET() {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
-  const users = await prisma.user.findMany({
-    select: {
-      id: true,
-      email: true,
-      role: true,
-      monthlyArticleLimit: true,
-      createdAt: true,
-    },
-    orderBy: { createdAt: "asc" },
+  const [users, publishedCounts] = await Promise.all([
+    prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        monthlyArticleLimit: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.$queryRaw<PublishedCountRow[]>`
+      SELECT r."userId" as "userId", COUNT(t.id) as count
+      FROM "Title" t
+      JOIN "Run" r ON r.id = t."runId"
+      WHERE t.status = 'success'
+      GROUP BY r."userId"
+    `,
+  ]);
+
+  const publishedByUser = new Map(
+    publishedCounts.map((row) => [row.userId, Number(row.count)]),
+  );
+
+  return NextResponse.json({
+    users: users.map((u) => ({
+      ...u,
+      articlesPublished: publishedByUser.get(u.id) ?? 0,
+    })),
   });
-  return NextResponse.json({ users });
 }
 
 export async function PATCH(request: NextRequest) {
