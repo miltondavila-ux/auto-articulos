@@ -501,8 +501,12 @@ Avance posterior confirmado por el usuario:
   y lanes vivos/polling cada 5 s durante todo el presupuesto de 18 min. Solo el
   shard 1 ejecuta mantenimiento para evitar 10 limpiezas duplicadas. El repo es
   público: runners estándar gratis; GitHub Free permite 20 jobs concurrentes,
-  usamos 10 y dejamos margen. Pendiente validar/commit/push; no se disparará
-  manualmente una publicación de prueba.
+  usamos 10 y dejamos margen. Entregado en commit `90b0b16` y deploy Vercel
+  `dpl_WZah6vUN2eB4JpQLBF2B15ApuNjT`. Validación real de infraestructura en la
+  primera corrida automática nueva `30670137653` (schedule, SHA `90b0b16`):
+  se levantaron los 10 shards y los diez alcanzaron simultáneamente el paso
+  `Procesar trabajo pendiente`. Codex no disparó el worker ni creó una
+  publicación; se avisó al usuario que ya podía ejecutar su prueba.
 
 ## Pendiente / próximos pasos
 

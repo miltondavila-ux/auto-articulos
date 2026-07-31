@@ -91,9 +91,8 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Codex
 
-- **Estado:** ACTIVO. Claude liberó el worker; Codex reserva ahora
-  `apps/worker/src/run-once.ts`, `apps/worker/src/queue.ts` y
-  `.github/workflows/worker.yml` para corregir la escalabilidad.
+- **Estado:** COMPLETADO Y LIBERADO. Claude liberó el worker y Codex terminó
+  la corrección de escalabilidad; ya no mantiene reserva sobre esos archivos.
 - **Tarea:** capacidad real para 40 usuarios publicando simultáneamente.
 - **Área reservada cuando se reanude:** OAuth/API/UI de Google y migración
   `20260731210000_add_google_search_console`.
@@ -129,6 +128,13 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
   otra y la capacidad que se apagó no vuelve hasta otro workflow. Además,
   `queue.ts` solo examina los primeros 20 runs. Cambio reservado: 10 runners ×
   4 lanes = 40 usuarios, espera ociosa durante la ventana y 100 candidatos.
+- **Entrega de escalabilidad:** commit `90b0b16`, push a `main` y deploy Vercel
+  `dpl_WZah6vUN2eB4JpQLBF2B15ApuNjT`. La primera corrida automática con esa
+  versión fue `30670137653` (schedule, 31/7/2026 22:29:59 UTC): GitHub levantó
+  los 10 jobs `procesar (1)` a `procesar (10)` y se comprobó que los diez
+  llegaron simultáneamente al paso `Procesar trabajo pendiente`. El usuario
+  recibió luz verde para crear/probar un artículo; Codex no disparó el worker
+  ni creó una publicación de prueba.
 
 ## Zona compartida: requiere coordinación explícita
 
