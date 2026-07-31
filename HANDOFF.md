@@ -365,6 +365,13 @@ Avance posterior confirmado por el usuario:
   revocación/eliminación y aclaración de que no se garantiza indexación. Se
   agregaron a `PUBLIC_PATHS` en `apps/web/src/proxy.ts`. El logotipo se omitió
   por ahora porque es opcional y puede añadir revisión de marca innecesaria.
+- Páginas validadas con Prettier, `npx tsc --noEmit` y build completo; commit
+  `c4b1899`, push a `main` y deploy Vercel
+  `dpl_D5oM5LuecC2Pw5FBtT489i7noa6d`. Las tres URLs públicas respondieron
+  HTTP 200 sin sesión:
+  `https://auto-articulos-web.vercel.app/acerca-de`,
+  `https://auto-articulos-web.vercel.app/privacidad` y
+  `https://auto-articulos-web.vercel.app/terminos`.
 
 ## Pendiente / próximos pasos
 
