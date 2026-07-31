@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
 
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { monthlyArticleLimit: true },
+    select: { monthlyArticleLimit: true, dailyArticleLimit: true },
   });
   if (user.monthlyArticleLimit !== null) {
     const startOfMonth = new Date();
@@ -124,6 +124,29 @@ export async function POST(request: NextRequest) {
             remaining <= 0
               ? `Ya alcanzaste tu límite mensual de ${user.monthlyArticleLimit} artículos.`
               : `Solo puedes publicar ${remaining} artículo(s) más este mes (límite mensual: ${user.monthlyArticleLimit}).`,
+        },
+        { status: 403 },
+      );
+    }
+  }
+  if (user.dailyArticleLimit !== null) {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const publishedToday = await prisma.title.count({
+      where: {
+        status: "success",
+        processedAt: { gte: startOfDay },
+        run: { userId },
+      },
+    });
+    const remainingToday = user.dailyArticleLimit - publishedToday;
+    if (titles.length > remainingToday) {
+      return NextResponse.json(
+        {
+          error:
+            remainingToday <= 0
+              ? `Ya alcanzaste tu límite diario de ${user.dailyArticleLimit} artículos. Intenta de nuevo mañana.`
+              : `Solo puedes publicar ${remainingToday} artículo(s) más hoy (límite diario: ${user.dailyArticleLimit}).`,
         },
         { status: 403 },
       );

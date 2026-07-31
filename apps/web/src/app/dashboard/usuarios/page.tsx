@@ -24,6 +24,7 @@ interface UserRow {
   email: string;
   role: "admin" | "user";
   monthlyArticleLimit: number | null;
+  dailyArticleLimit: number | null;
   createdAt: string;
   articlesPublished: number;
   currentPassword: string | null;
@@ -359,7 +360,7 @@ export default function UsuariosPage() {
           <table
             style={{
               width: "100%",
-              minWidth: 800,
+              minWidth: 920,
               borderCollapse: "collapse",
               fontSize: 13,
             }}
@@ -372,7 +373,8 @@ export default function UsuariosPage() {
                 <th style={thStyle}>Teléfono</th>
                 <th style={thStyle}>Rol</th>
                 <th style={thStyle}>Artículos publicados</th>
-                <th style={thStyle}>Límite mensual de artículos</th>
+                <th style={thStyle}>Límite mensual</th>
+                <th style={thStyle}>Límite diario</th>
                 <th style={thStyle}>Creado</th>
                 <th style={thStyle}>Acciones</th>
               </tr>
@@ -410,6 +412,10 @@ function UserRowItem({
   const [value, setValue] = useState(
     user.monthlyArticleLimit === null ? "" : String(user.monthlyArticleLimit),
   );
+  const [dailyValue, setDailyValue] = useState(
+    user.dailyArticleLimit === null ? "" : String(user.dailyArticleLimit),
+  );
+  const [savingDaily, setSavingDaily] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editFirstName, setEditFirstName] = useState(user.firstName ?? "");
@@ -442,6 +448,22 @@ function UserRowItem({
       onUpdated();
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleSaveDailyLimit() {
+    setSavingDaily(true);
+    try {
+      const dailyArticleLimit =
+        dailyValue.trim() === "" ? null : Number(dailyValue);
+      await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, dailyArticleLimit }),
+      });
+      onUpdated();
+    } finally {
+      setSavingDaily(false);
     }
   }
 
@@ -528,6 +550,28 @@ function UserRowItem({
               )}
             >
               {saving ? "..." : "Guardar"}
+            </button>
+          </div>
+        </td>
+        <td style={tdStyle}>
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <input
+              type="number"
+              min={0}
+              placeholder="Sin límite"
+              value={dailyValue}
+              onChange={(e) => setDailyValue(e.target.value)}
+              style={{ ...inputStyle, width: 100 }}
+            />
+            <button
+              onClick={handleSaveDailyLimit}
+              disabled={savingDaily}
+              style={disabledStyle(
+                { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
+                savingDaily,
+              )}
+            >
+              {savingDaily ? "..." : "Guardar"}
             </button>
           </div>
         </td>
@@ -628,7 +672,7 @@ function UserRowItem({
       </tr>
       {editing && (
         <tr style={{ background: "#f7f8fa", color: "#16181d" }}>
-          <td colSpan={9} style={{ ...tdStyle, padding: "10px 8px" }}>
+          <td colSpan={10} style={{ ...tdStyle, padding: "10px 8px" }}>
             <div
               style={{
                 display: "flex",
@@ -689,7 +733,7 @@ function UserRowItem({
         </tr>
       )}
       <tr>
-        <td colSpan={9} style={{ padding: "0 8px 8px" }}>
+        <td colSpan={10} style={{ padding: "0 8px 8px" }}>
           <UserHistorial email={user.email} />
         </td>
       </tr>

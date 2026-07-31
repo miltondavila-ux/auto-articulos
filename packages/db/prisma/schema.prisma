@@ -27,7 +27,8 @@ model User {
   // passwordHash (bcrypt); este campo nunca se usa para autenticar.
   initialPasswordEncrypted String?
   role                     UserRole @default(user)
-  monthlyArticleLimit      Int?
+  monthlyArticleLimit      Int?     @default(300)
+  dailyArticleLimit        Int?     @default(40)
   createdAt                DateTime @default(now())
 
   credentials      Credential[]

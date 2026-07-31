@@ -27,6 +27,7 @@ export async function GET() {
         email: true,
         role: true,
         monthlyArticleLimit: true,
+        dailyArticleLimit: true,
         createdAt: true,
         initialPasswordEncrypted: true,
       },
@@ -73,8 +74,17 @@ export async function PATCH(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { userId, monthlyArticleLimit, email, newPassword, name, firstName, lastName, phone } =
-    body;
+  const {
+    userId,
+    monthlyArticleLimit,
+    dailyArticleLimit,
+    email,
+    newPassword,
+    name,
+    firstName,
+    lastName,
+    phone,
+  } = body;
 
   if (typeof userId !== "string" || !userId) {
     return NextResponse.json({ error: "userId es requerido" }, { status: 400 });
@@ -82,6 +92,7 @@ export async function PATCH(request: NextRequest) {
 
   const data: {
     monthlyArticleLimit?: number | null;
+    dailyArticleLimit?: number | null;
     email?: string;
     name?: string;
     firstName?: string | null;
@@ -123,6 +134,22 @@ export async function PATCH(request: NextRequest) {
     data.monthlyArticleLimit = monthlyArticleLimit;
   }
 
+  if ("dailyArticleLimit" in body) {
+    if (
+      dailyArticleLimit !== null &&
+      (typeof dailyArticleLimit !== "number" || dailyArticleLimit < 0)
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "dailyArticleLimit debe ser un número mayor o igual a 0, o null (sin límite)",
+        },
+        { status: 400 },
+      );
+    }
+    data.dailyArticleLimit = dailyArticleLimit;
+  }
+
   if (typeof email === "string" && email.trim()) {
     const existing = await prisma.user.findUnique({
       where: { email: email.trim() },
@@ -159,6 +186,7 @@ export async function PATCH(request: NextRequest) {
       email: true,
       role: true,
       monthlyArticleLimit: true,
+      dailyArticleLimit: true,
       createdAt: true,
     },
   });
