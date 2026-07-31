@@ -21,6 +21,9 @@ export async function GET() {
       select: {
         id: true,
         name: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
         email: true,
         role: true,
         monthlyArticleLimit: true,
@@ -70,7 +73,8 @@ export async function PATCH(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { userId, monthlyArticleLimit, email, newPassword, name } = body;
+  const { userId, monthlyArticleLimit, email, newPassword, name, firstName, lastName, phone } =
+    body;
 
   if (typeof userId !== "string" || !userId) {
     return NextResponse.json({ error: "userId es requerido" }, { status: 400 });
@@ -80,12 +84,27 @@ export async function PATCH(request: NextRequest) {
     monthlyArticleLimit?: number | null;
     email?: string;
     name?: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    phone?: string | null;
     passwordHash?: string;
     initialPasswordEncrypted?: string;
   } = {};
 
   if (typeof name === "string") {
     data.name = name.trim();
+  }
+
+  if (typeof firstName === "string") {
+    data.firstName = firstName.trim() || null;
+  }
+
+  if (typeof lastName === "string") {
+    data.lastName = lastName.trim() || null;
+  }
+
+  if (typeof phone === "string") {
+    data.phone = phone.trim() || null;
   }
 
   if ("monthlyArticleLimit" in body) {
@@ -134,6 +153,9 @@ export async function PATCH(request: NextRequest) {
     select: {
       id: true,
       name: true,
+      firstName: true,
+      lastName: true,
+      phone: true,
       email: true,
       role: true,
       monthlyArticleLimit: true,
@@ -175,7 +197,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
-  const { email, password, name } = await request.json();
+  const { email, password, name, firstName, lastName, phone } = await request.json();
 
   if (typeof email !== "string" || !email.trim()) {
     return NextResponse.json(
@@ -204,11 +226,23 @@ export async function POST(request: NextRequest) {
     data: {
       email,
       name: typeof name === "string" && name.trim() ? name.trim() : null,
+      firstName: typeof firstName === "string" && firstName.trim() ? firstName.trim() : null,
+      lastName: typeof lastName === "string" && lastName.trim() ? lastName.trim() : null,
+      phone: typeof phone === "string" && phone.trim() ? phone.trim() : null,
       passwordHash,
       initialPasswordEncrypted,
       role: "user",
     },
-    select: { id: true, name: true, email: true, role: true, createdAt: true },
+    select: {
+      id: true,
+      name: true,
+      firstName: true,
+      lastName: true,
+      phone: true,
+      email: true,
+      role: true,
+      createdAt: true,
+    },
   });
 
   return NextResponse.json({ user });

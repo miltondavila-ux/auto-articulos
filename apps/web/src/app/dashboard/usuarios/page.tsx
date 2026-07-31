@@ -18,6 +18,9 @@ import type { RunStatus, TitleStatus } from "@/types/dashboard";
 interface UserRow {
   id: string;
   name: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
   email: string;
   role: "admin" | "user";
   monthlyArticleLimit: number | null;
@@ -72,6 +75,7 @@ export default function UsuariosPage() {
   const [creating, setCreating] = useState(false);
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [loadingUsage, setLoadingUsage] = useState(false);
+  const [search, setSearch] = useState("");
   const [banner, setBanner] = useState<{
     type: "error" | "info";
     text: string;
@@ -333,27 +337,64 @@ export default function UsuariosPage() {
       </section>
 
       <section style={sectionStyle}>
-        <h2 style={h2Style}>Usuarios con acceso</h2>
-        <table
-          style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 8,
+          }}
         >
-          <thead>
-            <tr style={{ textAlign: "left", color: "#6b7280" }}>
-              <th style={thStyle}>Nombre</th>
-              <th style={thStyle}>Correo</th>
-              <th style={thStyle}>Rol</th>
-              <th style={thStyle}>Artículos publicados</th>
-              <th style={thStyle}>Límite mensual de artículos</th>
-              <th style={thStyle}>Creado</th>
-              <th style={thStyle}>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <UserRowItem key={u.id} user={u} onUpdated={loadUsers} />
-            ))}
-          </tbody>
-        </table>
+          <h2 style={h2Style}>Usuarios con acceso</h2>
+          <input
+            type="text"
+            placeholder="Buscar por correo, nombre o apellido..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ ...inputStyle, width: 280 }}
+          />
+        </div>
+        <div style={{ overflowX: "auto" }}>
+          <table
+            style={{
+              width: "100%",
+              minWidth: 800,
+              borderCollapse: "collapse",
+              fontSize: 13,
+            }}
+          >
+            <thead>
+              <tr style={{ textAlign: "left", color: "#6b7280" }}>
+                <th style={thStyle}>Nombre</th>
+                <th style={thStyle}>Apellido</th>
+                <th style={thStyle}>Correo</th>
+                <th style={thStyle}>Teléfono</th>
+                <th style={thStyle}>Rol</th>
+                <th style={thStyle}>Artículos publicados</th>
+                <th style={thStyle}>Límite mensual de artículos</th>
+                <th style={thStyle}>Creado</th>
+                <th style={thStyle}>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users
+                .filter((u) => {
+                  const q = search.trim().toLowerCase();
+                  if (!q) return true;
+                  return (
+                    u.email.toLowerCase().includes(q) ||
+                    (u.firstName ?? "").toLowerCase().includes(q) ||
+                    (u.lastName ?? "").toLowerCase().includes(q) ||
+                    (u.name ?? "").toLowerCase().includes(q)
+                  );
+                })
+                .map((u) => (
+                  <UserRowItem key={u.id} user={u} onUpdated={loadUsers} />
+                ))}
+            </tbody>
+          </table>
+        </div>
       </section>
     </div>
   );
@@ -371,7 +412,9 @@ function UserRowItem({
   );
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [editName, setEditName] = useState(user.name ?? "");
+  const [editFirstName, setEditFirstName] = useState(user.firstName ?? "");
+  const [editLastName, setEditLastName] = useState(user.lastName ?? "");
+  const [editPhone, setEditPhone] = useState(user.phone ?? "");
   const [editEmail, setEditEmail] = useState(user.email);
   const [newPassword, setNewPassword] = useState("");
   const [editError, setEditError] = useState<string | null>(null);
@@ -408,7 +451,11 @@ function UserRowItem({
     try {
       const body: Record<string, unknown> = { userId: user.id };
       if (editEmail.trim() !== user.email) body.email = editEmail.trim();
-      if (editName.trim() !== (user.name ?? "")) body.name = editName.trim();
+      if (editFirstName.trim() !== (user.firstName ?? ""))
+        body.firstName = editFirstName.trim();
+      if (editLastName.trim() !== (user.lastName ?? ""))
+        body.lastName = editLastName.trim();
+      if (editPhone.trim() !== (user.phone ?? "")) body.phone = editPhone.trim();
       if (newPassword.trim() !== "") body.newPassword = newPassword.trim();
 
       const res = await fetch("/api/admin/users", {
@@ -452,8 +499,10 @@ function UserRowItem({
   return (
     <>
       <tr style={{ borderTop: "1px solid #dfe3e8" }}>
-        <td style={tdStyle}>{user.name ?? "—"}</td>
+        <td style={tdStyle}>{user.firstName ?? "—"}</td>
+        <td style={tdStyle}>{user.lastName ?? "—"}</td>
         <td style={tdStyle}>{user.email}</td>
+        <td style={tdStyle}>{user.phone ?? "—"}</td>
         <td style={tdStyle}>
           {user.role === "admin" ? "Administrador" : "Usuario"}
         </td>
@@ -579,7 +628,7 @@ function UserRowItem({
       </tr>
       {editing && (
         <tr style={{ background: "#f7f8fa", color: "#16181d" }}>
-          <td colSpan={7} style={{ ...tdStyle, padding: "10px 8px" }}>
+          <td colSpan={9} style={{ ...tdStyle, padding: "10px 8px" }}>
             <div
               style={{
                 display: "flex",
@@ -590,10 +639,17 @@ function UserRowItem({
             >
               <input
                 type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                style={{ ...inputStyle, width: 180 }}
+                value={editFirstName}
+                onChange={(e) => setEditFirstName(e.target.value)}
+                style={{ ...inputStyle, width: 140 }}
                 placeholder="Nombre"
+              />
+              <input
+                type="text"
+                value={editLastName}
+                onChange={(e) => setEditLastName(e.target.value)}
+                style={{ ...inputStyle, width: 140 }}
+                placeholder="Apellido"
               />
               <input
                 type="email"
@@ -601,6 +657,13 @@ function UserRowItem({
                 onChange={(e) => setEditEmail(e.target.value)}
                 style={{ ...inputStyle, width: 220 }}
                 placeholder="Correo"
+              />
+              <input
+                type="text"
+                value={editPhone}
+                onChange={(e) => setEditPhone(e.target.value)}
+                style={{ ...inputStyle, width: 140 }}
+                placeholder="Teléfono"
               />
               <input
                 type="password"
@@ -626,7 +689,7 @@ function UserRowItem({
         </tr>
       )}
       <tr>
-        <td colSpan={7} style={{ padding: "0 8px 8px" }}>
+        <td colSpan={9} style={{ padding: "0 8px 8px" }}>
           <UserHistorial email={user.email} />
         </td>
       </tr>

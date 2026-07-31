@@ -11,7 +11,7 @@ export default async function DashboardLayout({
   const user = await getCurrentUser();
 
   return (
-    <main style={{ maxWidth: 820, margin: "0 auto", padding: "32px 20px" }}>
+    <main style={{ maxWidth: 1400, margin: "0 auto", padding: "32px 40px" }}>
       <style>{`
         @media (min-width: 700px) {
           .mobile-notice { display: none; }
