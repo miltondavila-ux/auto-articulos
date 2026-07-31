@@ -389,20 +389,34 @@ async function generateImage(
 
     // La generación de imagen es asíncrona: hay que esperar a que aparezca la
     // vista previa dentro del recorte de foto antes de continuar.
-    await page.waitForSelector('img[alt="Preview"]', {
-      state: "attached",
-      timeout: IMAGE_GENERATION_TIMEOUT_MS,
-    });
-    await page.waitForFunction(
-      () => {
-        const preview = document.querySelector(
-          'img[alt="Preview"]',
-        ) as HTMLImageElement | null;
-        return Boolean(preview && preview.naturalWidth > 0);
-      },
-      undefined,
-      { timeout: IMAGE_GENERATION_TIMEOUT_MS },
-    );
+    try {
+      await page.waitForSelector('img[alt="Preview"]', {
+        state: "attached",
+        timeout: IMAGE_GENERATION_TIMEOUT_MS,
+      });
+      await page.waitForFunction(
+        () => {
+          const preview = document.querySelector(
+            'img[alt="Preview"]',
+          ) as HTMLImageElement | null;
+          return Boolean(preview && preview.naturalWidth > 0);
+        },
+        undefined,
+        { timeout: IMAGE_GENERATION_TIMEOUT_MS },
+      );
+    } catch (err) {
+      // Reportado por el usuario el 31/7/2026: cuando la generación de
+      // imagen nunca aparece dentro del tiempo esperado, una causa posible
+      // es que se hayan agotado los tokens/créditos de generación de
+      // imágenes de la cuenta en 10minutesWebsite (no hay un mensaje de
+      // error visible para distinguirlo de una demora normal, así que se
+      // deja como una posibilidad a considerar en vez de un diagnóstico
+      // certero).
+      const message = err instanceof Error ? err.message : String(err);
+      throw new Error(
+        `${message} — es posible que se hayan acabado los tokens de generación de imágenes de la cuenta en 10minutesWebsite.`,
+      );
+    }
 
     const relevant = await checkPreviewRelevant(page, title, summary);
     if (relevant || attempt === MAX_IMAGE_ATTEMPTS) {
