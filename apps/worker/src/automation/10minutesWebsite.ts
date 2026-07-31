@@ -131,9 +131,33 @@ async function login(
   await page.fill('input[name="password"]', credentials.password);
   await page.getByRole("button", { name: "Login", exact: true }).click();
 
-  await page.waitForSelector('a[href="user_buyer_seller_articles.php"]', {
-    timeout: NAV_TIMEOUT_MS,
-  });
+  try {
+    await page.waitForSelector('a[href="user_buyer_seller_articles.php"]', {
+      timeout: NAV_TIMEOUT_MS,
+    });
+  } catch {
+    // Mensaje más claro que el timeout crudo de Playwright: esto casi
+    // siempre pasa por usuario/contraseña incorrectos guardados en
+    // Configuración, no por un problema del código. Si el sitio muestra
+    // algún texto de error visible, se incluye también.
+    const alertText = await page
+      .evaluate(() => {
+        const candidates = Array.from(
+          document.querySelectorAll(
+            '[class*="alert" i], [class*="error" i], [role="alert"]',
+          ),
+        ).filter((el) => (el as HTMLElement).offsetParent !== null);
+        return candidates
+          .map((el) => (el.textContent ?? "").trim())
+          .filter((t) => t.length > 0)
+          .slice(0, 3)
+          .join(" | ");
+      })
+      .catch(() => "");
+    throw new Error(
+      `No se pudo iniciar sesión en 10minutesWebsite. Verifica que el usuario y la contraseña guardados en Configuración sean correctos (los mismos con los que se entra a 10minutesWebsite)${alertText ? `. Mensaje visible en el sitio: "${alertText}"` : "."}`,
+    );
+  }
   await onStep("Sesión iniciada correctamente.");
 }
 

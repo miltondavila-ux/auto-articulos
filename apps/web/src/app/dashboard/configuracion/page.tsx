@@ -20,6 +20,7 @@ export default function ConfiguracionPage() {
   const [savingCreds, setSavingCreds] = useState(false);
   const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [lastSyncStatus, setLastSyncStatus] = useState<SyncStatus | null>(null);
+  const [lastSyncError, setLastSyncError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [banner, setBanner] = useState<{
     type: "error" | "info";
@@ -43,6 +44,7 @@ export default function ConfiguracionPage() {
       const data = await res.json();
       setCategories(data.categories);
       setLastSyncStatus(data.lastSyncJob?.status ?? null);
+      setLastSyncError(data.lastSyncJob?.errorMessage ?? null);
     }
   }, []);
 
@@ -251,14 +253,34 @@ export default function ConfiguracionPage() {
                 flexShrink: 0,
               }}
             />
-            En cola para procesarse. El worker está arrancando — esta pantalla
-            se actualiza sola cuando termine.
+            {lastSyncStatus === "running"
+              ? "Conectando con 10minutesWebsite ahora mismo..."
+              : "En cola para procesarse — puede haber otro trabajo en curso (tuyo o de otro usuario) antes de que le toque a este. Esta pantalla se actualiza sola cuando arranque."}
           </p>
         )}
         {lastSyncStatus === "error" && (
-          <p style={{ fontSize: 13, color: "#d64545", marginTop: 8 }}>
-            La última sincronización falló. Intenta de nuevo.
-          </p>
+          <div style={{ marginTop: 8 }}>
+            <p style={{ fontSize: 13, color: "#d64545", margin: 0 }}>
+              La última sincronización falló
+              {lastSyncError ? ":" : ". Intenta de nuevo."}
+            </p>
+            {lastSyncError && (
+              <p
+                style={{
+                  fontSize: 12,
+                  color: "#d64545",
+                  marginTop: 4,
+                  fontFamily: "monospace",
+                  whiteSpace: "pre-wrap",
+                  background: "#fdecec",
+                  padding: "6px 10px",
+                  borderRadius: 6,
+                }}
+              >
+                {lastSyncError}
+              </p>
+            )}
+          </div>
         )}
         {categories.length > 0 && (
           <ul
