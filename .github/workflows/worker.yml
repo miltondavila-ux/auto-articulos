@@ -13,6 +13,19 @@ jobs:
   procesar:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Varios "shards" idénticos corren en paralelo (pedido explícito del
+    # usuario el 31/7/2026, por carga real de ~40 usuarios activos a la
+    # vez): cada uno es un proceso de Node completamente separado que
+    # compite por el mismo trabajo pendiente en la base de datos. El
+    # reparto es automático y seguro entre-procesos gracias al "claim"
+    # atómico de reservation.ts (User.workerBusyUntil) — nunca dos shards
+    # abren sesión contra la MISMA cuenta de 10minutesWebsite a la vez,
+    # pero usuarios distintos avanzan todos en paralelo. No hace falta
+    # asignar manualmente qué shard procesa a quién.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5]
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DIRECT_URL: ${{ secrets.DATABASE_URL }}

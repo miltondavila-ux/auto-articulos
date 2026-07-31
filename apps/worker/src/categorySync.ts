@@ -21,7 +21,7 @@ export async function processNextCategorySync(): Promise<boolean> {
 
   let job: (typeof candidates)[number] | null = null;
   for (const candidate of candidates) {
-    if (tryReserveUser(candidate.userId)) {
+    if (await tryReserveUser(candidate.userId)) {
       job = candidate;
       break;
     }
@@ -75,7 +75,7 @@ export async function processNextCategorySync(): Promise<boolean> {
       data: { status: "error", errorMessage: message, finishedAt: new Date() },
     });
   } finally {
-    releaseUser(job.userId);
+    await releaseUser(job.userId);
   }
 
   return true;

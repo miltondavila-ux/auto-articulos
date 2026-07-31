@@ -14,22 +14,31 @@ enum UserRole {
 }
 
 model User {
-  id                       String   @id @default(cuid())
+  id                       String    @id @default(cuid())
   name                     String?
   firstName                String?
   lastName                 String?
   phone                    String?
-  email                    String   @unique
+  email                    String    @unique
   passwordHash             String
   // Guardada cifrada (no en texto plano) además del hash, para que el
   // admin pueda recuperarla y compartirla con la persona invitada — pedido
   // explícito del usuario el 31/7/2026. El login sigue verificando contra
   // passwordHash (bcrypt); este campo nunca se usa para autenticar.
   initialPasswordEncrypted String?
-  role                     UserRole @default(user)
-  monthlyArticleLimit      Int?     @default(300)
-  dailyArticleLimit        Int?     @default(95)
-  createdAt                DateTime @default(now())
+  role                     UserRole  @default(user)
+  monthlyArticleLimit      Int?      @default(300)
+  dailyArticleLimit        Int?      @default(95)
+  createdAt                DateTime  @default(now())
+  // Bloqueo entre procesos (no solo entre "lanes" del mismo proceso): con
+  // varios workers de GitHub Actions corriendo en paralelo (31/7/2026,
+  // pedido explícito por carga real de ~40 usuarios), el bloqueo en
+  // memoria de reservation.ts ya no alcanza -- dos procesos distintos
+  // podrían abrir sesión en la MISMA cuenta de 10minutesWebsite a la vez.
+  // Este campo es el reemplazo: un "claim" atómico vía UPDATE condicional
+  // (ver reservation.ts), con vencimiento automático como red de
+  // seguridad si un proceso muere sin liberarlo.
+  workerBusyUntil          DateTime?
 
   credentials        Credential[]
   runs               Run[]

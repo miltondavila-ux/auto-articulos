@@ -13,10 +13,18 @@ const BUDGET_MS = 18 * 60 * 1000;
 // sesión de 10minutesWebsite, nunca dos lanes en la misma cuenta a la vez —
 // ver reservation.ts). Pedido explícito del usuario (31/7/2026): que el
 // trabajo de un usuario no quede esperando a que termine el de otro.
-// Valor conservador a propósito: el runner estándar de GitHub Actions tiene
-// solo 2 vCPU, y cada lane abre su propio navegador Playwright — subir esto
-// demasiado podría causar timeouts por falta de recursos en vez de ayudar.
+// Valor conservador a propósito DENTRO de un mismo shard: el runner estándar
+// de GitHub Actions tiene solo 2 vCPU, y cada lane abre su propio navegador
+// Playwright. La escala real para ~40 usuarios activos viene de correr
+// varios shards en paralelo (ver worker.yml, `strategy.matrix`), cada uno
+// con su propio runner y estas mismas lanes — no de subir este número.
 const TITLE_LANE_CONCURRENCY = 2;
+
+// Sincronizar categorías es mucho más rápido que publicar un artículo (solo
+// lee un <select>, no genera contenido/imagen con IA), así que puede tener
+// más carriles sin pesar tanto en el runner. Pedido explícito del usuario:
+// que sincronizar categorías no haga esperar tanto.
+const SYNC_LANE_CONCURRENCY = 2;
 
 // Ronda vacía consecutiva en un lane antes de darlo por sin trabajo por
 // ahora (evita que un lane se detenga apenas por perder una carrera de
@@ -73,7 +81,9 @@ async function main() {
   const deadline = Date.now() + BUDGET_MS;
 
   const results = await Promise.all([
-    runSyncLane(deadline),
+    ...Array.from({ length: SYNC_LANE_CONCURRENCY }, () =>
+      runSyncLane(deadline),
+    ),
     ...Array.from({ length: TITLE_LANE_CONCURRENCY }, () =>
       runTitleLane(deadline),
     ),

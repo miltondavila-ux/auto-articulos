@@ -30,7 +30,7 @@ export async function processNext(): Promise<boolean> {
   type RunWithCategory = (typeof candidates)[number];
   let run: RunWithCategory | null = null;
   for (const candidate of candidates) {
-    if (tryReserveUser(candidate.userId)) {
+    if (await tryReserveUser(candidate.userId)) {
       run = candidate;
       break;
     }
@@ -40,7 +40,7 @@ export async function processNext(): Promise<boolean> {
   try {
     return await processRunTitle(run);
   } finally {
-    releaseUser(run.userId);
+    await releaseUser(run.userId);
   }
 }
 
