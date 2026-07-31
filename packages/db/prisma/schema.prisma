@@ -31,10 +31,28 @@ model User {
   dailyArticleLimit        Int?     @default(95)
   createdAt                DateTime @default(now())
 
-  credentials      Credential[]
-  runs             Run[]
-  categories       Category[]
-  categorySyncJobs CategorySyncJob[]
+  credentials        Credential[]
+  runs               Run[]
+  categories         Category[]
+  categorySyncJobs   CategorySyncJob[]
+  searchIntegrations SearchIntegration[]
+}
+
+model SearchIntegration {
+  id                    String   @id @default(cuid())
+  userId                String
+  provider              String
+  encryptedRefreshToken String
+  siteUrl               String?
+  sitemapUrl            String?
+  permissionLevel       String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@index([userId])
 }
 
 model Credential {
@@ -119,16 +137,19 @@ enum TitleStatus {
 }
 
 model Title {
-  id           String      @id @default(cuid())
-  runId        String
-  text         String
-  order        Int
-  status       TitleStatus @default(pending)
-  attempts     Int         @default(0)
-  articleUrl   String?
-  finalTitle   String?
-  errorMessage String?
-  processedAt  DateTime?
+  id                    String      @id @default(cuid())
+  runId                 String
+  text                  String
+  order                 Int
+  status                TitleStatus @default(pending)
+  attempts              Int         @default(0)
+  articleUrl            String?
+  finalTitle            String?
+  errorMessage          String?
+  processedAt           DateTime?
+  googleIndexingStatus  String?
+  googleIndexingMessage String?
+  googleIndexingAt      DateTime?
 
   run    Run          @relation(fields: [runId], references: [id], onDelete: Cascade)
   events TitleEvent[]

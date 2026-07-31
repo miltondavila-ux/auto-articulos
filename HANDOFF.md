@@ -372,18 +372,49 @@ Avance posterior confirmado por el usuario:
   `https://auto-articulos-web.vercel.app/acerca-de`,
   `https://auto-articulos-web.vercel.app/privacidad` y
   `https://auto-articulos-web.vercel.app/terminos`.
+- Antes de copiar esas URLs a Google se detectó un requisito de verificación:
+  para una app OAuth externa en producción, Google exige que homepage,
+  privacidad y condiciones estén en un dominio propio verificado por DNS en
+  Search Console. `vercel.app` pertenece a Vercel y puede ser rechazado aunque
+  controlemos el subdominio asignado. Se pausó el formulario sin guardar URLs.
+  Solución gratuita si el usuario ya posee un dominio: agregar en Vercel un
+  subdominio como `autoarticulos.<dominio-propio>` y verificar por DNS ese
+  dominio con la misma cuenta que es Owner/Editor del proyecto Google Cloud.
+  Pendiente confirmar qué dominio propio administra el usuario y si tiene
+  acceso a sus DNS; no comprar ni activar nada facturable.
+- `vercel domains ls` confirmó que el equipo actual tiene **0 dominios
+  propios**. Se eligió por ahora la ruta gratuita para menos de 100 usuarios:
+  OAuth externo no verificado en estado Production (advertencia de Google y
+  límite vitalicio de 100 usuarios, suficiente para los ~60 actuales). No usar
+  Testing porque sus refresh tokens expiran a los 7 días.
+- Implementación Google completada en código: modelo `SearchIntegration` estrictamente por
+  `userId`+proveedor, tokens cifrados, campos de estado Google en `Title`,
+  callbacks OAuth con estado CSRF, listado/validación de propiedades del
+  usuario, selector de propiedad+sitemap en Configuración y hook del worker
+  que reenvía el sitemap tras publicar sin convertir fallos de Google en fallo
+  del artículo. También se añadieron los secretos Google al entorno del
+  workflow del worker. Prisma format/generate, Prettier de TS/Markdown,
+  `tsc --noEmit` para web y worker y ambos builds terminaron correctamente.
+  La migración está creada pero todavía no aplicada ni desplegada; falta crear
+  el cliente OAuth real y cargar sus secretos antes de habilitar la conexión.
 
 ## Pendiente / próximos pasos
 
-1. Crear/configurar los clientes OAuth de Google y Bing descritos arriba y
-   guardar `client_id`/`client_secret` como secretos de entorno. Después,
-   implementar migración, callbacks OAuth, UI y hook post-publicación.
-2. Corregir el registro de usuario cuyo correo aparece con el prefijo
+1. En Google Auth Platform configurar Público externo, alcance
+   `https://www.googleapis.com/auth/webmasters`, publicar en Production y crear
+   el cliente web con callback
+   `https://auto-articulos-web.vercel.app/api/search-integrations/google/callback`.
+   Guardar ID/secreto en Vercel y GitHub sin pegarlos en archivos ni chat.
+2. Aplicar la migración `20260731210000_add_google_search_console`, desplegar
+   web+worker y validar solamente el login OAuth y listado de propiedades; no
+   disparar una publicación automática.
+3. Implementar Bing después de cerrar y validar Google.
+4. Corregir el registro de usuario cuyo correo aparece con el prefijo
    accidental `Ahora :` en la pestaña de accesos y en uso de base de datos.
-3. Confirmar operativamente que los usuarios recién creados guarden sus
+5. Confirmar operativamente que los usuarios recién creados guarden sus
    propias credenciales de 10minutesWebsite y sincronicen categorías (esto
    es trabajo de cada usuario final, no de código).
-4. `CODEX_PROMPT.md` se recreó en esta sesión (ver ese archivo) para poder
+6. `CODEX_PROMPT.md` se recreó en esta sesión (ver ese archivo) para poder
    continuar desde Codex leyendo únicamente este HANDOFF — si se vuelve a
    borrar y hace falta, recrearlo con el mismo patrón.
 

@@ -11,6 +11,7 @@ import {
   ReadyBadge,
 } from "@/components/dashboard-ui";
 import type { CategoryRow, SyncStatus } from "@/types/dashboard";
+import GoogleSearchConsoleSection from "@/components/GoogleSearchConsoleSection";
 
 export default function ConfiguracionPage() {
   const [username, setUsername] = useState("");
@@ -113,6 +114,7 @@ export default function ConfiguracionPage() {
 
   return (
     <div>
+      <GoogleSearchConsoleSection />
       <section style={readySectionStyle(credentialsConfigured)}>
         <h2 style={h2Style}>
           Credenciales de 10minutesWebsite{" "}

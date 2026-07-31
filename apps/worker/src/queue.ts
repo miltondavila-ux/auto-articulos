@@ -2,6 +2,7 @@ import { prisma, Prisma } from "@auto-articulos/db";
 import { decryptSecret, MAX_ATTEMPTS } from "@auto-articulos/shared";
 import { publishArticle } from "./automation/10minutesWebsite";
 import { tryReserveUser, releaseUser } from "./reservation";
+import { notifyGoogle } from "./googleIndexing";
 
 async function markTitleError(titleId: string, message: string) {
   await prisma.title.update({
@@ -135,6 +136,7 @@ async function processRunTitle(
       },
     });
     await onStep("Artículo publicado con éxito.");
+    await notifyGoogle(nextTitle.id, run.userId);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     const [fresh, freshRun] = await Promise.all([
