@@ -9,6 +9,59 @@ import { cleanupOldEvents, recoverStuckTitles } from "./cleanup";
 // del job y dejar que la siguiente corrida programada continúe).
 const BUDGET_MS = 18 * 60 * 1000;
 
+// Cuántos usuarios distintos se procesan en paralelo (cada uno con su propia
+// sesión de 10minutesWebsite, nunca dos lanes en la misma cuenta a la vez —
+// ver reservation.ts). Pedido explícito del usuario (31/7/2026): que el
+// trabajo de un usuario no quede esperando a que termine el de otro.
+// Valor conservador a propósito: el runner estándar de GitHub Actions tiene
+// solo 2 vCPU, y cada lane abre su propio navegador Playwright — subir esto
+// demasiado podría causar timeouts por falta de recursos en vez de ayudar.
+const TITLE_LANE_CONCURRENCY = 2;
+
+// Ronda vacía consecutiva en un lane antes de darlo por sin trabajo por
+// ahora (evita que un lane se detenga apenas por perder una carrera de
+// reserva contra otro lane que tomó el único run disponible).
+const IDLE_RETRIES = 3;
+const IDLE_DELAY_MS = 500;
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function runTitleLane(deadline: number): Promise<boolean> {
+  let didWork = false;
+  let idleStreak = 0;
+  while (Date.now() < deadline) {
+    const did = await processNext();
+    if (did) {
+      didWork = true;
+      idleStreak = 0;
+      continue;
+    }
+    idleStreak += 1;
+    if (idleStreak >= IDLE_RETRIES) break;
+    await sleep(IDLE_DELAY_MS);
+  }
+  return didWork;
+}
+
+async function runSyncLane(deadline: number): Promise<boolean> {
+  let didWork = false;
+  let idleStreak = 0;
+  while (Date.now() < deadline) {
+    const did = await processNextCategorySync();
+    if (did) {
+      didWork = true;
+      idleStreak = 0;
+      continue;
+    }
+    idleStreak += 1;
+    if (idleStreak >= IDLE_RETRIES) break;
+    await sleep(IDLE_DELAY_MS);
+  }
+  return didWork;
+}
+
 async function main() {
   const recovered = await recoverStuckTitles();
   if (recovered > 0) {
@@ -18,15 +71,14 @@ async function main() {
   }
 
   const deadline = Date.now() + BUDGET_MS;
-  let didAnyWork = false;
 
-  while (Date.now() < deadline) {
-    const didSyncWork = await processNextCategorySync();
-    const didRunWork = await processNext();
-
-    if (!didSyncWork && !didRunWork) break;
-    didAnyWork = true;
-  }
+  const results = await Promise.all([
+    runSyncLane(deadline),
+    ...Array.from({ length: TITLE_LANE_CONCURRENCY }, () =>
+      runTitleLane(deadline),
+    ),
+  ]);
+  const didAnyWork = results.some(Boolean);
 
   const deletedEvents = await cleanupOldEvents();
   if (deletedEvents > 0) {

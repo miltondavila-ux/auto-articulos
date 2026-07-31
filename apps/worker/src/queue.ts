@@ -1,6 +1,7 @@
-import { prisma } from "@auto-articulos/db";
+import { prisma, Prisma } from "@auto-articulos/db";
 import { decryptSecret, MAX_ATTEMPTS } from "@auto-articulos/shared";
 import { publishArticle } from "./automation/10minutesWebsite";
+import { tryReserveUser, releaseUser } from "./reservation";
 
 async function markTitleError(titleId: string, message: string) {
   await prisma.title.update({
@@ -9,15 +10,42 @@ async function markTitleError(titleId: string, message: string) {
   });
 }
 
-/** Procesa un único título del run activo más antiguo. Devuelve true si hizo algo. */
+/**
+ * Procesa un único título de algún run activo. Devuelve true si hizo algo.
+ *
+ * Puede llamarse desde varios "lanes" concurrentes (ver run-once.ts): cada
+ * llamada toma el run activo más antiguo cuyo usuario no esté ya reservado
+ * por otro lane, para que distintos usuarios avancen en paralelo sin que dos
+ * lanes abran sesión en la MISMA cuenta de 10minutesWebsite al mismo tiempo.
+ */
 export async function processNext(): Promise<boolean> {
-  const run = await prisma.run.findFirst({
+  const candidates = await prisma.run.findMany({
     where: { status: "running" },
     orderBy: { createdAt: "asc" },
     include: { category: true },
+    take: 20,
   });
+
+  type RunWithCategory = (typeof candidates)[number];
+  let run: RunWithCategory | null = null;
+  for (const candidate of candidates) {
+    if (tryReserveUser(candidate.userId)) {
+      run = candidate;
+      break;
+    }
+  }
   if (!run) return false;
 
+  try {
+    return await processRunTitle(run);
+  } finally {
+    releaseUser(run.userId);
+  }
+}
+
+async function processRunTitle(
+  run: Prisma.RunGetPayload<{ include: { category: true } }>,
+): Promise<boolean> {
   const nextTitle = await prisma.title.findFirst({
     where: { runId: run.id, status: "pending" },
     orderBy: { order: "asc" },

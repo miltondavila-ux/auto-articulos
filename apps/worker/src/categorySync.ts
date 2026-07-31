@@ -1,13 +1,31 @@
 import { prisma } from "@auto-articulos/db";
 import { decryptSecret } from "@auto-articulos/shared";
 import { fetchCategories } from "./automation/10minutesWebsite";
+import { tryReserveUser, releaseUser } from "./reservation";
 
-/** Procesa un único job de sincronización de categorías pendiente. Devuelve true si hizo algo. */
+/**
+ * Procesa un único job de sincronización de categorías pendiente. Devuelve
+ * true si hizo algo.
+ *
+ * Igual que `processNext()` en queue.ts: se salta jobs cuyo usuario ya esté
+ * reservado (por ejemplo, si ese mismo usuario tiene un título publicándose
+ * en este momento), para no abrir una segunda sesión contra la misma cuenta
+ * de 10minutesWebsite en paralelo.
+ */
 export async function processNextCategorySync(): Promise<boolean> {
-  const job = await prisma.categorySyncJob.findFirst({
+  const candidates = await prisma.categorySyncJob.findMany({
     where: { status: "pending" },
     orderBy: { createdAt: "asc" },
+    take: 20,
   });
+
+  let job: (typeof candidates)[number] | null = null;
+  for (const candidate of candidates) {
+    if (tryReserveUser(candidate.userId)) {
+      job = candidate;
+      break;
+    }
+  }
   if (!job) return false;
 
   await prisma.categorySyncJob.update({
@@ -56,6 +74,8 @@ export async function processNextCategorySync(): Promise<boolean> {
       where: { id: job.id },
       data: { status: "error", errorMessage: message, finishedAt: new Date() },
     });
+  } finally {
+    releaseUser(job.userId);
   }
 
   return true;
