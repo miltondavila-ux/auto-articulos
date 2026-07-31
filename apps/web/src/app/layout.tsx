@@ -8,7 +8,7 @@ export const metadata = {
     title: "Creador de artículos en secuencia",
     description:
       "Crea artículos en secuencias. Herramienta exclusiva para el programa de posicionamiento de 10minutesWebsite.",
-    images: [{ url: "/login-hero.jpg", width: 923, height: 1200 }],
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
   },
 };
 
