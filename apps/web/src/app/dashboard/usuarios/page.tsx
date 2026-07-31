@@ -78,6 +78,7 @@ export default function UsuariosPage() {
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [loadingUsage, setLoadingUsage] = useState(false);
   const [search, setSearch] = useState("");
+  const [tab, setTab] = useState<"crear" | "uso" | "accesos">("accesos");
   const [banner, setBanner] = useState<{
     type: "error" | "info";
     text: string;
@@ -151,8 +152,38 @@ export default function UsuariosPage() {
     );
   }
 
+  const tabs: { id: typeof tab; label: string }[] = [
+    { id: "accesos", label: "Accesos a usuarios" },
+    { id: "crear", label: "Creación de usuarios" },
+    { id: "uso", label: "Uso de base de datos" },
+  ];
+
   return (
     <div>
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          flexWrap: "wrap",
+          marginBottom: 16,
+        }}
+      >
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            style={
+              tab === t.id
+                ? { ...buttonStyle, marginTop: 0 }
+                : { ...secondaryButtonStyle, marginTop: 0 }
+            }
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "crear" && (
       <section style={sectionStyle}>
         <h2 style={h2Style}>Agregar usuario</h2>
         <p style={{ fontSize: 13, color: "#6b7280" }}>
@@ -208,7 +239,9 @@ export default function UsuariosPage() {
           </div>
         )}
       </section>
+      )}
 
+      {tab === "uso" && (
       <section style={sectionStyle}>
         <div
           style={{
@@ -357,7 +390,9 @@ export default function UsuariosPage() {
           </>
         )}
       </section>
+      )}
 
+      {tab === "accesos" && (
       <section style={sectionStyle}>
         <div
           style={{
@@ -419,6 +454,7 @@ export default function UsuariosPage() {
           </table>
         </div>
       </section>
+      )}
     </div>
   );
 }
