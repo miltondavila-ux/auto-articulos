@@ -22,7 +22,10 @@ interface UserRow {
   monthlyArticleLimit: number | null;
   createdAt: string;
   articlesPublished: number;
+  currentPassword: string | null;
 }
+
+const PLATFORM_URL = "https://auto-articulos-web.vercel.app/login";
 
 interface UsagePerUser {
   userId: string;
@@ -363,6 +366,14 @@ function UserRowItem({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopyCredentials() {
+    const text = `Correo electrónico: ${user.email}\nClave: ${user.currentPassword ?? "(no disponible, resetéala con Editar)"}\nAcceso a la plataforma: ${PLATFORM_URL}`;
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   async function handleSaveLimit() {
     setSaving(true);
@@ -460,6 +471,29 @@ function UserRowItem({
         <td style={tdStyle}>{new Date(user.createdAt).toLocaleDateString()}</td>
         <td style={tdStyle}>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            <button
+              onClick={handleCopyCredentials}
+              disabled={!user.currentPassword}
+              title={
+                user.currentPassword
+                  ? undefined
+                  : "No hay clave recuperable guardada — usa Editar para poner una nueva."
+              }
+              style={disabledStyle(
+                {
+                  ...secondaryButtonStyle,
+                  padding: "4px 10px",
+                  fontSize: 12,
+                  background: copied
+                    ? "#dff5e6"
+                    : secondaryButtonStyle.background,
+                  color: copied ? "#1e8a4b" : secondaryButtonStyle.color,
+                },
+                !user.currentPassword,
+              )}
+            >
+              {copied ? "¡Copiado!" : "Copiar credenciales"}
+            </button>
             <button
               onClick={() => setEditing((v) => !v)}
               style={{

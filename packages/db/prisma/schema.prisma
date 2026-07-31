@@ -14,12 +14,17 @@ enum UserRole {
 }
 
 model User {
-  id                  String   @id @default(cuid())
-  email               String   @unique
-  passwordHash        String
-  role                UserRole @default(user)
-  monthlyArticleLimit Int?
-  createdAt           DateTime @default(now())
+  id                       String   @id @default(cuid())
+  email                    String   @unique
+  passwordHash             String
+  // Guardada cifrada (no en texto plano) además del hash, para que el
+  // admin pueda recuperarla y compartirla con la persona invitada — pedido
+  // explícito del usuario el 31/7/2026. El login sigue verificando contra
+  // passwordHash (bcrypt); este campo nunca se usa para autenticar.
+  initialPasswordEncrypted String?
+  role                     UserRole @default(user)
+  monthlyArticleLimit      Int?
+  createdAt                DateTime @default(now())
 
   credentials      Credential[]
   runs             Run[]

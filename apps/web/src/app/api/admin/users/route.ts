@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
+import { encryptSecret, decryptSecret } from "@auto-articulos/shared";
 import { getCurrentUserId, requireAdmin } from "@/lib/current-user";
 
 interface PublishedCountRow {
@@ -23,6 +24,7 @@ export async function GET() {
         role: true,
         monthlyArticleLimit: true,
         createdAt: true,
+        initialPasswordEncrypted: true,
       },
       orderBy: { createdAt: "asc" },
     }),
@@ -40,10 +42,22 @@ export async function GET() {
   );
 
   return NextResponse.json({
-    users: users.map((u) => ({
-      ...u,
-      articlesPublished: publishedByUser.get(u.id) ?? 0,
-    })),
+    users: users.map((u) => {
+      const { initialPasswordEncrypted, ...rest } = u;
+      let currentPassword: string | null = null;
+      if (initialPasswordEncrypted) {
+        try {
+          currentPassword = decryptSecret(initialPasswordEncrypted);
+        } catch {
+          currentPassword = null;
+        }
+      }
+      return {
+        ...rest,
+        currentPassword,
+        articlesPublished: publishedByUser.get(u.id) ?? 0,
+      };
+    }),
   });
 }
 
@@ -65,6 +79,7 @@ export async function PATCH(request: NextRequest) {
     monthlyArticleLimit?: number | null;
     email?: string;
     passwordHash?: string;
+    initialPasswordEncrypted?: string;
   } = {};
 
   if ("monthlyArticleLimit" in body) {
@@ -104,6 +119,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
     data.passwordHash = await bcrypt.hash(newPassword, 12);
+    data.initialPasswordEncrypted = encryptSecret(newPassword);
   }
 
   const user = await prisma.user.update({
@@ -176,8 +192,9 @@ export async function POST(request: NextRequest) {
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
+  const initialPasswordEncrypted = encryptSecret(password);
   const user = await prisma.user.create({
-    data: { email, passwordHash, role: "user" },
+    data: { email, passwordHash, initialPasswordEncrypted, role: "user" },
     select: { id: true, email: true, role: true, createdAt: true },
   });
 
