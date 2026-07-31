@@ -120,6 +120,8 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
   Console en `packages/shared` y `apps/worker/src/googleIndexing.ts`. Se agregó
   consulta automática con URL Inspection API y UI para actualizar el estado y
   abrir la solicitud manual en Search Console. No se disparó publicación.
+- **Entrega Google:** commit `4641960`, deploy
+  `dpl_3T67yEFLhWoPAMBb1GUTCbEK4uLC` listo en producción.
 
 ## Zona compartida: requiere coordinación explícita
 
@@ -190,6 +192,20 @@ Estado del área: LIBERADA o RESERVADA
 - **Pendientes:** ninguno propio; queda pendiente la integración de Google
   Search Console de Codex (sin relación con esta entrega).
 - **Estado del área:** LIBERADA.
+
+### 2026-07-31 — Diagnóstico de Mario
+
+- **Agente:** Codex.
+- **Tarea:** determinar por qué `mariodavila@gmail.com` aparecía bloqueado.
+- **Resultado:** consulta de solo lectura contra la base real del worker:
+  `workerBusyUntil = null`, credencial y categorías presentes, límites internos
+  disponibles. La causa es el límite externo explícito de 10 artículos/día de
+  10minutesWebsite; la corrida se detuvo para proteger el resto del lote.
+- **Verificaciones:** workflow temporal `30669052921`, exitoso. No se modificó
+  la cuenta ni se disparó el worker.
+- **Pendiente:** esperar al día siguiente o pedir a soporte de
+  10minutesWebsite que retire el límite para esa cuenta.
+- **Estado del área:** workflow diagnóstico eliminado; área LIBERADA.
 
 ### 2026-07-31 — Creación del tablero
 

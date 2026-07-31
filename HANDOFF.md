@@ -478,13 +478,23 @@ Avance posterior confirmado por el usuario:
   “Actualizar estado” y un acceso directo a Search Console para que el usuario
   pulse manualmente Solicitar indexación. No se usa Indexing API porque Google
   la restringe a `JobPosting`/`BroadcastEvent`. Validado con Prettier,
-  `tsc --noEmit` y builds completos de web/worker; todavía falta commit/deploy.
+  `tsc --noEmit` y builds completos de web/worker. Commit `4641960`, push a
+  `main` y deploy Vercel `dpl_3T67yEFLhWoPAMBb1GUTCbEK4uLC` completados.
+- Diagnóstico de `mariodavila@gmail.com` solicitado inmediatamente después:
+  workflow temporal de solo lectura confirmó en la base real del worker que
+  no está bloqueado por el sistema (`workerBusyUntil = null`), tiene una
+  credencial, 4 categorías y límites internos 300/mes y 95/día. Su corrida
+  más reciente quedó `halted` porque 10minutesWebsite devolvió explícitamente
+  su límite externo de 10 artículos diarios. Un título quedó en error y los
+  demás pendientes; reabrir ahora repetiría el mismo rechazo. Debe esperar al
+  día siguiente o pedir a soporte de 10minutesWebsite que retire el límite de
+  esa cuenta del programa. No se modificaron sus datos ni se disparó el worker.
+  El workflow diagnóstico se eliminó después de obtener evidencia.
 
 ## Pendiente / próximos pasos
 
-1. Commit/push/deploy del estado individual de URL + acceso manual a Search
-   Console. Validarlo con un artículo ya existente si está disponible, sin
-   disparar una publicación automática.
+1. Validar el estado individual de Google con un artículo ya existente si está
+   disponible, sin disparar una publicación automática.
 2. Lorena debe seleccionar su propiedad y guardar su sitemap. Después, cada
    usuario deberá completar esa misma configuración una sola vez.
 3. El usuario puede borrar de su Desktop el JSON OAuth definitivo después de
