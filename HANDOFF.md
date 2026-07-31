@@ -266,14 +266,79 @@ están en la misma página (pestañas distintas):
   porque esa sección mide espacio ocupado en la base, no artículos
   publicados.
 
+## Integración de indexación Google/Bing (solicitada, diseño pendiente)
+
+Pedido del usuario el 31/7/2026: que cada usuario conecte sus propias cuentas
+de Google Search Console y Bing Webmaster, y que cada URL publicada se envíe
+automáticamente a los buscadores.
+
+Conclusiones confirmadas contra documentación oficial:
+
+- **No se deben pedir ni guardar contraseñas de Gmail/Microsoft.** Ambos
+  servicios se conectan mediante OAuth 2.0: el usuario inicia sesión en la
+  página oficial, concede permiso y la app guarda cifrado únicamente el
+  `refresh_token` revocable.
+- La separación es estrictamente **multi-tenant**: existe un solo cliente
+  OAuth global de Auto Artículos (el `client_id`/`client_secret` de la app),
+  pero cada usuario de Auto Artículos inicia su propio consentimiento y
+  obtiene su propio `refresh_token` cifrado. Cada registro queda relacionado
+  por `userId`, lista únicamente las propiedades de Search Console de esa
+  persona y solo puede enviar/consultar URLs para la propiedad que esa misma
+  persona seleccione. Nunca se reutiliza un token, correo o propiedad entre
+  usuarios.
+- La **Google Indexing API no se puede usar para estos artículos**: Google la
+  limita a páginas con `JobPosting` o `BroadcastEvent` dentro de
+  `VideoObject`. Intentar usarla para artículos normales incumpliría la
+  política oficial.
+- Para Google, el flujo válido es Search Console API con scope
+  `https://www.googleapis.com/auth/webmasters`: elegir una propiedad
+  verificada, registrar/enviar su sitemap y consultar posteriormente el
+  estado de la URL con URL Inspection. Search Console no ofrece un endpoint
+  público para solicitar indexación individual de artículos normales.
+- Para Bing, Bing Webmaster OAuth 2.0 con scope `webmaster.manage` sí permite
+  llamar `SubmitUrl` con cada `articleUrl` publicada. La propiedad debe estar
+  previamente verificada en Bing Webmaster.
+- En ambos casos, enviar sitemap/URL acelera el descubrimiento, pero **no
+  garantiza** que Google o Bing indexen la página; la decisión final siempre
+  es del buscador.
+- Punto de integración previsto: después de que `apps/worker/src/queue.ts`
+  confirme y guarde `result.articleUrl`. Un fallo de Google/Bing nunca debe
+  convertir un artículo ya publicado en error; se registrará como estado de
+  indexación separado y reintentable.
+- Diseño de datos previsto: una integración por usuario/proveedor con tokens
+  cifrados, propiedad elegida y sitemap de Google; estados separados de
+  envío Google/Bing por `Title`. La pantalla Configuración tendrá botones
+  "Conectar Google Search Console" y "Conectar Bing Webmaster", selector de
+  propiedad, estado, desconexión y mensajes claros.
+
+Bloqueo externo actual (no es un bug del código): antes de que los usuarios
+puedan autorizar la app hay que registrar dos clientes OAuth y guardar sus
+secretos solo en Vercel/GitHub, nunca en el repo:
+
+1. Google Cloud: habilitar Search Console API, configurar consentimiento
+   externo y crear cliente web con callback
+   `https://auto-articulos-web.vercel.app/api/search-integrations/google/callback`.
+   Para ~60 usuarios en producción se debe publicar/verificar la app; en modo
+   Testing los refresh tokens expiran a los 7 días.
+2. Bing Webmaster: Settings → API Access → OAuth Client, scope
+   `webmaster.manage`, callback
+   `https://auto-articulos-web.vercel.app/api/search-integrations/bing/callback`.
+
+No se modificó código ni base de datos todavía: primero se documentó la
+limitación real para no construir una integración de Google prohibida ni
+guardar contraseñas de usuarios.
+
 ## Pendiente / próximos pasos
 
-1. Corregir el registro de usuario cuyo correo aparece con el prefijo
+1. Crear/configurar los clientes OAuth de Google y Bing descritos arriba y
+   guardar `client_id`/`client_secret` como secretos de entorno. Después,
+   implementar migración, callbacks OAuth, UI y hook post-publicación.
+2. Corregir el registro de usuario cuyo correo aparece con el prefijo
    accidental `Ahora :` en la pestaña de accesos y en uso de base de datos.
-2. Confirmar operativamente que los usuarios recién creados guarden sus
+3. Confirmar operativamente que los usuarios recién creados guarden sus
    propias credenciales de 10minutesWebsite y sincronicen categorías (esto
    es trabajo de cada usuario final, no de código).
-3. `CODEX_PROMPT.md` se recreó en esta sesión (ver ese archivo) para poder
+4. `CODEX_PROMPT.md` se recreó en esta sesión (ver ese archivo) para poder
    continuar desde Codex leyendo únicamente este HANDOFF — si se vuelve a
    borrar y hace falta, recrearlo con el mismo patrón.
 
