@@ -714,7 +714,7 @@ function UserHistorial({ email }: { email: string }) {
                               href={title.articleUrl}
                               target="_blank"
                               rel="noreferrer"
-                              style={{ color: "#1e8a4b", fontWeight: 600 }}
+                              style={{ color: "#031537", fontWeight: 600 }}
                             >
                               Ver artículo
                             </a>

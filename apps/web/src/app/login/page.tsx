@@ -35,78 +35,53 @@ export default function LoginPage() {
   return (
     <main
       style={{
-        display: "flex",
+        position: "relative",
         minHeight: "100vh",
         background: "#031537",
         overflow: "hidden",
-        position: "relative",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
-      <style>{`
-        @keyframes login-glow {
-          0%, 100% { opacity: 0.5; transform: scale(1); }
-          50% { opacity: 0.9; transform: scale(1.08); }
-        }
-        @media (max-width: 860px) {
-          .login-hero-panel { display: none; }
-          .login-form-panel { flex-basis: 100% !important; }
-        }
-      `}</style>
-
-      {/* Halo de luz cian detrás de todo, para dar el efecto "espectacular" */}
+      {/* Una sola imagen de fondo a pantalla completa, sin división entre
+          zonas: se desvanece hacia el azul sólido con un único degradado. */}
+      <img
+        src="/login-hero.jpg"
+        alt=""
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: "20% 15%",
+          opacity: 0.55,
+        }}
+      />
       <div
         style={{
           position: "absolute",
-          top: "20%",
-          left: "28%",
-          width: 520,
-          height: 520,
-          borderRadius: "50%",
+          inset: 0,
           background:
-            "radial-gradient(circle, rgba(77,216,232,0.35) 0%, rgba(77,216,232,0) 70%)",
-          filter: "blur(10px)",
-          animation: "login-glow 6s ease-in-out infinite",
-          pointerEvents: "none",
+            "radial-gradient(circle at 25% 30%, rgba(3,21,55,0.15) 0%, rgba(3,21,55,0.55) 45%, rgba(3,21,55,0.97) 78%), linear-gradient(to bottom, rgba(3,21,55,0.5) 0%, rgba(3,21,55,0.2) 20%, rgba(3,21,55,0.85) 100%)",
         }}
       />
 
       <div
-        className="login-hero-panel"
         style={{
-          flex: "1 1 50%",
           position: "relative",
+          width: "100%",
+          maxWidth: 1080,
+          padding: 24,
           display: "flex",
-          alignItems: "flex-end",
-          minHeight: "100vh",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 40,
+          flexWrap: "wrap",
         }}
       >
-        <img
-          src="/login-hero.jpg"
-          alt=""
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            objectPosition: "center 15%",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(to right, rgba(3,21,55,0) 55%, rgba(3,21,55,0.95) 100%), linear-gradient(to top, rgba(3,21,55,0.85) 0%, rgba(3,21,55,0.1) 45%)",
-          }}
-        />
-        <div
-          style={{
-            position: "relative",
-            padding: "0 0 48px 48px",
-            maxWidth: 420,
-          }}
-        >
+        <div style={{ maxWidth: 420, minWidth: 260 }}>
           <p
             style={{
               fontSize: 13,
@@ -121,7 +96,7 @@ export default function LoginPage() {
           </p>
           <h2
             style={{
-              fontSize: 30,
+              fontSize: 32,
               lineHeight: 1.2,
               color: "#f2f5fb",
               margin: "10px 0 0",
@@ -142,28 +117,13 @@ export default function LoginPage() {
             10minutesWebsite.
           </p>
         </div>
-      </div>
 
-      <div
-        className="login-form-panel"
-        style={{
-          flex: "1 1 50%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          position: "relative",
-          padding: 20,
-        }}
-      >
         <form
           onSubmit={handleSubmit}
           style={{
-            position: "relative",
-            background: "rgba(13, 33, 74, 0.55)",
-            backdropFilter: "blur(14px)",
-            border: "1px solid rgba(77, 216, 232, 0.25)",
-            boxShadow:
-              "0 20px 60px rgba(0, 0, 0, 0.45), 0 0 40px rgba(77, 216, 232, 0.08)",
+            background: "rgba(13, 33, 74, 0.45)",
+            backdropFilter: "blur(16px)",
+            border: "1px solid rgba(77, 216, 232, 0.2)",
             padding: 36,
             borderRadius: 16,
             width: 340,

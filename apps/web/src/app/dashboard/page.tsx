@@ -232,7 +232,7 @@ function OnboardingWizard({
           style={{
             cursor: "pointer",
             fontSize: 13,
-            color: "#1e8a4b",
+            color: "#031537",
             fontWeight: 600,
           }}
         >
@@ -298,7 +298,7 @@ function OnboardingSteps({
                 margin: 0,
                 fontSize: 14,
                 fontWeight: 600,
-                color: step.done ? "#1e8a4b" : "#16181d",
+                color: step.done ? "#031537" : "#16181d",
               }}
             >
               {step.title}
@@ -699,7 +699,7 @@ function TitleProgressRow({
             target="_blank"
             rel="noreferrer"
             style={{
-              color: "#1e8a4b",
+              color: "#031537",
               fontWeight: 600,
               textDecoration: "none",
             }}

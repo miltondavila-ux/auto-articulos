@@ -346,7 +346,7 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
             target="_blank"
             rel="noreferrer"
             style={{
-              color: "#1e8a4b",
+              color: "#031537",
               fontWeight: 600,
               textDecoration: "none",
               display: "inline-flex",
