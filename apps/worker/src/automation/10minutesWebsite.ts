@@ -85,12 +85,19 @@ export async function fetchCategories(
       timeout: NAV_TIMEOUT_MS,
     });
 
+    // `data-content` trae el HTML que usa el widget visual del sitio para
+    // mostrar un ícono junto al nombre (ej. "<i class='fa-solid ...'></i>
+    // Finanza"). Se limpia con el propio parser HTML del navegador
+    // (más confiable que un regex) para quedarnos solo con el texto real.
     return await page.$$eval("#user_label_list_article option", (options) =>
       options
-        .map((o) => ({
-          externalId: (o as HTMLOptionElement).value,
-          name: (o as HTMLOptionElement).dataset.content ?? "",
-        }))
+        .map((o) => {
+          const opt = o as HTMLOptionElement;
+          const tmp = document.createElement("div");
+          tmp.innerHTML = opt.dataset.content ?? "";
+          const name = (tmp.textContent ?? "").replace(/\s+/g, " ").trim();
+          return { externalId: opt.value, name };
+        })
         .filter((c) => c.externalId && c.name),
     );
   } finally {
