@@ -20,6 +20,17 @@ interface PerUserEventsRow {
   eventBytes: bigint;
 }
 
+// Almacenamiento incluido en el plan Supabase Pro contratado. Ajustar si el
+// plan real difiere (esto es solo para mostrar cuánto queda libre en el
+// panel de admin, no afecta el funcionamiento de la app).
+const PLAN_STORAGE_BYTES = 8 * 1024 * 1024 * 1024; // 8 GB
+
+function riskLevel(shareOfContent: number): "alto" | "medio" | "bajo" {
+  if (shareOfContent >= 0.5) return "alto";
+  if (shareOfContent >= 0.25) return "medio";
+  return "bajo";
+}
+
 // Todo esto se calcula con agregaciones SQL (COUNT/SUM/pg_database_size)
 // hechas por Postgres — solo viajan por la red unos pocos números, nunca
 // las filas completas, así que consultar esta página no pesa nada en la
@@ -69,7 +80,7 @@ export async function GET() {
     ]),
   );
 
-  const perUser = perUserTitles
+  const rawPerUser = perUserTitles
     .map((row) => {
       const events = eventsByUser.get(row.userId) ?? {
         events: 0,
@@ -86,8 +97,31 @@ export async function GET() {
     })
     .sort((a, b) => b.estimatedBytes - a.estimatedBytes);
 
+  // El "peligro" de un usuario se mide como su parte del CONTENIDO total
+  // generado por la app (no de toda la base, que incluye tablas del
+  // sistema/otros usuarios sin actividad) — así se nota rápido si uno solo
+  // concentra la mayoría del uso.
+  const totalContentBytes = rawPerUser.reduce(
+    (sum, u) => sum + u.estimatedBytes,
+    0,
+  );
+  const perUser = rawPerUser.map((u) => {
+    const shareOfContent =
+      totalContentBytes > 0 ? u.estimatedBytes / totalContentBytes : 0;
+    return {
+      ...u,
+      shareOfContent,
+      risk: riskLevel(shareOfContent),
+    };
+  });
+
+  const databaseSizeBytes = Number(dbSize[0]?.bytes ?? 0);
+
   return NextResponse.json({
-    databaseSizeBytes: Number(dbSize[0]?.bytes ?? 0),
+    databaseSizeBytes,
+    planStorageBytes: PLAN_STORAGE_BYTES,
+    remainingBytes: Math.max(0, PLAN_STORAGE_BYTES - databaseSizeBytes),
+    percentUsed: Math.min(1, databaseSizeBytes / PLAN_STORAGE_BYTES),
     perUser,
   });
 }

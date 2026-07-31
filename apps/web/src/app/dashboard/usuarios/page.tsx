@@ -30,12 +30,24 @@ interface UsagePerUser {
   titles: number;
   events: number;
   estimatedBytes: number;
+  shareOfContent: number;
+  risk: "alto" | "medio" | "bajo";
 }
 
 interface UsageData {
   databaseSizeBytes: number;
+  planStorageBytes: number;
+  remainingBytes: number;
+  percentUsed: number;
   perUser: UsagePerUser[];
 }
+
+const riskColors: Record<UsagePerUser["risk"], { bg: string; color: string }> =
+  {
+    alto: { bg: "#fdecec", color: "#d64545" },
+    medio: { bg: "#fff8e6", color: "#8a6d1a" },
+    bajo: { bg: "#dff5e6", color: "#1e8a4b" },
+  };
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -206,15 +218,54 @@ export default function UsuariosPage() {
         </p>
         {usage && (
           <>
-            <p style={{ fontSize: 14, fontWeight: 600, marginTop: 8 }}>
-              Tamaño total de la base: {formatBytes(usage.databaseSizeBytes)}
-            </p>
+            <div style={{ marginTop: 8 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+              >
+                <span>
+                  Usado: {formatBytes(usage.databaseSizeBytes)} de{" "}
+                  {formatBytes(usage.planStorageBytes)}
+                </span>
+                <span
+                  style={{
+                    color: usage.percentUsed >= 0.8 ? "#d64545" : "#6b7280",
+                  }}
+                >
+                  {(usage.percentUsed * 100).toFixed(1)}% usado — quedan{" "}
+                  {formatBytes(usage.remainingBytes)} libres
+                </span>
+              </div>
+              <div
+                style={{
+                  height: 8,
+                  background: "#e9ecf1",
+                  borderRadius: 999,
+                  overflow: "hidden",
+                  marginTop: 6,
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    width: `${Math.min(100, usage.percentUsed * 100)}%`,
+                    background:
+                      usage.percentUsed >= 0.8 ? "#d64545" : "#2f5fdb",
+                    transition: "width 0.4s ease",
+                  }}
+                />
+              </div>
+            </div>
             <table
               style={{
                 width: "100%",
                 borderCollapse: "collapse",
                 fontSize: 13,
-                marginTop: 8,
+                marginTop: 14,
               }}
             >
               <thead>
@@ -224,6 +275,8 @@ export default function UsuariosPage() {
                   <th style={thStyle}>Títulos</th>
                   <th style={thStyle}>Eventos de log</th>
                   <th style={thStyle}>Peso estimado</th>
+                  <th style={thStyle}>% del contenido total</th>
+                  <th style={thStyle}>Riesgo</th>
                 </tr>
               </thead>
               <tbody>
@@ -237,6 +290,23 @@ export default function UsuariosPage() {
                     <td style={tdStyle}>{row.titles}</td>
                     <td style={tdStyle}>{row.events}</td>
                     <td style={tdStyle}>{formatBytes(row.estimatedBytes)}</td>
+                    <td style={tdStyle}>
+                      {(row.shareOfContent * 100).toFixed(1)}%
+                    </td>
+                    <td style={tdStyle}>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          padding: "2px 8px",
+                          borderRadius: 999,
+                          background: riskColors[row.risk].bg,
+                          color: riskColors[row.risk].color,
+                        }}
+                      >
+                        {row.risk}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
