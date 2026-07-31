@@ -24,9 +24,11 @@ export default async function DashboardLayout({
           alignItems: "center",
         }}
       >
-        <h1 style={{ fontSize: 22, margin: 0 }}>Auto Artículos</h1>
+        <h1 style={{ fontSize: 22, margin: 0, color: "#e8ecf5" }}>
+          Auto Artículos
+        </h1>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 13, color: "#6b7280" }}>{user.email}</span>
+          <span style={{ fontSize: 13, color: "#a8b3c7" }}>{user.email}</span>
           <LogoutButton />
         </div>
       </div>

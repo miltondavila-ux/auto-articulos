@@ -33,7 +33,7 @@ export default function DashboardNav() {
         display: "flex",
         gap: 4,
         marginTop: 20,
-        borderBottom: "1px solid #dfe3e8",
+        borderBottom: "1px solid rgba(232, 236, 245, 0.15)",
       }}
     >
       {tabs.map((tab) => {
@@ -43,8 +43,8 @@ export default function DashboardNav() {
           fontSize: 14,
           fontWeight: 600,
           textDecoration: "none",
-          color: active ? "#16181d" : "#6b7280",
-          borderBottom: active ? "2px solid #2f5fdb" : "2px solid transparent",
+          color: active ? "#e8ecf5" : "#a8b3c7",
+          borderBottom: active ? "2px solid #4dd8e8" : "2px solid transparent",
         };
         return (
           <Link key={tab.href} href={tab.href} style={style}>
