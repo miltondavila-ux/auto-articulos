@@ -490,6 +490,19 @@ Avance posterior confirmado por el usuario:
   día siguiente o pedir a soporte de 10minutesWebsite que retire el límite de
   esa cuenta del programa. No se modificaron sus datos ni se disparó el worker.
   El workflow diagnóstico se eliminó después de obtener evidencia.
+- Rediseño de escalabilidad solicitado después de observar a
+  `lorenalvarez30@gmail.com` esperando demasiado: el esquema de 5 shards × 2
+  lanes solo podía publicar para 10 usuarios simultáneos, examinaba únicamente
+  los primeros 20 runs y cada lane ocioso moría después de 1.5 segundos. Si
+  llegaban usuarios mientras el workflow seguía activo, `triggerWorkerNow()`
+  evitaba otra corrida pero la capacidad ya apagada no regresaba, creando cola.
+  Nueva arquitectura preparada: **10 shards × 4 lanes = 40 usuarios publicando
+  simultáneamente**, 1 lane de categorías por shard, hasta 100 runs candidatos
+  y lanes vivos/polling cada 5 s durante todo el presupuesto de 18 min. Solo el
+  shard 1 ejecuta mantenimiento para evitar 10 limpiezas duplicadas. El repo es
+  público: runners estándar gratis; GitHub Free permite 20 jobs concurrentes,
+  usamos 10 y dejamos margen. Pendiente validar/commit/push; no se disparará
+  manualmente una publicación de prueba.
 
 ## Pendiente / próximos pasos
 

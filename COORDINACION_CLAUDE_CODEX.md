@@ -91,9 +91,10 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Codex
 
-- **Estado:** ACTIVO. Claude liberó el worker; Codex reservó la integración
-  Google en web/shared/worker hasta terminar su despliegue.
-- **Tarea:** integración multiusuario con Google Search Console.
+- **Estado:** ACTIVO. Claude liberó el worker; Codex reserva ahora
+  `apps/worker/src/run-once.ts`, `apps/worker/src/queue.ts` y
+  `.github/workflows/worker.yml` para corregir la escalabilidad.
+- **Tarea:** capacidad real para 40 usuarios publicando simultáneamente.
 - **Área reservada cuando se reanude:** OAuth/API/UI de Google y migración
   `20260731210000_add_google_search_console`.
 - **Archivos previstos:**
@@ -122,6 +123,12 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
   abrir la solicitud manual en Search Console. No se disparó publicación.
 - **Entrega Google:** commit `4641960`, deploy
   `dpl_3T67yEFLhWoPAMBb1GUTCbEK4uLC` listo en producción.
+- **Diagnóstico de escalabilidad:** el esquema actual solo ofrece 10 lanes de
+  artículos (5 shards × 2) y los lanes ociosos terminan después de 1.5 s. Si
+  llegan usuarios mientras sigue una corrida, `triggerWorkerNow()` no abre
+  otra y la capacidad que se apagó no vuelve hasta otro workflow. Además,
+  `queue.ts` solo examina los primeros 20 runs. Cambio reservado: 10 runners ×
+  4 lanes = 40 usuarios, espera ociosa durante la ventana y 100 candidatos.
 
 ## Zona compartida: requiere coordinación explícita
 

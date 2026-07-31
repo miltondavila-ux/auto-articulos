@@ -27,7 +27,10 @@ export async function processNext(): Promise<boolean> {
     where: { status: "running" },
     orderBy: { createdAt: "asc" },
     include: { category: true },
-    take: 20,
+    // Hay ~60 usuarios objetivo y hasta 40 lanes concurrentes. Limitar la
+    // búsqueda a 20 hacía que todos compitieran por el mismo subconjunto y no
+    // vieran trabajo válido más abajo en la cola.
+    take: 100,
   });
 
   type RunWithCategory = (typeof candidates)[number];

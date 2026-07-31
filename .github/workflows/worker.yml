@@ -13,9 +13,11 @@ jobs:
   procesar:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    # Varios "shards" idénticos corren en paralelo (pedido explícito del
-    # usuario el 31/7/2026, por carga real de ~40 usuarios activos a la
-    # vez): cada uno es un proceso de Node completamente separado que
+    # 10 shards × 4 lanes de artículos = capacidad para 40 usuarios
+    # publicando simultáneamente. El repo es público y usa runners estándar:
+    # GitHub Actions los ofrece sin costo. Usamos 10 de los 20 jobs concurrentes
+    # del plan Free y dejamos margen para deploys/diagnósticos. Cada shard es
+    # un proceso de Node separado que
     # compite por el mismo trabajo pendiente en la base de datos. El
     # reparto es automático y seguro entre-procesos gracias al "claim"
     # atómico de reservation.ts (User.workerBusyUntil) — nunca dos shards
@@ -24,8 +26,9 @@ jobs:
     # asignar manualmente qué shard procesa a quién.
     strategy:
       fail-fast: false
+      max-parallel: 10
       matrix:
-        shard: [1, 2, 3, 4, 5]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DIRECT_URL: ${{ secrets.DATABASE_URL }}
@@ -33,6 +36,7 @@ jobs:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       GOOGLE_SEARCH_CONSOLE_CLIENT_ID: ${{ secrets.GOOGLE_SEARCH_CONSOLE_CLIENT_ID }}
       GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET: ${{ secrets.GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET }}
+      WORKER_SHARD: ${{ matrix.shard }}
     steps:
       - uses: actions/checkout@v4
 

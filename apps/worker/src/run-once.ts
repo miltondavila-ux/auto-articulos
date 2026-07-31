@@ -13,24 +13,22 @@ const BUDGET_MS = 18 * 60 * 1000;
 // sesión de 10minutesWebsite, nunca dos lanes en la misma cuenta a la vez —
 // ver reservation.ts). Pedido explícito del usuario (31/7/2026): que el
 // trabajo de un usuario no quede esperando a que termine el de otro.
-// Valor conservador a propósito DENTRO de un mismo shard: el runner estándar
-// de GitHub Actions tiene solo 2 vCPU, y cada lane abre su propio navegador
-// Playwright. La escala real para ~40 usuarios activos viene de correr
-// varios shards en paralelo (ver worker.yml, `strategy.matrix`), cada uno
-// con su propio runner y estas mismas lanes — no de subir este número.
-const TITLE_LANE_CONCURRENCY = 2;
+// Los runners estándar para repos públicos tienen 4 CPU/16 GB. Cuatro lanes
+// mayormente esperan red/IA, por lo que 10 shards × 4 lanes dan capacidad real
+// para 40 usuarios sin consumir los 20 jobs máximos de la cuenta Free.
+const TITLE_LANE_CONCURRENCY = 4;
 
 // Sincronizar categorías es mucho más rápido que publicar un artículo (solo
 // lee un <select>, no genera contenido/imagen con IA), así que puede tener
 // más carriles sin pesar tanto en el runner. Pedido explícito del usuario:
 // que sincronizar categorías no haga esperar tanto.
-const SYNC_LANE_CONCURRENCY = 2;
+const SYNC_LANE_CONCURRENCY = 1;
 
-// Ronda vacía consecutiva en un lane antes de darlo por sin trabajo por
-// ahora (evita que un lane se detenga apenas por perder una carrera de
-// reserva contra otro lane que tomó el único run disponible).
-const IDLE_RETRIES = 3;
-const IDLE_DELAY_MS = 500;
+// Los lanes permanecen disponibles durante toda la ventana. Antes se apagaban
+// tras solo 1.5 segundos sin trabajo; como triggerWorkerNow() no dispara otra
+// corrida mientras una siga activa, los usuarios que llegaban después perdían
+// esa capacidad y quedaban haciendo cola hasta el próximo workflow.
+const IDLE_DELAY_MS = 5_000;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -38,16 +36,12 @@ function sleep(ms: number) {
 
 async function runTitleLane(deadline: number): Promise<boolean> {
   let didWork = false;
-  let idleStreak = 0;
   while (Date.now() < deadline) {
     const did = await processNext();
     if (did) {
       didWork = true;
-      idleStreak = 0;
       continue;
     }
-    idleStreak += 1;
-    if (idleStreak >= IDLE_RETRIES) break;
     await sleep(IDLE_DELAY_MS);
   }
   return didWork;
@@ -55,27 +49,28 @@ async function runTitleLane(deadline: number): Promise<boolean> {
 
 async function runSyncLane(deadline: number): Promise<boolean> {
   let didWork = false;
-  let idleStreak = 0;
   while (Date.now() < deadline) {
     const did = await processNextCategorySync();
     if (did) {
       didWork = true;
-      idleStreak = 0;
       continue;
     }
-    idleStreak += 1;
-    if (idleStreak >= IDLE_RETRIES) break;
     await sleep(IDLE_DELAY_MS);
   }
   return didWork;
 }
 
 async function main() {
-  const recovered = await recoverStuckTitles();
-  if (recovered > 0) {
-    console.log(
-      `Recuperados ${recovered} título(s) atascado(s) en "processing".`,
-    );
+  // Con varios shards, ejecutar mantenimiento en todos duplicaría consultas y
+  // limpiezas. El shard 1 se encarga; todos publican en paralelo.
+  const isMaintenanceShard = (process.env.WORKER_SHARD ?? "1") === "1";
+  if (isMaintenanceShard) {
+    const recovered = await recoverStuckTitles();
+    if (recovered > 0) {
+      console.log(
+        `Recuperados ${recovered} título(s) atascado(s) en "processing".`,
+      );
+    }
   }
 
   const deadline = Date.now() + BUDGET_MS;
@@ -90,9 +85,11 @@ async function main() {
   ]);
   const didAnyWork = results.some(Boolean);
 
-  const deletedEvents = await cleanupOldEvents();
-  if (deletedEvents > 0) {
-    console.log(`Limpieza: ${deletedEvents} eventos de log viejos borrados.`);
+  if (isMaintenanceShard) {
+    const deletedEvents = await cleanupOldEvents();
+    if (deletedEvents > 0) {
+      console.log(`Limpieza: ${deletedEvents} eventos de log viejos borrados.`);
+    }
   }
 
   console.log(
