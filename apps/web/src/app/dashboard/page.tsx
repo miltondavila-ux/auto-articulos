@@ -672,23 +672,24 @@ function TitleProgressRow({
               Si lleva mucho rato sin avanzar (por ejemplo, por una caída de
               conexión), puedes forzar un reintento.
             </p>
-            <button
-              onClick={handleRetry}
-              disabled={retrying}
-              style={{
-                background: "#fff8e6",
-                color: "#8a6d1a",
-                border: "1px solid #f0deac",
-                borderRadius: 6,
-                padding: "4px 10px",
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: retrying ? "default" : "pointer",
-              }}
-            >
-              {retrying ? "Reintentando..." : "Reintentar ahora"}
-            </button>
           </details>
+          <button
+            onClick={handleRetry}
+            disabled={retrying}
+            style={{
+              marginTop: 6,
+              background: "#fff8e6",
+              color: "#8a6d1a",
+              border: "1px solid #f0deac",
+              borderRadius: 6,
+              padding: "4px 10px",
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: retrying ? "default" : "pointer",
+            }}
+          >
+            {retrying ? "Reintentando..." : "Reintentar ahora"}
+          </button>
         </div>
       )}
 

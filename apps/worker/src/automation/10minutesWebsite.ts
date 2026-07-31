@@ -182,7 +182,42 @@ async function createArticleDraft(
     timeout: NAV_TIMEOUT_MS,
   });
 
-  await page.selectOption("#type", ARTICLE_TYPE_NOTICIAS);
+  try {
+    await page.selectOption("#type", ARTICLE_TYPE_NOTICIAS, {
+      timeout: NAV_TIMEOUT_MS,
+    });
+  } catch {
+    // Encontrado en vivo el 31/7/2026 (cuenta de Mariana Romero): si el
+    // formulario no carga, es posible que el sitio esté mostrando otra
+    // pantalla (ej. un aviso de límite) en vez del formulario normal, y por
+    // eso nunca aparece el campo "Tipo". Mensaje explícito con la hipótesis
+    // más probable, pedido por el usuario.
+    const alertText = await page
+      .evaluate(() => {
+        const candidates = Array.from(
+          document.querySelectorAll(
+            '[class*="alert" i], [class*="error" i], [role="alert"]',
+          ),
+        ).filter((el) => (el as HTMLElement).offsetParent !== null);
+        return candidates
+          .map((el) => (el.textContent ?? "").trim())
+          .filter((t) => t.length > 0)
+          .slice(0, 3)
+          .join(" | ");
+      })
+      .catch(() => "");
+    throw new Error(
+      "No se pudo abrir el formulario de creación de artículo (el sitio no " +
+        'mostró el campo "Tipo" a tiempo)' +
+        (alertText ? `. Mensaje visible en el sitio: "${alertText}"` : ".") +
+        " Es posible que la cuenta haya alcanzado un límite diario de " +
+        "artículos en 10minutesWebsite (por ejemplo, 10 por día), algo que " +
+        "no debería aplicar para cuentas del programa de posicionamiento. " +
+        "Si este error se repite, solicita al servicio al cliente de " +
+        "10minutesWebsite que revise y elimine esa restricción para esta " +
+        "cuenta.",
+    );
+  }
 
   // #user_label_list_article es un <select multiple> reforzado visualmente
   // por un widget (se ve como combobox), pero fijar el value real y disparar
