@@ -23,12 +23,37 @@ interface UserRow {
   createdAt: string;
 }
 
+interface UsagePerUser {
+  userId: string;
+  email: string;
+  runs: number;
+  titles: number;
+  events: number;
+  estimatedBytes: number;
+}
+
+interface UsageData {
+  databaseSizeBytes: number;
+  perUser: UsagePerUser[];
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${kb.toFixed(1)} KB`;
+  const mb = kb / 1024;
+  if (mb < 1024) return `${mb.toFixed(1)} MB`;
+  return `${(mb / 1024).toFixed(2)} GB`;
+}
+
 export default function UsuariosPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [forbidden, setForbidden] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [creating, setCreating] = useState(false);
+  const [usage, setUsage] = useState<UsageData | null>(null);
+  const [loadingUsage, setLoadingUsage] = useState(false);
   const [banner, setBanner] = useState<{
     type: "error" | "info";
     text: string;
@@ -46,8 +71,21 @@ export default function UsuariosPage() {
     }
   }
 
+  async function loadUsage() {
+    setLoadingUsage(true);
+    try {
+      const res = await fetch("/api/admin/usage");
+      if (res.ok) {
+        setUsage(await res.json());
+      }
+    } finally {
+      setLoadingUsage(false);
+    }
+  }
+
   useEffect(() => {
     loadUsers();
+    loadUsage();
   }, []);
 
   async function handleCreate(e: FormEvent) {
@@ -136,6 +174,74 @@ export default function UsuariosPage() {
           >
             {banner.text}
           </div>
+        )}
+      </section>
+
+      <section style={sectionStyle}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 8,
+          }}
+        >
+          <h2 style={h2Style}>Uso de la base de datos (Supabase)</h2>
+          <button
+            onClick={loadUsage}
+            disabled={loadingUsage}
+            style={disabledStyle(
+              { ...secondaryButtonStyle, padding: "4px 10px", fontSize: 12 },
+              loadingUsage,
+            )}
+          >
+            {loadingUsage ? "Actualizando..." : "Actualizar"}
+          </button>
+        </div>
+        <p style={{ fontSize: 13, color: "#6b7280", marginTop: -6 }}>
+          Tamaño real de la base y cuánto contenido corresponde a cada usuario,
+          calculado directamente con SQL (no consume cuota de transferencia
+          extra al mirarlo).
+        </p>
+        {usage && (
+          <>
+            <p style={{ fontSize: 14, fontWeight: 600, marginTop: 8 }}>
+              Tamaño total de la base: {formatBytes(usage.databaseSizeBytes)}
+            </p>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                fontSize: 13,
+                marginTop: 8,
+              }}
+            >
+              <thead>
+                <tr style={{ textAlign: "left", color: "#6b7280" }}>
+                  <th style={thStyle}>Usuario</th>
+                  <th style={thStyle}>Ejecuciones</th>
+                  <th style={thStyle}>Títulos</th>
+                  <th style={thStyle}>Eventos de log</th>
+                  <th style={thStyle}>Peso estimado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {usage.perUser.map((row) => (
+                  <tr
+                    key={row.userId}
+                    style={{ borderTop: "1px solid #dfe3e8" }}
+                  >
+                    <td style={tdStyle}>{row.email}</td>
+                    <td style={tdStyle}>{row.runs}</td>
+                    <td style={tdStyle}>{row.titles}</td>
+                    <td style={tdStyle}>{row.events}</td>
+                    <td style={tdStyle}>{formatBytes(row.estimatedBytes)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
         )}
       </section>
 
