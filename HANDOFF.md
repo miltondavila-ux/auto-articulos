@@ -709,7 +709,7 @@ la API de Search Console de más.
   con el próximo artículo real que se publique.
 - **BLOQUEADO: el deploy a Vercel de este cambio de UI falló** —
   `npx vercel --prod --yes` devolvió `Error: The specified token is not
-  valid. Use 'vercel login' to generate a new token.` El cambio del worker
+valid. Use 'vercel login' to generate a new token.` El cambio del worker
   (lo más importante, el que arregla el reenvío duplicado) YA está en
   producción vía GitHub Actions sin necesitar Vercel. Pero el check visible
   "✓ Sitemap enviado a Google" en `GoogleIndexingStatus.tsx` NO está
@@ -729,6 +729,17 @@ la API de Search Console de más.
 - Nueva pestaña `/dashboard/oportunidades` y API multiusuario bajo
   `/api/opportunities`. Cada análisis se ejecuta únicamente al pulsar el botón;
   no hay consumo periódico en segundo plano.
+- Mejora UX del 1/8/2026: al pulsar **Analizar oportunidades** se muestra un
+  temporizador `mm:ss`, barra de progreso y una línea de cuatro etapas
+  (consultar Search Console, comparar tendencias, crear long tails y validar
+  duplicados/canibalización), además del aviso de no cerrar la página. Es
+  progreso informativo mientras responde una única solicitud; no dispara
+  publicaciones.
+- Configuración real confirmada el 1/8/2026: el usuario creó una clave nueva,
+  guardó `OPENAI_API_KEY` en Vercel Production, redistribuyó el deployment y
+  confirmó que la prueba de **Analizar oportunidades fue exitosa**. La clave no
+  se copió al chat, repositorio ni documentos. No se ejecutaron ni publicaron
+  los títulos generados durante esta comprobación por parte de Codex.
 - Consulta Search Analytics de la propiedad Google elegida por ese usuario:
   compara los últimos 28 días consolidados (hasta tres días antes) con los 28
   anteriores, usando consulta+página, impresiones, clics, CTR y posición.

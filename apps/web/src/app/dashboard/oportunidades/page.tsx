@@ -31,6 +31,7 @@ export default function OportunidadesPage() {
   const [groups, setGroups] = useState<OpportunityGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
+  const [analysisSeconds, setAnalysisSeconds] = useState(0);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<{
     error: boolean;
@@ -47,6 +48,31 @@ export default function OportunidadesPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (!analyzing) return;
+    setAnalysisSeconds(0);
+    const timer = window.setInterval(
+      () => setAnalysisSeconds((seconds) => seconds + 1),
+      1000,
+    );
+    return () => window.clearInterval(timer);
+  }, [analyzing]);
+
+  const analysisStages = [
+    "Consultando datos de Search Console",
+    "Comparando impresiones y tendencias",
+    "Creando oportunidades long tail",
+    "Validando duplicados y canibalización",
+  ];
+  const currentStage = Math.min(
+    analysisStages.length - 1,
+    Math.floor(analysisSeconds / 7),
+  );
+  const analysisProgress = Math.min(92, 8 + analysisSeconds * 3);
+  const elapsedTime = `${Math.floor(analysisSeconds / 60)}:${String(
+    analysisSeconds % 60,
+  ).padStart(2, "0")}`;
 
   async function analyze() {
     setAnalyzing(true);
@@ -123,6 +149,102 @@ export default function OportunidadesPage() {
               ? "Actualizar análisis"
               : "Analizar oportunidades"}
         </button>
+        {analyzing && (
+          <div
+            role="status"
+            aria-live="polite"
+            style={{
+              marginTop: 16,
+              padding: 16,
+              border: "1px solid #b8caf7",
+              borderRadius: 10,
+              background: "#f3f6ff",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 16,
+                alignItems: "center",
+                marginBottom: 10,
+              }}
+            >
+              <strong style={{ fontSize: 14, color: "#24458f" }}>
+                {analysisStages[currentStage]}
+              </strong>
+              <span
+                style={{
+                  minWidth: 52,
+                  textAlign: "center",
+                  padding: "4px 8px",
+                  borderRadius: 999,
+                  background: "#dfe8ff",
+                  color: "#24458f",
+                  fontSize: 12,
+                  fontVariantNumeric: "tabular-nums",
+                  fontWeight: 700,
+                }}
+              >
+                {elapsedTime}
+              </span>
+            </div>
+            <div
+              aria-hidden="true"
+              style={{
+                height: 8,
+                borderRadius: 999,
+                background: "#dfe5f2",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  width: `${analysisProgress}%`,
+                  height: "100%",
+                  borderRadius: 999,
+                  background: "linear-gradient(90deg, #2f5fdb, #4dd8e8)",
+                  transition: "width 1s linear",
+                }}
+              />
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+                gap: 8,
+                marginTop: 12,
+              }}
+            >
+              {analysisStages.map((stage, index) => (
+                <div
+                  key={stage}
+                  style={{
+                    display: "flex",
+                    gap: 7,
+                    alignItems: "flex-start",
+                    color: index <= currentStage ? "#24458f" : "#8a94a6",
+                    fontSize: 11,
+                    fontWeight: index === currentStage ? 700 : 500,
+                  }}
+                >
+                  <span aria-hidden="true">
+                    {index < currentStage
+                      ? "✓"
+                      : index === currentStage
+                        ? "●"
+                        : "○"}
+                  </span>
+                  <span>{stage}</span>
+                </div>
+              ))}
+            </div>
+            <p style={{ margin: "12px 0 0", color: "#5e6b83", fontSize: 12 }}>
+              El tiempo depende de la cantidad de datos. No cierres esta página
+              mientras termina el análisis.
+            </p>
+          </div>
+        )}
         <p style={{ color: "#6b7280", fontSize: 12 }}>
           Necesitas tener Google conectado, una propiedad elegida y categorías
           sincronizadas en{" "}
