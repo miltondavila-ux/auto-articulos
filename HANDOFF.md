@@ -707,16 +707,33 @@ la API de Search Console de más.
   visualmente en el navegador ni con un artículo real nuevo** (cuota de la
   sesión se agotó justo después de implementar) — pendiente de confirmar
   con el próximo artículo real que se publique.
-- **BLOQUEADO: el deploy a Vercel de este cambio de UI falló** —
-  `npx vercel --prod --yes` devolvió `Error: The specified token is not
-valid. Use 'vercel login' to generate a new token.` El cambio del worker
-  (lo más importante, el que arregla el reenvío duplicado) YA está en
-  producción vía GitHub Actions sin necesitar Vercel. Pero el check visible
-  "✓ Sitemap enviado a Google" en `GoogleIndexingStatus.tsx` NO está
-  desplegado todavía porque el token de Vercel CLI venció. Alguien con
-  acceso (el usuario, o correr `vercel login` de forma interactiva) tiene
-  que renovarlo y correr `cd apps/web && npx vercel --prod --yes` de nuevo
-  para que este cambio de UI salga a producción.
+- **RESUELTO (1/8/2026, tarde)**: el token de Vercel CLI había vencido
+  (`Error: The specified token is not valid`). El usuario corrió
+  `npx vercel whoami` (que disparó un login por device-code) y quedó
+  autenticado de nuevo como `miltondavila-6917`. Con eso se desplegó
+  `dpl_CTeyXid3N8wQNXyzHmN9REokezEz`, incluyendo el check visible "✓
+  Sitemap enviado a Google" (`GoogleIndexingStatus.tsx`) y el mensaje claro
+  de "Google Search Console no está conectado" para el caso `not_configured`
+  (ver más abajo). Ya no está bloqueado.
+- **Bug encontrado y corregido en el camino (1/8/2026)**: un usuario
+  (`gestions.pascual@gmail.com`) tenía el email guardado como
+  `"Ahora : gestions.pascual@gmail.com"` — un error de tipeo en la planilla
+  original de alta masiva que le rompía el login (email inválido). Corregido
+  directo en producción con un script puntual. Se escaneó el resto de los
+  usuarios por el mismo patrón (espacios o formato de email inválido) — no
+  se encontró ningún otro caso.
+- **Causa raíz real del caso mostrado por el usuario** (artículo de
+  `segurosdesaludyvida.com` con "✗ Sitemap no enviado" y el enlace de Search
+  Console que "no llevaba a nada"): esa cuenta específica **todavía no tiene
+  conectada una propiedad de Google Search Console** —
+  `googleIndexingStatus` = `"not_configured"`, no un bug. Antes el mensaje no
+  lo explicaba (mostraba la misma cruz roja que un error real, y el enlace
+  caía genérico a la página de inicio de Search Console porque sin
+  `siteUrl` no tenía a dónde apuntar). Ahora el mensaje dice claramente
+  "Google Search Console no está conectado para esta cuenta" con un enlace
+  directo a Configuración. **Sigue pendiente que cada dueño de cuenta
+  conecte su propia cuenta de Google una vez** (acción de cada usuario, no
+  de código — ver ítem 2 de "Pendiente" más abajo).
 
 ## Pendiente / próximos pasos
 
