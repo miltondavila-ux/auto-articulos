@@ -35,14 +35,32 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Claude
 
-- **Estado:** `TERMINADO — ÁREA LIBERADA` (31/7/2026, ~21:53 UTC). Codex ya
-  puede tocar `apps/worker/**`, `worker.yml` y `schema.prisma` sin
-  coordinar conmigo primero (avisar aquí igual si toca alguno, por las
-  dudas de que retome trabajo más tarde).
-- **Tarea:** resolver contención real detectada en vivo (~40 usuarios activos
-  la misma noche): disparos de `workflow_dispatch` se cancelaban entre sí
-  porque `worker.yml` solo permitía una corrida a la vez, dejando trabajo
-  pendiente (ej. sync de categorías de Lizzammar Oropeza) esperando de más.
+- **Estado:** `TERMINADO — ÁREA LIBERADA` (1/8/2026). Codex puede tocar
+  `apps/worker/**` (incluido `10minutesWebsite.ts`) libremente.
+- **Última tarea (RESUELTA, ver `HANDOFF.md` sección "RESUELTO 1/8/2026:
+  bug del schema FAQ")**: Google Search Console marcaba error de sintaxis
+  en el schema FAQPage. Causa raíz: 10minutesWebsite convierte todas las
+  comillas dobles en simples al guardar el campo "Widget (opcional)",
+  invalidando cualquier JSON-LD directo. Solución implementada y
+  **confirmada por el usuario en producción** ("esto funcionó
+  perfectamente"): `buildFaqSchema()` en
+  `apps/worker/src/automation/10minutesWebsite.ts` ahora genera un
+  `<script>` JS ejecutable que arma el schema con `JSON.stringify()` EN EL
+  NAVEGADOR (inmune a la conversión de comillas, ya que JS no distingue
+  comilla simple/doble/invertida) y lo inyecta dinámicamente como
+  `<script type="application/ld+json">` — patrón oficialmente soportado por
+  Google. `fillFaqWidget()` reactivado en `publishArticle()`. Probado con
+  `vm.runInNewContext` simulando el navegador (casos límite: backtick,
+  `${...}`, comillas dobles, backslash en el texto) y `tsc --noEmit` limpio.
+  **Pendiente**: verificar en 1-2 artículos NUEVOS reales (publicados por
+  el worker, no pegados a mano) que Search Console los valida igual de
+  bien.
+- **Tarea previa completada (histórico, ver más abajo en "Registro de
+  entregas")**: resolver contención real detectada en vivo (~40 usuarios
+  activos la misma noche): disparos de `workflow_dispatch` se cancelaban
+  entre sí porque `worker.yml` solo permitía una corrida a la vez, dejando
+  trabajo pendiente (ej. sync de categorías de Lizzammar Oropeza) esperando
+  de más.
 - **Objetivo completado:**
   1. `apps/web/src/lib/trigger-worker.ts`: `triggerWorkerNow()` ahora chequea
      si ya hay una corrida `in_progress`/`queued` antes de disparar otra
@@ -91,8 +109,8 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Codex
 
-- **Estado:** ACTIVO — ÁREA RESERVADA para construir el módulo
-  **Oportunidades**. Claude figura terminado y con el área liberada.
+- **Estado:** `TERMINADO — ÁREA LIBERADA`. Módulo **Oportunidades** entregado
+  en producción; Codex ya no reserva sus archivos.
 - **Tarea:** analizar el rendimiento multiusuario de Google Search Console,
   generar hasta 10 categorías con 9 títulos long tail por categoría evitando
   duplicación/canibalismo, y permitir eliminar o enviar categorías/títulos al
@@ -116,6 +134,12 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
   Transaction pooler `:6543` falló con `prepared statement s0 does not exist`
   y el segundo quedó esperando el advisory lock. El runtime web/worker seguirá
   usando `:6543`; no se toca `worker.yml`.
+- **Entrega:** commits `05d8d6b` (módulo completo) y `2f33164` (migraciones por
+  Session pooler), push a `main`, migración productiva exitosa
+  `30707560663` y deploy Vercel `dpl_21hmZQbA7FZzF6kCtmJdsxTWn4mU`. Página y
+  GET de API verificados con sesión real, sin pulsar Analizar/Ejecutar ni crear
+  publicaciones. El cambio ajeno de FAQ en el worker continúa fuera de los
+  commits de Codex.
 - **Área reservada cuando se reanude:** OAuth/API/UI de Google y migración
   `20260731210000_add_google_search_console`.
 - **Archivos previstos:**
@@ -199,6 +223,27 @@ Push/deploy/migración:
 Pendientes:
 Estado del área: LIBERADA o RESERVADA
 ```
+
+### 2026-08-01 ~16:08 UTC — Codex: módulo Oportunidades
+
+- **Agente:** Codex.
+- **Tarea:** analista SEO bajo demanda con Google Search Console y generación
+  long tail sin duplicación/canibalismo.
+- **Archivos/área:** modelos+migración `Opportunity*`, helper Search Analytics,
+  API/UI `/opportunities`, navegación y workflow de migración.
+- **Resultado:** máximo 10 categorías seleccionadas por rendimiento, 9 títulos
+  por grupo, eliminar/ejecutar por grupo o título y transferencia al flujo
+  normal `Run`/`Title`. Multiusuario estricto y sin límite interno nuevo de 10
+  artículos derivado de 10MinutesWebsite.
+- **Verificaciones:** Prisma format/generate, Prettier, `tsc --noEmit`, build
+  Next.js y carga autenticada de página/API. No se ejecutó el análisis real ni
+  una publicación.
+- **Commit:** `05d8d6b`, `2f33164`.
+- **Push/deploy/migración:** `main`; migración `30707560663` exitosa; Vercel
+  `dpl_21hmZQbA7FZzF6kCtmJdsxTWn4mU` READY.
+- **Pendientes:** el usuario puede pulsar **Analizar oportunidades** para la
+  primera validación con sus datos reales de Search Console.
+- **Estado del área:** LIBERADA.
 
 ### 2026-07-31 ~21:53 UTC — Claude: 5 shards + fix de límite diario
 

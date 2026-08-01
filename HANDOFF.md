@@ -508,14 +508,169 @@ Avance posterior confirmado por el usuario:
   `Procesar trabajo pendiente`. Codex no disparó el worker ni creó una
   publicación; se avisó al usuario que ya podía ejecutar su prueba.
 
+## RESUELTO (1/8/2026): bug del schema FAQ en Google Search Console
+
+**Estado: resuelto y confirmado por el usuario en producción** (ver sección
+"RESUELTO" más abajo). Se deja toda la investigación documentada porque
+explica una lección importante sobre el campo Widget de 10minutesWebsite que
+puede ser relevante para futuras integraciones con ese campo.
+
+### Qué pasó
+
+El usuario reportó que Google Search Console marca "Detectados errores de
+sintaxis en los datos estructurados" / "Falta el carácter '}' o el nombre del
+miembro del objeto" en artículos publicados. Se confirmó que es el **schema
+FAQ** (`apps/worker/src/automation/10minutesWebsite.ts`, antes
+`fillFaqWidget`/`buildFaqSchema`), no otra cosa — el usuario probó quitando el
+FAQ del campo Widget de un artículo y la validación pasó limpia.
+
+### Causa raíz confirmada con evidencia directa (no es una hipótesis)
+
+1. Nuestro código genera JSON-LD válido: `JSON.stringify(schema)` con comillas
+   dobles, verificado.
+2. En la página PÚBLICA, el schema aparece con comillas simples:
+   `{'@context':'https://schema.org',...}` — JSON inválido (las comillas
+   simples no existen en la gramática JSON).
+3. **Prueba decisiva del usuario**: abrió el artículo para EDITAR en
+   10minutesWebsite (no la página pública) y miró qué hay GUARDADO en el campo
+   "Widget (opcional)" (`#widgetcode`). Ya estaba con comillas simples ahí
+   también — incluso el propio `<script type='application/ld+json'>` (su
+   atributo `type`) apareció con comillas simples, cuando nosotros mandamos
+   `type="application/ld+json"` con comillas dobles.
+4. Conclusión: **10minutesWebsite convierte TODAS las comillas dobles (`"`,
+   U+0022) en comillas simples (`'`, U+0027) al GUARDAR ese campo específico**
+   — es una transformación de texto plano, ciega (no distingue JSON de HTML
+   de nada), aplicada a absolutamente todo lo que se guarda en el Widget. No
+   importa si lo llena Playwright o un humano a mano: el daño ya está en el
+   valor persistido, antes de que la página se renderice.
+5. Por qué es imposible arreglarlo mandando JSON de otra forma: JSON exige
+   comillas dobles literales para sus delimitadores, sin excepción ni
+   alternativa (a diferencia de HTML, que acepta comillas simples o dobles
+   indistintamente en atributos). Si el campo destruye el 100% de las
+   comillas dobles que le llegan, no existe ninguna forma de codificar JSON
+   válido a través de él — probar con entidades HTML (`&quot;`) tampoco
+   sirve, porque el contenido de un `<script>` es "raw text": el navegador
+   (y el parser de Google) NO decodifica entidades ahí, así que
+   `&quot;` llegaría literal, igual de inválido.
+
+### Alternativas consideradas y descartadas
+
+- **Reportar el bug a soporte de 10minutesWebsite**: sigue siendo válido
+  hacerlo (afecta a cualquiera que use ese campo con comillas dobles: JSON,
+  ciertos atributos, algunos snippets de JS), pero no es una solución
+  inmediata — depende de que ellos lo arreglen.
+- **Microdata en vez de JSON-LD** (atributos HTML tipo `itemscope
+itemtype="https://schema.org/FAQPage"`): sobrevive a la conversión de
+  comillas porque HTML no exige un tipo de comilla específico. PERO Microdata
+  solo es legítimo para Google si anota contenido que el usuario **ve** en la
+  página — ocultarlo (como pidió el usuario originalmente) podría leerse como
+  contenido oculto manipulador y arriesgar TODO el sitio, no solo el FAQ. El
+  usuario, al preguntársele, **descartó (dismissed) la pregunta** de si
+  quería hacerlo visible — no se implementó.
+- **Dejar el FAQ pausado indefinidamente**: el usuario explícitamente NO
+  quiso esto como solución final, pidió seguir buscando un arreglo real.
+
+### Solución que se está probando ahora mismo (en curso, sin confirmar)
+
+**Idea**: en vez de mandar el JSON-LD directo por el campo Widget, mandar un
+`<script>` (SIN `type="application/ld+json"`, o sea JavaScript normal y
+ejecutable) que construya el schema EN TIEMPO DE EJECUCIÓN en el navegador
+con `JSON.stringify()`, y lo inyecte dinámicamente como un
+`<script type="application/ld+json">` nuevo en el `<head>`. Por qué debería
+funcionar:
+
+1. El código fuente que mandamos usa comillas invertidas (backticks, `` ` ``)
+   para el texto de las preguntas/respuestas y comillas simples para las
+   claves de JS (`'@context'`, etc.) — NINGÚN carácter `"` literal en todo el
+   snippet, así que la conversión ciega de 10minutesWebsite no tiene nada que
+   tocar.
+2. JavaScript acepta comillas simples, dobles o invertidas indistintamente
+   para sus propios string literals — a diferencia de JSON, no le importa el
+   estilo de comilla. Aunque 10minutesWebsite mangle algo, seguiría siendo JS
+   válido.
+3. `JSON.stringify()` se ejecuta EN EL NAVEGADOR del visitante/rastreador, y
+   SIEMPRE produce JSON con comillas dobles correctas, sin importar cómo
+   estaba escrito el código fuente que lo generó.
+4. Googlebot SÍ ejecuta JavaScript al rastrear (es un hecho documentado por
+   Google, no una suposición) y SÍ recoge JSON-LD inyectado dinámicamente al
+   DOM — es un patrón oficialmente soportado, no un truco cuestionable.
+5. Sigue siendo invisible en la página (es solo ejecución de script, no
+   agrega HTML visible) — cumple el requisito original del usuario.
+
+**Snippet exacto que se le dio al usuario para probar manualmente** (pegado
+en el campo Widget del artículo
+`https://www.segurosdesaludyvida.com/noticias/acceso-a-obamacare-para-personas-con-discapacidad`,
+reemplazando el JSON-LD roto que ya estaba ahí):
+
+```html
+<script>
+  (function () {
+    var faqs = [
+      [`pregunta 1`, `respuesta 1`],
+      [`pregunta 2`, `respuesta 2`],
+      // ... (backticks para CADA pregunta/respuesta, ver el commit o el chat
+      // para el snippet completo con las 5 preguntas reales de ese artículo)
+    ];
+    var schema = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faqs.map(function (pair) {
+        return {
+          "@type": "Question",
+          name: pair[0],
+          acceptedAnswer: { "@type": "Answer", text: pair[1] },
+        };
+      }),
+    };
+    var s = document.createElement("script");
+    s.type = "application/ld+json";
+    s.text = JSON.stringify(schema);
+    document.head.appendChild(s);
+  })();
+</script>
+```
+
+### RESUELTO (1/8/2026) — confirmado por el usuario en producción
+
+El usuario pegó manualmente ese snippet en el Widget del artículo real y
+volvió a probarlo en Google Search Console: **"esto funcionó perfectamente"**
+— ya no marca error de sintaxis. Con esa confirmación se portó la misma
+lógica al código:
+
+- `apps/worker/src/automation/10minutesWebsite.ts`: `buildFaqSchema()`
+  reescrita para generar el `<script>` JS auto-inyector (con backticks para
+  el texto de cada pregunta/respuesta) en vez del JSON-LD directo. Se agregó
+  `escapeForTemplateLiteral()` para escapar backslash/backtick/`${` por si
+  el contenido generado por IA llegara a incluir alguno de esos caracteres
+  (el snippet de prueba manual no tenía este escape porque las 5
+  preguntas/respuestas de ese artículo puntual no lo necesitaban).
+- La llamada `await fillFaqWidget(...)` en `publishArticle()` está
+  **reactivada** (ya no comentada) — el FAQ vuelve a generarse en todos los
+  artículos nuevos, ahora con el formato correcto.
+- Probado en aislado con `vm.runInNewContext` simulando `document`/
+  `JSON.stringify` antes de confiar en el fix, incluyendo casos límite
+  (texto con backtick, `${...}`, comillas dobles y backslash) — el script
+  se ejecuta sin errores de sintaxis y produce JSON válido en todos los
+  casos. `tsc --noEmit` limpio.
+- **Pendiente de verificar**: probar en 1-2 artículos reales NUEVOS
+  (publicados con este código, no el snippet pegado a mano) para confirmar
+  que Playwright llena el campo igual de bien que el pegado manual del
+  usuario, y volver a chequear esos artículos en Search Console.
+
+**189 artículos viejos con el FAQ roto** (schema activo desde el 29/7/2026,
+25 runs/usuarios distintos): el usuario decidió explícitamente **dejarlos
+así por ahora** (no es grave — Google solo ignora el schema roto, no
+penaliza el posicionamiento). No se construyó ningún script de limpieza
+masiva. Si en el futuro se quiere limpiar esos 189 (o republicar su FAQ con
+el formato nuevo), sería una tarea aparte: visitar cada artículo por su URL
+de edición en 10minutesWebsite y reemplazar el contenido del campo Widget —
+a construir con cuidado y probar en 1 solo artículo antes de correrla en los 189.
+
 ## Pendiente / próximos pasos
 
-0. **En construcción por Codex:** módulo **Oportunidades** basado en Search
-   Console: análisis bajo demanda, hasta 10 categorías × 9 títulos long tail,
-   controles para eliminar/ejecutar por categoría o título y envío al flujo
-   existente de Publicar/Histórico. No aplicará límites internos basados en el
-   límite externo de 10MinutesWebsite. Reserva detallada en
-   `COORDINACION_CLAUDE_CODEX.md`; Claude mantiene su área liberada.
+0. ~~Construir módulo **Oportunidades**~~ — **HECHO** en commits `05d8d6b` y
+   `2f33164`; migración y deploy productivo confirmados. La primera ejecución
+   del botón **Analizar oportunidades** corresponde al usuario.
 
 ### Módulo Oportunidades (implementación 31/7/2026)
 
@@ -538,9 +693,16 @@ Avance posterior confirmado por el usuario:
   oportunidades transferidas; por eso aparecen en Inicio/Histórico y las
   procesa el mismo worker de Publicar. No existe un límite interno nuevo de 10
   artículos vinculado a 10MinutesWebsite.
-- Migración: `20260731224000_add_opportunities`. Código validado localmente con
-  Prisma format/generate, TypeScript y build completo de Next.js. Pendiente en
-  este punto: commit, migración de producción y deploy web.
+- Migración: `20260731224000_add_opportunities`, aplicada en producción por el
+  workflow `30707560663`. Código validado con Prisma format/generate,
+  TypeScript, build completo de Next.js y carga autenticada de la página/API
+  (sin pulsar Analizar ni Ejecutar). Commits `05d8d6b` y `2f33164`; deploy
+  productivo `dpl_21hmZQbA7FZzF6kCtmJdsxTWn4mU`.
+- Prisma Migrate no debe usar el Transaction pooler `:6543`: el primer intento
+  falló con `prepared statement s0 does not exist` y el segundo quedó esperando
+  el advisory lock. `.github/workflows/migrate.yml` ahora transforma la URL en
+  memoria a Session pooler `:5432` solo durante la migración (sin imprimir
+  secretos); así terminó en 19 s. Web y worker siguen usando `:6543`.
 
 1. Validar el estado individual de Google con un artículo ya existente si está
    disponible, sin disparar una publicación automática.

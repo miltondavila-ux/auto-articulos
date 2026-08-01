@@ -613,14 +613,22 @@ async function checkPreviewRelevant(
 /**
  * Genera preguntas frecuentes reales con IA a partir del título y el
  * contenido real generado para el artículo (ver faqPrompt.ts), y coloca el
- * schema.org FAQPage (JSON-LD) en el campo "Widget (opcional)" (#widgetcode)
- * al pie del formulario. Es un textarea de texto libre sin validaciones
- * (verificado en vivo el 29/7/2026: escribir aquí no afecta el guardado del
- * artículo, a diferencia del campo de imagen).
+ * schema.org FAQPage en el campo "Widget (opcional)" (#widgetcode) al pie
+ * del formulario. Es un textarea de texto libre sin validaciones (verificado
+ * en vivo el 29/7/2026: escribir aquí no afecta el guardado del artículo, a
+ * diferencia del campo de imagen).
  *
  * Pedido explícito del usuario (31/7/2026): el FAQ debe quedar SOLO en el
- * código (para SEO) y no debe verse nada en la página — por eso acá solo se
- * inserta el <script type="application/ld+json">, nunca HTML visible.
+ * código (para SEO) y no debe verse nada en la página.
+ *
+ * Bug de plataforma encontrado el 1/8/2026 (Google Search Console marcaba
+ * "Detectados errores de sintaxis en los datos estructurados" en todos los
+ * artículos): confirmado con evidencia directa que 10minutesWebsite
+ * convierte TODAS las comillas dobles en comillas simples al GUARDAR el
+ * campo Widget — incluso el propio atributo `type="application/ld+json"`
+ * del script terminaba con comillas simples. Como JSON exige comillas
+ * dobles literales sin excepción, esto invalidaba el schema sin importar
+ * cómo se armara el JSON. Ver buildFaqSchema() para la solución.
  */
 async function fillFaqWidget(
   page: Page,
@@ -646,18 +654,62 @@ async function fillFaqWidget(
   );
 }
 
+/**
+ * En vez de mandar el JSON-LD directo (que 10minutesWebsite invalida
+ * convirtiendo sus comillas dobles en simples al guardar), esto genera un
+ * <script> de JavaScript normal y EJECUTABLE que arma el schema con
+ * JSON.stringify() en el navegador y lo inyecta como
+ * <script type="application/ld+json"> nuevo en el <head> en tiempo de
+ * ejecución. JavaScript no distingue comilla simple/doble/invertida para
+ * sus propios string literals, así que la conversión de comillas de
+ * 10minutesWebsite no rompe nada — y JSON.stringify() siempre produce JSON
+ * con comillas dobles correctas sin importar cómo estaba escrito el código
+ * fuente que lo generó. Googlebot ejecuta JavaScript al rastrear y sí
+ * recoge JSON-LD inyectado dinámicamente al DOM (patrón oficialmente
+ * soportado por Google, no un truco). Probado en vivo el 1/8/2026 en un
+ * artículo real: Google Search Console ya no marca error.
+ *
+ * El texto de cada pregunta/respuesta va entre backticks (template
+ * literals); se escapan backslashes, backticks y `${` por si el contenido
+ * generado por IA llegara a incluir alguno de esos caracteres.
+ */
 function buildFaqSchema(faqs: Faq[]): string {
-  const schema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqs.map((f) => ({
-      "@type": "Question",
-      name: f.q,
-      acceptedAnswer: { "@type": "Answer", text: f.a },
-    })),
-  };
+  const pairsJs = faqs
+    .map(
+      (f) =>
+        `[\`${escapeForTemplateLiteral(f.q)}\`, \`${escapeForTemplateLiteral(f.a)}\`]`,
+    )
+    .join(",\n    ");
 
-  return `<script type="application/ld+json">${JSON.stringify(schema)}</script>`;
+  return `<script>
+(function(){
+  var faqs = [
+    ${pairsJs}
+  ];
+  var schema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map(function(pair){
+      return {
+        '@type': 'Question',
+        name: pair[0],
+        acceptedAnswer: { '@type': 'Answer', text: pair[1] }
+      };
+    })
+  };
+  var s = document.createElement('script');
+  s.type = 'application/ld+json';
+  s.text = JSON.stringify(schema);
+  document.head.appendChild(s);
+})();
+</script>`;
+}
+
+function escapeForTemplateLiteral(text: string): string {
+  return text
+    .replace(/\\/g, "\\\\")
+    .replace(/`/g, "\\`")
+    .replace(/\$\{/g, "\\${");
 }
 
 function stripHtml(html: string): string {
