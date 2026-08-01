@@ -128,14 +128,14 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Codex
 
-- **Estado:** ACTIVO — verificación de `OPENAI_API_KEY` recién agregada por el
-  usuario en Vercel Production, redespliegue y prueba controlada del análisis
-  de Oportunidades. No se ejecutarán títulos ni publicaciones.
+- **Estado:** `TERMINADO — ÁREA LIBERADA`. `OPENAI_API_KEY` y el análisis real
+  fueron confirmados por el usuario; la mejora visual quedó en Producción.
 - **Resultado de configuración:** el usuario confirmó que la prueba real del
   análisis fue exitosa después de agregar la clave y redistribuir Production.
   Codex agregó temporizador, barra y cuatro etapas visibles mientras analiza;
-  TypeScript y build web están limpios. Pendiente commit/push y deploy de esta
-  mejora visual; no se volvió a ejecutar el análisis ni se publicaron títulos.
+  TypeScript y build web quedaron limpios. Commit `5720368` desplegado en
+  Vercel Production y confirmado **Listo** en la captura del usuario del
+  1/8/2026. No se volvió a ejecutar el análisis ni se publicaron títulos.
 - **Tarea:** analizar el rendimiento multiusuario de Google Search Console,
   generar hasta 10 categorías con 9 títulos long tail por categoría evitando
   duplicación/canibalismo, y permitir eliminar o enviar categorías/títulos al

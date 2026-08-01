@@ -740,6 +740,9 @@ valid. Use 'vercel login' to generate a new token.` El cambio del worker
   confirmó que la prueba de **Analizar oportunidades fue exitosa**. La clave no
   se copió al chat, repositorio ni documentos. No se ejecutaron ni publicaron
   los títulos generados durante esta comprobación por parte de Codex.
+- Temporizador entregado en commit `5720368`. La captura final de Vercel del
+  1/8/2026 confirmó el deployment **Listo** en **Producción**, con el commit
+  correcto `5720368`. No hace falta volver a redistribuirlo.
 - Consulta Search Analytics de la propiedad Google elegida por ese usuario:
   compara los últimos 28 días consolidados (hasta tres días antes) con los 28
   anteriores, usando consulta+página, impresiones, clics, CTR y posición.
