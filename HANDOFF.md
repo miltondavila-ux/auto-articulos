@@ -735,7 +735,7 @@ la API de Search Console de más.
   conecte su propia cuenta de Google una vez** (acción de cada usuario, no
   de código — ver ítem 2 de "Pendiente" más abajo).
 
-## EN CURSO (1/8/2026): máximo de títulos por lote configurable por usuario
+## RESUELTO (1/8/2026): máximo de títulos por lote configurable por usuario
 
 Pedido del usuario: reemplazar el máximo fijo global de 20 títulos por un
 valor que el administrador pueda configurar para cada cuenta, conservando 20
@@ -760,10 +760,17 @@ Publicar como desde Oportunidades.
   rutas explícitas modificadas, `npx tsc --noEmit` limpio en web y worker, y
   build completo de Next.js exitoso. No se disparó el worker, no se ejecutó una
   oportunidad y no se publicó ningún artículo.
-- Estado al escribir esta entrada: implementación validada localmente; pendiente
-  commit/push, aplicación de la migración en producción y deploy de Vercel. Los
-  cambios ajenos simultáneos de detección automática de sitemaps no pertenecen a
-  esta tarea y se mantendrán fuera del commit de Codex.
+- Entrega completada en commit `9cf7785`, pusheado a `main`. La migración se
+  aplicó correctamente en producción mediante GitHub Actions
+  (`30711443186`, conclusión `success`) y asignó 20 a las cuentas existentes.
+  Vercel desplegó el cambio junto con la detección automática de sitemap que
+  Claude había dejado pendiente: deployment
+  `dpl_D56uMg9asdwF6ozSuccNEKDv7RSk`, estado `READY`, alias
+  `https://auto-articulos-web.vercel.app`.
+- No se probó creando un lote ni ejecutando Oportunidades, porque ambas acciones
+  podrían disparar la publicación real. Esa validación funcional queda para el
+  usuario; las verificaciones de schema, tipos, build, migración y deployment sí
+  quedaron completas.
 
 ## Pendiente / próximos pasos
 

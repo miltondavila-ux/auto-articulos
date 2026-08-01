@@ -133,17 +133,14 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
   `packages/shared/src/google-search-console.ts`) qué sitemaps ya conoce
   para la propiedad elegida, y lo guarda solo la primera vez que hay
   `siteUrl` pero no `sitemapUrl`. Commit `e5f590a`, pusheado a `main`.
-  **NO desplegado a Vercel todavía a propósito**: el filesystem compartido
-  tiene los cambios sin commitear de Codex (`maxTitlesPerBatch`), que
-  dependen de una migración no aplicada a producción — desplegar ahora
-  subiría el estado actual del disco completo (no solo mi commit) y podría
-  romper producción con columnas inexistentes. Cuando Codex commitee/migre
-  su parte, cualquiera de los dos puede correr
-  `cd apps/web && npx vercel --prod --yes` para sacar ambos cambios juntos.
+  **Desplegado después por Codex**, una vez commiteado `maxTitlesPerBatch` y
+  aplicada primero su migración: ambos cambios llegaron juntos a Producción en
+  `dpl_D56uMg9asdwF6ozSuccNEKDv7RSk` sin exponer el despliegue a una columna
+  inexistente.
 
 ### Codex
 
-- **Estado:** `ACTIVO — ÁREA RESERVADA` (1/8/2026).
+- **Estado:** `TERMINADO — ÁREA LIBERADA` (1/8/2026).
 - **Tarea actual:** hacer configurable por usuario el máximo de títulos por
   lote, con valor predeterminado 20 y validación obligatoria en servidor tanto
   para Publicar como para las ejecuciones de categorías/títulos de
@@ -165,11 +162,16 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
   `PRD_CALCULADORA_ROGE.md`; tampoco se ejecutarán pruebas que publiquen
   artículos. Antes del commit se releerá este tablero para comprobar que no
   haya una reserva nueva incompatible.
-- **Avance:** schema+migración, APIs y UI implementados. Prisma
+- **Resultado:** schema+migración, APIs y UI implementados. Prisma
   format/generate, Prettier, `tsc --noEmit` de web/worker y build Next.js
-  limpios. Pendiente commit/push, migración productiva y deploy; no se disparó
-  ninguna publicación. Cambios ajenos simultáneos en la integración de
-  sitemaps quedan expresamente fuera del commit.
+  limpios. Commit `9cf7785` pusheado; migración productiva `30711443186`
+  exitosa; deploy Vercel `dpl_D56uMg9asdwF6ozSuccNEKDv7RSk` READY. No se
+  disparó ninguna publicación. Los cambios simultáneos de sitemap fueron
+  commits separados de Claude y llegaron al mismo deploy después de aplicarse
+  primero esta migración.
+- **Archivos modificados sin commit al liberar el área:** ninguno propio. Solo
+  permanecen sin seguimiento `PRD_CALCULADORA_ROGE.md` y `calculadora-roge/`,
+  que son ajenos y no se tocaron.
 
 - **Estado:** `TERMINADO — ÁREA LIBERADA`. `OPENAI_API_KEY` y el análisis real
   fueron confirmados por el usuario; la mejora visual quedó en Producción.
@@ -291,6 +293,28 @@ Push/deploy/migración:
 Pendientes:
 Estado del área: LIBERADA o RESERVADA
 ```
+
+### 2026-08-01 17:59 UTC — Codex: máximo configurable por lote
+
+- **Agente:** Codex.
+- **Tarea:** sustituir el máximo fijo de 20 títulos por un máximo configurable
+  para cada usuario, predeterminado en 20 y obligatorio en servidor.
+- **Archivos/área:** `User.maxTitlesPerBatch` + migración, Administración de
+  Usuarios, `/api/me`, creación de runs desde Publicar y Oportunidades, ambas
+  pantallas y documentación compartida.
+- **Resultado:** el administrador puede definir el máximo al crear o editar una
+  cuenta; Publicar muestra y aplica el valor real; Oportunidades impide ejecutar
+  una categoría demasiado grande; ambas APIs rechazan el exceso antes de crear
+  el `Run`.
+- **Verificaciones:** Prisma format/generate/validate, Prettier, `tsc --noEmit`
+  web+worker y build Next.js. Migración y build Vercel exitosos. No se ejecutó
+  ninguna publicación automática.
+- **Commit:** `9cf7785`.
+- **Push/deploy/migración:** `main`; GitHub Actions `30711443186` success;
+  Vercel `dpl_D56uMg9asdwF6ozSuccNEKDv7RSk` READY y alias de producción activo.
+- **Pendientes:** prueba funcional del usuario creando lotes con máximos
+  distintos; Codex no la realizó porque dispararía publicaciones reales.
+- **Estado del área:** LIBERADA.
 
 ### 2026-08-01 ~16:08 UTC — Codex: módulo Oportunidades
 
