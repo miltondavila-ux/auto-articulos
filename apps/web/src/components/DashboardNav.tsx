@@ -13,7 +13,7 @@ const BASE_TABS = [
   { href: "/dashboard/configuracion", label: "Configuración" },
 ];
 
-const ADMIN_TAB = { href: "/dashboard/usuarios", label: "Usuarios" };
+const ADMIN_TAB = { href: "/dashboard/usuarios", label: "Administración" };
 
 export default function DashboardNav() {
   const pathname = usePathname();

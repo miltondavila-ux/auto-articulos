@@ -772,6 +772,25 @@ Publicar como desde Oportunidades.
   usuario; las verificaciones de schema, tipos, build, migración y deployment sí
   quedaron completas.
 
+## EN CURSO (1/8/2026): Usuarios se convierte en Administración
+
+Pedido del usuario: renombrar visualmente el módulo **Usuarios** como
+**Administración** y convertir la página en un dashboard moderno con
+indicadores claros y accesos a sus tres áreas principales.
+
+- La navegación superior ahora dice **Administración**. Se conserva la URL
+  `/dashboard/usuarios` para no romper enlaces guardados ni accesos existentes.
+- La página abre con un encabezado visual de centro de control y cuatro tarjetas
+  de indicadores calculadas con los datos reales que ya cargan las APIs:
+  usuarios totales/administradores, usuarios activos ahora, artículos publicados
+  entre todas las cuentas y porcentaje/espacio disponible de la base de datos.
+- Los tres botones pequeños se reemplazaron por tarjetas de navegación modernas,
+  responsivas y accesibles para **Accesos a usuarios**, **Creación de usuarios**
+  y **Uso de la base de datos**. La tarjeta activa queda diferenciada sin perder
+  el contenido y las capacidades existentes de cada sección.
+- Verificaciones locales completadas: Prettier, `npx tsc --noEmit` en web y
+  build completo de Next.js exitosos. Pendiente commit/push y deploy Vercel.
+
 ## RESUELTO (1/8/2026): roles administradores editables desde Usuarios
 
 Pedido del usuario: desde `/dashboard/usuarios`, poder convertir otra cuenta

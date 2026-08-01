@@ -154,7 +154,7 @@ export default function UsuariosPage() {
   if (forbidden) {
     return (
       <section style={sectionStyle}>
-        <h2 style={h2Style}>Usuarios</h2>
+        <h2 style={h2Style}>Administración</h2>
         <p style={{ fontSize: 13, color: "#6b7280" }}>
           Esta sección es solo para administradores.
         </p>
@@ -162,33 +162,250 @@ export default function UsuariosPage() {
     );
   }
 
-  const tabs: { id: typeof tab; label: string }[] = [
-    { id: "accesos", label: "Accesos a usuarios" },
-    { id: "crear", label: "Creación de usuarios" },
-    { id: "uso", label: "Uso de base de datos" },
+  const totalPublished = users.reduce(
+    (total, user) => total + user.articlesPublished,
+    0,
+  );
+  const adminCount = users.filter((user) => user.role === "admin").length;
+  const activeNow = usage?.perUser.filter((user) => user.active).length ?? 0;
+  const metrics = [
+    {
+      label: "Usuarios totales",
+      value: users.length.toLocaleString("es-US"),
+      detail: `${adminCount} con acceso administrativo`,
+      color: "#2f5fdb",
+    },
+    {
+      label: "Activos ahora",
+      value: loadingUsage ? "…" : activeNow.toLocaleString("es-US"),
+      detail: "Con ejecuciones en curso o pendientes",
+      color: "#16a06b",
+    },
+    {
+      label: "Artículos publicados",
+      value: totalPublished.toLocaleString("es-US"),
+      detail: "Suma de todas las cuentas",
+      color: "#7c3aed",
+    },
+    {
+      label: "Base de datos usada",
+      value: usage ? `${(usage.percentUsed * 100).toFixed(1)}%` : "…",
+      detail: usage
+        ? `${formatBytes(usage.remainingBytes)} disponibles`
+        : "Calculando almacenamiento",
+      color: "#d97706",
+    },
+  ];
+  const tabs: {
+    id: typeof tab;
+    label: string;
+    description: string;
+    eyebrow: string;
+  }[] = [
+    {
+      id: "accesos",
+      label: "Accesos a usuarios",
+      description: "Roles, credenciales, límites e historial por cuenta.",
+      eyebrow: `${users.length} cuentas`,
+    },
+    {
+      id: "crear",
+      label: "Creación de usuarios",
+      description: "Da acceso a una nueva persona con límites personalizados.",
+      eyebrow: "Nueva cuenta",
+    },
+    {
+      id: "uso",
+      label: "Uso de la base de datos",
+      description: "Capacidad, actividad y consumo detallado por usuario.",
+      eyebrow: usage
+        ? `${formatBytes(usage.databaseSizeBytes)} usados`
+        : "Métricas",
+    },
   ];
 
   return (
     <div>
+      <section
+        style={{
+          marginTop: 20,
+          padding: "26px 28px",
+          borderRadius: 18,
+          color: "#fff",
+          background:
+            "radial-gradient(circle at 85% 10%, rgba(77, 216, 232, 0.3), transparent 34%), linear-gradient(135deg, #102f72 0%, #174d9a 52%, #117c92 100%)",
+          border: "1px solid rgba(151, 214, 255, 0.35)",
+          boxShadow: "0 20px 45px rgba(0, 9, 35, 0.24)",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 800,
+            letterSpacing: "0.15em",
+            color: "#aeeef5",
+            textTransform: "uppercase",
+          }}
+        >
+          Centro de control
+        </div>
+        <h2 style={{ margin: "8px 0 6px", fontSize: 28 }}>Administración</h2>
+        <p
+          style={{
+            margin: 0,
+            maxWidth: 720,
+            color: "rgba(255,255,255,0.78)",
+            fontSize: 14,
+            lineHeight: 1.6,
+          }}
+        >
+          Supervisa la actividad de la plataforma, controla los accesos y
+          administra la capacidad desde un solo lugar.
+        </p>
+      </section>
+
       <div
         style={{
-          display: "flex",
-          gap: 8,
-          flexWrap: "wrap",
-          marginBottom: 16,
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+          gap: 12,
+          marginTop: 14,
+        }}
+      >
+        {metrics.map((metric) => (
+          <div
+            key={metric.label}
+            style={{
+              position: "relative",
+              overflow: "hidden",
+              minHeight: 116,
+              padding: "18px 19px",
+              borderRadius: 14,
+              background: "#fff",
+              color: "#16181d",
+              border: "1px solid #e4e9f1",
+              boxShadow: "0 8px 22px rgba(12, 35, 75, 0.08)",
+            }}
+          >
+            <div
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                width: 64,
+                height: 64,
+                borderRadius: "50%",
+                background: metric.color,
+                opacity: 0.1,
+                right: -18,
+                top: -20,
+              }}
+            />
+            <div style={{ fontSize: 12, color: "#64748b", fontWeight: 600 }}>
+              {metric.label}
+            </div>
+            <div
+              style={{
+                marginTop: 7,
+                fontSize: 27,
+                lineHeight: 1,
+                fontWeight: 800,
+                color: metric.color,
+              }}
+            >
+              {metric.value}
+            </div>
+            <div style={{ marginTop: 10, fontSize: 11, color: "#7b8798" }}>
+              {metric.detail}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div
+        aria-label="Secciones de administración"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+          gap: 12,
+          marginTop: 14,
         }}
       >
         {tabs.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            style={
-              tab === t.id
-                ? { ...buttonStyle, marginTop: 0 }
-                : { ...secondaryButtonStyle, marginTop: 0 }
-            }
+            aria-pressed={tab === t.id}
+            style={{
+              position: "relative",
+              minHeight: 126,
+              padding: 18,
+              overflow: "hidden",
+              textAlign: "left",
+              fontFamily: "inherit",
+              cursor: "pointer",
+              borderRadius: 14,
+              border: tab === t.id ? "1px solid #78cfe0" : "1px solid #e4e9f1",
+              background:
+                tab === t.id
+                  ? "linear-gradient(135deg, #effbff 0%, #f5f8ff 100%)"
+                  : "#fff",
+              color: "#16181d",
+              boxShadow:
+                tab === t.id
+                  ? "0 10px 26px rgba(47, 95, 219, 0.12)"
+                  : "0 4px 14px rgba(12, 35, 75, 0.06)",
+            }}
           >
-            {t.label}
+            <span
+              style={{
+                display: "inline-flex",
+                padding: "3px 8px",
+                borderRadius: 999,
+                background: tab === t.id ? "#d7f3f8" : "#eef2f7",
+                color: tab === t.id ? "#0d7283" : "#64748b",
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+              }}
+            >
+              {t.eyebrow}
+            </span>
+            <span
+              style={{
+                display: "block",
+                marginTop: 11,
+                fontSize: 16,
+                fontWeight: 800,
+              }}
+            >
+              {t.label}
+            </span>
+            <span
+              style={{
+                display: "block",
+                marginTop: 5,
+                maxWidth: 330,
+                color: "#6b7280",
+                fontSize: 12,
+                lineHeight: 1.45,
+              }}
+            >
+              {t.description}
+            </span>
+            <span
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                right: 16,
+                bottom: 12,
+                color: tab === t.id ? "#0d7283" : "#a4afbd",
+                fontSize: 18,
+                fontWeight: 700,
+              }}
+            >
+              →
+            </span>
           </button>
         ))}
       </div>

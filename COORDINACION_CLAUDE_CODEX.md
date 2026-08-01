@@ -140,6 +140,23 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Codex
 
+- **Estado:** `ACTIVO — ÁREA RESERVADA` (1/8/2026).
+- **Tarea actual:** renombrar visualmente el módulo Usuarios a
+  **Administración** y convertir su entrada en un dashboard moderno con
+  indicadores y accesos destacados a Accesos a usuarios, Creación de usuarios
+  y Uso de la base de datos.
+- **Reserva actual:**
+  - `apps/web/src/components/DashboardNav.tsx`
+  - `apps/web/src/app/dashboard/usuarios/page.tsx`
+  - `HANDOFF.md`
+  - `COORDINACION_CLAUDE_CODEX.md`
+- **Límites:** se conserva la URL `/dashboard/usuarios` para no romper enlaces;
+  no hay migración ni cambios al worker; la calculadora permanece fuera.
+- **Avance:** navegación renombrada y dashboard administrativo implementado con
+  encabezado, cuatro indicadores en vivo y tres tarjetas de acceso responsivas.
+  Prettier, `tsc --noEmit` web y build Next.js limpios. Pendiente commit/push y
+  deploy.
+
 - **Estado:** `TERMINADO — ÁREA LIBERADA` (1/8/2026).
 - **Tarea actual:** permitir que un administrador cambie el rol de otras
   cuentas entre `user` y `admin` desde `/dashboard/usuarios`, con validación
