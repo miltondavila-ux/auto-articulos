@@ -224,6 +224,16 @@ export default function UsuariosPage() {
     },
   ];
 
+  function openSection(section: typeof tab) {
+    setTab(section);
+    window.requestAnimationFrame(() => {
+      document.getElementById("administracion-contenido")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }
+
   return (
     <div>
       <section
@@ -333,8 +343,9 @@ export default function UsuariosPage() {
         {tabs.map((t) => (
           <button
             key={t.id}
-            onClick={() => setTab(t.id)}
+            onClick={() => openSection(t.id)}
             aria-pressed={tab === t.id}
+            aria-controls="administracion-contenido"
             style={{
               position: "relative",
               minHeight: 126,
@@ -411,7 +422,7 @@ export default function UsuariosPage() {
       </div>
 
       {tab === "crear" && (
-        <section style={sectionStyle}>
+        <section id="administracion-contenido" style={sectionStyle}>
           <h2 style={h2Style}>Agregar usuario</h2>
           <p style={{ fontSize: 13, color: "#6b7280" }}>
             Crea una cuenta para dar acceso a otra persona. Cada usuario tiene
@@ -481,7 +492,7 @@ export default function UsuariosPage() {
       )}
 
       {tab === "uso" && (
-        <section style={sectionStyle}>
+        <section id="administracion-contenido" style={sectionStyle}>
           <div
             style={{
               display: "flex",
@@ -634,7 +645,7 @@ export default function UsuariosPage() {
       )}
 
       {tab === "accesos" && (
-        <section style={sectionStyle}>
+        <section id="administracion-contenido" style={sectionStyle}>
           <div
             style={{
               display: "flex",

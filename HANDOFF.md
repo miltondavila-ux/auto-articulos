@@ -772,7 +772,7 @@ Publicar como desde Oportunidades.
   usuario; las verificaciones de schema, tipos, build, migración y deployment sí
   quedaron completas.
 
-## EN CURSO (1/8/2026): Usuarios se convierte en Administración
+## RESUELTO (1/8/2026): Usuarios se convierte en Administración
 
 Pedido del usuario: renombrar visualmente el módulo **Usuarios** como
 **Administración** y convertir la página en un dashboard moderno con
@@ -787,9 +787,16 @@ indicadores claros y accesos a sus tres áreas principales.
 - Los tres botones pequeños se reemplazaron por tarjetas de navegación modernas,
   responsivas y accesibles para **Accesos a usuarios**, **Creación de usuarios**
   y **Uso de la base de datos**. La tarjeta activa queda diferenciada sin perder
-  el contenido y las capacidades existentes de cada sección.
-- Verificaciones locales completadas: Prettier, `npx tsc --noEmit` en web y
-  build completo de Next.js exitosos. Pendiente commit/push y deploy Vercel.
+  el contenido y las capacidades existentes de cada sección. Cada tarjeta abre
+  su área y desplaza suavemente la vista hasta el contenido correspondiente.
+- Verificaciones completadas: Prettier, `npx tsc --noEmit` en web y builds
+  completos local/Vercel exitosos. Commit `8f74800` pusheado a `main` y
+  deployment `dpl_F9HVraJCfuXkGj2ubCA8kWwd9AoT` en estado `READY`, asociado al
+  alias `https://auto-articulos-web.vercel.app`.
+- No fue posible hacer la inspección visual autenticada desde Codex porque el
+  único navegador disponible no comparte la sesión del usuario. El build de
+  producción y las rutas sí quedaron verificados; la revisión visual final
+  corresponde a la sesión admin del usuario.
 
 ## RESUELTO (1/8/2026): roles administradores editables desde Usuarios
 

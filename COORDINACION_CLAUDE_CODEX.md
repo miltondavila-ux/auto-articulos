@@ -140,7 +140,7 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Codex
 
-- **Estado:** `ACTIVO — ÁREA RESERVADA` (1/8/2026).
+- **Estado:** `TERMINADO — ÁREA LIBERADA` (1/8/2026).
 - **Tarea actual:** renombrar visualmente el módulo Usuarios a
   **Administración** y convertir su entrada en un dashboard moderno con
   indicadores y accesos destacados a Accesos a usuarios, Creación de usuarios
@@ -152,10 +152,17 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
   - `COORDINACION_CLAUDE_CODEX.md`
 - **Límites:** se conserva la URL `/dashboard/usuarios` para no romper enlaces;
   no hay migración ni cambios al worker; la calculadora permanece fuera.
-- **Avance:** navegación renombrada y dashboard administrativo implementado con
-  encabezado, cuatro indicadores en vivo y tres tarjetas de acceso responsivas.
-  Prettier, `tsc --noEmit` web y build Next.js limpios. Pendiente commit/push y
-  deploy.
+- **Resultado:** navegación renombrada y dashboard administrativo implementado
+  con encabezado, cuatro indicadores en vivo y tres tarjetas de acceso
+  responsivas. Cada tarjeta abre su sección y desplaza la vista hasta el
+  contenido. Prettier, `tsc --noEmit` web y builds Next.js local/Vercel limpios.
+  Commit funcional `8f74800` pusheado y deployment
+  `dpl_F9HVraJCfuXkGj2ubCA8kWwd9AoT` READY. No se modificaron datos, roles ni
+  artículos; la inspección visual autenticada queda para la sesión admin del
+  usuario porque el navegador disponible para Codex no comparte esa sesión.
+- **Archivos modificados sin commit al liberar el área:** ninguno propio. Solo
+  permanecen sin seguimiento `PRD_CALCULADORA_ROGE.md` y `calculadora-roge/`,
+  que no se tocaron.
 
 - **Estado:** `TERMINADO — ÁREA LIBERADA` (1/8/2026).
 - **Tarea actual:** permitir que un administrador cambie el rol de otras
@@ -332,6 +339,27 @@ Push/deploy/migración:
 Pendientes:
 Estado del área: LIBERADA o RESERVADA
 ```
+
+### 2026-08-01 18:22 UTC — Codex: dashboard de Administración
+
+- **Agente:** Codex.
+- **Tarea:** renombrar visualmente Usuarios como Administración y convertir la
+  entrada en un dashboard moderno con accesos claros a todas sus áreas.
+- **Archivos/área:** navegación del dashboard, pantalla
+  `/dashboard/usuarios` y documentación compartida.
+- **Resultado:** encabezado administrativo, cuatro indicadores en vivo y tres
+  tarjetas funcionales para Accesos a usuarios, Creación de usuarios y Uso de
+  la base de datos. Cada clic abre la sección y desplaza la pantalla hasta su
+  contenido. Se conservó la URL existente para no romper enlaces.
+- **Verificaciones:** Prettier, `tsc --noEmit` web y builds completos local y
+  Vercel. No se modificaron datos, roles ni artículos.
+- **Commit:** `8f74800` para el dashboard; cierre documental y navegación por
+  clic en commit posterior.
+- **Push/deploy/migración:** `main`; sin migración; Vercel
+  `dpl_F9HVraJCfuXkGj2ubCA8kWwd9AoT` READY para el dashboard inicial.
+- **Pendientes:** revisión visual final por el usuario dentro de su sesión admin
+  autenticada.
+- **Estado del área:** LIBERADA.
 
 ### 2026-08-01 18:15 UTC — Codex: administración de roles
 
