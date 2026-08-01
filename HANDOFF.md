@@ -772,7 +772,7 @@ Publicar como desde Oportunidades.
   usuario; las verificaciones de schema, tipos, build, migración y deployment sí
   quedaron completas.
 
-## EN CURSO (1/8/2026): roles administradores editables desde Usuarios
+## RESUELTO (1/8/2026): roles administradores editables desde Usuarios
 
 Pedido del usuario: desde `/dashboard/usuarios`, poder convertir otra cuenta
 en Administrador para que vea y gestione las mismas secciones administrativas
@@ -790,8 +790,12 @@ que la cuenta principal.
   administrativo.
 - No hace falta migración: `User.role` y el enum `UserRole` ya existían. No se
   cambió el rol de ningún usuario durante el desarrollo.
-- Verificaciones locales completadas: Prettier, `npx tsc --noEmit` en web y
-  build completo de Next.js exitosos. Pendiente commit/push y deploy Vercel.
+- Verificaciones completadas: Prettier, `npx tsc --noEmit` en web y builds
+  completos de Next.js local y Vercel exitosos. Commit `88f7265` pusheado a
+  `main`; deployment `dpl_HZdrbWia3ZuHP8hPPdcQoTThGo2b` en estado `READY` y
+  asociado al alias `https://auto-articulos-web.vercel.app`.
+- No se cambió el rol real de ninguna cuenta durante la validación. El usuario
+  puede hacerlo desde Usuarios → Accesos a usuarios → Rol → Guardar rol.
 
 ## Pendiente / próximos pasos
 

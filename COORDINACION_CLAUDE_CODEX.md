@@ -140,7 +140,7 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Codex
 
-- **Estado:** `ACTIVO — ÁREA RESERVADA` (1/8/2026).
+- **Estado:** `TERMINADO — ÁREA LIBERADA` (1/8/2026).
 - **Tarea actual:** permitir que un administrador cambie el rol de otras
   cuentas entre `user` y `admin` desde `/dashboard/usuarios`, con validación
   obligatoria en servidor y protección contra degradar la propia cuenta
@@ -153,9 +153,14 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 - **Límites:** sin migración ni cambios al worker; no se tocarán
   `calculadora-roge/` ni `PRD_CALCULADORA_ROGE.md` y no se ejecutarán
   publicaciones automáticas.
-- **Avance:** selector de rol y validaciones de API implementados; la propia
+- **Resultado:** selector de rol y validaciones de API implementados; la propia
   cuenta administradora queda protegida en cliente y servidor. Prettier,
-  `tsc --noEmit` web y build Next.js limpios. Pendiente commit/push y deploy.
+  `tsc --noEmit` web y builds Next.js local/Vercel limpios. Commit `88f7265`
+  pusheado y deployment `dpl_HZdrbWia3ZuHP8hPPdcQoTThGo2b` READY. No se cambió
+  el rol real de ninguna cuenta durante la validación.
+- **Archivos modificados sin commit al liberar el área:** ninguno propio. Solo
+  siguen sin seguimiento `PRD_CALCULADORA_ROGE.md` y `calculadora-roge/`, que
+  no se tocaron.
 
 - **Estado:** `TERMINADO — ÁREA LIBERADA` (1/8/2026).
 - **Tarea actual:** hacer configurable por usuario el máximo de títulos por
@@ -310,6 +315,25 @@ Push/deploy/migración:
 Pendientes:
 Estado del área: LIBERADA o RESERVADA
 ```
+
+### 2026-08-01 18:15 UTC — Codex: administración de roles
+
+- **Agente:** Codex.
+- **Tarea:** permitir promover o degradar cuentas entre Usuario y Administrador
+  desde `/dashboard/usuarios`.
+- **Archivos/área:** API administrativa de usuarios, pantalla Usuarios y
+  documentación compartida.
+- **Resultado:** selector y botón Guardar rol visibles; validación estricta del
+  enum en servidor; usuarios normales no pueden promoverse y el administrador
+  conectado no puede degradar su propia cuenta.
+- **Verificaciones:** Prettier, `tsc --noEmit` web y builds completos local y
+  Vercel. No se cambió ningún rol real ni se ejecutaron publicaciones.
+- **Commit:** `88f7265`.
+- **Push/deploy/migración:** `main`; sin migración; Vercel
+  `dpl_HZdrbWia3ZuHP8hPPdcQoTThGo2b` READY.
+- **Pendientes:** el usuario puede elegir qué cuentas promover desde la nueva
+  columna Rol.
+- **Estado del área:** LIBERADA.
 
 ### 2026-08-01 17:59 UTC — Codex: máximo configurable por lote
 
