@@ -91,9 +91,26 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Codex
 
-- **Estado:** COMPLETADO Y LIBERADO. Claude liberó el worker y Codex terminó
-  la corrección de escalabilidad; ya no mantiene reserva sobre esos archivos.
-- **Tarea:** capacidad real para 40 usuarios publicando simultáneamente.
+- **Estado:** ACTIVO — ÁREA RESERVADA para construir el módulo
+  **Oportunidades**. Claude figura terminado y con el área liberada.
+- **Tarea:** analizar el rendimiento multiusuario de Google Search Console,
+  generar hasta 10 categorías con 9 títulos long tail por categoría evitando
+  duplicación/canibalismo, y permitir eliminar o enviar categorías/títulos al
+  flujo existente de Publicar e Histórico. No se impondrá en este módulo
+  ningún límite interno derivado de 10MinutesWebsite.
+- **Reserva actual:** modelos/migración de Oportunidades en `packages/db`,
+  helpers de Search Console/análisis en `packages/shared` o `apps/web/src/lib`,
+  rutas `apps/web/src/app/api/opportunities/**`, página
+  `apps/web/src/app/dashboard/oportunidades/**`, navegación/tipos necesarios y
+  documentación compartida. Si resulta imprescindible tocar el worker se
+  registrará aquí antes; inicialmente se reutilizará `Run`/`Title` y
+  `triggerWorkerNow()` sin modificar `apps/worker/**`.
+- **Avance:** implementación completa local: modelos+migración, consulta de
+  Search Analytics comparativa, analista OpenAI con validación antirrepetición,
+  API multiusuario y UI con eliminar/ejecutar por grupo o título. `tsc` y build
+  web limpios. Pendiente commit, migración productiva y deploy. Se detectó un
+  cambio ajeno simultáneo en `apps/worker/src/automation/10minutesWebsite.ts`;
+  Codex no lo tocó ni lo incluirá en staging/commit.
 - **Área reservada cuando se reanude:** OAuth/API/UI de Google y migración
   `20260731210000_add_google_search_console`.
 - **Archivos previstos:**

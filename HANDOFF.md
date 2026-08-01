@@ -510,6 +510,38 @@ Avance posterior confirmado por el usuario:
 
 ## Pendiente / próximos pasos
 
+0. **En construcción por Codex:** módulo **Oportunidades** basado en Search
+   Console: análisis bajo demanda, hasta 10 categorías × 9 títulos long tail,
+   controles para eliminar/ejecutar por categoría o título y envío al flujo
+   existente de Publicar/Histórico. No aplicará límites internos basados en el
+   límite externo de 10MinutesWebsite. Reserva detallada en
+   `COORDINACION_CLAUDE_CODEX.md`; Claude mantiene su área liberada.
+
+### Módulo Oportunidades (implementación 31/7/2026)
+
+- Nueva pestaña `/dashboard/oportunidades` y API multiusuario bajo
+  `/api/opportunities`. Cada análisis se ejecuta únicamente al pulsar el botón;
+  no hay consumo periódico en segundo plano.
+- Consulta Search Analytics de la propiedad Google elegida por ese usuario:
+  compara los últimos 28 días consolidados (hasta tres días antes) con los 28
+  anteriores, usando consulta+página, impresiones, clics, CTR y posición.
+- El prompt recibe hasta 250 oportunidades de rendimiento, las categorías
+  reales sincronizadas y hasta 1.000 títulos publicados del usuario. Exige
+  seleccionar máximo 10 categorías por éxito/tendencia y exactamente 9 títulos
+  long tail distintos por categoría, sin duplicados ni canibalización. La
+  salida se vuelve a validar en servidor antes de guardarse.
+- Nuevos modelos `OpportunityGroup`/`OpportunityTitle`, ambos aislados por
+  `userId` y relacionados con `Category`. Un nuevo análisis reemplaza las
+  sugerencias anteriores del mismo usuario, nunca las de otra cuenta.
+- UI con eliminar/ejecutar para categoría completa y para cada título. Ejecutar
+  crea un `Run`/`Title` normal en el flujo existente y elimina únicamente las
+  oportunidades transferidas; por eso aparecen en Inicio/Histórico y las
+  procesa el mismo worker de Publicar. No existe un límite interno nuevo de 10
+  artículos vinculado a 10MinutesWebsite.
+- Migración: `20260731224000_add_opportunities`. Código validado localmente con
+  Prisma format/generate, TypeScript y build completo de Next.js. Pendiente en
+  este punto: commit, migración de producción y deploy web.
+
 1. Validar el estado individual de Google con un artículo ya existente si está
    disponible, sin disparar una publicación automática.
 2. Lorena debe seleccionar su propiedad y guardar su sitemap. Después, cada

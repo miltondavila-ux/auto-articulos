@@ -45,6 +45,7 @@ model User {
   categories         Category[]
   categorySyncJobs   CategorySyncJob[]
   searchIntegrations SearchIntegration[]
+  opportunityGroups  OpportunityGroup[]
 }
 
 model SearchIntegration {
@@ -87,10 +88,40 @@ model Category {
   updatedAt  DateTime @updatedAt
   createdAt  DateTime @default(now())
 
-  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  runs Run[]
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  runs              Run[]
+  opportunityGroups OpportunityGroup[]
 
   @@unique([userId, platform, externalId])
+}
+
+model OpportunityGroup {
+  id          String   @id @default(cuid())
+  userId      String
+  categoryId  String
+  rationale   String?
+  impressions Float    @default(0)
+  clicks      Float    @default(0)
+  createdAt   DateTime @default(now())
+
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  titles   OpportunityTitle[]
+
+  @@unique([userId, categoryId])
+  @@index([userId, createdAt])
+}
+
+model OpportunityTitle {
+  id        String   @id @default(cuid())
+  groupId   String
+  text      String
+  rationale String?
+  createdAt DateTime @default(now())
+
+  group OpportunityGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
 }
 
 enum CategorySyncStatus {

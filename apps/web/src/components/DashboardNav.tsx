@@ -8,6 +8,7 @@ import type { CSSProperties } from "react";
 const BASE_TABS = [
   { href: "/dashboard", label: "Inicio" },
   { href: "/dashboard/publicar", label: "Publicar" },
+  { href: "/dashboard/oportunidades", label: "Oportunidades" },
   { href: "/dashboard/historial", label: "Historial" },
   { href: "/dashboard/configuracion", label: "Configuración" },
 ];

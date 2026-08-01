@@ -102,3 +102,46 @@ export async function inspectGoogleUrl(
   }
   return data.inspectionResult?.indexStatusResult ?? {};
 }
+
+export interface GoogleSearchAnalyticsRow {
+  keys: string[];
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+}
+
+export async function queryGoogleSearchAnalytics(
+  accessToken: string,
+  siteUrl: string,
+  startDate: string,
+  endDate: string,
+) {
+  const response = await fetch(
+    `${WEBMASTERS_API}/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        startDate,
+        endDate,
+        dimensions: ["query", "page"],
+        rowLimit: 5000,
+        dataState: "final",
+      }),
+    },
+  );
+  const data = (await response.json()) as {
+    rows?: GoogleSearchAnalyticsRow[];
+    error?: { message?: string };
+  };
+  if (!response.ok) {
+    throw new Error(
+      data.error?.message ?? `Search Analytics respondió ${response.status}.`,
+    );
+  }
+  return data.rows ?? [];
+}
