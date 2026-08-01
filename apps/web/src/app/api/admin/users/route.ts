@@ -10,12 +10,22 @@ interface PublishedCountRow {
 }
 
 const MAX_POSTGRES_INT = 2_147_483_647;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function isValidMaxTitlesPerBatch(value: unknown): value is number {
   return (
     typeof value === "number" &&
     Number.isInteger(value) &&
     value >= 1 &&
+    value <= MAX_POSTGRES_INT
+  );
+}
+
+function isValidArticleLimit(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= 0 &&
     value <= MAX_POSTGRES_INT
   );
 }
@@ -284,18 +294,72 @@ export async function POST(request: NextRequest) {
     firstName,
     lastName,
     phone,
+    role = "user",
+    monthlyArticleLimit = 300,
+    dailyArticleLimit = 95,
     maxTitlesPerBatch = 20,
   } = await request.json();
 
-  if (typeof email !== "string" || !email.trim()) {
+  const normalizedEmail = typeof email === "string" ? email.trim() : "";
+  const normalizedFirstName =
+    typeof firstName === "string" ? firstName.trim() : "";
+  const normalizedLastName =
+    typeof lastName === "string" ? lastName.trim() : "";
+  const normalizedPhone = typeof phone === "string" ? phone.trim() : "";
+
+  if (!normalizedFirstName) {
+    return NextResponse.json(
+      { error: "El nombre es requerido" },
+      { status: 400 },
+    );
+  }
+  if (!normalizedLastName) {
+    return NextResponse.json(
+      { error: "El apellido es requerido" },
+      { status: 400 },
+    );
+  }
+  if (!normalizedPhone) {
+    return NextResponse.json(
+      { error: "El teléfono es requerido" },
+      { status: 400 },
+    );
+  }
+  if (!normalizedEmail) {
     return NextResponse.json(
       { error: "El correo es requerido" },
+      { status: 400 },
+    );
+  }
+  if (!EMAIL_PATTERN.test(normalizedEmail)) {
+    return NextResponse.json(
+      { error: "El correo no tiene un formato válido" },
       { status: 400 },
     );
   }
   if (typeof password !== "string" || password.length < 8) {
     return NextResponse.json(
       { error: "La contraseña debe tener al menos 8 caracteres" },
+      { status: 400 },
+    );
+  }
+  if (role !== "admin" && role !== "user") {
+    return NextResponse.json(
+      { error: "El rol debe ser Usuario o Administrador" },
+      { status: 400 },
+    );
+  }
+  if (!isValidArticleLimit(monthlyArticleLimit)) {
+    return NextResponse.json(
+      {
+        error: "El límite mensual debe ser un número entero mayor o igual a 0",
+      },
+      { status: 400 },
+    );
+  }
+  if (!isValidArticleLimit(dailyArticleLimit)) {
+    return NextResponse.json(
+      { error: "El límite diario debe ser un número entero mayor o igual a 0" },
       { status: 400 },
     );
   }
@@ -309,7 +373,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const existing = await prisma.user.findUnique({ where: { email } });
+  const existing = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+  });
   if (existing) {
     return NextResponse.json(
       { error: "Ya existe un usuario con ese correo" },
@@ -321,20 +387,19 @@ export async function POST(request: NextRequest) {
   const initialPasswordEncrypted = encryptSecret(password);
   const user = await prisma.user.create({
     data: {
-      email,
-      name: typeof name === "string" && name.trim() ? name.trim() : null,
-      firstName:
-        typeof firstName === "string" && firstName.trim()
-          ? firstName.trim()
-          : null,
-      lastName:
-        typeof lastName === "string" && lastName.trim()
-          ? lastName.trim()
-          : null,
-      phone: typeof phone === "string" && phone.trim() ? phone.trim() : null,
+      email: normalizedEmail,
+      name:
+        typeof name === "string" && name.trim()
+          ? name.trim()
+          : `${normalizedFirstName} ${normalizedLastName}`,
+      firstName: normalizedFirstName,
+      lastName: normalizedLastName,
+      phone: normalizedPhone,
       passwordHash,
       initialPasswordEncrypted,
-      role: "user",
+      role,
+      monthlyArticleLimit,
+      dailyArticleLimit,
       maxTitlesPerBatch,
     },
     select: {
@@ -345,6 +410,8 @@ export async function POST(request: NextRequest) {
       phone: true,
       email: true,
       role: true,
+      monthlyArticleLimit: true,
+      dailyArticleLimit: true,
       maxTitlesPerBatch: true,
       createdAt: true,
     },

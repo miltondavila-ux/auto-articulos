@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
 import {
   sectionStyle,
   h2Style,
@@ -32,6 +32,11 @@ interface UserRow {
 }
 
 const PLATFORM_URL = "https://auto-articulos-web.vercel.app/login";
+const createFieldStyle: CSSProperties = {
+  display: "grid",
+  gap: 5,
+  fontSize: 12,
+};
 
 interface UsagePerUser {
   userId: string;
@@ -73,9 +78,14 @@ export default function UsuariosPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [currentUserId, setCurrentUserId] = useState("");
   const [forbidden, setForbidden] = useState(false);
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"admin" | "user">("user");
+  const [monthlyArticleLimit, setMonthlyArticleLimit] = useState("300");
+  const [dailyArticleLimit, setDailyArticleLimit] = useState("95");
   const [maxTitlesPerBatch, setMaxTitlesPerBatch] = useState("20");
   const [creating, setCreating] = useState(false);
   const [usage, setUsage] = useState<UsageData | null>(null);
@@ -126,9 +136,14 @@ export default function UsuariosPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name,
+          firstName,
+          lastName,
+          phone,
           email,
           password,
+          role,
+          monthlyArticleLimit: Number(monthlyArticleLimit),
+          dailyArticleLimit: Number(dailyArticleLimit),
           maxTitlesPerBatch: Number(maxTitlesPerBatch),
         }),
       });
@@ -140,9 +155,14 @@ export default function UsuariosPage() {
         });
         return;
       }
-      setName("");
+      setFirstName("");
+      setLastName("");
+      setPhone("");
       setEmail("");
       setPassword("");
+      setRole("user");
+      setMonthlyArticleLimit("300");
+      setDailyArticleLimit("95");
       setMaxTitlesPerBatch("20");
       setBanner({ type: "info", text: `Usuario ${data.user.email} creado.` });
       loadUsers();
@@ -431,30 +451,100 @@ export default function UsuariosPage() {
           </p>
           <form
             onSubmit={handleCreate}
-            style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
+              gap: 12,
+              alignItems: "end",
+            }}
           >
-            <input
-              type="text"
-              placeholder="Nombre"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              style={inputStyle}
-            />
-            <input
-              type="email"
-              placeholder="Correo"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={inputStyle}
-            />
-            <input
-              type="password"
-              placeholder="Contraseña temporal"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={inputStyle}
-            />
-            <label style={{ display: "grid", gap: 3, fontSize: 11 }}>
+            <label style={createFieldStyle}>
+              Nombre
+              <input
+                type="text"
+                required
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                style={inputStyle}
+              />
+            </label>
+            <label style={createFieldStyle}>
+              Apellido
+              <input
+                type="text"
+                required
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                style={inputStyle}
+              />
+            </label>
+            <label style={createFieldStyle}>
+              Teléfono
+              <input
+                type="tel"
+                required
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                style={inputStyle}
+              />
+            </label>
+            <label style={createFieldStyle}>
+              Correo electrónico
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={inputStyle}
+              />
+            </label>
+            <label style={createFieldStyle}>
+              Contraseña temporal
+              <input
+                type="password"
+                required
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={inputStyle}
+              />
+            </label>
+            <label style={createFieldStyle}>
+              Rol
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value as "admin" | "user")}
+                style={inputStyle}
+              >
+                <option value="user">Usuario</option>
+                <option value="admin">Administrador</option>
+              </select>
+            </label>
+            <label style={createFieldStyle}>
+              Límite mensual de artículos
+              <input
+                type="number"
+                min={0}
+                step={1}
+                required
+                value={monthlyArticleLimit}
+                onChange={(e) => setMonthlyArticleLimit(e.target.value)}
+                style={inputStyle}
+              />
+            </label>
+            <label style={createFieldStyle}>
+              Límite diario de artículos
+              <input
+                type="number"
+                min={0}
+                step={1}
+                required
+                value={dailyArticleLimit}
+                onChange={(e) => setDailyArticleLimit(e.target.value)}
+                style={inputStyle}
+              />
+            </label>
+            <label style={createFieldStyle}>
               Máximo de títulos por lote
               <input
                 type="number"
@@ -463,13 +553,16 @@ export default function UsuariosPage() {
                 required
                 value={maxTitlesPerBatch}
                 onChange={(e) => setMaxTitlesPerBatch(e.target.value)}
-                style={{ ...inputStyle, width: 190 }}
+                style={inputStyle}
               />
             </label>
             <button
               type="submit"
               disabled={creating}
-              style={disabledStyle(buttonStyle, creating)}
+              style={disabledStyle(
+                { ...buttonStyle, width: "100%", marginTop: 0 },
+                creating,
+              )}
             >
               {creating ? "Creando..." : "Crear usuario"}
             </button>

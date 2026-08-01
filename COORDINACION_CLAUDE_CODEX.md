@@ -140,6 +140,21 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Codex
 
+- **Estado:** `ACTIVO — ÁREA RESERVADA` (1/8/2026).
+- **Tarea actual:** completar la creación administrativa de usuarios con nombre,
+  apellido, teléfono, rol y los tres límites configurables, además de correo y
+  contraseña temporal, con validación obligatoria en servidor.
+- **Reserva actual:**
+  - `apps/web/src/app/api/admin/users/route.ts`
+  - `apps/web/src/app/dashboard/usuarios/page.tsx`
+  - `HANDOFF.md`
+  - `COORDINACION_CLAUDE_CODEX.md`
+- **Límites:** sin migración ni cambios al worker; no se crearán usuarios reales
+  durante las pruebas y no se tocarán las rutas de la calculadora.
+- **Avance:** formulario y API completados con todos los campos y validaciones
+  de servidor. Prettier, TypeScript y build Next.js limpios. Pendiente commit,
+  push y deploy; no se creó ningún usuario real.
+
 - **Estado:** `TERMINADO — ÁREA LIBERADA` (1/8/2026).
 - **Tarea actual:** auditoría integral y limpieza conservadora de código, archivos
   y dependencias sin uso, preservando todo comportamiento productivo.

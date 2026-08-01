@@ -772,6 +772,30 @@ Publicar como desde Oportunidades.
   usuario; las verificaciones de schema, tipos, build, migración y deployment sí
   quedaron completas.
 
+## IMPLEMENTADO (1/8/2026): creación completa de usuarios
+
+Pedido del usuario: corregir el formulario de creación administrativa, que solo
+mostraba nombre, correo, contraseña y máximo por lote, para que permita definir
+desde el alta todos los datos de la cuenta.
+
+- El formulario de Administración → Creación de usuarios ahora incluye nombre,
+  apellido, teléfono, correo electrónico, contraseña temporal, rol
+  Usuario/Administrador, límite mensual, límite diario y máximo de títulos por
+  lote.
+- Los valores iniciales conservan las reglas vigentes: rol Usuario, 300
+  artículos mensuales, 95 diarios y 20 títulos por lote. El formulario se
+  limpia y restablece esos valores después de una creación exitosa.
+- `POST /api/admin/users` valida también en servidor que nombre, apellido,
+  teléfono y correo estén presentes, que el correo tenga formato válido, que el
+  rol sea exclusivamente `user`/`admin`, que los límites sean enteros no
+  negativos y que el máximo por lote sea un entero positivo. No se confía solo
+  en los campos HTML.
+- La cuenta se guarda desde el inicio con nombre combinado compatible,
+  nombre/apellido separados, teléfono, rol y los tres límites seleccionados. No
+  hizo falta migración porque todos esos campos ya existen en `User`.
+- Prettier, TypeScript y build completo de Next.js terminaron correctamente. No
+  se creó ningún usuario real durante las pruebas.
+
 ## RESUELTO (1/8/2026): auditoría integral y limpieza conservadora
 
 Pedido del usuario: auditar todo el código, retirar elementos sin uso y código
