@@ -772,6 +772,27 @@ Publicar como desde Oportunidades.
   usuario; las verificaciones de schema, tipos, build, migración y deployment sí
   quedaron completas.
 
+## EN CURSO (1/8/2026): roles administradores editables desde Usuarios
+
+Pedido del usuario: desde `/dashboard/usuarios`, poder convertir otra cuenta
+en Administrador para que vea y gestione las mismas secciones administrativas
+que la cuenta principal.
+
+- La columna **Rol** ahora contiene un selector `Usuario` / `Administrador` y
+  un botón explícito **Guardar rol** para cada cuenta ajena. La pantalla explica
+  que asignar Administrador concede acceso a las secciones administrativas.
+- `PATCH /api/admin/users` acepta `role` únicamente con los valores reales del
+  enum Prisma (`user` o `admin`) y sigue protegido por `requireAdmin()`, por lo
+  que un usuario normal no puede promoverse a sí mismo llamando la API.
+- La cuenta administradora conectada aparece marcada como **Tu cuenta** y no
+  puede degradarse desde la interfaz. El servidor repite esa protección aunque
+  alguien intente saltarse la UI, evitando perder accidentalmente el acceso
+  administrativo.
+- No hace falta migración: `User.role` y el enum `UserRole` ya existían. No se
+  cambió el rol de ningún usuario durante el desarrollo.
+- Verificaciones locales completadas: Prettier, `npx tsc --noEmit` en web y
+  build completo de Next.js exitosos. Pendiente commit/push y deploy Vercel.
+
 ## Pendiente / próximos pasos
 
 0. ~~Construir módulo **Oportunidades**~~ — **HECHO** en commits `05d8d6b` y

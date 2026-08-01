@@ -21,8 +21,9 @@ function isValidMaxTitlesPerBatch(value: unknown): value is number {
 }
 
 export async function GET() {
+  let currentUserId: string;
   try {
-    await requireAdmin();
+    currentUserId = (await requireAdmin()).id;
   } catch {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
@@ -59,6 +60,7 @@ export async function GET() {
   );
 
   return NextResponse.json({
+    currentUserId,
     users: users.map((u) => {
       const { initialPasswordEncrypted, ...rest } = u;
       let currentPassword: string | null = null;
@@ -79,8 +81,9 @@ export async function GET() {
 }
 
 export async function PATCH(request: NextRequest) {
+  let currentUserId: string;
   try {
-    await requireAdmin();
+    currentUserId = (await requireAdmin()).id;
   } catch {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
@@ -97,6 +100,7 @@ export async function PATCH(request: NextRequest) {
     firstName,
     lastName,
     phone,
+    role,
   } = body;
 
   if (typeof userId !== "string" || !userId) {
@@ -114,7 +118,27 @@ export async function PATCH(request: NextRequest) {
     phone?: string | null;
     passwordHash?: string;
     initialPasswordEncrypted?: string;
+    role?: "admin" | "user";
   } = {};
+
+  if ("role" in body) {
+    if (role !== "admin" && role !== "user") {
+      return NextResponse.json(
+        { error: "El rol debe ser Usuario o Administrador." },
+        { status: 400 },
+      );
+    }
+    if (userId === currentUserId && role !== "admin") {
+      return NextResponse.json(
+        {
+          error:
+            "No puedes quitar el rol de administrador de tu propia cuenta.",
+        },
+        { status: 400 },
+      );
+    }
+    data.role = role;
+  }
 
   if (typeof name === "string") {
     data.name = name.trim();

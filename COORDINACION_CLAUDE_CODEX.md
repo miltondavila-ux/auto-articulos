@@ -140,6 +140,23 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Codex
 
+- **Estado:** `ACTIVO — ÁREA RESERVADA` (1/8/2026).
+- **Tarea actual:** permitir que un administrador cambie el rol de otras
+  cuentas entre `user` y `admin` desde `/dashboard/usuarios`, con validación
+  obligatoria en servidor y protección contra degradar la propia cuenta
+  administradora.
+- **Reserva actual:**
+  - `apps/web/src/app/api/admin/users/route.ts`
+  - `apps/web/src/app/dashboard/usuarios/page.tsx`
+  - `HANDOFF.md`
+  - `COORDINACION_CLAUDE_CODEX.md`
+- **Límites:** sin migración ni cambios al worker; no se tocarán
+  `calculadora-roge/` ni `PRD_CALCULADORA_ROGE.md` y no se ejecutarán
+  publicaciones automáticas.
+- **Avance:** selector de rol y validaciones de API implementados; la propia
+  cuenta administradora queda protegida en cliente y servidor. Prettier,
+  `tsc --noEmit` web y build Next.js limpios. Pendiente commit/push y deploy.
+
 - **Estado:** `TERMINADO — ÁREA LIBERADA` (1/8/2026).
 - **Tarea actual:** hacer configurable por usuario el máximo de títulos por
   lote, con valor predeterminado 20 y validación obligatoria en servidor tanto

@@ -71,6 +71,7 @@ function formatBytes(bytes: number): string {
 
 export default function UsuariosPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
+  const [currentUserId, setCurrentUserId] = useState("");
   const [forbidden, setForbidden] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -95,6 +96,7 @@ export default function UsuariosPage() {
     if (res.ok) {
       const data = await res.json();
       setUsers(data.users);
+      setCurrentUserId(data.currentUserId ?? "");
     }
   }
 
@@ -434,11 +436,15 @@ export default function UsuariosPage() {
               style={{ ...inputStyle, width: 280 }}
             />
           </div>
+          <p style={{ fontSize: 12, color: "#6b7280", marginTop: -4 }}>
+            Cambia el rol a <strong>Administrador</strong> para que esa cuenta
+            vea y gestione las mismas secciones administrativas que tú.
+          </p>
           <div style={{ overflowX: "auto" }}>
             <table
               style={{
                 width: "100%",
-                minWidth: 1080,
+                minWidth: 1240,
                 borderCollapse: "collapse",
                 fontSize: 13,
               }}
@@ -471,7 +477,12 @@ export default function UsuariosPage() {
                     );
                   })
                   .map((u) => (
-                    <UserRowItem key={u.id} user={u} onUpdated={loadUsers} />
+                    <UserRowItem
+                      key={u.id}
+                      user={u}
+                      isCurrentUser={u.id === currentUserId}
+                      onUpdated={loadUsers}
+                    />
                   ))}
               </tbody>
             </table>
@@ -484,9 +495,11 @@ export default function UsuariosPage() {
 
 function UserRowItem({
   user,
+  isCurrentUser,
   onUpdated,
 }: {
   user: UserRow;
+  isCurrentUser: boolean;
   onUpdated: () => void;
 }) {
   const [value, setValue] = useState(
@@ -499,6 +512,9 @@ function UserRowItem({
   const [batchValue, setBatchValue] = useState(String(user.maxTitlesPerBatch));
   const [savingBatch, setSavingBatch] = useState(false);
   const [batchLimitError, setBatchLimitError] = useState<string | null>(null);
+  const [roleValue, setRoleValue] = useState<"admin" | "user">(user.role);
+  const [savingRole, setSavingRole] = useState(false);
+  const [roleError, setRoleError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editFirstName, setEditFirstName] = useState(user.firstName ?? "");
@@ -573,6 +589,26 @@ function UserRowItem({
     }
   }
 
+  async function handleSaveRole() {
+    setSavingRole(true);
+    setRoleError(null);
+    try {
+      const response = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, role: roleValue }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setRoleError(data.error ?? "No se pudo guardar el rol.");
+        return;
+      }
+      onUpdated();
+    } finally {
+      setSavingRole(false);
+    }
+  }
+
   async function handleSaveEdit() {
     setSaving(true);
     setEditError(null);
@@ -633,7 +669,39 @@ function UserRowItem({
         <td style={tdStyle}>{user.email}</td>
         <td style={tdStyle}>{user.phone ?? "—"}</td>
         <td style={tdStyle}>
-          {user.role === "admin" ? "Administrador" : "Usuario"}
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <select
+              value={roleValue}
+              onChange={(event) =>
+                setRoleValue(event.target.value as "admin" | "user")
+              }
+              disabled={isCurrentUser || savingRole}
+              aria-label={`Rol de ${user.email}`}
+              style={{ ...inputStyle, width: 132 }}
+            >
+              <option value="user">Usuario</option>
+              <option value="admin">Administrador</option>
+            </select>
+            {isCurrentUser ? (
+              <span style={{ fontSize: 11, color: "#6b7280" }}>Tu cuenta</span>
+            ) : (
+              <button
+                onClick={handleSaveRole}
+                disabled={savingRole || roleValue === user.role}
+                style={disabledStyle(
+                  { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
+                  savingRole || roleValue === user.role,
+                )}
+              >
+                {savingRole ? "..." : "Guardar rol"}
+              </button>
+            )}
+          </div>
+          {roleError && (
+            <div style={{ fontSize: 11, color: "#d64545", marginTop: 4 }}>
+              {roleError}
+            </div>
+          )}
         </td>
         <td style={{ ...tdStyle, fontWeight: 600 }}>
           {user.articlesPublished}
