@@ -111,6 +111,11 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
   web limpios. Pendiente commit, migración productiva y deploy. Se detectó un
   cambio ajeno simultáneo en `apps/worker/src/automation/10minutesWebsite.ts`;
   Codex no lo tocó ni lo incluirá en staging/commit.
+- **Reserva ampliada:** `.github/workflows/migrate.yml` únicamente para hacer
+  que Prisma Migrate use el Session pooler `:5432`; el primer intento en el
+  Transaction pooler `:6543` falló con `prepared statement s0 does not exist`
+  y el segundo quedó esperando el advisory lock. El runtime web/worker seguirá
+  usando `:6543`; no se toca `worker.yml`.
 - **Área reservada cuando se reanude:** OAuth/API/UI de Google y migración
   `20260731210000_add_google_search_console`.
 - **Archivos previstos:**

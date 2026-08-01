@@ -17,4 +17,14 @@ jobs:
           node-version: "20"
           cache: "npm"
       - run: npm ci
-      - run: npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma
+      # Prisma Migrate necesita una sesión estable para prepared statements y
+      # advisory locks. El runtime serverless usa el Transaction pooler :6543,
+      # pero una migración aislada debe usar el Session pooler :5432 (una sola
+      # conexión, dentro del límite de 15). Nunca imprime la URL ni el secreto.
+      - name: Aplicar migraciones con Session pooler
+        shell: bash
+        run: |
+          MIGRATION_DATABASE_URL="${DATABASE_URL/:6543/:5432}"
+          MIGRATION_DATABASE_URL="${MIGRATION_DATABASE_URL/?pgbouncer=true/}"
+          DATABASE_URL="$MIGRATION_DATABASE_URL" DIRECT_URL="$MIGRATION_DATABASE_URL" \
+            npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma
