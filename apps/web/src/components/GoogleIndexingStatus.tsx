@@ -36,8 +36,8 @@ export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
     return (
       <div style={{ marginTop: 7, fontSize: 12 }}>
         <div style={{ color: "#6b7280" }}>
-          Google Search Console no está conectado para esta cuenta — el
-          sitemap no se pudo enviar.
+          Google Search Console no está conectado para esta cuenta — el sitemap
+          no se incluirá en el envío diario.
         </div>
         <a
           href="/dashboard/configuracion"
@@ -49,21 +49,22 @@ export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
     );
   }
 
-  // El sitemap se manda una sola vez por lote (no por artículo), pero
-  // igual se cumplió el objetivo para ESTE artículo en cuanto su estado
-  // pasa por "indexed" o "inspection_pending" (ambos implican que la
-  // llamada a submitGoogleSitemap no falló). "error" es una falla real
-  // (ej. token vencido, cuota agotada) — se distingue con su propio texto.
-  const sitemapOk = status === "indexed" || status === "inspection_pending";
-  const sitemapLabel =
-    status === "error" ? "✗ Error al enviar el sitemap" : "✗ Sitemap no enviado";
   return (
     <div style={{ marginTop: 7, fontSize: 12 }}>
-      <div style={{ color: sitemapOk ? "#1e8a4b" : "#d64545" }}>
-        {sitemapOk ? "✓ Sitemap enviado a Google" : sitemapLabel}
+      <div style={{ color: "#1358a3" }}>
+        Sitemap: envío diario programado a las 12:00 a. m.
       </div>
-      <div style={{ color: indexed ? "#1e8a4b" : "#8a6d1a" }}>
-        {indexed ? "✓ Indexada en Google" : "Google: pendiente de indexación"}
+      <div
+        style={{
+          color:
+            status === "error" ? "#d64545" : indexed ? "#1e8a4b" : "#8a6d1a",
+        }}
+      >
+        {status === "error"
+          ? "Google: error al consultar la indexación"
+          : indexed
+            ? "✓ Indexada en Google"
+            : "Google: pendiente de indexación"}
       </div>
       {message && (
         <div style={{ color: "#6b7280", marginTop: 2 }}>{message}</div>

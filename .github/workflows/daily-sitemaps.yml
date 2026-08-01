@@ -1,0 +1,61 @@
+name: Envío diario de sitemaps
+
+on:
+  schedule:
+    # Medianoche en Nueva York: 04:00 UTC durante EDT y 05:00 UTC durante EST.
+    - cron: "0 4 * * *"
+    - cron: "0 5 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: auto-articulos-daily-sitemaps
+  cancel-in-progress: false
+
+jobs:
+  enviar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DIRECT_URL: ${{ secrets.DATABASE_URL }}
+      CREDENTIALS_ENCRYPTION_KEY: ${{ secrets.CREDENTIALS_ENCRYPTION_KEY }}
+      GOOGLE_SEARCH_CONSOLE_CLIENT_ID: ${{ secrets.GOOGLE_SEARCH_CONSOLE_CLIENT_ID }}
+      GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET: ${{ secrets.GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET }}
+    steps:
+      - name: Confirmar medianoche de Nueva York
+        id: horario
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          offset="$(TZ=America/New_York date +%z)"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] || \
+             { [ "$SCHEDULE" = "0 4 * * *" ] && [ "$offset" = "-0400" ]; } || \
+             { [ "$SCHEDULE" = "0 5 * * *" ] && [ "$offset" = "-0500" ]; }; then
+            echo "ejecutar=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ejecutar=false" >> "$GITHUB_OUTPUT"
+            echo "Se omite esta corrida: corresponde al horario UTC alterno."
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.horario.outputs.ejecutar == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.horario.outputs.ejecutar == 'true'
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Instalar dependencias
+        if: steps.horario.outputs.ejecutar == 'true'
+        run: npm ci
+
+      - name: Generar cliente de Prisma
+        if: steps.horario.outputs.ejecutar == 'true'
+        run: npx prisma generate --schema=packages/db/prisma/schema.prisma
+
+      - name: Enviar todos los sitemaps configurados
+        if: steps.horario.outputs.ejecutar == 'true'
+        working-directory: apps/worker
+        run: npm run send-daily-sitemaps

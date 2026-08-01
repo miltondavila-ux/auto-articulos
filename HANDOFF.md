@@ -772,6 +772,33 @@ Publicar como desde Oportunidades.
   usuario; las verificaciones de schema, tipos, build, migración y deployment sí
   quedaron completas.
 
+## IMPLEMENTADO (1/8/2026): envío diario centralizado de sitemaps
+
+Pedido del usuario: dejar de enviar el sitemap después de cada artículo o
+categoría y enviar, una vez al día alrededor de las 12:00 a. m., los sitemaps de
+todos los usuarios a sus respectivas cuentas de Google Search Console.
+
+- `notifyGoogle()` ya no llama a `submitGoogleSitemap()`: después de publicar un
+  artículo conserva únicamente la inspección individual de su URL. Esto aplica
+  igual a títulos creados desde Publicar y desde Oportunidades, porque ambos
+  terminan en la misma cola del worker.
+- Nuevo ejecutor `send-daily-sitemaps.ts`: consulta todas las integraciones
+  Google con propiedad y sitemap configurados, renueva el token OAuth de cada
+  usuario y envía cada sitemap. Trabaja en grupos de cinco; un fallo individual
+  queda registrado y no impide procesar las demás cuentas.
+- Nuevo workflow `daily-sitemaps.yml`, separado del worker de publicaciones y
+  sin Playwright. Tiene horarios 04:00/05:00 UTC y comprueba el desfase de
+  `America/New_York`, por lo que solo uno corre a la medianoche correcta tanto
+  en horario de verano como de invierno. También admite ejecución manual para
+  diagnóstico explícito.
+- La UI ya no afirma que el sitemap se envió por artículo: ahora explica que el
+  sitemap tiene envío diario a las 12:00 a. m. y mantiene separado el estado de
+  indexación de cada URL.
+- Verificaciones completadas: Prettier, `tsc --noEmit` en web y worker, builds
+  completos de ambos proyectos y prueba de las cuatro combinaciones de cron y
+  desfase EDT/EST. No se ejecutó el proceso manualmente para no enviar sitemaps
+  reales fuera del horario acordado y no se publicó ningún artículo.
+
 ## RESUELTO (1/8/2026): Usuarios se convierte en Administración
 
 Pedido del usuario: renombrar visualmente el módulo **Usuarios** como

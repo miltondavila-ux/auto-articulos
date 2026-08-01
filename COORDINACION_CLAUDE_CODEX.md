@@ -140,6 +140,28 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Codex
 
+- **Estado:** `ACTIVO — ÁREA RESERVADA` (1/8/2026).
+- **Tarea actual:** retirar el envío de sitemap por artículo/lote y crear un
+  envío diario centralizado para todos los usuarios con Google Search Console
+  y sitemap configurados, alrededor de las 00:00 de America/New_York.
+- **Reserva actual:**
+  - `.github/workflows/**` para el nuevo workflow diario
+  - `apps/worker/src/googleIndexing.ts`
+  - `apps/worker/src/queue.ts`
+  - nuevo ejecutor diario bajo `apps/worker/src/**`
+  - `apps/worker/package.json`
+  - `apps/web/src/components/GoogleIndexingStatus.tsx`
+  - `apps/web/src/components/GoogleSearchConsoleSection.tsx`
+  - `HANDOFF.md`
+  - `COORDINACION_CLAUDE_CODEX.md`
+- **Límites:** sin migración ni publicación de artículos; solo se procesarán
+  integraciones Google ya conectadas y configuradas. No se tocarán ni incluirán
+  `calculadora-roge/` ni `PRD_CALCULADORA_ROGE.md`.
+- **Avance:** envío retirado del flujo por artículo/lote; ejecutor y workflow
+  diarios creados; textos de la UI actualizados. Prettier, `tsc --noEmit` y
+  builds completos de web/worker limpios; lógica EDT/EST verificada. Pendiente
+  commit, push y deploy, sin ejecutar envíos reales durante las pruebas.
+
 - **Estado:** `TERMINADO — ÁREA LIBERADA` (1/8/2026).
 - **Tarea actual:** renombrar visualmente el módulo Usuarios a
   **Administración** y convertir su entrada en un dashboard moderno con

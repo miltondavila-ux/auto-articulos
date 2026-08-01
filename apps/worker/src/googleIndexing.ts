@@ -3,30 +3,18 @@ import {
   decryptSecret,
   getGoogleAccessToken,
   inspectGoogleUrl,
-  submitGoogleSitemap,
 } from "@auto-articulos/shared";
 
 /**
- * El sitemap es el mismo para todo el sitio: reenviarlo por cada artículo de
- * un mismo lote no aporta nada (Google igual lo rastrea una sola vez y
- * descubre todas las URLs nuevas) y gasta cuota de la API de Search Console
- * de más. Pedido explícito del usuario (1/8/2026): un solo envío de sitemap
- * por lote, no uno por artículo. Se detecta consultando si YA hay otro
- * título de este mismo `runId` con `googleIndexingAt` seteado (o sea, que ya
- * pasó por acá antes) — si lo hay, no se reenvía el sitemap, pero cada
- * artículo sigue teniendo su propio chequeo de indexación (eso sí es
- * legítimamente por-URL) y su propio "check" visible de que el objetivo del
- * sitemap se cumplió para su lote.
+ * Después de publicar solo se consulta el estado de indexación de esta URL.
+ * Los sitemaps ya no se envían por artículo ni por lote: un workflow diario
+ * independiente envía una vez el sitemap configurado de cada usuario.
  */
-export async function notifyGoogle(
-  titleId: string,
-  userId: string,
-  runId: string,
-) {
+export async function notifyGoogle(titleId: string, userId: string) {
   const integration = await prisma.searchIntegration.findUnique({
     where: { userId_provider: { userId, provider: "google" } },
   });
-  if (!integration?.siteUrl || !integration.sitemapUrl) {
+  if (!integration?.siteUrl) {
     await prisma.title.update({
       where: { id: titleId },
       data: { googleIndexingStatus: "not_configured" },
@@ -38,17 +26,6 @@ export async function notifyGoogle(
       decryptSecret(integration.encryptedRefreshToken),
     );
 
-    const sitemapAlreadySentForThisRun = await prisma.title.count({
-      where: { runId, id: { not: titleId }, googleIndexingAt: { not: null } },
-    });
-    if (sitemapAlreadySentForThisRun === 0) {
-      await submitGoogleSitemap(
-        token,
-        integration.siteUrl,
-        integration.sitemapUrl,
-      );
-    }
-
     const title = await prisma.title.findUnique({
       where: { id: titleId },
       select: { articleUrl: true },
@@ -58,9 +35,7 @@ export async function notifyGoogle(
       : null;
     const indexed = inspection?.verdict === "PASS";
     const sitemapNote =
-      sitemapAlreadySentForThisRun > 0
-        ? "✓ Sitemap enviado para este lote (compartido con otros artículos del mismo lote)."
-        : "✓ Sitemap enviado.";
+      "El sitemap se enviará en el próximo proceso diario programado.";
     await prisma.title.update({
       where: { id: titleId },
       data: {

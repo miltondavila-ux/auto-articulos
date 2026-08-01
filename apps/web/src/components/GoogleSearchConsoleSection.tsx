@@ -144,10 +144,11 @@ export default function GoogleSearchConsoleSection() {
       )}
       {message && <p style={{ fontSize: 13, color: "#1e8a4b" }}>{message}</p>}
       <p style={{ fontSize: 12, color: "#6b7280" }}>
-        Después de publicar, la app enviará tu sitemap y consultará el estado de
-        cada URL. Si Google todavía no la indexó, verás un acceso directo para
-        abrir Search Console y pulsar “Solicitar indexación” manualmente; Google
-        no ofrece ese último botón mediante API.
+        Cada día a las 12:00 a. m. la app enviará tu sitemap a Google. Después
+        de publicar, seguirá consultando el estado de cada URL. Si Google
+        todavía no la indexó, verás un acceso directo para abrir Search Console
+        y pulsar “Solicitar indexación” manualmente; Google no ofrece ese último
+        botón mediante API.
       </p>
     </section>
   );
