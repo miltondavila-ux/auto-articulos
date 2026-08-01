@@ -707,6 +707,16 @@ la API de Search Console de más.
   visualmente en el navegador ni con un artículo real nuevo** (cuota de la
   sesión se agotó justo después de implementar) — pendiente de confirmar
   con el próximo artículo real que se publique.
+- **BLOQUEADO: el deploy a Vercel de este cambio de UI falló** —
+  `npx vercel --prod --yes` devolvió `Error: The specified token is not
+  valid. Use 'vercel login' to generate a new token.` El cambio del worker
+  (lo más importante, el que arregla el reenvío duplicado) YA está en
+  producción vía GitHub Actions sin necesitar Vercel. Pero el check visible
+  "✓ Sitemap enviado a Google" en `GoogleIndexingStatus.tsx` NO está
+  desplegado todavía porque el token de Vercel CLI venció. Alguien con
+  acceso (el usuario, o correr `vercel login` de forma interactiva) tiene
+  que renovarlo y correr `cd apps/web && npx vercel --prod --yes` de nuevo
+  para que este cambio de UI salga a producción.
 
 ## Pendiente / próximos pasos
 
