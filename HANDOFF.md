@@ -772,7 +772,7 @@ Publicar como desde Oportunidades.
   usuario; las verificaciones de schema, tipos, build, migración y deployment sí
   quedaron completas.
 
-## IMPLEMENTADO (1/8/2026): creación completa de usuarios
+## RESUELTO (1/8/2026): creación completa de usuarios
 
 Pedido del usuario: corregir el formulario de creación administrativa, que solo
 mostraba nombre, correo, contraseña y máximo por lote, para que permita definir
@@ -795,6 +795,9 @@ desde el alta todos los datos de la cuenta.
   hizo falta migración porque todos esos campos ya existen en `User`.
 - Prettier, TypeScript y build completo de Next.js terminaron correctamente. No
   se creó ningún usuario real durante las pruebas.
+- Commit `6508de2` pusheado a `main`; deployment Vercel
+  `dpl_8JbECg94AfFV5mechnCYR1UDPids` en estado `READY` y asociado al alias de
+  producción.
 
 ## RESUELTO (1/8/2026): auditoría integral y limpieza conservadora
 

@@ -140,7 +140,7 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Codex
 
-- **Estado:** `ACTIVO — ÁREA RESERVADA` (1/8/2026).
+- **Estado:** `TERMINADO — ÁREA LIBERADA` (1/8/2026).
 - **Tarea actual:** completar la creación administrativa de usuarios con nombre,
   apellido, teléfono, rol y los tres límites configurables, además de correo y
   contraseña temporal, con validación obligatoria en servidor.
@@ -151,9 +151,13 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
   - `COORDINACION_CLAUDE_CODEX.md`
 - **Límites:** sin migración ni cambios al worker; no se crearán usuarios reales
   durante las pruebas y no se tocarán las rutas de la calculadora.
-- **Avance:** formulario y API completados con todos los campos y validaciones
-  de servidor. Prettier, TypeScript y build Next.js limpios. Pendiente commit,
-  push y deploy; no se creó ningún usuario real.
+- **Resultado:** formulario y API completados con todos los campos y
+  validaciones de servidor. Prettier, TypeScript y builds Next.js local/Vercel
+  limpios. Commit `6508de2` pusheado y deployment
+  `dpl_8JbECg94AfFV5mechnCYR1UDPids` READY. No se creó ningún usuario real.
+- **Archivos modificados sin commit al liberar el área:** ninguno propio. Solo
+  permanecen sin seguimiento `PRD_CALCULADORA_ROGE.md` y `calculadora-roge/`,
+  que no se tocaron.
 
 - **Estado:** `TERMINADO — ÁREA LIBERADA` (1/8/2026).
 - **Tarea actual:** auditoría integral y limpieza conservadora de código, archivos
@@ -403,6 +407,24 @@ Push/deploy/migración:
 Pendientes:
 Estado del área: LIBERADA o RESERVADA
 ```
+
+### 2026-08-01 18:57 UTC — Codex: creación completa de usuarios
+
+- **Agente:** Codex.
+- **Tarea:** añadir al alta administrativa todos los datos disponibles de una
+  cuenta y validarlos también en servidor.
+- **Archivos/área:** API administrativa de usuarios, dashboard Administración y
+  documentación compartida.
+- **Resultado:** alta con nombre, apellido, teléfono, correo, contraseña, rol,
+  límite mensual, límite diario y máximo por lote; persistencia completa y
+  validación estricta de cada campo.
+- **Verificaciones:** Prettier, TypeScript y builds Next.js local/Vercel. No se
+  creó ningún usuario real.
+- **Commit:** `6508de2`.
+- **Push/deploy/migración:** `main`; sin migración; Vercel
+  `dpl_8JbECg94AfFV5mechnCYR1UDPids` READY.
+- **Pendientes:** revisión visual y creación real por el usuario administrador.
+- **Estado del área:** LIBERADA.
 
 ### 2026-08-01 18:41 UTC — Codex: auditoría y limpieza integral
 
