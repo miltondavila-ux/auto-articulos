@@ -140,7 +140,7 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Codex
 
-- **Estado:** `ACTIVO — ÁREA RESERVADA` (1/8/2026).
+- **Estado:** `TERMINADO — ÁREA LIBERADA` (1/8/2026).
 - **Tarea actual:** auditoría integral y limpieza conservadora de código, archivos
   y dependencias sin uso, preservando todo comportamiento productivo.
 - **Reserva actual:** todo el repositorio de Auto Artículos (`apps/web/**`,
@@ -151,11 +151,16 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
   sitemap ni otras operaciones que muten datos externos. Solo se eliminará lo
   que pueda demostrarse sin referencias y se validará web+worker antes de
   desplegar.
-- **Avance:** auditoría y limpieza implementadas. Knip/Depcheck sin elementos
+- **Resultado:** auditoría y limpieza implementadas. Knip/Depcheck sin elementos
   sin uso, Madge sin ciclos y TypeScript limpio en los cuatro proyectos. Se
   retiraron el export y script muertos, se activó detección permanente de código
-  no usado y se limpiaron configuraciones/documentación engañosa. Pendiente
-  validación final, commit, push y deploy.
+  no usado y se limpiaron configuraciones/documentación engañosa. Builds
+  web/worker limpios; commit `d12fc7a` pusheado y deployment Vercel
+  `dpl_FAWT9PFAN5zVWNcoE4hR3smRBce9` READY. No se tocaron datos ni se ejecutaron
+  acciones externas de usuario.
+- **Archivos modificados sin commit al liberar el área:** ninguno propio. Solo
+  permanecen sin seguimiento `PRD_CALCULADORA_ROGE.md` y `calculadora-roge/`,
+  que no se tocaron.
 
 - **Estado:** `TERMINADO — ÁREA LIBERADA` (1/8/2026).
 - **Tarea actual:** retirar el envío de sitemap por artículo/lote y crear un
@@ -383,6 +388,29 @@ Push/deploy/migración:
 Pendientes:
 Estado del área: LIBERADA o RESERVADA
 ```
+
+### 2026-08-01 18:41 UTC — Codex: auditoría y limpieza integral
+
+- **Agente:** Codex.
+- **Tarea:** auditar todo Auto Artículos y eliminar únicamente código o
+  configuración demostrablemente innecesarios sin romper producción.
+- **Archivos/área:** web, worker, paquetes compartidos, manifests,
+  configuraciones raíz y documentación operativa.
+- **Resultado:** export muerto retirado, comando obsoleto de Next reemplazado,
+  detección permanente de código no usado activada, ignore/env limpiados,
+  comentario contradictorio corregido y metadata social normalizada. No había
+  archivos, rutas, activos ni dependencias completos que pudieran eliminarse de
+  forma segura.
+- **Verificaciones:** Prettier; TypeScript en cuatro proyectos; builds web y
+  worker; Knip y Depcheck sin hallazgos; Madge sin ciclos; Vercel compiló las 29
+  rutas. No se ejecutaron publicaciones, análisis ni envíos de sitemap.
+- **Commit:** `d12fc7a`.
+- **Push/deploy/migración:** `main`; sin migración; Vercel
+  `dpl_FAWT9PFAN5zVWNcoE4hR3smRBce9` READY.
+- **Pendientes:** actualizar Next cuando exista una versión compatible que
+  resuelva los avisos transitivos actuales de `postcss`/`sharp`; no usar el
+  `npm audit fix --force` que degrada a Next 9.
+- **Estado del área:** LIBERADA.
 
 ### 2026-08-01 18:31 UTC — Codex: envío diario de sitemaps
 

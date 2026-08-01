@@ -803,6 +803,12 @@ basura sin romper el comportamiento productivo.
   automática propuesta fuerza un downgrade incompatible a Next 9; no se aplicó
   para cumplir la instrucción de no romper producción. Debe revisarse cuando
   Next publique una versión compatible corregida.
+- Verificación final: Prettier; TypeScript limpio en web, worker, db y shared;
+  builds completos de web/worker; Knip sin hallazgos; Depcheck sin hallazgos;
+  Madge sin ciclos; build Vercel con las 29 rutas correcto y sin la advertencia
+  anterior de `metadataBase`. Commit `d12fc7a` pusheado a `main` y deployment
+  `dpl_FAWT9PFAN5zVWNcoE4hR3smRBce9` en estado `READY`, asociado al alias de
+  producción.
 
 ## RESUELTO (1/8/2026): envío diario centralizado de sitemaps
 
