@@ -772,6 +772,38 @@ Publicar como desde Oportunidades.
   usuario; las verificaciones de schema, tipos, build, migración y deployment sí
   quedaron completas.
 
+## RESUELTO (1/8/2026): auditoría integral y limpieza conservadora
+
+Pedido del usuario: auditar todo el código, retirar elementos sin uso y código
+basura sin romper el comportamiento productivo.
+
+- Se revisaron los 64 módulos TypeScript/TSX, rutas Next, worker, paquetes
+  compartidos, manifests, configuraciones, workflows y activos rastreados. Knip
+  y Depcheck quedaron sin archivos, exports ni dependencias sin uso; Madge no
+  encontró dependencias circulares.
+- Se eliminó el único export público innecesario
+  (`OpportunityAnalysisGroup`, que solo se usa dentro de su módulo) y el script
+  roto `next lint`, retirado por Next 16. Se sustituyó por un comando funcional
+  `typecheck`.
+- Los cuatro proyectos TypeScript ahora activan `noUnusedLocals` y
+  `noUnusedParameters`, de modo que el build rechazará nuevo código muerto en
+  web, worker, db y shared.
+- Se consolidaron reglas redundantes de `.gitignore`, manteniendo
+  `.env.example` rastreable; el ejemplo de entorno se actualizó con todas las
+  variables realmente usadas y se retiró la referencia obsoleta a Neon.
+- Se corrigió el comentario contradictorio del endpoint administrativo
+  permanente de diagnóstico y se agregó `metadataBase` al layout raíz, quitando
+  las advertencias de metadatos sociales del build sin alterar rutas ni UI.
+- No se borraron rutas, migraciones, activos ni infraestructura: la auditoría
+  confirmó que están referenciados o tienen una función operativa/documental.
+  Tampoco se tocaron datos ni se ejecutaron publicaciones, análisis SEO o envíos
+  de sitemap.
+- `npm audit` reporta tres avisos altos transitivos de `postcss`/`sharp` a través
+  de la versión más reciente disponible de Next (`16.2.12`). La única corrección
+  automática propuesta fuerza un downgrade incompatible a Next 9; no se aplicó
+  para cumplir la instrucción de no romper producción. Debe revisarse cuando
+  Next publique una versión compatible corregida.
+
 ## RESUELTO (1/8/2026): envío diario centralizado de sitemaps
 
 Pedido del usuario: dejar de enviar el sitemap después de cada artículo o

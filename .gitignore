@@ -2,13 +2,11 @@ node_modules/
 .next/
 dist/
 build/
-.env
-.env.local
-.env.*.local
+.env*
+!.env.example
 *.log
 .DS_Store
 /packages/db/generated/
 .claude/
 *.tsbuildinfo
 .vercel
-.env*

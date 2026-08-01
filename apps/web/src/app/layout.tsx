@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 export const metadata = {
+  metadataBase: new URL("https://auto-articulos-web.vercel.app"),
   title: "Creador de artículos en secuencia",
   description:
     "Crea artículos en secuencias. Herramienta exclusiva para el programa de posicionamiento de 10minutesWebsite.",

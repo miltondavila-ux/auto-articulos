@@ -140,6 +140,23 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Codex
 
+- **Estado:** `ACTIVO — ÁREA RESERVADA` (1/8/2026).
+- **Tarea actual:** auditoría integral y limpieza conservadora de código, archivos
+  y dependencias sin uso, preservando todo comportamiento productivo.
+- **Reserva actual:** todo el repositorio de Auto Artículos (`apps/web/**`,
+  `apps/worker/**`, `packages/**`, `.github/**` y configuraciones raíz), además
+  de `HANDOFF.md` y `COORDINACION_CLAUDE_CODEX.md`.
+- **Límites:** no tocar, leer ni incluir `calculadora-roge/` ni
+  `PRD_CALCULADORA_ROGE.md`; no ejecutar publicaciones, análisis SEO, envíos de
+  sitemap ni otras operaciones que muten datos externos. Solo se eliminará lo
+  que pueda demostrarse sin referencias y se validará web+worker antes de
+  desplegar.
+- **Avance:** auditoría y limpieza implementadas. Knip/Depcheck sin elementos
+  sin uso, Madge sin ciclos y TypeScript limpio en los cuatro proyectos. Se
+  retiraron el export y script muertos, se activó detección permanente de código
+  no usado y se limpiaron configuraciones/documentación engañosa. Pendiente
+  validación final, commit, push y deploy.
+
 - **Estado:** `TERMINADO — ÁREA LIBERADA` (1/8/2026).
 - **Tarea actual:** retirar el envío de sitemap por artículo/lote y crear un
   envío diario centralizado para todos los usuarios con Google Search Console

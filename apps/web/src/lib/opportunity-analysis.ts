@@ -2,7 +2,7 @@ import type { GoogleSearchAnalyticsRow } from "@auto-articulos/shared";
 
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 
-export interface OpportunityAnalysisGroup {
+interface OpportunityAnalysisGroup {
   categoryId: string;
   rationale: string;
   impressions: number;
