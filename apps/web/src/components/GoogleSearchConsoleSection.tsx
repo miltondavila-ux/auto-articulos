@@ -21,6 +21,13 @@ export default function GoogleSearchConsoleSection() {
   const [siteUrl, setSiteUrl] = useState("");
   const [sitemapUrl, setSitemapUrl] = useState("");
   const [message, setMessage] = useState("");
+  // El sitemap se detecta solo preguntándole a Google (ver la API) — no
+  // tiene sentido mostrarle a todo el mundo un campo de texto para
+  // escribirlo a mano si ya se detectó. Pedido explícito del usuario
+  // (1/8/2026): "eso debería estar en automático en la plataforma". El
+  // campo manual solo se muestra si la detección automática no encontró
+  // nada, o si el usuario pide explícitamente cambiarlo.
+  const [editingSitemap, setEditingSitemap] = useState(false);
 
   async function load() {
     const res = await fetch("/api/search-integrations/google");
@@ -87,12 +94,41 @@ export default function GoogleSearchConsoleSection() {
               </option>
             ))}
           </select>
-          <input
-            value={sitemapUrl}
-            onChange={(e) => setSitemapUrl(e.target.value)}
-            placeholder="URL del sitemap, por ejemplo https://tusitio.com/sitemap.xml"
-            style={inputStyle}
-          />
+          {data.sitemapUrl && !editingSitemap ? (
+            <div style={{ fontSize: 13, color: "#1e8a4b" }}>
+              ✓ Sitemap detectado automáticamente: {data.sitemapUrl}{" "}
+              <button
+                type="button"
+                onClick={() => setEditingSitemap(true)}
+                style={{
+                  border: 0,
+                  padding: 0,
+                  background: "transparent",
+                  color: "#1358a3",
+                  cursor: "pointer",
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+              >
+                Cambiar
+              </button>
+            </div>
+          ) : (
+            <>
+              {!data.sitemapUrl && (
+                <p style={{ fontSize: 12, color: "#8a6d1a", margin: 0 }}>
+                  No pudimos detectar tu sitemap automáticamente — podés
+                  escribirlo a mano si lo conocés.
+                </p>
+              )}
+              <input
+                value={sitemapUrl}
+                onChange={(e) => setSitemapUrl(e.target.value)}
+                placeholder="URL del sitemap, por ejemplo https://tusitio.com/sitemap.xml"
+                style={inputStyle}
+              />
+            </>
+          )}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <button onClick={save} style={secondaryButtonStyle}>
               Guardar propiedad
