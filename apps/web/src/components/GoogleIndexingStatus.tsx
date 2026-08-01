@@ -24,17 +24,43 @@ export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
   }
 
   const indexed = status === "indexed";
+
+  // "not_configured": el usuario todavía no conectó/seleccionó una
+  // propiedad de Google Search Console para esta cuenta — no es un error
+  // del sistema, es un paso pendiente del usuario. Se muestra aparte, sin
+  // la cruz roja de error, y con un enlace a Configuración en vez del
+  // enlace roto a Search Console (que sin `siteUrl` no tiene a dónde
+  // apuntar). Pedido explícito del usuario (1/8/2026): que solo diga
+  // "enviado" cuando REALMENTE se envió, y que el enlace lleve a algo útil.
+  if (status === "not_configured") {
+    return (
+      <div style={{ marginTop: 7, fontSize: 12 }}>
+        <div style={{ color: "#6b7280" }}>
+          Google Search Console no está conectado para esta cuenta — el
+          sitemap no se pudo enviar.
+        </div>
+        <a
+          href="/dashboard/configuracion"
+          style={{ color: "#1358a3", fontWeight: 600 }}
+        >
+          Conectar Google Search Console en Configuración
+        </a>
+      </div>
+    );
+  }
+
   // El sitemap se manda una sola vez por lote (no por artículo), pero
   // igual se cumplió el objetivo para ESTE artículo en cuanto su estado
   // pasa por "indexed" o "inspection_pending" (ambos implican que la
-  // llamada a submitGoogleSitemap no falló) — "error"/"not_configured" son
-  // los únicos casos donde el sitemap NO quedó cubierto. Pedido explícito
-  // del usuario (1/8/2026): un check separado del de indexación real.
+  // llamada a submitGoogleSitemap no falló). "error" es una falla real
+  // (ej. token vencido, cuota agotada) — se distingue con su propio texto.
   const sitemapOk = status === "indexed" || status === "inspection_pending";
+  const sitemapLabel =
+    status === "error" ? "✗ Error al enviar el sitemap" : "✗ Sitemap no enviado";
   return (
     <div style={{ marginTop: 7, fontSize: 12 }}>
       <div style={{ color: sitemapOk ? "#1e8a4b" : "#d64545" }}>
-        {sitemapOk ? "✓ Sitemap enviado a Google" : "✗ Sitemap no enviado"}
+        {sitemapOk ? "✓ Sitemap enviado a Google" : sitemapLabel}
       </div>
       <div style={{ color: indexed ? "#1e8a4b" : "#8a6d1a" }}>
         {indexed ? "✓ Indexada en Google" : "Google: pendiente de indexación"}
