@@ -652,10 +652,25 @@ lógica al código:
   (texto con backtick, `${...}`, comillas dobles y backslash) — el script
   se ejecuta sin errores de sintaxis y produce JSON válido en todos los
   casos. `tsc --noEmit` limpio.
-- **Pendiente de verificar**: probar en 1-2 artículos reales NUEVOS
-  (publicados con este código, no el snippet pegado a mano) para confirmar
-  que Playwright llena el campo igual de bien que el pegado manual del
-  usuario, y volver a chequear esos artículos en Search Console.
+- **VERIFICADO EN PRODUCCIÓN (1/8/2026 ~16:29 UTC), confirmado por el
+  usuario en Search Console ("ahora sí funcionó")**: artículo
+  `https://www.segurosdesaludyvida.com/noticias/como-calificar-para-obamacare-como-inmigrante`,
+  publicado por el worker automáticamente (no pegado a mano) con el commit
+  `a7a2f42`. Chequeado también del lado del código: el script inyectado en
+  el `<head>` tiene comillas dobles correctas
+  (`{"@context":"https://schema.org",...}`) y `JSON.parse()` lo valida sin
+  error. **El fix funciona end-to-end con Playwright, no solo con el pegado
+  manual del usuario — queda cerrado.**
+  - Nota de timing (ya documentada en otros lados de este archivo, se repite
+    porque volvió a pasar acá): los primeros artículos publicados justo
+    después del push (`como-encontrar-medicos-y-hospitales-en-florida`,
+    procesado 16:19:46 UTC) todavía salieron con el bug viejo, porque la
+    corrida de GitHub Actions que los procesó había arrancado a las
+    16:05:17 UTC — 9 minutos ANTES de que el commit `a7a2f42` (16:14:07 UTC)
+    quedara pusheado. Una corrida en curso sigue usando el código que tenía
+    al arrancar. Si se ve el bug viejo justo después de un fix, confirmar
+    con `gh run list --workflow=worker.yml` (columna `headSha` vs. hora del
+    commit) antes de asumir que el fix no sirvió.
 
 **189 artículos viejos con el FAQ roto** (schema activo desde el 29/7/2026,
 25 runs/usuarios distintos): el usuario decidió explícitamente **dejarlos
@@ -665,6 +680,33 @@ masiva. Si en el futuro se quiere limpiar esos 189 (o republicar su FAQ con
 el formato nuevo), sería una tarea aparte: visitar cada artículo por su URL
 de edición en 10minutesWebsite y reemplazar el contenido del campo Widget —
 a construir con cuidado y probar en 1 solo artículo antes de correrla en los 189.
+
+## RESUELTO (1/8/2026): sitemap de Google se enviaba una vez POR ARTÍCULO en vez de una vez por lote
+
+Pedido explícito del usuario: si un lote publica 9 artículos, no tiene
+sentido reenviar el mismo sitemap del sitio 9 veces seguidas (Google igual
+lo rastrea una sola vez y descubre las 9 URLs nuevas) — solo gasta cuota de
+la API de Search Console de más.
+
+- `apps/worker/src/googleIndexing.ts` (`notifyGoogle()`): ahora solo llama
+  `submitGoogleSitemap()` si NINGÚN OTRO título del mismo `runId` ya tiene
+  `googleIndexingAt` seteado (o sea, es el primero de ese lote en pasar por
+  acá). La consulta de indexación por URL (`inspectGoogleUrl`) SÍ se sigue
+  haciendo por cada artículo — eso es legítimamente por-URL, no redundante.
+  No hizo falta ninguna migración nueva (se detecta consultando los títulos
+  del mismo run, no un campo nuevo).
+- `apps/worker/src/queue.ts`: `notifyGoogle()` ahora recibe también `run.id`.
+- `apps/web/src/components/GoogleIndexingStatus.tsx`: se agregó un check
+  separado y explícito — **"✓ Sitemap enviado a Google" / "✗ Sitemap no
+  enviado"** — distinto del check de "✓ Indexada en Google" que ya existía
+  (son objetivos distintos: uno es "se lo avisamos a Google ya", el otro es
+  "Google ya terminó de indexarla", que puede tardar días y no depende de
+  nosotros). Pedido explícito del usuario: quería ver un check por artículo
+  confirmando que el objetivo del envío de sitemap se cumplió.
+- `tsc --noEmit` limpio en `apps/worker` y `apps/web`. **No se verificó
+  visualmente en el navegador ni con un artículo real nuevo** (cuota de la
+  sesión se agotó justo después de implementar) — pendiente de confirmar
+  con el próximo artículo real que se publique.
 
 ## Pendiente / próximos pasos
 

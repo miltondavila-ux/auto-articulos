@@ -37,22 +37,26 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 - **Estado:** `TERMINADO — ÁREA LIBERADA` (1/8/2026). Codex puede tocar
   `apps/worker/**` (incluido `10minutesWebsite.ts`) libremente.
-- **Última tarea (RESUELTA, ver `HANDOFF.md` sección "RESUELTO 1/8/2026:
-  bug del schema FAQ")**: Google Search Console marcaba error de sintaxis
-  en el schema FAQPage. Causa raíz: 10minutesWebsite convierte todas las
-  comillas dobles en simples al guardar el campo "Widget (opcional)",
-  invalidando cualquier JSON-LD directo. Solución implementada y
-  **confirmada por el usuario en producción** ("esto funcionó
-  perfectamente"): `buildFaqSchema()` en
-  `apps/worker/src/automation/10minutesWebsite.ts` ahora genera un
-  `<script>` JS ejecutable que arma el schema con `JSON.stringify()` EN EL
-  NAVEGADOR (inmune a la conversión de comillas, ya que JS no distingue
-  comilla simple/doble/invertida) y lo inyecta dinámicamente como
-  `<script type="application/ld+json">` — patrón oficialmente soportado por
-  Google. `fillFaqWidget()` reactivado en `publishArticle()`. Probado con
-  `vm.runInNewContext` simulando el navegador (casos límite: backtick,
-  `${...}`, comillas dobles, backslash en el texto) y `tsc --noEmit` limpio.
-  **Pendiente**: verificar en 1-2 artículos NUEVOS reales (publicados por
+- **Última tarea (RESUELTA Y VERIFICADA END-TO-END, ver `HANDOFF.md` sección
+  "RESUELTO 1/8/2026: bug del schema FAQ")**: Google Search Console marcaba
+  error de sintaxis en el schema FAQPage. Causa raíz: 10minutesWebsite
+  convierte todas las comillas dobles en simples al guardar el campo
+  "Widget (opcional)", invalidando cualquier JSON-LD directo. Solución
+  implementada y **confirmada por el usuario en producción con un artículo
+  publicado por el worker automáticamente** (no solo con el pegado manual
+  de prueba): `como-calificar-para-obamacare-como-inmigrante`, JSON válido
+  verificado por código (`JSON.parse` ok) y por el usuario en Search
+  Console ("ahora sí funcionó"). Cerrado, nada pendiente.
+  `buildFaqSchema()` en `apps/worker/src/automation/10minutesWebsite.ts`
+  genera un `<script>` JS ejecutable que arma el schema con
+  `JSON.stringify()` EN EL NAVEGADOR (inmune a la conversión de comillas, ya
+  que JS no distingue comilla simple/doble/invertida) y lo inyecta
+  dinámicamente como `<script type="application/ld+json">` — patrón
+  oficialmente soportado por Google. `fillFaqWidget()` reactivado en
+  `publishArticle()`. Probado con `vm.runInNewContext` simulando el
+  navegador (casos límite: backtick, `${...}`, comillas dobles, backslash
+  en el texto), `tsc --noEmit` limpio, y ahora también verificado en un
+  artículo real publicado por
   el worker, no pegados a mano) que Search Console los valida igual de
   bien.
 - **Tarea previa completada (histórico, ver más abajo en "Registro de
@@ -106,11 +110,27 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
   (ítems 18-21 del changelog).
 - **Archivos modificados sin commit al liberar el área:** ninguno — todo
   quedó commiteado y pusheado.
+- **Nueva tarea puntual (1/8/2026, cuota de Claude por agotarse — commit y
+  aviso, no vuelvo a reservar el área)**: pedido explícito del usuario:
+  `notifyGoogle()` en `apps/worker/src/googleIndexing.ts` mandaba
+  `submitGoogleSitemap()` una vez POR ARTÍCULO (9 artículos = 9 envíos del
+  mismo sitemap), gastando cuota de la API de Search Console sin necesidad.
+  Se cambió para mandar el sitemap **una sola vez por lote** (detecta si ya
+  hay otro título del mismo `runId` con `googleIndexingAt` seteado; si lo
+  hay, no reenvía) — la inspección de indexación por URL sigue siendo por
+  artículo, eso sí es legítimo. También se agregó un check visible
+  "✓ Sitemap enviado a Google" / "✗ Sitemap no enviado" en
+  `apps/web/src/components/GoogleIndexingStatus.tsx`, separado del check de
+  "Indexada en Google" (son objetivos distintos: uno es "se lo avisamos a
+  Google", el otro es "Google ya la indexó", que puede tardar días).
+  `tsc --noEmit` limpio en `apps/worker` y `apps/web`. Si Codex está en medio
+  de algo en estos archivos, avisar y coordinar antes de pisar este cambio.
 
 ### Codex
 
-- **Estado:** `TERMINADO — ÁREA LIBERADA`. Módulo **Oportunidades** entregado
-  en producción; Codex ya no reserva sus archivos.
+- **Estado:** ACTIVO — verificación de `OPENAI_API_KEY` recién agregada por el
+  usuario en Vercel Production, redespliegue y prueba controlada del análisis
+  de Oportunidades. No se ejecutarán títulos ni publicaciones.
 - **Tarea:** analizar el rendimiento multiusuario de Google Search Console,
   generar hasta 10 categorías con 9 títulos long tail por categoría evitando
   duplicación/canibalismo, y permitir eliminar o enviar categorías/títulos al

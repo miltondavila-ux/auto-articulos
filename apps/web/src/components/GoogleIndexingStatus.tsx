@@ -24,8 +24,18 @@ export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
   }
 
   const indexed = status === "indexed";
+  // El sitemap se manda una sola vez por lote (no por artículo), pero
+  // igual se cumplió el objetivo para ESTE artículo en cuanto su estado
+  // pasa por "indexed" o "inspection_pending" (ambos implican que la
+  // llamada a submitGoogleSitemap no falló) — "error"/"not_configured" son
+  // los únicos casos donde el sitemap NO quedó cubierto. Pedido explícito
+  // del usuario (1/8/2026): un check separado del de indexación real.
+  const sitemapOk = status === "indexed" || status === "inspection_pending";
   return (
     <div style={{ marginTop: 7, fontSize: 12 }}>
+      <div style={{ color: sitemapOk ? "#1e8a4b" : "#d64545" }}>
+        {sitemapOk ? "✓ Sitemap enviado a Google" : "✗ Sitemap no enviado"}
+      </div>
       <div style={{ color: indexed ? "#1e8a4b" : "#8a6d1a" }}>
         {indexed ? "✓ Indexada en Google" : "Google: pendiente de indexación"}
       </div>
