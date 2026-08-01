@@ -140,7 +140,7 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Codex
 
-- **Estado:** `ACTIVO — ÁREA RESERVADA` (1/8/2026).
+- **Estado:** `TERMINADO — ÁREA LIBERADA` (1/8/2026).
 - **Tarea actual:** retirar el envío de sitemap por artículo/lote y crear un
   envío diario centralizado para todos los usuarios con Google Search Console
   y sitemap configurados, alrededor de las 00:00 de America/New_York.
@@ -157,10 +157,15 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 - **Límites:** sin migración ni publicación de artículos; solo se procesarán
   integraciones Google ya conectadas y configuradas. No se tocarán ni incluirán
   `calculadora-roge/` ni `PRD_CALCULADORA_ROGE.md`.
-- **Avance:** envío retirado del flujo por artículo/lote; ejecutor y workflow
+- **Resultado:** envío retirado del flujo por artículo/lote; ejecutor y workflow
   diarios creados; textos de la UI actualizados. Prettier, `tsc --noEmit` y
-  builds completos de web/worker limpios; lógica EDT/EST verificada. Pendiente
-  commit, push y deploy, sin ejecutar envíos reales durante las pruebas.
+  builds completos de web/worker limpios; lógica EDT/EST verificada. Commit
+  `0ddc029` pusheado, workflow de GitHub ID `325202521` reconocido y deployment
+  Vercel `dpl_2mdKZNS4z6iAQgRFoC8krwUaBrbt` READY. No se ejecutaron envíos reales
+  ni publicaciones durante las pruebas.
+- **Archivos modificados sin commit al liberar el área:** ninguno propio. Solo
+  permanecen sin seguimiento `PRD_CALCULADORA_ROGE.md` y `calculadora-roge/`,
+  que no se tocaron.
 
 - **Estado:** `TERMINADO — ÁREA LIBERADA` (1/8/2026).
 - **Tarea actual:** renombrar visualmente el módulo Usuarios a
@@ -361,6 +366,26 @@ Push/deploy/migración:
 Pendientes:
 Estado del área: LIBERADA o RESERVADA
 ```
+
+### 2026-08-01 18:31 UTC — Codex: envío diario de sitemaps
+
+- **Agente:** Codex.
+- **Tarea:** reemplazar los envíos de sitemap por artículo/lote por un proceso
+  diario para todas las cuentas Google configuradas.
+- **Archivos/área:** workflow diario, ejecutor del worker, integración posterior
+  a publicación, textos Google de la web y documentación compartida.
+- **Resultado:** cada sitemap se envía una vez a medianoche de Nueva York,
+  respetando EDT/EST; los fallos se aíslan por usuario y la inspección individual
+  de URLs se conserva sin reenviar sitemaps.
+- **Verificaciones:** Prettier, `tsc --noEmit` y builds web/worker; cuatro casos
+  EDT/EST; workflow reconocido por GitHub con 0 ejecuciones. No se enviaron
+  sitemaps reales ni se publicaron artículos durante las pruebas.
+- **Commit:** `0ddc029`.
+- **Push/deploy/migración:** `main`; sin migración; workflow GitHub
+  `325202521`; Vercel `dpl_2mdKZNS4z6iAQgRFoC8krwUaBrbt` READY.
+- **Pendientes:** observar la primera ejecución automática en la próxima
+  medianoche; no requiere acción del usuario.
+- **Estado del área:** LIBERADA.
 
 ### 2026-08-01 18:22 UTC — Codex: dashboard de Administración
 

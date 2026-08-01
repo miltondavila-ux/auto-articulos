@@ -772,7 +772,7 @@ Publicar como desde Oportunidades.
   usuario; las verificaciones de schema, tipos, build, migración y deployment sí
   quedaron completas.
 
-## IMPLEMENTADO (1/8/2026): envío diario centralizado de sitemaps
+## RESUELTO (1/8/2026): envío diario centralizado de sitemaps
 
 Pedido del usuario: dejar de enviar el sitemap después de cada artículo o
 categoría y enviar, una vez al día alrededor de las 12:00 a. m., los sitemaps de
@@ -798,6 +798,10 @@ todos los usuarios a sus respectivas cuentas de Google Search Console.
   completos de ambos proyectos y prueba de las cuatro combinaciones de cron y
   desfase EDT/EST. No se ejecutó el proceso manualmente para no enviar sitemaps
   reales fuera del horario acordado y no se publicó ningún artículo.
+- Commit `0ddc029` pusheado a `main`. GitHub reconoció el workflow **Envío
+  diario de sitemaps** con ID `325202521`; todavía tiene 0 ejecuciones, como se
+  esperaba, porque no se disparó manualmente. La actualización web quedó en
+  producción mediante Vercel `dpl_2mdKZNS4z6iAQgRFoC8krwUaBrbt` (`READY`).
 
 ## RESUELTO (1/8/2026): Usuarios se convierte en Administración
 
