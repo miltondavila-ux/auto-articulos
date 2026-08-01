@@ -47,6 +47,33 @@ export async function listGoogleSearchConsoleSites(accessToken: string) {
   return data.siteEntry ?? [];
 }
 
+/**
+ * Le pregunta a Google qué sitemaps ya conoce para esta propiedad
+ * verificada, en vez de obligar al usuario a escribirlo a mano (pedido
+ * explícito del usuario, 1/8/2026: "poner al usuario a hacer algo que no
+ * debe hacer no es inteligente"). Devuelve las URLs completas de sitemap
+ * ya registradas, si las hay.
+ */
+export async function listGoogleSitemaps(
+  accessToken: string,
+  siteUrl: string,
+): Promise<string[]> {
+  const response = await fetch(
+    `${WEBMASTERS_API}/sites/${encodeURIComponent(siteUrl)}/sitemaps`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  const data = (await response.json()) as {
+    sitemap?: Array<{ path: string }>;
+    error?: { message?: string };
+  };
+  if (!response.ok) {
+    throw new Error(
+      data.error?.message ?? "No se pudieron listar los sitemaps.",
+    );
+  }
+  return (data.sitemap ?? []).map((s) => s.path).filter(Boolean);
+}
+
 export async function submitGoogleSitemap(
   accessToken: string,
   siteUrl: string,
