@@ -26,6 +26,8 @@ interface OpportunityGroup {
   titles: OpportunityTitle[];
 }
 
+const DEFAULT_MAX_TITLES_PER_BATCH = 20;
+
 export default function OportunidadesPage() {
   const router = useRouter();
   const [groups, setGroups] = useState<OpportunityGroup[]>([]);
@@ -33,15 +35,30 @@ export default function OportunidadesPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisSeconds, setAnalysisSeconds] = useState(0);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [maxTitlesPerBatch, setMaxTitlesPerBatch] = useState(
+    DEFAULT_MAX_TITLES_PER_BATCH,
+  );
   const [message, setMessage] = useState<{
     error: boolean;
     text: string;
   } | null>(null);
 
   const load = useCallback(async () => {
-    const response = await fetch("/api/opportunities", { cache: "no-store" });
-    const data = await response.json().catch(() => ({}));
-    if (response.ok) setGroups(data.groups ?? []);
+    const [opportunitiesResponse, meResponse] = await Promise.all([
+      fetch("/api/opportunities", { cache: "no-store" }),
+      fetch("/api/me", { cache: "no-store" }),
+    ]);
+    const data = await opportunitiesResponse.json().catch(() => ({}));
+    if (opportunitiesResponse.ok) setGroups(data.groups ?? []);
+    if (meResponse.ok) {
+      const me = await meResponse.json();
+      if (
+        typeof me.maxTitlesPerBatch === "number" &&
+        me.maxTitlesPerBatch >= 1
+      ) {
+        setMaxTitlesPerBatch(me.maxTitlesPerBatch);
+      }
+    }
     setLoading(false);
   }, []);
 
@@ -253,6 +270,9 @@ export default function OportunidadesPage() {
           </Link>
           .
         </p>
+        <p style={{ color: "#6b7280", fontSize: 12 }}>
+          Tu máximo permitido es de {maxTitlesPerBatch} títulos por lote.
+        </p>
       </section>
 
       {message && (
@@ -306,13 +326,22 @@ export default function OportunidadesPage() {
             <div style={{ display: "flex", gap: 8 }}>
               <button
                 onClick={() => execute("group", group.id)}
-                disabled={busyId !== null}
+                disabled={
+                  busyId !== null || group.titles.length > maxTitlesPerBatch
+                }
+                title={
+                  group.titles.length > maxTitlesPerBatch
+                    ? `Esta categoría supera tu máximo de ${maxTitlesPerBatch} títulos por lote.`
+                    : undefined
+                }
                 style={disabledStyle(
                   { ...buttonStyle, marginTop: 0 },
-                  busyId !== null,
+                  busyId !== null || group.titles.length > maxTitlesPerBatch,
                 )}
               >
-                Ejecutar categoría ({group.titles.length})
+                {group.titles.length > maxTitlesPerBatch
+                  ? `Supera el máximo (${group.titles.length}/${maxTitlesPerBatch})`
+                  : `Ejecutar categoría (${group.titles.length})`}
               </button>
               <button
                 onClick={() => remove("groups", group.id)}

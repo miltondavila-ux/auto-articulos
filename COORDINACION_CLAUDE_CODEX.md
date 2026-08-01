@@ -125,8 +125,51 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
   Google", el otro es "Google ya la indexó", que puede tardar días).
   `tsc --noEmit` limpio en `apps/worker` y `apps/web`. Si Codex está en medio
   de algo en estos archivos, avisar y coordinar antes de pisar este cambio.
+- **Otra tarea puntual (1/8/2026, misma sesión)**: pedido explícito del
+  usuario ("poner al usuario a hacer algo que no debe hacer no es
+  inteligente") — antes había que escribir a mano la URL del sitemap en
+  Configuración; ahora `GET /api/search-integrations/google` le pregunta a
+  Google directamente (`listGoogleSitemaps()`, nuevo helper en
+  `packages/shared/src/google-search-console.ts`) qué sitemaps ya conoce
+  para la propiedad elegida, y lo guarda solo la primera vez que hay
+  `siteUrl` pero no `sitemapUrl`. Commit `e5f590a`, pusheado a `main`.
+  **NO desplegado a Vercel todavía a propósito**: el filesystem compartido
+  tiene los cambios sin commitear de Codex (`maxTitlesPerBatch`), que
+  dependen de una migración no aplicada a producción — desplegar ahora
+  subiría el estado actual del disco completo (no solo mi commit) y podría
+  romper producción con columnas inexistentes. Cuando Codex commitee/migre
+  su parte, cualquiera de los dos puede correr
+  `cd apps/web && npx vercel --prod --yes` para sacar ambos cambios juntos.
 
 ### Codex
+
+- **Estado:** `ACTIVO — ÁREA RESERVADA` (1/8/2026).
+- **Tarea actual:** hacer configurable por usuario el máximo de títulos por
+  lote, con valor predeterminado 20 y validación obligatoria en servidor tanto
+  para Publicar como para las ejecuciones de categorías/títulos de
+  Oportunidades.
+- **Reserva actual:**
+  - `packages/db/prisma/schema.prisma`
+  - nueva migración en `packages/db/prisma/migrations/**` para
+    `User.maxTitlesPerBatch`
+  - `apps/web/src/app/api/admin/users/route.ts`
+  - `apps/web/src/app/dashboard/usuarios/page.tsx`
+  - `apps/web/src/app/api/runs/route.ts`
+  - `apps/web/src/app/api/me/route.ts`
+  - `apps/web/src/app/api/opportunities/**`
+  - `apps/web/src/app/dashboard/publicar/page.tsx`
+  - tipos/helpers estrictamente necesarios bajo `apps/web/src/types/**` o
+    `apps/web/src/lib/**`
+  - `HANDOFF.md` y este archivo de coordinación
+- **Límites de la reserva:** no se tocarán `calculadora-roge/` ni
+  `PRD_CALCULADORA_ROGE.md`; tampoco se ejecutarán pruebas que publiquen
+  artículos. Antes del commit se releerá este tablero para comprobar que no
+  haya una reserva nueva incompatible.
+- **Avance:** schema+migración, APIs y UI implementados. Prisma
+  format/generate, Prettier, `tsc --noEmit` de web/worker y build Next.js
+  limpios. Pendiente commit/push, migración productiva y deploy; no se disparó
+  ninguna publicación. Cambios ajenos simultáneos en la integración de
+  sitemaps quedan expresamente fuera del commit.
 
 - **Estado:** `TERMINADO — ÁREA LIBERADA`. `OPENAI_API_KEY` y el análisis real
   fueron confirmados por el usuario; la mejora visual quedó en Producción.

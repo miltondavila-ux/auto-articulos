@@ -13,7 +13,7 @@ import {
 } from "@/components/dashboard-ui";
 import type { CategoryRow } from "@/types/dashboard";
 
-const MAX_TITLES_PER_BATCH = 20;
+const DEFAULT_MAX_TITLES_PER_BATCH = 20;
 
 export default function PublicarPage() {
   const router = useRouter();
@@ -28,6 +28,22 @@ export default function PublicarPage() {
   const [starting, setStarting] = useState(false);
   const [hasActiveRun, setHasActiveRun] = useState(false);
   const [disableIndexing, setDisableIndexing] = useState(false);
+  const [maxTitlesPerBatch, setMaxTitlesPerBatch] = useState(
+    DEFAULT_MAX_TITLES_PER_BATCH,
+  );
+
+  const loadUserLimits = useCallback(async () => {
+    const res = await fetch("/api/me");
+    if (res.ok) {
+      const data = await res.json();
+      if (
+        typeof data.maxTitlesPerBatch === "number" &&
+        data.maxTitlesPerBatch >= 1
+      ) {
+        setMaxTitlesPerBatch(data.maxTitlesPerBatch);
+      }
+    }
+  }, []);
 
   const loadCredentialsStatus = useCallback(async () => {
     const res = await fetch("/api/credentials");
@@ -62,13 +78,14 @@ export default function PublicarPage() {
     loadCredentialsStatus();
     loadCategories();
     checkActiveRun();
-  }, [loadCredentialsStatus, loadCategories, checkActiveRun]);
+    loadUserLimits();
+  }, [loadCredentialsStatus, loadCategories, checkActiveRun, loadUserLimits]);
 
   const titleCount = titlesText
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line.length > 0).length;
-  const overLimit = titleCount > MAX_TITLES_PER_BATCH;
+  const overLimit = titleCount > maxTitlesPerBatch;
 
   async function handleIniciar() {
     setStarting(true);
@@ -174,8 +191,8 @@ export default function PublicarPage() {
       <section style={sectionStyle}>
         <h2 style={h2Style}>Títulos a publicar</h2>
         <p style={{ fontSize: 13, color: "#6b7280" }}>
-          Un título por línea. Máximo {MAX_TITLES_PER_BATCH} por lote — si
-          tienes más, divídelos en varios lotes.
+          Un título por línea. Máximo {maxTitlesPerBatch} por lote — si tienes
+          más, divídelos en varios lotes.
         </p>
         <textarea
           value={titlesText}
@@ -200,9 +217,9 @@ export default function PublicarPage() {
             fontWeight: overLimit ? 600 : 400,
           }}
         >
-          {titleCount} / {MAX_TITLES_PER_BATCH} títulos
+          {titleCount} / {maxTitlesPerBatch} títulos
           {overLimit &&
-            ` — quita ${titleCount - MAX_TITLES_PER_BATCH} para poder iniciar`}
+            ` — quita ${titleCount - maxTitlesPerBatch} para poder iniciar`}
         </p>
         <label
           style={{

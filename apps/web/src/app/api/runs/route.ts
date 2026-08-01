@@ -3,10 +3,6 @@ import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
 import { triggerWorkerNow } from "@/lib/trigger-worker";
 
-// Pedido explícito del usuario (31/7/2026): limitar cuántos títulos se
-// pueden mandar de una sola vez, para lotes más manejables y previsibles.
-const MAX_TITLES_PER_BATCH = 20;
-
 // Bug de consumo de datos encontrado el 30/7/2026: este endpoint se
 // consulta con polling frecuente (Inicio) y en cada visita al Historial, y
 // antes traía TODOS los eventos de TODOS los títulos (incluidas las
@@ -62,10 +58,19 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
-  if (titles.length > MAX_TITLES_PER_BATCH) {
+
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: {
+      maxTitlesPerBatch: true,
+      monthlyArticleLimit: true,
+      dailyArticleLimit: true,
+    },
+  });
+  if (titles.length > user.maxTitlesPerBatch) {
     return NextResponse.json(
       {
-        error: `Puedes publicar como máximo ${MAX_TITLES_PER_BATCH} títulos por lote (pegaste ${titles.length}). Divide la lista en varios lotes más chicos.`,
+        error: `Puedes publicar como máximo ${user.maxTitlesPerBatch} títulos por lote (pegaste ${titles.length}). Divide la lista en varios lotes más chicos.`,
       },
       { status: 400 },
     );
@@ -101,10 +106,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const user = await prisma.user.findUniqueOrThrow({
-    where: { id: userId },
-    select: { monthlyArticleLimit: true, dailyArticleLimit: true },
-  });
   if (user.monthlyArticleLimit !== null) {
     const startOfMonth = new Date();
     startOfMonth.setDate(1);

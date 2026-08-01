@@ -15,7 +15,13 @@ export async function getCurrentUser() {
   const userId = await getCurrentUserId();
   return prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { id: true, email: true, role: true, createdAt: true },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      maxTitlesPerBatch: true,
+      createdAt: true,
+    },
   });
 }
 

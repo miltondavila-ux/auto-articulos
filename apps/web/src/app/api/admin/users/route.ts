@@ -9,6 +9,17 @@ interface PublishedCountRow {
   count: bigint;
 }
 
+const MAX_POSTGRES_INT = 2_147_483_647;
+
+function isValidMaxTitlesPerBatch(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= MAX_POSTGRES_INT
+  );
+}
+
 export async function GET() {
   try {
     await requireAdmin();
@@ -28,6 +39,7 @@ export async function GET() {
         role: true,
         monthlyArticleLimit: true,
         dailyArticleLimit: true,
+        maxTitlesPerBatch: true,
         createdAt: true,
         initialPasswordEncrypted: true,
       },
@@ -78,6 +90,7 @@ export async function PATCH(request: NextRequest) {
     userId,
     monthlyArticleLimit,
     dailyArticleLimit,
+    maxTitlesPerBatch,
     email,
     newPassword,
     name,
@@ -93,6 +106,7 @@ export async function PATCH(request: NextRequest) {
   const data: {
     monthlyArticleLimit?: number | null;
     dailyArticleLimit?: number | null;
+    maxTitlesPerBatch?: number;
     email?: string;
     name?: string;
     firstName?: string | null;
@@ -150,6 +164,19 @@ export async function PATCH(request: NextRequest) {
     data.dailyArticleLimit = dailyArticleLimit;
   }
 
+  if ("maxTitlesPerBatch" in body) {
+    if (!isValidMaxTitlesPerBatch(maxTitlesPerBatch)) {
+      return NextResponse.json(
+        {
+          error:
+            "maxTitlesPerBatch debe ser un número entero mayor o igual a 1",
+        },
+        { status: 400 },
+      );
+    }
+    data.maxTitlesPerBatch = maxTitlesPerBatch;
+  }
+
   if (typeof email === "string" && email.trim()) {
     const existing = await prisma.user.findUnique({
       where: { email: email.trim() },
@@ -187,6 +214,7 @@ export async function PATCH(request: NextRequest) {
       role: true,
       monthlyArticleLimit: true,
       dailyArticleLimit: true,
+      maxTitlesPerBatch: true,
       createdAt: true,
     },
   });
@@ -225,7 +253,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
-  const { email, password, name, firstName, lastName, phone } = await request.json();
+  const {
+    email,
+    password,
+    name,
+    firstName,
+    lastName,
+    phone,
+    maxTitlesPerBatch = 20,
+  } = await request.json();
 
   if (typeof email !== "string" || !email.trim()) {
     return NextResponse.json(
@@ -236,6 +272,15 @@ export async function POST(request: NextRequest) {
   if (typeof password !== "string" || password.length < 8) {
     return NextResponse.json(
       { error: "La contraseña debe tener al menos 8 caracteres" },
+      { status: 400 },
+    );
+  }
+  if (!isValidMaxTitlesPerBatch(maxTitlesPerBatch)) {
+    return NextResponse.json(
+      {
+        error:
+          "El máximo de títulos por lote debe ser un número entero mayor o igual a 1",
+      },
       { status: 400 },
     );
   }
@@ -254,12 +299,19 @@ export async function POST(request: NextRequest) {
     data: {
       email,
       name: typeof name === "string" && name.trim() ? name.trim() : null,
-      firstName: typeof firstName === "string" && firstName.trim() ? firstName.trim() : null,
-      lastName: typeof lastName === "string" && lastName.trim() ? lastName.trim() : null,
+      firstName:
+        typeof firstName === "string" && firstName.trim()
+          ? firstName.trim()
+          : null,
+      lastName:
+        typeof lastName === "string" && lastName.trim()
+          ? lastName.trim()
+          : null,
       phone: typeof phone === "string" && phone.trim() ? phone.trim() : null,
       passwordHash,
       initialPasswordEncrypted,
       role: "user",
+      maxTitlesPerBatch,
     },
     select: {
       id: true,
@@ -269,6 +321,7 @@ export async function POST(request: NextRequest) {
       phone: true,
       email: true,
       role: true,
+      maxTitlesPerBatch: true,
       createdAt: true,
     },
   });

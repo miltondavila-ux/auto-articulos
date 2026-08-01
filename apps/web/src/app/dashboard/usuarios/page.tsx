@@ -25,6 +25,7 @@ interface UserRow {
   role: "admin" | "user";
   monthlyArticleLimit: number | null;
   dailyArticleLimit: number | null;
+  maxTitlesPerBatch: number;
   createdAt: string;
   articlesPublished: number;
   currentPassword: string | null;
@@ -74,6 +75,7 @@ export default function UsuariosPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [maxTitlesPerBatch, setMaxTitlesPerBatch] = useState("20");
   const [creating, setCreating] = useState(false);
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [loadingUsage, setLoadingUsage] = useState(false);
@@ -121,7 +123,12 @@ export default function UsuariosPage() {
       const res = await fetch("/api/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          maxTitlesPerBatch: Number(maxTitlesPerBatch),
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -134,6 +141,7 @@ export default function UsuariosPage() {
       setName("");
       setEmail("");
       setPassword("");
+      setMaxTitlesPerBatch("20");
       setBanner({ type: "info", text: `Usuario ${data.user.email} creado.` });
       loadUsers();
     } finally {
@@ -184,276 +192,291 @@ export default function UsuariosPage() {
       </div>
 
       {tab === "crear" && (
-      <section style={sectionStyle}>
-        <h2 style={h2Style}>Agregar usuario</h2>
-        <p style={{ fontSize: 13, color: "#6b7280" }}>
-          Crea una cuenta para dar acceso a otra persona. Cada usuario tiene sus
-          propias credenciales de 10minutesWebsite y su propio historial,
-          completamente separados.
-        </p>
-        <form
-          onSubmit={handleCreate}
-          style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
-        >
-          <input
-            type="text"
-            placeholder="Nombre"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            style={inputStyle}
-          />
-          <input
-            type="email"
-            placeholder="Correo"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={inputStyle}
-          />
-          <input
-            type="password"
-            placeholder="Contraseña temporal"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={inputStyle}
-          />
-          <button
-            type="submit"
-            disabled={creating}
-            style={disabledStyle(buttonStyle, creating)}
+        <section style={sectionStyle}>
+          <h2 style={h2Style}>Agregar usuario</h2>
+          <p style={{ fontSize: 13, color: "#6b7280" }}>
+            Crea una cuenta para dar acceso a otra persona. Cada usuario tiene
+            sus propias credenciales de 10minutesWebsite y su propio historial,
+            completamente separados.
+          </p>
+          <form
+            onSubmit={handleCreate}
+            style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
           >
-            {creating ? "Creando..." : "Crear usuario"}
-          </button>
-        </form>
-        {banner && (
-          <div
-            style={{
-              padding: 12,
-              borderRadius: 8,
-              marginTop: 12,
-              background: banner.type === "error" ? "#fdecec" : "#eafaf0",
-              color: banner.type === "error" ? "#d64545" : "#1e8a4b",
-              fontSize: 14,
-            }}
-          >
-            {banner.text}
-          </div>
-        )}
-      </section>
+            <input
+              type="text"
+              placeholder="Nombre"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              style={inputStyle}
+            />
+            <input
+              type="email"
+              placeholder="Correo"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={inputStyle}
+            />
+            <input
+              type="password"
+              placeholder="Contraseña temporal"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={inputStyle}
+            />
+            <label style={{ display: "grid", gap: 3, fontSize: 11 }}>
+              Máximo de títulos por lote
+              <input
+                type="number"
+                min={1}
+                step={1}
+                required
+                value={maxTitlesPerBatch}
+                onChange={(e) => setMaxTitlesPerBatch(e.target.value)}
+                style={{ ...inputStyle, width: 190 }}
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={creating}
+              style={disabledStyle(buttonStyle, creating)}
+            >
+              {creating ? "Creando..." : "Crear usuario"}
+            </button>
+          </form>
+          {banner && (
+            <div
+              style={{
+                padding: 12,
+                borderRadius: 8,
+                marginTop: 12,
+                background: banner.type === "error" ? "#fdecec" : "#eafaf0",
+                color: banner.type === "error" ? "#d64545" : "#1e8a4b",
+                fontSize: 14,
+              }}
+            >
+              {banner.text}
+            </div>
+          )}
+        </section>
       )}
 
       {tab === "uso" && (
-      <section style={sectionStyle}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: 8,
-          }}
-        >
-          <h2 style={h2Style}>Uso de la base de datos (Supabase)</h2>
-          <button
-            onClick={loadUsage}
-            disabled={loadingUsage}
-            style={disabledStyle(
-              { ...secondaryButtonStyle, padding: "4px 10px", fontSize: 12 },
-              loadingUsage,
-            )}
+        <section style={sectionStyle}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 8,
+            }}
           >
-            {loadingUsage ? "Actualizando..." : "Actualizar"}
-          </button>
-        </div>
-        <p style={{ fontSize: 13, color: "#6b7280", marginTop: -6 }}>
-          Tamaño real de la base y cuánto contenido corresponde a cada usuario,
-          calculado directamente con SQL (no consume cuota de transferencia
-          extra al mirarlo).
-        </p>
-        {usage && (
-          <>
-            <div style={{ marginTop: 8 }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: 13,
-                  fontWeight: 600,
-                }}
-              >
-                <span>
-                  Usado: {formatBytes(usage.databaseSizeBytes)} de{" "}
-                  {formatBytes(usage.planStorageBytes)}
-                </span>
-                <span
-                  style={{
-                    color: usage.percentUsed >= 0.8 ? "#d64545" : "#6b7280",
-                  }}
-                >
-                  {(usage.percentUsed * 100).toFixed(1)}% usado — quedan{" "}
-                  {formatBytes(usage.remainingBytes)} libres
-                </span>
-              </div>
-              <div
-                style={{
-                  height: 8,
-                  background: "#e9ecf1",
-                  borderRadius: 999,
-                  overflow: "hidden",
-                  marginTop: 6,
-                }}
-              >
+            <h2 style={h2Style}>Uso de la base de datos (Supabase)</h2>
+            <button
+              onClick={loadUsage}
+              disabled={loadingUsage}
+              style={disabledStyle(
+                { ...secondaryButtonStyle, padding: "4px 10px", fontSize: 12 },
+                loadingUsage,
+              )}
+            >
+              {loadingUsage ? "Actualizando..." : "Actualizar"}
+            </button>
+          </div>
+          <p style={{ fontSize: 13, color: "#6b7280", marginTop: -6 }}>
+            Tamaño real de la base y cuánto contenido corresponde a cada
+            usuario, calculado directamente con SQL (no consume cuota de
+            transferencia extra al mirarlo).
+          </p>
+          {usage && (
+            <>
+              <div style={{ marginTop: 8 }}>
                 <div
                   style={{
-                    height: "100%",
-                    width: `${Math.min(100, usage.percentUsed * 100)}%`,
-                    background:
-                      usage.percentUsed >= 0.8 ? "#d64545" : "#2f5fdb",
-                    transition: "width 0.4s ease",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: 13,
+                    fontWeight: 600,
                   }}
-                />
+                >
+                  <span>
+                    Usado: {formatBytes(usage.databaseSizeBytes)} de{" "}
+                    {formatBytes(usage.planStorageBytes)}
+                  </span>
+                  <span
+                    style={{
+                      color: usage.percentUsed >= 0.8 ? "#d64545" : "#6b7280",
+                    }}
+                  >
+                    {(usage.percentUsed * 100).toFixed(1)}% usado — quedan{" "}
+                    {formatBytes(usage.remainingBytes)} libres
+                  </span>
+                </div>
+                <div
+                  style={{
+                    height: 8,
+                    background: "#e9ecf1",
+                    borderRadius: 999,
+                    overflow: "hidden",
+                    marginTop: 6,
+                  }}
+                >
+                  <div
+                    style={{
+                      height: "100%",
+                      width: `${Math.min(100, usage.percentUsed * 100)}%`,
+                      background:
+                        usage.percentUsed >= 0.8 ? "#d64545" : "#2f5fdb",
+                      transition: "width 0.4s ease",
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-            <div style={{ overflowX: "auto" }}>
-              <table
-                style={{
-                  width: "100%",
-                  minWidth: 640,
-                  borderCollapse: "collapse",
-                  fontSize: 13,
-                  marginTop: 14,
-                }}
-              >
-                <thead>
-                  <tr style={{ textAlign: "left", color: "#6b7280" }}>
-                    <th style={thStyle}>Usuario</th>
-                    <th style={thStyle}>Ejecuciones</th>
-                    <th style={thStyle}>Títulos</th>
-                    <th style={thStyle}>Eventos de log</th>
-                    <th style={thStyle}>Peso estimado</th>
-                    <th style={thStyle}>% del contenido total</th>
-                    <th style={thStyle}>Riesgo</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {usage.perUser.map((row) => (
-                    <tr
-                      key={row.userId}
-                      style={{
-                        borderTop: "1px solid #dfe3e8",
-                        background: row.active ? "#e6f4ff" : undefined,
-                      }}
-                    >
-                      <td style={tdStyle}>
-                        {row.email}
-                        {row.active && (
+              <div style={{ overflowX: "auto" }}>
+                <table
+                  style={{
+                    width: "100%",
+                    minWidth: 640,
+                    borderCollapse: "collapse",
+                    fontSize: 13,
+                    marginTop: 14,
+                  }}
+                >
+                  <thead>
+                    <tr style={{ textAlign: "left", color: "#6b7280" }}>
+                      <th style={thStyle}>Usuario</th>
+                      <th style={thStyle}>Ejecuciones</th>
+                      <th style={thStyle}>Títulos</th>
+                      <th style={thStyle}>Eventos de log</th>
+                      <th style={thStyle}>Peso estimado</th>
+                      <th style={thStyle}>% del contenido total</th>
+                      <th style={thStyle}>Riesgo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {usage.perUser.map((row) => (
+                      <tr
+                        key={row.userId}
+                        style={{
+                          borderTop: "1px solid #dfe3e8",
+                          background: row.active ? "#e6f4ff" : undefined,
+                        }}
+                      >
+                        <td style={tdStyle}>
+                          {row.email}
+                          {row.active && (
+                            <span
+                              style={{
+                                marginLeft: 8,
+                                fontSize: 10,
+                                fontWeight: 700,
+                                padding: "2px 8px",
+                                borderRadius: 999,
+                                background: "#2f5fdb",
+                                color: "#fff",
+                              }}
+                            >
+                              ● En uso ahora
+                            </span>
+                          )}
+                        </td>
+                        <td style={tdStyle}>{row.runs}</td>
+                        <td style={tdStyle}>{row.titles}</td>
+                        <td style={tdStyle}>{row.events}</td>
+                        <td style={tdStyle}>
+                          {formatBytes(row.estimatedBytes)}
+                        </td>
+                        <td style={tdStyle}>
+                          {(row.shareOfContent * 100).toFixed(1)}%
+                        </td>
+                        <td style={tdStyle}>
                           <span
                             style={{
-                              marginLeft: 8,
-                              fontSize: 10,
-                              fontWeight: 700,
+                              fontSize: 11,
+                              fontWeight: 600,
                               padding: "2px 8px",
                               borderRadius: 999,
-                              background: "#2f5fdb",
-                              color: "#fff",
+                              background: riskColors[row.risk].bg,
+                              color: riskColors[row.risk].color,
                             }}
                           >
-                            ● En uso ahora
+                            {row.risk}
                           </span>
-                        )}
-                      </td>
-                      <td style={tdStyle}>{row.runs}</td>
-                      <td style={tdStyle}>{row.titles}</td>
-                      <td style={tdStyle}>{row.events}</td>
-                      <td style={tdStyle}>{formatBytes(row.estimatedBytes)}</td>
-                      <td style={tdStyle}>
-                        {(row.shareOfContent * 100).toFixed(1)}%
-                      </td>
-                      <td style={tdStyle}>
-                        <span
-                          style={{
-                            fontSize: 11,
-                            fontWeight: 600,
-                            padding: "2px 8px",
-                            borderRadius: 999,
-                            background: riskColors[row.risk].bg,
-                            color: riskColors[row.risk].color,
-                          }}
-                        >
-                          {row.risk}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
-      </section>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </section>
       )}
 
       {tab === "accesos" && (
-      <section style={sectionStyle}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: 8,
-          }}
-        >
-          <h2 style={h2Style}>Usuarios con acceso</h2>
-          <input
-            type="text"
-            placeholder="Buscar por correo, nombre o apellido..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ ...inputStyle, width: 280 }}
-          />
-        </div>
-        <div style={{ overflowX: "auto" }}>
-          <table
+        <section style={sectionStyle}>
+          <div
             style={{
-              width: "100%",
-              minWidth: 920,
-              borderCollapse: "collapse",
-              fontSize: 13,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 8,
             }}
           >
-            <thead>
-              <tr style={{ textAlign: "left", color: "#6b7280" }}>
-                <th style={thStyle}>Nombre</th>
-                <th style={thStyle}>Apellido</th>
-                <th style={thStyle}>Correo</th>
-                <th style={thStyle}>Teléfono</th>
-                <th style={thStyle}>Rol</th>
-                <th style={thStyle}>Artículos publicados</th>
-                <th style={thStyle}>Límite mensual</th>
-                <th style={thStyle}>Límite diario</th>
-                <th style={thStyle}>Creado</th>
-                <th style={thStyle}>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users
-                .filter((u) => {
-                  const q = search.trim().toLowerCase();
-                  if (!q) return true;
-                  return (
-                    u.email.toLowerCase().includes(q) ||
-                    (u.firstName ?? "").toLowerCase().includes(q) ||
-                    (u.lastName ?? "").toLowerCase().includes(q) ||
-                    (u.name ?? "").toLowerCase().includes(q)
-                  );
-                })
-                .map((u) => (
-                  <UserRowItem key={u.id} user={u} onUpdated={loadUsers} />
-                ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+            <h2 style={h2Style}>Usuarios con acceso</h2>
+            <input
+              type="text"
+              placeholder="Buscar por correo, nombre o apellido..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ ...inputStyle, width: 280 }}
+            />
+          </div>
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                minWidth: 1080,
+                borderCollapse: "collapse",
+                fontSize: 13,
+              }}
+            >
+              <thead>
+                <tr style={{ textAlign: "left", color: "#6b7280" }}>
+                  <th style={thStyle}>Nombre</th>
+                  <th style={thStyle}>Apellido</th>
+                  <th style={thStyle}>Correo</th>
+                  <th style={thStyle}>Teléfono</th>
+                  <th style={thStyle}>Rol</th>
+                  <th style={thStyle}>Artículos publicados</th>
+                  <th style={thStyle}>Límite mensual</th>
+                  <th style={thStyle}>Límite diario</th>
+                  <th style={thStyle}>Máximo por lote</th>
+                  <th style={thStyle}>Creado</th>
+                  <th style={thStyle}>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users
+                  .filter((u) => {
+                    const q = search.trim().toLowerCase();
+                    if (!q) return true;
+                    return (
+                      u.email.toLowerCase().includes(q) ||
+                      (u.firstName ?? "").toLowerCase().includes(q) ||
+                      (u.lastName ?? "").toLowerCase().includes(q) ||
+                      (u.name ?? "").toLowerCase().includes(q)
+                    );
+                  })
+                  .map((u) => (
+                    <UserRowItem key={u.id} user={u} onUpdated={loadUsers} />
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
     </div>
   );
@@ -473,6 +496,9 @@ function UserRowItem({
     user.dailyArticleLimit === null ? "" : String(user.dailyArticleLimit),
   );
   const [savingDaily, setSavingDaily] = useState(false);
+  const [batchValue, setBatchValue] = useState(String(user.maxTitlesPerBatch));
+  const [savingBatch, setSavingBatch] = useState(false);
+  const [batchLimitError, setBatchLimitError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editFirstName, setEditFirstName] = useState(user.firstName ?? "");
@@ -524,6 +550,29 @@ function UserRowItem({
     }
   }
 
+  async function handleSaveBatchLimit() {
+    setSavingBatch(true);
+    setBatchLimitError(null);
+    try {
+      const response = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          maxTitlesPerBatch: Number(batchValue),
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setBatchLimitError(data.error ?? "No se pudo guardar el máximo.");
+        return;
+      }
+      onUpdated();
+    } finally {
+      setSavingBatch(false);
+    }
+  }
+
   async function handleSaveEdit() {
     setSaving(true);
     setEditError(null);
@@ -534,7 +583,8 @@ function UserRowItem({
         body.firstName = editFirstName.trim();
       if (editLastName.trim() !== (user.lastName ?? ""))
         body.lastName = editLastName.trim();
-      if (editPhone.trim() !== (user.phone ?? "")) body.phone = editPhone.trim();
+      if (editPhone.trim() !== (user.phone ?? ""))
+        body.phone = editPhone.trim();
       if (newPassword.trim() !== "") body.newPassword = newPassword.trim();
 
       const res = await fetch("/api/admin/users", {
@@ -631,6 +681,33 @@ function UserRowItem({
               {savingDaily ? "..." : "Guardar"}
             </button>
           </div>
+        </td>
+        <td style={tdStyle}>
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <input
+              type="number"
+              min={1}
+              step={1}
+              value={batchValue}
+              onChange={(e) => setBatchValue(e.target.value)}
+              style={{ ...inputStyle, width: 86 }}
+            />
+            <button
+              onClick={handleSaveBatchLimit}
+              disabled={savingBatch}
+              style={disabledStyle(
+                { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
+                savingBatch,
+              )}
+            >
+              {savingBatch ? "..." : "Guardar"}
+            </button>
+          </div>
+          {batchLimitError && (
+            <div style={{ fontSize: 11, color: "#d64545", marginTop: 4 }}>
+              {batchLimitError}
+            </div>
+          )}
         </td>
         <td style={tdStyle}>{new Date(user.createdAt).toLocaleDateString()}</td>
         <td style={tdStyle}>
@@ -729,7 +806,7 @@ function UserRowItem({
       </tr>
       {editing && (
         <tr style={{ background: "#f7f8fa", color: "#16181d" }}>
-          <td colSpan={10} style={{ ...tdStyle, padding: "10px 8px" }}>
+          <td colSpan={11} style={{ ...tdStyle, padding: "10px 8px" }}>
             <div
               style={{
                 display: "flex",
@@ -790,7 +867,7 @@ function UserRowItem({
         </tr>
       )}
       <tr>
-        <td colSpan={10} style={{ padding: "0 8px 8px" }}>
+        <td colSpan={11} style={{ padding: "0 8px 8px" }}>
           <UserHistorial email={user.email} />
         </td>
       </tr>

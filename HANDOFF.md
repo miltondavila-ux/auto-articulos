@@ -735,6 +735,36 @@ la API de Search Console de más.
   conecte su propia cuenta de Google una vez** (acción de cada usuario, no
   de código — ver ítem 2 de "Pendiente" más abajo).
 
+## EN CURSO (1/8/2026): máximo de títulos por lote configurable por usuario
+
+Pedido del usuario: reemplazar el máximo fijo global de 20 títulos por un
+valor que el administrador pueda configurar para cada cuenta, conservando 20
+como predeterminado y validándolo obligatoriamente en servidor tanto desde
+Publicar como desde Oportunidades.
+
+- `User.maxTitlesPerBatch Int @default(20)` agregado al schema y nueva
+  migración `20260801190000_add_max_titles_per_batch`. La columna es obligatoria
+  y la migración asigna 20 a todos los usuarios existentes.
+- Administración de Usuarios permite indicar el máximo al crear una cuenta y
+  modificarlo después en la tabla de accesos. La API acepta únicamente enteros
+  positivos; no confía en las restricciones del campo HTML.
+- `POST /api/runs` obtiene el máximo del usuario autenticado y rechaza en el
+  servidor cualquier lote de Publicar que lo supere. La pantalla Publicar carga
+  el valor real mediante `/api/me`, lo muestra en el contador y desactiva el
+  botón cuando corresponde.
+- `POST /api/opportunities/execute` aplica la misma validación antes de crear un
+  `Run`. Oportunidades muestra el máximo real y desactiva la ejecución completa
+  de una categoría cuando contiene demasiados títulos; los títulos individuales
+  siguen disponibles si el máximo es al menos 1.
+- Verificaciones locales completadas: Prisma format/generate, Prettier de las
+  rutas explícitas modificadas, `npx tsc --noEmit` limpio en web y worker, y
+  build completo de Next.js exitoso. No se disparó el worker, no se ejecutó una
+  oportunidad y no se publicó ningún artículo.
+- Estado al escribir esta entrada: implementación validada localmente; pendiente
+  commit/push, aplicación de la migración en producción y deploy de Vercel. Los
+  cambios ajenos simultáneos de detección automática de sitemaps no pertenecen a
+  esta tarea y se mantendrán fuera del commit de Codex.
+
 ## Pendiente / próximos pasos
 
 0. ~~Construir módulo **Oportunidades**~~ — **HECHO** en commits `05d8d6b` y

@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   if ((type !== "group" && type !== "title") || !id) {
     return NextResponse.json({ error: "Selección inválida." }, { status: 400 });
   }
-  const [credential, activeRun] = await Promise.all([
+  const [credential, activeRun, user] = await Promise.all([
     prisma.credential.findUnique({
       where: { userId_platform: { userId, platform: "10minutesWebsite" } },
       select: { id: true },
@@ -17,6 +17,10 @@ export async function POST(request: NextRequest) {
     prisma.run.findFirst({
       where: { userId, status: { in: ["pending", "running"] } },
       select: { id: true },
+    }),
+    prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { maxTitlesPerBatch: true },
     }),
   ]);
   if (!credential) {
@@ -50,6 +54,14 @@ export async function POST(request: NextRequest) {
   if (selected.length === 0) {
     return NextResponse.json(
       { error: "No hay títulos para ejecutar." },
+      { status: 400 },
+    );
+  }
+  if (selected.length > user.maxTitlesPerBatch) {
+    return NextResponse.json(
+      {
+        error: `Puedes ejecutar como máximo ${user.maxTitlesPerBatch} títulos por lote (esta categoría tiene ${selected.length}). Elimina algunos títulos o pide al administrador que aumente tu máximo.`,
+      },
       { status: 400 },
     );
   }
