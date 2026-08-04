@@ -1,14 +1,15 @@
 import type { ReactNode } from "react";
 import DashboardNav from "@/components/DashboardNav";
 import LogoutButton from "@/components/LogoutButton";
-import { getCurrentUser } from "@/lib/current-user";
+import StopImpersonationButton from "@/components/StopImpersonationButton";
+import { displayName, getSessionContext } from "@/lib/current-user";
 
 export default async function DashboardLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  const user = await getCurrentUser();
+  const { user, actingAdmin } = await getSessionContext();
 
   return (
     <main
@@ -45,17 +46,53 @@ export default async function DashboardLayout({
             alignItems: "center",
             gap: 12,
             flexWrap: "wrap",
+            justifyContent: "flex-end",
           }}
         >
-          <span
-            style={{
-              fontSize: 12,
-              color: "#a8b3c7",
-              wordBreak: "break-all",
-            }}
-          >
-            {user.email}
-          </span>
+          {actingAdmin ? (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-end",
+                gap: 2,
+                maxWidth: "100%",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 11,
+                  color: "#a8b3c7",
+                  wordBreak: "break-word",
+                  textAlign: "right",
+                }}
+              >
+                {displayName(actingAdmin)}
+              </span>
+              <span
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: "#ffd98a",
+                  wordBreak: "break-word",
+                  textAlign: "right",
+                }}
+              >
+                Actuando como: {displayName(user)}
+              </span>
+            </div>
+          ) : (
+            <span
+              style={{
+                fontSize: 12,
+                color: "#a8b3c7",
+                wordBreak: "break-word",
+              }}
+            >
+              {displayName(user)}
+            </span>
+          )}
+          {actingAdmin && <StopImpersonationButton />}
           <LogoutButton />
         </div>
       </div>

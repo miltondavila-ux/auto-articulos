@@ -870,6 +870,10 @@ function UserRowItem({
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [impersonating, setImpersonating] = useState(false);
+  const [impersonateError, setImpersonateError] = useState<string | null>(
+    null,
+  );
 
   async function handleCopyCredentials() {
     const text = `Correo electrónico: ${user.email}\nClave: ${user.currentPassword ?? "(no disponible, resetéala con Editar)"}\nAcceso a la plataforma: ${PLATFORM_URL}`;
@@ -995,6 +999,26 @@ function UserRowItem({
       onUpdated();
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleImpersonate() {
+    setImpersonating(true);
+    setImpersonateError(null);
+    try {
+      const res = await fetch("/api/admin/impersonate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setImpersonateError(data.error ?? "No se pudo acceder a la cuenta.");
+        return;
+      }
+      window.location.href = "/dashboard";
+    } finally {
+      setImpersonating(false);
     }
   }
 
@@ -1169,6 +1193,28 @@ function UserRowItem({
         <td style={tdStyle}>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             <button
+              onClick={handleImpersonate}
+              disabled={isCurrentUser || user.role === "admin" || impersonating}
+              title={
+                isCurrentUser
+                  ? "Ya estás en tu propia cuenta."
+                  : user.role === "admin"
+                    ? "No puedes acceder a la cuenta de otro administrador."
+                    : undefined
+              }
+              style={disabledStyle(
+                {
+                  ...secondaryButtonStyle,
+                  padding: "4px 10px",
+                  fontSize: 12,
+                  color: "#2f5fdb",
+                },
+                isCurrentUser || user.role === "admin" || impersonating,
+              )}
+            >
+              {impersonating ? "Entrando..." : "Acceder como"}
+            </button>
+            <button
               onClick={handleCopyCredentials}
               disabled={!user.currentPassword}
               title={
@@ -1256,6 +1302,11 @@ function UserRowItem({
           {deleteError && (
             <div style={{ fontSize: 11, color: "#d64545", marginTop: 4 }}>
               {deleteError}
+            </div>
+          )}
+          {impersonateError && (
+            <div style={{ fontSize: 11, color: "#d64545", marginTop: 4 }}>
+              {impersonateError}
             </div>
           )}
         </td>
