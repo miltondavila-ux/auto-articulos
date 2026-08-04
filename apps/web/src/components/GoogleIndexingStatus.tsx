@@ -36,23 +36,50 @@ export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
     return (
       <div style={{ marginTop: 7, fontSize: 12 }}>
         <div style={{ color: "#6b7280" }}>
-          Google Search Console no está conectado para esta cuenta — el sitemap
-          no se incluirá en el envío diario.
+          Google Search Console no estaba conectado cuando se publicó este
+          artículo.
         </div>
-        <a
-          href="/dashboard/configuracion"
-          style={{ color: "#1358a3", fontWeight: 600 }}
-        >
-          Conectar Google Search Console en Configuración
-        </a>
+        {message && (
+          <div style={{ color: "#6b7280", marginTop: 2 }}>{message}</div>
+        )}
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 5 }}>
+          <a
+            href="/dashboard/configuracion"
+            style={{ color: "#1358a3", fontWeight: 600 }}
+          >
+            Conectar Google Search Console
+          </a>
+          {/* Si el usuario conectó Google Search Console DESPUÉS de que este
+              artículo se publicara, el estado queda congelado en
+              "not_configured" para siempre — este botón es la única forma
+              de volver a consultarlo sin ayuda de soporte. */}
+          <button
+            type="button"
+            onClick={check}
+            disabled={checking}
+            style={{
+              border: 0,
+              padding: 0,
+              background: "transparent",
+              color: "#1358a3",
+              cursor: checking ? "default" : "pointer",
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
+            {checking ? "Consultando Google..." : "¿Ya la conectaste? Revisar de nuevo"}
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
     <div style={{ marginTop: 7, fontSize: 12 }}>
-      <div style={{ color: "#1358a3" }}>
-        Sitemap: envío diario programado a las 12:00 a. m.
+      <div style={{ color: title.lastSitemapSentAt ? "#1e8a4b" : "#1358a3" }}>
+        {title.lastSitemapSentAt
+          ? `✓ Sitemap enviado a Google el ${new Date(title.lastSitemapSentAt).toLocaleString("es-US")}`
+          : "Sitemap: envío diario programado a las 12:00 a. m. — todavía no se confirmó un envío para este artículo."}
       </div>
       <div
         style={{

@@ -199,6 +199,10 @@ model Title {
   googleIndexingStatus  String?
   googleIndexingMessage String?
   googleIndexingAt      DateTime?
+  // Se marca solo cuando el envío diario del sitemap a Google Search
+  // Console fue confirmado exitoso (respuesta ok de la API) — nunca en un
+  // intento fallido, pendiente o sin verificar.
+  lastSitemapSentAt     DateTime?
 
   run    Run          @relation(fields: [runId], references: [id], onDelete: Cascade)
   events TitleEvent[]

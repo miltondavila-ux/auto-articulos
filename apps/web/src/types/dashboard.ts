@@ -22,6 +22,7 @@ export interface TitleRow {
   googleIndexingStatus: string | null;
   googleIndexingMessage: string | null;
   googleIndexingAt: string | null;
+  lastSitemapSentAt: string | null;
   events: TitleEventRow[];
 }
 

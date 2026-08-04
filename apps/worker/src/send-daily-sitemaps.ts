@@ -37,6 +37,32 @@ async function submitForUser(integration: {
       integration.siteUrl,
       integration.sitemapUrl,
     );
+
+    // Solo se llega aquí si submitGoogleSitemap confirmó una respuesta ok de
+    // la API de Search Console (si no, lanza y cae al catch de abajo). Recién
+    // ahí se marca cada artículo publicado como incluido en este envío —
+    // nunca en un intento fallido, pendiente o sin verificar.
+    const publishedTitles = await prisma.title.findMany({
+      where: { run: { userId: integration.userId }, status: "success" },
+      select: { id: true },
+    });
+    if (publishedTitles.length > 0) {
+      const sentAt = new Date();
+      await prisma.$transaction([
+        prisma.title.updateMany({
+          where: { id: { in: publishedTitles.map((t) => t.id) } },
+          data: { lastSitemapSentAt: sentAt },
+        }),
+        prisma.titleEvent.createMany({
+          data: publishedTitles.map((t) => ({
+            titleId: t.id,
+            message: "Sitemap enviado a Google Search Console (envío diario).",
+            createdAt: sentAt,
+          })),
+        }),
+      ]);
+    }
+
     console.log(`Sitemap enviado para el usuario ${integration.userId}.`);
     return { userId: integration.userId, ok: true };
   } catch (error) {
