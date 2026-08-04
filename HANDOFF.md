@@ -919,6 +919,44 @@ que la cuenta principal.
 - No se cambió el rol real de ninguna cuenta durante la validación. El usuario
   puede hacerlo desde Usuarios → Accesos a usuarios → Rol → Guardar rol.
 
+## RESUELTO (2/8/2026): servidor .net vs .site por usuario (fotos rotas en Europa)
+
+Reportado por el usuario: usuarios europeos (ej. Lidia Capdevila) tienen su
+cuenta real en `10minutesWebsite.site`, no `.net`. Artículo de ejemplo sin
+foto:
+`https://www.lidiacapdevila.com/noticias/estrategias-clave-para-invertir-en-propiedades-en-barcelona`
+(`article-86920-1.webp?mtime=null` — imagen nunca guardada de verdad, aunque
+el log decía "Imagen generada." sin error).
+
+Causa raíz: `BASE_URL` estaba harcodeado a `.net` en
+`apps/worker/src/automation/10minutesWebsite.ts`. El login y la creación de
+artículo funcionan igual en ambos dominios, pero la imagen se ve bien en la
+vista previa (dentro de la sesión `.net`) y nunca queda persistida en el
+storage real cuando la cuenta vive en `.site`.
+
+- `User.platformDomain String @default("net")` — migración
+  `20260802200000_add_user_platform_domain`, aplicada en producción. Los 55
+  usuarios existentes quedaron en `"net"` (sin cambio de comportamiento).
+  Lidia se actualizó manualmente a `"site"`.
+- `10minutesWebsite.ts`: `BASE_URL` fijo reemplazado por
+  `resolveBaseUrl(platformDomain)`, pasado como parámetro a través de
+  `publishArticle()`/`fetchCategories()` → `login()`/`createArticleDraft()`/
+  `saveAndGetUrl()`. `TenMinutesWebsiteCredentials` ahora incluye
+  `platformDomain?: string | null`.
+- `queue.ts`/`categorySync.ts`: leen `user.platformDomain` (via `include`/
+  query adicional) y lo pasan en las credenciales.
+- Dropdown "Servidor de 10minutesWebsite" (`.net`/`.site`) en Administración
+  → Creación de usuarios y en cada fila de Accesos a usuarios (guardado
+  inmediato, mismo patrón que el selector de Rol).
+- `tsc --noEmit` limpio en `apps/worker` y `apps/web`. Commit `aef65c2`
+  pusheado y desplegado a Vercel Production.
+- **Pendiente de confirmar**: que el próximo artículo real de Lidia (con
+  `platformDomain = "site"`) publique la imagen correctamente. No se disparó
+  ninguna publicación de prueba — corresponde al usuario.
+- Si aparecen más usuarios europeos con el mismo síntoma (imagen con
+  `mtime=null` en el HTML publicado), el arreglo es simplemente cambiarles
+  el dropdown a `.site` desde Administración — no hace falta tocar código.
+
 ## Pendiente / próximos pasos
 
 0. ~~Construir módulo **Oportunidades**~~ — **HECHO** en commits `05d8d6b` y
