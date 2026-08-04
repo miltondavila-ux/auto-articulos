@@ -9,6 +9,12 @@ export interface TenMinutesWebsiteCredentials {
   // vivir en 10minutesWebsite.site en vez de .net; si no se especifica,
   // se usa .net (comportamiento original, sin cambios para nadie).
   platformDomain?: string | null;
+  // "es" o "en" — ver User.contentLanguage. Idioma en el que la IA debe
+  // redactar el artículo, independiente del idioma de la interfaz de la
+  // cuenta (ver bilingual() más abajo, que es lo que arregla los
+  // selectores de botón rotos por ESE otro problema). Por defecto "es",
+  // sin cambios para nadie existente.
+  contentLanguage?: string | null;
 }
 
 export interface PublishResult {
@@ -47,6 +53,43 @@ const IMAGE_GENERATION_TIMEOUT_MS = 90_000;
 const SAVE_VERIFICATION_TIMEOUT_MS = 90_000;
 
 /**
+ * Encontrado en producción el 4/8/2026: cuando la cuenta de 10minutesWebsite
+ * tiene el idioma de la interfaz en inglés (no todos los usuarios la usan en
+ * español), los botones de este flujo cambian de texto y los selectores por
+ * texto en español dejaban de encontrarlos, colgando el artículo con
+ * "Timeout ... waiting for getByRole('button', { name: 'Usar ChatGPT' })".
+ * Se agregan las variantes en inglés como ALTERNATIVA, nunca como reemplazo:
+ * si la traducción real en inglés del sitio no coincide exactamente con la
+ * que se adivinó acá, el comportamiento para esa cuenta queda igual que
+ * antes (no se rompe nada para las cuentas en español, que son la mayoría).
+ */
+function bilingual(...texts: string[]): RegExp {
+  const escaped = texts.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  return new RegExp(escaped.join("|"), "i");
+}
+
+const CHATGPT_MODAL_TITLE_TEXTS = [
+  "Generador de artículos usando Inteligencia Artificial",
+  "AI Article Generator",
+  "Article Generator using Artificial Intelligence",
+];
+const TEXT_USAR_CHATGPT = bilingual("Usar ChatGPT", "Use ChatGPT");
+const TEXT_CHATGPT_MODAL_TITLE = bilingual(...CHATGPT_MODAL_TITLE_TEXTS);
+const TEXT_GENERAR = bilingual("Generar", "Generate");
+const TEXT_USAR_CONTENIDO = bilingual("Usar contenido", "Use content");
+const TEXT_GUARDAR_CAMBIOS = bilingual("Guardar cambios", "Save changes");
+const TEXT_GENERAR_IMAGEN = bilingual("Generar imagen", "Generate image");
+const TEXT_CREACION_IMAGENES = bilingual(
+  "Creación de imágenes con inteligencia artificial",
+  "Image creation with artificial intelligence",
+  "AI image creation",
+);
+const TEXT_AVISO_IMAGENES_IA = bilingual(
+  "Generación de imágenes mediante IA",
+  "AI image generation",
+);
+
+/**
  * Automatiza la creación y publicación de un artículo en 10minutesWebsite a
  * partir de un título, usando las credenciales guardadas del usuario.
  * `onStep` se llama en cada paso relevante para poder mostrar una línea de
@@ -77,6 +120,7 @@ export async function publishArticle(
       title,
       categoryExternalId,
       disableIndexing,
+      credentials.contentLanguage,
       onStep,
     );
     await generateImage(page, finalTitle, summary, onStep);
@@ -199,6 +243,7 @@ async function createArticleDraft(
   title: string,
   categoryExternalId: string,
   disableIndexing: boolean,
+  contentLanguage: string | null | undefined,
   onStep: OnStep,
 ): Promise<{ summary: string; contentHtml: string; finalTitle: string }> {
   await onStep("Abriendo formulario de creación de artículo...");
@@ -280,19 +325,29 @@ async function createArticleDraft(
     await onStep("Indexación en buscadores desactivada para este artículo.");
   }
 
-  await page.getByRole("button", { name: "Usar ChatGPT" }).click();
+  await page.getByRole("button", { name: TEXT_USAR_CHATGPT }).click();
 
   // Selector específico: la página también tiene un widget de chat en vivo
   // ("Lucy") con role="dialog" oculto, así que no basta con ".modal, [role='dialog']".
   const dialog = page.locator(".modal", {
-    hasText: "Generador de artículos usando Inteligencia Artificial",
+    hasText: TEXT_CHATGPT_MODAL_TITLE,
   });
   await dialog.waitFor({ state: "visible", timeout: NAV_TIMEOUT_MS });
 
+  // Pedido explícito del usuario (4/8/2026): el admin puede elegir el idioma
+  // de redacción del artículo desde Auto Artículos (User.contentLanguage,
+  // "es" por defecto). En vez de depender de un selector de idioma dentro de
+  // este modal (cuyo selector real no se pudo verificar sin acceso en vivo
+  // al sitio), se le indica el idioma directamente en el mismo prompt que ya
+  // se le manda a la IA — no cambia nada para "es" (comportamiento actual).
   const ideaTextarea = dialog.locator("textarea").first();
-  await ideaTextarea.fill(title);
+  const idea =
+    contentLanguage === "en"
+      ? `Write the entire article in English (not Spanish): ${title}`
+      : title;
+  await ideaTextarea.fill(idea);
 
-  await dialog.getByRole("button", { name: "Generar" }).click();
+  await dialog.getByRole("button", { name: TEXT_GENERAR }).click();
   await onStep(
     "Generando contenido con inteligencia artificial (puede tardar un minuto)...",
   );
@@ -301,20 +356,19 @@ async function createArticleDraft(
   // Esperamos a que el campo Título dentro del modal tenga texto real
   // (no el placeholder "Please wait we are getting the data...").
   await page.waitForFunction(
-    () => {
+    (titleTexts) => {
       const chatGptDialog = Array.from(
         document.querySelectorAll(".modal"),
-      ).find((el) =>
-        (el.textContent ?? "").includes(
-          "Generador de artículos usando Inteligencia Artificial",
-        ),
-      );
+      ).find((el) => {
+        const text = el.textContent ?? "";
+        return titleTexts.some((t) => text.includes(t));
+      });
       if (!chatGptDialog) return false;
       const fields = Array.from(chatGptDialog.querySelectorAll("textarea"));
       const last = fields[fields.length - 1] as HTMLTextAreaElement | undefined;
       return Boolean(last && last.value && !last.value.includes("Please wait"));
     },
-    undefined,
+    CHATGPT_MODAL_TITLE_TEXTS,
     { timeout: CONTENT_GENERATION_TIMEOUT_MS },
   );
   await onStep("Contenido generado. Aplicándolo al artículo...");
@@ -337,7 +391,7 @@ async function createArticleDraft(
       .catch(() => "")) || title;
   await onStep(`Título asignado por la IA: "${finalTitle}"`);
 
-  await dialog.getByRole("button", { name: "Usar contenido" }).click();
+  await dialog.getByRole("button", { name: TEXT_USAR_CONTENIDO }).click();
   await dialog.waitFor({ state: "hidden", timeout: NAV_TIMEOUT_MS });
 
   // Bug real encontrado el 29/7/2026: la IA a veces escribe el resumen por
@@ -377,14 +431,12 @@ const IMAGE_SECTION_OPEN_ATTEMPTS = 3;
  */
 async function openImageSection(page: Page) {
   const generarImagenBtn = page.locator("button.aigenerationbutton:visible", {
-    hasText: "Generar imagen",
+    hasText: TEXT_GENERAR_IMAGEN,
   });
 
   for (let attempt = 1; attempt <= IMAGE_SECTION_OPEN_ATTEMPTS; attempt++) {
     await page
-      .getByText("Creación de imágenes con inteligencia artificial", {
-        exact: false,
-      })
+      .getByText(TEXT_CREACION_IMAGENES)
       .first()
       .click()
       .catch(() => {});
@@ -425,7 +477,7 @@ async function dismissImageGenerationDisclaimer(
   onStep: OnStep,
 ): Promise<void> {
   const dialog = page.locator(".modal", {
-    hasText: "Generación de imágenes mediante IA",
+    hasText: TEXT_AVISO_IMAGENES_IA,
   });
   const appeared = await dialog
     .first()
@@ -813,7 +865,7 @@ async function saveAndGetUrl(
   onStep: OnStep,
 ): Promise<string | null> {
   await onStep("Guardando y publicando el artículo...");
-  const saveBtn = page.getByRole("button", { name: "Guardar cambios" }).first();
+  const saveBtn = page.getByRole("button", { name: TEXT_GUARDAR_CAMBIOS }).first();
   await saveBtn.click();
   await page
     .waitForLoadState("networkidle", { timeout: NAV_TIMEOUT_MS })
@@ -829,7 +881,7 @@ async function saveAndGetUrl(
   // real del botón + cualquier texto tipo alerta/error visible en ese
   // momento, como evento normal (no error) para verlo en el Historial.
   const stillOnForm = await page
-    .getByRole("button", { name: "Guardar cambios" })
+    .getByRole("button", { name: TEXT_GUARDAR_CAMBIOS })
     .first()
     .isVisible()
     .catch(() => false);

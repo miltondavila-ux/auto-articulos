@@ -38,6 +38,12 @@ model User {
   // servidor real de la cuenta. "net" (valor por defecto, sin cambios para
   // nadie existente) o "site".
   platformDomain           String    @default("net")
+  // Idioma en el que la IA debe redactar los artículos de este usuario en
+  // 10minutesWebsite (independiente del idioma de la interfaz de esa
+  // cuenta, que es lo que causaba selectores de botón rotos — ver
+  // apps/worker/src/automation/10minutesWebsite.ts, 4/8/2026). "es" por
+  // defecto, sin cambios para nadie existente.
+  contentLanguage          String    @default("es")
   createdAt                DateTime  @default(now())
   // Bloqueo entre procesos (no solo entre "lanes" del mismo proceso): con
   // varios workers de GitHub Actions corriendo en paralelo (31/7/2026,

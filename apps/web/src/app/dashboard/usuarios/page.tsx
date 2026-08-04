@@ -33,6 +33,7 @@ interface UserRow {
   dailyArticleLimit: number | null;
   maxTitlesPerBatch: number;
   platformDomain: string;
+  contentLanguage: string;
   createdAt: string;
   articlesPublished: number;
   currentPassword: string | null;
@@ -174,6 +175,7 @@ export default function UsuariosPage() {
   const [dailyArticleLimit, setDailyArticleLimit] = useState("95");
   const [maxTitlesPerBatch, setMaxTitlesPerBatch] = useState("20");
   const [platformDomain, setPlatformDomain] = useState<"net" | "site">("net");
+  const [contentLanguage, setContentLanguage] = useState<"es" | "en">("es");
   const [creating, setCreating] = useState(false);
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [loadingUsage, setLoadingUsage] = useState(false);
@@ -261,6 +263,7 @@ export default function UsuariosPage() {
           dailyArticleLimit: Number(dailyArticleLimit),
           maxTitlesPerBatch: Number(maxTitlesPerBatch),
           platformDomain,
+          contentLanguage,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -281,6 +284,7 @@ export default function UsuariosPage() {
       setDailyArticleLimit("95");
       setMaxTitlesPerBatch("20");
       setPlatformDomain("net");
+      setContentLanguage("es");
       setBanner({ type: "info", text: `Usuario ${data.user.email} creado.` });
       loadUsers();
     } finally {
@@ -686,6 +690,19 @@ export default function UsuariosPage() {
                 <option value="site">10minuteswebsite.site</option>
               </select>
             </label>
+            <label style={createFieldStyle}>
+              Idioma de generación de contenido
+              <select
+                value={contentLanguage}
+                onChange={(e) =>
+                  setContentLanguage(e.target.value as "es" | "en")
+                }
+                style={inputStyle}
+              >
+                <option value="es">Español</option>
+                <option value="en">Inglés</option>
+              </select>
+            </label>
             <button
               type="submit"
               disabled={creating}
@@ -983,6 +1000,10 @@ function UserCard({
     user.platformDomain === "site" ? "site" : "net",
   );
   const [savingDomain, setSavingDomain] = useState(false);
+  const [languageValue, setLanguageValue] = useState<"es" | "en">(
+    user.contentLanguage === "en" ? "en" : "es",
+  );
+  const [savingLanguage, setSavingLanguage] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editFirstName, setEditFirstName] = useState(user.firstName ?? "");
@@ -1092,6 +1113,23 @@ function UserCard({
       onUpdated();
     } finally {
       setSavingDomain(false);
+    }
+  }
+
+  async function handleSaveLanguage() {
+    setSavingLanguage(true);
+    try {
+      await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          contentLanguage: languageValue,
+        }),
+      });
+      onUpdated();
+    } finally {
+      setSavingLanguage(false);
     }
   }
 
@@ -1381,6 +1419,39 @@ function UserCard({
                 )}
               >
                 {savingDomain ? "..." : "Guardar"}
+              </button>
+            </div>
+          </Field>
+
+          <Field label="Idioma de contenido">
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <select
+                value={languageValue}
+                onChange={(e) =>
+                  setLanguageValue(e.target.value as "es" | "en")
+                }
+                disabled={savingLanguage}
+                aria-label={`Idioma de contenido de ${user.email}`}
+                style={{ ...inputStyle, width: 96 }}
+              >
+                <option value="es">Español</option>
+                <option value="en">Inglés</option>
+              </select>
+              <button
+                onClick={handleSaveLanguage}
+                disabled={
+                  savingLanguage ||
+                  languageValue ===
+                    (user.contentLanguage === "en" ? "en" : "es")
+                }
+                style={disabledStyle(
+                  { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
+                  savingLanguage ||
+                    languageValue ===
+                      (user.contentLanguage === "en" ? "en" : "es"),
+                )}
+              >
+                {savingLanguage ? "..." : "Guardar"}
               </button>
             </div>
           </Field>
