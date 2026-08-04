@@ -6,6 +6,12 @@
     "apps/*",
     "packages/*"
   ],
+  "overrides": {
+    "@tremor/react": {
+      "react": "^19.0.0",
+      "react-dom": "^19.0.0"
+    }
+  },
   "scripts": {
     "dev:web": "npm run dev --workspace=apps/web",
     "dev:worker": "npm run dev --workspace=apps/worker",
