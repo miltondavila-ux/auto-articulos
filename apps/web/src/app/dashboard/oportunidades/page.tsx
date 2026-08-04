@@ -360,6 +360,7 @@ export default function OportunidadesPage() {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
+                  flexWrap: "wrap",
                   gap: 16,
                   padding: 12,
                   border: "1px solid #e5e8ec",
@@ -367,7 +368,7 @@ export default function OportunidadesPage() {
                   background: "#f8fafc",
                 }}
               >
-                <div>
+                <div style={{ minWidth: 200, flex: "1 1 200px" }}>
                   <strong style={{ fontSize: 14 }}>
                     {index + 1}. {title.text}
                   </strong>
