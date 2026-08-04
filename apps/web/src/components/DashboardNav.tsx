@@ -35,6 +35,8 @@ export default function DashboardNav() {
         gap: 4,
         marginTop: 20,
         borderBottom: "1px solid rgba(232, 236, 245, 0.15)",
+        overflowX: "auto",
+        WebkitOverflowScrolling: "touch",
       }}
     >
       {tabs.map((tab) => {
@@ -46,6 +48,8 @@ export default function DashboardNav() {
           textDecoration: "none",
           color: active ? "#e8ecf5" : "#a8b3c7",
           borderBottom: active ? "2px solid #4dd8e8" : "2px solid transparent",
+          whiteSpace: "nowrap",
+          flexShrink: 0,
         };
         return (
           <Link key={tab.href} href={tab.href} style={style}>

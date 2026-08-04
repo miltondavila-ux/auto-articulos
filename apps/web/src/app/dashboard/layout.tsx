@@ -11,24 +11,51 @@ export default async function DashboardLayout({
   const user = await getCurrentUser();
 
   return (
-    <main style={{ maxWidth: 1400, margin: "0 auto", padding: "32px 40px" }}>
+    <main
+      className="dashboard-main"
+      style={{
+        maxWidth: 1400,
+        margin: "0 auto",
+        padding: "24px 16px",
+        boxSizing: "border-box",
+      }}
+    >
       <style>{`
         @media (min-width: 700px) {
           .mobile-notice { display: none; }
+          .dashboard-main { padding: 32px 40px !important; }
         }
       `}</style>
       <div
+        className="dashboard-header"
         style={{
           display: "flex",
+          flexWrap: "wrap",
           justifyContent: "space-between",
           alignItems: "center",
+          gap: 10,
         }}
       >
-        <h1 style={{ fontSize: 22, margin: 0, color: "#e8ecf5" }}>
+        <h1 style={{ fontSize: 20, margin: 0, color: "#e8ecf5" }}>
           Auto Artículos
         </h1>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 13, color: "#a8b3c7" }}>{user.email}</span>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <span
+            style={{
+              fontSize: 12,
+              color: "#a8b3c7",
+              wordBreak: "break-all",
+            }}
+          >
+            {user.email}
+          </span>
           <LogoutButton />
         </div>
       </div>
