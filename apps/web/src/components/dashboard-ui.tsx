@@ -24,6 +24,10 @@ export const inputStyle: CSSProperties = {
   background: "#f7f8fa",
   color: "#16181d",
   fontSize: 14,
+  // Sin esto, cualquier width/minWidth fijo (usados en varios lugares) le
+  // suma el padding/borde encima y desborda en pantallas angostas.
+  boxSizing: "border-box",
+  maxWidth: "100%",
 };
 
 export const buttonStyle: CSSProperties = {

@@ -164,7 +164,7 @@ export default function PublicarPage() {
           value={selectedCategoryId}
           onChange={(e) => setSelectedCategoryId(e.target.value)}
           disabled={hasActiveRun || categories.length === 0}
-          style={{ ...inputStyle, minWidth: 260 }}
+          style={{ ...inputStyle, width: "100%" }}
         >
           <option value="">
             {categories.length === 0
