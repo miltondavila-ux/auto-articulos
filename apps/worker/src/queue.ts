@@ -26,7 +26,7 @@ export async function processNext(): Promise<boolean> {
   const candidates = await prisma.run.findMany({
     where: { status: "running" },
     orderBy: { createdAt: "asc" },
-    include: { category: true },
+    include: { category: true, user: { select: { platformDomain: true } } },
     // Hay ~60 usuarios objetivo y hasta 40 lanes concurrentes. Limitar la
     // búsqueda a 20 hacía que todos compitieran por el mismo subconjunto y no
     // vieran trabajo válido más abajo en la cola.
@@ -51,7 +51,9 @@ export async function processNext(): Promise<boolean> {
 }
 
 async function processRunTitle(
-  run: Prisma.RunGetPayload<{ include: { category: true } }>,
+  run: Prisma.RunGetPayload<{
+    include: { category: true; user: { select: { platformDomain: true } } };
+  }>,
 ): Promise<boolean> {
   const nextTitle = await prisma.title.findFirst({
     where: { runId: run.id, status: "pending" },
@@ -115,7 +117,7 @@ async function processRunTitle(
     const username = decryptSecret(credential.encryptedUsername);
     const password = decryptSecret(credential.encryptedPassword);
     const result = await publishArticle(
-      { username, password },
+      { username, password, platformDomain: run.user.platformDomain },
       nextTitle.text,
       run.category.externalId,
       run.disableIndexing,

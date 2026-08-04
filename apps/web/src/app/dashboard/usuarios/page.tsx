@@ -26,6 +26,7 @@ interface UserRow {
   monthlyArticleLimit: number | null;
   dailyArticleLimit: number | null;
   maxTitlesPerBatch: number;
+  platformDomain: string;
   createdAt: string;
   articlesPublished: number;
   currentPassword: string | null;
@@ -87,6 +88,7 @@ export default function UsuariosPage() {
   const [monthlyArticleLimit, setMonthlyArticleLimit] = useState("300");
   const [dailyArticleLimit, setDailyArticleLimit] = useState("95");
   const [maxTitlesPerBatch, setMaxTitlesPerBatch] = useState("20");
+  const [platformDomain, setPlatformDomain] = useState<"net" | "site">("net");
   const [creating, setCreating] = useState(false);
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [loadingUsage, setLoadingUsage] = useState(false);
@@ -145,6 +147,7 @@ export default function UsuariosPage() {
           monthlyArticleLimit: Number(monthlyArticleLimit),
           dailyArticleLimit: Number(dailyArticleLimit),
           maxTitlesPerBatch: Number(maxTitlesPerBatch),
+          platformDomain,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -164,6 +167,7 @@ export default function UsuariosPage() {
       setMonthlyArticleLimit("300");
       setDailyArticleLimit("95");
       setMaxTitlesPerBatch("20");
+      setPlatformDomain("net");
       setBanner({ type: "info", text: `Usuario ${data.user.email} creado.` });
       loadUsers();
     } finally {
@@ -556,6 +560,19 @@ export default function UsuariosPage() {
                 style={inputStyle}
               />
             </label>
+            <label style={createFieldStyle}>
+              Servidor de 10minutesWebsite
+              <select
+                value={platformDomain}
+                onChange={(e) =>
+                  setPlatformDomain(e.target.value as "net" | "site")
+                }
+                style={inputStyle}
+              >
+                <option value="net">10minuteswebsite.net</option>
+                <option value="site">10minuteswebsite.site</option>
+              </select>
+            </label>
             <button
               type="submit"
               disabled={creating}
@@ -765,7 +782,7 @@ export default function UsuariosPage() {
             <table
               style={{
                 width: "100%",
-                minWidth: 1240,
+                minWidth: 1360,
                 borderCollapse: "collapse",
                 fontSize: 13,
               }}
@@ -781,6 +798,7 @@ export default function UsuariosPage() {
                   <th style={thStyle}>Límite mensual</th>
                   <th style={thStyle}>Límite diario</th>
                   <th style={thStyle}>Máximo por lote</th>
+                  <th style={thStyle}>Servidor</th>
                   <th style={thStyle}>Creado</th>
                   <th style={thStyle}>Acciones</th>
                 </tr>
@@ -836,6 +854,10 @@ function UserRowItem({
   const [roleValue, setRoleValue] = useState<"admin" | "user">(user.role);
   const [savingRole, setSavingRole] = useState(false);
   const [roleError, setRoleError] = useState<string | null>(null);
+  const [domainValue, setDomainValue] = useState<"net" | "site">(
+    user.platformDomain === "site" ? "site" : "net",
+  );
+  const [savingDomain, setSavingDomain] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editFirstName, setEditFirstName] = useState(user.firstName ?? "");
@@ -927,6 +949,20 @@ function UserRowItem({
       onUpdated();
     } finally {
       setSavingRole(false);
+    }
+  }
+
+  async function handleSaveDomain() {
+    setSavingDomain(true);
+    try {
+      await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, platformDomain: domainValue }),
+      });
+      onUpdated();
+    } finally {
+      setSavingDomain(false);
     }
   }
 
@@ -1098,6 +1134,37 @@ function UserRowItem({
             </div>
           )}
         </td>
+        <td style={tdStyle}>
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <select
+              value={domainValue}
+              onChange={(e) =>
+                setDomainValue(e.target.value as "net" | "site")
+              }
+              disabled={savingDomain}
+              aria-label={`Servidor de ${user.email}`}
+              style={{ ...inputStyle, width: 96 }}
+            >
+              <option value="net">.net</option>
+              <option value="site">.site</option>
+            </select>
+            <button
+              onClick={handleSaveDomain}
+              disabled={
+                savingDomain ||
+                domainValue === (user.platformDomain === "site" ? "site" : "net")
+              }
+              style={disabledStyle(
+                { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
+                savingDomain ||
+                  domainValue ===
+                    (user.platformDomain === "site" ? "site" : "net"),
+              )}
+            >
+              {savingDomain ? "..." : "Guardar"}
+            </button>
+          </div>
+        </td>
         <td style={tdStyle}>{new Date(user.createdAt).toLocaleDateString()}</td>
         <td style={tdStyle}>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -1195,7 +1262,7 @@ function UserRowItem({
       </tr>
       {editing && (
         <tr style={{ background: "#f7f8fa", color: "#16181d" }}>
-          <td colSpan={11} style={{ ...tdStyle, padding: "10px 8px" }}>
+          <td colSpan={12} style={{ ...tdStyle, padding: "10px 8px" }}>
             <div
               style={{
                 display: "flex",
@@ -1256,7 +1323,7 @@ function UserRowItem({
         </tr>
       )}
       <tr>
-        <td colSpan={11} style={{ padding: "0 8px 8px" }}>
+        <td colSpan={12} style={{ padding: "0 8px 8px" }}>
           <UserHistorial email={user.email} />
         </td>
       </tr>

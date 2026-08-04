@@ -34,16 +34,26 @@ export async function processNextCategorySync(): Promise<boolean> {
   });
 
   try {
-    const credential = await prisma.credential.findUnique({
-      where: { userId_platform: { userId: job.userId, platform: "10minutesWebsite" } },
-    });
+    const [credential, user] = await Promise.all([
+      prisma.credential.findUnique({
+        where: { userId_platform: { userId: job.userId, platform: "10minutesWebsite" } },
+      }),
+      prisma.user.findUnique({
+        where: { id: job.userId },
+        select: { platformDomain: true },
+      }),
+    ]);
     if (!credential) {
       throw new Error("Primero debes guardar tus credenciales de 10minutesWebsite.");
     }
 
     const username = decryptSecret(credential.encryptedUsername);
     const password = decryptSecret(credential.encryptedPassword);
-    const remoteCategories = await fetchCategories({ username, password });
+    const remoteCategories = await fetchCategories({
+      username,
+      password,
+      platformDomain: user?.platformDomain,
+    });
 
     for (const cat of remoteCategories) {
       await prisma.category.upsert({

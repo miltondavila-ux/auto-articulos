@@ -51,6 +51,7 @@ export async function GET() {
         monthlyArticleLimit: true,
         dailyArticleLimit: true,
         maxTitlesPerBatch: true,
+        platformDomain: true,
         createdAt: true,
         initialPasswordEncrypted: true,
       },
@@ -104,6 +105,7 @@ export async function PATCH(request: NextRequest) {
     monthlyArticleLimit,
     dailyArticleLimit,
     maxTitlesPerBatch,
+    platformDomain,
     email,
     newPassword,
     name,
@@ -121,6 +123,7 @@ export async function PATCH(request: NextRequest) {
     monthlyArticleLimit?: number | null;
     dailyArticleLimit?: number | null;
     maxTitlesPerBatch?: number;
+    platformDomain?: string;
     email?: string;
     name?: string;
     firstName?: string | null;
@@ -211,6 +214,16 @@ export async function PATCH(request: NextRequest) {
     data.maxTitlesPerBatch = maxTitlesPerBatch;
   }
 
+  if ("platformDomain" in body) {
+    if (platformDomain !== "net" && platformDomain !== "site") {
+      return NextResponse.json(
+        { error: "platformDomain debe ser 'net' o 'site'" },
+        { status: 400 },
+      );
+    }
+    data.platformDomain = platformDomain;
+  }
+
   if (typeof email === "string" && email.trim()) {
     const existing = await prisma.user.findUnique({
       where: { email: email.trim() },
@@ -249,6 +262,7 @@ export async function PATCH(request: NextRequest) {
       monthlyArticleLimit: true,
       dailyArticleLimit: true,
       maxTitlesPerBatch: true,
+      platformDomain: true,
       createdAt: true,
     },
   });
@@ -298,7 +312,15 @@ export async function POST(request: NextRequest) {
     monthlyArticleLimit = 300,
     dailyArticleLimit = 95,
     maxTitlesPerBatch = 20,
+    platformDomain = "net",
   } = await request.json();
+
+  if (platformDomain !== "net" && platformDomain !== "site") {
+    return NextResponse.json(
+      { error: "platformDomain debe ser 'net' o 'site'" },
+      { status: 400 },
+    );
+  }
 
   const normalizedEmail = typeof email === "string" ? email.trim() : "";
   const normalizedFirstName =
@@ -401,6 +423,7 @@ export async function POST(request: NextRequest) {
       monthlyArticleLimit,
       dailyArticleLimit,
       maxTitlesPerBatch,
+      platformDomain,
     },
     select: {
       id: true,
@@ -413,6 +436,7 @@ export async function POST(request: NextRequest) {
       monthlyArticleLimit: true,
       dailyArticleLimit: true,
       maxTitlesPerBatch: true,
+      platformDomain: true,
       createdAt: true,
     },
   });

@@ -5,6 +5,10 @@ import { generateFaqs, type Faq } from "../faqPrompt";
 export interface TenMinutesWebsiteCredentials {
   username: string;
   password: string;
+  // "net" o "site" — ver User.platformDomain. Cuentas en Europa pueden
+  // vivir en 10minutesWebsite.site en vez de .net; si no se especifica,
+  // se usa .net (comportamiento original, sin cambios para nadie).
+  platformDomain?: string | null;
 }
 
 export interface PublishResult {
@@ -30,7 +34,12 @@ export type OnStep = (message: string) => Promise<void>;
  */
 export class DailyLimitReachedError extends Error {}
 
-const BASE_URL = "https://10minuteswebsite.net";
+function resolveBaseUrl(platformDomain?: string | null): string {
+  return platformDomain === "site"
+    ? "https://10minuteswebsite.site"
+    : "https://10minuteswebsite.net";
+}
+
 const ARTICLE_TYPE_NOTICIAS = "2";
 const NAV_TIMEOUT_MS = 30_000;
 const CONTENT_GENERATION_TIMEOUT_MS = 90_000;
@@ -55,14 +64,16 @@ export async function publishArticle(
   disableIndexing: boolean,
   onStep: OnStep,
 ): Promise<PublishResult> {
+  const baseUrl = resolveBaseUrl(credentials.platformDomain);
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
 
-    await login(page, credentials, onStep);
+    await login(page, baseUrl, credentials, onStep);
 
     const { summary, contentHtml, finalTitle } = await createArticleDraft(
       page,
+      baseUrl,
       title,
       categoryExternalId,
       disableIndexing,
@@ -70,7 +81,7 @@ export async function publishArticle(
     );
     await generateImage(page, finalTitle, summary, onStep);
     await fillFaqWidget(page, finalTitle, summary, contentHtml, onStep);
-    const articleUrl = await saveAndGetUrl(page, finalTitle, onStep);
+    const articleUrl = await saveAndGetUrl(page, baseUrl, finalTitle, onStep);
 
     return { articleUrl, finalTitle };
   } finally {
@@ -86,12 +97,13 @@ export async function publishArticle(
 export async function fetchCategories(
   credentials: TenMinutesWebsiteCredentials,
 ): Promise<RemoteCategory[]> {
+  const baseUrl = resolveBaseUrl(credentials.platformDomain);
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
-    await login(page, credentials, async () => {});
+    await login(page, baseUrl, credentials, async () => {});
 
-    await page.goto(`${BASE_URL}/dashboard/direct-articles`, {
+    await page.goto(`${baseUrl}/dashboard/direct-articles`, {
       waitUntil: "domcontentloaded",
       timeout: NAV_TIMEOUT_MS,
     });
@@ -118,11 +130,12 @@ export async function fetchCategories(
 
 async function login(
   page: Page,
+  baseUrl: string,
   credentials: TenMinutesWebsiteCredentials,
   onStep: OnStep,
 ): Promise<void> {
   await onStep("Iniciando sesión en 10minutesWebsite...");
-  await page.goto(`${BASE_URL}/dashboard/start.php`, {
+  await page.goto(`${baseUrl}/dashboard/start.php`, {
     waitUntil: "domcontentloaded",
     timeout: NAV_TIMEOUT_MS,
   });
@@ -182,13 +195,14 @@ async function login(
 
 async function createArticleDraft(
   page: Page,
+  baseUrl: string,
   title: string,
   categoryExternalId: string,
   disableIndexing: boolean,
   onStep: OnStep,
 ): Promise<{ summary: string; contentHtml: string; finalTitle: string }> {
   await onStep("Abriendo formulario de creación de artículo...");
-  await page.goto(`${BASE_URL}/dashboard/direct-articles`, {
+  await page.goto(`${baseUrl}/dashboard/direct-articles`, {
     waitUntil: "domcontentloaded",
     timeout: NAV_TIMEOUT_MS,
   });
@@ -794,6 +808,7 @@ async function findArticleByTitle(
 
 async function saveAndGetUrl(
   page: Page,
+  baseUrl: string,
   expectedTitle: string,
   onStep: OnStep,
 ): Promise<string | null> {
@@ -853,7 +868,7 @@ async function saveAndGetUrl(
   );
   const deadline = Date.now() + SAVE_VERIFICATION_TIMEOUT_MS;
   while (Date.now() < deadline) {
-    await page.goto(`${BASE_URL}/dashboard/user_buyer_seller_articles.php`, {
+    await page.goto(`${baseUrl}/dashboard/user_buyer_seller_articles.php`, {
       waitUntil: "domcontentloaded",
       timeout: NAV_TIMEOUT_MS,
     });
