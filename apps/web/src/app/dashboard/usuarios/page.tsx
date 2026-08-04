@@ -675,6 +675,7 @@ export default function UsuariosPage() {
               </div>
               <div style={{ overflowX: "auto" }}>
                 <table
+                  className="responsive-table"
                   style={{
                     width: "100%",
                     minWidth: 640,
@@ -703,7 +704,7 @@ export default function UsuariosPage() {
                           background: row.active ? "#e6f4ff" : undefined,
                         }}
                       >
-                        <td style={tdStyle}>
+                        <td style={tdStyle} data-label="Usuario">
                           {row.email}
                           {row.active && (
                             <span
@@ -721,16 +722,22 @@ export default function UsuariosPage() {
                             </span>
                           )}
                         </td>
-                        <td style={tdStyle}>{row.runs}</td>
-                        <td style={tdStyle}>{row.titles}</td>
-                        <td style={tdStyle}>{row.events}</td>
-                        <td style={tdStyle}>
+                        <td style={tdStyle} data-label="Ejecuciones">
+                          {row.runs}
+                        </td>
+                        <td style={tdStyle} data-label="Títulos">
+                          {row.titles}
+                        </td>
+                        <td style={tdStyle} data-label="Eventos de log">
+                          {row.events}
+                        </td>
+                        <td style={tdStyle} data-label="Peso estimado">
                           {formatBytes(row.estimatedBytes)}
                         </td>
-                        <td style={tdStyle}>
+                        <td style={tdStyle} data-label="% del contenido total">
                           {(row.shareOfContent * 100).toFixed(1)}%
                         </td>
-                        <td style={tdStyle}>
+                        <td style={tdStyle} data-label="Riesgo">
                           <span
                             style={{
                               fontSize: 11,
@@ -780,6 +787,7 @@ export default function UsuariosPage() {
           </p>
           <div style={{ overflowX: "auto" }}>
             <table
+              className="responsive-table"
               style={{
                 width: "100%",
                 minWidth: 1360,
@@ -1045,11 +1053,19 @@ function UserRowItem({
   return (
     <>
       <tr style={{ borderTop: "1px solid #dfe3e8" }}>
-        <td style={tdStyle}>{user.firstName ?? "—"}</td>
-        <td style={tdStyle}>{user.lastName ?? "—"}</td>
-        <td style={tdStyle}>{user.email}</td>
-        <td style={tdStyle}>{user.phone ?? "—"}</td>
-        <td style={tdStyle}>
+        <td style={tdStyle} data-label="Nombre">
+          {user.firstName ?? "—"}
+        </td>
+        <td style={tdStyle} data-label="Apellido">
+          {user.lastName ?? "—"}
+        </td>
+        <td style={tdStyle} data-label="Correo">
+          {user.email}
+        </td>
+        <td style={tdStyle} data-label="Teléfono">
+          {user.phone ?? "—"}
+        </td>
+        <td style={tdStyle} data-label="Rol">
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <select
               value={roleValue}
@@ -1084,10 +1100,13 @@ function UserRowItem({
             </div>
           )}
         </td>
-        <td style={{ ...tdStyle, fontWeight: 600 }}>
+        <td
+          style={{ ...tdStyle, fontWeight: 600 }}
+          data-label="Artículos publicados"
+        >
           {user.articlesPublished}
         </td>
-        <td style={tdStyle}>
+        <td style={tdStyle} data-label="Límite mensual">
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <input
               type="number"
@@ -1109,7 +1128,7 @@ function UserRowItem({
             </button>
           </div>
         </td>
-        <td style={tdStyle}>
+        <td style={tdStyle} data-label="Límite diario">
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <input
               type="number"
@@ -1131,7 +1150,7 @@ function UserRowItem({
             </button>
           </div>
         </td>
-        <td style={tdStyle}>
+        <td style={tdStyle} data-label="Máximo por lote">
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <input
               type="number"
@@ -1158,7 +1177,7 @@ function UserRowItem({
             </div>
           )}
         </td>
-        <td style={tdStyle}>
+        <td style={tdStyle} data-label="Servidor">
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <select
               value={domainValue}
@@ -1189,8 +1208,10 @@ function UserRowItem({
             </button>
           </div>
         </td>
-        <td style={tdStyle}>{new Date(user.createdAt).toLocaleDateString()}</td>
-        <td style={tdStyle}>
+        <td style={tdStyle} data-label="Creado">
+          {new Date(user.createdAt).toLocaleDateString()}
+        </td>
+        <td style={tdStyle} data-label="Acciones">
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             <button
               onClick={handleImpersonate}
@@ -1471,6 +1492,7 @@ function UserHistorial({ email }: { email: string }) {
                   {runStatusLabel(run.status as RunStatus)}
                 </summary>
                 <table
+                  className="responsive-table"
                   style={{
                     width: "100%",
                     borderCollapse: "collapse",
@@ -1492,7 +1514,7 @@ function UserHistorial({ email }: { email: string }) {
                         key={title.id}
                         style={{ borderTop: "1px solid #dfe3e8" }}
                       >
-                        <td style={tdStyle}>
+                        <td style={tdStyle} data-label="Título">
                           {title.text}
                           {title.finalTitle &&
                             title.finalTitle !== title.text && (
@@ -1507,11 +1529,13 @@ function UserHistorial({ email }: { email: string }) {
                               </div>
                             )}
                         </td>
-                        <td style={tdStyle}>
+                        <td style={tdStyle} data-label="Estado">
                           {statusLabel(title.status as TitleStatus)}
                         </td>
-                        <td style={tdStyle}>{title.attempts}</td>
-                        <td style={tdStyle}>
+                        <td style={tdStyle} data-label="Intentos">
+                          {title.attempts}
+                        </td>
+                        <td style={tdStyle} data-label="Enlace / Error">
                           {title.articleUrl ? (
                             <a
                               href={title.articleUrl}

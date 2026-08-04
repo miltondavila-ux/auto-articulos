@@ -280,6 +280,7 @@ function RunTable({ titles }: { titles: TitleRow[] }) {
   return (
     <div style={{ overflowX: "auto" }}>
       <table
+        className="responsive-table"
         style={{
           width: "100%",
           minWidth: 600,
@@ -330,7 +331,7 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
 
   return (
     <tr style={{ borderTop: "1px solid #dfe3e8" }}>
-      <td style={tdStyle}>
+      <td style={tdStyle} data-label="Título">
         {title.text}
         {title.finalTitle && title.finalTitle !== title.text && (
           <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>
@@ -338,9 +339,13 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
           </div>
         )}
       </td>
-      <td style={tdStyle}>{statusLabel(title.status)}</td>
-      <td style={tdStyle}>{title.attempts}</td>
-      <td style={tdStyle}>
+      <td style={tdStyle} data-label="Estado">
+        {statusLabel(title.status)}
+      </td>
+      <td style={tdStyle} data-label="Intentos">
+        {title.attempts}
+      </td>
+      <td style={tdStyle} data-label="Enlace / Error">
         {title.articleUrl ? (
           <div>
             <a
@@ -364,7 +369,7 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
           (title.errorMessage ?? "—")
         )}
       </td>
-      <td style={tdStyle}>
+      <td style={tdStyle} data-label="Log">
         {title.attempts > 0 && (
           <details
             onToggle={(e) => {

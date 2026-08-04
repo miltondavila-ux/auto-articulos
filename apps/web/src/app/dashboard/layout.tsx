@@ -26,6 +26,48 @@ export default async function DashboardLayout({
           .mobile-notice { display: none; }
           .dashboard-main { padding: 32px 40px !important; }
         }
+        /*
+         * Tablas anchas (Accesos a usuarios, Uso de la base de datos,
+         * Historial): en vez de scroll horizontal, cada fila se apila como
+         * una tarjeta y cada celda muestra su encabezado como etiqueta
+         * (truco clásico de "tabla responsive" solo con CSS, sin duplicar
+         * la lógica/estado de cada fila).
+         */
+        @media (max-width: 699px) {
+          table.responsive-table {
+            min-width: 0 !important;
+            width: 100% !important;
+          }
+          table.responsive-table thead { display: none; }
+          table.responsive-table,
+          table.responsive-table tbody,
+          table.responsive-table tr,
+          table.responsive-table td {
+            display: block;
+            width: 100%;
+          }
+          table.responsive-table tr {
+            border-top: none !important;
+            border: 1px solid #dfe3e8;
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+          }
+          table.responsive-table td {
+            padding: 6px 2px;
+          }
+          table.responsive-table td[data-label]::before {
+            content: attr(data-label);
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: #8a94a6;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 3px;
+          }
+        }
       `}</style>
       <div
         className="dashboard-header"
