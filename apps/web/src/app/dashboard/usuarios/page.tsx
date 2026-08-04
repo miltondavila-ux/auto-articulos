@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
+import {
+  useEffect,
+  useState,
+  type CSSProperties,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import {
   sectionStyle,
   h2Style,
@@ -66,6 +72,85 @@ const riskColors: Record<UsagePerUser["risk"], { bg: string; color: string }> =
     bajo: { bg: "#dff5e6", color: "#1e8a4b" },
   };
 
+const PAGE_SIZE = 10;
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <div
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          color: "#8a94a6",
+          textTransform: "uppercase",
+          letterSpacing: "0.03em",
+          marginBottom: 4,
+        }}
+      >
+        {label}
+      </div>
+      <div>{children}</div>
+    </div>
+  );
+}
+
+function Pagination({
+  page,
+  totalPages,
+  totalCount,
+  filteredCount,
+  onChange,
+}: {
+  page: number;
+  totalPages: number;
+  totalCount: number;
+  filteredCount: number;
+  onChange: (page: number) => void;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        flexWrap: "wrap",
+        gap: 10,
+      }}
+    >
+      <span style={{ fontSize: 12, color: "#6b7280" }}>
+        {totalCount.toLocaleString("es-US")} usuarios en total
+        {filteredCount !== totalCount &&
+          ` · ${filteredCount.toLocaleString("es-US")} coinciden con la búsqueda`}
+      </span>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <button
+          onClick={() => onChange(page - 1)}
+          disabled={page <= 1}
+          style={disabledStyle(
+            { ...secondaryButtonStyle, padding: "4px 10px", fontSize: 12 },
+            page <= 1,
+          )}
+        >
+          ← Anterior
+        </button>
+        <span style={{ fontSize: 12, color: "#16181d", fontWeight: 600 }}>
+          Página {page} de {totalPages}
+        </span>
+        <button
+          onClick={() => onChange(page + 1)}
+          disabled={page >= totalPages}
+          style={disabledStyle(
+            { ...secondaryButtonStyle, padding: "4px 10px", fontSize: 12 },
+            page >= totalPages,
+          )}
+        >
+          Siguiente →
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   const kb = bytes / 1024;
@@ -93,6 +178,7 @@ export default function UsuariosPage() {
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [loadingUsage, setLoadingUsage] = useState(false);
   const [search, setSearch] = useState("");
+  const [accessPage, setAccessPage] = useState(1);
   const [tab, setTab] = useState<"crear" | "uso" | "accesos">("accesos");
   const [banner, setBanner] = useState<{
     type: "error" | "info";
@@ -128,6 +214,33 @@ export default function UsuariosPage() {
     loadUsers();
     loadUsage();
   }, []);
+
+  const filteredUsers = users.filter((u) => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      u.email.toLowerCase().includes(q) ||
+      (u.firstName ?? "").toLowerCase().includes(q) ||
+      (u.lastName ?? "").toLowerCase().includes(q) ||
+      (u.name ?? "").toLowerCase().includes(q)
+    );
+  });
+  const totalAccessPages = Math.max(
+    1,
+    Math.ceil(filteredUsers.length / PAGE_SIZE),
+  );
+  const pagedUsers = filteredUsers.slice(
+    (accessPage - 1) * PAGE_SIZE,
+    accessPage * PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    setAccessPage(1);
+  }, [search]);
+
+  useEffect(() => {
+    setAccessPage((p) => Math.min(p, totalAccessPages));
+  }, [totalAccessPages]);
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
@@ -673,88 +786,97 @@ export default function UsuariosPage() {
                   />
                 </div>
               </div>
-              <div style={{ overflowX: "auto" }}>
-                <table
-                  className="responsive-table"
-                  style={{
-                    width: "100%",
-                    minWidth: 640,
-                    borderCollapse: "collapse",
-                    fontSize: 13,
-                    marginTop: 14,
-                  }}
-                >
-                  <thead>
-                    <tr style={{ textAlign: "left", color: "#6b7280" }}>
-                      <th style={thStyle}>Usuario</th>
-                      <th style={thStyle}>Ejecuciones</th>
-                      <th style={thStyle}>Títulos</th>
-                      <th style={thStyle}>Eventos de log</th>
-                      <th style={thStyle}>Peso estimado</th>
-                      <th style={thStyle}>% del contenido total</th>
-                      <th style={thStyle}>Riesgo</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {usage.perUser.map((row) => (
-                      <tr
-                        key={row.userId}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 10,
+                  marginTop: 14,
+                }}
+              >
+                {usage.perUser.map((row) => (
+                  <details
+                    key={row.userId}
+                    style={{
+                      border: "1px solid #e5e8ec",
+                      borderRadius: 10,
+                      background: row.active ? "#e6f4ff" : "#fff",
+                      color: "#16181d",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <summary
+                      style={{
+                        cursor: "pointer",
+                        listStyle: "none",
+                        padding: "12px 14px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        gap: 8,
+                      }}
+                    >
+                      <span
                         style={{
-                          borderTop: "1px solid #dfe3e8",
-                          background: row.active ? "#e6f4ff" : undefined,
+                          fontSize: 13,
+                          fontWeight: 600,
+                          wordBreak: "break-word",
                         }}
                       >
-                        <td style={tdStyle} data-label="Usuario">
-                          {row.email}
-                          {row.active && (
-                            <span
-                              style={{
-                                marginLeft: 8,
-                                fontSize: 10,
-                                fontWeight: 700,
-                                padding: "2px 8px",
-                                borderRadius: 999,
-                                background: "#2f5fdb",
-                                color: "#fff",
-                              }}
-                            >
-                              ● En uso ahora
-                            </span>
-                          )}
-                        </td>
-                        <td style={tdStyle} data-label="Ejecuciones">
-                          {row.runs}
-                        </td>
-                        <td style={tdStyle} data-label="Títulos">
-                          {row.titles}
-                        </td>
-                        <td style={tdStyle} data-label="Eventos de log">
-                          {row.events}
-                        </td>
-                        <td style={tdStyle} data-label="Peso estimado">
-                          {formatBytes(row.estimatedBytes)}
-                        </td>
-                        <td style={tdStyle} data-label="% del contenido total">
-                          {(row.shareOfContent * 100).toFixed(1)}%
-                        </td>
-                        <td style={tdStyle} data-label="Riesgo">
+                        {row.email}
+                        {row.active && (
                           <span
                             style={{
-                              fontSize: 11,
-                              fontWeight: 600,
+                              marginLeft: 8,
+                              fontSize: 10,
+                              fontWeight: 700,
                               padding: "2px 8px",
                               borderRadius: 999,
-                              background: riskColors[row.risk].bg,
-                              color: riskColors[row.risk].color,
+                              background: "#2f5fdb",
+                              color: "#fff",
                             }}
                           >
-                            {row.risk}
+                            ● En uso ahora
                           </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        )}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          padding: "2px 8px",
+                          borderRadius: 999,
+                          background: riskColors[row.risk].bg,
+                          color: riskColors[row.risk].color,
+                        }}
+                      >
+                        {row.risk}
+                      </span>
+                    </summary>
+                    <div
+                      style={{
+                        padding: 14,
+                        borderTop: "1px solid #eef1f4",
+                        background: "#fafbfc",
+                        display: "grid",
+                        gridTemplateColumns:
+                          "repeat(auto-fit, minmax(140px, 1fr))",
+                        gap: 14,
+                      }}
+                    >
+                      <Field label="Ejecuciones">{row.runs}</Field>
+                      <Field label="Títulos">{row.titles}</Field>
+                      <Field label="Eventos de log">{row.events}</Field>
+                      <Field label="Peso estimado">
+                        {formatBytes(row.estimatedBytes)}
+                      </Field>
+                      <Field label="% del contenido total">
+                        {(row.shareOfContent * 100).toFixed(1)}%
+                      </Field>
+                    </div>
+                  </details>
+                ))}
               </div>
             </>
           )}
@@ -783,56 +905,51 @@ export default function UsuariosPage() {
           </div>
           <p style={{ fontSize: 12, color: "#6b7280", marginTop: -4 }}>
             Cambia el rol a <strong>Administrador</strong> para que esa cuenta
-            vea y gestione las mismas secciones administrativas que tú.
+            vea y gestione las mismas secciones administrativas que tú. Haz
+            clic en una cuenta para ver el detalle.
           </p>
-          <div style={{ overflowX: "auto" }}>
-            <table
-              className="responsive-table"
-              style={{
-                width: "100%",
-                minWidth: 1360,
-                borderCollapse: "collapse",
-                fontSize: 13,
-              }}
-            >
-              <thead>
-                <tr style={{ textAlign: "left", color: "#6b7280" }}>
-                  <th style={thStyle}>Nombre</th>
-                  <th style={thStyle}>Apellido</th>
-                  <th style={thStyle}>Correo</th>
-                  <th style={thStyle}>Teléfono</th>
-                  <th style={thStyle}>Rol</th>
-                  <th style={thStyle}>Artículos publicados</th>
-                  <th style={thStyle}>Límite mensual</th>
-                  <th style={thStyle}>Límite diario</th>
-                  <th style={thStyle}>Máximo por lote</th>
-                  <th style={thStyle}>Servidor</th>
-                  <th style={thStyle}>Creado</th>
-                  <th style={thStyle}>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users
-                  .filter((u) => {
-                    const q = search.trim().toLowerCase();
-                    if (!q) return true;
-                    return (
-                      u.email.toLowerCase().includes(q) ||
-                      (u.firstName ?? "").toLowerCase().includes(q) ||
-                      (u.lastName ?? "").toLowerCase().includes(q) ||
-                      (u.name ?? "").toLowerCase().includes(q)
-                    );
-                  })
-                  .map((u) => (
-                    <UserRowItem
-                      key={u.id}
-                      user={u}
-                      isCurrentUser={u.id === currentUserId}
-                      onUpdated={loadUsers}
-                    />
-                  ))}
-              </tbody>
-            </table>
+
+          <div style={{ marginTop: 10 }}>
+            <Pagination
+              page={accessPage}
+              totalPages={totalAccessPages}
+              totalCount={users.length}
+              filteredCount={filteredUsers.length}
+              onChange={setAccessPage}
+            />
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+              marginTop: 12,
+            }}
+          >
+            {pagedUsers.length === 0 && (
+              <p style={{ fontSize: 13, color: "#6b7280" }}>
+                No se encontraron usuarios.
+              </p>
+            )}
+            {pagedUsers.map((u) => (
+              <UserCard
+                key={u.id}
+                user={u}
+                isCurrentUser={u.id === currentUserId}
+                onUpdated={loadUsers}
+              />
+            ))}
+          </div>
+
+          <div style={{ marginTop: 12 }}>
+            <Pagination
+              page={accessPage}
+              totalPages={totalAccessPages}
+              totalCount={users.length}
+              filteredCount={filteredUsers.length}
+              onChange={setAccessPage}
+            />
           </div>
         </section>
       )}
@@ -840,7 +957,7 @@ export default function UsuariosPage() {
   );
 }
 
-function UserRowItem({
+function UserCard({
   user,
   isCurrentUser,
   onUpdated,
@@ -1050,291 +1167,364 @@ function UserRowItem({
     }
   }
 
+  const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ");
+
   return (
-    <>
-      <tr style={{ borderTop: "1px solid #dfe3e8" }}>
-        <td style={tdStyle} data-label="Nombre">
-          {user.firstName ?? "—"}
-        </td>
-        <td style={tdStyle} data-label="Apellido">
-          {user.lastName ?? "—"}
-        </td>
-        <td style={tdStyle} data-label="Correo">
-          {user.email}
-        </td>
-        <td style={tdStyle} data-label="Teléfono">
-          {user.phone ?? "—"}
-        </td>
-        <td style={tdStyle} data-label="Rol">
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            <select
-              value={roleValue}
-              onChange={(event) =>
-                setRoleValue(event.target.value as "admin" | "user")
-              }
-              disabled={isCurrentUser || savingRole}
-              aria-label={`Rol de ${user.email}`}
-              style={{ ...inputStyle, width: 132 }}
-            >
-              <option value="user">Usuario</option>
-              <option value="admin">Administrador</option>
-            </select>
-            {isCurrentUser ? (
-              <span style={{ fontSize: 11, color: "#6b7280" }}>Tu cuenta</span>
-            ) : (
+    <details
+      style={{
+        border: "1px solid #e5e8ec",
+        borderRadius: 10,
+        background: "#fff",
+        color: "#16181d",
+        overflow: "hidden",
+      }}
+    >
+      <summary
+        style={{
+          cursor: "pointer",
+          listStyle: "none",
+          padding: "12px 14px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 8,
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <strong style={{ fontSize: 14 }}>{fullName || "(sin nombre)"}</strong>
+          <span
+            style={{ fontSize: 12, color: "#6b7280", wordBreak: "break-word" }}
+          >
+            {user.email}
+          </span>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            flexWrap: "wrap",
+          }}
+        >
+          {isCurrentUser && (
+            <span style={{ fontSize: 11, color: "#6b7280" }}>Tu cuenta</span>
+          )}
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              padding: "2px 8px",
+              borderRadius: 999,
+              background: user.role === "admin" ? "#dfe8ff" : "#eef2f7",
+              color: user.role === "admin" ? "#24458f" : "#64748b",
+            }}
+          >
+            {user.role === "admin" ? "Administrador" : "Usuario"}
+          </span>
+          <span style={{ fontSize: 11, color: "#6b7280" }}>
+            {user.articlesPublished} artículos
+          </span>
+        </div>
+      </summary>
+
+      <div
+        style={{
+          padding: "14px",
+          borderTop: "1px solid #eef1f4",
+          background: "#fafbfc",
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+            gap: 14,
+          }}
+        >
+          <Field label="Teléfono">{user.phone ?? "—"}</Field>
+
+          <Field label="Rol">
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <select
+                value={roleValue}
+                onChange={(event) =>
+                  setRoleValue(event.target.value as "admin" | "user")
+                }
+                disabled={isCurrentUser || savingRole}
+                aria-label={`Rol de ${user.email}`}
+                style={{ ...inputStyle, width: 132 }}
+              >
+                <option value="user">Usuario</option>
+                <option value="admin">Administrador</option>
+              </select>
+              {!isCurrentUser && (
+                <button
+                  onClick={handleSaveRole}
+                  disabled={savingRole || roleValue === user.role}
+                  style={disabledStyle(
+                    { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
+                    savingRole || roleValue === user.role,
+                  )}
+                >
+                  {savingRole ? "..." : "Guardar"}
+                </button>
+              )}
+            </div>
+            {roleError && (
+              <div style={{ fontSize: 11, color: "#d64545", marginTop: 4 }}>
+                {roleError}
+              </div>
+            )}
+          </Field>
+
+          <Field label="Límite mensual">
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input
+                type="number"
+                min={0}
+                placeholder="Sin límite"
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                style={{ ...inputStyle, width: 100 }}
+              />
               <button
-                onClick={handleSaveRole}
-                disabled={savingRole || roleValue === user.role}
+                onClick={handleSaveLimit}
+                disabled={saving}
                 style={disabledStyle(
                   { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
-                  savingRole || roleValue === user.role,
+                  saving,
                 )}
               >
-                {savingRole ? "..." : "Guardar rol"}
+                {saving ? "..." : "Guardar"}
               </button>
+            </div>
+          </Field>
+
+          <Field label="Límite diario">
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input
+                type="number"
+                min={0}
+                placeholder="Sin límite"
+                value={dailyValue}
+                onChange={(e) => setDailyValue(e.target.value)}
+                style={{ ...inputStyle, width: 100 }}
+              />
+              <button
+                onClick={handleSaveDailyLimit}
+                disabled={savingDaily}
+                style={disabledStyle(
+                  { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
+                  savingDaily,
+                )}
+              >
+                {savingDaily ? "..." : "Guardar"}
+              </button>
+            </div>
+          </Field>
+
+          <Field label="Máximo por lote">
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input
+                type="number"
+                min={1}
+                step={1}
+                value={batchValue}
+                onChange={(e) => setBatchValue(e.target.value)}
+                style={{ ...inputStyle, width: 86 }}
+              />
+              <button
+                onClick={handleSaveBatchLimit}
+                disabled={savingBatch}
+                style={disabledStyle(
+                  { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
+                  savingBatch,
+                )}
+              >
+                {savingBatch ? "..." : "Guardar"}
+              </button>
+            </div>
+            {batchLimitError && (
+              <div style={{ fontSize: 11, color: "#d64545", marginTop: 4 }}>
+                {batchLimitError}
+              </div>
             )}
-          </div>
-          {roleError && (
-            <div style={{ fontSize: 11, color: "#d64545", marginTop: 4 }}>
-              {roleError}
-            </div>
-          )}
-        </td>
-        <td
-          style={{ ...tdStyle, fontWeight: 600 }}
-          data-label="Artículos publicados"
-        >
-          {user.articlesPublished}
-        </td>
-        <td style={tdStyle} data-label="Límite mensual">
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            <input
-              type="number"
-              min={0}
-              placeholder="Sin límite"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              style={{ ...inputStyle, width: 100 }}
-            />
-            <button
-              onClick={handleSaveLimit}
-              disabled={saving}
-              style={disabledStyle(
-                { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
-                saving,
-              )}
-            >
-              {saving ? "..." : "Guardar"}
-            </button>
-          </div>
-        </td>
-        <td style={tdStyle} data-label="Límite diario">
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            <input
-              type="number"
-              min={0}
-              placeholder="Sin límite"
-              value={dailyValue}
-              onChange={(e) => setDailyValue(e.target.value)}
-              style={{ ...inputStyle, width: 100 }}
-            />
-            <button
-              onClick={handleSaveDailyLimit}
-              disabled={savingDaily}
-              style={disabledStyle(
-                { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
-                savingDaily,
-              )}
-            >
-              {savingDaily ? "..." : "Guardar"}
-            </button>
-          </div>
-        </td>
-        <td style={tdStyle} data-label="Máximo por lote">
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            <input
-              type="number"
-              min={1}
-              step={1}
-              value={batchValue}
-              onChange={(e) => setBatchValue(e.target.value)}
-              style={{ ...inputStyle, width: 86 }}
-            />
-            <button
-              onClick={handleSaveBatchLimit}
-              disabled={savingBatch}
-              style={disabledStyle(
-                { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
-                savingBatch,
-              )}
-            >
-              {savingBatch ? "..." : "Guardar"}
-            </button>
-          </div>
-          {batchLimitError && (
-            <div style={{ fontSize: 11, color: "#d64545", marginTop: 4 }}>
-              {batchLimitError}
-            </div>
-          )}
-        </td>
-        <td style={tdStyle} data-label="Servidor">
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            <select
-              value={domainValue}
-              onChange={(e) =>
-                setDomainValue(e.target.value as "net" | "site")
-              }
-              disabled={savingDomain}
-              aria-label={`Servidor de ${user.email}`}
-              style={{ ...inputStyle, width: 96 }}
-            >
-              <option value="net">.net</option>
-              <option value="site">.site</option>
-            </select>
-            <button
-              onClick={handleSaveDomain}
-              disabled={
-                savingDomain ||
-                domainValue === (user.platformDomain === "site" ? "site" : "net")
-              }
-              style={disabledStyle(
-                { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
-                savingDomain ||
+          </Field>
+
+          <Field label="Servidor">
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <select
+                value={domainValue}
+                onChange={(e) =>
+                  setDomainValue(e.target.value as "net" | "site")
+                }
+                disabled={savingDomain}
+                aria-label={`Servidor de ${user.email}`}
+                style={{ ...inputStyle, width: 96 }}
+              >
+                <option value="net">.net</option>
+                <option value="site">.site</option>
+              </select>
+              <button
+                onClick={handleSaveDomain}
+                disabled={
+                  savingDomain ||
                   domainValue ===
-                    (user.platformDomain === "site" ? "site" : "net"),
-              )}
-            >
-              {savingDomain ? "..." : "Guardar"}
-            </button>
-          </div>
-        </td>
-        <td style={tdStyle} data-label="Creado">
-          {new Date(user.createdAt).toLocaleDateString()}
-        </td>
-        <td style={tdStyle} data-label="Acciones">
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            <button
-              onClick={handleImpersonate}
-              disabled={isCurrentUser || user.role === "admin" || impersonating}
-              title={
-                isCurrentUser
-                  ? "Ya estás en tu propia cuenta."
-                  : user.role === "admin"
-                    ? "No puedes acceder a la cuenta de otro administrador."
-                    : undefined
-              }
-              style={disabledStyle(
-                {
-                  ...secondaryButtonStyle,
-                  padding: "4px 10px",
-                  fontSize: 12,
-                  color: "#2f5fdb",
-                },
-                isCurrentUser || user.role === "admin" || impersonating,
-              )}
-            >
-              {impersonating ? "Entrando..." : "Acceder como"}
-            </button>
-            <button
-              onClick={handleCopyCredentials}
-              disabled={!user.currentPassword}
-              title={
-                user.currentPassword
-                  ? undefined
-                  : "No hay clave recuperable guardada — usa Editar para poner una nueva."
-              }
-              style={disabledStyle(
-                {
-                  ...secondaryButtonStyle,
-                  padding: "4px 10px",
-                  fontSize: 12,
-                  background: copied
-                    ? "#dff5e6"
-                    : secondaryButtonStyle.background,
-                  color: copied ? "#1e8a4b" : secondaryButtonStyle.color,
-                },
-                !user.currentPassword,
-              )}
-            >
-              {copied ? "¡Copiado!" : "Copiar credenciales"}
-            </button>
-            <button
-              onClick={() => setEditing((v) => !v)}
-              style={{
+                    (user.platformDomain === "site" ? "site" : "net")
+                }
+                style={disabledStyle(
+                  { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
+                  savingDomain ||
+                    domainValue ===
+                      (user.platformDomain === "site" ? "site" : "net"),
+                )}
+              >
+                {savingDomain ? "..." : "Guardar"}
+              </button>
+            </div>
+          </Field>
+
+          <Field label="Creado">
+            {new Date(user.createdAt).toLocaleDateString()}
+          </Field>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            gap: 6,
+            flexWrap: "wrap",
+            marginTop: 16,
+          }}
+        >
+          <button
+            onClick={handleImpersonate}
+            disabled={isCurrentUser || user.role === "admin" || impersonating}
+            title={
+              isCurrentUser
+                ? "Ya estás en tu propia cuenta."
+                : user.role === "admin"
+                  ? "No puedes acceder a la cuenta de otro administrador."
+                  : undefined
+            }
+            style={disabledStyle(
+              {
                 ...secondaryButtonStyle,
                 padding: "4px 10px",
                 fontSize: 12,
+                color: "#2f5fdb",
+              },
+              isCurrentUser || user.role === "admin" || impersonating,
+            )}
+          >
+            {impersonating ? "Entrando..." : "Acceder como"}
+          </button>
+          <button
+            onClick={handleCopyCredentials}
+            disabled={!user.currentPassword}
+            title={
+              user.currentPassword
+                ? undefined
+                : "No hay clave recuperable guardada — usa Editar para poner una nueva."
+            }
+            style={disabledStyle(
+              {
+                ...secondaryButtonStyle,
+                padding: "4px 10px",
+                fontSize: 12,
+                background: copied
+                  ? "#dff5e6"
+                  : secondaryButtonStyle.background,
+                color: copied ? "#1e8a4b" : secondaryButtonStyle.color,
+              },
+              !user.currentPassword,
+            )}
+          >
+            {copied ? "¡Copiado!" : "Copiar credenciales"}
+          </button>
+          <button
+            onClick={() => setEditing((v) => !v)}
+            style={{
+              ...secondaryButtonStyle,
+              padding: "4px 10px",
+              fontSize: 12,
+            }}
+          >
+            {editing ? "Cancelar" : "Editar"}
+          </button>
+          {!confirmingDelete ? (
+            <button
+              onClick={() => setConfirmingDelete(true)}
+              style={{
+                background: "none",
+                color: "#d64545",
+                border: "1px solid #fde8e8",
+                borderRadius: 6,
+                padding: "4px 10px",
+                fontSize: 12,
+                cursor: "pointer",
               }}
             >
-              {editing ? "Cancelar" : "Editar"}
+              Eliminar
             </button>
-            {!confirmingDelete ? (
+          ) : (
+            <>
+              <span style={{ fontSize: 12, color: "#8a6d1a" }}>¿Seguro?</span>
               <button
-                onClick={() => setConfirmingDelete(true)}
+                onClick={handleDelete}
+                disabled={deleting}
                 style={{
-                  background: "none",
+                  background: "#fde8e8",
                   color: "#d64545",
-                  border: "1px solid #fde8e8",
+                  border: "1px solid #e8b4b4",
                   borderRadius: 6,
                   padding: "4px 10px",
                   fontSize: 12,
-                  cursor: "pointer",
+                  fontWeight: 600,
+                  cursor: deleting ? "default" : "pointer",
                 }}
               >
-                Eliminar
+                {deleting ? "..." : "Sí"}
               </button>
-            ) : (
-              <>
-                <span style={{ fontSize: 12, color: "#8a6d1a" }}>¿Seguro?</span>
-                <button
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  style={{
-                    background: "#fde8e8",
-                    color: "#d64545",
-                    border: "1px solid #e8b4b4",
-                    borderRadius: 6,
-                    padding: "4px 10px",
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: deleting ? "default" : "pointer",
-                  }}
-                >
-                  {deleting ? "..." : "Sí"}
-                </button>
-                <button
-                  onClick={() => setConfirmingDelete(false)}
-                  disabled={deleting}
-                  style={{
-                    background: "none",
-                    color: "#6b7280",
-                    border: "1px solid #dfe3e8",
-                    borderRadius: 6,
-                    padding: "4px 10px",
-                    fontSize: 12,
-                    cursor: deleting ? "default" : "pointer",
-                  }}
-                >
-                  No
-                </button>
-              </>
-            )}
+              <button
+                onClick={() => setConfirmingDelete(false)}
+                disabled={deleting}
+                style={{
+                  background: "none",
+                  color: "#6b7280",
+                  border: "1px solid #dfe3e8",
+                  borderRadius: 6,
+                  padding: "4px 10px",
+                  fontSize: 12,
+                  cursor: deleting ? "default" : "pointer",
+                }}
+              >
+                No
+              </button>
+            </>
+          )}
+        </div>
+        {deleteError && (
+          <div style={{ fontSize: 11, color: "#d64545", marginTop: 6 }}>
+            {deleteError}
           </div>
-          {deleteError && (
-            <div style={{ fontSize: 11, color: "#d64545", marginTop: 4 }}>
-              {deleteError}
-            </div>
-          )}
-          {impersonateError && (
-            <div style={{ fontSize: 11, color: "#d64545", marginTop: 4 }}>
-              {impersonateError}
-            </div>
-          )}
-        </td>
-      </tr>
-      {editing && (
-        <tr style={{ background: "#f7f8fa", color: "#16181d" }}>
-          <td colSpan={12} style={{ ...tdStyle, padding: "10px 8px" }}>
+        )}
+        {impersonateError && (
+          <div style={{ fontSize: 11, color: "#d64545", marginTop: 6 }}>
+            {impersonateError}
+          </div>
+        )}
+
+        {editing && (
+          <div
+            style={{
+              marginTop: 14,
+              padding: "10px 10px",
+              background: "#f0f2f5",
+              borderRadius: 8,
+            }}
+          >
             <div
               style={{
                 display: "flex",
@@ -1391,15 +1581,14 @@ function UserRowItem({
                 {editError}
               </p>
             )}
-          </td>
-        </tr>
-      )}
-      <tr>
-        <td colSpan={12} style={{ padding: "0 8px 8px" }}>
+          </div>
+        )}
+
+        <div style={{ marginTop: 14 }}>
           <UserHistorial email={user.email} />
-        </td>
-      </tr>
-    </>
+        </div>
+      </div>
+    </details>
   );
 }
 
