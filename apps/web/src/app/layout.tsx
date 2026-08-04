@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import "./globals.css";
 
 export const metadata = {
   metadataBase: new URL("https://auto-articulos-web.vercel.app"),

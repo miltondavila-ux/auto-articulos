@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Preflight está apagado en tailwind.config.js para no tocar el resto de
+ * la app (estilos inline). Pero los componentes de Tremor sí asumen el
+ * box-sizing:border-box que Preflight normalmente pone — sin esto, el
+ * padding de las tarjetas se suma por fuera del ancho y desborda en
+ * mobile. Se repone solo esta regla puntual, no el resto de los resets.
+ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}

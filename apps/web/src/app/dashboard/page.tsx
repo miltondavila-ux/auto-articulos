@@ -10,6 +10,7 @@ import {
 } from "@/components/dashboard-ui";
 import type { RunRow, TitleEventRow, TitleRow } from "@/types/dashboard";
 import GoogleIndexingStatus from "@/components/GoogleIndexingStatus";
+import PerformanceDashboard from "@/components/PerformanceDashboard";
 
 interface PublishedNotification {
   id: string;
@@ -163,6 +164,8 @@ export default function InicioPage() {
           ))}
         </div>
       )}
+
+      <PerformanceDashboard />
 
       <OnboardingWizard
         credentialsConfigured={credentialsConfigured}
