@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
     include: { titles: { orderBy: { createdAt: "asc" } }, category: true },
   });
   if (!group) {
+    console.error("opportunities/execute: not found", { userId, type, id });
     return NextResponse.json(
       { error: "Oportunidad no encontrada." },
       { status: 404 },

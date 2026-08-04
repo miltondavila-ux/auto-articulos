@@ -138,6 +138,10 @@ export default function OportunidadesPage() {
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       setMessage({ error: true, text: data.error ?? "No se pudo ejecutar." });
+      // Si el servidor dice que ya no existe, la lista en pantalla está
+      // desactualizada (p. ej. otra pestaña ya la ejecutó/eliminó) —
+      // refrescamos para que no se sigan reintentando datos fantasma.
+      await load();
       setBusyId(null);
       return;
     }
