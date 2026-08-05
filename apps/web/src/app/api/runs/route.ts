@@ -21,6 +21,9 @@ export async function GET() {
         orderBy: { order: "asc" },
         include: {
           events: { orderBy: { createdAt: "desc" }, take: 1 },
+          businessProfilePost: {
+            select: { status: true, sentAt: true, googleResponse: true },
+          },
         },
       },
       category: true,

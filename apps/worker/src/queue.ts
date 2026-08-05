@@ -150,6 +150,7 @@ async function processRunTitle(
         status: "success",
         articleUrl: result.articleUrl,
         finalTitle: result.finalTitle,
+        summary: result.summary,
         processedAt: new Date(),
         errorMessage: null,
       },

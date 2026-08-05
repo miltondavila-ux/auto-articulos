@@ -68,14 +68,35 @@ model User {
   // seguridad si un proceso muere sin liberarlo.
   workerBusyUntil          DateTime?
 
-  credentials        Credential[]
-  runs               Run[]
-  categories         Category[]
-  categorySyncJobs   CategorySyncJob[]
-  languages          Language[]
-  languageSyncJobs   LanguageSyncJob[]
-  searchIntegrations SearchIntegration[]
-  opportunityGroups  OpportunityGroup[]
+  credentials                Credential[]
+  runs                       Run[]
+  categories                 Category[]
+  categorySyncJobs           CategorySyncJob[]
+  languages                  Language[]
+  languageSyncJobs           LanguageSyncJob[]
+  searchIntegrations         SearchIntegration[]
+  opportunityGroups          OpportunityGroup[]
+  businessProfileIntegration BusinessProfileIntegration?
+}
+
+// Conexión OAuth de un usuario con Google Business Profile (antes Google My
+// Business) — pedido explícito del usuario, 5/8/2026: cada artículo publicado
+// también se convierte en una publicación del perfil de negocio. Mismo patrón
+// que SearchIntegration (refresh token cifrado, nunca el access token), pero
+// un solo registro por usuario porque solo se elige UNA ubicación a la vez.
+model BusinessProfileIntegration {
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  encryptedRefreshToken String
+  // Nulos justo después de conectar: el usuario recién elige la ubicación en
+  // un segundo paso en Configuración (mismo patrón que SearchIntegration).
+  accountName           String? // "accounts/123..."
+  locationName          String? // "accounts/123/locations/456..."
+  locationTitle         String? // nombre visible, para mostrarlo en Configuración
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SearchIntegration {
@@ -267,11 +288,36 @@ model Title {
   // Console fue confirmado exitoso (respuesta ok de la API) — nunca en un
   // intento fallido, pendiente o sin verificar.
   lastSitemapSentAt     DateTime?
+  // Resumen/excerpt real del artículo (el mismo texto que ya se usa para
+  // armar el prompt de imagen, ver apps/worker/src/imagePrompt.ts), guardado
+  // en el momento de publicar para poder reusarlo después al armar la
+  // publicación de Google Business Profile sin tener que volver a abrir el
+  // artículo. Null en artículos publicados antes de este campo.
+  summary               String?
 
-  run    Run          @relation(fields: [runId], references: [id], onDelete: Cascade)
-  events TitleEvent[]
+  run                 Run                  @relation(fields: [runId], references: [id], onDelete: Cascade)
+  events              TitleEvent[]
+  businessProfilePost BusinessProfilePost?
 
   @@index([runId, status])
+}
+
+// Historial de publicaciones enviadas a Google Business Profile — un
+// registro por artículo publicado, con el texto exacto enviado, la fecha,
+// la ubicación usada, el estado y la respuesta/error real de Google. Pedido
+// explícito del usuario, 5/8/2026.
+model BusinessProfilePost {
+  id             String    @id @default(cuid())
+  titleId        String    @unique
+  summary        String
+  ctaUrl         String
+  imageUrl       String?
+  status         String    @default("pending") // pending, sent, error, rejected
+  googleResponse String?
+  sentAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  title Title @relation(fields: [titleId], references: [id], onDelete: Cascade)
 }
 
 model TitleEvent {

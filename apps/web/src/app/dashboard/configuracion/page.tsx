@@ -12,6 +12,7 @@ import {
 } from "@/components/dashboard-ui";
 import type { CategoryRow, LanguageRow, SyncStatus } from "@/types/dashboard";
 import GoogleSearchConsoleSection from "@/components/GoogleSearchConsoleSection";
+import BusinessProfileSection from "@/components/BusinessProfileSection";
 
 export default function ConfiguracionPage() {
   const [username, setUsername] = useState("");
@@ -192,6 +193,7 @@ export default function ConfiguracionPage() {
   return (
     <div>
       <GoogleSearchConsoleSection />
+      <BusinessProfileSection />
       <section style={readySectionStyle(credentialsConfigured)}>
         <h2 style={h2Style}>
           Credenciales de 10minutesWebsite{" "}

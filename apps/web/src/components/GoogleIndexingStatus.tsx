@@ -51,6 +51,27 @@ export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
           ? `✓ Sitemap enviado: ${new Date(title.lastSitemapSentAt).toLocaleString("es-US")}`
           : "Sitemap: todavía no se confirmó un envío para este artículo."}
       </div>
+      {title.businessProfilePost && (
+        <div
+          style={{
+            color:
+              title.businessProfilePost.status === "sent"
+                ? "#1e8a4b"
+                : title.businessProfilePost.status === "rejected" ||
+                    title.businessProfilePost.status === "error"
+                  ? "#d64545"
+                  : "#8a6d1a",
+          }}
+        >
+          {title.businessProfilePost.status === "sent"
+            ? `✓ Publicado en Google Business Profile${title.businessProfilePost.sentAt ? `: ${new Date(title.businessProfilePost.sentAt).toLocaleString("es-US")}` : ""}`
+            : title.businessProfilePost.status === "rejected"
+              ? "Google Business Profile rechazó esta publicación."
+              : title.businessProfilePost.status === "error"
+                ? "Error al publicar en Google Business Profile."
+                : "Publicando en Google Business Profile..."}
+        </div>
+      )}
       <div
         style={{
           color:
