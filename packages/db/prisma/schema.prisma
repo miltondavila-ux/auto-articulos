@@ -50,6 +50,13 @@ model User {
   // depender de OpportunityGroup.createdAt (que no cambia si esa corrida no
   // creó grupos).
   lastOpportunityAnalysisAt DateTime?
+  // Momento exacto en que el usuario aceptó expresamente el aviso de
+  // divulgación de Oportunidades (algoritmo automatizado + IA, sin
+  // responsabilidad del administrador sobre las decisiones de
+  // publicación) — pedido explícito del usuario, 5/8/2026. Se muestra una
+  // sola vez, la primera vez que se entra a Oportunidades; null significa
+  // que todavía no lo ha aceptado.
+  opportunitiesDisclosureAcceptedAt DateTime?
   createdAt                DateTime  @default(now())
   // Bloqueo entre procesos (no solo entre "lanes" del mismo proceso): con
   // varios workers de GitHub Actions corriendo en paralelo (31/7/2026,

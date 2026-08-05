@@ -9,6 +9,7 @@ export async function GET() {
     role: user.role,
     maxTitlesPerBatch: user.maxTitlesPerBatch,
     contentLanguage: user.contentLanguage,
+    opportunitiesDisclosureAcceptedAt: user.opportunitiesDisclosureAcceptedAt,
   });
 }
 

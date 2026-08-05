@@ -50,6 +50,10 @@ export default function OportunidadesPage() {
   );
   const [lastAnalysisAt, setLastAnalysisAt] = useState<string | null>(null);
   const [disableIndexing, setDisableIndexing] = useState(false);
+  const [disclosureAcceptedAt, setDisclosureAcceptedAt] = useState<
+    string | null | undefined
+  >(undefined);
+  const [acceptingDisclosure, setAcceptingDisclosure] = useState(false);
   const [message, setMessage] = useState<{
     kind: "error" | "info" | "success";
     text: string;
@@ -73,9 +77,25 @@ export default function OportunidadesPage() {
       ) {
         setMaxTitlesPerBatch(me.maxTitlesPerBatch);
       }
+      setDisclosureAcceptedAt(me.opportunitiesDisclosureAcceptedAt ?? null);
     }
     setLoading(false);
   }, []);
+
+  async function acceptDisclosure() {
+    setAcceptingDisclosure(true);
+    try {
+      const response = await fetch("/api/opportunities/disclosure", {
+        method: "POST",
+      });
+      const data = await response.json().catch(() => ({}));
+      if (response.ok) {
+        setDisclosureAcceptedAt(data.opportunitiesDisclosureAcceptedAt);
+      }
+    } finally {
+      setAcceptingDisclosure(false);
+    }
+  }
 
   useEffect(() => {
     load();
@@ -173,6 +193,46 @@ export default function OportunidadesPage() {
     }
     router.push("/dashboard/publicaciones-en-curso");
     router.refresh();
+  }
+
+  if (!loading && disclosureAcceptedAt === null) {
+    return (
+      <section style={sectionStyle}>
+        <h2 style={h2Style}>Aviso importante sobre Oportunidades</h2>
+        <p style={{ color: "#16181d", fontSize: 14, lineHeight: 1.6 }}>
+          Las oportunidades que vas a ver aquí son generadas mediante un
+          algoritmo automatizado conectado a fuentes como Google Search
+          Console y Bing, y los resultados son producidos con inteligencia
+          artificial.
+        </p>
+        <p style={{ color: "#16181d", fontSize: 14, lineHeight: 1.6 }}>
+          Cada usuario es responsable de revisar el contenido y decidir si
+          desea publicarlo o no. El administrador del programa no asume
+          responsabilidad por las decisiones de publicación ni por los
+          resultados derivados del uso de estas oportunidades.
+        </p>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <button
+            onClick={acceptDisclosure}
+            disabled={acceptingDisclosure}
+            style={disabledStyle(
+              { ...buttonStyle, marginTop: 0 },
+              acceptingDisclosure,
+            )}
+          >
+            {acceptingDisclosure ? "Guardando..." : "Acepto y entiendo"}
+          </button>
+          <Link href="/dashboard" style={{ textDecoration: "none" }}>
+            <button
+              type="button"
+              style={{ ...secondaryButtonStyle, marginTop: 0 }}
+            >
+              Volver a Inicio
+            </button>
+          </Link>
+        </div>
+      </section>
+    );
   }
 
   return (

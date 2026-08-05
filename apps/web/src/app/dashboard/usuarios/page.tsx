@@ -34,6 +34,7 @@ interface UserRow {
   maxTitlesPerBatch: number;
   platformDomain: string;
   contentLanguage: string;
+  opportunitiesDisclosureAcceptedAt: string | null;
   createdAt: string;
   articlesPublished: number;
   currentPassword: string | null;
@@ -1388,6 +1389,14 @@ function UserCard({
 
           <Field label="Creado">
             {new Date(user.createdAt).toLocaleDateString()}
+          </Field>
+
+          <Field label="Aviso de Oportunidades">
+            {user.opportunitiesDisclosureAcceptedAt
+              ? `Aceptado el ${new Date(
+                  user.opportunitiesDisclosureAcceptedAt,
+                ).toLocaleString("es-US")}`
+              : "Todavía no aceptado"}
           </Field>
         </div>
 

@@ -53,6 +53,7 @@ export async function GET() {
         maxTitlesPerBatch: true,
         platformDomain: true,
         contentLanguage: true,
+        opportunitiesDisclosureAcceptedAt: true,
         createdAt: true,
         initialPasswordEncrypted: true,
       },
