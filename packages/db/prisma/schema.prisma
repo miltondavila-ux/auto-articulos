@@ -79,6 +79,13 @@ model SearchIntegration {
   siteUrl               String?
   sitemapUrl            String?
   permissionLevel       String?
+  // Resultado real del último intento de enviar el sitemap a Google (el
+  // diario automático o el botón manual "Enviar sitemap ahora") — pedido
+  // explícito del usuario: poder ver si falló y reintentarlo a mano en vez
+  // de depender solo del automático.
+  lastSitemapSyncAt     DateTime?
+  lastSitemapSyncStatus String?
+  lastSitemapSyncError  String?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 

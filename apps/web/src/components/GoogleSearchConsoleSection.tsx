@@ -17,10 +17,14 @@ export default function GoogleSearchConsoleSection() {
     sitemapUrl?: string | null;
     sites: Site[];
     error?: string;
+    lastSitemapSyncAt?: string | null;
+    lastSitemapSyncStatus?: string | null;
+    lastSitemapSyncError?: string | null;
   } | null>(null);
   const [siteUrl, setSiteUrl] = useState("");
   const [sitemapUrl, setSitemapUrl] = useState("");
   const [message, setMessage] = useState("");
+  const [sendingSitemap, setSendingSitemap] = useState(false);
   // El sitemap se detecta solo preguntándole a Google (ver la API) — no
   // tiene sentido mostrarle a todo el mundo un campo de texto para
   // escribirlo a mano si ya se detectó. Pedido explícito del usuario
@@ -60,6 +64,23 @@ export default function GoogleSearchConsoleSection() {
     await fetch("/api/search-integrations/google", { method: "DELETE" });
     setMessage("Google Search Console desconectado.");
     load();
+  }
+
+  async function sendSitemapNow() {
+    setSendingSitemap(true);
+    setMessage("");
+    try {
+      const res = await fetch("/api/sitemap/send", { method: "POST" });
+      const value = await res.json().catch(() => ({}));
+      setMessage(
+        res.ok
+          ? "Sitemap enviado a Google correctamente."
+          : (value.error ?? "No se pudo enviar el sitemap."),
+      );
+      await load();
+    } finally {
+      setSendingSitemap(false);
+    }
   }
 
   return (
@@ -129,10 +150,47 @@ export default function GoogleSearchConsoleSection() {
               />
             </>
           )}
+          {data.sitemapUrl && (
+            <div style={{ fontSize: 12 }}>
+              {data.lastSitemapSyncStatus === "success" && (
+                <p style={{ color: "#1e8a4b", margin: 0 }}>
+                  ✓ Último envío exitoso
+                  {data.lastSitemapSyncAt
+                    ? `: ${new Date(data.lastSitemapSyncAt).toLocaleString("es-US")}`
+                    : "."}
+                </p>
+              )}
+              {data.lastSitemapSyncStatus === "error" && (
+                <p style={{ color: "#d64545", margin: 0 }}>
+                  ✗ El último envío falló
+                  {data.lastSitemapSyncAt
+                    ? ` (${new Date(data.lastSitemapSyncAt).toLocaleString("es-US")})`
+                    : ""}
+                  {data.lastSitemapSyncError
+                    ? `: ${data.lastSitemapSyncError}`
+                    : "."}
+                </p>
+              )}
+              {!data.lastSitemapSyncStatus && (
+                <p style={{ color: "#6b7280", margin: 0 }}>
+                  Todavía no se ha enviado el sitemap.
+                </p>
+              )}
+            </div>
+          )}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <button onClick={save} style={secondaryButtonStyle}>
               Guardar propiedad
             </button>
+            {data.sitemapUrl && (
+              <button
+                onClick={sendSitemapNow}
+                disabled={sendingSitemap}
+                style={secondaryButtonStyle}
+              >
+                {sendingSitemap ? "Enviando..." : "Enviar sitemap ahora"}
+              </button>
+            )}
             <button onClick={disconnect} style={secondaryButtonStyle}>
               Desconectar Google
             </button>

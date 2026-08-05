@@ -15,6 +15,7 @@ interface SitemapResult {
 }
 
 async function submitForUser(integration: {
+  id: string;
   userId: string;
   encryptedRefreshToken: string;
   siteUrl: string | null;
@@ -42,31 +43,50 @@ async function submitForUser(integration: {
     // la API de Search Console (si no, lanza y cae al catch de abajo). Recién
     // ahí se marca cada artículo publicado como incluido en este envío —
     // nunca en un intento fallido, pendiente o sin verificar.
+    const sentAt = new Date();
     const publishedTitles = await prisma.title.findMany({
       where: { run: { userId: integration.userId }, status: "success" },
       select: { id: true },
     });
-    if (publishedTitles.length > 0) {
-      const sentAt = new Date();
-      await prisma.$transaction([
-        prisma.title.updateMany({
-          where: { id: { in: publishedTitles.map((t) => t.id) } },
-          data: { lastSitemapSentAt: sentAt },
-        }),
-        prisma.titleEvent.createMany({
-          data: publishedTitles.map((t) => ({
-            titleId: t.id,
-            message: "Sitemap enviado a Google Search Console (envío diario).",
-            createdAt: sentAt,
-          })),
-        }),
-      ]);
-    }
+    await prisma.$transaction([
+      prisma.searchIntegration.update({
+        where: { id: integration.id },
+        data: {
+          lastSitemapSyncAt: sentAt,
+          lastSitemapSyncStatus: "success",
+          lastSitemapSyncError: null,
+        },
+      }),
+      ...(publishedTitles.length > 0
+        ? [
+            prisma.title.updateMany({
+              where: { id: { in: publishedTitles.map((t) => t.id) } },
+              data: { lastSitemapSentAt: sentAt },
+            }),
+            prisma.titleEvent.createMany({
+              data: publishedTitles.map((t) => ({
+                titleId: t.id,
+                message:
+                  "Sitemap enviado a Google Search Console (envío diario).",
+                createdAt: sentAt,
+              })),
+            }),
+          ]
+        : []),
+    ]);
 
     console.log(`Sitemap enviado para el usuario ${integration.userId}.`);
     return { userId: integration.userId, ok: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    await prisma.searchIntegration.update({
+      where: { id: integration.id },
+      data: {
+        lastSitemapSyncAt: new Date(),
+        lastSitemapSyncStatus: "error",
+        lastSitemapSyncError: message,
+      },
+    });
     console.error(
       `No se pudo enviar el sitemap del usuario ${integration.userId}: ${message}`,
     );
@@ -82,6 +102,7 @@ export async function sendDailySitemaps(): Promise<SitemapResult[]> {
       sitemapUrl: { not: null },
     },
     select: {
+      id: true,
       userId: true,
       encryptedRefreshToken: true,
       siteUrl: true,

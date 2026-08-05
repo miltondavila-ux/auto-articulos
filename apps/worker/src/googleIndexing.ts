@@ -34,15 +34,13 @@ export async function notifyGoogle(titleId: string, userId: string) {
       ? await inspectGoogleUrl(token, integration.siteUrl, title.articleUrl)
       : null;
     const indexed = inspection?.verdict === "PASS";
-    const sitemapNote =
-      "El sitemap se enviará en el próximo proceso diario programado.";
     await prisma.title.update({
       where: { id: titleId },
       data: {
         googleIndexingStatus: indexed ? "indexed" : "inspection_pending",
         googleIndexingMessage: indexed
-          ? `${sitemapNote} Google informa que la URL está indexada${inspection?.coverageState ? `: ${inspection.coverageState}` : "."}`
-          : `${sitemapNote} Google todavía no reporta la URL como indexada${inspection?.coverageState ? `: ${inspection.coverageState}` : "."}`,
+          ? `Google informa que la URL está indexada${inspection?.coverageState ? `: ${inspection.coverageState}` : "."}`
+          : `Google todavía no reporta la URL como indexada${inspection?.coverageState ? `: ${inspection.coverageState}` : "."}`,
         googleIndexingAt: new Date(),
       },
     });

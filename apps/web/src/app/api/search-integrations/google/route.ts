@@ -56,6 +56,9 @@ export async function GET() {
       siteUrl: integration.siteUrl,
       sitemapUrl,
       sites,
+      lastSitemapSyncAt: integration.lastSitemapSyncAt,
+      lastSitemapSyncStatus: integration.lastSitemapSyncStatus,
+      lastSitemapSyncError: integration.lastSitemapSyncError,
     });
   } catch (error) {
     return NextResponse.json({
@@ -64,6 +67,9 @@ export async function GET() {
       sitemapUrl: integration.sitemapUrl,
       sites: [],
       error: error instanceof Error ? error.message : String(error),
+      lastSitemapSyncAt: integration.lastSitemapSyncAt,
+      lastSitemapSyncStatus: integration.lastSitemapSyncStatus,
+      lastSitemapSyncError: integration.lastSitemapSyncError,
     });
   }
 }

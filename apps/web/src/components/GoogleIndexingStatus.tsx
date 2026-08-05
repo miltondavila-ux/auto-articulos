@@ -46,6 +46,11 @@ export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
 
   return (
     <div style={{ marginTop: 7, fontSize: 12 }}>
+      <div style={{ color: title.lastSitemapSentAt ? "#1e8a4b" : "#6b7280" }}>
+        {title.lastSitemapSentAt
+          ? `✓ Sitemap enviado: ${new Date(title.lastSitemapSentAt).toLocaleString("es-US")}`
+          : "Sitemap: todavía no se confirmó un envío para este artículo."}
+      </div>
       <div
         style={{
           color:
