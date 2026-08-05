@@ -10,7 +10,7 @@ import {
   disabledStyle,
   ReadyBadge,
 } from "@/components/dashboard-ui";
-import type { CategoryRow, SyncStatus } from "@/types/dashboard";
+import type { CategoryRow, LanguageRow, SyncStatus } from "@/types/dashboard";
 import GoogleSearchConsoleSection from "@/components/GoogleSearchConsoleSection";
 
 export default function ConfiguracionPage() {
@@ -23,6 +23,15 @@ export default function ConfiguracionPage() {
   const [lastSyncStatus, setLastSyncStatus] = useState<SyncStatus | null>(null);
   const [lastSyncError, setLastSyncError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [languages, setLanguages] = useState<LanguageRow[]>([]);
+  const [lastLanguageSyncStatus, setLastLanguageSyncStatus] =
+    useState<SyncStatus | null>(null);
+  const [lastLanguageSyncError, setLastLanguageSyncError] = useState<
+    string | null
+  >(null);
+  const [languageSyncing, setLanguageSyncing] = useState(false);
+  const [contentLanguage, setContentLanguage] = useState("");
+  const [savingLanguage, setSavingLanguage] = useState(false);
   const [banner, setBanner] = useState<{
     type: "error" | "info";
     text: string;
@@ -30,6 +39,8 @@ export default function ConfiguracionPage() {
 
   const syncInProgress =
     lastSyncStatus === "pending" || lastSyncStatus === "running";
+  const languageSyncInProgress =
+    lastLanguageSyncStatus === "pending" || lastLanguageSyncStatus === "running";
 
   const loadCredentialsStatus = useCallback(async () => {
     const res = await fetch("/api/credentials");
@@ -49,16 +60,40 @@ export default function ConfiguracionPage() {
     }
   }, []);
 
+  const loadLanguages = useCallback(async () => {
+    const [langRes, meRes] = await Promise.all([
+      fetch("/api/languages"),
+      fetch("/api/me"),
+    ]);
+    if (langRes.ok) {
+      const data = await langRes.json();
+      setLanguages(data.languages);
+      setLastLanguageSyncStatus(data.lastSyncJob?.status ?? null);
+      setLastLanguageSyncError(data.lastSyncJob?.errorMessage ?? null);
+    }
+    if (meRes.ok) {
+      const data = await meRes.json();
+      setContentLanguage(data.contentLanguage ?? "");
+    }
+  }, []);
+
   useEffect(() => {
     loadCredentialsStatus();
     loadCategories();
-  }, [loadCredentialsStatus, loadCategories]);
+    loadLanguages();
+  }, [loadCredentialsStatus, loadCategories, loadLanguages]);
 
   useEffect(() => {
     if (!syncInProgress) return;
     const interval = setInterval(loadCategories, 3000);
     return () => clearInterval(interval);
   }, [syncInProgress, loadCategories]);
+
+  useEffect(() => {
+    if (!languageSyncInProgress) return;
+    const interval = setInterval(loadLanguages, 3000);
+    return () => clearInterval(interval);
+  }, [languageSyncInProgress, loadLanguages]);
 
   async function handleSaveCredentials(e: FormEvent) {
     e.preventDefault();
@@ -107,6 +142,48 @@ export default function ConfiguracionPage() {
       loadCategories();
     } finally {
       setSyncing(false);
+    }
+  }
+
+  async function handleSyncLanguages() {
+    setLanguageSyncing(true);
+    setBanner(null);
+    try {
+      const res = await fetch("/api/languages/sync", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setBanner({
+          type: "error",
+          text: data.error ?? "Error al sincronizar idiomas",
+        });
+        return;
+      }
+      loadLanguages();
+    } finally {
+      setLanguageSyncing(false);
+    }
+  }
+
+  async function handleSaveLanguage() {
+    setSavingLanguage(true);
+    setBanner(null);
+    try {
+      const res = await fetch("/api/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contentLanguage }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setBanner({
+          type: "error",
+          text: data.error ?? "Error al guardar el idioma",
+        });
+        return;
+      }
+      setBanner({ type: "info", text: "Idioma de los artículos guardado." });
+    } finally {
+      setSavingLanguage(false);
     }
   }
 
@@ -321,6 +398,112 @@ export default function ConfiguracionPage() {
               <li key={c.id}>{c.name}</li>
             ))}
           </ul>
+        )}
+      </section>
+
+      <section style={sectionStyle}>
+        <h2 style={h2Style}>Idioma de los artículos</h2>
+        <p style={{ fontSize: 13, color: "#6b7280" }}>
+          Sincroniza los idiomas reales que ofrece 10minutesWebsite al crear
+          un artículo, y elige en cuál quieres que se redacten los tuyos.
+        </p>
+        <button
+          onClick={handleSyncLanguages}
+          disabled={
+            languageSyncing || languageSyncInProgress || !credentialsConfigured
+          }
+          style={disabledStyle(
+            secondaryButtonStyle,
+            languageSyncing || languageSyncInProgress || !credentialsConfigured,
+          )}
+        >
+          {languageSyncing || languageSyncInProgress
+            ? "Sincronizando..."
+            : "Sincronizar idiomas"}
+        </button>
+        {!credentialsConfigured && (
+          <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
+            Guarda primero tus credenciales para poder sincronizar idiomas.
+          </p>
+        )}
+        {languageSyncInProgress && (
+          <p
+            style={{
+              fontSize: 13,
+              color: "#8a6d1a",
+              marginTop: 8,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <style>{`
+              @keyframes auto-articulos-spin {
+                to { transform: rotate(360deg); }
+              }
+            `}</style>
+            <span
+              aria-hidden
+              style={{
+                display: "inline-block",
+                width: 14,
+                height: 14,
+                border: "2px solid #f5e6c8",
+                borderTopColor: "#8a6d1a",
+                borderRadius: "50%",
+                animation: "auto-articulos-spin 0.8s linear infinite",
+                flexShrink: 0,
+              }}
+            />
+            {lastLanguageSyncStatus === "running"
+              ? "Conectando con 10minutesWebsite ahora mismo..."
+              : "En cola para procesarse. Esta pantalla se actualiza sola cuando arranque."}
+          </p>
+        )}
+        {lastLanguageSyncStatus === "error" && (
+          <p style={{ fontSize: 13, color: "#d64545", marginTop: 8 }}>
+            La última sincronización falló
+            {lastLanguageSyncError ? `: ${lastLanguageSyncError}` : ". Intenta de nuevo."}
+          </p>
+        )}
+        {languages.length > 0 && (
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              alignItems: "center",
+              marginTop: 12,
+              flexWrap: "wrap",
+            }}
+          >
+            <select
+              value={contentLanguage}
+              onChange={(e) => setContentLanguage(e.target.value)}
+              style={{ ...inputStyle, width: 220 }}
+            >
+              <option value="">Elige un idioma</option>
+              {languages.map((l) => (
+                <option key={l.id} value={l.externalId}>
+                  {l.name}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleSaveLanguage}
+              disabled={savingLanguage || !contentLanguage}
+              style={disabledStyle(
+                secondaryButtonStyle,
+                savingLanguage || !contentLanguage,
+              )}
+            >
+              {savingLanguage ? "Guardando..." : "Guardar"}
+            </button>
+          </div>
+        )}
+        {languages.length === 0 && !languageSyncInProgress && (
+          <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
+            Sincroniza para ver los idiomas disponibles en tu cuenta.
+          </p>
         )}
       </section>
 

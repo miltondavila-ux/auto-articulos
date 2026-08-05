@@ -59,6 +59,8 @@ model User {
   runs               Run[]
   categories         Category[]
   categorySyncJobs   CategorySyncJob[]
+  languages          Language[]
+  languageSyncJobs   LanguageSyncJob[]
   searchIntegrations SearchIntegration[]
   opportunityGroups  OpportunityGroup[]
 }
@@ -108,6 +110,37 @@ model Category {
   opportunityGroups OpportunityGroup[]
 
   @@unique([userId, platform, externalId])
+}
+
+// Idiomas reales que ofrece el selector "Lucy habla diferentes idiomas..."
+// dentro del modal de generación de 10minutesWebsite (visto en vivo el
+// 5/8/2026) — se sincronizan igual que las categorías, en vez de asumir una
+// lista fija, porque cada cuenta puede tener opciones distintas.
+model Language {
+  id         String   @id @default(cuid())
+  userId     String
+  platform   String   @default("10minutesWebsite")
+  externalId String
+  name       String
+  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform, externalId])
+}
+
+model LanguageSyncJob {
+  id           String             @id @default(cuid())
+  userId       String
+  status       CategorySyncStatus @default(pending)
+  errorMessage String?
+  createdAt    DateTime           @default(now())
+  finishedAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
 }
 
 model OpportunityGroup {

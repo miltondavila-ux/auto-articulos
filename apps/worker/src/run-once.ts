@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { processNext } from "./queue";
 import { processNextCategorySync } from "./categorySync";
+import { processNextLanguageSync } from "./languageSync";
 import { cleanupOldEvents, recoverStuckTitles } from "./cleanup";
 
 // Pensado para correr en un runner efímero (GitHub Actions), no como proceso
@@ -60,6 +61,19 @@ async function runSyncLane(deadline: number): Promise<boolean> {
   return didWork;
 }
 
+async function runLanguageSyncLane(deadline: number): Promise<boolean> {
+  let didWork = false;
+  while (Date.now() < deadline) {
+    const did = await processNextLanguageSync();
+    if (did) {
+      didWork = true;
+      continue;
+    }
+    await sleep(IDLE_DELAY_MS);
+  }
+  return didWork;
+}
+
 async function main() {
   // Con varios shards, ejecutar mantenimiento en todos duplicaría consultas y
   // limpiezas. El shard 1 se encarga; todos publican en paralelo.
@@ -78,6 +92,9 @@ async function main() {
   const results = await Promise.all([
     ...Array.from({ length: SYNC_LANE_CONCURRENCY }, () =>
       runSyncLane(deadline),
+    ),
+    ...Array.from({ length: SYNC_LANE_CONCURRENCY }, () =>
+      runLanguageSyncLane(deadline),
     ),
     ...Array.from({ length: TITLE_LANE_CONCURRENCY }, () =>
       runTitleLane(deadline),

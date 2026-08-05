@@ -32,6 +32,12 @@ export interface CategoryRow {
   externalId: string;
 }
 
+export interface LanguageRow {
+  id: string;
+  name: string;
+  externalId: string;
+}
+
 export interface RunRow {
   id: string;
   status: RunStatus;

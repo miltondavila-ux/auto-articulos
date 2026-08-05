@@ -23,6 +23,7 @@ export async function getCurrentUser() {
       lastName: true,
       role: true,
       maxTitlesPerBatch: true,
+      contentLanguage: true,
       createdAt: true,
     },
   });

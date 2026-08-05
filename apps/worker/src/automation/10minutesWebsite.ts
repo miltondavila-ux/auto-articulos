@@ -172,6 +172,77 @@ export async function fetchCategories(
   }
 }
 
+export interface RemoteLanguage {
+  externalId: string;
+  name: string;
+}
+
+/**
+ * Lee los idiomas reales que ofrece el selector "Lucy habla diferentes
+ * idiomas, selecciona el que más te guste" dentro del modal de generación
+ * con IA (visto en vivo el 5/8/2026, pedido explícito del usuario: que se
+ * traigan junto a las categorías en vez de asumir una lista fija).
+ *
+ * Es de solo lectura: abre el modal para ver el selector, pero nunca escribe
+ * en el campo de la idea ni hace clic en "Generar" — se cierra el navegador
+ * sin dejar ningún rastro en la cuenta real, igual que fetchCategories().
+ */
+export async function fetchLanguages(
+  credentials: TenMinutesWebsiteCredentials,
+): Promise<RemoteLanguage[]> {
+  const baseUrl = resolveBaseUrl(credentials.platformDomain);
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await login(page, baseUrl, credentials, async () => {});
+
+    await page.goto(`${baseUrl}/dashboard/direct-articles`, {
+      waitUntil: "domcontentloaded",
+      timeout: NAV_TIMEOUT_MS,
+    });
+
+    // El botón "Usar ChatGPT" solo queda disponible con un Tipo y una
+    // Categoría ya elegidos (mismo requisito que createArticleDraft) — se
+    // toma la primera categoría real de la cuenta, no importa cuál, ya que
+    // nunca se llega a generar ningún artículo con ella.
+    await page.selectOption("#type", ARTICLE_TYPE_NOTICIAS, {
+      timeout: NAV_TIMEOUT_MS,
+    });
+    const firstCategoryId = await page
+      .locator("#user_label_list_article option")
+      .first()
+      .getAttribute("value");
+    if (firstCategoryId) {
+      await page.selectOption("#user_label_list_article", firstCategoryId);
+      await page.dispatchEvent("#user_label_list_article", "change");
+    }
+
+    await page.getByRole("button", { name: TEXT_USAR_CHATGPT }).click();
+    const dialog = page.locator(".modal", {
+      hasText: TEXT_CHATGPT_MODAL_TITLE,
+    });
+    await dialog.waitFor({ state: "visible", timeout: NAV_TIMEOUT_MS });
+
+    return await dialog
+      .locator("select")
+      .first()
+      .locator("option")
+      .evaluateAll((options) =>
+        options
+          .map((o) => {
+            const opt = o as HTMLOptionElement;
+            return {
+              externalId: opt.value,
+              name: (opt.textContent ?? "").trim(),
+            };
+          })
+          .filter((l) => l.externalId && l.name),
+      );
+  } finally {
+    await browser.close();
+  }
+}
+
 async function login(
   page: Page,
   baseUrl: string,
@@ -334,18 +405,24 @@ async function createArticleDraft(
   });
   await dialog.waitFor({ state: "visible", timeout: NAV_TIMEOUT_MS });
 
-  // Pedido explícito del usuario (4/8/2026): el admin puede elegir el idioma
-  // de redacción del artículo desde Auto Artículos (User.contentLanguage,
-  // "es" por defecto). En vez de depender de un selector de idioma dentro de
-  // este modal (cuyo selector real no se pudo verificar sin acceso en vivo
-  // al sitio), se le indica el idioma directamente en el mismo prompt que ya
-  // se le manda a la IA — no cambia nada para "es" (comportamiento actual).
+  // Selector real "Lucy habla diferentes idiomas, selecciona el que más te
+  // guste" (visto en vivo el 5/8/2026, ver fetchLanguages()). El sitio ya lo
+  // deja en español por defecto, así que solo se toca si el usuario
+  // sincronizó y eligió explícitamente otro idioma en Configuración —
+  // User.contentLanguage guarda el value real de esa opción, no un código
+  // inventado. Si no hay sincronización (valor no coincide con ninguna
+  // opción real), se deja el valor por defecto del sitio en vez de fallar
+  // la publicación completa por esto.
+  if (contentLanguage) {
+    await dialog
+      .locator("select")
+      .first()
+      .selectOption(contentLanguage)
+      .catch(() => {});
+  }
+
   const ideaTextarea = dialog.locator("textarea").first();
-  const idea =
-    contentLanguage === "en"
-      ? `Write the entire article in English (not Spanish): ${title}`
-      : title;
-  await ideaTextarea.fill(idea);
+  await ideaTextarea.fill(title);
 
   await dialog.getByRole("button", { name: TEXT_GENERAR }).click();
   await onStep(

@@ -107,7 +107,6 @@ export async function PATCH(request: NextRequest) {
     dailyArticleLimit,
     maxTitlesPerBatch,
     platformDomain,
-    contentLanguage,
     email,
     newPassword,
     name,
@@ -126,7 +125,6 @@ export async function PATCH(request: NextRequest) {
     dailyArticleLimit?: number | null;
     maxTitlesPerBatch?: number;
     platformDomain?: string;
-    contentLanguage?: string;
     email?: string;
     name?: string;
     firstName?: string | null;
@@ -227,16 +225,6 @@ export async function PATCH(request: NextRequest) {
     data.platformDomain = platformDomain;
   }
 
-  if ("contentLanguage" in body) {
-    if (contentLanguage !== "es" && contentLanguage !== "en") {
-      return NextResponse.json(
-        { error: "contentLanguage debe ser 'es' o 'en'" },
-        { status: 400 },
-      );
-    }
-    data.contentLanguage = contentLanguage;
-  }
-
   if (typeof email === "string" && email.trim()) {
     const existing = await prisma.user.findUnique({
       where: { email: email.trim() },
@@ -327,18 +315,11 @@ export async function POST(request: NextRequest) {
     dailyArticleLimit = 95,
     maxTitlesPerBatch = 20,
     platformDomain = "net",
-    contentLanguage = "es",
   } = await request.json();
 
   if (platformDomain !== "net" && platformDomain !== "site") {
     return NextResponse.json(
       { error: "platformDomain debe ser 'net' o 'site'" },
-      { status: 400 },
-    );
-  }
-  if (contentLanguage !== "es" && contentLanguage !== "en") {
-    return NextResponse.json(
-      { error: "contentLanguage debe ser 'es' o 'en'" },
       { status: 400 },
     );
   }
@@ -445,7 +426,6 @@ export async function POST(request: NextRequest) {
       dailyArticleLimit,
       maxTitlesPerBatch,
       platformDomain,
-      contentLanguage,
     },
     select: {
       id: true,
