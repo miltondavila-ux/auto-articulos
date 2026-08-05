@@ -324,6 +324,28 @@ export default function ConfiguracionPage() {
         )}
       </section>
 
+      <section style={{ ...sectionStyle, textAlign: "center" }}>
+        <h2 style={h2Style}>Acceso rápido desde el celular</h2>
+        <p style={{ fontSize: 13, color: "#6b7280" }}>
+          Escanea este código con la cámara de tu teléfono para abrir Auto
+          Artículos y agregarlo a la pantalla de inicio.
+        </p>
+        <img
+          src="/qr-app.svg"
+          alt="Código QR para abrir Auto Artículos en el celular"
+          width={200}
+          height={200}
+          style={{
+            marginTop: 12,
+            background: "#fff",
+            padding: 12,
+            borderRadius: 12,
+            maxWidth: "100%",
+            height: "auto",
+          }}
+        />
+      </section>
+
       {banner && (
         <div
           style={{
