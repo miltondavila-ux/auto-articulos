@@ -44,6 +44,12 @@ model User {
   // apps/worker/src/automation/10minutesWebsite.ts, 4/8/2026). "es" por
   // defecto, sin cambios para nadie existente.
   contentLanguage          String    @default("es")
+  // Se actualiza cada vez que termina un análisis de oportunidades (haya
+  // encontrado categorías nuevas o no) — permite mostrar "último análisis"
+  // y aplicar la espera mínima de 7 días cuando no hay nada nuevo, sin
+  // depender de OpportunityGroup.createdAt (que no cambia si esa corrida no
+  // creó grupos).
+  lastOpportunityAnalysisAt DateTime?
   createdAt                DateTime  @default(now())
   // Bloqueo entre procesos (no solo entre "lanes" del mismo proceso): con
   // varios workers de GitHub Actions corriendo en paralelo (31/7/2026,

@@ -8,6 +8,9 @@ import {
 import { getCurrentUserId } from "@/lib/current-user";
 import { analyzeSeoOpportunities } from "@/lib/opportunity-analysis";
 
+const COOLDOWN_DAYS = 7;
+const COOLDOWN_MS = COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
+
 function isoDate(date: Date) {
   return date.toISOString().slice(0, 10);
 }
@@ -22,7 +25,14 @@ async function list(userId: string) {
 
 export async function GET() {
   const userId = await getCurrentUserId();
-  return NextResponse.json({ groups: await list(userId) });
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { lastOpportunityAnalysisAt: true },
+  });
+  return NextResponse.json({
+    groups: await list(userId),
+    lastAnalysisAt: user.lastOpportunityAnalysisAt,
+  });
 }
 
 export async function POST() {
@@ -46,6 +56,33 @@ export async function POST() {
       { error: "Sincroniza tus categorías de 10minutesWebsite primero." },
       { status: 400 },
     );
+  }
+
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { lastOpportunityAnalysisAt: true },
+  });
+  // Pedido explícito del usuario: si la última corrida no encontró nada
+  // nuevo, no dejar reintentar antes de 7 días (le da tiempo real a que
+  // cambien los datos de Search Console) en vez de gastar otra consulta a
+  // la IA para muy probablemente confirmar lo mismo.
+  const existingGroupsCount = await prisma.opportunityGroup.count({
+    where: { userId },
+  });
+  if (
+    existingGroupsCount === 0 &&
+    user.lastOpportunityAnalysisAt &&
+    Date.now() - user.lastOpportunityAnalysisAt.getTime() < COOLDOWN_MS
+  ) {
+    const nextAvailableAt = new Date(
+      user.lastOpportunityAnalysisAt.getTime() + COOLDOWN_MS,
+    );
+    return NextResponse.json({
+      groups: [],
+      lastAnalysisAt: user.lastOpportunityAnalysisAt,
+      noNewOpportunities: true,
+      nextAvailableAt,
+    });
   }
 
   try {
@@ -102,9 +139,24 @@ export async function POST() {
       ),
     });
 
+    const now = new Date();
+
+    if (analysis.status === "no_new") {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { lastOpportunityAnalysisAt: now },
+      });
+      return NextResponse.json({
+        groups: await list(userId),
+        lastAnalysisAt: now,
+        noNewOpportunities: true,
+        nextAvailableAt: new Date(now.getTime() + COOLDOWN_MS),
+      });
+    }
+
     await prisma.$transaction(async (tx) => {
       await tx.opportunityGroup.deleteMany({ where: { userId } });
-      for (const group of analysis) {
+      for (const group of analysis.groups) {
         await tx.opportunityGroup.create({
           data: {
             userId,
@@ -116,12 +168,24 @@ export async function POST() {
           },
         });
       }
+      await tx.user.update({
+        where: { id: userId },
+        data: { lastOpportunityAnalysisAt: now },
+      });
     });
-    return NextResponse.json({ groups: await list(userId) });
+    return NextResponse.json({
+      groups: await list(userId),
+      lastAnalysisAt: now,
+    });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) },
-      { status: 500 },
-    );
+    // Nunca se le muestra al usuario el error técnico crudo (ej. un
+    // SyntaxError de JSON.parse) — se registra en el log del servidor para
+    // poder diagnosticarlo, y se devuelve un mensaje entendible.
+    console.error("POST /api/opportunities falló:", error);
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No se pudo completar el análisis esta vez.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

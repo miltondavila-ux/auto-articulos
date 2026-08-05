@@ -28,6 +28,16 @@ interface OpportunityGroup {
 
 const DEFAULT_MAX_TITLES_PER_BATCH = 20;
 
+function formatDateTime(value: string | Date) {
+  return new Date(value).toLocaleString("es-US", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export default function OportunidadesPage() {
   const router = useRouter();
   const [groups, setGroups] = useState<OpportunityGroup[]>([]);
@@ -38,8 +48,9 @@ export default function OportunidadesPage() {
   const [maxTitlesPerBatch, setMaxTitlesPerBatch] = useState(
     DEFAULT_MAX_TITLES_PER_BATCH,
   );
+  const [lastAnalysisAt, setLastAnalysisAt] = useState<string | null>(null);
   const [message, setMessage] = useState<{
-    error: boolean;
+    kind: "error" | "info" | "success";
     text: string;
   } | null>(null);
 
@@ -49,7 +60,10 @@ export default function OportunidadesPage() {
       fetch("/api/me", { cache: "no-store" }),
     ]);
     const data = await opportunitiesResponse.json().catch(() => ({}));
-    if (opportunitiesResponse.ok) setGroups(data.groups ?? []);
+    if (opportunitiesResponse.ok) {
+      setGroups(data.groups ?? []);
+      setLastAnalysisAt(data.lastAnalysisAt ?? null);
+    }
     if (meResponse.ok) {
       const me = await meResponse.json();
       if (
@@ -100,13 +114,24 @@ export default function OportunidadesPage() {
       if (!response.ok)
         throw new Error(data.error ?? "No se pudo completar el análisis.");
       setGroups(data.groups ?? []);
-      setMessage({
-        error: false,
-        text: "Análisis completado con datos de Search Console.",
-      });
+      if (data.lastAnalysisAt) setLastAnalysisAt(data.lastAnalysisAt);
+      if (data.noNewOpportunities) {
+        const nextDate = data.nextAvailableAt
+          ? formatDateTime(data.nextAvailableAt)
+          : null;
+        setMessage({
+          kind: "info",
+          text: `Con la información actual de Search Console no encontramos nuevas oportunidades para publicar. Te recomendamos esperar al menos 7 días antes de repetir el análisis${nextDate ? ` (podrás volver a intentarlo a partir del ${nextDate})` : ""}, para darle tiempo a Google de reflejar cambios en tus datos.`,
+        });
+      } else {
+        setMessage({
+          kind: "success",
+          text: "Análisis completado con datos de Search Console.",
+        });
+      }
     } catch (error) {
       setMessage({
-        error: true,
+        kind: "error",
         text: error instanceof Error ? error.message : String(error),
       });
     } finally {
@@ -122,7 +147,7 @@ export default function OportunidadesPage() {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok)
-      setMessage({ error: true, text: data.error ?? "No se pudo eliminar." });
+      setMessage({ kind: "error", text: data.error ?? "No se pudo eliminar." });
     await load();
     setBusyId(null);
   }
@@ -137,7 +162,7 @@ export default function OportunidadesPage() {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      setMessage({ error: true, text: data.error ?? "No se pudo ejecutar." });
+      setMessage({ kind: "error", text: data.error ?? "No se pudo ejecutar." });
       // Si el servidor dice que ya no existe, la lista en pantalla está
       // desactualizada (p. ej. otra pestaña ya la ejecutó/eliminó) —
       // refrescamos para que no se sigan reintentando datos fantasma.
@@ -159,17 +184,32 @@ export default function OportunidadesPage() {
           categorías y crea 9 oportunidades long tail únicas para cada una,
           evitando duplicados y canibalización.
         </p>
-        <button
-          onClick={analyze}
-          disabled={analyzing}
-          style={disabledStyle(buttonStyle, analyzing)}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+            marginTop: 12,
+          }}
         >
-          {analyzing
-            ? "Analizando Search Console..."
-            : groups.length
-              ? "Actualizar análisis"
-              : "Analizar oportunidades"}
-        </button>
+          <button
+            onClick={analyze}
+            disabled={analyzing}
+            style={disabledStyle({ ...buttonStyle, marginTop: 0 }, analyzing)}
+          >
+            {analyzing
+              ? "Analizando Search Console..."
+              : groups.length
+                ? "Actualizar análisis"
+                : "Analizar oportunidades"}
+          </button>
+          {lastAnalysisAt && (
+            <span style={{ fontSize: 12, color: "#6b7280" }}>
+              Último análisis: {formatDateTime(lastAnalysisAt)}
+            </span>
+          )}
+        </div>
         {analyzing && (
           <div
             role="status"
@@ -285,8 +325,18 @@ export default function OportunidadesPage() {
             marginTop: 16,
             padding: 12,
             borderRadius: 8,
-            background: message.error ? "#fdecec" : "#eafaf0",
-            color: message.error ? "#d64545" : "#1e8a4b",
+            background:
+              message.kind === "error"
+                ? "#fdecec"
+                : message.kind === "info"
+                  ? "#fff8e6"
+                  : "#eafaf0",
+            color:
+              message.kind === "error"
+                ? "#d64545"
+                : message.kind === "info"
+                  ? "#8a6d1a"
+                  : "#1e8a4b",
           }}
         >
           {message.text}
