@@ -119,7 +119,7 @@ export default function PublicarPage() {
         });
         return;
       }
-      router.push("/dashboard");
+      router.push("/dashboard/publicaciones-en-curso");
     } finally {
       setStarting(false);
     }
@@ -158,8 +158,11 @@ export default function PublicarPage() {
           }}
         >
           Ya hay una ejecución en curso.{" "}
-          <Link href="/dashboard" style={{ color: "#2f5fdb" }}>
-            Ver progreso en Inicio
+          <Link
+            href="/dashboard/publicaciones-en-curso"
+            style={{ color: "#2f5fdb" }}
+          >
+            Ver progreso en Publicaciones en Curso
           </Link>
           .
         </div>

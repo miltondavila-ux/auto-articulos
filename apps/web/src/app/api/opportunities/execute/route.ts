@@ -5,7 +5,11 @@ import { triggerWorkerNow } from "@/lib/trigger-worker";
 
 export async function POST(request: NextRequest) {
   const userId = await getCurrentUserId();
-  const { type, id } = (await request.json()) as { type?: string; id?: string };
+  const { type, id, disableIndexing } = (await request.json()) as {
+    type?: string;
+    id?: string;
+    disableIndexing?: boolean;
+  };
   if ((type !== "group" && type !== "title") || !id) {
     return NextResponse.json({ error: "Selección inválida." }, { status: 400 });
   }
@@ -73,6 +77,7 @@ export async function POST(request: NextRequest) {
         userId,
         categoryId: group.categoryId,
         status: "running",
+        disableIndexing: Boolean(disableIndexing),
         titles: {
           create: selected.map((title, order) => ({ text: title.text, order })),
         },

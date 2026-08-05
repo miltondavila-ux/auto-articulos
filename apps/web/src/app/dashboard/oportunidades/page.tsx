@@ -49,6 +49,7 @@ export default function OportunidadesPage() {
     DEFAULT_MAX_TITLES_PER_BATCH,
   );
   const [lastAnalysisAt, setLastAnalysisAt] = useState<string | null>(null);
+  const [disableIndexing, setDisableIndexing] = useState(false);
   const [message, setMessage] = useState<{
     kind: "error" | "info" | "success";
     text: string;
@@ -158,7 +159,7 @@ export default function OportunidadesPage() {
     const response = await fetch("/api/opportunities/execute", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type, id }),
+      body: JSON.stringify({ type, id, disableIndexing }),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
@@ -170,7 +171,7 @@ export default function OportunidadesPage() {
       setBusyId(null);
       return;
     }
-    router.push("/dashboard");
+    router.push("/dashboard/publicaciones-en-curso");
     router.refresh();
   }
 
@@ -317,6 +318,24 @@ export default function OportunidadesPage() {
         <p style={{ color: "#6b7280", fontSize: 12 }}>
           Tu máximo permitido es de {maxTitlesPerBatch} títulos por lote.
         </p>
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            fontSize: 13,
+            color: "#6b7280",
+            margin: "10px 0 0",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={disableIndexing}
+            onChange={(e) => setDisableIndexing(e.target.checked)}
+          />
+          Desactivar indexación en buscadores al ejecutar (por defecto queda
+          activada, como en 10minutesWebsite)
+        </label>
       </section>
 
       {message && (
