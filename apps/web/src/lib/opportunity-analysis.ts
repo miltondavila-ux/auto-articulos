@@ -157,11 +157,11 @@ export async function analyzeSeoOpportunities(input: {
   if (!apiKey) throw new Error("OPENAI_API_KEY no está configurada.");
 
   const previous = new Map(
-    input.previousRows.map((row) => [row.keys.join(" "), row]),
+    input.previousRows.map((row) => [row.keys.join(" "), row]),
   );
   const performance = input.currentRows
     .map((row) => {
-      const old = previous.get(row.keys.join(" "));
+      const old = previous.get(row.keys.join(" "));
       return {
         query: row.keys[0] ?? "",
         page: row.keys[1] ?? "",
