@@ -72,16 +72,24 @@ export default function BusinessProfileSection() {
         cuenta de Google que usas para Search Console, u otra distinta.
       </p>
       {!data?.connected ? (
-        <a
-          href="/api/business-profile/connect"
-          style={{
-            ...secondaryButtonStyle,
-            display: "inline-block",
-            textDecoration: "none",
-          }}
-        >
-          Conectar Google Business Profile
-        </a>
+        <div>
+          <button
+            type="button"
+            disabled
+            title="Todavía no disponible"
+            style={{
+              ...secondaryButtonStyle,
+              opacity: 0.4,
+              cursor: "not-allowed",
+            }}
+          >
+            Conectar Google Business Profile
+          </button>
+          <p style={{ fontSize: 12, color: "#8a6d1a", marginTop: 6 }}>
+            Todavía no disponible — estamos esperando la aprobación de Google
+            para usar esta API. Te avisaremos cuando esté lista.
+          </p>
+        </div>
       ) : data.needsLocation ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {data.locations && data.locations.length > 0 ? (

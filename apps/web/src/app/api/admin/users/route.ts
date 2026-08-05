@@ -313,7 +313,7 @@ export async function POST(request: NextRequest) {
     phone,
     role = "user",
     monthlyArticleLimit = 300,
-    dailyArticleLimit = 95,
+    dailyArticleLimit = 20,
     maxTitlesPerBatch = 20,
     platformDomain = "net",
   } = await request.json();
