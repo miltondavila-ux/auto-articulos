@@ -8,7 +8,7 @@ import {
 import { getCurrentUserId } from "@/lib/current-user";
 import { analyzeSeoOpportunities } from "@/lib/opportunity-analysis";
 
-const COOLDOWN_DAYS = 7;
+const COOLDOWN_DAYS = 3;
 const COOLDOWN_MS = COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
 
 function isoDate(date: Date) {
@@ -63,7 +63,7 @@ export async function POST() {
     select: { lastOpportunityAnalysisAt: true },
   });
   // Pedido explícito del usuario: si la última corrida no encontró nada
-  // nuevo, no dejar reintentar antes de 7 días (le da tiempo real a que
+  // nuevo, no dejar reintentar antes de 3 días (le da tiempo real a que
   // cambien los datos de Search Console) en vez de gastar otra consulta a
   // la IA para muy probablemente confirmar lo mismo.
   const existingGroupsCount = await prisma.opportunityGroup.count({
