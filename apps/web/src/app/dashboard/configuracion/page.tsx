@@ -386,18 +386,47 @@ export default function ConfiguracionPage() {
           </div>
         )}
         {categories.length > 0 && (
-          <ul
-            style={{
-              marginTop: 12,
-              paddingLeft: 18,
-              fontSize: 13,
-              color: "#374151",
-            }}
-          >
-            {categories.map((c) => (
-              <li key={c.id}>{c.name}</li>
-            ))}
-          </ul>
+          <>
+            <ul
+              style={{
+                marginTop: 12,
+                paddingLeft: 18,
+                fontSize: 13,
+                color: "#374151",
+              }}
+            >
+              {categories
+                .filter((c) => !c.isSequence)
+                .map((c) => (
+                  <li key={c.id}>{c.name}</li>
+                ))}
+            </ul>
+            {categories.some((c) => c.isSequence) && (
+              <>
+                <p style={{ fontSize: 13, fontWeight: 600, marginTop: 16 }}>
+                  Categorías de secuencia
+                </p>
+                <p style={{ fontSize: 12, color: "#6b7280", marginTop: -4 }}>
+                  No se usan por defecto al publicar — solo si las eliges
+                  explícitamente en &quot;Publicar&quot;.
+                </p>
+                <ul
+                  style={{
+                    marginTop: 8,
+                    paddingLeft: 18,
+                    fontSize: 13,
+                    color: "#374151",
+                  }}
+                >
+                  {categories
+                    .filter((c) => c.isSequence)
+                    .map((c) => (
+                      <li key={c.id}>{c.name}</li>
+                    ))}
+                </ul>
+              </>
+            )}
+          </>
         )}
       </section>
 

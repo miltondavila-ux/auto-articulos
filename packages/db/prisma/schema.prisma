@@ -108,6 +108,11 @@ model Category {
   platform   String   @default("10minutesWebsite")
   externalId String
   name       String
+  // 10minutesWebsite distingue categorías "regulares" de categorías "de
+  // secuencia" (atributo real data-sequence="0"/"1" en el <select> del
+  // formulario, visto en vivo el 5/8/2026). Por defecto solo se debe
+  // escribir en las regulares; las de secuencia se listan aparte.
+  isSequence Boolean  @default(false)
   updatedAt  DateTime @updatedAt
   createdAt  DateTime @default(now())
 

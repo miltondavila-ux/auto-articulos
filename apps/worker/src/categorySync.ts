@@ -69,8 +69,9 @@ export async function processNextCategorySync(): Promise<boolean> {
           platform: "10minutesWebsite",
           externalId: cat.externalId,
           name: cat.name,
+          isSequence: cat.isSequence,
         },
-        update: { name: cat.name },
+        update: { name: cat.name, isSequence: cat.isSequence },
       });
     }
 

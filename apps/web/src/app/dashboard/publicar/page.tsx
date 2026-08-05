@@ -21,6 +21,7 @@ export default function PublicarPage() {
   const [credentialsConfigured, setCredentialsConfigured] = useState(false);
   const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [useSequenceCategory, setUseSequenceCategory] = useState(false);
   const [banner, setBanner] = useState<{
     type: "error" | "info";
     text: string;
@@ -80,6 +81,16 @@ export default function PublicarPage() {
     checkActiveRun();
     loadUserLimits();
   }, [loadCredentialsStatus, loadCategories, checkActiveRun, loadUserLimits]);
+
+  // 10minutesWebsite distingue categorías "regulares" de categorías "de
+  // secuencia" — por defecto solo se ofrecen las regulares; las de
+  // secuencia quedan en una lista aparte, para usarlas solo si se elige
+  // explícitamente (pedido del usuario, 5/8/2026).
+  const regularCategories = categories.filter((c) => !c.isSequence);
+  const sequenceCategories = categories.filter((c) => c.isSequence);
+  const visibleCategories = useSequenceCategory
+    ? sequenceCategories
+    : regularCategories;
 
   const titleCount = titlesText
     .split("\n")
@@ -160,18 +171,41 @@ export default function PublicarPage() {
           Elige primero la categoría bajo la que se publicarán los artículos de
           esta ejecución.
         </p>
+        {sequenceCategories.length > 0 && (
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontSize: 13,
+              color: "#6b7280",
+              margin: "8px 0",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={useSequenceCategory}
+              disabled={hasActiveRun}
+              onChange={(e) => {
+                setUseSequenceCategory(e.target.checked);
+                setSelectedCategoryId("");
+              }}
+            />
+            Usar una categoría de secuencia en vez de una regular
+          </label>
+        )}
         <select
           value={selectedCategoryId}
           onChange={(e) => setSelectedCategoryId(e.target.value)}
-          disabled={hasActiveRun || categories.length === 0}
+          disabled={hasActiveRun || visibleCategories.length === 0}
           style={{ ...inputStyle, width: "100%" }}
         >
           <option value="">
-            {categories.length === 0
+            {visibleCategories.length === 0
               ? "Sin categorías sincronizadas"
               : "Elige una categoría"}
           </option>
-          {categories.map((c) => (
+          {visibleCategories.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
             </option>

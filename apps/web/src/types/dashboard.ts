@@ -30,6 +30,7 @@ export interface CategoryRow {
   id: string;
   name: string;
   externalId: string;
+  isSequence: boolean;
 }
 
 export interface LanguageRow {

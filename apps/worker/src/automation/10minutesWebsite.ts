@@ -25,6 +25,7 @@ export interface PublishResult {
 export interface RemoteCategory {
   externalId: string;
   name: string;
+  isSequence: boolean;
 }
 
 export type OnStep = (message: string) => Promise<void>;
@@ -156,6 +157,8 @@ export async function fetchCategories(
     // mostrar un ícono junto al nombre (ej. "<i class='fa-solid ...'></i>
     // Finanza"). Se limpia con el propio parser HTML del navegador
     // (más confiable que un regex) para quedarnos solo con el texto real.
+    // `data-sequence` ("0"/"1", verificado en vivo el 5/8/2026) distingue
+    // categorías regulares de categorías "de secuencia" del sitio.
     return await page.$$eval("#user_label_list_article option", (options) =>
       options
         .map((o) => {
@@ -163,7 +166,11 @@ export async function fetchCategories(
           const tmp = document.createElement("div");
           tmp.innerHTML = opt.dataset.content ?? "";
           const name = (tmp.textContent ?? "").replace(/\s+/g, " ").trim();
-          return { externalId: opt.value, name };
+          return {
+            externalId: opt.value,
+            name,
+            isSequence: opt.dataset.sequence === "1",
+          };
         })
         .filter((c) => c.externalId && c.name),
     );

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Category" ADD COLUMN IF NOT EXISTS "isSequence" BOOLEAN NOT NULL DEFAULT false;
