@@ -143,6 +143,7 @@ export async function queryGoogleSearchAnalytics(
   siteUrl: string,
   startDate: string,
   endDate: string,
+  dimensions: string[] = ["query", "page"],
 ) {
   const response = await fetch(
     `${WEBMASTERS_API}/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
@@ -155,7 +156,7 @@ export async function queryGoogleSearchAnalytics(
       body: JSON.stringify({
         startDate,
         endDate,
-        dimensions: ["query", "page"],
+        dimensions,
         rowLimit: 5000,
         dataState: "final",
       }),

@@ -97,7 +97,7 @@ export async function POST() {
     const accessToken = await getGoogleAccessToken(
       decryptSecret(integration.encryptedRefreshToken),
     );
-    const [currentRows, previousRows, existing] = await Promise.all([
+    const [currentRows, previousRows, countryRows, existing] = await Promise.all([
       queryGoogleSearchAnalytics(
         accessToken,
         integration.siteUrl,
@@ -109,6 +109,18 @@ export async function POST() {
         integration.siteUrl,
         isoDate(previousStart),
         isoDate(previousEnd),
+      ),
+      // Distribución geográfica real (países que ya generan impresiones/clics)
+      // para que el análisis de oportunidades pueda segmentar títulos por
+      // ubicación real en vez de inventarla — pedido explícito del usuario,
+      // 5/8/2026. Search Console no expone ciudad como dimensión propia; el
+      // nivel de ciudad/condado se infiere del texto real de las consultas.
+      queryGoogleSearchAnalytics(
+        accessToken,
+        integration.siteUrl,
+        isoDate(currentStart),
+        isoDate(end),
+        ["country"],
       ),
       prisma.title.findMany({
         where: {
@@ -134,6 +146,7 @@ export async function POST() {
       categories,
       currentRows,
       previousRows,
+      countryRows,
       existingTitles: existing.flatMap((title) =>
         title.finalTitle ? [title.text, title.finalTitle] : [title.text],
       ),
