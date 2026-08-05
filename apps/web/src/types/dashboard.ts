@@ -22,6 +22,9 @@ export interface TitleRow {
   googleIndexingStatus: string | null;
   googleIndexingMessage: string | null;
   googleIndexingAt: string | null;
+  bingIndexingStatus: string | null;
+  bingIndexingMessage: string | null;
+  bingIndexingAt: string | null;
   lastSitemapSentAt: string | null;
   businessProfilePost: {
     status: string;

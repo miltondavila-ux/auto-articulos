@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Title" ADD COLUMN IF NOT EXISTS "bingIndexingStatus" TEXT;
+ALTER TABLE "Title" ADD COLUMN IF NOT EXISTS "bingIndexingMessage" TEXT;
+ALTER TABLE "Title" ADD COLUMN IF NOT EXISTS "bingIndexingAt" TIMESTAMP(3);

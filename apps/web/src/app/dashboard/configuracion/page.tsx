@@ -13,6 +13,7 @@ import {
 import type { CategoryRow, LanguageRow, SyncStatus } from "@/types/dashboard";
 import GoogleSearchConsoleSection from "@/components/GoogleSearchConsoleSection";
 import BusinessProfileSection from "@/components/BusinessProfileSection";
+import BingWebmasterSection from "@/components/BingWebmasterSection";
 
 export default function ConfiguracionPage() {
   const [username, setUsername] = useState("");
@@ -193,6 +194,7 @@ export default function ConfiguracionPage() {
   return (
     <div>
       <GoogleSearchConsoleSection />
+      <BingWebmasterSection />
       <BusinessProfileSection />
       <section style={readySectionStyle(credentialsConfigured)}>
         <h2 style={h2Style}>

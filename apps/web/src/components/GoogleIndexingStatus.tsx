@@ -87,6 +87,19 @@ export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
       {message && (
         <div style={{ color: "#6b7280", marginTop: 2 }}>{message}</div>
       )}
+      {title.bingIndexingStatus && title.bingIndexingStatus !== "not_configured" && (
+        <div
+          style={{
+            marginTop: 4,
+            color:
+              title.bingIndexingStatus === "error" ? "#d64545" : "#1e8a4b",
+          }}
+        >
+          {title.bingIndexingStatus === "error"
+            ? `Bing: error al pedir indexación${title.bingIndexingMessage ? ` (${title.bingIndexingMessage})` : "."}`
+            : "✓ Indexación instantánea solicitada a Bing"}
+        </div>
+      )}
       <div style={{ marginTop: 5 }}>
         <button
           type="button"

@@ -4,6 +4,8 @@ import {
   decryptSecret,
   getGoogleAccessToken,
   submitGoogleSitemap,
+  getBingAccessToken,
+  submitBingSitemap,
 } from "@auto-articulos/shared";
 
 const CONCURRENCY = 5;
@@ -17,6 +19,7 @@ interface SitemapResult {
 async function submitForUser(integration: {
   id: string;
   userId: string;
+  provider: string;
   encryptedRefreshToken: string;
   siteUrl: string | null;
   sitemapUrl: string | null;
@@ -28,16 +31,19 @@ async function submitForUser(integration: {
       error: "Configuración incompleta.",
     };
   }
+  const providerLabel =
+    integration.provider === "bing" ? "Bing Webmaster Tools" : "Google Search Console";
 
   try {
-    const accessToken = await getGoogleAccessToken(
-      decryptSecret(integration.encryptedRefreshToken),
-    );
-    await submitGoogleSitemap(
-      accessToken,
-      integration.siteUrl,
-      integration.sitemapUrl,
-    );
+    const accessToken =
+      integration.provider === "bing"
+        ? await getBingAccessToken(decryptSecret(integration.encryptedRefreshToken))
+        : await getGoogleAccessToken(decryptSecret(integration.encryptedRefreshToken));
+    if (integration.provider === "bing") {
+      await submitBingSitemap(accessToken, integration.siteUrl, integration.sitemapUrl);
+    } else {
+      await submitGoogleSitemap(accessToken, integration.siteUrl, integration.sitemapUrl);
+    }
 
     // Solo se llega aquí si submitGoogleSitemap confirmó una respuesta ok de
     // la API de Search Console (si no, lanza y cae al catch de abajo). Recién
@@ -66,8 +72,7 @@ async function submitForUser(integration: {
             prisma.titleEvent.createMany({
               data: publishedTitles.map((t) => ({
                 titleId: t.id,
-                message:
-                  "Sitemap enviado a Google Search Console (envío diario).",
+                message: `Sitemap enviado a ${providerLabel} (envío diario).`,
                 createdAt: sentAt,
               })),
             }),
@@ -97,13 +102,14 @@ async function submitForUser(integration: {
 export async function sendDailySitemaps(): Promise<SitemapResult[]> {
   const integrations = await prisma.searchIntegration.findMany({
     where: {
-      provider: "google",
+      provider: { in: ["google", "bing"] },
       siteUrl: { not: null },
       sitemapUrl: { not: null },
     },
     select: {
       id: true,
       userId: true,
+      provider: true,
       encryptedRefreshToken: true,
       siteUrl: true,
       sitemapUrl: true,

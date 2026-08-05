@@ -284,6 +284,12 @@ model Title {
   googleIndexingStatus  String?
   googleIndexingMessage String?
   googleIndexingAt      DateTime?
+  // Bing sí permite pedir indexación instantánea de cualquier URL
+  // (SubmitUrl), a diferencia de Google que solo lo permite para tipos de
+  // contenido muy específicos — pedido explícito del usuario, 5/8/2026.
+  bingIndexingStatus    String?
+  bingIndexingMessage   String?
+  bingIndexingAt        DateTime?
   // Se marca solo cuando el envío diario del sitemap a Google Search
   // Console fue confirmado exitoso (respuesta ok de la API) — nunca en un
   // intento fallido, pendiente o sin verificar.
