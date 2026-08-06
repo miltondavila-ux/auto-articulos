@@ -15,6 +15,17 @@ export interface TenMinutesWebsiteCredentials {
   // selectores de botón rotos por ESE otro problema). Por defecto "es",
   // sin cambios para nadie existente.
   contentLanguage?: string | null;
+  // Texto propio del usuario (ver User.articleSignature) que se agrega al
+  // final del contenido de CADA artículo nuevo, antes de guardar — pedido
+  // explícito del usuario, 6/8/2026. Null/vacío = no se agrega nada.
+  articleSignature?: string | null;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 export interface PublishResult {
@@ -123,6 +134,7 @@ export async function publishArticle(
       categoryExternalId,
       disableIndexing,
       credentials.contentLanguage,
+      credentials.articleSignature,
       onStep,
     );
     await generateImage(page, finalTitle, summary, onStep);
@@ -323,6 +335,7 @@ async function createArticleDraft(
   categoryExternalId: string,
   disableIndexing: boolean,
   contentLanguage: string | null | undefined,
+  articleSignature: string | null | undefined,
   onStep: OnStep,
 ): Promise<{ summary: string; contentHtml: string; finalTitle: string }> {
   await onStep("Abriendo formulario de creación de artículo...");
@@ -475,6 +488,20 @@ async function createArticleDraft(
       .inputValue()
       .catch(() => "")) || title;
   await onStep(`Título asignado por la IA: "${finalTitle}"`);
+
+  // Firma/aviso propio del usuario (User.articleSignature): se agrega al
+  // final del contenido ANTES de hacer clic en "Usar contenido", para que
+  // la plataforma lo transfiera junto con el resto del contenido generado
+  // al editor real — así no hace falta ubicar/tocar el editor real, que no
+  // conocemos con certeza (podría ser un WYSIWYG distinto a un textarea).
+  const trimmedSignature = articleSignature?.trim();
+  if (trimmedSignature) {
+    await dialog
+      .locator("textarea")
+      .nth(1)
+      .fill(`${contentHtml}\n<p>${escapeHtml(trimmedSignature)}</p>`);
+    await onStep("Firma personalizada agregada al final del artículo.");
+  }
 
   await dialog.getByRole("button", { name: TEXT_USAR_CONTENIDO }).click();
   await dialog.waitFor({ state: "hidden", timeout: NAV_TIMEOUT_MS });

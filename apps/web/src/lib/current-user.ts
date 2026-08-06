@@ -24,6 +24,7 @@ export async function getCurrentUser() {
       role: true,
       maxTitlesPerBatch: true,
       contentLanguage: true,
+      articleSignature: true,
       opportunitiesDisclosureAcceptedAt: true,
       createdAt: true,
     },

@@ -34,6 +34,9 @@ export default function ConfiguracionPage() {
   const [languageSyncing, setLanguageSyncing] = useState(false);
   const [contentLanguage, setContentLanguage] = useState("");
   const [savingLanguage, setSavingLanguage] = useState(false);
+  const [articleSignature, setArticleSignature] = useState("");
+  const [savingSignature, setSavingSignature] = useState(false);
+  const MAX_SIGNATURE_LEN = 700;
   const [banner, setBanner] = useState<{
     type: "error" | "info";
     text: string;
@@ -76,6 +79,7 @@ export default function ConfiguracionPage() {
     if (meRes.ok) {
       const data = await meRes.json();
       setContentLanguage(data.contentLanguage ?? "");
+      setArticleSignature(data.articleSignature ?? "");
     }
   }, []);
 
@@ -186,6 +190,29 @@ export default function ConfiguracionPage() {
       setBanner({ type: "info", text: "Idioma de los artículos guardado." });
     } finally {
       setSavingLanguage(false);
+    }
+  }
+
+  async function handleSaveSignature() {
+    setSavingSignature(true);
+    setBanner(null);
+    try {
+      const res = await fetch("/api/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ articleSignature }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setBanner({
+          type: "error",
+          text: data.error ?? "Error al guardar el texto final",
+        });
+        return;
+      }
+      setBanner({ type: "info", text: "Texto final del artículo guardado." });
+    } finally {
+      setSavingSignature(false);
     }
   }
 
@@ -538,6 +565,49 @@ export default function ConfiguracionPage() {
             Sincroniza para ver los idiomas disponibles en tu cuenta.
           </p>
         )}
+      </section>
+
+      <section style={sectionStyle}>
+        <h2 style={h2Style}>Texto al final de cada artículo</h2>
+        <p style={{ fontSize: 13, color: "#6b7280" }}>
+          Este texto se agregará automáticamente al final del contenido de
+          cada artículo nuevo que se publique (por ejemplo, una firma o un
+          aviso legal). Déjalo vacío si no quieres agregar nada.
+        </p>
+        <textarea
+          value={articleSignature}
+          onChange={(e) =>
+            e.target.value.length <= MAX_SIGNATURE_LEN &&
+            setArticleSignature(e.target.value)
+          }
+          placeholder='Ej: "Verónica Rojas, Agente Inmobiliario, comparte su experiencia..."'
+          rows={5}
+          style={{
+            ...inputStyle,
+            width: "100%",
+            resize: "vertical",
+            fontFamily: "inherit",
+          }}
+        />
+        <p
+          style={{
+            fontSize: 12,
+            marginTop: 6,
+            color:
+              articleSignature.length >= MAX_SIGNATURE_LEN
+                ? "#d64545"
+                : "#6b7280",
+          }}
+        >
+          {articleSignature.length} / {MAX_SIGNATURE_LEN} caracteres
+        </p>
+        <button
+          onClick={handleSaveSignature}
+          disabled={savingSignature}
+          style={disabledStyle(secondaryButtonStyle, savingSignature)}
+        >
+          {savingSignature ? "Guardando..." : "Guardar"}
+        </button>
       </section>
 
       <section style={{ ...sectionStyle, textAlign: "center" }}>

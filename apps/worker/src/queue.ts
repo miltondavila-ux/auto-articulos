@@ -29,7 +29,13 @@ export async function processNext(): Promise<boolean> {
     orderBy: { createdAt: "asc" },
     include: {
       category: true,
-      user: { select: { platformDomain: true, contentLanguage: true } },
+      user: {
+        select: {
+          platformDomain: true,
+          contentLanguage: true,
+          articleSignature: true,
+        },
+      },
     },
     // Hay ~60 usuarios objetivo y hasta 40 lanes concurrentes. Limitar la
     // búsqueda a 20 hacía que todos compitieran por el mismo subconjunto y no
@@ -58,7 +64,13 @@ async function processRunTitle(
   run: Prisma.RunGetPayload<{
     include: {
       category: true;
-      user: { select: { platformDomain: true; contentLanguage: true } };
+      user: {
+        select: {
+          platformDomain: true;
+          contentLanguage: true;
+          articleSignature: true;
+        };
+      };
     };
   }>,
 ): Promise<boolean> {
@@ -129,6 +141,7 @@ async function processRunTitle(
         password,
         platformDomain: run.user.platformDomain,
         contentLanguage: run.user.contentLanguage,
+        articleSignature: run.user.articleSignature,
       },
       nextTitle.text,
       run.category.externalId,
