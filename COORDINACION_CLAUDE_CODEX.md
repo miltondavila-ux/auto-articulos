@@ -35,10 +35,26 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Claude
 
-- **Estado:** `TERMINADO — ÁREA LIBERADA` (1/8/2026). Codex puede tocar
-  `apps/worker/**` (incluido `10minutesWebsite.ts`) libremente.
-- **Última tarea (RESUELTA Y VERIFICADA END-TO-END, ver `HANDOFF.md` sección
-  "RESUELTO 1/8/2026: bug del schema FAQ")**: Google Search Console marcaba
+- **Estado:** `TERMINADO — ÁREA LIBERADA` (6/8/2026). Área completa liberada
+  para Codex.
+- **Última tarea (sesión larga 5-6/8/2026, ver `HANDOFF.md` sección "RESUELTO
+  (5-6/8/2026): sesión larga" para el detalle completo)**: estado real de
+  sitemap por artículo, menú "Publicaciones en Curso", aviso de divulgación
+  de Oportunidades, segmentación por cliente/ubicación/producto + fix de un
+  bug grave de datos inventados (ubicaciones y luego cualquier dato
+  específico), integración completa de Bing Webmaster Tools (probada en
+  producción con Lorena Álvarez), investigación e implementación de Google
+  Business Profile (deshabilitado en UI hasta que Google apruebe el acceso,
+  solicitud ya enviada), límite diario bajado a 20 para todos los usuarios,
+  enfriamiento de Oportunidades bajado a 3 días. Ningún dato de usuario real
+  fue modificado sin pedido explícito; no se disparó ninguna publicación de
+  prueba. Ver "Pendiente / próximos pasos" en `HANDOFF.md` (ítems 9-12) para
+  lo que sigue: aprobación de Google Business Profile, revisar/borrar
+  oportunidades viejas de Eira, confirmar indexación instantánea de Bing con
+  una publicación real, y credenciales locales de Google que se perdieron
+  (no bloquea producción).
+- **Tarea anterior (RESUELTA Y VERIFICADA END-TO-END, ver `HANDOFF.md`
+  sección "RESUELTO 1/8/2026: bug del schema FAQ")**: Google Search Console marcaba
   error de sintaxis en el schema FAQPage. Causa raíz: 10minutesWebsite
   convierte todas las comillas dobles en simples al guardar el campo
   "Widget (opcional)", invalidando cualquier JSON-LD directo. Solución
@@ -407,6 +423,48 @@ Push/deploy/migración:
 Pendientes:
 Estado del área: LIBERADA o RESERVADA
 ```
+
+### 2026-08-06 03:37 UTC — Claude: sesión larga (sitemap, Oportunidades, Bing, Business Profile)
+
+- **Agente:** Claude.
+- **Tarea:** múltiples pedidos encadenados del usuario en una sola sesión
+  extensa (ver `HANDOFF.md` sección "RESUELTO (5-6/8/2026): sesión larga"
+  para el detalle completo por tema).
+- **Archivos/área:** estado real de sitemap (`SearchIntegration`, `Title`,
+  `GoogleIndexingStatus.tsx`, `googleIndexing.ts`), nueva ruta
+  `/dashboard/publicaciones-en-curso` + `LiveRunProgress.tsx`, aviso de
+  divulgación de Oportunidades (`User.opportunitiesDisclosureAcceptedAt`),
+  `opportunity-analysis.ts` (segmentación + fix de datos inventados + bytes
+  NUL corregidos), integración completa de Bing
+  (`bing-oauth.ts`, `bing-webmaster.ts`, `bingIndexing.ts`,
+  `BingWebmasterSection.tsx`), integración completa de Google Business
+  Profile (`BusinessProfileIntegration`, `BusinessProfilePost`,
+  `businessProfilePublish.ts`, `BusinessProfileSection.tsx` — deshabilitada
+  en UI), `User.dailyArticleLimit` bajado a 20, `COOLDOWN_DAYS` de
+  Oportunidades bajado a 3.
+- **Resultado:** todo desplegado y verificado en producción salvo Google
+  Business Profile (código completo pero botón deshabilitado hasta que
+  Google apruebe el acceso — solicitud ya enviada). Bug grave de datos
+  inventados en Oportunidades (ciudades de EE. UU. inventadas sin evidencia,
+  reportado por el usuario en la cuenta de Eira) corregido y generalizado a
+  cualquier dato específico. Bing probado end-to-end en producción con la
+  cuenta real de Lorena Álvarez.
+- **Verificaciones:** `tsc --noEmit` + build completo en `apps/web` y
+  `apps/worker` antes de cada deploy. Migraciones aplicadas vía
+  `migrate.yml` en cada cambio de schema. Verificación visual en navegador
+  para cada cambio de UI. No se disparó ninguna publicación de prueba ni se
+  ejecutó Oportunidades por iniciativa propia.
+- **Commits:** múltiples, todos en `main` (ver `git log` — desde el commit
+  del enfriamiento de sitemap hasta "Bajar el enfriamiento de Oportunidades
+  de 7 a 3 días").
+- **Push/deploy/migración:** todos los pushes a `main` con su
+  `vercel --prod --yes` correspondiente; migraciones aplicadas vía
+  `gh workflow run migrate.yml` en cada cambio de schema.
+- **Pendientes:** ver `HANDOFF.md` → "Pendiente / próximos pasos", ítems
+  9-12 (aprobación de Google Business Profile, limpieza de oportunidades
+  viejas de Eira, confirmar indexación instantánea de Bing con publicación
+  real, credenciales locales de Google perdidas — no bloquea producción).
+- **Estado del área:** LIBERADA.
 
 ### 2026-08-01 18:57 UTC — Codex: creación completa de usuarios
 

@@ -1,6 +1,6 @@
 # HANDOFF — Auto Artículos
 
-Última actualización: 2026-07-31 (noche), por Claude Code.
+Última actualización: 2026-08-05/06 (noche), por Claude Code.
 
 Este documento es la fuente de verdad para retomar el proyecto sin necesitar
 el historial de chat. Mantenlo actualizado después de cada sesión de trabajo
@@ -957,6 +957,143 @@ storage real cuando la cuenta vive en `.site`.
   `mtime=null` en el HTML publicado), el arreglo es simplemente cambiarles
   el dropdown a `.site` desde Administración — no hace falta tocar código.
 
+## RESUELTO (5-6/8/2026): sesión larga — sitemap real, Oportunidades, Bing, Business Profile
+
+Sesión extensa, muchos pedidos encadenados. Resumen por tema. Todo verificado
+con `tsc --noEmit` + build en ambos apps antes de cada deploy salvo que se
+indique lo contrario.
+
+### Estado de sitemap por artículo (real, no aspiracional)
+- `SearchIntegration.lastSitemapSyncAt/Status/Error` — nuevos campos, migración
+  `20260805220000_add_sitemap_sync_status`. `send-daily-sitemaps.ts` y el nuevo
+  `POST /api/sitemap/send` (botón "Enviar sitemap ahora" en Configuración) los
+  actualizan con el resultado REAL de cada intento.
+- `GoogleIndexingStatus.tsx` (Inicio + Historial) muestra "✓ Sitemap enviado:
+  fecha" o "todavía no confirmado", leyendo `Title.lastSitemapSentAt`.
+- Se eliminó el mensaje estático "El sitemap se enviará en el próximo proceso
+  diario programado" que `googleIndexing.ts` pegaba en TODOS los mensajes de
+  indexación — era el origen real de la confusión reportada por el usuario.
+
+### "Publicaciones en Curso" (nuevo ítem de menú)
+- La vista de progreso en vivo (antes mezclada en Inicio) se extrajo a
+  `apps/web/src/components/LiveRunProgress.tsx`, vive en
+  `/dashboard/publicaciones-en-curso`. Publicar y Ejecutar (Oportunidades)
+  redirigen ahí automáticamente; Inicio solo muestra un aviso corto con enlace.
+
+### Oportunidades: aviso de divulgación con aceptación registrada
+- `User.opportunitiesDisclosureAcceptedAt` (migración
+  `20260805230000_add_opportunities_disclosure`) — aviso legal bloqueante la
+  primera vez que se entra a Oportunidades (algoritmo automatizado + IA, sin
+  responsabilidad del admin), fecha/hora exacta de aceptación registrada,
+  visible también en Administración → detalle de usuario.
+
+### Oportunidades: segmentación por cliente/ubicación/producto — Y el bug grave que causó
+- Se agregó consulta adicional a Search Console por país
+  (`queryGoogleSearchAnalytics(..., ["country"])`) para segmentar títulos por
+  perfil de cliente/ubicación/producto (patrón "Cómo [producto] en [ciudad] si
+  soy [perfil]").
+- **BUG GRAVE encontrado por el usuario en la cuenta de Eira**: el modelo
+  generaba una ciudad/estado de EE. UU. DISTINTA por título (Georgia, Texas,
+  California, Nevada...) sin ninguna evidencia real — pura invención. Causa
+  raíz: Search Console solo da país como dimensión (nunca ciudad/estado); el
+  prompt pedía ubicación en todos los títulos sin exigir evidencia literal.
+- **Arreglado en dos pasadas** (`apps/web/src/lib/opportunity-analysis.ts`):
+  primero regla anti-invención específica de ubicaciones (nunca mencionar
+  ciudad/estado/país que no aparezca LITERALMENTE en consulta/página/título
+  real), después **generalizada a cualquier dato específico** (pedido
+  explícito: "no podemos equivocarnos") — ingredientes, cifras, marcas,
+  características, etc. también necesitan evidencia literal o se omiten.
+  Incluye el ejemplo real del error como caso prohibido explícito en el
+  prompt.
+- **Pendiente para el usuario**: las categorías de Oportunidades generadas
+  para Eira (y cualquier otro usuario) ANTES de este fix pueden tener
+  ubicaciones inventadas — conviene "Eliminar categoría" y volver a analizar.
+  No se tocaron datos de ningún usuario real por Claude.
+- De paso se encontraron y arreglaron **bytes NUL reales** incrustados en ese
+  mismo archivo (`row.keys.join(" ")` tenía un byte `0x00` en vez de espacio;
+  git lo marcaba como binario). No rompía el build pero corrompía la
+  comparación actual-vs-anterior. Escaneado todo `apps/`+`packages/`: fue el
+  único archivo afectado.
+- Enfriamiento de "no hay oportunidades nuevas" bajado de 7 a 3 días (pedido
+  explícito) — `COOLDOWN_DAYS` en `apps/web/src/app/api/opportunities/route.ts`
+  + texto correspondiente en `oportunidades/page.tsx`.
+
+### Bing Webmaster Tools — integración completa, probada en producción
+- OAuth paralelo a Google (`apps/web/src/lib/bing-oauth.ts`, scope
+  `webmaster.manage`). Reutiliza el modelo `SearchIntegration` existente con
+  `provider: "bing"` — no hizo falta modelo nuevo.
+- `packages/shared/src/bing-webmaster.ts`: `listBingSites` (GetUserSites),
+  `submitBingSitemap` (SubmitFeed), y **`submitBingUrl`** (SubmitUrl) — Bing sí
+  permite indexación instantánea por URL (cupo real: 10,000/día por dominio),
+  a diferencia de Google (Indexing API restringida a JobPosting/
+  BroadcastEvent). Verificado contra documentación oficial de Microsoft.
+- `apps/worker/src/bingIndexing.ts` (`notifyBing()`) llamado en `queue.ts`
+  justo después de `notifyGoogle()`, apenas se confirma `articleUrl` real.
+- Sección "Bing Webmaster Tools" en Configuración, mismo patrón conectar/
+  elegir sitio que Google.
+- **Probado en producción con la cuenta real de Lorena Álvarez
+  (segurosdesaludyvida.com)**: OAuth, selección de sitio y envío de sitemap
+  confirmados exitosos (`lastSitemapSyncStatus: "success"`). La indexación
+  instantánea por artículo nuevo queda pendiente de confirmar con la próxima
+  publicación real de esa cuenta.
+- Credenciales OAuth (`BING_WEBMASTER_CLIENT_ID/SECRET`) registradas por el
+  usuario en bing.com/webmasters → Settings → API Access, guardadas en Vercel
+  (Production) y GitHub Actions secrets, wireadas en `worker.yml`.
+
+### Google Business Profile — investigado, implementado, DESHABILITADO en UI hasta aprobación de Google
+- Investigación exhaustiva contra documentación oficial (no asumida):
+  `localPosts.create` SIGUE activo (contradice una suposición inicial de que
+  Google lo restringió en 2024 — falso, verificado en vivo). Requiere
+  aprobación previa de Google ("Basic API Access") a nivel de PROYECTO, no por
+  usuario — una vez aprobado, cada usuario conecta su cuenta vía OAuth normal
+  igual que Search Console.
+- Implementación completa (asumiendo aprobación futura): modelos
+  `BusinessProfileIntegration`/`BusinessProfilePost`, migración
+  `20260805233000_add_business_profile`, `Title.summary` (nuevo, resumen real
+  del artículo capturado al publicar), OAuth connect/callback, selector de
+  ubicación, worker lane `businessProfilePublish.ts` que genera resumen
+  adaptado por IA (hasta 1500 caracteres) + imagen con OpenAI (`gpt-image-1`,
+  mismo prompt que ya usa 10minutesWebsite) subida a **Vercel Blob** (store
+  nuevo `auto-articulos-business-profile`, público) + `createLocalPost` con
+  CTA al artículo real.
+- **El botón "Conectar Google Business Profile" está deshabilitado (gris) en
+  Configuración a propósito** — pedido explícito porque usuarios lo tocaban y
+  no funcionaba (Google no ha aprobado el acceso todavía). Reactivar en
+  `BusinessProfileSection.tsx` cuando llegue la aprobación.
+- **Solicitud de acceso ya enviada a Google**
+  (`support.google.com/business/contact/api_default`, "Application for Basic
+  API Access"), usando la cuenta/sitio propios del usuario
+  (`10minutesWebsite.com`, confirmado por el usuario como su negocio propio
+  verificado) como caso calificador. Plazo esperado: 7-10 días hábiles (puede
+  variar). Nada más que hacer hasta que Google responda — al aprobar, falta:
+  habilitar la 8va API ("Google My Business API", oculta hasta aprobación) y
+  probar publicación real con un usuario de prueba.
+
+### Incidente: `apps/web/.env.local` sobreescrito por accidente
+- `vercel blob create-store ... --yes` (para el store de Business Profile)
+  **sobreescribió `.env.local` completo**, borrando `DATABASE_URL`,
+  `SESSION_SECRET`, `CREDENTIALS_ENCRYPTION_KEY` y las llaves de Google/OpenAI
+  locales.
+- Recuperados `DATABASE_URL`/`CREDENTIALS_ENCRYPTION_KEY`/`OPENAI_API_KEY`
+  desde `apps/worker/.env` (mismo valor compartido en el monorepo);
+  `SESSION_SECRET` regenerado (solo local, sin impacto en producción).
+- **`GOOGLE_SEARCH_CONSOLE_CLIENT_ID`/`CLIENT_SECRET` y
+  `GITHUB_ACTIONS_TOKEN` quedaron vacíos en local y NO son recuperables** —
+  Vercel los guardó como "Sensitive" (write-only, ni el dueño de la cuenta
+  puede releerlos; confirmado intentando `vercel env pull` contra production
+  explícitamente). Producción sigue intacta, solo afecta pruebas locales de
+  conectar Google. Si hace falta probar ese flujo en local, pedirle al
+  usuario el Client ID/Secret desde Google Cloud Console o generar uno nuevo.
+
+### Otros cambios puntuales
+- Límite diario bajado de 95 a **20 para los 55 usuarios existentes** (pedido
+  explícito), migración `20260806000000_set_daily_limit_20` (incluye
+  `UPDATE "User"` real, no solo cambio de default). Cuentas nuevas también
+  arrancan en 20.
+- Grid de detalle de usuario en Administración (`minmax(160px,1fr)` →
+  `230px`) — se veía apretado en pantallas anchas con el campo nuevo de Aviso
+  de Oportunidades.
+
 ## Pendiente / próximos pasos
 
 0. ~~Construir módulo **Oportunidades**~~ — **HECHO** en commits `05d8d6b` y
@@ -1009,16 +1146,20 @@ storage real cuando la cuenta vive en `.site`.
   memoria a Session pooler `:5432` solo durante la migración (sin imprimir
   secretos); así terminó en 19 s. Web y worker siguen usando `:6543`.
 
-1. Validar el estado individual de Google con un artículo ya existente si está
-   disponible, sin disparar una publicación automática.
-2. Lorena debe seleccionar su propiedad y guardar su sitemap. Después, cada
-   usuario deberá completar esa misma configuración una sola vez.
+1. ~~Validar el estado individual de Google con un artículo ya existente~~ —
+   **HECHO**, ver secciones RESUELTO de indexación/sitemap arriba.
+2. ~~Lorena debe seleccionar su propiedad y guardar su sitemap~~ — **HECHO**
+   para Google Y Bing (5-6/8/2026). El resto de los usuarios lo hacen cada uno
+   por su cuenta, una sola vez, cuando quieran conectar Search Console/Bing.
 3. El usuario puede borrar de su Desktop el JSON OAuth definitivo después de
    confirmar que los secretos funcionan; ya existe copia cifrada en
    Vercel/GitHub y no debe subirse al repo.
-4. Implementar Bing después de cerrar y validar Google.
-5. Corregir el registro de usuario cuyo correo aparece con el prefijo
-   accidental `Ahora :` en la pestaña de accesos y en uso de base de datos.
+4. ~~Implementar Bing después de cerrar y validar Google~~ — **HECHO**
+   (5-6/8/2026), ver sección RESUELTO de Bing arriba. Probado en producción
+   con la cuenta de Lorena.
+5. ~~Corregir el registro de usuario cuyo correo aparece con el prefijo
+   accidental `Ahora :`~~ — **HECHO** (1/8/2026), ver sección RESUELTO del
+   sitemap por lote más arriba.
 6. Confirmar operativamente que los usuarios recién creados guarden sus
    propias credenciales de 10minutesWebsite y sincronicen categorías (esto
    es trabajo de cada usuario final, no de código).
@@ -1030,7 +1171,25 @@ storage real cuando la cuenta vive en `.site`.
    5 jobs paralelos confirmados, lote de Milton y de Lizzammar avanzaron
    correctamente sin errores. Área del worker liberada para Codex en
    `COORDINACION_CLAUDE_CODEX.md`.
-   primero.
+9. **Google Business Profile: esperando aprobación de Google** ("Basic API
+   Access", solicitud enviada 6/8/2026, plazo esperado 7-10 días hábiles). El
+   botón de conectar está deshabilitado a propósito hasta entonces. Cuando el
+   usuario confirme la aprobación (cuota pasa de 0 a 300 QPM en Google Cloud
+   Console, o llega el correo de confirmación): reactivar el botón en
+   `BusinessProfileSection.tsx` y probar la publicación real con un usuario
+   de prueba antes de anunciarlo al resto.
+10. **Eira: revisar/borrar oportunidades generadas ANTES del fix de
+    anti-invención** (5-6/8/2026) — pueden tener ciudades/estados inventados.
+    Recomendado, no ejecutado por Claude (son datos de un usuario real).
+11. Confirmar que la indexación instantánea de Bing (`SubmitUrl`) funciona
+    end-to-end con el próximo artículo real que publique Lorena Álvarez — el
+    OAuth y el sitemap ya se probaron, pero el hook de indexación por artículo
+    todavía no se vio correr con una publicación real.
+12. **Restaurar en `apps/web/.env.local`** (si se necesita probar OAuth de
+    Google en local): `GOOGLE_SEARCH_CONSOLE_CLIENT_ID`/`CLIENT_SECRET` y
+    `GITHUB_ACTIONS_TOKEN` — se perdieron el 5/8/2026 (ver sección de
+    incidente arriba) y Vercel no permite releerlos. Pedírselos al usuario o
+    generar credenciales nuevas.
 
 ## Reglas y preferencias del usuario (NO ignorar)
 
@@ -1055,6 +1214,23 @@ storage real cuando la cuenta vive en `.site`.
   manualmente — el push por sí solo no despliega.
 - Mantener este HANDOFF.md actualizado al final de cada sesión de trabajo
   importante (pedido explícito, ver también `CODEX_PROMPT.md`).
+- **Cero tolerancia a datos inventados en Oportunidades** (pedido explícito,
+  5-6/8/2026, tras el bug de ubicaciones inventadas en la cuenta de Eira):
+  cualquier dato específico en un título (ubicación, ingrediente, cifra,
+  característica, marca, etc.) debe tener evidencia LITERAL en consultas/
+  páginas reales de Search Console o en títulos ya publicados por ese
+  usuario — nunca inferido por "suena relacionado con la categoría". Nunca
+  debilitar la regla anti-invención de `opportunity-analysis.ts` sin que el
+  usuario lo pida explícitamente.
+- `vercel env add`/variables marcadas "Sensitive" en Vercel son de **un solo
+  sentido**: ni el CLI ni el dashboard del dueño de la cuenta pueden volver a
+  leer el valor después de guardarlo (confirmado 5/8/2026). Si se necesita el
+  valor real después, hay que pedírselo de nuevo al usuario o regenerarlo en
+  su fuente original — no perder tiempo reintentando `vercel env pull`.
+- Antes de correr cualquier comando de `vercel` que no sea `deploy`/`--prod`
+  (ej. `vercel blob create-store`, `vercel env add`), considerar si puede
+  sobreescribir `.env.local` — ya pasó una vez (5/8/2026) y se perdieron
+  variables locales que no eran parte del comando.
 - No guardar el contenido de los artículos en la base de datos — solo
   título, resumen corto, URL y estado. Mantener la base lo más liviana
   posible (limpieza automática de eventos de log viejos ya implementada en
