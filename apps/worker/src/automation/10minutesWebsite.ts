@@ -550,13 +550,37 @@ async function createArticleDraft(
   // la plataforma lo transfiera junto con el resto del contenido generado
   // al editor real — así no hace falta ubicar/tocar el editor real, que no
   // conocemos con certeza (podría ser un WYSIWYG distinto a un textarea).
+  //
+  // Bug real encontrado el 7/8/2026 (cuenta de Svetlana Botnarciuc, la primera
+  // con texto propio configurado que llegó hasta aquí): el sitio deja ese
+  // textarea (`#respose_content`) con el atributo `disabled`, así que el `fill`
+  // se pasaba 30s esperando a que fuera editable y terminaba lanzando —
+  // **abortando el artículo completo por un añadido cosmético**. Dos arreglos:
+  // se le quita el `disabled`/`readonly` antes de escribir, y pase lo que pase
+  // este paso ya nunca tumba la publicación: si no se puede agregar el texto,
+  // se avisa en el log y el artículo sigue su curso sin él.
   const trimmedSignature = articleSignature?.trim();
   if (trimmedSignature) {
-    await dialog
-      .locator("textarea")
-      .nth(1)
-      .fill(`${contentHtml}\n<p>${escapeHtml(trimmedSignature)}</p>`);
-    await onStep("Firma personalizada agregada al final del artículo.");
+    const contentField = dialog.locator("textarea").nth(1);
+    const signatureError = await contentField
+      .evaluate((el) => {
+        el.removeAttribute("disabled");
+        el.removeAttribute("readonly");
+      })
+      .then(() =>
+        contentField.fill(
+          `${contentHtml}\n<p>${escapeHtml(trimmedSignature)}</p>`,
+          { timeout: NAV_TIMEOUT_MS },
+        ),
+      )
+      .then(() => null)
+      .catch((e: unknown) => (e instanceof Error ? e.message : String(e)));
+
+    await onStep(
+      signatureError
+        ? `Aviso: no se pudo agregar tu texto propio al final del artículo (${signatureError.slice(0, 120)}). El artículo se publica igual, sin ese texto.`
+        : "Texto propio agregado al final del artículo.",
+    );
   }
 
   await dialog.getByRole("button", { name: TEXT_USAR_CONTENIDO }).click();
