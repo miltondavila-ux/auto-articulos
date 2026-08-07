@@ -568,14 +568,51 @@ async function createArticleDraft(
   // "Guardar cambios" en silencio (clase "error-article"), y ese estado no
   // se revierte solo aunque se corrija el valor después — hay que corregirlo
   // ANTES de guardar.
-  const excerptField = page.locator("#excerptes");
-  let summary = await excerptField.inputValue().catch(() => "");
-  if (summary.length >= 300) {
-    summary = summary.slice(0, 280);
-    await excerptField.fill(summary);
+  //
+  // El id de este campo NO es igual en todas las cuentas: `#excerptes` es el de
+  // las cuentas donde se mapeó el flujo, pero en la de Gustavo Torres el campo
+  // real es `#excerpt` (confirmado el 7/8/2026 con el volcado de diagnóstico).
+  // Con el id equivocado, `inputValue()` fallaba, el resumen quedaba en cadena
+  // vacía y el recorte de 300 nunca se aplicaba: en un intento real se vio el
+  // campo con 308 caracteres, o sea por encima del límite que deshabilita
+  // "Guardar cambios" en silencio. Además ese resumen vacío se arrastraba al
+  // prompt de la imagen y al FAQ. Se busca por ids conocidos y, si ninguno
+  // está, por un campo cuyo id/name hable de resumen.
+  const excerptSelector = await page
+    .evaluate(() => {
+      for (const id of ["#excerptes", "#excerpt"]) {
+        if (document.querySelector(id)) return id;
+      }
+      const candidate = Array.from(
+        document.querySelectorAll("textarea, input[type=text]"),
+      ).find((el) => {
+        const field = el as HTMLInputElement;
+        return (
+          /excerpt|resumen/i.test(field.id) ||
+          /excerpt|resumen/i.test(field.name ?? "")
+        );
+      });
+      if (!candidate) return null;
+      candidate.setAttribute("data-auto-articulos-excerpt", "1");
+      return '[data-auto-articulos-excerpt="1"]';
+    })
+    .catch(() => null);
+
+  let summary = "";
+  if (!excerptSelector) {
     await onStep(
-      "Resumen recortado para respetar el límite de 300 caracteres de la plataforma.",
+      "Aviso: no se encontró el campo de resumen en el formulario; se continúa sin recortarlo.",
     );
+  } else {
+    const excerptField = page.locator(excerptSelector);
+    summary = await excerptField.inputValue().catch(() => "");
+    if (summary.length >= 300) {
+      summary = summary.slice(0, 280);
+      await excerptField.fill(summary);
+      await onStep(
+        "Resumen recortado para respetar el límite de 300 caracteres de la plataforma.",
+      );
+    }
   }
 
   return { summary, contentHtml, finalTitle };
@@ -697,20 +734,54 @@ async function generateImage(
   await dismissImageGenerationDisclaimer(page, onStep);
 
   for (let attempt = 1; attempt <= MAX_IMAGE_ATTEMPTS; attempt++) {
-    // #images es el textarea real que lee "Generar imagen" (verificado en
-    // vivo el 29/7/2026): escribimos ahí nuestro propio prompt, basado en el
-    // título y resumen reales, justo antes de generar.
+    // El textarea del prompt se llamaba `#images` en la cuenta donde se mapeó
+    // el flujo (29/7/2026), pero los ids de este formulario NO son iguales en
+    // todas las cuentas: en la de Gustavo Torres el campo `#images` sencillamente
+    // no existe (confirmado el 7/8/2026 con el volcado de diagnóstico), y el
+    // `fill` se pasaba 30s esperándolo, fallaba en silencio y luego se pulsaba
+    // "Generar imagen" con el campo vacío — de ahí el "This field is required"
+    // del sitio y la vista previa congelada en 0px. La misma diferencia se ve en
+    // el resumen: aquí es `#excerpt`, y el código lo busca como `#excerptes`.
+    //
+    // Por eso ya no se depende de un id fijo: se ubica el campo por lo que es
+    // (un textarea/input cuyo id o name habla de imagen) y se marca con un
+    // atributo temporal para poder usar el `fill` normal de Playwright. Si el
+    // id fijo existe, se sigue prefiriendo — no cambia nada para las cuentas
+    // que ya funcionaban.
     const prompt = buildImagePrompt(summary);
-    // El error de este fill se descartaba en silencio. Si #images no se puede
-    // escribir, el campo queda vacío y el sitio responde "This field is
-    // required" al pulsar "Generar imagen" — visto en producción el 7/8/2026 —
-    // sin que quedara ni rastro del motivo en el log. Se guarda para volcarlo
-    // en el diagnóstico de más abajo; se sigue sin abortar por esto.
-    const promptFillError = await page
-      .locator("#images")
-      .fill(prompt, { force: true })
-      .then(() => null)
-      .catch((e: unknown) => (e instanceof Error ? e.message : String(e)));
+    const promptSelector = await page
+      .evaluate(() => {
+        const byId = document.querySelector("#images");
+        if (byId) return "#images";
+        const candidate = Array.from(
+          document.querySelectorAll("textarea, input[type=text]"),
+        ).find((el) => {
+          const field = el as HTMLInputElement;
+          return /imag/i.test(field.id) || /imag/i.test(field.name ?? "");
+        });
+        if (!candidate) return null;
+        candidate.setAttribute("data-auto-articulos-prompt", "1");
+        return '[data-auto-articulos-prompt="1"]';
+      })
+      .catch(() => null);
+
+    // El error de este fill se descartaba en silencio; ahora se guarda para
+    // volcarlo en el diagnóstico de más abajo. Se sigue sin abortar por esto.
+    const promptFillError = promptSelector
+      ? await page
+          .locator(promptSelector)
+          .fill(prompt, { force: true, timeout: NAV_TIMEOUT_MS })
+          .then(() => null)
+          .catch((e: unknown) => (e instanceof Error ? e.message : String(e)))
+      : "no se encontró ningún campo de prompt de imagen en la página";
+
+    if (attempt === 1) {
+      await onStep(
+        promptFillError
+          ? `Aviso: no se pudo escribir el prompt de la imagen (${promptFillError.slice(0, 120)}).`
+          : `Prompt de imagen escrito en "${promptSelector}".`,
+      );
+    }
 
     // Bug real encontrado el 30/7/2026: aunque openImageSection() ya
     // confirmó que el botón está visible, para cuando llegamos a hacer clic
@@ -772,18 +843,23 @@ async function generateImage(
               })`;
             });
 
-          // Estado real del campo del prompt: es el candidato número uno a
-          // estar vacío cuando el sitio contesta "This field is required".
-          const promptField = document.querySelector(
-            "#images",
-          ) as HTMLTextAreaElement | HTMLInputElement | null;
-          const promptState = promptField
-            ? `#images existe, ${
-                (promptField as HTMLElement).offsetParent === null
-                  ? "oculto"
-                  : "visible"
-              }, ${promptField.value?.length ?? 0} chars`
-            : "#images NO existe en la página";
+          // Inventario de todos los campos del formulario con su id y name.
+          // Los ids NO son iguales en todas las cuentas (`#excerptes` vs
+          // `#excerpt`, `#images` inexistente), así que esta lista es lo que
+          // permite mapear la cuenta real en vez de suponer nombres.
+          const promptState = Array.from(
+            document.querySelectorAll("textarea, input[type=text]"),
+          )
+            .slice(0, 20)
+            .map((el) => {
+              const field = el as HTMLInputElement;
+              return `${field.tagName.toLowerCase()}#${
+                field.id || "(sin id)"
+              }[name=${field.name || "-"}] ${field.value?.length ?? 0} chars${
+                (field as HTMLElement).offsetParent === null ? " oculto" : ""
+              }`;
+            })
+            .join(" ; ");
 
           // Qué campos están marcados como obligatorios/vacíos: para cada
           // mensaje de error visible, buscamos el input o textarea más cercano
@@ -832,7 +908,7 @@ async function generateImage(
 
       await onStep(
         screenState
-          ? `DIAGNÓSTICO [pantalla al agotarse la espera de la imagen] prompt: ${
+          ? `DIAGNÓSTICO [pantalla al agotarse la espera de la imagen] campos del formulario: ${
               screenState.promptState
             }${
               promptFillError
