@@ -435,11 +435,23 @@ async function createArticleDraft(
   // opción real), se deja el valor por defecto del sitio en vez de fallar
   // la publicación completa por esto.
   if (contentLanguage) {
-    await dialog
-      .locator("select")
-      .first()
-      .selectOption(contentLanguage)
-      .catch(() => {});
+    const languageSelect = dialog.locator("select").first();
+    await languageSelect.selectOption(contentLanguage).catch(() => {});
+    // Bug real encontrado el 6/8/2026 (cuenta de Gustavo Torres, contentLanguage
+    // en inglés): a diferencia del selector de categoría (#user_label_list_article),
+    // este también parece estar reforzado por un widget visual que necesita el
+    // evento "change" disparado a mano para sincronizarse de verdad — sin esto,
+    // la generación de contenido se quedaba colgada 90s sin producir nada
+    // (page.waitForFunction timeout), probablemente porque el sitio nunca
+    // terminaba de aplicar el cambio de idioma antes de "Generar". Mismo
+    // tratamiento que ya funciona para la categoría.
+    await dialog.locator("select").first().dispatchEvent("change").catch(() => {});
+    const appliedLanguage = await languageSelect.inputValue().catch(() => "");
+    await onStep(
+      appliedLanguage === contentLanguage
+        ? `Idioma del contenido aplicado: ${appliedLanguage}.`
+        : `Aviso: no se pudo confirmar el idioma seleccionado (se esperaba "${contentLanguage}", quedó en "${appliedLanguage}"). Se continúa igual.`,
+    );
   }
 
   const ideaTextarea = dialog.locator("textarea").first();
