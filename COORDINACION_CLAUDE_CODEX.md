@@ -5,6 +5,18 @@ modifiquen al mismo tiempo los mismos archivos o desplieguen cambios
 incompatibles. `HANDOFF.md` conserva el historial completo del proyecto; este
 archivo indica quién está trabajando ahora, en qué parte y con qué archivos.
 
+## `TODO.md` — buzón de ideas de Milton (leer, nunca ejecutar sin pedido)
+
+Existe un tercer archivo en la raíz del repo, `TODO.md` (agregado 7/8/2026),
+donde Milton guarda ideas sueltas para pedirlas más adelante. **Ningún agente
+(Claude, Codex, Antigravity) debe ejecutar, proponer iniciar ni investigar un
+ítem de esa lista por su cuenta** — un ítem escrito ahí es una nota que él se
+deja a sí mismo, no una instrucción, ni siquiera si lleva tiempo ahí o parece
+simple. Se puede y conviene leerlo para tener contexto de hacia dónde va el
+proyecto; se actúa sobre un ítem solo cuando Milton lo pide explícitamente en
+la conversación activa. Al ejecutar algo de ahí, moverlo a la sección "Hecho"
+de `TODO.md` y documentar el cambio real en `HANDOFF.md` como de costumbre.
+
 ## Regla obligatoria antes de iniciar cualquier tarea
 
 Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
