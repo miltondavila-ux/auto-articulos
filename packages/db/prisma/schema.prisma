@@ -14,22 +14,22 @@ enum UserRole {
 }
 
 model User {
-  id                       String    @id @default(cuid())
-  name                     String?
-  firstName                String?
-  lastName                 String?
-  phone                    String?
-  email                    String    @unique
-  passwordHash             String
+  id                                String    @id @default(cuid())
+  name                              String?
+  firstName                         String?
+  lastName                          String?
+  phone                             String?
+  email                             String    @unique
+  passwordHash                      String
   // Guardada cifrada (no en texto plano) además del hash, para que el
   // admin pueda recuperarla y compartirla con la persona invitada — pedido
   // explícito del usuario el 31/7/2026. El login sigue verificando contra
   // passwordHash (bcrypt); este campo nunca se usa para autenticar.
-  initialPasswordEncrypted String?
-  role                     UserRole  @default(user)
-  monthlyArticleLimit      Int?      @default(300)
-  dailyArticleLimit        Int?      @default(20)
-  maxTitlesPerBatch        Int       @default(20)
+  initialPasswordEncrypted          String?
+  role                              UserRole  @default(user)
+  monthlyArticleLimit               Int?      @default(300)
+  dailyArticleLimit                 Int?      @default(20)
+  maxTitlesPerBatch                 Int       @default(20)
   // Encontrado el 2/8/2026: usuarios en Europa (ej. Lidia Capdevila) tienen
   // su cuenta real en 10minutesWebsite.site en vez de .net. El login/las
   // acciones generales funcionan igual en ambos, pero la generación de
@@ -37,23 +37,23 @@ model User {
   // (mtime=null en el archivo final) cuando el dominio no coincide con el
   // servidor real de la cuenta. "net" (valor por defecto, sin cambios para
   // nadie existente) o "site".
-  platformDomain           String    @default("net")
+  platformDomain                    String    @default("net")
   // Idioma en el que la IA debe redactar los artículos de este usuario en
   // 10minutesWebsite (independiente del idioma de la interfaz de esa
   // cuenta, que es lo que causaba selectores de botón rotos — ver
   // apps/worker/src/automation/10minutesWebsite.ts, 4/8/2026). "es" por
   // defecto, sin cambios para nadie existente.
-  contentLanguage          String    @default("es")
+  contentLanguage                   String    @default("es")
   // Texto propio del usuario (ej. firma/aviso legal) que se agrega
   // automáticamente al final del contenido de CADA artículo nuevo — pedido
   // explícito del usuario, 6/8/2026. Null/vacío = no se agrega nada.
-  articleSignature         String?
+  articleSignature                  String?
   // Se actualiza cada vez que termina un análisis de oportunidades (haya
   // encontrado categorías nuevas o no) — permite mostrar "último análisis"
   // y aplicar la espera mínima de 7 días cuando no hay nada nuevo, sin
   // depender de OpportunityGroup.createdAt (que no cambia si esa corrida no
   // creó grupos).
-  lastOpportunityAnalysisAt DateTime?
+  lastOpportunityAnalysisAt         DateTime?
   // Momento exacto en que el usuario aceptó expresamente el aviso de
   // divulgación de Oportunidades (algoritmo automatizado + IA, sin
   // responsabilidad del administrador sobre las decisiones de
@@ -61,7 +61,7 @@ model User {
   // sola vez, la primera vez que se entra a Oportunidades; null significa
   // que todavía no lo ha aceptado.
   opportunitiesDisclosureAcceptedAt DateTime?
-  createdAt                DateTime  @default(now())
+  createdAt                         DateTime  @default(now())
   // Bloqueo entre procesos (no solo entre "lanes" del mismo proceso): con
   // varios workers de GitHub Actions corriendo en paralelo (31/7/2026,
   // pedido explícito por carga real de ~40 usuarios), el bloqueo en
@@ -70,7 +70,7 @@ model User {
   // Este campo es el reemplazo: un "claim" atómico vía UPDATE condicional
   // (ver reservation.ts), con vencimiento automático como red de
   // seguridad si un proceso muere sin liberarlo.
-  workerBusyUntil          DateTime?
+  workerBusyUntil                   DateTime?
 
   credentials                Credential[]
   runs                       Run[]
@@ -89,22 +89,22 @@ model User {
 // que SearchIntegration (refresh token cifrado, nunca el access token), pero
 // un solo registro por usuario porque solo se elige UNA ubicación a la vez.
 model BusinessProfileIntegration {
-  id                    String    @id @default(cuid())
-  userId                String    @unique
+  id                    String   @id @default(cuid())
+  userId                String   @unique
   encryptedRefreshToken String
   // Nulos justo después de conectar: el usuario recién elige la ubicación en
   // un segundo paso en Configuración (mismo patrón que SearchIntegration).
   accountName           String? // "accounts/123..."
   locationName          String? // "accounts/123/locations/456..."
   locationTitle         String? // nombre visible, para mostrarlo en Configuración
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SearchIntegration {
-  id                    String   @id @default(cuid())
+  id                    String    @id @default(cuid())
   userId                String
   provider              String
   encryptedRefreshToken String
@@ -118,8 +118,8 @@ model SearchIntegration {
   lastSitemapSyncAt     DateTime?
   lastSitemapSyncStatus String?
   lastSitemapSyncError  String?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -256,6 +256,13 @@ model Run {
   categoryId      String
   status          RunStatus @default(pending)
   disableIndexing Boolean   @default(false)
+  // Idioma elegido para ESTE lote, al pegar los títulos en Publicar o al
+  // ejecutar desde Oportunidades (pedido explícito del usuario, 7/8/2026: el
+  // idioma es una propiedad del artículo, no del usuario). Guarda el value real
+  // del selector de 10minutesWebsite, igual que User.contentLanguage — ver
+  // fetchLanguages() en el worker. NULL = usar el idioma configurado del
+  // usuario, que es lo que pasa con todas las corridas anteriores a este campo.
+  contentLanguage String?
   createdAt       DateTime  @default(now())
   finishedAt      DateTime?
 

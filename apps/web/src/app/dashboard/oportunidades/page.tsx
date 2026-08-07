@@ -7,6 +7,7 @@ import {
   buttonStyle,
   disabledStyle,
   h2Style,
+  inputStyle,
   secondaryButtonStyle,
   sectionStyle,
 } from "@/components/dashboard-ui";
@@ -50,6 +51,13 @@ export default function OportunidadesPage() {
   );
   const [lastAnalysisAt, setLastAnalysisAt] = useState<string | null>(null);
   const [disableIndexing, setDisableIndexing] = useState(false);
+  // Idioma con el que se ejecutará lo que se publique desde aquí (mismo criterio
+  // que en Publicar, pedido del usuario 7/8/2026). Arranca en el configurado del
+  // usuario, así que quien no lo toque publica igual que antes.
+  const [languages, setLanguages] = useState<
+    { id: string; externalId: string; name: string }[]
+  >([]);
+  const [contentLanguage, setContentLanguage] = useState("");
   const [disclosureAcceptedAt, setDisclosureAcceptedAt] = useState<
     string | null | undefined
   >(undefined);
@@ -60,10 +68,12 @@ export default function OportunidadesPage() {
   } | null>(null);
 
   const load = useCallback(async () => {
-    const [opportunitiesResponse, meResponse] = await Promise.all([
-      fetch("/api/opportunities", { cache: "no-store" }),
-      fetch("/api/me", { cache: "no-store" }),
-    ]);
+    const [opportunitiesResponse, meResponse, languagesResponse] =
+      await Promise.all([
+        fetch("/api/opportunities", { cache: "no-store" }),
+        fetch("/api/me", { cache: "no-store" }),
+        fetch("/api/languages", { cache: "no-store" }),
+      ]);
     const data = await opportunitiesResponse.json().catch(() => ({}));
     if (opportunitiesResponse.ok) {
       setGroups(data.groups ?? []);
@@ -78,6 +88,13 @@ export default function OportunidadesPage() {
         setMaxTitlesPerBatch(me.maxTitlesPerBatch);
       }
       setDisclosureAcceptedAt(me.opportunitiesDisclosureAcceptedAt ?? null);
+      if (typeof me.contentLanguage === "string") {
+        setContentLanguage(me.contentLanguage);
+      }
+    }
+    if (languagesResponse.ok) {
+      const langs = await languagesResponse.json().catch(() => ({}));
+      setLanguages(langs.languages ?? []);
     }
     setLoading(false);
   }, []);
@@ -179,7 +196,7 @@ export default function OportunidadesPage() {
     const response = await fetch("/api/opportunities/execute", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type, id, disableIndexing }),
+      body: JSON.stringify({ type, id, disableIndexing, contentLanguage }),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
@@ -396,6 +413,37 @@ export default function OportunidadesPage() {
           Desactivar indexación en buscadores al ejecutar (por defecto queda
           activada, como en 10minutesWebsite)
         </label>
+
+        <div style={{ marginTop: 16 }}>
+          <label
+            style={{
+              display: "block",
+              fontSize: 13,
+              color: "#6b7280",
+              marginBottom: 6,
+            }}
+          >
+            Idioma con el que se escribirán los artículos que ejecutes desde
+            aquí. Solo aplica a lo que ejecutes ahora; no cambia tu
+            configuración.
+          </label>
+          <select
+            value={contentLanguage}
+            onChange={(e) => setContentLanguage(e.target.value)}
+            disabled={languages.length === 0}
+            style={{ ...inputStyle, width: "100%", maxWidth: 320 }}
+          >
+            {languages.length === 0 ? (
+              <option value="">Sin idiomas sincronizados</option>
+            ) : (
+              languages.map((l) => (
+                <option key={l.id} value={l.externalId}>
+                  {l.name}
+                </option>
+              ))
+            )}
+          </select>
+        </div>
       </section>
 
       {message && (

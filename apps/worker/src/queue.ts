@@ -140,7 +140,10 @@ async function processRunTitle(
         username,
         password,
         platformDomain: run.user.platformDomain,
-        contentLanguage: run.user.contentLanguage,
+        // El idioma elegido para ESTE lote manda; si el lote no trae ninguno
+        // (corridas anteriores al campo, o el usuario no lo cambió), se usa el
+        // configurado del usuario, que es el comportamiento de siempre.
+        contentLanguage: run.contentLanguage ?? run.user.contentLanguage,
         articleSignature: run.user.articleSignature,
       },
       nextTitle.text,

@@ -35,7 +35,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const userId = await getCurrentUserId();
-  const { titlesText, categoryId, disableIndexing } = await request.json();
+  const { titlesText, categoryId, disableIndexing, contentLanguage } =
+    await request.json();
 
   if (typeof titlesText !== "string") {
     return NextResponse.json(
@@ -163,6 +164,13 @@ export async function POST(request: NextRequest) {
       categoryId: category.id,
       status: "running",
       disableIndexing: Boolean(disableIndexing),
+      // Idioma de ESTE lote. Se guarda solo si viene un valor real; vacío o
+      // ausente deja NULL, que el worker interpreta como "usar el idioma
+      // configurado del usuario" (comportamiento de siempre).
+      contentLanguage:
+        typeof contentLanguage === "string" && contentLanguage.trim()
+          ? contentLanguage.trim()
+          : null,
       titles: {
         create: titles.map((text: string, index: number) => ({
           text,

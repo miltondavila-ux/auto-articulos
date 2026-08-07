@@ -32,6 +32,13 @@ export default function PublicarPage() {
   const [maxTitlesPerBatch, setMaxTitlesPerBatch] = useState(
     DEFAULT_MAX_TITLES_PER_BATCH,
   );
+  // Idioma de ESTE lote (pedido del usuario, 7/8/2026: el idioma es del
+  // artículo, no del usuario). Arranca en el configurado del usuario, así que
+  // quien no lo toque publica exactamente como antes.
+  const [languages, setLanguages] = useState<
+    { id: string; externalId: string; name: string }[]
+  >([]);
+  const [contentLanguage, setContentLanguage] = useState("");
 
   const loadUserLimits = useCallback(async () => {
     const res = await fetch("/api/me");
@@ -43,6 +50,17 @@ export default function PublicarPage() {
       ) {
         setMaxTitlesPerBatch(data.maxTitlesPerBatch);
       }
+      if (typeof data.contentLanguage === "string") {
+        setContentLanguage(data.contentLanguage);
+      }
+    }
+  }, []);
+
+  const loadLanguages = useCallback(async () => {
+    const res = await fetch("/api/languages");
+    if (res.ok) {
+      const data = await res.json();
+      setLanguages(data.languages ?? []);
     }
   }, []);
 
@@ -80,7 +98,14 @@ export default function PublicarPage() {
     loadCategories();
     checkActiveRun();
     loadUserLimits();
-  }, [loadCredentialsStatus, loadCategories, checkActiveRun, loadUserLimits]);
+    loadLanguages();
+  }, [
+    loadCredentialsStatus,
+    loadCategories,
+    checkActiveRun,
+    loadUserLimits,
+    loadLanguages,
+  ]);
 
   // 10minutesWebsite distingue categorías "regulares" de categorías "de
   // secuencia" — por defecto solo se ofrecen las regulares; las de
@@ -109,6 +134,7 @@ export default function PublicarPage() {
           titlesText,
           categoryId: selectedCategoryId,
           disableIndexing,
+          contentLanguage,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -221,6 +247,38 @@ export default function PublicarPage() {
               Configuración
             </Link>
             .
+          </p>
+        )}
+
+        <h2 style={{ ...h2Style, marginTop: 24 }}>Idioma de este lote</h2>
+        <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 8 }}>
+          En este idioma se escribirán los artículos de este lote. Puedes dar
+          los títulos en español aunque elijas otro idioma. Solo aplica a este
+          lote; no cambia tu configuración.
+        </p>
+        <select
+          value={contentLanguage}
+          onChange={(e) => setContentLanguage(e.target.value)}
+          disabled={hasActiveRun || languages.length === 0}
+          style={{ ...inputStyle, width: "100%" }}
+        >
+          {languages.length === 0 ? (
+            <option value="">Sin idiomas sincronizados</option>
+          ) : (
+            languages.map((l) => (
+              <option key={l.id} value={l.externalId}>
+                {l.name}
+              </option>
+            ))
+          )}
+        </select>
+        {languages.length === 0 && (
+          <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
+            Sincroniza tus idiomas desde{" "}
+            <Link href="/dashboard/configuracion" style={{ color: "#2f5fdb" }}>
+              Configuración
+            </Link>
+            . Mientras tanto se usará el idioma que tengas configurado allí.
           </p>
         )}
       </section>

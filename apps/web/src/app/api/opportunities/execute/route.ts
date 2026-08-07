@@ -5,11 +5,13 @@ import { triggerWorkerNow } from "@/lib/trigger-worker";
 
 export async function POST(request: NextRequest) {
   const userId = await getCurrentUserId();
-  const { type, id, disableIndexing } = (await request.json()) as {
-    type?: string;
-    id?: string;
-    disableIndexing?: boolean;
-  };
+  const { type, id, disableIndexing, contentLanguage } =
+    (await request.json()) as {
+      type?: string;
+      id?: string;
+      disableIndexing?: boolean;
+      contentLanguage?: string;
+    };
   if ((type !== "group" && type !== "title") || !id) {
     return NextResponse.json({ error: "Selección inválida." }, { status: 400 });
   }
@@ -78,6 +80,12 @@ export async function POST(request: NextRequest) {
         categoryId: group.categoryId,
         status: "running",
         disableIndexing: Boolean(disableIndexing),
+        // Ver POST /api/runs: vacío deja NULL y el worker usa el idioma
+        // configurado del usuario.
+        contentLanguage:
+          typeof contentLanguage === "string" && contentLanguage.trim()
+            ? contentLanguage.trim()
+            : null,
         titles: {
           create: selected.map((title, order) => ({ text: title.text, order })),
         },
