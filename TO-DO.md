@@ -31,7 +31,16 @@ HANDOFF, solo alimenta ideas hacia él).
 
 ## Pendientes
 
-_(vacío por ahora)_
+- **(7/8/2026)** Que Oportunidades use la data de Bing Webmaster Tools
+  además de la de Google Search Console, cuando el usuario tenga las dos
+  conectadas (hoy `POST /api/opportunities` solo usa Google, y de hecho
+  bloquea el análisis si Google no está conectado, aunque haya Bing). Plan
+  ya conversado con Claude ese día: Google deja de ser obligatorio (basta
+  con tener uno de los dos); si hay Bing conectado, se traen sus consultas
+  con más impresiones/clics (`GetQueryStats` de la API de Bing Webmaster
+  Tools) y se le pasan a la IA como evidencia aparte, claramente etiquetada
+  como "Bing" (Bing solo da consulta, no consulta+página como Google); si
+  hay ambos, se combinan. Sin probar contra una cuenta real de Bing todavía.
 
 ## Hecho
 
