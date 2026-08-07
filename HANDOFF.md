@@ -1094,6 +1094,78 @@ indique lo contrario.
   `230px`) — se veía apretado en pantallas anchas con el campo nuevo de Aviso
   de Oportunidades.
 
+## RESUELTO (7/8/2026): generación de contenido colgada en idiomas no españoles
+
+Cuentas con `contentLanguage` distinto de español (Gustavo Torres, Svetlana)
+nunca lograban publicar: el artículo se quedaba en "Generando contenido con
+inteligencia artificial" y moría por timeout, siempre.
+
+### Causa raíz (confirmada en producción, commit `1284cec`)
+
+La espera de "contenido generado" **no usaba el locator `dialog` de Playwright**
+que usa el resto de `createArticleDraft()`. Reimplementaba la búsqueda del modal
+a mano dentro del navegador (`document.querySelectorAll(".modal")` + comparación
+exacta contra `CHATGPT_MODAL_TITLE_TEXTS`). Esa búsqueda casera no ubicaba el
+modal en esas cuentas, así que la condición devolvía `false` para siempre.
+
+**El artículo ya estaba generado y el código no lo veía.** Prueba directa, del
+log de producción: en el mismo instante del timeout, el volcado de diagnóstico
+—que sí usa el locator— leyó los cinco campos completos y correctos (contenido
+de 5958 chars, resumen, título "Navigating Home Buying in Baja California",
+prompt de imagen). Mismo momento, dos resultados opuestos.
+
+Verificado tras el arreglo: la generación en inglés tarda **21 segundos**
+(10:59:12 → 10:59:33), y la corrida terminó en `success` — la primera del día
+que no murió cortada por el tope de 20 minutos de GitHub.
+
+### Dos hipótesis previas que la evidencia DESCARTÓ
+
+Quedan escritas a propósito, porque costaron horas y llevaron a cambios que
+hubo que revertir:
+
+1. **"El sitio tarda más generando en otros idiomas."** Falso: tarda 21s. La
+   señal que lo desmentía estaba desde el principio y se pasó por alto — los
+   fallos ocurrían clavados EXACTAMENTE en el límite (3 veces a 90s y, tras
+   subirlo, 3 veces a 180000ms). Una generación lenta habría dado tiempos
+   variables y alguna corrida buena; fallar siempre al milisegundo del tope
+   significa que la condición nunca podía volverse verdadera.
+2. **"`en_VI` es un valor corrupto, hay que ponerlo en `en`."** Falso y
+   contraproducente: `en_VI` es el valor REAL que 10minutesWebsite usa para
+   inglés, leído bien por `fetchLanguages()`. Al cambiarlo a `en` en la base,
+   `selectOption()` dejó de encontrar la opción y se perdían ~30 segundos por
+   artículo en un timeout silencioso. Se revirtió a `en_VI`.
+
+**Lección**: la selección de idioma nunca tuvo nada que ver. El log decía
+"Idioma del contenido aplicado: en_VI" y aun así colgaba.
+
+### Regla que se desprende (aplicar en el resto del archivo)
+
+No reimplementar la búsqueda de elementos con selectores crudos dentro de
+`page.evaluate`/`waitForFunction` cuando ya existe un locator de Playwright para
+lo mismo. Duplicar esa lógica es lo que produjo un fallo silencioso e
+indistinguible de "el sitio está lento".
+
+Queda pendiente revisar si `generateImage()` tiene el mismo problema: busca
+`img[alt="Preview"]` con el texto en inglés fijo, sin tratamiento bilingüe. Se
+le agregó un volcado de diagnóstico en el commit `b3035b1` para averiguarlo con
+evidencia en lugar de suponerlo.
+
+### Estado al cierre
+
+- Contenido: **resuelto y verificado en producción**.
+- Imagen: la publicación de Gustavo ahora avanza hasta el paso de imagen y falla
+  ahí. Es un paso al que esa cuenta nunca había llegado; justo antes apareció el
+  aviso de primera vez del generador de imágenes (ya desactivado por 15 días).
+  Sin diagnóstico todavía.
+
+### Incidente propio a registrar
+
+Durante la depuración se usó `git add -A` (prohibido por las reglas de este
+archivo), lo que metió `PRD_CALCULADORA_ROGE.md` y `calculadora-roge/` en un
+commit; un `git reset --hard` posterior los **borró del disco**. Se recuperaron
+íntegros desde el objeto de git y volvieron a quedar sin trackear. Refuerza por
+qué la regla existe: agregar siempre rutas explícitas.
+
 ## Pendiente / próximos pasos
 
 0. ~~Construir módulo **Oportunidades**~~ — **HECHO** en commits `05d8d6b` y

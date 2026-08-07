@@ -424,6 +424,50 @@ Pendientes:
 Estado del área: LIBERADA o RESERVADA
 ```
 
+### 2026-08-07 ~15:20 UTC — Claude: generación de contenido colgada en idiomas no españoles
+
+- **Agente:** Claude.
+- **Tarea:** cuentas con `contentLanguage` distinto de español (Gustavo Torres,
+  Svetlana) nunca publicaban; morían por timeout en "Generando contenido".
+- **Archivos/área:** `apps/worker/src/automation/10minutesWebsite.ts`
+  (`createArticleDraft()` y `generateImage()`). Solo worker: **no** requiere
+  deploy de Vercel ni migración.
+- **Causa raíz:** la espera de "contenido generado" reimplementaba la búsqueda
+  del modal a mano dentro del navegador (`document.querySelectorAll(".modal")`
+  + comparación exacta de textos) en vez de usar el locator `dialog` que usa el
+  resto de la función. No ubicaba el modal en esas cuentas → condición `false`
+  para siempre. El artículo ya estaba generado y el código no lo veía.
+- **Resultado:** se sondea el campo Título a través del locator `dialog`. En
+  producción: generación en inglés en **21 segundos** y corrida terminada en
+  `success` (la primera del día que no murió cortada a los 20 min). Se conserva
+  un volcado de diagnóstico de los campos del modal para un timeout real, y se
+  agregó otro equivalente al paso de imagen.
+- **Verificaciones:** `tsc --noEmit` y build limpios en `apps/worker`; se
+  comprobó además que el compilado en `dist/` llevara el cambio. Verificación
+  final en producción hecha por el usuario (las pruebas de publicación son
+  suyas, según las reglas de este tablero).
+- **Commits:** `f78199f` (intento intermedio, insuficiente), `1284cec`
+  (arreglo real), `b3035b1` (diagnóstico del paso de imagen).
+- **Push/deploy/migración:** pusheado a `main`. Sin deploy ni migración.
+- **Pendientes:** la publicación ahora avanza hasta el paso de **imagen** y
+  falla ahí; falta diagnóstico. Sospecha a verificar con evidencia, no asumir:
+  `generateImage()` busca `img[alt="Preview"]` con texto en inglés fijo, sin
+  tratamiento bilingüe — mismo patrón de fallo que el del modal.
+- **Advertencias para el próximo agente:**
+  - Se hicieron dos diagnósticos equivocados antes del bueno ("el sitio tarda
+    más en otros idiomas" y "`en_VI` está corrupto"). Ambos están documentados
+    y descartados en `HANDOFF.md`; no reintentarlos. `en_VI` es el valor REAL
+    de inglés del sitio, no tocarlo.
+  - Se usó `git add -A` (prohibido) y un `git reset --hard` posterior borró
+    `PRD_CALCULADORA_ROGE.md` y `calculadora-roge/` del disco. Recuperados
+    íntegros. Usar siempre rutas explícitas.
+  - El cron del worker está siendo estrangulado por GitHub: dispara ~1 vez por
+    hora, no cada 5 minutos (huecos reales medidos ese día: 53, 61, 88 min).
+    Para probar algo, el camino rápido es publicar desde el dashboard
+    (`workflow_dispatch`), y ese disparo se **omite** si ya hay una corrida
+    activa.
+- **Estado del área:** LIBERADA.
+
 ### 2026-08-06 03:37 UTC — Claude: sesión larga (sitemap, Oportunidades, Bing, Business Profile)
 
 - **Agente:** Claude.
