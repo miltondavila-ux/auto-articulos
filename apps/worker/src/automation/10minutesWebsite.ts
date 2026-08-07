@@ -468,42 +468,39 @@ async function createArticleDraft(
   // "Please wait we are getting the data...".
   //
   // Bug real encontrado el 7/8/2026 (cuentas de Gustavo Torres y Svetlana, ambas
-  // con contentLanguage distinto de español): esta espera miraba el ÚLTIMO
-  // textarea del modal, que NO es el título sino el prompt de imagen (el campo
-  // que el sitio escribe después de los tres que nos interesan). Evidencia de
-  // que la condición nunca se cumplía, en vez de ser lentitud del sitio: las
-  // corridas fallaban clavadas EXACTAMENTE en el límite — tres veces a los 90s,
-  // y tras subir el límite, tres veces a los 180000ms. Una generación
-  // simplemente lenta habría dado tiempos variables y alguna corrida buena.
-  // En español el prompt de imagen sí se llena (por eso nunca falló); en otros
-  // idiomas aparentemente no, y esperábamos para siempre un campo que el sitio
-  // nunca iba a escribir, aunque el artículo ya estuviera generado.
+  // con contentLanguage distinto de español): esta espera NO usaba el locator
+  // `dialog` de Playwright, sino que reimplementaba la búsqueda del modal a mano
+  // dentro del navegador (`document.querySelectorAll(".modal")` + comparación
+  // exacta de textos contra CHATGPT_MODAL_TITLE_TEXTS). Esa búsqueda casera no
+  // ubicaba el modal en esas cuentas, así que la condición devolvía `false` para
+  // siempre y la espera se agotaba aunque el artículo YA estuviera generado.
   //
-  // Ahora se espera el índice 3, que es justo el que el resto del código ya da
-  // por contrato al leer `finalTitle` unas líneas más abajo.
-  try {
-    await page.waitForFunction(
-      (titleTexts) => {
-        const chatGptDialog = Array.from(
-          document.querySelectorAll(".modal"),
-        ).find((el) => {
-          const text = el.textContent ?? "";
-          return titleTexts.some((t) => text.includes(t));
-        });
-        if (!chatGptDialog) return false;
-        const fields = Array.from(chatGptDialog.querySelectorAll("textarea"));
-        const titleField = fields[3] as HTMLTextAreaElement | undefined;
-        return Boolean(
-          titleField &&
-            titleField.value &&
-            !titleField.value.includes("Please wait"),
-        );
-      },
-      CHATGPT_MODAL_TITLE_TEXTS,
-      { timeout: CONTENT_GENERATION_TIMEOUT_MS },
-    );
-  } catch (err) {
-    // Si aun así se agota el tiempo, no dejamos un timeout ciego: volcamos el
+  // Evidencia directa, del log de producción del 7/8/2026: en el mismo instante
+  // del timeout, el volcado de diagnóstico —que sí usa el locator `dialog`— leyó
+  // los cinco campos completos y correctos (contenido de 5958 chars, resumen,
+  // título "Navigating Home Buying in Baja California", prompt de imagen). Mismo
+  // momento, dos resultados opuestos: el que fallaba era el buscador casero. Los
+  // fallos clavados exactamente en el límite (tres veces a 90s y, con el límite
+  // subido, tres veces a 180000ms) confirman que la condición nunca podía
+  // volverse verdadera; no era lentitud del sitio ni del idioma.
+  //
+  // Ahora se sondea el campo a través del MISMO locator `dialog` que ya se usa
+  // en todo el resto de la función (y que el diagnóstico demostró que funciona),
+  // en vez de duplicar la lógica de búsqueda con selectores crudos.
+  const titleField = dialog.locator("textarea").nth(3);
+  const generationDeadline = Date.now() + CONTENT_GENERATION_TIMEOUT_MS;
+  let contentGenerated = false;
+  while (Date.now() < generationDeadline) {
+    const value = await titleField.inputValue().catch(() => "");
+    if (value && !value.includes("Please wait")) {
+      contentGenerated = true;
+      break;
+    }
+    await page.waitForTimeout(1000);
+  }
+
+  if (!contentGenerated) {
+    // Si de verdad se agota el tiempo, no dejamos un timeout ciego: volcamos el
     // estado real de cada campo del modal para saber qué llegó a escribir el
     // sitio y qué no, en vez de tener que adivinar con la siguiente corrida.
     const fieldsState = await dialog
@@ -522,7 +519,11 @@ async function createArticleDraft(
         fieldsState.length ? fieldsState.join(" | ") : "no se pudieron leer"
       }`,
     );
-    throw err;
+    throw new Error(
+      `El sitio no terminó de generar el contenido en ${
+        CONTENT_GENERATION_TIMEOUT_MS / 1000
+      }s (el campo Título del modal siguió vacío).`,
+    );
   }
   await onStep("Contenido generado. Aplicándolo al artículo...");
 
