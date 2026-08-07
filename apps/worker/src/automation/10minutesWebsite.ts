@@ -463,24 +463,67 @@ async function createArticleDraft(
   );
 
   // El generador escribe Contenido, Resumen y Título en ese orden (streaming).
-  // Esperamos a que el campo Título dentro del modal tenga texto real
-  // (no el placeholder "Please wait we are getting the data...").
-  await page.waitForFunction(
-    (titleTexts) => {
-      const chatGptDialog = Array.from(
-        document.querySelectorAll(".modal"),
-      ).find((el) => {
-        const text = el.textContent ?? "";
-        return titleTexts.some((t) => text.includes(t));
-      });
-      if (!chatGptDialog) return false;
-      const fields = Array.from(chatGptDialog.querySelectorAll("textarea"));
-      const last = fields[fields.length - 1] as HTMLTextAreaElement | undefined;
-      return Boolean(last && last.value && !last.value.includes("Please wait"));
-    },
-    CHATGPT_MODAL_TITLE_TEXTS,
-    { timeout: CONTENT_GENERATION_TIMEOUT_MS },
-  );
+  // Esperamos a que el campo Título (índice 3: idea, contenido, resumen,
+  // título, prompt de imagen) tenga texto real, no el placeholder
+  // "Please wait we are getting the data...".
+  //
+  // Bug real encontrado el 7/8/2026 (cuentas de Gustavo Torres y Svetlana, ambas
+  // con contentLanguage distinto de español): esta espera miraba el ÚLTIMO
+  // textarea del modal, que NO es el título sino el prompt de imagen (el campo
+  // que el sitio escribe después de los tres que nos interesan). Evidencia de
+  // que la condición nunca se cumplía, en vez de ser lentitud del sitio: las
+  // corridas fallaban clavadas EXACTAMENTE en el límite — tres veces a los 90s,
+  // y tras subir el límite, tres veces a los 180000ms. Una generación
+  // simplemente lenta habría dado tiempos variables y alguna corrida buena.
+  // En español el prompt de imagen sí se llena (por eso nunca falló); en otros
+  // idiomas aparentemente no, y esperábamos para siempre un campo que el sitio
+  // nunca iba a escribir, aunque el artículo ya estuviera generado.
+  //
+  // Ahora se espera el índice 3, que es justo el que el resto del código ya da
+  // por contrato al leer `finalTitle` unas líneas más abajo.
+  try {
+    await page.waitForFunction(
+      (titleTexts) => {
+        const chatGptDialog = Array.from(
+          document.querySelectorAll(".modal"),
+        ).find((el) => {
+          const text = el.textContent ?? "";
+          return titleTexts.some((t) => text.includes(t));
+        });
+        if (!chatGptDialog) return false;
+        const fields = Array.from(chatGptDialog.querySelectorAll("textarea"));
+        const titleField = fields[3] as HTMLTextAreaElement | undefined;
+        return Boolean(
+          titleField &&
+            titleField.value &&
+            !titleField.value.includes("Please wait"),
+        );
+      },
+      CHATGPT_MODAL_TITLE_TEXTS,
+      { timeout: CONTENT_GENERATION_TIMEOUT_MS },
+    );
+  } catch (err) {
+    // Si aun así se agota el tiempo, no dejamos un timeout ciego: volcamos el
+    // estado real de cada campo del modal para saber qué llegó a escribir el
+    // sitio y qué no, en vez de tener que adivinar con la siguiente corrida.
+    const fieldsState = await dialog
+      .locator("textarea")
+      .evaluateAll((nodes) =>
+        nodes.map((n, i) => {
+          const value = (n as HTMLTextAreaElement).value ?? "";
+          return `#${i}: ${value.length} chars${
+            value ? ` — "${value.slice(0, 60).replace(/\s+/g, " ")}"` : " (vacío)"
+          }`;
+        }),
+      )
+      .catch(() => [] as string[]);
+    await onStep(
+      `DIAGNÓSTICO [estado de los campos del modal al agotarse la espera]: ${
+        fieldsState.length ? fieldsState.join(" | ") : "no se pudieron leer"
+      }`,
+    );
+    throw err;
+  }
   await onStep("Contenido generado. Aplicándolo al artículo...");
 
   // Leemos el Contenido (HTML) aquí, mientras el modal sigue abierto, para
