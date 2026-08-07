@@ -19,6 +19,7 @@ creados en el sistema (1 admin + 44 usuarios normales, incluida Sandra).
 
 ## Arquitectura
 
+- **Principio Cloud 100% (Independencia de máquina local)**: Todo el código fuente, configuración, workflows y documentación residen exclusivamente en **GitHub** (`https://github.com/miltondavila-ux/auto-articulos.git`). La computadora del usuario **no procesa ni aloja nada**; la plataforma se ejecuta 100% en la nube (Vercel + GitHub Actions + Supabase Pro).
 - **Dashboard**: Next.js 16 (App Router) + React 19, desplegado en **Vercel**.
   Repo: `apps/web`. Despliegue: `cd apps/web && npx vercel --prod --yes`
   (el push a GitHub por sí solo **no** dispara un deploy automático en este

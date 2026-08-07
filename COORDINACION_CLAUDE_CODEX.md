@@ -49,6 +49,7 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 - **Estado:** `ARQUITECTO PRINCIPAL ACTIVO — SUPERVISIÓN Y DESARROLLO` (7/8/2026).
 - **Rol:** Arquitecto de Software y Desarrollador Principal en Google Antigravity.
+- **Principio Canónico Cloud:** El repositorio en **GitHub** (`https://github.com/miltondavila-ux/auto-articulos.git`) es la Única Fuente de Verdad del sistema. Todo se ejecuta y hospeda 100% en la nube (Vercel, GitHub Actions y Supabase).
 - **Autoridad y Funciones de Arquitectura:**
   1. **Supervisión de Infraestructura:** Vigilancia de la concurrencia del worker en GitHub Actions (10 shards × 4 lanes), estado de Supabase Transaction Pooler (:6543, `?pgbouncer=true`) y estabilidad de despliegues Vercel.
   2. **Guardian de Estabilidad y Seguridad (Zero-Breaking):** Validación estricta de compilación (`tsc --noEmit`), preservación del cifrado AES-256-GCM de credenciales y aislamiento multi-tenant estricto.
