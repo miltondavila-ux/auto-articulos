@@ -222,6 +222,18 @@ export default function ConfiguracionPage() {
 
   const showCredentialsForm = editingCredentials || !credentialsConfigured;
 
+  const signaturePercent = Math.min(
+    100,
+    Math.round((articleSignature.length / MAX_SIGNATURE_LEN) * 100),
+  );
+
+  const signatureBarColor =
+    signaturePercent >= 95
+      ? "#ef4444"
+      : signaturePercent >= 80
+        ? "#f59e0b"
+        : "#2563eb";
+
   const tabs: {
     id: "integrations" | "platform" | "editor" | "mobile";
     eyebrow: string;
@@ -239,36 +251,192 @@ export default function ConfiguracionPage() {
     {
       id: "platform",
       eyebrow: "10minutesWebsite",
-      label: "🔐 Cuenta y Datos",
+      label: "🔐 Cuenta & Categorías",
       description:
         "Credenciales cifradas de tu cuenta y sincronización de categorías.",
       badge: credentialsConfigured ? "✓ Listo" : undefined,
     },
     {
       id: "editor",
-      eyebrow: "Preferencias de Contenido",
-      label: "✍️ Redacción & Estilo",
+      eyebrow: "IA & Estilo",
+      label: "✍️ Redacción & Firma",
       description:
         "Idioma por defecto de tus artículos y texto o firma final automática.",
     },
     {
       id: "mobile",
-      eyebrow: "Acceso Móvil",
-      label: "📱 App Móvil",
+      eyebrow: "Dispositivos",
+      label: "📱 App Móvil & PWA",
       description:
-        "Código QR para escanear y agregar Auto Artículos a la pantalla de tu celular.",
+        "Código QR para escanear e instrucciones de instalación en tu celular.",
     },
   ];
 
+  const activeLangName =
+    languages.find((l) => l.externalId === contentLanguage)?.name ??
+    "Sin definir";
+
   return (
-    <div>
-      {/* Selector de Pestañas */}
+    <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+      {/* Hero Control Center Header */}
+      <div
+        style={{
+          background: "linear-gradient(135deg, #071330 0%, #0f2766 100%)",
+          color: "#ffffff",
+          borderRadius: 16,
+          padding: "24px 28px",
+          marginBottom: 20,
+          boxShadow: "0 14px 36px rgba(7, 19, 48, 0.25)",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        {/* Glow accent */}
+        <div
+          style={{
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 180,
+            height: 180,
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle, rgba(59,130,246,0.3) 0%, rgba(0,0,0,0) 70%)",
+            pointerEvents: "none",
+          }}
+        />
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            flexWrap: "wrap",
+            gap: 16,
+          }}
+        >
+          <div>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "4px 10px",
+                borderRadius: 999,
+                background: "rgba(59, 130, 246, 0.2)",
+                border: "1px solid rgba(59, 130, 246, 0.4)",
+                color: "#93c5fd",
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.05em",
+                marginBottom: 10,
+              }}
+            >
+              🎛️ CENTRO DE CONTROL PRO
+            </span>
+            <h1
+              style={{
+                fontSize: 24,
+                fontWeight: 800,
+                margin: "0 0 6px 0",
+                color: "#ffffff",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Configuración del Sistema
+            </h1>
+            <p
+              style={{
+                fontSize: 13,
+                color: "#cbd5e1",
+                margin: 0,
+                maxWidth: 650,
+                lineHeight: 1.45,
+              }}
+            >
+              Gestiona integraciones con buscadores, credenciales cifradas de
+              10minutesWebsite, preferencias de redacción e instalación móvil desde un panel unificado.
+            </p>
+          </div>
+
+          {/* Status Chips Bar */}
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              flexWrap: "wrap",
+              alignSelf: "center",
+            }}
+          >
+            <div
+              style={{
+                background: "rgba(255, 255, 255, 0.08)",
+                backdropFilter: "blur(8px)",
+                padding: "8px 14px",
+                borderRadius: 10,
+                border: "1px solid rgba(255, 255, 255, 0.12)",
+                fontSize: 12,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: credentialsConfigured ? "#22c55e" : "#f59e0b",
+                  boxShadow: credentialsConfigured
+                    ? "0 0 8px #22c55e"
+                    : "0 0 8px #f59e0b",
+                }}
+              />
+              <span style={{ color: "#e2e8f0", fontWeight: 600 }}>
+                10minutesWebsite:
+              </span>
+              <span
+                style={{
+                  color: credentialsConfigured ? "#4ade80" : "#fbbf24",
+                  fontWeight: 700,
+                }}
+              >
+                {credentialsConfigured ? "Cifrado & Activo" : "Pendiente"}
+              </span>
+            </div>
+
+            <div
+              style={{
+                background: "rgba(255, 255, 255, 0.08)",
+                backdropFilter: "blur(8px)",
+                padding: "8px 14px",
+                borderRadius: 10,
+                border: "1px solid rgba(255, 255, 255, 0.12)",
+                fontSize: 12,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <span style={{ color: "#e2e8f0", fontWeight: 600 }}>
+                Categorías:
+              </span>
+              <span style={{ color: "#60a5fa", fontWeight: 700 }}>
+                {categories.length} sincronizadas
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Pro Selector de Pestañas (Glassmorphism & Interactive Cards) */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
           gap: 12,
-          marginBottom: 20,
+          marginBottom: 24,
         }}
       >
         {tabs.map((t) => {
@@ -281,24 +449,42 @@ export default function ConfiguracionPage() {
               aria-pressed={isActive}
               style={{
                 position: "relative",
-                minHeight: 110,
-                padding: 16,
+                minHeight: 115,
+                padding: "18px 20px",
                 overflow: "hidden",
                 textAlign: "left",
                 fontFamily: "inherit",
                 cursor: "pointer",
                 borderRadius: 14,
-                border: isActive ? "1px solid #78cfe0" : "1px solid #e4e9f1",
+                border: isActive
+                  ? "2px solid #2563eb"
+                  : "1px solid rgba(226, 232, 240, 0.8)",
                 background: isActive
-                  ? "linear-gradient(135deg, #effbff 0%, #f5f8ff 100%)"
+                  ? "linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%)"
                   : "#ffffff",
-                color: "#16181d",
+                color: "#0f172a",
                 boxShadow: isActive
-                  ? "0 8px 20px rgba(47, 95, 219, 0.12)"
-                  : "0 2px 8px rgba(12, 35, 75, 0.04)",
-                transition: "all 0.15s ease",
+                  ? "0 10px 24px rgba(37, 99, 235, 0.15)"
+                  : "0 2px 8px rgba(15, 23, 42, 0.04)",
+                transform: isActive ? "translateY(-2px)" : "translateY(0)",
+                transition: "all 0.2s ease-in-out",
               }}
             >
+              {/* Active Indicator Bar */}
+              {isActive && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 3,
+                    background:
+                      "linear-gradient(90deg, #2563eb 0%, #60a5fa 100%)",
+                  }}
+                />
+              )}
+
               <div
                 style={{
                   display: "flex",
@@ -311,8 +497,8 @@ export default function ConfiguracionPage() {
                     display: "inline-flex",
                     padding: "3px 8px",
                     borderRadius: 999,
-                    background: isActive ? "#d7f3f8" : "#eef2f7",
-                    color: isActive ? "#0d7283" : "#64748b",
+                    background: isActive ? "#dbeafe" : "#f1f5f9",
+                    color: isActive ? "#1d4ed8" : "#64748b",
                     fontSize: 10,
                     fontWeight: 800,
                     letterSpacing: "0.06em",
@@ -326,8 +512,8 @@ export default function ConfiguracionPage() {
                     style={{
                       fontSize: 11,
                       fontWeight: 700,
-                      color: "#1e8a4b",
-                      background: "#dff5e6",
+                      color: "#15803d",
+                      background: "#dcfce7",
                       padding: "2px 8px",
                       borderRadius: 999,
                     }}
@@ -339,9 +525,10 @@ export default function ConfiguracionPage() {
               <span
                 style={{
                   display: "block",
-                  marginTop: 8,
-                  fontSize: 15,
+                  marginTop: 10,
+                  fontSize: 16,
                   fontWeight: 800,
+                  color: isActive ? "#1e40af" : "#0f172a",
                 }}
               >
                 {t.label}
@@ -350,7 +537,7 @@ export default function ConfiguracionPage() {
                 style={{
                   display: "block",
                   marginTop: 4,
-                  color: "#6b7280",
+                  color: "#64748b",
                   fontSize: 12,
                   lineHeight: 1.4,
                 }}
@@ -362,23 +549,52 @@ export default function ConfiguracionPage() {
         })}
       </div>
 
-      {/* Pestaña: Integraciones */}
+      {/* Pestaña 1: Buscadores & Redes (Integraciones Marketplace) */}
       {activeTab === "integrations" && (
-        <div>
+        <div
+          style={{ display: "flex", flexDirection: "column", gap: 16 }}
+        >
           <GoogleSearchConsoleSection />
           <BingWebmasterSection />
           <BusinessProfileSection />
         </div>
       )}
 
-      {/* Pestaña: 10minutesWebsite */}
+      {/* Pestaña 2: 10minutesWebsite Hub */}
       {activeTab === "platform" && (
-        <div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* Credenciales Card */}
           <section style={readySectionStyle(credentialsConfigured)}>
-            <h2 style={h2Style}>
-              Credenciales de 10minutesWebsite{" "}
-              {credentialsConfigured && <ReadyBadge />}
-            </h2>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 8,
+                marginBottom: 12,
+              }}
+            >
+              <h2 style={{ ...h2Style, margin: 0 }}>
+                Credenciales de 10minutesWebsite{" "}
+                {credentialsConfigured && <ReadyBadge />}
+              </h2>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#475569",
+                  background: "#f1f5f9",
+                  padding: "4px 10px",
+                  borderRadius: 8,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                🔒 Cifrado AES-256-GCM
+              </span>
+            </div>
 
             {!showCredentialsForm && (
               <div
@@ -386,11 +602,33 @@ export default function ConfiguracionPage() {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
+                  background: "rgba(255,255,255,0.7)",
+                  padding: "12px 16px",
+                  borderRadius: 10,
+                  border: "1px solid #e2e8f0",
                 }}
               >
-                <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>
-                  Ya tienes credenciales guardadas de forma cifrada.
-                </p>
+                <div>
+                  <p
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: "#1e293b",
+                      margin: 0,
+                    }}
+                  >
+                    Credenciales guardadas y activas
+                  </p>
+                  <p
+                    style={{
+                      fontSize: 12,
+                      color: "#64748b",
+                      margin: "2px 0 0 0",
+                    }}
+                  >
+                    Tus datos se usan únicamente por el worker headless para publicar artículos a tu nombre.
+                  </p>
+                </div>
                 <button
                   onClick={() => setEditingCredentials(true)}
                   style={secondaryButtonStyle}
@@ -403,27 +641,27 @@ export default function ConfiguracionPage() {
             {showCredentialsForm && (
               <form
                 onSubmit={handleSaveCredentials}
-                style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+                style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}
               >
                 <input
                   placeholder="Usuario de 10minutesWebsite"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  style={inputStyle}
+                  style={{ ...inputStyle, minWidth: 240 }}
                 />
                 <input
                   type="password"
                   placeholder="Contraseña"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  style={inputStyle}
+                  style={{ ...inputStyle, minWidth: 200 }}
                 />
                 <button
                   type="submit"
                   disabled={savingCreds}
                   style={disabledStyle(secondaryButtonStyle, savingCreds)}
                 >
-                  {savingCreds ? "Guardando..." : "Guardar"}
+                  {savingCreds ? "Guardando..." : "Guardar credenciales"}
                 </button>
                 {credentialsConfigured && (
                   <button
@@ -437,14 +675,14 @@ export default function ConfiguracionPage() {
               </form>
             )}
             {showCredentialsForm && (
-              <p style={{ fontSize: 12, color: "#6b7280", marginTop: 10 }}>
+              <p style={{ fontSize: 12, color: "#64748b", marginTop: 10 }}>
                 Son tu usuario y contraseña de 10minutesWebsite, no los de Auto
                 Artículos. Si no recuerdas tu contraseña de 10minutesWebsite,{" "}
                 <a
                   href="https://10minuteswebsite.net/dashboard/forgot-password.php"
                   target="_blank"
                   rel="noreferrer"
-                  style={{ color: "#2f5fdb" }}
+                  style={{ color: "#2563eb", fontWeight: 600 }}
                 >
                   recupérala con tu correo aquí
                 </a>
@@ -453,7 +691,7 @@ export default function ConfiguracionPage() {
                   href="https://www.10minuteswebsite.com/ayuda"
                   target="_blank"
                   rel="noreferrer"
-                  style={{ color: "#2f5fdb" }}
+                  style={{ color: "#2563eb", fontWeight: 600 }}
                 >
                   servicio al cliente de 10minutesWebsite
                 </a>
@@ -462,12 +700,38 @@ export default function ConfiguracionPage() {
             )}
           </section>
 
+          {/* Categorías Card con Tag Cloud View */}
           <section style={sectionStyle}>
-            <h2 style={h2Style}>Categorías</h2>
-            <p style={{ fontSize: 13, color: "#6b7280" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 8,
+                marginBottom: 6,
+              }}
+            >
+              <h2 style={{ ...h2Style, margin: 0 }}>Categorías Sincronizadas</h2>
+              <span
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: "#2563eb",
+                  background: "#eff6ff",
+                  padding: "4px 10px",
+                  borderRadius: 999,
+                }}
+              >
+                {categories.length} categorías
+              </span>
+            </div>
+
+            <p style={{ fontSize: 13, color: "#64748b", marginBottom: 14 }}>
               Sincroniza las categorías reales de tu cuenta de 10minutesWebsite.
-              Solo hace falta repetirlo si agregas o cambias categorías allá.
+              Se actualizan solas al hacer clic en el botón inferior.
             </p>
+
             <button
               onClick={handleSyncCategories}
               disabled={syncing || syncInProgress || !credentialsConfigured}
@@ -478,22 +742,27 @@ export default function ConfiguracionPage() {
             >
               {syncing || syncInProgress
                 ? "Sincronizando..."
-                : "Sincronizar categorías"}
+                : "Sincronizar categorías ahora"}
             </button>
+
             {!credentialsConfigured && (
-              <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
-                Guarda primero tus credenciales para poder sincronizar categorías.
+              <p style={{ fontSize: 13, color: "#e11d48", marginTop: 8 }}>
+                Guarda primero tus credenciales arriba para sincronizar.
               </p>
             )}
+
             {syncInProgress && (
               <p
                 style={{
                   fontSize: 13,
-                  color: "#8a6d1a",
-                  marginTop: 8,
+                  color: "#b45309",
+                  marginTop: 10,
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
+                  background: "#fffbeb",
+                  padding: "8px 12px",
+                  borderRadius: 8,
                 }}
               >
                 <style>{`
@@ -507,313 +776,456 @@ export default function ConfiguracionPage() {
                     display: "inline-block",
                     width: 14,
                     height: 14,
-                    border: "2px solid #f5e6c8",
-                    borderTopColor: "#8a6d1a",
+                    border: "2px solid #fef3c7",
+                    borderTopColor: "#b45309",
                     borderRadius: "50%",
                     animation: "auto-articulos-spin 0.8s linear infinite",
                     flexShrink: 0,
                   }}
                 />
                 {lastSyncStatus === "running"
-                  ? "Conectando con 10minutesWebsite ahora mismo..."
-                  : "En cola para procesarse — puede haber otro trabajo en curso (tuyo o de otro usuario) antes de que le toque a este. Esta pantalla se actualiza sola cuando arranque."}
+                  ? "Conectando con 10minutesWebsite..."
+                  : "En cola de sincronización. Esta pantalla se actualizará automáticamente."}
               </p>
             )}
+
             {lastSyncStatus === "error" && (
-              <div style={{ marginTop: 8 }}>
-                <p style={{ fontSize: 13, color: "#d64545", margin: 0 }}>
-                  La última sincronización falló
-                  {lastSyncError ? ":" : ". Intenta de nuevo."}
+              <div style={{ marginTop: 10 }}>
+                <p style={{ fontSize: 13, color: "#ef4444", margin: 0 }}>
+                  La última sincronización falló.
                 </p>
                 {lastSyncError && (
                   <p
                     style={{
                       fontSize: 12,
-                      color: "#d64545",
+                      color: "#b91c1c",
                       marginTop: 4,
                       fontFamily: "monospace",
                       whiteSpace: "pre-wrap",
-                      background: "#fdecec",
-                      padding: "6px 10px",
+                      background: "#fef2f2",
+                      padding: "8px 12px",
                       borderRadius: 6,
                     }}
                   >
                     {lastSyncError}
                   </p>
                 )}
-                <p style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>
-                  Si el error menciona el usuario o la contraseña, primero
-                  actualízalos arriba en &quot;Credenciales de
-                  10minutesWebsite&quot;. Si no recuerdas tu contraseña de
-                  10minutesWebsite,{" "}
-                  <a
-                    href="https://10minuteswebsite.net/dashboard/forgot-password.php"
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ color: "#2f5fdb" }}
-                  >
-                    recupérala con tu correo aquí
-                  </a>
-                  . Si aun así no logras entrar, escribe al{" "}
-                  <a
-                    href="https://www.10minuteswebsite.com/ayuda"
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ color: "#2f5fdb" }}
-                  >
-                    servicio al cliente de 10minutesWebsite
-                  </a>
-                  .
-                </p>
               </div>
             )}
+
+            {/* Tag Cloud Vista Enriquecida */}
             {categories.length > 0 && (
-              <>
-                <ul
+              <div style={{ marginTop: 18 }}>
+                <p
                   style={{
-                    marginTop: 12,
-                    paddingLeft: 18,
-                    fontSize: 13,
-                    color: "#374151",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "#475569",
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                    marginBottom: 10,
+                  }}
+                >
+                  Categorías Estándar:
+                </p>
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 8,
                   }}
                 >
                   {categories
                     .filter((c) => !c.isSequence)
                     .map((c) => (
-                      <li key={c.id}>{c.name}</li>
+                      <span
+                        key={c.id}
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: "#1e293b",
+                          background: "#f8fafc",
+                          border: "1px solid #cbd5e1",
+                          padding: "5px 12px",
+                          borderRadius: 20,
+                          boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
+                        }}
+                      >
+                        📂 {c.name}
+                      </span>
                     ))}
-                </ul>
+                </div>
+
                 {categories.some((c) => c.isSequence) && (
-                  <>
-                    <p style={{ fontSize: 13, fontWeight: 600, marginTop: 16 }}>
-                      Categorías de secuencia
-                    </p>
-                    <p style={{ fontSize: 12, color: "#6b7280", marginTop: -4 }}>
-                      No se usan por defecto al publicar — solo si las eliges
-                      explícitamente en &quot;Publicar&quot;.
-                    </p>
-                    <ul
+                  <div style={{ marginTop: 16 }}>
+                    <p
                       style={{
-                        marginTop: 8,
-                        paddingLeft: 18,
-                        fontSize: 13,
-                        color: "#374151",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: "#6b21a8",
+                        letterSpacing: "0.04em",
+                        textTransform: "uppercase",
+                        marginBottom: 6,
+                      }}
+                    >
+                      Categorías de Secuencia:
+                    </p>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 8,
                       }}
                     >
                       {categories
                         .filter((c) => c.isSequence)
                         .map((c) => (
-                          <li key={c.id}>{c.name}</li>
+                          <span
+                            key={c.id}
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: "#6b21a8",
+                              background: "#f3e8ff",
+                              border: "1px solid #d8b4fe",
+                              padding: "5px 12px",
+                              borderRadius: 20,
+                            }}
+                          >
+                            ⚡ {c.name}
+                          </span>
                         ))}
-                    </ul>
-                  </>
+                    </div>
+                  </div>
                 )}
-              </>
+              </div>
             )}
           </section>
         </div>
       )}
 
-      {/* Pestaña: Redacción & Estilo */}
+      {/* Pestaña 3: Redacción & Estilo Hub */}
       {activeTab === "editor" && (
-        <div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* Idioma Card */}
           <section style={sectionStyle}>
-            <h2 style={h2Style}>Idioma de los artículos</h2>
-            <p style={{ fontSize: 13, color: "#6b7280" }}>
-              Sincroniza los idiomas reales que ofrece 10minutesWebsite al crear
-              un artículo, y elige en cuál quieres que se redacten los tuyos.
-            </p>
-            <button
-              onClick={handleSyncLanguages}
-              disabled={
-                languageSyncing ||
-                languageSyncInProgress ||
-                !credentialsConfigured
-              }
-              style={disabledStyle(
-                secondaryButtonStyle,
-                languageSyncing ||
-                  languageSyncInProgress ||
-                  !credentialsConfigured,
-              )}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 8,
+                marginBottom: 6,
+              }}
             >
-              {languageSyncing || languageSyncInProgress
-                ? "Sincronizando..."
-                : "Sincronizar idiomas"}
-            </button>
-            {!credentialsConfigured && (
-              <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
-                Guarda primero tus credenciales para poder sincronizar idiomas.
-              </p>
-            )}
-            {languageSyncInProgress && (
-              <p
+              <h2 style={{ ...h2Style, margin: 0 }}>Idioma Predeterminado de Redacción</h2>
+              <span
                 style={{
-                  fontSize: 13,
-                  color: "#8a6d1a",
-                  marginTop: 8,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: "#0369a1",
+                  background: "#e0f2fe",
+                  padding: "4px 10px",
+                  borderRadius: 999,
                 }}
               >
-                <style>{`
-                  @keyframes auto-articulos-spin {
-                    to { transform: rotate(360deg); }
-                  }
-                `}</style>
-                <span
-                  aria-hidden
+                🌐 {activeLangName}
+              </span>
+            </div>
+
+            <p style={{ fontSize: 13, color: "#64748b", marginBottom: 14 }}>
+              Sincroniza los idiomas que soporta tu cuenta en 10minutesWebsite y elige cuál quieres usar por defecto.
+            </p>
+
+            <div
+              style={{
+                display: "flex",
+                gap: 10,
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              <button
+                onClick={handleSyncLanguages}
+                disabled={
+                  languageSyncing ||
+                  languageSyncInProgress ||
+                  !credentialsConfigured
+                }
+                style={disabledStyle(
+                  secondaryButtonStyle,
+                  languageSyncing ||
+                    languageSyncInProgress ||
+                    !credentialsConfigured,
+                )}
+              >
+                {languageSyncing || languageSyncInProgress
+                  ? "Sincronizando..."
+                  : "Sincronizar idiomas de tu cuenta"}
+              </button>
+
+              {languages.length > 0 && (
+                <div
                   style={{
-                    display: "inline-block",
-                    width: 14,
-                    height: 14,
-                    border: "2px solid #f5e6c8",
-                    borderTopColor: "#8a6d1a",
-                    borderRadius: "50%",
-                    animation: "auto-articulos-spin 0.8s linear infinite",
-                    flexShrink: 0,
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "center",
                   }}
-                />
-                {lastLanguageSyncStatus === "running"
-                  ? "Conectando con 10minutesWebsite ahora mismo..."
-                  : "En cola para procesarse. Esta pantalla se actualiza sola cuando arranque."}
+                >
+                  <select
+                    value={contentLanguage}
+                    onChange={(e) => setContentLanguage(e.target.value)}
+                    style={{ ...inputStyle, width: 220, height: 40 }}
+                  >
+                    <option value="">Seleccionar idioma...</option>
+                    {languages.map((l) => (
+                      <option key={l.id} value={l.externalId}>
+                        {l.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleSaveLanguage}
+                    disabled={savingLanguage || !contentLanguage}
+                    style={disabledStyle(
+                      secondaryButtonStyle,
+                      savingLanguage || !contentLanguage,
+                    )}
+                  >
+                    {savingLanguage ? "Guardando..." : "Guardar como preferido"}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {languageSyncInProgress && (
+              <p style={{ fontSize: 13, color: "#b45309", marginTop: 10 }}>
+                Conectando con 10minutesWebsite para sincronizar idiomas...
               </p>
             )}
+
             {lastLanguageSyncStatus === "error" && (
-              <p style={{ fontSize: 13, color: "#d64545", marginTop: 8 }}>
-                La última sincronización falló
-                {lastLanguageSyncError
-                  ? `: ${lastLanguageSyncError}`
-                  : ". Intenta de nuevo."}
-              </p>
-            )}
-            {languages.length > 0 && (
-              <div
-                style={{
-                  display: "flex",
-                  gap: 8,
-                  alignItems: "center",
-                  marginTop: 12,
-                  flexWrap: "wrap",
-                }}
-              >
-                <select
-                  value={contentLanguage}
-                  onChange={(e) => setContentLanguage(e.target.value)}
-                  style={{ ...inputStyle, width: 220 }}
-                >
-                  <option value="">Elige un idioma</option>
-                  {languages.map((l) => (
-                    <option key={l.id} value={l.externalId}>
-                      {l.name}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  onClick={handleSaveLanguage}
-                  disabled={savingLanguage || !contentLanguage}
-                  style={disabledStyle(
-                    secondaryButtonStyle,
-                    savingLanguage || !contentLanguage,
-                  )}
-                >
-                  {savingLanguage ? "Guardando..." : "Guardar"}
-                </button>
-              </div>
-            )}
-            {languages.length === 0 && !languageSyncInProgress && (
-              <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
-                Sincroniza para ver los idiomas disponibles en tu cuenta.
+              <p style={{ fontSize: 13, color: "#ef4444", marginTop: 10 }}>
+                La última sincronización de idiomas falló
+                {lastLanguageSyncError ? `: ${lastLanguageSyncError}` : "."}
               </p>
             )}
           </section>
 
+          {/* Firma / Texto Final Card con Barra de Progreso Dinámica */}
           <section style={sectionStyle}>
-            <h2 style={h2Style}>Texto al final de cada artículo</h2>
-            <p style={{ fontSize: 13, color: "#6b7280" }}>
-              Este texto se agregará automáticamente al final del contenido de
-              cada artículo nuevo que se publique (por ejemplo, una firma o un
-              aviso legal). Déjalo vacío si no quieres agregar nada.
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 8,
+                marginBottom: 6,
+              }}
+            >
+              <h2 style={{ ...h2Style, margin: 0 }}>Firma / Texto al Final del Artículo</h2>
+              <span
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: signatureBarColor,
+                  background: `${signatureBarColor}15`,
+                  padding: "4px 10px",
+                  borderRadius: 999,
+                  border: `1px solid ${signatureBarColor}30`,
+                }}
+              >
+                {articleSignature.length} / {MAX_SIGNATURE_LEN} caracteres ({signaturePercent}%)
+              </span>
+            </div>
+
+            <p style={{ fontSize: 13, color: "#64748b", marginBottom: 12 }}>
+              Este texto o firma profesional se añadirá automáticamente al final de cada artículo nuevo publicado.
             </p>
+
             <textarea
               value={articleSignature}
               onChange={(e) =>
                 e.target.value.length <= MAX_SIGNATURE_LEN &&
                 setArticleSignature(e.target.value)
               }
-              placeholder='Ej: "Verónica Rojas, Agente Inmobiliario, comparte su experiencia..."'
+              placeholder='Ej: "Verónica Rojas, Agente Inmobiliario Licenciada en Florida, comparte su análisis..."'
               rows={5}
               style={{
                 ...inputStyle,
                 width: "100%",
                 resize: "vertical",
                 fontFamily: "inherit",
+                lineHeight: 1.5,
               }}
             />
-            <p
+
+            {/* Dynamic Character Progress Bar */}
+            <div
               style={{
-                fontSize: 12,
-                marginTop: 6,
-                color:
-                  articleSignature.length >= MAX_SIGNATURE_LEN
-                    ? "#d64545"
-                    : "#6b7280",
+                width: "100%",
+                height: 6,
+                background: "#e2e8f0",
+                borderRadius: 999,
+                marginTop: 8,
+                overflow: "hidden",
               }}
             >
-              {articleSignature.length} / {MAX_SIGNATURE_LEN} caracteres
-            </p>
-            <button
-              onClick={handleSaveSignature}
-              disabled={savingSignature}
-              style={disabledStyle(secondaryButtonStyle, savingSignature)}
-            >
-              {savingSignature ? "Guardando..." : "Guardar"}
-            </button>
+              <div
+                style={{
+                  width: `${signaturePercent}%`,
+                  height: "100%",
+                  background: signatureBarColor,
+                  borderRadius: 999,
+                  transition: "width 0.2s ease, background 0.2s ease",
+                }}
+              />
+            </div>
+
+            <div style={{ marginTop: 12 }}>
+              <button
+                onClick={handleSaveSignature}
+                disabled={savingSignature}
+                style={disabledStyle(secondaryButtonStyle, savingSignature)}
+              >
+                {savingSignature ? "Guardando firma..." : "Guardar firma final"}
+              </button>
+            </div>
           </section>
         </div>
       )}
 
-      {/* Pestaña: Acceso Móvil */}
+      {/* Pestaña 4: Acceso Móvil Hub */}
       {activeTab === "mobile" && (
-        <section style={{ ...sectionStyle, textAlign: "center" }}>
-          <h2 style={h2Style}>Acceso rápido desde el celular</h2>
-          <p style={{ fontSize: 13, color: "#6b7280" }}>
-            Escanea este código con la cámara de tu teléfono para abrir Auto
-            Artículos y agregarlo a la pantalla de inicio.
-          </p>
-          <img
-            src="/qr-app.svg"
-            alt="Código QR para abrir Auto Artículos en el celular"
-            width={200}
-            height={200}
+        <section
+          style={{
+            ...sectionStyle,
+            padding: 30,
+          }}
+        >
+          <div
             style={{
-              marginTop: 12,
-              background: "#fff",
-              padding: 12,
-              borderRadius: 12,
-              maxWidth: "100%",
-              height: "auto",
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: 24,
+              alignItems: "center",
             }}
-          />
+          >
+            <div style={{ textAlign: "center" }}>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  letterSpacing: "0.06em",
+                  color: "#2563eb",
+                  background: "#eff6ff",
+                  padding: "4px 10px",
+                  borderRadius: 999,
+                  textTransform: "uppercase",
+                }}
+              >
+                📱 CÓDIGO QR DIRECTO
+              </span>
+              <h2 style={{ ...h2Style, marginTop: 10, fontSize: 18 }}>
+                Abre Auto Artículos en tu Celular
+              </h2>
+              <p style={{ fontSize: 13, color: "#64748b", margin: "6px 0 16px 0" }}>
+                Apunta la cámara de tu teléfono al código QR para acceder al instante.
+              </p>
+
+              <div
+                style={{
+                  background: "#ffffff",
+                  padding: 16,
+                  borderRadius: 16,
+                  display: "inline-block",
+                  boxShadow: "0 8px 24px rgba(15, 23, 42, 0.08)",
+                  border: "1px solid #e2e8f0",
+                }}
+              >
+                <img
+                  src="/qr-app.svg"
+                  alt="Código QR para abrir Auto Artículos en el celular"
+                  width={180}
+                  height={180}
+                  style={{ display: "block" }}
+                />
+              </div>
+            </div>
+
+            {/* PWA Instructions */}
+            <div>
+              <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 14px 0", color: "#0f172a" }}>
+                💡 ¿Cómo agregar a la pantalla de inicio?
+              </h3>
+
+              <div
+                style={{
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 12,
+                  padding: 16,
+                  marginBottom: 12,
+                }}
+              >
+                <p style={{ fontSize: 13, fontWeight: 700, margin: "0 0 4px 0", color: "#1e293b" }}>
+                  🍏 En iPhone / iPad (Safari):
+                </p>
+                <ol style={{ fontSize: 12, color: "#475569", margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
+                  <li>Abre el enlace en Safari desde el código QR.</li>
+                  <li>Toca el botón **Compartir** (icono cuadrado con flecha).</li>
+                  <li>Selecciona **&quot;Agregar al inicio&quot;** (Add to Home Screen).</li>
+                </ol>
+              </div>
+
+              <div
+                style={{
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 12,
+                  padding: 16,
+                }}
+              >
+                <p style={{ fontSize: 13, fontWeight: 700, margin: "0 0 4px 0", color: "#1e293b" }}>
+                  🤖 En Android (Chrome):
+                </p>
+                <ol style={{ fontSize: 12, color: "#475569", margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
+                  <li>Abre la página en Google Chrome.</li>
+                  <li>Toca los tres puntos de menú (⋮) en la esquina superior.</li>
+                  <li>Elige **&quot;Instalar aplicación&quot;** o **&quot;Agregar a inicio&quot;**.</li>
+                </ol>
+              </div>
+            </div>
+          </div>
         </section>
       )}
 
+      {/* Global Alert Notification Banner */}
       {banner && (
         <div
           style={{
-            padding: 12,
-            borderRadius: 8,
+            padding: "14px 18px",
+            borderRadius: 12,
             marginTop: 20,
-            background: banner.type === "error" ? "#fdecec" : "#eafaf0",
-            color: banner.type === "error" ? "#d64545" : "#1e8a4b",
+            background: banner.type === "error" ? "#fef2f2" : "#f0fdf4",
+            color: banner.type === "error" ? "#991b1b" : "#166534",
+            border:
+              banner.type === "error"
+                ? "1px solid #fecaca"
+                : "1px solid #bbf7d0",
             fontSize: 14,
+            fontWeight: 600,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.03)",
           }}
         >
+          {banner.type === "error" ? "⚠️ " : "✅ "}
           {banner.text}
         </div>
       )}
     </div>
   );
 }
+
 
