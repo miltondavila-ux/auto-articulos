@@ -701,10 +701,16 @@ async function generateImage(
     // vivo el 29/7/2026): escribimos ahí nuestro propio prompt, basado en el
     // título y resumen reales, justo antes de generar.
     const prompt = buildImagePrompt(summary);
-    await page
+    // El error de este fill se descartaba en silencio. Si #images no se puede
+    // escribir, el campo queda vacío y el sitio responde "This field is
+    // required" al pulsar "Generar imagen" — visto en producción el 7/8/2026 —
+    // sin que quedara ni rastro del motivo en el log. Se guarda para volcarlo
+    // en el diagnóstico de más abajo; se sigue sin abortar por esto.
+    const promptFillError = await page
       .locator("#images")
       .fill(prompt, { force: true })
-      .catch(() => {});
+      .then(() => null)
+      .catch((e: unknown) => (e instanceof Error ? e.message : String(e)));
 
     // Bug real encontrado el 30/7/2026: aunque openImageSection() ya
     // confirmó que el botón está visible, para cuando llegamos a hacer clic
@@ -765,6 +771,43 @@ async function generateImage(
                 img.offsetParent === null ? "oculta" : "visible"
               })`;
             });
+
+          // Estado real del campo del prompt: es el candidato número uno a
+          // estar vacío cuando el sitio contesta "This field is required".
+          const promptField = document.querySelector(
+            "#images",
+          ) as HTMLTextAreaElement | HTMLInputElement | null;
+          const promptState = promptField
+            ? `#images existe, ${
+                (promptField as HTMLElement).offsetParent === null
+                  ? "oculto"
+                  : "visible"
+              }, ${promptField.value?.length ?? 0} chars`
+            : "#images NO existe en la página";
+
+          // Qué campos están marcados como obligatorios/vacíos: para cada
+          // mensaje de error visible, buscamos el input o textarea más cercano
+          // y reportamos su id/name, que es lo que dice qué hay que llenar.
+          const requiredFields = Array.from(
+            document.querySelectorAll(
+              '[class*="error" i], [class*="invalid" i], [role="alert"]',
+            ),
+          )
+            .filter((el) => (el as HTMLElement).offsetParent !== null)
+            .filter((el) => /required|obligatorio/i.test(el.textContent ?? ""))
+            .slice(0, 5)
+            .map((el) => {
+              const scope = el.closest("div, form, section") ?? el.parentElement;
+              const field = scope?.querySelector("input, textarea, select") as
+                | HTMLInputElement
+                | null;
+              return field
+                ? `${field.tagName.toLowerCase()}#${field.id || "(sin id)"}[name=${
+                    field.name || "-"
+                  }] con ${field.value?.length ?? 0} chars`
+                : "campo no identificado";
+            });
+
           const alerts = Array.from(
             document.querySelectorAll(
               '[class*="alert" i], [class*="error" i], [class*="toast" i], [role="alert"]',
@@ -775,8 +818,13 @@ async function generateImage(
             .filter((t) => t.length > 0)
             .slice(0, 3)
             .join(" | ");
+
           return {
             imgs: imgs.length ? imgs.join(" ; ") : "ninguna imagen con alt",
+            promptState,
+            requiredFields: requiredFields.length
+              ? requiredFields.join(" ; ")
+              : "ningun campo obligatorio identificado",
             alerts: alerts || "sin mensajes visibles",
           };
         })
@@ -784,7 +832,15 @@ async function generateImage(
 
       await onStep(
         screenState
-          ? `DIAGNÓSTICO [pantalla al agotarse la espera de la imagen] imágenes: ${screenState.imgs} || mensajes: ${screenState.alerts}`
+          ? `DIAGNÓSTICO [pantalla al agotarse la espera de la imagen] prompt: ${
+              screenState.promptState
+            }${
+              promptFillError
+                ? ` || FALLO AL ESCRIBIR EL PROMPT: ${promptFillError.slice(0, 200)}`
+                : " || el prompt se escribió sin error"
+            } || campos obligatorios vacíos: ${
+              screenState.requiredFields
+            } || imágenes: ${screenState.imgs} || mensajes: ${screenState.alerts}`
           : "DIAGNÓSTICO [pantalla al agotarse la espera de la imagen]: no se pudo leer el estado de la página",
       );
 
