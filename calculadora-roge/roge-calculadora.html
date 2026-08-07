@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora ROGE — Demo de embebido</title>
+</head>
+<body style="margin:0;background:#f2f2f2;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+
+<!-- ======================================================================
+     BLOQUE EMBEBIBLE — copia desde aquí...
+     ====================================================================== -->
+<div id="rogecalc-widget">
+  <style>
+    #rogecalc-widget {
+      --rc-black: #0b0b0c;
+      --rc-black-soft: #17171a;
+      --rc-gold: #c9a24b;
+      --rc-gold-light: #e6cd8a;
+      --rc-white: #ffffff;
+      --rc-text-muted: #8a8a8f;
+      --rc-border: #2a2a2e;
+      --rc-green: #3fae6a;
+      --rc-red: #c9564b;
+      box-sizing: border-box;
+      max-width: 1080px;
+      margin: 0 auto;
+      background: var(--rc-black);
+      color: var(--rc-white);
+      border-radius: 18px;
+      padding: 28px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      line-height: 1.4;
+    }
+    #rogecalc-widget *, #rogecalc-widget *::before, #rogecalc-widget *::after { box-sizing: border-box; }
+
+    #rogecalc-widget .rc-header { display:flex; align-items:center; gap:16px; margin-bottom:22px; }
+    #rogecalc-widget .rc-logo {
+      width:56px; height:56px; border-radius:50%; flex:0 0 auto;
+      background: radial-gradient(circle at 35% 30%, var(--rc-gold-light), var(--rc-gold) 60%, #8a6d24 100%);
+      display:flex; align-items:center; justify-content:center;
+      font-weight:800; font-size:14px; letter-spacing:0.5px; color:#1a1300;
+    }
+    #rogecalc-widget .rc-title h2 { margin:0; font-size:22px; font-weight:700; letter-spacing:0.2px; }
+    #rogecalc-widget .rc-title p { margin:4px 0 0; font-size:13px; color:var(--rc-text-muted); }
+
+    #rogecalc-widget .rc-grid {
+      display:grid;
+      grid-template-columns: minmax(0,360px) 1fr;
+      gap:24px;
+      align-items:start;
+    }
+    @media (max-width: 720px) {
+      #rogecalc-widget .rc-grid { grid-template-columns: 1fr; }
+    }
+
+    #rogecalc-widget .rc-panel {
+      background: var(--rc-black-soft);
+      border: 1px solid var(--rc-border);
+      border-radius: 14px;
+      padding: 18px 18px 20px;
+    }
+    #rogecalc-widget .rc-panel + .rc-panel { margin-top:16px; }
+
+    #rogecalc-widget .rc-field { margin-bottom:18px; }
+    #rogecalc-widget .rc-field:last-child { margin-bottom:0; }
+    #rogecalc-widget .rc-field label {
+      display:flex; justify-content:space-between; align-items:baseline;
+      font-size:13px; color:var(--rc-text-muted); margin-bottom:8px;
+    }
+    #rogecalc-widget .rc-field label span.rc-val { color:var(--rc-gold-light); font-weight:700; font-size:14px; }
+
+    #rogecalc-widget input[type="range"] {
+      -webkit-appearance:none; appearance:none;
+      width:100%; height:4px; border-radius:2px;
+      background: var(--rc-border); outline:none; cursor:pointer;
+    }
+    #rogecalc-widget input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance:none; appearance:none;
+      width:18px; height:18px; border-radius:50%;
+      background: var(--rc-gold); border:2px solid var(--rc-black-soft);
+      box-shadow: 0 0 0 1px var(--rc-gold);
+      cursor:pointer;
+    }
+    #rogecalc-widget input[type="range"]::-moz-range-thumb {
+      width:18px; height:18px; border-radius:50%;
+      background: var(--rc-gold); border:2px solid var(--rc-black-soft);
+      box-shadow: 0 0 0 1px var(--rc-gold);
+      cursor:pointer;
+    }
+
+    #rogecalc-widget .rc-toggle-group { display:flex; gap:8px; flex-wrap:wrap; }
+    #rogecalc-widget .rc-toggle-btn {
+      flex:1; min-width:110px;
+      background:transparent; border:1px solid var(--rc-border); color:var(--rc-white);
+      padding:9px 10px; border-radius:8px; font-size:12.5px; cursor:pointer;
+      transition: all .15s ease;
+    }
+    #rogecalc-widget .rc-toggle-btn:hover { border-color: var(--rc-gold); }
+    #rogecalc-widget .rc-toggle-btn.active {
+      background: var(--rc-gold); border-color: var(--rc-gold); color:#1a1300; font-weight:700;
+    }
+
+    #rogecalc-widget .rc-assumptions summary {
+      cursor:pointer; font-size:13px; color:var(--rc-gold-light); font-weight:600;
+      list-style:none; display:flex; align-items:center; gap:6px;
+    }
+    #rogecalc-widget .rc-assumptions summary::-webkit-details-marker { display:none; }
+    #rogecalc-widget .rc-assumptions summary::before { content:"▸"; transition: transform .15s ease; }
+    #rogecalc-widget .rc-assumptions[open] summary::before { transform: rotate(90deg); }
+    #rogecalc-widget .rc-assum-group { margin-top:14px; padding-top:12px; border-top:1px solid var(--rc-border); }
+    #rogecalc-widget .rc-assum-group h4 { margin:0 0 10px; font-size:11.5px; text-transform:uppercase; letter-spacing:0.6px; color:var(--rc-gold); }
+    #rogecalc-widget .rc-assum-row { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; font-size:12.5px; color:#c9c9cd; }
+    #rogecalc-widget .rc-assum-row input[type="number"] {
+      width:92px; background:var(--rc-black); border:1px solid var(--rc-border); color:var(--rc-white);
+      border-radius:6px; padding:5px 7px; font-size:12.5px; text-align:right;
+    }
+    #rogecalc-widget .rc-assum-row input[type="checkbox"] { width:16px; height:16px; accent-color: var(--rc-gold); }
+    #rogecalc-widget .rc-tag {
+      display:inline-block; font-size:10px; padding:2px 6px; border-radius:4px;
+      background:#3a2e0f; color:var(--rc-gold-light); margin-left:6px; font-weight:600;
+    }
+
+    #rogecalc-widget .rc-results-header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; }
+    #rogecalc-widget .rc-results-header h3 { margin:0; font-size:15px; color:var(--rc-text-muted); font-weight:600; }
+
+    #rogecalc-widget .rc-cards {
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(190px,1fr)); gap:12px;
+      margin-bottom:20px;
+    }
+    #rogecalc-widget .rc-card {
+      background: var(--rc-black-soft); border:1px solid var(--rc-border); border-radius:12px;
+      padding:14px; position:relative;
+    }
+    #rogecalc-widget .rc-card.rc-winner { border-color: var(--rc-gold); box-shadow: 0 0 0 1px var(--rc-gold), 0 0 18px rgba(201,162,75,0.25); }
+    #rogecalc-widget .rc-card .rc-badge {
+      position:absolute; top:-10px; right:10px; background:var(--rc-gold); color:#1a1300;
+      font-size:10px; font-weight:800; padding:3px 8px; border-radius:6px; letter-spacing:0.3px;
+    }
+    #rogecalc-widget .rc-card .rc-company { font-size:12.5px; color:var(--rc-text-muted); font-weight:600; margin-bottom:6px; }
+    #rogecalc-widget .rc-card .rc-neto { font-size:20px; font-weight:800; color:var(--rc-white); }
+    #rogecalc-widget .rc-card.rc-winner .rc-neto { color: var(--rc-gold-light); }
+    #rogecalc-widget .rc-card .rc-breakdown { margin-top:8px; font-size:11px; color:var(--rc-text-muted); }
+    #rogecalc-widget .rc-card .rc-breakdown div { display:flex; justify-content:space-between; }
+
+    #rogecalc-widget .rc-bars { display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
+    #rogecalc-widget .rc-bar-row { display:grid; grid-template-columns: 120px 1fr 100px; align-items:center; gap:10px; }
+    #rogecalc-widget .rc-bar-label { font-size:12px; color:#c9c9cd; }
+    #rogecalc-widget .rc-bar-track { background:var(--rc-border); border-radius:6px; height:14px; overflow:hidden; }
+    #rogecalc-widget .rc-bar-fill { height:100%; border-radius:6px; background: linear-gradient(90deg, #8a6d24, var(--rc-gold)); transition: width .2s ease; }
+    #rogecalc-widget .rc-bar-fill.rc-fill-other { background: linear-gradient(90deg, #3a3a3f, #5a5a60); }
+    #rogecalc-widget .rc-bar-value { font-size:12px; text-align:right; font-weight:700; color:var(--rc-white); }
+
+    #rogecalc-widget .rc-verdict {
+      background: linear-gradient(135deg, #1c1706, #0b0b0c);
+      border:1px solid var(--rc-gold); border-radius:12px; padding:16px 18px;
+      font-size:14px; color:var(--rc-white); line-height:1.5;
+    }
+    #rogecalc-widget .rc-verdict strong { color: var(--rc-gold-light); }
+
+    #rogecalc-widget .rc-footer { margin-top:20px; font-size:10.5px; color:var(--rc-text-muted); border-top:1px solid var(--rc-border); padding-top:12px; }
+  </style>
+
+  <div class="rc-header">
+    <div class="rc-logo">ONE</div>
+    <div class="rc-title">
+      <h2>Calculadora ROGE</h2>
+      <p>Compara tu ingreso neto anual como Agente Productor: ROGE vs. MY Realty, LPT, La Rosa y eXp</p>
+    </div>
+  </div>
+
+  <div class="rc-grid">
+    <!-- ==================== CONTROLES ==================== -->
+    <div>
+      <div class="rc-panel">
+        <div class="rc-field">
+          <label>Ventas al año <span class="rc-val" id="rc-out-ventas">12</span></label>
+          <input type="range" id="rc-in-ventas" min="1" max="60" step="1" value="12">
+        </div>
+        <div class="rc-field">
+          <label>Precio medio de venta <span class="rc-val" id="rc-out-precio">$350,000</span></label>
+          <input type="range" id="rc-in-precio" min="100000" max="2000000" step="10000" value="350000">
+        </div>
+        <div class="rc-field">
+          <label>Nivel de experiencia</label>
+          <div class="rc-toggle-group" data-group="experiencia">
+            <button type="button" class="rc-toggle-btn active" data-value="experimentado">Con experiencia</button>
+            <button type="button" class="rc-toggle-btn" data-value="nuevo">Nuevo agente</button>
+          </div>
+        </div>
+        <div class="rc-field">
+          <label>Tipo de transacción (aplica a ROGE)</label>
+          <div class="rc-toggle-group" data-group="tipoTransaccion">
+            <button type="button" class="rc-toggle-btn active" data-value="venta">Venta</button>
+            <button type="button" class="rc-toggle-btn" data-value="alquiler">Alquiler</button>
+          </div>
+        </div>
+        <div class="rc-field">
+          <label>Plan LPT Realty</label>
+          <div class="rc-toggle-group" data-group="lptPlan">
+            <button type="button" class="rc-toggle-btn active" data-value="blueprint">80/20 con cap $15,000</button>
+            <button type="button" class="rc-toggle-btn" data-value="business">$500/tx con cap $5,000</button>
+          </div>
+        </div>
+        <div class="rc-field">
+          <label>Plan La Rosa Realty</label>
+          <div class="rc-toggle-group" data-group="laRosaPlan">
+            <button type="button" class="rc-toggle-btn active" data-value="100">100% comisión</button>
+            <button type="button" class="rc-toggle-btn" data-value="9010">90/10</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="rc-panel">
+        <details class="rc-assumptions">
+          <summary>Supuestos (editables)</summary>
+
+          <div class="rc-assum-group">
+            <h4>General</h4>
+            <div class="rc-assum-row">
+              <span>Tasa de comisión por lado (%)</span>
+              <input type="number" id="rc-a-tasaComision" value="3" min="0" max="10" step="0.1">
+            </div>
+          </div>
+
+          <div class="rc-assum-group">
+            <h4>ROGE</h4>
+            <div class="rc-assum-row"><span>Cuota mensual ($)</span><input type="number" id="rc-a-rogeMensual" value="55" min="0" step="1"></div>
+            <div class="rc-assum-row"><span>Cuota anual ($)</span><input type="number" id="rc-a-rogeAnual" value="348" min="0" step="1"></div>
+            <div class="rc-assum-row"><span>Fee por transacción ($) <span class="rc-tag">lo paga el cliente</span></span><input type="number" value="0" disabled></div>
+            <div class="rc-assum-row"><span>Incluir costos fijos</span><input type="checkbox" id="rc-a-rogeIncluir" checked></div>
+          </div>
+
+          <div class="rc-assum-group">
+            <h4>MY Realty Group <span class="rc-tag">sin dato público</span></h4>
+            <div class="rc-assum-row"><span>Cuota mensual ($)</span><input type="number" id="rc-a-myMensual" value="0" min="0" step="1"></div>
+            <div class="rc-assum-row"><span>Cuota anual ($)</span><input type="number" id="rc-a-myAnual" value="0" min="0" step="1"></div>
+            <div class="rc-assum-row"><span>Fee por transacción ($)</span><input type="number" id="rc-a-myFeeTx" value="0" min="0" step="1"></div>
+          </div>
+
+          <div class="rc-assum-group">
+            <h4>LPT Realty</h4>
+            <div class="rc-assum-row"><span>Cuota mensual ($) <span class="rc-tag">sin cuota</span></span><input type="number" value="0" disabled></div>
+            <div class="rc-assum-row"><span>Cuota anual ($) <span class="rc-tag">sin cuota</span></span><input type="number" value="0" disabled></div>
+            <div class="rc-assum-row"><span>Fee tras cap, plan 80/20 ($)</span><input type="number" id="rc-a-lptFeeTrasCap" value="195" min="0" step="1"></div>
+            <div class="rc-assum-row"><span>Fee por transacción, plan $500/tx ($)</span><input type="number" id="rc-a-lptFeeBusiness" value="500" min="0" step="1"></div>
+            <div class="rc-assum-row"><span>El fee por transacción lo paga el agente <span class="rc-tag">supuesto</span></span><input type="checkbox" id="rc-a-lptFeeAgente" checked></div>
+          </div>
+
+          <div class="rc-assum-group">
+            <h4>La Rosa Realty</h4>
+            <div class="rc-assum-row"><span>Cuota mensual ($)</span><input type="number" id="rc-a-laRosaMensual" value="40" min="0" step="1"></div>
+            <div class="rc-assum-row"><span>Cuota anual ($) <span class="rc-tag">sin cuota</span></span><input type="number" value="0" disabled></div>
+            <div class="rc-assum-row"><span>Fee por transacción ($)</span><input type="number" id="rc-a-laRosaFeeTx" value="595" min="0" step="1"></div>
+            <div class="rc-assum-row"><span>El fee por transacción lo paga el agente <span class="rc-tag">supuesto</span></span><input type="checkbox" id="rc-a-laRosaFeeAgente" checked></div>
+          </div>
+
+          <div class="rc-assum-group">
+            <h4>eXp Realty USA</h4>
+            <div class="rc-assum-row"><span>Cuota mensual ($)</span><input type="number" id="rc-a-expMensual" value="85" min="0" step="1"></div>
+            <div class="rc-assum-row"><span>Cuota anual ($) <span class="rc-tag">sin cuota</span></span><input type="number" value="0" disabled></div>
+            <div class="rc-assum-row"><span>Fee por transacción (risk mgmt) ($)</span><input type="number" id="rc-a-expFeeTx" value="40" min="0" step="1"></div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ==================== RESULTADOS ==================== -->
+    <div>
+      <div class="rc-results-header"><h3>Ingreso neto anual estimado</h3></div>
+      <div class="rc-cards" id="rc-cards"></div>
+      <div class="rc-bars" id="rc-bars"></div>
+      <div class="rc-verdict" id="rc-verdict"></div>
+    </div>
+  </div>
+
+  <div class="rc-footer">
+    Cifras ilustrativas basadas en los modelos de comisión publicados por cada corredora y en los supuestos editables de este panel. No constituyen asesoría financiera. Valida cifras exactas directamente con cada corredora antes de tomar una decisión.
+  </div>
+
+  <script>
+  (function(){
+    var root = document.getElementById('rogecalc-widget');
+
+    var S = {
+      ventasAnio: 12,
+      precioMedio: 350000,
+      experiencia: 'experimentado',
+      tipoTransaccion: 'venta',
+      lptPlan: 'blueprint',
+      laRosaPlan: '100',
+      tasaComision: 0.03,
+      rogeMensual: 55, rogeAnual: 348, rogeIncluir: true,
+      myMensual: 0, myAnual: 0, myFeeTx: 0,
+      lptFeeAgente: true, lptFeeTrasCap: 195, lptFeeBusiness: 500,
+      laRosaMensual: 40, laRosaFeeTx: 595, laRosaFeeAgente: true,
+      expMensual: 85, expFeeTx: 40
+    };
+
+    function fmt(n){
+      var sign = n < 0 ? '-' : '';
+      return sign + '$' + Math.round(Math.abs(n)).toLocaleString('en-US');
+    }
+
+    // ---- fórmulas ----
+    function splitCamino1(){
+      if (S.tipoTransaccion === 'alquiler') return 0.90;
+      return S.precioMedio > 1000000 ? 0.95 : 1.00;
+    }
+
+    function calcROGE(){
+      var txPrice = S.precioMedio * S.tasaComision;
+      var bruto = 0;
+      if (S.experiencia === 'nuevo'){
+        for (var i=1; i<=S.ventasAnio; i++){
+          var split = (i<=5) ? 0.70 : splitCamino1();
+          bruto += txPrice * split;
+        }
+      } else {
+        bruto = S.ventasAnio * txPrice * splitCamino1();
+      }
+      var costos = S.rogeIncluir ? (S.rogeMensual*12 + S.rogeAnual) : 0;
+      return { bruto: bruto, costos: costos, neto: bruto - costos };
+    }
+
+    function calcMYRealty(){
+      var produccion = S.ventasAnio * S.precioMedio * S.tasaComision;
+      var bruto;
+      if (S.experiencia === 'nuevo'){
+        var n3 = Math.min(3, S.ventasAnio);
+        var p3 = n3 * S.precioMedio * S.tasaComision;
+        var resto = produccion - p3;
+        bruto = p3*0.70 + resto*1.00;
+      } else {
+        bruto = produccion * 1.00;
+      }
+      var costos = S.myMensual*12 + S.myAnual + S.myFeeTx*S.ventasAnio;
+      return { bruto: bruto, costos: costos, neto: bruto - costos };
+    }
+
+    function calcLPT(){
+      var txPrice = S.precioMedio * S.tasaComision;
+      var cap = (S.lptPlan === 'blueprint') ? 15000 : 5000;
+      var acumulado = 0, bruto = 0;
+      for (var i=1; i<=S.ventasAnio; i++){
+        if (S.lptPlan === 'blueprint'){
+          if (acumulado < cap){
+            var parte = Math.min(txPrice*0.20, cap - acumulado);
+            acumulado += parte;
+            bruto += txPrice - parte;
+          } else {
+            bruto += txPrice - (S.lptFeeAgente ? S.lptFeeTrasCap : 0);
+          }
+        } else {
+          var fee;
+          if (acumulado < cap){
+            fee = Math.min(S.lptFeeBusiness, cap - acumulado);
+            acumulado += fee;
+          } else {
+            fee = S.lptFeeTrasCap;
+          }
+          bruto += txPrice - (S.lptFeeAgente ? fee : 0);
+        }
+      }
+      return { bruto: bruto, costos: 0, neto: bruto };
+    }
+
+    function calcLaRosa(){
+      var txPrice = S.precioMedio * S.tasaComision;
+      var bruto = 0, acumuladoRetenido = 0;
+      var cap = 10000;
+      for (var i=1; i<=S.ventasAnio; i++){
+        if (S.experiencia === 'nuevo' && i<=3){
+          bruto += txPrice*0.70;
+          continue;
+        }
+        if (S.laRosaPlan === '9010'){
+          var retenido = 0;
+          if (acumuladoRetenido < cap){
+            retenido = Math.min(txPrice*0.10, cap - acumuladoRetenido);
+            acumuladoRetenido += retenido;
+          }
+          bruto += txPrice - retenido;
+        } else {
+          bruto += txPrice * 1.00;
+        }
+      }
+      var costosFijos = S.laRosaMensual*12;
+      var costoTx = S.laRosaFeeAgente ? S.laRosaFeeTx*S.ventasAnio : 0;
+      var costos = costosFijos + costoTx;
+      return { bruto: bruto, costos: costos, neto: bruto - costos };
+    }
+
+    function calcEXP(){
+      var txPrice = S.precioMedio * S.tasaComision;
+      var acumulado = 0, bruto = 0;
+      var cap = 16000;
+      for (var i=1; i<=S.ventasAnio; i++){
+        var parte = 0;
+        if (acumulado < cap){
+          parte = Math.min(txPrice*0.20, cap - acumulado);
+          acumulado += parte;
+        }
+        bruto += (txPrice - parte);
+      }
+      var costos = S.expMensual*12 + S.expFeeTx*S.ventasAnio;
+      return { bruto: bruto, costos: costos, neto: bruto - costos };
+    }
+
+    var COMPANIES = [
+      { key:'roge', name:'ROGE', calc: calcROGE },
+      { key:'my', name:'MY Realty Group', calc: calcMYRealty },
+      { key:'lpt', name:'LPT Realty', calc: calcLPT },
+      { key:'larosa', name:'La Rosa Realty', calc: calcLaRosa },
+      { key:'exp', name:'eXp Realty USA', calc: calcEXP }
+    ];
+
+    function render(){
+      var results = COMPANIES.map(function(c){
+        var r = c.calc();
+        return { key:c.key, name:c.name, bruto:r.bruto, costos:r.costos, neto:r.neto };
+      });
+
+      var maxNeto = Math.max.apply(null, results.map(function(r){ return r.neto; }).concat([0]));
+      var winnerKey = results.reduce(function(best, r){ return r.neto > best.neto ? r : best; }, results[0]).key;
+
+      var cardsEl = root.querySelector('#rc-cards');
+      cardsEl.innerHTML = results.map(function(r){
+        var isWinner = r.key === winnerKey;
+        return '' +
+          '<div class="rc-card' + (isWinner ? ' rc-winner' : '') + '">' +
+            (isWinner ? '<div class="rc-badge">MEJOR OPCIÓN</div>' : '') +
+            '<div class="rc-company">' + r.name + '</div>' +
+            '<div class="rc-neto">' + fmt(r.neto) + '</div>' +
+            '<div class="rc-breakdown">' +
+              '<div><span>Ingreso bruto</span><span>' + fmt(r.bruto) + '</span></div>' +
+              '<div><span>Costos/fees agente</span><span>' + fmt(r.costos) + '</span></div>' +
+            '</div>' +
+          '</div>';
+      }).join('');
+
+      var barsEl = root.querySelector('#rc-bars');
+      barsEl.innerHTML = results.map(function(r){
+        var pct = maxNeto > 0 ? Math.max(0, (r.neto / maxNeto) * 100) : 0;
+        var isWinner = r.key === winnerKey;
+        return '' +
+          '<div class="rc-bar-row">' +
+            '<div class="rc-bar-label">' + r.name + '</div>' +
+            '<div class="rc-bar-track"><div class="rc-bar-fill' + (isWinner ? '' : ' rc-fill-other') + '" style="width:' + pct.toFixed(1) + '%"></div></div>' +
+            '<div class="rc-bar-value">' + fmt(r.neto) + '</div>' +
+          '</div>';
+      }).join('');
+
+      var roge = results.filter(function(r){ return r.key==='roge'; })[0];
+      var others = results.filter(function(r){ return r.key!=='roge'; });
+      var bestOther = others.reduce(function(best, r){ return r.neto > best.neto ? r : best; }, others[0]);
+
+      var verdictEl = root.querySelector('#rc-verdict');
+      var verdictHtml;
+      if (roge.neto >= bestOther.neto){
+        var diff = roge.neto - bestOther.neto;
+        verdictHtml = 'Con esta producción, <strong>ROGE</strong> te da el mayor ingreso neto anual estimado: <strong>' + fmt(roge.neto) + '</strong>, ' + fmt(diff) + ' más que la siguiente mejor opción (' + bestOther.name + ': ' + fmt(bestOther.neto) + ').';
+      } else {
+        var diff2 = bestOther.neto - roge.neto;
+        verdictHtml = 'Con esta producción, <strong>' + bestOther.name + '</strong> daría un neto estimado mayor (' + fmt(bestOther.neto) + ') que ROGE (' + fmt(roge.neto) + '), una diferencia de ' + fmt(diff2) + '.';
+        if (winnerKey === 'my'){
+          verdictHtml += ' Ten en cuenta que las tarifas de MY Realty Group no tienen dato público confirmado y se están usando en $0 por defecto — ajusta el supuesto o confirma con la agencia antes de tomar esta cifra como definitiva.';
+        }
+      }
+      verdictEl.innerHTML = verdictHtml;
+    }
+
+    // ---- wiring de inputs ----
+    var sliderVentas = root.querySelector('#rc-in-ventas');
+    var outVentas = root.querySelector('#rc-out-ventas');
+    sliderVentas.addEventListener('input', function(){
+      S.ventasAnio = parseInt(this.value, 10);
+      outVentas.textContent = S.ventasAnio;
+      render();
+    });
+
+    var sliderPrecio = root.querySelector('#rc-in-precio');
+    var outPrecio = root.querySelector('#rc-out-precio');
+    sliderPrecio.addEventListener('input', function(){
+      S.precioMedio = parseInt(this.value, 10);
+      outPrecio.textContent = fmt(S.precioMedio);
+      render();
+    });
+
+    function wireToggleGroup(groupName, stateKey){
+      var group = root.querySelector('[data-group="' + groupName + '"]');
+      var btns = group.querySelectorAll('.rc-toggle-btn');
+      btns.forEach(function(btn){
+        btn.addEventListener('click', function(){
+          btns.forEach(function(b){ b.classList.remove('active'); });
+          btn.classList.add('active');
+          S[stateKey] = btn.getAttribute('data-value');
+          render();
+        });
+      });
+    }
+    wireToggleGroup('experiencia', 'experiencia');
+    wireToggleGroup('tipoTransaccion', 'tipoTransaccion');
+    wireToggleGroup('lptPlan', 'lptPlan');
+    wireToggleGroup('laRosaPlan', 'laRosaPlan');
+
+    function wireNumber(id, stateKey, isPercent){
+      var el = root.querySelector('#' + id);
+      el.addEventListener('input', function(){
+        var v = parseFloat(this.value);
+        if (isNaN(v)) v = 0;
+        S[stateKey] = isPercent ? v/100 : v;
+        render();
+      });
+    }
+    wireNumber('rc-a-tasaComision', 'tasaComision', true);
+    wireNumber('rc-a-rogeMensual', 'rogeMensual');
+    wireNumber('rc-a-rogeAnual', 'rogeAnual');
+    wireNumber('rc-a-myMensual', 'myMensual');
+    wireNumber('rc-a-myAnual', 'myAnual');
+    wireNumber('rc-a-myFeeTx', 'myFeeTx');
+    wireNumber('rc-a-lptFeeTrasCap', 'lptFeeTrasCap');
+    wireNumber('rc-a-lptFeeBusiness', 'lptFeeBusiness');
+    wireNumber('rc-a-laRosaMensual', 'laRosaMensual');
+    wireNumber('rc-a-laRosaFeeTx', 'laRosaFeeTx');
+    wireNumber('rc-a-expMensual', 'expMensual');
+    wireNumber('rc-a-expFeeTx', 'expFeeTx');
+
+    function wireCheckbox(id, stateKey){
+      var el = root.querySelector('#' + id);
+      el.addEventListener('change', function(){
+        S[stateKey] = this.checked;
+        render();
+      });
+    }
+    wireCheckbox('rc-a-rogeIncluir', 'rogeIncluir');
+    wireCheckbox('rc-a-lptFeeAgente', 'lptFeeAgente');
+    wireCheckbox('rc-a-laRosaFeeAgente', 'laRosaFeeAgente');
+
+    render();
+  })();
+  </script>
+</div>
+<!-- ======================================================================
+     ...hasta aquí — este es el bloque que se copia/pega en el sitio ROGE.
+     ====================================================================== -->
+
+</body>
+</html>
