@@ -10,3 +10,7 @@ build/
 .claude/
 *.tsbuildinfo
 .vercel
+
+# Proyecto ajeno fuera del alcance de Auto Articulos
+PRD_CALCULADORA_ROGE.md
+calculadora-roge/

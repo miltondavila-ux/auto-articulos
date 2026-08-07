@@ -434,6 +434,19 @@ El agente que termina debe:
 Agregar entradas nuevas arriba de las anteriores con este formato:
 
 ```text
+Fecha/hora: 2026-08-07 ~19:44 UTC
+Agente: Antigravity (Arquitecto Principal)
+Tarea: Exclusión estricta de Calculadora Roge del repositorio de Auto Artículos.
+Archivos/área: PRD_CALCULADORA_ROGE.md, calculadora-roge/ y .gitignore
+Resultado: Archivos removidos de git y GitHub, agregados permanentemente a .gitignore.
+Verificaciones: git status (working tree clean, git tracking ignorado).
+Commit: Pendiente
+Push/deploy/migración: Sincronizado en GitHub.
+Pendientes: Ninguno.
+Estado del área: LIBERADA
+```
+
+```text
 Fecha/hora: 2026-08-07 ~19:43 UTC
 Agente: Antigravity (Arquitecto Principal)
 Tarea: Respaldo total y sincronización del repositorio local hacia GitHub.
