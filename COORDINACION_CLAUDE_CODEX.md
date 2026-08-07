@@ -447,12 +447,21 @@ Estado del área: LIBERADA o RESERVADA
   final en producción hecha por el usuario (las pruebas de publicación son
   suyas, según las reglas de este tablero).
 - **Commits:** `f78199f` (intento intermedio, insuficiente), `1284cec`
-  (arreglo real), `b3035b1` (diagnóstico del paso de imagen).
+  (arreglo real del contenido), `b3035b1` y `e537c21` (diagnósticos del paso de
+  imagen), `dcbd76a` (prompt de imagen y resumen por tipo de campo, no por id
+  fijo), `94fb39e` (el texto propio ya no tumba la publicación), `566adef`
+  (traducción del texto propio al idioma del artículo).
+- **Verificado en producción por el usuario**, dos cuentas y tres idiomas:
+  Gustavo Torres (`en_VI`) publica bien; Svetlana Botnarciuc (`ro_RO`) recibe un
+  título en español, escribe el artículo en rumano, traduce su bio al rumano,
+  genera la imagen y publica. Cuentas en español sin cambios de comportamiento.
 - **Push/deploy/migración:** pusheado a `main`. Sin deploy ni migración.
-- **Pendientes:** la publicación ahora avanza hasta el paso de **imagen** y
-  falla ahí; falta diagnóstico. Sospecha a verificar con evidencia, no asumir:
-  `generateImage()` busca `img[alt="Preview"]` con texto en inglés fijo, sin
-  tratamiento bilingüe — mismo patrón de fallo que el del modal.
+- **Pendientes:** mover la elección de idioma de Configuración (por usuario) a
+  **Publicar y Oportunidades** (por lote), pedido explícito del usuario el mismo
+  día y acordado para después de cerrar la verificación. Implica guardar el
+  idioma en la corrida, selector en ambas pantallas alimentado por los idiomas
+  ya sincronizados, y que el worker lea el de la corrida con respaldo en el del
+  usuario. Falta decidir si es por lote o por título (se recomendó por lote).
 - **Advertencias para el próximo agente:**
   - Se hicieron dos diagnósticos equivocados antes del bueno ("el sitio tarda
     más en otros idiomas" y "`en_VI` está corrupto"). Ambos están documentados

@@ -1150,13 +1150,56 @@ Queda pendiente revisar si `generateImage()` tiene el mismo problema: busca
 le agregó un volcado de diagnóstico en el commit `b3035b1` para averiguarlo con
 evidencia en lugar de suponerlo.
 
+### Los otros tres bugs que aparecieron detrás (todos resueltos y verificados)
+
+Al desatascar el contenido, la publicación avanzó a pasos donde esas cuentas
+nunca habían llegado, y aparecieron tres bugs más. **Los ids del formulario de
+10minutesWebsite NO son iguales en todas las cuentas**, y el código los tenía
+escritos a mano para las cuentas en español:
+
+1. **Prompt de imagen (`dcbd76a`)**: el código escribía en `#images`, que no
+   existe en la cuenta de Gustavo. El `fill` esperaba 30s, fallaba en silencio,
+   y luego se pulsaba "Generar imagen" con el campo vacío → el sitio contestaba
+   `This field is required` y la vista previa se quedaba en 0px para siempre. El
+   mensaje de error culpaba a los tokens de imagen, que no tenían nada que ver.
+2. **Resumen (`dcbd76a`)**: el campo real es `#excerpt`, el código lo leía de
+   `#excerptes`. Con el id equivocado el resumen quedaba en cadena vacía, así
+   que **nunca se aplicaba el recorte a 300 chars** (se vio un intento con 308,
+   por encima del límite que deshabilita "Guardar cambios" en silencio) y ese
+   vacío se arrastraba al prompt de imagen y al FAQ.
+3. **Texto propio del usuario (`94fb39e`)**: el sitio deja el textarea del
+   contenido del modal (`#respose_content`) con `disabled`. El `fill` esperaba
+   30s y lanzaba, **abortando el artículo completo por un añadido cosmético**,
+   tres intentos seguidos. Afectaba a cualquier usuario con `articleSignature`
+   configurado, en cualquier idioma — no solo a los de idioma no español. Ahora
+   se le quita el `disabled` antes de escribir y, sobre todo, **ese paso ya no
+   puede tumbar la publicación**: si falla, avisa en el log y el artículo sale
+   sin ese texto.
+
+Ambos campos (prompt y resumen) se ubican ahora por id conocido primero y, si no
+está, por un campo cuyo `id`/`name` hable de imagen o de resumen. Las cuentas que
+ya funcionaban no cambian de comportamiento.
+
+### Mejora pedida en la misma sesión: traducir el texto propio (`566adef`)
+
+Con Svetlana el artículo salía entero en rumano y terminaba con el párrafo de
+firma en español. Nuevo `apps/worker/src/translateText.ts` (mismo patrón que
+`faqPrompt.ts`, gpt-4o-mini): traduce `articleSignature` al idioma del artículo,
+respetando nombres propios. **Nunca bloquea la publicación** — sin clave, con
+error de red, con idioma español o sin idioma, devuelve el texto original;
+verificado con prueba local de los cuatro caminos. Cachea por idioma+texto, así
+la firma se traduce una vez por proceso y no una vez por artículo.
+
 ### Estado al cierre
 
-- Contenido: **resuelto y verificado en producción**.
-- Imagen: la publicación de Gustavo ahora avanza hasta el paso de imagen y falla
-  ahí. Es un paso al que esa cuenta nunca había llegado; justo antes apareció el
-  aviso de primera vez del generador de imágenes (ya desactivado por 15 días).
-  Sin diagnóstico todavía.
+**Todo resuelto y verificado en producción por el usuario**, en dos cuentas y
+tres idiomas:
+
+- **Gustavo Torres (inglés, `en_VI`)**: publica correctamente.
+- **Svetlana Botnarciuc (rumano, `ro_RO`)**: título dado en español, artículo
+  escrito en rumano, bio traducida al rumano, imagen generada y artículo
+  publicado.
+- Las cuentas en español no cambiaron de comportamiento en ningún paso.
 
 ### Incidente propio a registrar
 
