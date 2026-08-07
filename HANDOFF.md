@@ -317,6 +317,7 @@ type="application/ld+json">` (schema.org FAQPage) en el campo Widget,
 22. **Ejecución y Monitoreo del Worker en GitHub Actions (7/8/2026)**: Antigravity verificó la corrida activa de GitHub Actions (`worker.yml`, Run ID `31227842921`), levantada automáticamente con los **10 shards paralelos (`procesar 1..10`)** procesando el trabajo pendiente en la base de datos de producción.
 23. **Respaldo Total del Proyecto en GitHub (7/8/2026)**: Antigravity respaldó y sincronizó el 100% de los archivos locales en la rama `main` de GitHub (`https://github.com/miltondavila-ux/auto-articulos.git`), incluyendo archivos pendientes. Estado verificado: `working tree clean`.
 24. **Exclusión Estricta de Calculadora Roge (7/8/2026)**: Por confirmación explícita del usuario de que Calculadora Roge no pertenece al proyecto Auto Artículos, se eliminaron inmediatamente sus archivos del seguimiento de git (`git rm --cached`) y del repositorio de GitHub, y se agregaron permanentemente a `.gitignore`.
+25. **Fase Redes Sociales: Integración de Meta Threads API (7/8/2026)**: Antigravity diseñó e implementó la arquitectura de integración con Meta Threads API v1.0. Incluye modelo `ThreadsIntegration` en Prisma, cifrado AES-256-GCM para Long-Lived Tokens (60 días con autorrefresco), API endpoints `/api/search-integrations/threads`, flujo OAuth 2.0, tarjeta UI `ThreadsSection` en Configuración -> Integraciones y hook no-bloqueante de publicación automática de Hilos en el Worker (`notifyThreads`).
 
 ## Aclaración: "Artículos publicados" vs. "Títulos" en Usuarios
 

@@ -81,6 +81,7 @@ model User {
   searchIntegrations         SearchIntegration[]
   opportunityGroups          OpportunityGroup[]
   businessProfileIntegration BusinessProfileIntegration?
+  threadsIntegration         ThreadsIntegration?
 }
 
 // Conexión OAuth de un usuario con Google Business Profile (antes Google My
@@ -99,6 +100,23 @@ model BusinessProfileIntegration {
   locationTitle         String? // nombre visible, para mostrarlo en Configuración
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Conexión OAuth 2.0 con Meta Threads API — pedido explícito del usuario,
+// 7/8/2026. Almacena el Long-Lived Token cifrado con AES-256-GCM y datos de la
+// cuenta conectada para la publicación automática de Hilos tras la divulgación
+// del artículo.
+model ThreadsIntegration {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  threadsUserId        String
+  threadsUsername      String?
+  accessTokenEncrypted String
+  expiresAt            DateTime
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -311,6 +329,13 @@ model Title {
   // publicación de Google Business Profile sin tener que volver a abrir el
   // artículo. Null en artículos publicados antes de este campo.
   summary               String?
+  // Seguimiento de publicación automática en Meta Threads — pedido explícito
+  // del usuario, 7/8/2026. Se llena cuando el worker publica el artículo y
+  // envía el Hilo a Meta Threads en 2 pasos (Container API).
+  threadsPublishStatus  String? // "pending" | "success" | "error" | "not_configured" | "skipped"
+  threadsPostId         String?
+  threadsPublishError   String?
+  threadsPublishAt      DateTime?
 
   run                 Run                  @relation(fields: [runId], references: [id], onDelete: Cascade)
   events              TitleEvent[]

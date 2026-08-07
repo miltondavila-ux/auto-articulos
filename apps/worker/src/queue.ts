@@ -7,6 +7,7 @@ import {
 import { tryReserveUser, releaseUser } from "./reservation";
 import { notifyGoogle } from "./googleIndexing";
 import { notifyBing } from "./bingIndexing";
+import { notifyThreads } from "./threadsIndexing";
 
 async function markTitleError(titleId: string, message: string) {
   await prisma.title.update({
@@ -175,6 +176,7 @@ async function processRunTitle(
     await onStep("Artículo publicado con éxito.");
     await notifyGoogle(nextTitle.id, run.userId);
     await notifyBing(nextTitle.id, run.userId);
+    await notifyThreads(nextTitle.id, run.userId);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     const [fresh, freshRun] = await Promise.all([

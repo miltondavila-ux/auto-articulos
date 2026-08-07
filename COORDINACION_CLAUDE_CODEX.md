@@ -435,6 +435,19 @@ El agente que termina debe:
 Agregar entradas nuevas arriba de las anteriores con este formato:
 
 ```text
+Fecha/hora: 2026-08-07 ~19:56 UTC
+Agente: Antigravity (Arquitecto Principal)
+Tarea: Fase Redes Sociales — Implementación de integración con Meta Threads API v1.0.
+Archivos/área: packages/db, packages/shared, apps/web/src/app/api/search-integrations/threads, apps/web/src/components/ThreadsSection.tsx, apps/worker/src/threadsIndexing.ts
+Resultado: Modelo Prisma ThreadsIntegration, OAuth 2.0 multi-tenant cifrado (AES-256-GCM), autorrefresco de tokens (60 días), interfaz ThreadsSection en Configuración y publicación de Hilos en 2 pasos (Container API) en el Worker.
+Verificaciones: npx tsc --noEmit (0 errores) y npx next build (48/48 rutas compiladas).
+Commit: Pendiente
+Push/deploy/migración: DB sincronizada con Supabase via prisma db push.
+Pendientes: Despliegue en producción Vercel.
+Estado del área: LIBERADA
+```
+
+```text
 Fecha/hora: 2026-08-07 ~19:44 UTC
 Agente: Antigravity (Arquitecto Principal)
 Tarea: Exclusión estricta de Calculadora Roge del repositorio de Auto Artículos.
