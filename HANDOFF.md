@@ -313,6 +313,7 @@ type="application/ld+json">` (schema.org FAQPage) en el campo Widget,
     pocos minutos y el de Lizzammar terminó 20/20 en éxito. Sin errores en
     ningún shard (solo una advertencia inofensiva de GitHub sobre Node 20
     deprecado en los runners, no afecta el funcionamiento).
+22. **Ejecución y Monitoreo del Worker en GitHub Actions (7/8/2026)**: Antigravity verificó la corrida activa de GitHub Actions (`worker.yml`, Run ID `31227842921`), levantada automáticamente con los **10 shards paralelos (`procesar 1..10`)** procesando el trabajo pendiente en la base de datos de producción.
 
 ## Aclaración: "Artículos publicados" vs. "Títulos" en Usuarios
 
