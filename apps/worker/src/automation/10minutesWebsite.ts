@@ -1,6 +1,7 @@
 import { chromium, type Page } from "playwright";
 import { buildImagePrompt, isImageRelevant } from "../imagePrompt";
 import { generateFaqs, type Faq } from "../faqPrompt";
+import { translateText } from "../translateText";
 
 export interface TenMinutesWebsiteCredentials {
   username: string;
@@ -561,6 +562,16 @@ async function createArticleDraft(
   // se avisa en el log y el artículo sigue su curso sin él.
   const trimmedSignature = articleSignature?.trim();
   if (trimmedSignature) {
+    // Pedido explícito del usuario (7/8/2026): ese texto debe salir en el mismo
+    // idioma del artículo. Antes se pegaba tal cual, así que un artículo entero
+    // en rumano terminaba con un párrafo en español. Si la traducción falla o
+    // el idioma es español, translateText() devuelve el texto original — nunca
+    // bloquea ni deja el artículo sin firma por este motivo.
+    const signatureText = await translateText(trimmedSignature, contentLanguage);
+    if (signatureText !== trimmedSignature) {
+      await onStep("Tu texto propio fue traducido al idioma del artículo.");
+    }
+
     const contentField = dialog.locator("textarea").nth(1);
     const signatureError = await contentField
       .evaluate((el) => {
@@ -569,7 +580,7 @@ async function createArticleDraft(
       })
       .then(() =>
         contentField.fill(
-          `${contentHtml}\n<p>${escapeHtml(trimmedSignature)}</p>`,
+          `${contentHtml}\n<p>${escapeHtml(signatureText)}</p>`,
           { timeout: NAV_TIMEOUT_MS },
         ),
       )
