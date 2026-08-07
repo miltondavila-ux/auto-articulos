@@ -1,6 +1,6 @@
 # HANDOFF — Auto Artículos
 
-Última actualización: 2026-08-07, por Antigravity.
+Última actualización: 2026-08-07, por Antigravity (Arquitecto Principal del Sistema).
 
 Este documento es la fuente de verdad para retomar el proyecto sin necesitar
 el historial de chat. Mantenlo actualizado después de cada sesión de trabajo

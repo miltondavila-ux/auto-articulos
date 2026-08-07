@@ -45,12 +45,15 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ## Trabajo activo
 
-### Antigravity
+### Antigravity (Arquitecto Principal del Sistema)
 
-- **Estado:** `EJECUCIÓN WORKER GITHUB ACTIONS` (7/8/2026).
-- **Rol:** Agente de desarrollo principal en Google Antigravity.
-- **Acción actual:** Verificación y seguimiento de ejecución del worker en GitHub Actions (Run ID `31227842921`, 10 shards paralelos procesando trabajo pendiente en la base de datos).
-- **Protocolo:** Adopta al 100% las reglas del tablero: lectura obligatoria de `COORDINACION_CLAUDE_CODEX.md` y `HANDOFF.md`, verificación de `git status`, reserva explícita de archivos antes de editar, comprobaciones de TypeScript (`tsc --noEmit`), actualización de `HANDOFF.md` y no tocar el proyecto ajeno (`calculadora-roge/`).
+- **Estado:** `ARQUITECTO PRINCIPAL ACTIVO — SUPERVISIÓN Y DESARROLLO` (7/8/2026).
+- **Rol:** Arquitecto de Software y Desarrollador Principal en Google Antigravity.
+- **Autoridad y Funciones de Arquitectura:**
+  1. **Supervisión de Infraestructura:** Vigilancia de la concurrencia del worker en GitHub Actions (10 shards × 4 lanes), estado de Supabase Transaction Pooler (:6543, `?pgbouncer=true`) y estabilidad de despliegues Vercel.
+  2. **Guardian de Estabilidad y Seguridad (Zero-Breaking):** Validación estricta de compilación (`tsc --noEmit`), preservación del cifrado AES-256-GCM de credenciales y aislamiento multi-tenant estricto.
+  3. **Coordinación y Auditoría:** Supervisión de reservas, revisión de entregas y actualización continua de `HANDOFF.md` y este tablero.
+- **Protocolo:** Cumple y exige al 100% las reglas del tablero: lectura previa obligatoria, verificación de `git status`, reservas explícitas, comprobaciones estáticas y protección del proyecto ajeno (`calculadora-roge/`).
 
 ### Claude
 
