@@ -33,6 +33,12 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ## Trabajo activo
 
+### Antigravity
+
+- **Estado:** `INTEGRADO / LISTO PARA INTERVENIR` (7/8/2026).
+- **Rol:** Agente de desarrollo principal en Google Antigravity.
+- **Protocolo:** Adopta al 100% las reglas del tablero: lectura obligatoria de `COORDINACION_CLAUDE_CODEX.md` y `HANDOFF.md`, verificación de `git status`, reserva explícita de archivos antes de editar, comprobaciones de TypeScript (`tsc --noEmit`), actualización de `HANDOFF.md` y no tocar el proyecto ajeno (`calculadora-roge/`).
+
 ### Claude
 
 - **Estado:** `TERMINADO — ÁREA LIBERADA` (6/8/2026). Área completa liberada
@@ -412,16 +418,16 @@ El agente que termina debe:
 Agregar entradas nuevas arriba de las anteriores con este formato:
 
 ```text
-Fecha/hora:
-Agente:
-Tarea:
-Archivos/área:
-Resultado:
-Verificaciones:
-Commit:
-Push/deploy/migración:
-Pendientes:
-Estado del área: LIBERADA o RESERVADA
+Fecha/hora: 2026-08-07 ~19:23 UTC
+Agente: Antigravity
+Tarea: Reorganización del módulo de Configuración mediante pestañas categóricas (Tabs) para evitar scroll infinito.
+Archivos/área: apps/web/src/app/dashboard/configuracion/page.tsx
+Resultado: Interfaz organizada en 4 pestañas (Integraciones, 10minutesWebsite, Redacción & Estilo, App Móvil). 100% de la lógica y estado preservados.
+Verificaciones: npx tsc --noEmit (0 errores) y npx next build (0 errores, 45 páginas compiladas exitosamente).
+Commit: Pendiente
+Push/deploy/migración: Sin migración de DB.
+Pendientes: Despliegue a Vercel mediante vercel --prod cuando el usuario decida publicar.
+Estado del área: LIBERADA
 ```
 
 ### 2026-08-07 ~15:20 UTC — Claude: generación de contenido colgada en idiomas no españoles

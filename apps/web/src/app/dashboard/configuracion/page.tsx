@@ -216,421 +216,588 @@ export default function ConfiguracionPage() {
     }
   }
 
+  const [activeTab, setActiveTab] = useState<
+    "integrations" | "platform" | "editor" | "mobile"
+  >("integrations");
+
   const showCredentialsForm = editingCredentials || !credentialsConfigured;
+
+  const tabs: {
+    id: "integrations" | "platform" | "editor" | "mobile";
+    eyebrow: string;
+    label: string;
+    description: string;
+    badge?: string;
+  }[] = [
+    {
+      id: "integrations",
+      eyebrow: "Buscadores y Redes",
+      label: "🔍 Integraciones",
+      description:
+        "Conecta Google Search Console, Bing Webmaster Tools y Google Business Profile.",
+    },
+    {
+      id: "platform",
+      eyebrow: "10minutesWebsite",
+      label: "🔐 Cuenta y Datos",
+      description:
+        "Credenciales cifradas de tu cuenta y sincronización de categorías.",
+      badge: credentialsConfigured ? "✓ Listo" : undefined,
+    },
+    {
+      id: "editor",
+      eyebrow: "Preferencias de Contenido",
+      label: "✍️ Redacción & Estilo",
+      description:
+        "Idioma por defecto de tus artículos y texto o firma final automática.",
+    },
+    {
+      id: "mobile",
+      eyebrow: "Acceso Móvil",
+      label: "📱 App Móvil",
+      description:
+        "Código QR para escanear y agregar Auto Artículos a la pantalla de tu celular.",
+    },
+  ];
 
   return (
     <div>
-      <GoogleSearchConsoleSection />
-      <BingWebmasterSection />
-      <BusinessProfileSection />
-      <section style={readySectionStyle(credentialsConfigured)}>
-        <h2 style={h2Style}>
-          Credenciales de 10minutesWebsite{" "}
-          {credentialsConfigured && <ReadyBadge />}
-        </h2>
-
-        {!showCredentialsForm && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>
-              Ya tienes credenciales guardadas de forma cifrada.
-            </p>
+      {/* Selector de Pestañas */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gap: 12,
+          marginBottom: 20,
+        }}
+      >
+        {tabs.map((t) => {
+          const isActive = activeTab === t.id;
+          return (
             <button
-              onClick={() => setEditingCredentials(true)}
-              style={secondaryButtonStyle}
-            >
-              Actualizar
-            </button>
-          </div>
-        )}
-
-        {showCredentialsForm && (
-          <form
-            onSubmit={handleSaveCredentials}
-            style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
-          >
-            <input
-              placeholder="Usuario de 10minutesWebsite"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              style={inputStyle}
-            />
-            <input
-              type="password"
-              placeholder="Contraseña"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={inputStyle}
-            />
-            <button
-              type="submit"
-              disabled={savingCreds}
-              style={disabledStyle(secondaryButtonStyle, savingCreds)}
-            >
-              {savingCreds ? "Guardando..." : "Guardar"}
-            </button>
-            {credentialsConfigured && (
-              <button
-                type="button"
-                onClick={() => setEditingCredentials(false)}
-                style={secondaryButtonStyle}
-              >
-                Cancelar
-              </button>
-            )}
-          </form>
-        )}
-        {showCredentialsForm && (
-          <p style={{ fontSize: 12, color: "#6b7280", marginTop: 10 }}>
-            Son tu usuario y contraseña de 10minutesWebsite, no los de Auto
-            Artículos. Si no recuerdas tu contraseña de 10minutesWebsite,{" "}
-            <a
-              href="https://10minuteswebsite.net/dashboard/forgot-password.php"
-              target="_blank"
-              rel="noreferrer"
-              style={{ color: "#2f5fdb" }}
-            >
-              recupérala con tu correo aquí
-            </a>
-            . Si aun así no logras entrar, escribe al{" "}
-            <a
-              href="https://www.10minuteswebsite.com/ayuda"
-              target="_blank"
-              rel="noreferrer"
-              style={{ color: "#2f5fdb" }}
-            >
-              servicio al cliente de 10minutesWebsite
-            </a>
-            .
-          </p>
-        )}
-      </section>
-
-      <section style={sectionStyle}>
-        <h2 style={h2Style}>Categorías</h2>
-        <p style={{ fontSize: 13, color: "#6b7280" }}>
-          Sincroniza las categorías reales de tu cuenta de 10minutesWebsite.
-          Solo hace falta repetirlo si agregas o cambias categorías allá.
-        </p>
-        <button
-          onClick={handleSyncCategories}
-          disabled={syncing || syncInProgress || !credentialsConfigured}
-          style={disabledStyle(
-            secondaryButtonStyle,
-            syncing || syncInProgress || !credentialsConfigured,
-          )}
-        >
-          {syncing || syncInProgress
-            ? "Sincronizando..."
-            : "Sincronizar categorías"}
-        </button>
-        {!credentialsConfigured && (
-          <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
-            Guarda primero tus credenciales para poder sincronizar categorías.
-          </p>
-        )}
-        {syncInProgress && (
-          <p
-            style={{
-              fontSize: 13,
-              color: "#8a6d1a",
-              marginTop: 8,
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            <style>{`
-              @keyframes auto-articulos-spin {
-                to { transform: rotate(360deg); }
-              }
-            `}</style>
-            <span
-              aria-hidden
+              key={t.id}
+              type="button"
+              onClick={() => setActiveTab(t.id)}
+              aria-pressed={isActive}
               style={{
-                display: "inline-block",
-                width: 14,
-                height: 14,
-                border: "2px solid #f5e6c8",
-                borderTopColor: "#8a6d1a",
-                borderRadius: "50%",
-                animation: "auto-articulos-spin 0.8s linear infinite",
-                flexShrink: 0,
+                position: "relative",
+                minHeight: 110,
+                padding: 16,
+                overflow: "hidden",
+                textAlign: "left",
+                fontFamily: "inherit",
+                cursor: "pointer",
+                borderRadius: 14,
+                border: isActive ? "1px solid #78cfe0" : "1px solid #e4e9f1",
+                background: isActive
+                  ? "linear-gradient(135deg, #effbff 0%, #f5f8ff 100%)"
+                  : "#ffffff",
+                color: "#16181d",
+                boxShadow: isActive
+                  ? "0 8px 20px rgba(47, 95, 219, 0.12)"
+                  : "0 2px 8px rgba(12, 35, 75, 0.04)",
+                transition: "all 0.15s ease",
               }}
-            />
-            {lastSyncStatus === "running"
-              ? "Conectando con 10minutesWebsite ahora mismo..."
-              : "En cola para procesarse — puede haber otro trabajo en curso (tuyo o de otro usuario) antes de que le toque a este. Esta pantalla se actualiza sola cuando arranque."}
-          </p>
-        )}
-        {lastSyncStatus === "error" && (
-          <div style={{ marginTop: 8 }}>
-            <p style={{ fontSize: 13, color: "#d64545", margin: 0 }}>
-              La última sincronización falló
-              {lastSyncError ? ":" : ". Intenta de nuevo."}
-            </p>
-            {lastSyncError && (
-              <p
+            >
+              <div
                 style={{
-                  fontSize: 12,
-                  color: "#d64545",
-                  marginTop: 4,
-                  fontFamily: "monospace",
-                  whiteSpace: "pre-wrap",
-                  background: "#fdecec",
-                  padding: "6px 10px",
-                  borderRadius: 6,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                 }}
               >
-                {lastSyncError}
+                <span
+                  style={{
+                    display: "inline-flex",
+                    padding: "3px 8px",
+                    borderRadius: 999,
+                    background: isActive ? "#d7f3f8" : "#eef2f7",
+                    color: isActive ? "#0d7283" : "#64748b",
+                    fontSize: 10,
+                    fontWeight: 800,
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {t.eyebrow}
+                </span>
+                {t.badge && (
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "#1e8a4b",
+                      background: "#dff5e6",
+                      padding: "2px 8px",
+                      borderRadius: 999,
+                    }}
+                  >
+                    {t.badge}
+                  </span>
+                )}
+              </div>
+              <span
+                style={{
+                  display: "block",
+                  marginTop: 8,
+                  fontSize: 15,
+                  fontWeight: 800,
+                }}
+              >
+                {t.label}
+              </span>
+              <span
+                style={{
+                  display: "block",
+                  marginTop: 4,
+                  color: "#6b7280",
+                  fontSize: 12,
+                  lineHeight: 1.4,
+                }}
+              >
+                {t.description}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Pestaña: Integraciones */}
+      {activeTab === "integrations" && (
+        <div>
+          <GoogleSearchConsoleSection />
+          <BingWebmasterSection />
+          <BusinessProfileSection />
+        </div>
+      )}
+
+      {/* Pestaña: 10minutesWebsite */}
+      {activeTab === "platform" && (
+        <div>
+          <section style={readySectionStyle(credentialsConfigured)}>
+            <h2 style={h2Style}>
+              Credenciales de 10minutesWebsite{" "}
+              {credentialsConfigured && <ReadyBadge />}
+            </h2>
+
+            {!showCredentialsForm && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>
+                  Ya tienes credenciales guardadas de forma cifrada.
+                </p>
+                <button
+                  onClick={() => setEditingCredentials(true)}
+                  style={secondaryButtonStyle}
+                >
+                  Actualizar
+                </button>
+              </div>
+            )}
+
+            {showCredentialsForm && (
+              <form
+                onSubmit={handleSaveCredentials}
+                style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+              >
+                <input
+                  placeholder="Usuario de 10minutesWebsite"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  style={inputStyle}
+                />
+                <input
+                  type="password"
+                  placeholder="Contraseña"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  style={inputStyle}
+                />
+                <button
+                  type="submit"
+                  disabled={savingCreds}
+                  style={disabledStyle(secondaryButtonStyle, savingCreds)}
+                >
+                  {savingCreds ? "Guardando..." : "Guardar"}
+                </button>
+                {credentialsConfigured && (
+                  <button
+                    type="button"
+                    onClick={() => setEditingCredentials(false)}
+                    style={secondaryButtonStyle}
+                  >
+                    Cancelar
+                  </button>
+                )}
+              </form>
+            )}
+            {showCredentialsForm && (
+              <p style={{ fontSize: 12, color: "#6b7280", marginTop: 10 }}>
+                Son tu usuario y contraseña de 10minutesWebsite, no los de Auto
+                Artículos. Si no recuerdas tu contraseña de 10minutesWebsite,{" "}
+                <a
+                  href="https://10minuteswebsite.net/dashboard/forgot-password.php"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: "#2f5fdb" }}
+                >
+                  recupérala con tu correo aquí
+                </a>
+                . Si aun así no logras entrar, escribe al{" "}
+                <a
+                  href="https://www.10minuteswebsite.com/ayuda"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: "#2f5fdb" }}
+                >
+                  servicio al cliente de 10minutesWebsite
+                </a>
+                .
               </p>
             )}
-            <p style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>
-              Si el error menciona el usuario o la contraseña, primero
-              actualízalos arriba en &quot;Credenciales de
-              10minutesWebsite&quot;. Si no recuerdas tu contraseña de
-              10minutesWebsite,{" "}
-              <a
-                href="https://10minuteswebsite.net/dashboard/forgot-password.php"
-                target="_blank"
-                rel="noreferrer"
-                style={{ color: "#2f5fdb" }}
-              >
-                recupérala con tu correo aquí
-              </a>
-              . Si aun así no logras entrar, escribe al{" "}
-              <a
-                href="https://www.10minuteswebsite.com/ayuda"
-                target="_blank"
-                rel="noreferrer"
-                style={{ color: "#2f5fdb" }}
-              >
-                servicio al cliente de 10minutesWebsite
-              </a>
-              .
+          </section>
+
+          <section style={sectionStyle}>
+            <h2 style={h2Style}>Categorías</h2>
+            <p style={{ fontSize: 13, color: "#6b7280" }}>
+              Sincroniza las categorías reales de tu cuenta de 10minutesWebsite.
+              Solo hace falta repetirlo si agregas o cambias categorías allá.
             </p>
-          </div>
-        )}
-        {categories.length > 0 && (
-          <>
-            <ul
-              style={{
-                marginTop: 12,
-                paddingLeft: 18,
-                fontSize: 13,
-                color: "#374151",
-              }}
+            <button
+              onClick={handleSyncCategories}
+              disabled={syncing || syncInProgress || !credentialsConfigured}
+              style={disabledStyle(
+                secondaryButtonStyle,
+                syncing || syncInProgress || !credentialsConfigured,
+              )}
             >
-              {categories
-                .filter((c) => !c.isSequence)
-                .map((c) => (
-                  <li key={c.id}>{c.name}</li>
-                ))}
-            </ul>
-            {categories.some((c) => c.isSequence) && (
+              {syncing || syncInProgress
+                ? "Sincronizando..."
+                : "Sincronizar categorías"}
+            </button>
+            {!credentialsConfigured && (
+              <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
+                Guarda primero tus credenciales para poder sincronizar categorías.
+              </p>
+            )}
+            {syncInProgress && (
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "#8a6d1a",
+                  marginTop: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <style>{`
+                  @keyframes auto-articulos-spin {
+                    to { transform: rotate(360deg); }
+                  }
+                `}</style>
+                <span
+                  aria-hidden
+                  style={{
+                    display: "inline-block",
+                    width: 14,
+                    height: 14,
+                    border: "2px solid #f5e6c8",
+                    borderTopColor: "#8a6d1a",
+                    borderRadius: "50%",
+                    animation: "auto-articulos-spin 0.8s linear infinite",
+                    flexShrink: 0,
+                  }}
+                />
+                {lastSyncStatus === "running"
+                  ? "Conectando con 10minutesWebsite ahora mismo..."
+                  : "En cola para procesarse — puede haber otro trabajo en curso (tuyo o de otro usuario) antes de que le toque a este. Esta pantalla se actualiza sola cuando arranque."}
+              </p>
+            )}
+            {lastSyncStatus === "error" && (
+              <div style={{ marginTop: 8 }}>
+                <p style={{ fontSize: 13, color: "#d64545", margin: 0 }}>
+                  La última sincronización falló
+                  {lastSyncError ? ":" : ". Intenta de nuevo."}
+                </p>
+                {lastSyncError && (
+                  <p
+                    style={{
+                      fontSize: 12,
+                      color: "#d64545",
+                      marginTop: 4,
+                      fontFamily: "monospace",
+                      whiteSpace: "pre-wrap",
+                      background: "#fdecec",
+                      padding: "6px 10px",
+                      borderRadius: 6,
+                    }}
+                  >
+                    {lastSyncError}
+                  </p>
+                )}
+                <p style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>
+                  Si el error menciona el usuario o la contraseña, primero
+                  actualízalos arriba en &quot;Credenciales de
+                  10minutesWebsite&quot;. Si no recuerdas tu contraseña de
+                  10minutesWebsite,{" "}
+                  <a
+                    href="https://10minuteswebsite.net/dashboard/forgot-password.php"
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ color: "#2f5fdb" }}
+                  >
+                    recupérala con tu correo aquí
+                  </a>
+                  . Si aun así no logras entrar, escribe al{" "}
+                  <a
+                    href="https://www.10minuteswebsite.com/ayuda"
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ color: "#2f5fdb" }}
+                  >
+                    servicio al cliente de 10minutesWebsite
+                  </a>
+                  .
+                </p>
+              </div>
+            )}
+            {categories.length > 0 && (
               <>
-                <p style={{ fontSize: 13, fontWeight: 600, marginTop: 16 }}>
-                  Categorías de secuencia
-                </p>
-                <p style={{ fontSize: 12, color: "#6b7280", marginTop: -4 }}>
-                  No se usan por defecto al publicar — solo si las eliges
-                  explícitamente en &quot;Publicar&quot;.
-                </p>
                 <ul
                   style={{
-                    marginTop: 8,
+                    marginTop: 12,
                     paddingLeft: 18,
                     fontSize: 13,
                     color: "#374151",
                   }}
                 >
                   {categories
-                    .filter((c) => c.isSequence)
+                    .filter((c) => !c.isSequence)
                     .map((c) => (
                       <li key={c.id}>{c.name}</li>
                     ))}
                 </ul>
+                {categories.some((c) => c.isSequence) && (
+                  <>
+                    <p style={{ fontSize: 13, fontWeight: 600, marginTop: 16 }}>
+                      Categorías de secuencia
+                    </p>
+                    <p style={{ fontSize: 12, color: "#6b7280", marginTop: -4 }}>
+                      No se usan por defecto al publicar — solo si las eliges
+                      explícitamente en &quot;Publicar&quot;.
+                    </p>
+                    <ul
+                      style={{
+                        marginTop: 8,
+                        paddingLeft: 18,
+                        fontSize: 13,
+                        color: "#374151",
+                      }}
+                    >
+                      {categories
+                        .filter((c) => c.isSequence)
+                        .map((c) => (
+                          <li key={c.id}>{c.name}</li>
+                        ))}
+                    </ul>
+                  </>
+                )}
               </>
             )}
-          </>
-        )}
-      </section>
+          </section>
+        </div>
+      )}
 
-      <section style={sectionStyle}>
-        <h2 style={h2Style}>Idioma de los artículos</h2>
-        <p style={{ fontSize: 13, color: "#6b7280" }}>
-          Sincroniza los idiomas reales que ofrece 10minutesWebsite al crear
-          un artículo, y elige en cuál quieres que se redacten los tuyos.
-        </p>
-        <button
-          onClick={handleSyncLanguages}
-          disabled={
-            languageSyncing || languageSyncInProgress || !credentialsConfigured
-          }
-          style={disabledStyle(
-            secondaryButtonStyle,
-            languageSyncing || languageSyncInProgress || !credentialsConfigured,
-          )}
-        >
-          {languageSyncing || languageSyncInProgress
-            ? "Sincronizando..."
-            : "Sincronizar idiomas"}
-        </button>
-        {!credentialsConfigured && (
-          <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
-            Guarda primero tus credenciales para poder sincronizar idiomas.
-          </p>
-        )}
-        {languageSyncInProgress && (
-          <p
-            style={{
-              fontSize: 13,
-              color: "#8a6d1a",
-              marginTop: 8,
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            <style>{`
-              @keyframes auto-articulos-spin {
-                to { transform: rotate(360deg); }
-              }
-            `}</style>
-            <span
-              aria-hidden
-              style={{
-                display: "inline-block",
-                width: 14,
-                height: 14,
-                border: "2px solid #f5e6c8",
-                borderTopColor: "#8a6d1a",
-                borderRadius: "50%",
-                animation: "auto-articulos-spin 0.8s linear infinite",
-                flexShrink: 0,
-              }}
-            />
-            {lastLanguageSyncStatus === "running"
-              ? "Conectando con 10minutesWebsite ahora mismo..."
-              : "En cola para procesarse. Esta pantalla se actualiza sola cuando arranque."}
-          </p>
-        )}
-        {lastLanguageSyncStatus === "error" && (
-          <p style={{ fontSize: 13, color: "#d64545", marginTop: 8 }}>
-            La última sincronización falló
-            {lastLanguageSyncError ? `: ${lastLanguageSyncError}` : ". Intenta de nuevo."}
-          </p>
-        )}
-        {languages.length > 0 && (
-          <div
-            style={{
-              display: "flex",
-              gap: 8,
-              alignItems: "center",
-              marginTop: 12,
-              flexWrap: "wrap",
-            }}
-          >
-            <select
-              value={contentLanguage}
-              onChange={(e) => setContentLanguage(e.target.value)}
-              style={{ ...inputStyle, width: 220 }}
-            >
-              <option value="">Elige un idioma</option>
-              {languages.map((l) => (
-                <option key={l.id} value={l.externalId}>
-                  {l.name}
-                </option>
-              ))}
-            </select>
+      {/* Pestaña: Redacción & Estilo */}
+      {activeTab === "editor" && (
+        <div>
+          <section style={sectionStyle}>
+            <h2 style={h2Style}>Idioma de los artículos</h2>
+            <p style={{ fontSize: 13, color: "#6b7280" }}>
+              Sincroniza los idiomas reales que ofrece 10minutesWebsite al crear
+              un artículo, y elige en cuál quieres que se redacten los tuyos.
+            </p>
             <button
-              onClick={handleSaveLanguage}
-              disabled={savingLanguage || !contentLanguage}
+              onClick={handleSyncLanguages}
+              disabled={
+                languageSyncing ||
+                languageSyncInProgress ||
+                !credentialsConfigured
+              }
               style={disabledStyle(
                 secondaryButtonStyle,
-                savingLanguage || !contentLanguage,
+                languageSyncing ||
+                  languageSyncInProgress ||
+                  !credentialsConfigured,
               )}
             >
-              {savingLanguage ? "Guardando..." : "Guardar"}
+              {languageSyncing || languageSyncInProgress
+                ? "Sincronizando..."
+                : "Sincronizar idiomas"}
             </button>
-          </div>
-        )}
-        {languages.length === 0 && !languageSyncInProgress && (
-          <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
-            Sincroniza para ver los idiomas disponibles en tu cuenta.
+            {!credentialsConfigured && (
+              <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
+                Guarda primero tus credenciales para poder sincronizar idiomas.
+              </p>
+            )}
+            {languageSyncInProgress && (
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "#8a6d1a",
+                  marginTop: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <style>{`
+                  @keyframes auto-articulos-spin {
+                    to { transform: rotate(360deg); }
+                  }
+                `}</style>
+                <span
+                  aria-hidden
+                  style={{
+                    display: "inline-block",
+                    width: 14,
+                    height: 14,
+                    border: "2px solid #f5e6c8",
+                    borderTopColor: "#8a6d1a",
+                    borderRadius: "50%",
+                    animation: "auto-articulos-spin 0.8s linear infinite",
+                    flexShrink: 0,
+                  }}
+                />
+                {lastLanguageSyncStatus === "running"
+                  ? "Conectando con 10minutesWebsite ahora mismo..."
+                  : "En cola para procesarse. Esta pantalla se actualiza sola cuando arranque."}
+              </p>
+            )}
+            {lastLanguageSyncStatus === "error" && (
+              <p style={{ fontSize: 13, color: "#d64545", marginTop: 8 }}>
+                La última sincronización falló
+                {lastLanguageSyncError
+                  ? `: ${lastLanguageSyncError}`
+                  : ". Intenta de nuevo."}
+              </p>
+            )}
+            {languages.length > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  alignItems: "center",
+                  marginTop: 12,
+                  flexWrap: "wrap",
+                }}
+              >
+                <select
+                  value={contentLanguage}
+                  onChange={(e) => setContentLanguage(e.target.value)}
+                  style={{ ...inputStyle, width: 220 }}
+                >
+                  <option value="">Elige un idioma</option>
+                  {languages.map((l) => (
+                    <option key={l.id} value={l.externalId}>
+                      {l.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleSaveLanguage}
+                  disabled={savingLanguage || !contentLanguage}
+                  style={disabledStyle(
+                    secondaryButtonStyle,
+                    savingLanguage || !contentLanguage,
+                  )}
+                >
+                  {savingLanguage ? "Guardando..." : "Guardar"}
+                </button>
+              </div>
+            )}
+            {languages.length === 0 && !languageSyncInProgress && (
+              <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
+                Sincroniza para ver los idiomas disponibles en tu cuenta.
+              </p>
+            )}
+          </section>
+
+          <section style={sectionStyle}>
+            <h2 style={h2Style}>Texto al final de cada artículo</h2>
+            <p style={{ fontSize: 13, color: "#6b7280" }}>
+              Este texto se agregará automáticamente al final del contenido de
+              cada artículo nuevo que se publique (por ejemplo, una firma o un
+              aviso legal). Déjalo vacío si no quieres agregar nada.
+            </p>
+            <textarea
+              value={articleSignature}
+              onChange={(e) =>
+                e.target.value.length <= MAX_SIGNATURE_LEN &&
+                setArticleSignature(e.target.value)
+              }
+              placeholder='Ej: "Verónica Rojas, Agente Inmobiliario, comparte su experiencia..."'
+              rows={5}
+              style={{
+                ...inputStyle,
+                width: "100%",
+                resize: "vertical",
+                fontFamily: "inherit",
+              }}
+            />
+            <p
+              style={{
+                fontSize: 12,
+                marginTop: 6,
+                color:
+                  articleSignature.length >= MAX_SIGNATURE_LEN
+                    ? "#d64545"
+                    : "#6b7280",
+              }}
+            >
+              {articleSignature.length} / {MAX_SIGNATURE_LEN} caracteres
+            </p>
+            <button
+              onClick={handleSaveSignature}
+              disabled={savingSignature}
+              style={disabledStyle(secondaryButtonStyle, savingSignature)}
+            >
+              {savingSignature ? "Guardando..." : "Guardar"}
+            </button>
+          </section>
+        </div>
+      )}
+
+      {/* Pestaña: Acceso Móvil */}
+      {activeTab === "mobile" && (
+        <section style={{ ...sectionStyle, textAlign: "center" }}>
+          <h2 style={h2Style}>Acceso rápido desde el celular</h2>
+          <p style={{ fontSize: 13, color: "#6b7280" }}>
+            Escanea este código con la cámara de tu teléfono para abrir Auto
+            Artículos y agregarlo a la pantalla de inicio.
           </p>
-        )}
-      </section>
-
-      <section style={sectionStyle}>
-        <h2 style={h2Style}>Texto al final de cada artículo</h2>
-        <p style={{ fontSize: 13, color: "#6b7280" }}>
-          Este texto se agregará automáticamente al final del contenido de
-          cada artículo nuevo que se publique (por ejemplo, una firma o un
-          aviso legal). Déjalo vacío si no quieres agregar nada.
-        </p>
-        <textarea
-          value={articleSignature}
-          onChange={(e) =>
-            e.target.value.length <= MAX_SIGNATURE_LEN &&
-            setArticleSignature(e.target.value)
-          }
-          placeholder='Ej: "Verónica Rojas, Agente Inmobiliario, comparte su experiencia..."'
-          rows={5}
-          style={{
-            ...inputStyle,
-            width: "100%",
-            resize: "vertical",
-            fontFamily: "inherit",
-          }}
-        />
-        <p
-          style={{
-            fontSize: 12,
-            marginTop: 6,
-            color:
-              articleSignature.length >= MAX_SIGNATURE_LEN
-                ? "#d64545"
-                : "#6b7280",
-          }}
-        >
-          {articleSignature.length} / {MAX_SIGNATURE_LEN} caracteres
-        </p>
-        <button
-          onClick={handleSaveSignature}
-          disabled={savingSignature}
-          style={disabledStyle(secondaryButtonStyle, savingSignature)}
-        >
-          {savingSignature ? "Guardando..." : "Guardar"}
-        </button>
-      </section>
-
-      <section style={{ ...sectionStyle, textAlign: "center" }}>
-        <h2 style={h2Style}>Acceso rápido desde el celular</h2>
-        <p style={{ fontSize: 13, color: "#6b7280" }}>
-          Escanea este código con la cámara de tu teléfono para abrir Auto
-          Artículos y agregarlo a la pantalla de inicio.
-        </p>
-        <img
-          src="/qr-app.svg"
-          alt="Código QR para abrir Auto Artículos en el celular"
-          width={200}
-          height={200}
-          style={{
-            marginTop: 12,
-            background: "#fff",
-            padding: 12,
-            borderRadius: 12,
-            maxWidth: "100%",
-            height: "auto",
-          }}
-        />
-      </section>
+          <img
+            src="/qr-app.svg"
+            alt="Código QR para abrir Auto Artículos en el celular"
+            width={200}
+            height={200}
+            style={{
+              marginTop: 12,
+              background: "#fff",
+              padding: 12,
+              borderRadius: 12,
+              maxWidth: "100%",
+              height: "auto",
+            }}
+          />
+        </section>
+      )}
 
       {banner && (
         <div
@@ -649,3 +816,4 @@ export default function ConfiguracionPage() {
     </div>
   );
 }
+
