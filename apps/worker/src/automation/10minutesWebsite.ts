@@ -741,6 +741,53 @@ async function generateImage(
       // error visible para distinguirlo de una demora normal, así que se
       // deja como una posibilidad a considerar en vez de un diagnóstico
       // certero).
+      //
+      // Volcado de diagnóstico agregado el 7/8/2026, mismo criterio que se usó
+      // para desatascar la generación de contenido: en vez de quedarnos con la
+      // hipótesis de los tokens, dejamos en el log el estado real de la
+      // pantalla. Interesa sobre todo el `alt` de las imágenes presentes: este
+      // paso busca `img[alt="Preview"]` con el texto en inglés fijo, y si el
+      // sitio lo rotula distinto en esta cuenta, el selector nunca casa y la
+      // espera se agota aunque la imagen ya esté generada — que es exactamente
+      // el tipo de fallo que tenía colgada la generación de contenido.
+      //
+      // A propósito SIN captura de pantalla: las capturas en base64 pesan
+      // cientos de KB y guardarlas siempre fue lo que agotó la cuota de
+      // transferencia de la base (bug del 30/7/2026). Esto es solo texto corto.
+      const screenState = await page
+        .evaluate(() => {
+          const imgs = Array.from(document.querySelectorAll("img"))
+            .filter((i) => (i as HTMLImageElement).alt)
+            .slice(0, 8)
+            .map((i) => {
+              const img = i as HTMLImageElement;
+              return `alt="${img.alt}" (${img.naturalWidth}px, ${
+                img.offsetParent === null ? "oculta" : "visible"
+              })`;
+            });
+          const alerts = Array.from(
+            document.querySelectorAll(
+              '[class*="alert" i], [class*="error" i], [class*="toast" i], [role="alert"]',
+            ),
+          )
+            .filter((el) => (el as HTMLElement).offsetParent !== null)
+            .map((el) => (el.textContent ?? "").trim())
+            .filter((t) => t.length > 0)
+            .slice(0, 3)
+            .join(" | ");
+          return {
+            imgs: imgs.length ? imgs.join(" ; ") : "ninguna imagen con alt",
+            alerts: alerts || "sin mensajes visibles",
+          };
+        })
+        .catch(() => null);
+
+      await onStep(
+        screenState
+          ? `DIAGNÓSTICO [pantalla al agotarse la espera de la imagen] imágenes: ${screenState.imgs} || mensajes: ${screenState.alerts}`
+          : "DIAGNÓSTICO [pantalla al agotarse la espera de la imagen]: no se pudo leer el estado de la página",
+      );
+
       const message = err instanceof Error ? err.message : String(err);
       throw new Error(
         `${message} — es posible que se hayan acabado los tokens de generación de imágenes de la cuenta en 10minutesWebsite.`,
