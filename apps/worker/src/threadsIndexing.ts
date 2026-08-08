@@ -25,7 +25,7 @@ async function buildThreadsStorytellingCopy(
     
     // Fórmula 2: Gancho de curiosidad/Secreto revelado
     `Fórmula: Curiosidad y Secreto.
-     Pautas: Comienza con una frase de impacto que rompa el scroll (Ej: "Hay una cosa sobre... de la que casi nadie habla y es súper importante...", "Si estás en Florida, hay un detalle con... que te puede ahorrar dolores de cabeza"). Explica brevemente la razón y cierra diciendo que escribiste una guía con peras y manzanas en tu blog.`,
+     Pautas: Comienza con una frase de impacto que rompa el scroll (Ej: "Hay una cosa sobre... de la que casi nadie habla y es súper importante...", "Si estás en Florida, hay un detalle con... que te puede ahorrar dolores de cabeza"). Explica brevemente la razón y cierra diciendo que escribiste una guía con todos los detalles en tu blog.`,
      
     // Fórmula 3: Empatía directa / Frustración común
     `Fórmula: Empatía directa con el dolor del cliente.
@@ -66,13 +66,12 @@ async function buildThreadsStorytellingCopy(
               `INSTRUCCIONES DE ESTILO ESPECÍFICAS A SEGUIR:\n` +
               `${selectedFormula}\n\n` +
               `REGLAS CRÍTICAS DE FORMATO:\n` +
-              `- El texto total DEBE ser menor a 380 caracteres (excluyendo el enlace) para asegurar que todo quepa sin cortarse.\n` +
+              `- El texto total DEBE ser menor a 360 caracteres para asegurar que quepa el enlace y no se corte.\n` +
               `- No uses hashtags (#) ni formato markdown (nada de negritas, cursivas o asteriscos).\n` +
-              `- Incluye el enlace de manera natural e integrada al final (Ej: "Hace un rato lo subí aquí: [URL]" o "Te dejo el enlace si quieres echarle un ojo: [URL]").\n\n` +
+              `- NO escribas la URL del artículo directamente. Escribe la palabra exacta "[ENLACE]" (en mayúsculas y con corchetes) al final, integrada en tu frase de cierre (Ej: "Hace un rato lo subí aquí: [ENLACE]" o "Te dejo el enlace si quieres echarle un ojo: [ENLACE]").\n\n` +
               `Datos del artículo:\n` +
               `- Título del artículo: ${finalTitle}\n` +
-              `- Resumen: ${summary}\n` +
-              `- Enlace del artículo: ${articleUrl}`,
+              `- Resumen: ${summary}`,
           },
         ],
         temperature: 0.85,
@@ -86,7 +85,16 @@ async function buildThreadsStorytellingCopy(
     if (!response.ok || !text) {
       return `${finalTitle}\n\n${summary}\n\nLeer más: ${articleUrl}`.slice(0, 490);
     }
-    return text;
+
+    // Reemplazar el marcador de posición por el enlace real e intacto
+    let finalPost = text;
+    if (finalPost.includes("[ENLACE]")) {
+      finalPost = finalPost.replace("[ENLACE]", articleUrl);
+    } else {
+      finalPost = `${finalPost}\n\n${articleUrl}`;
+    }
+
+    return finalPost;
   } catch {
     return `${finalTitle}\n\n${summary}\n\nLeer más: ${articleUrl}`.slice(0, 490);
   }
