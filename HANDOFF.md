@@ -322,6 +322,7 @@ type="application/ld+json">` (schema.org FAQPage) en el campo Widget,
 27. **Refactorización SaaS Centralizada de Meta Threads API (7/8/2026):** Restringió la visualización y edición del App ID, App Secret, asistente de ChatGPT y botón de copiado de URI de redirección exclusivamente al rol de Administrador. Los usuarios regulares ahora solo ven el botón de conexión directa `🌀 Conectar Meta Threads` (SaaS Multi-tenant).
 28. **Sincronización de Base de Datos Remota (7/8/2026):** Creó la tabla `SystemSetting` en Supabase PostgreSQL de Producción aplicando prisma db push mediante el pipeline automatizado `migrate.yml` en GitHub Actions utilizando el Session Pooler (`:5432`).
 29. **Asistencia de Configuración de Meta Console (7/8/2026):** Se dio soporte completo de configuración de URIs en Meta Developers. El código quedó listo, desplegado y preparado para recibir el App ID y App Secret en producción.
+30. **Verificación OAuth de Threads en Producción (8/8/2026):** Se completó con éxito la primera conexión de Threads real para la cuenta `@segurosdesaludyvidausa` (Lorena Alvarez) a través de la integración centralizada SaaS de Meta.
 
 ## Aclaración: "Artículos publicados" vs. "Títulos" en Usuarios
 
