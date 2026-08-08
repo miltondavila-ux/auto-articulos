@@ -15,15 +15,15 @@ export interface ThreadsPublishResult {
 }
 
 /**
- * Obtiene las credenciales de la aplicación Threads de Meta desde las variables de entorno.
+ * Obtiene las credenciales de la aplicación Threads de Meta (App ID y App Secret).
  */
-function getThreadsAppCredentials() {
-  const appId = process.env.THREADS_APP_ID;
-  const appSecret = process.env.THREADS_APP_SECRET;
+export function getThreadsAppCredentials(overrideId?: string, overrideSecret?: string) {
+  const appId = overrideId || process.env.THREADS_APP_ID;
+  const appSecret = overrideSecret || process.env.THREADS_APP_SECRET;
 
   if (!appId || !appSecret) {
     throw new Error(
-      "THREADS_APP_ID o THREADS_APP_SECRET no están configuradas en las variables de entorno."
+      "La App ID y App Secret de Meta Threads no han sido configuradas todavía."
     );
   }
 
@@ -33,8 +33,12 @@ function getThreadsAppCredentials() {
 /**
  * Genera la URL de autorización de OAuth 2.0 para Meta Threads.
  */
-export function getThreadsAuthUrl(state: string, redirectUri: string): string {
-  const { appId } = getThreadsAppCredentials();
+export function getThreadsAuthUrl(
+  state: string,
+  redirectUri: string,
+  appCredentials?: { appId: string; appSecret: string }
+): string {
+  const { appId } = appCredentials || getThreadsAppCredentials();
   const scope = "threads_basic,threads_content_publish";
   const params = new URLSearchParams({
     client_id: appId,
@@ -53,9 +57,10 @@ export function getThreadsAuthUrl(state: string, redirectUri: string): string {
  */
 export async function exchangeCodeForThreadsTokens(
   code: string,
-  redirectUri: string
+  redirectUri: string,
+  appCredentials?: { appId: string; appSecret: string }
 ): Promise<ThreadsTokenExchangeResult> {
-  const { appId, appSecret } = getThreadsAppCredentials();
+  const { appId, appSecret } = appCredentials || getThreadsAppCredentials();
 
   // Paso 1: Canjear code por Short-Lived Access Token
   const shortLivedBody = new URLSearchParams({

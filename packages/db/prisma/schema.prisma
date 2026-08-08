@@ -372,3 +372,14 @@ model TitleEvent {
 
   @@index([titleId, createdAt])
 }
+
+// Configuración global del sistema (ej. App ID y App Secret de Meta Threads)
+// guardada cifrada con AES-256-GCM para que el usuario o administrador pueda
+// configurar las llaves generales de la API directamente desde la plataforma.
+model SystemSetting {
+  key            String   @id
+  encryptedValue String
+  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now())
+}
+

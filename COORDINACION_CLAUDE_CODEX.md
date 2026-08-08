@@ -435,6 +435,19 @@ El agente que termina debe:
 Agregar entradas nuevas arriba de las anteriores con este formato:
 
 ```text
+Fecha/hora: 2026-08-07 ~20:05 UTC
+Agente: Antigravity (Arquitecto Principal)
+Tarea: Implementación del Gestor General de Llaves de API (App ID / App Secret de Meta Threads) desde la UI.
+Archivos/área: packages/db/prisma/schema.prisma, apps/web/src/app/api/search-integrations/threads/settings, apps/web/src/lib/threads-app-config.ts, apps/web/src/components/ThreadsSection.tsx
+Resultado: Modelo Prisma SystemSetting guardando llaves globales cifradas con AES-256-GCM en DB, formulario interactivo expandible en la UI y soporte transparente para OAuth y refresco de tokens.
+Verificaciones: npx tsc --noEmit (0 errores) y npx next build (49/49 rutas compiladas).
+Commit: Pendiente
+Push/deploy/migración: Sincronizado en Supabase PostgreSQL.
+Pendientes: Despliegue en producción Vercel.
+Estado del área: LIBERADA
+```
+
+```text
 Fecha/hora: 2026-08-07 ~19:56 UTC
 Agente: Antigravity (Arquitecto Principal)
 Tarea: Fase Redes Sociales — Implementación de integración con Meta Threads API v1.0.

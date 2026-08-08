@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { encryptSecret, exchangeCodeForThreadsTokens } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
+import { getStoredThreadsAppCredentials } from "@/lib/threads-app-config";
 import { THREADS_STATE_COOKIE } from "../connect/route";
 
 export async function GET(request: NextRequest) {
@@ -18,8 +19,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const appCreds = await getStoredThreadsAppCredentials();
     const redirectUri = `${request.nextUrl.protocol}//${request.nextUrl.host}/api/search-integrations/threads/callback`;
-    const tokens = await exchangeCodeForThreadsTokens(code, redirectUri);
+    const tokens = await exchangeCodeForThreadsTokens(code, redirectUri, appCreds);
 
     const expiresAt = new Date(Date.now() + tokens.expiresInSeconds * 1000);
 
