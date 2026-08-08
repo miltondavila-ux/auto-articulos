@@ -323,6 +323,7 @@ type="application/ld+json">` (schema.org FAQPage) en el campo Widget,
 28. **Sincronización de Base de Datos Remota (7/8/2026):** Creó la tabla `SystemSetting` en Supabase PostgreSQL de Producción aplicando prisma db push mediante el pipeline automatizado `migrate.yml` en GitHub Actions utilizando el Session Pooler (`:5432`).
 29. **Asistencia de Configuración de Meta Console (7/8/2026):** Se dio soporte completo de configuración de URIs en Meta Developers. El código quedó listo, desplegado y preparado para recibir el App ID y App Secret en producción.
 30. **Verificación OAuth de Threads en Producción (8/8/2026):** Se completó con éxito la primera conexión de Threads real para la cuenta `@segurosdesaludyvidausa` (Lorena Alvarez) a través de la integración centralizada SaaS de Meta.
+31. **Copywriter de Storytelling y DALL-E para Threads (8/8/2026):** Se rediseñó la publicación en Threads para usar GPT-4o-mini para generar un copy conversacional de menos de 400 caracteres con ganchos interactivos, y DALL-E 3 para crear imágenes personalizadas que luego se alojan automáticamente en Vercel Blob.
 
 ## Aclaración: "Artículos publicados" vs. "Títulos" en Usuarios
 
