@@ -41,6 +41,9 @@ HANDOFF, solo alimenta ideas hacia él).
   Tools) y se le pasan a la IA como evidencia aparte, claramente etiquetada
   como "Bing" (Bing solo da consulta, no consulta+página como Google); si
   hay ambos, se combinan. Sin probar contra una cuenta real de Bing todavía.
+  Reconfirmado por el usuario el 8/8/2026 (mismo pedido, sin cambios de
+  diseño); ver detalle técnico completo en `HANDOFF.md`, sección
+  "PENDIENTE: combinar Bing + Google en Oportunidades".
 
 ## Hecho
 

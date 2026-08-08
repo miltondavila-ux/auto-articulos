@@ -435,6 +435,36 @@ El agente que termina debe:
 Agregar entradas nuevas arriba de las anteriores con este formato:
 
 ```text
+Fecha/hora: 2026-08-08
+Agente: Claude
+Tarea: Oportunidades descartaba categorías enteras por debajo de 9 títulos
+  (reportado por el usuario, cuenta de Lorena Álvarez, dejó de recibir
+  oportunidades nuevas).
+Archivos/área: apps/web/src/lib/opportunity-analysis.ts.
+Resultado: causa raíz confirmada leyendo el código (no especulada): se exigía
+  EXACTAMENTE 9 títulos por categoría tras filtrar duplicados, y se
+  descartaba el grupo ENTERO si quedaba en 8 o menos, aunque hubiera
+  oportunidad real. Cambiado a aceptar cualquier cantidad de al menos 1
+  título válido por categoría. El enfriamiento de 3 días sigue aplicando
+  solo cuando el resultado total es CERO categorías (confirmado con el
+  usuario que esa parte es la intención correcta). Detalle técnico completo
+  en HANDOFF.md, sección "RESUELTO (8/8/2026): Oportunidades descartaba
+  categorías enteras por debajo de 9 títulos".
+Verificaciones: tsc --noEmit limpio en apps/web. Verificación real en
+  producción (que a Lorena le vuelvan a aparecer oportunidades) pendiente de
+  que el usuario corra "Analizar oportunidades" de nuevo.
+Commit: 8511275.
+Push/deploy/migración: pusheado a main; deploy manual `vercel --prod --yes`
+  en apps/web, dpl_JjduTedbbeeBRgCzrUwENxRMNrdE, READY. Sin migración.
+Pendientes: ítem separado y NO implementado (pedido explícito, reconfirmado
+  8/8/2026): que Oportunidades combine datos de Bing Webmaster Tools además
+  de Google Search Console cuando el usuario tenga las dos conectadas.
+  Documentado completo (plan, riesgos, diferencia técnica Bing-vs-Google) en
+  HANDOFF.md sección "PENDIENTE: combinar Bing + Google en Oportunidades" y
+  en TO-DO.md — leer ahí antes de tocar este archivo de nuevo, no reinventar
+  el plan.
+Estado del área: LIBERADA
+
 Fecha/hora: 2026-08-08 ~15:15 UTC
 Agente: Antigravity (Arquitecto Principal)
 Tarea: Verificación final de OAuth en Producción con cuenta real (Lorena Alvarez).

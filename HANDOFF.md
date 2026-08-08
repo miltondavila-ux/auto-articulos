@@ -1219,6 +1219,112 @@ commit; un `git reset --hard` posterior los **borró del disco**. Se recuperaron
 íntegros desde el objeto de git y volvieron a quedar sin trackear. Refuerza por
 qué la regla existe: agregar siempre rutas explícitas.
 
+## RESUELTO (8/8/2026): Oportunidades descartaba categorías enteras por debajo de 9 títulos
+
+Reportado por el usuario: en la cuenta de Lorena Álvarez, Oportunidades dejó
+de devolver resultados nuevos, y sospechaba que el esquema de selección era
+demasiado rígido.
+
+### Causa raíz (confirmada leyendo el código, no especulada)
+
+En `analyzeSeoOpportunities()` (`apps/web/src/lib/opportunity-analysis.ts`),
+tras filtrar duplicados contra lo ya publicado, se exigía que cada grupo de
+categoría tuviera **EXACTAMENTE 9 títulos** (`if (titles.length !== 9)
+continue;`) — si quedaba en 8 o menos, se descartaba **el grupo entero**,
+aunque esos 8 títulos fueran oportunidades reales y válidas. Para una cuenta
+con historial largo de títulos publicados es fácil que el filtro de
+duplicados baje el conteo de alguna categoría por debajo de 9; en el peor
+caso, de TODAS, lo que dispara el enfriamiento de 3 días (`COOLDOWN_DAYS` en
+`api/opportunities/route.ts`) por un resultado que en realidad no era cero.
+
+### Arreglo
+
+Se cambió la condición a `if (titles.length === 0) continue;` — se acepta
+cualquier cantidad de al menos 1 título válido por categoría. El prompt
+sigue pidiéndole 9 al modelo (no se tocó `PROMPT_HEADER`), pero ya no se
+descarta el resultado si llegan menos tras el filtro de duplicados. El
+enfriamiento de 3 días sigue aplicando solo cuando el resultado total es
+CERO categorías — confirmado explícitamente con el usuario que esa parte del
+comportamiento es la intención correcta, no se toca.
+
+- **Commit:** `8511275`.
+- **Deploy:** `npx vercel --prod --yes` en `apps/web`, deployment
+  `dpl_JjduTedbbeeBRgCzrUwENxRMNrdE`, `READY` en producción. Sin migración
+  (no hay cambio de schema).
+- **Verificación:** `tsc --noEmit` limpio en `apps/web`. Verificación real en
+  producción (que a Lorena le vuelvan a aparecer oportunidades) queda
+  pendiente de que el usuario corra **Analizar oportunidades** de nuevo — el
+  enfriamiento de 3 días puede seguir aplicando si su última corrida ya
+  estaba en cooldown por otro motivo.
+
+## PENDIENTE: combinar Bing + Google en Oportunidades
+
+Pedido explícito del usuario, primero el 7/8/2026 y reconfirmado el
+8/8/2026, sin cambios de diseño entre una vez y la otra. **No implementado
+todavía** — queda también anotado en `TO-DO.md` (sección "Pendientes") por
+si esta sesión se corta por límite de tokens y otra IA debe continuar sin
+el contexto de esta conversación. Este bloque es autocontenido a propósito.
+
+### Qué pasa hoy
+
+- `analyzeSeoOpportunities()` (`apps/web/src/lib/opportunity-analysis.ts`)
+  solo recibe datos de Google Search Console (`currentRows`, `previousRows`,
+  `countryRows`, todos tipados como `GoogleSearchAnalyticsRow` de
+  `packages/shared/src/google-search-console.ts`).
+- `POST /api/opportunities` (`apps/web/src/app/api/opportunities/route.ts`)
+  **exige** una integración de Google conectada y bloquea con error si no
+  la hay (línea ~40-48), aunque el usuario tenga Bing Webmaster Tools
+  conectado (`SearchIntegration` con `provider: "bing"`, ver
+  `apps/web/src/components/BingWebmasterSection.tsx` y
+  `packages/shared/src/bing-webmaster.ts`).
+- La integración de Bing que ya existe solo cubre sitemap y solicitud de
+  indexación instantánea de URLs (`submitBingSitemap`, `submitBingUrl`,
+  `listBingSites`) — **no hay ninguna llamada implementada todavía** para
+  traer estadísticas de búsqueda de Bing (clics/impresiones/consultas).
+
+### Plan acordado con el usuario (ambas veces)
+
+1. Google deja de ser obligatorio para correr el análisis — basta con tener
+   Google **o** Bing conectado (hoy solo Google puede correr el análisis).
+2. Si Bing está conectado, traer sus consultas con más impresiones/clics vía
+   la API de Bing Webmaster Tools, endpoint `GetQueryStats`
+   (`https://ssl.bing.com/webmaster/api.svc/json/GetQueryStats`, mismo
+   patrón de fetch con Bearer token que ya usa `bing-webmaster.ts`).
+3. Esa data de Bing se agrega al prompt de `analyzeSeoOpportunities()` como
+   una sección **aparte y claramente etiquetada como "Bing"** (no mezclarla
+   silenciosamente con la de Google) — la regla anti-invención del
+   `PROMPT_HEADER` (muy estricta sobre no inventar datos específicos) debe
+   seguir aplicando igual sin importar el origen del dato.
+4. Si el usuario tiene ambas integraciones conectadas, se combinan las dos
+   fuentes en el mismo análisis.
+
+### Diferencia técnica real a tener en cuenta (no es un detalle menor)
+
+Google da fila por **consulta + página** (`GoogleSearchAnalyticsRow.keys =
+[query, page]`). La API de Bing, con `GetQueryStats`, da fila por
+**consulta únicamente** — no hay endpoint eficiente para cruzar página por
+consulta sin iterar una llamada por cada consulta (existe `GetQueryPageStats`
+pero es por consulta individual, no vale la pena para "top N consultas"). Por
+eso la evidencia de Bing entra al análisis con menos detalle que la de
+Google: consulta + volumen, sin página asociada. No forzar una columna de
+página falsa para Bing.
+
+### Riesgos a manejar en la implementación
+
+- **Nunca tumbar el análisis si Bing falla.** Mismo criterio defensivo que
+  ya usa `bing-webmaster.ts`: si la llamada a Bing falla, el análisis debe
+  seguir funcionando solo con Google (o viceversa si falla Google).
+- **No se puede probar la llamada real a la API de Bing desde el entorno de
+  desarrollo actual** — no hay ninguna cuenta de Bing conectada a mano fuera
+  de producción. La primera verificación real la hace el usuario en
+  producción, con un usuario que tenga Bing conectado (Lorena Álvarez ya lo
+  probó para sitemap, ver sección de Bing más arriba en este archivo). Si el
+  formato de respuesta de Bing no es exactamente el esperado, ajustar con
+  evidencia real del primer intento, mismo criterio usado en la sesión del
+  7/8/2026 para los bugs de `10minutesWebsite.ts` (ver esa sección: no
+  asumir el formato, volcar el estado real a un log de diagnóstico si algo
+  falla).
+
 ## Pendiente / próximos pasos
 
 0. ~~Construir módulo **Oportunidades**~~ — **HECHO** en commits `05d8d6b` y
