@@ -10,7 +10,11 @@ export default function PublicacionesEnCursoPage() {
   const [runs, setRuns] = useState<RunRow[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const activeRun = runs.find(
+  // "Publicar todas las categorías" en Oportunidades puede crear varios Run a
+  // la vez (uno por categoría, ver /api/opportunities/execute-all) — se
+  // muestran todos los activos, no solo el primero, para que ninguno quede
+  // corriendo en silencio sin progreso visible.
+  const activeRuns = runs.filter(
     (r) => r.status === "pending" || r.status === "running",
   );
 
@@ -28,17 +32,21 @@ export default function PublicacionesEnCursoPage() {
   }, [loadRuns]);
 
   useEffect(() => {
-    if (!activeRun) return;
+    if (activeRuns.length === 0) return;
     const interval = setInterval(loadRuns, 4000);
     return () => clearInterval(interval);
-  }, [activeRun, loadRuns]);
+  }, [activeRuns.length, loadRuns]);
 
   if (loading) return null;
 
   return (
     <div>
-      {activeRun ? (
-        <LiveProgress run={activeRun} onCancelled={loadRuns} />
+      {activeRuns.length > 0 ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {activeRuns.map((run) => (
+            <LiveProgress key={run.id} run={run} onCancelled={loadRuns} />
+          ))}
+        </div>
       ) : (
         <section style={{ ...sectionStyle, textAlign: "center" }}>
           <h2 style={h2Style}>No hay ninguna ejecución en curso</h2>

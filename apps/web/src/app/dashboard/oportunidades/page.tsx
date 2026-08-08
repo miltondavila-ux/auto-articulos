@@ -190,6 +190,28 @@ export default function OportunidadesPage() {
     setBusyId(null);
   }
 
+  async function executeAll() {
+    setBusyId("__all__");
+    setMessage(null);
+    const response = await fetch("/api/opportunities/execute-all", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ disableIndexing, contentLanguage }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setMessage({
+        kind: "error",
+        text: data.error ?? "No se pudo publicar todas las categorías.",
+      });
+      await load();
+      setBusyId(null);
+      return;
+    }
+    router.push("/dashboard/publicaciones-en-curso");
+    router.refresh();
+  }
+
   async function execute(type: "group" | "title", id: string) {
     setBusyId(id);
     setMessage(null);
@@ -444,6 +466,56 @@ export default function OportunidadesPage() {
             )}
           </select>
         </div>
+
+        {groups.length > 0 && (
+          <div style={{ marginTop: 16 }}>
+            {(() => {
+              const totalTitles = groups.reduce(
+                (sum, g) => sum + g.titles.length,
+                0,
+              );
+              const overLimit = totalTitles > maxTitlesPerBatch;
+              const disabled = busyId !== null || overLimit;
+              return (
+                <>
+                  <button
+                    onClick={executeAll}
+                    disabled={disabled}
+                    title={
+                      overLimit
+                        ? `Tienes ${totalTitles} títulos en ${groups.length} categorías, más de tu máximo de ${maxTitlesPerBatch} por lote.`
+                        : undefined
+                    }
+                    style={disabledStyle(
+                      { ...buttonStyle, marginTop: 0 },
+                      disabled,
+                    )}
+                  >
+                    {busyId === "__all__"
+                      ? "Publicando todas..."
+                      : overLimit
+                        ? `Supera el máximo (${totalTitles}/${maxTitlesPerBatch})`
+                        : `Publicar todas las categorías (${totalTitles})`}
+                  </button>
+                  {overLimit && (
+                    <p
+                      style={{
+                        margin: "6px 0 0",
+                        fontSize: 12,
+                        color: "#d64545",
+                      }}
+                    >
+                      Tienes {totalTitles} títulos en {groups.length}{" "}
+                      categorías, más de tu máximo de {maxTitlesPerBatch} por
+                      lote. Publica categoría por categoría, o elimina algunos
+                      títulos primero.
+                    </p>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        )}
       </section>
 
       {message && (
