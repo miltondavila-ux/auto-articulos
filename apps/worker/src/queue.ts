@@ -176,7 +176,7 @@ async function processRunTitle(
     await onStep("Artículo publicado con éxito.");
     await notifyGoogle(nextTitle.id, run.userId);
     await notifyBing(nextTitle.id, run.userId);
-    await notifyThreads(nextTitle.id, run.userId);
+    // await notifyThreads(nextTitle.id, run.userId); // Desactivado por solicitud: las publicaciones a redes ahora se controlan desde el módulo de Oportunidades Redes.
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     const [fresh, freshRun] = await Promise.all([

@@ -82,6 +82,7 @@ model User {
   opportunityGroups          OpportunityGroup[]
   businessProfileIntegration BusinessProfileIntegration?
   threadsIntegration         ThreadsIntegration?
+  socialOpportunities        SocialOpportunity[]
 }
 
 // Conexión OAuth de un usuario con Google Business Profile (antes Google My
@@ -340,6 +341,7 @@ model Title {
   run                 Run                  @relation(fields: [runId], references: [id], onDelete: Cascade)
   events              TitleEvent[]
   businessProfilePost BusinessProfilePost?
+  socialOpportunities SocialOpportunity[]
 
   @@index([runId, status])
 }
@@ -381,5 +383,23 @@ model SystemSetting {
   encryptedValue String
   updatedAt      DateTime @updatedAt
   createdAt      DateTime @default(now())
+}
+
+model SocialOpportunity {
+  id            String    @id @default(cuid())
+  userId        String
+  titleId       String?
+  articleUrl    String
+  articleTitle  String
+  platform      String    // "threads" | "linkedin" | "x" | "instagram" | "facebook"
+  suggestedText String    @db.Text
+  status        String    @default("pending") // "pending" | "published" | "skipped"
+  postId        String?
+  errorLog      String?   @db.Text
+  createdAt     DateTime  @default(now())
+  publishedAt   DateTime?
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         Title?    @relation(fields: [titleId], references: [id], onDelete: SetNull)
 }
 
