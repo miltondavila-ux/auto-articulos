@@ -247,7 +247,19 @@ ${JSON.stringify(input.existingTitles.slice(0, 800))}`;
           typeof value.rationale === "string" ? value.rationale.trim() : "",
       });
     }
-    if (titles.length !== 9) continue;
+    // Antes se exigía EXACTAMENTE 9 títulos por categoría (lo que el prompt le
+    // pide al modelo) y se descartaba el grupo ENTERO si, tras filtrar
+    // duplicados contra lo ya publicado, quedaba en 8 o menos. Pedido
+    // explícito del usuario (8/8/2026, cuenta de Lorena Álvarez: dejó de
+    // recibir oportunidades nuevas y sospechaba que el esquema era muy
+    // rígido): para una cuenta con historial largo es fácil que una categoría
+    // caiga por debajo de 9 tras el filtro de duplicados aunque sí había
+    // oportunidad real, y esa categoría completa se perdía. Ahora se acepta
+    // cualquier cantidad de al menos 1 título válido por categoría — mostrar
+    // menos títulos reales es preferible a no mostrar la categoría. El
+    // enfriamiento de 3 días (ver route.ts) sigue aplicando solo cuando el
+    // resultado total es CERO categorías, que es la intención original.
+    if (titles.length === 0) continue;
     selectedCategoryIds.add(group.categoryId);
     result.push({
       categoryId: group.categoryId,
