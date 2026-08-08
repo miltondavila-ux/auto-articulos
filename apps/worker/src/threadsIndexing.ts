@@ -10,16 +10,44 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
 
 /**
- * Pide a la IA un copy estilo Threads de tipo storytelling, amigable y cercano.
+ * Pide a la IA un copy estilo Threads de tipo storytelling, amigable y cercano,
+ * alternando aleatoriamente entre 5 fórmulas de copywriting para evitar spam y sonar 100% humano.
  */
 async function buildThreadsStorytellingCopy(
   finalTitle: string,
   summary: string,
   articleUrl: string
 ): Promise<string> {
+  const formulas = [
+    // Fórmula 1: Historia personal/Anécdota cercana
+    `Fórmula: Historia personal / Anécdota cercana.
+     Pautas: Empieza contando una pequeña anécdota en primera persona como si le hablaras a un amigo de confianza (Ej: "Ayer conversaba con una cliente que me decía...", "Estaba revisando unos casos de... y me di cuenta de algo"). Relata brevemente lo que aprendiste y dile con cariño que escribiste un post rápido en tu blog para ayudarlos en esa situación.`,
+    
+    // Fórmula 2: Gancho de curiosidad/Secreto revelado
+    `Fórmula: Curiosidad y Secreto.
+     Pautas: Comienza con una frase de impacto que rompa el scroll (Ej: "Hay una cosa sobre... de la que casi nadie habla y es súper importante...", "Si estás en Florida, hay un detalle con... que te puede ahorrar dolores de cabeza"). Explica brevemente la razón y cierra diciendo que escribiste una guía con peras y manzanas en tu blog.`,
+     
+    // Fórmula 3: Empatía directa / Frustración común
+    `Fórmula: Empatía directa con el dolor del cliente.
+     Pautas: Empieza con una pregunta directa sobre una frustración muy común del día a día (Ej: "¿Te ha pasado que sientes que el sistema de... está hecho para confundirte?", "¿Por qué nos complican tanto la vida con...?"). Demuestra que estás de su lado y ofréceles la guía sencilla que acabas de subir al blog para resolverlo.`,
+     
+    // Fórmula 4: Puntos clave rápidos en tono relajado
+    `Fórmula: 3 puntos de valor informales.
+     Pautas: Escribe una introducción súper corta y directa, y luego enumera 2 o 3 tips súper rápidos y sencillos (Ej: "Dos cosas que debes saber hoy sobre..."). Cierra de forma natural invitándolos a leer la explicación completa en tu sitio.`,
+     
+    // Fórmula 5: Hot Take / Desmitificación
+    `Fórmula: Opinión honesta / Desmitificación.
+     Pautas: Comienza cuestionando una idea o mito común de forma amigable (Ej: "Nos han hecho creer que conseguir un... es un dolor de cabeza, pero es más fácil de lo que piensas...", "No te dejes asustar por lo que dicen de..."). Explica el mito brevemente y ofrece tu post como la explicación clara y sin rodeos.`
+  ];
+
+  // Elegir una de las 5 fórmulas al azar
+  const selectedIndex = Math.floor(Math.random() * formulas.length);
+  const selectedFormula = formulas[selectedIndex];
+
   if (!OPENAI_API_KEY) {
     return `${finalTitle}\n\n${summary}\n\nLeer más: ${articleUrl}`.slice(0, 490);
   }
+
   try {
     const response = await fetch(OPENAI_CHAT_URL, {
       method: "POST",
@@ -33,21 +61,21 @@ async function buildThreadsStorytellingCopy(
           {
             role: "user",
             content:
-              `Escribe una publicación muy amigable y cercana al estilo de la red social Threads (conversacional, en primera persona, empática y de tipo storytelling). \n` +
-              `Debes estructurarlo con: \n` +
-              `1. Un gancho inicial en forma de pregunta empática (Ej: "¿Te ha pasado que...?" o "¿Sabías que...?"). \n` +
-              `2. Una breve historia o reflexión interesante basada en el tema del artículo.\n` +
-              `3. Una invitación natural y cálida para leer el artículo completo, usando el enlace proporcionado.\n\n` +
-              `REGLAS ESTRICTAS:\n` +
-              `- El texto total DEBE ser menor a 400 caracteres para asegurar que quepa el enlace y no se corte.\n` +
-              `- No uses hashtags ni markdown, solo texto plano.\n` +
-              `- No uses palabras demasiado corporativas o acartonadas.\n\n` +
-              `Título del artículo: ${finalTitle}\n` +
-              `Resumen: ${summary}\n` +
-              `Enlace a incluir: ${articleUrl}`,
+              `Eres un profesional amable, empático y experto en seguros y asesoría en Florida. ` +
+              `Escribe una publicación para la red social Threads. Debe sonar 100% como si la hubiera escrito una persona real, con cercanía, calidez y un tono conversacional natural (cero lenguaje corporativo, aburrido o publicitario).\n\n` +
+              `INSTRUCCIONES DE ESTILO ESPECÍFICAS A SEGUIR:\n` +
+              `${selectedFormula}\n\n` +
+              `REGLAS CRÍTICAS DE FORMATO:\n` +
+              `- El texto total DEBE ser menor a 380 caracteres (excluyendo el enlace) para asegurar que todo quepa sin cortarse.\n` +
+              `- No uses hashtags (#) ni formato markdown (nada de negritas, cursivas o asteriscos).\n` +
+              `- Incluye el enlace de manera natural e integrada al final (Ej: "Hace un rato lo subí aquí: [URL]" o "Te dejo el enlace si quieres echarle un ojo: [URL]").\n\n` +
+              `Datos del artículo:\n` +
+              `- Título del artículo: ${finalTitle}\n` +
+              `- Resumen: ${summary}\n` +
+              `- Enlace del artículo: ${articleUrl}`,
           },
         ],
-        temperature: 0.8,
+        temperature: 0.85,
         max_tokens: 300,
       }),
     });
