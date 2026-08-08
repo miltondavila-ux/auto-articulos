@@ -336,7 +336,14 @@ export default function ThreadsSection() {
                 Conecta tu cuenta de <strong>Meta Threads</strong> para que tus artículos se publiquen automáticamente en tu perfil con un resumen generado por IA e imagen destacada.
               </p>
               <a
-                href="/api/search-integrations/threads/connect"
+                href={settings?.configured ? "/api/search-integrations/threads/connect" : "#"}
+                onClick={(e) => {
+                  if (!settings?.configured) {
+                    e.preventDefault();
+                    setShowConfigForm(true);
+                    setMessage("⚠️ Por favor, primero ingresa tu App ID y App Secret de Meta Developers a continuación.");
+                  }
+                }}
                 style={{
                   ...secondaryButtonStyle,
                   display: "inline-flex",

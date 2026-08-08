@@ -26,8 +26,10 @@ export async function GET(request: Request) {
     });
 
     return response;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return NextResponse.json({ error: message }, { status: 503 });
+  } catch {
+    const reqUrl = new URL(request.url);
+    return NextResponse.redirect(
+      new URL("/dashboard/configuracion?threads=needs_config", reqUrl.origin)
+    );
   }
 }
