@@ -36,6 +36,9 @@ export default function ThreadsSection() {
   const [appIdInput, setAppIdInput] = useState("");
   const [appSecretInput, setAppSecretInput] = useState("");
   const [savingSettings, setSavingSettings] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const redirectUri = "https://auto-articulos-web.vercel.app/api/search-integrations/threads/callback";
 
   async function load() {
     try {
@@ -253,17 +256,48 @@ export default function ThreadsSection() {
                 style={{
                   background: "#f8fafc",
                   border: "1px solid #e2e8f0",
-                  padding: "12px 14px",
+                  padding: "14px",
                   borderRadius: 8,
                   fontSize: 12,
                   color: "#334155",
                   lineHeight: "1.5",
                 }}
               >
-                <div style={{ fontWeight: 700, color: "#0f172a", marginBottom: 6 }}>
-                  📖 ¿Cómo obtener estas llaves de API?
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    fontWeight: 700,
+                    color: "#0f172a",
+                    marginBottom: 8,
+                  }}
+                >
+                  <span>📖 ¿Cómo obtener estas llaves de API?</span>
+                  <a
+                    href={`https://chatgpt.com/?q=${encodeURIComponent(
+                      "Actúa como un experto en Meta Developers. Necesito configurar la API de Threads para mi aplicación. Por favor, guíame paso a paso para: 1. Crear una cuenta y una aplicación de tipo Threads en developers.facebook.com 2. Configurar la URL de redirección (Redirect URI) de OAuth con el valor: https://auto-articulos-web.vercel.app/api/search-integrations/threads/callback 3. Obtener el App ID (Identificador de la aplicación) y el App Secret (Clave secreta de la aplicación). Explícame de manera extremadamente sencilla, paso a paso, dónde hacer clic."
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      fontSize: 11,
+                      color: "#ffffff",
+                      background: "#10a37f",
+                      padding: "4px 10px",
+                      borderRadius: 6,
+                      textDecoration: "none",
+                      fontWeight: 600,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
+                      boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+                    }}
+                  >
+                    🤖 Preguntar a ChatGPT
+                  </a>
                 </div>
-                <ol style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 4 }}>
+                <ol style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 6 }}>
                   <li>
                     Ve a{" "}
                     <a
@@ -278,10 +312,42 @@ export default function ThreadsSection() {
                   </li>
                   <li>Crea una aplicación o selecciona una existente. Asegúrate de agregar el producto <strong>Threads API</strong>.</li>
                   <li>
-                    En la sección de Threads ➔ Configuración, añade esta dirección como <strong>URI de redireccionamiento de OAuth</strong> válida:<br />
-                    <code style={{ background: "#cbd5e1", padding: "2px 6px", borderRadius: 4, display: "inline-block", marginTop: 4, fontFamily: "monospace", fontSize: 11 }}>
-                      https://auto-articulos-web.vercel.app/api/search-integrations/threads/callback
-                    </code>
+                    En la sección de Threads ➔ Configuración, añade esta dirección como <strong>URI de redireccionamiento de OAuth</strong> válida:
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        marginTop: 4,
+                        background: "#cbd5e1",
+                        padding: "6px 10px",
+                        borderRadius: 4,
+                      }}
+                    >
+                      <code style={{ fontFamily: "monospace", fontSize: 11, color: "#1e293b", flex: 1, wordBreak: "break-all" }}>
+                        {redirectUri}
+                      </code>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(redirectUri);
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        }}
+                        style={{
+                          border: 0,
+                          background: "#0f172a",
+                          color: "#ffffff",
+                          fontSize: 10,
+                          fontWeight: 700,
+                          padding: "4px 8px",
+                          borderRadius: 4,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {copied ? "✓ Copiado" : "📋 Copiar"}
+                      </button>
+                    </div>
                   </li>
                   <li>Copia el <strong>App ID de Threads</strong> y el <strong>App Secret de Threads</strong> y pégalos abajo.</li>
                 </ol>
