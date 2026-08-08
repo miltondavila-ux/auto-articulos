@@ -31,6 +31,10 @@ export interface TitleRow {
     sentAt: string | null;
     googleResponse: string | null;
   } | null;
+  threadsPublishStatus: string | null;
+  threadsPostId: string | null;
+  threadsPublishError: string | null;
+  threadsPublishAt: string | null;
   events: TitleEventRow[];
 }
 

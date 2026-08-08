@@ -364,6 +364,48 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
               🔗 Ver artículo publicado
             </a>
             <GoogleIndexingStatus title={title} />
+            {title.threadsPublishStatus && (
+              <div
+                style={{
+                  fontSize: 11,
+                  color: "#6b7280",
+                  marginTop: 6,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                {title.threadsPublishStatus === "success" ? (
+                  <>
+                    <span>🌀</span>
+                    <a
+                      href={title.threadsPostId ? `https://www.threads.net/t/${title.threadsPostId}` : "#"}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        color: "#0f1419",
+                        fontWeight: 600,
+                        textDecoration: "none",
+                      }}
+                    >
+                      Ver post en Threads
+                    </a>
+                  </>
+                ) : title.threadsPublishStatus === "error" ? (
+                  <span style={{ color: "#d64545" }} title={title.threadsPublishError ?? undefined}>
+                    🌀 Error en Threads
+                  </span>
+                ) : title.threadsPublishStatus === "not_configured" ? (
+                  <span style={{ color: "#9ca3af" }}>
+                    🌀 Threads no configurado
+                  </span>
+                ) : (
+                  <span style={{ color: "#b45309" }}>
+                    🌀 Threads: {title.threadsPublishStatus}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           (title.errorMessage ?? "—")
