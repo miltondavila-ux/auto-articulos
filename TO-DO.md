@@ -44,6 +44,13 @@ HANDOFF, solo alimenta ideas hacia él).
   Reconfirmado por el usuario el 8/8/2026 (mismo pedido, sin cambios de
   diseño); ver detalle técnico completo en `HANDOFF.md`, sección
   "PENDIENTE: combinar Bing + Google en Oportunidades".
+- **(8/8/2026)** Motor de Distribución Inteligente SEO para Redes Sociales:
+  Crear un programador automático que publique un máximo de 2 posts por semana
+  por red social activa (X, LinkedIn, Threads, Instagram, Facebook Pages y
+  múltiples Facebook Groups). Los temas y artículos a publicar se seleccionarán
+  automáticamente en base a cuáles están puntuando/creciendo mejor en impresiones
+  y clics dentro de Google Search Console, para darles un empuje de tráfico social
+  estratégico. Evita el spam y el shadowban.
 
 ## Hecho
 
