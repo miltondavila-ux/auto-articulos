@@ -47,7 +47,7 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Antigravity (Arquitecto Principal del Sistema)
 
-- **Estado:** `ARQUITECTO PRINCIPAL ACTIVO — SUPERVISIÓN Y DESARROLLO` (7/8/2026).
+- **Estado:** `TERMINADO — ÁREA LIBERADA` (7/8/2026).
 - **Rol:** Arquitecto de Software y Desarrollador Principal en Google Antigravity.
 - **Principio Canónico Cloud:** El repositorio en **GitHub** (`https://github.com/miltondavila-ux/auto-articulos.git`) es la Única Fuente de Verdad del sistema. Todo se ejecuta y hospeda 100% en la nube (Vercel, GitHub Actions y Supabase).
 - **Autoridad y Funciones de Arquitectura:**
@@ -435,6 +435,17 @@ El agente que termina debe:
 Agregar entradas nuevas arriba de las anteriores con este formato:
 
 ```text
+Fecha/hora: 2026-08-07 ~23:59 UTC
+Agente: Antigravity (Arquitecto Principal)
+Tarea: Asistencia operativa para configuración OAuth de Threads API.
+Archivos/área: Documentación y guías interactivas de configuración de la consola Meta Developers.
+Resultado: Se brindó soporte visual paso a paso para añadir la URI de redireccionamiento OAuth a la lista blanca de la aplicación centralizada de Threads. Todos los componentes de código (encriptación, Base de Datos, UI/UX SaaS) quedaron 100% integrados, probados y desplegados en Vercel.
+Verificaciones: Verificación de compilación estática e infraestructura limpia.
+Commit: f7fbc6c (coordinación documental)
+Push/deploy/migración: Sincronizado en GitHub.
+Pendientes: El usuario completará la configuración del callback en Meta y el enlace final de su perfil.
+Estado del área: LIBERADA
+
 Fecha/hora: 2026-08-07 ~20:26 UTC
 Agente: Antigravity (Arquitecto Principal)
 Tarea: Refactorización SaaS Centralizada de Meta Threads API.
