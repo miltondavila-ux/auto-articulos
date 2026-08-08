@@ -245,7 +245,46 @@ export default function ThreadsSection() {
               }}
             >
               <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a" }}>
-                ⚙️ Configuración General de Credenciales de Meta Threads
+                ⚙️ Configuración de Credenciales de Meta Threads
+              </div>
+
+              {/* Guía paso a paso para el usuario */}
+              <div
+                style={{
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  padding: "12px 14px",
+                  borderRadius: 8,
+                  fontSize: 12,
+                  color: "#334155",
+                  lineHeight: "1.5",
+                }}
+              >
+                <div style={{ fontWeight: 700, color: "#0f172a", marginBottom: 6 }}>
+                  📖 ¿Cómo obtener estas llaves de API?
+                </div>
+                <ol style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 4 }}>
+                  <li>
+                    Ve a{" "}
+                    <a
+                      href="https://developers.facebook.com/apps/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: "#2563eb", fontWeight: 600, textDecoration: "underline" }}
+                    >
+                      Meta for Developers (Mis Aplicaciones)
+                    </a>{" "}
+                    e inicia sesión.
+                  </li>
+                  <li>Crea una aplicación o selecciona una existente. Asegúrate de agregar el producto <strong>Threads API</strong>.</li>
+                  <li>
+                    En la sección de Threads ➔ Configuración, añade esta dirección como <strong>URI de redireccionamiento de OAuth</strong> válida:<br />
+                    <code style={{ background: "#cbd5e1", padding: "2px 6px", borderRadius: 4, display: "inline-block", marginTop: 4, fontFamily: "monospace", fontSize: 11 }}>
+                      https://auto-articulos-web.vercel.app/api/search-integrations/threads/callback
+                    </code>
+                  </li>
+                  <li>Copia el <strong>App ID de Threads</strong> y el <strong>App Secret de Threads</strong> y pégalos abajo.</li>
+                </ol>
               </div>
 
               <div>
