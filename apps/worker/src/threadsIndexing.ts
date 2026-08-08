@@ -5,9 +5,12 @@ import {
   publishThread,
   refreshThreadsToken,
 } from "@auto-articulos/shared";
+import { put } from "@vercel/blob";
+import { buildImagePrompt } from "./imagePrompt";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
+const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
 
 /**
  * Pide a la IA un copy estilo Threads de tipo storytelling, amigable y cercano,
@@ -101,6 +104,67 @@ async function buildThreadsStorytellingCopy(
 }
 
 /**
+ * Genera la imagen con DALL-E (usando gpt-image-1 de tu proxy de OpenAI) y la sube a Vercel Blob.
+ */
+async function generateAndHostThreadsImage(
+  titleId: string,
+  summary: string
+): Promise<string | null> {
+  if (!OPENAI_API_KEY) return null;
+
+  const prompt = buildImagePrompt(summary);
+
+  // Intentamos primero con 'gpt-image-1' (que es el modelo configurado en tu cuenta de OpenAI/Proxy)
+  // y si falla, usamos 'dall-e-3' como alternativa
+  const models = ["gpt-image-1", "dall-e-3"];
+  for (const model of models) {
+    try {
+      const response = await fetch(OPENAI_IMAGE_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model,
+          prompt,
+          size: "1024x1024",
+          n: 1,
+        }),
+      });
+
+      const data = (await response.json()) as {
+        data?: { url?: string; b64_json?: string }[];
+        error?: { message?: string };
+      };
+
+      const imageUrl = data.data?.[0]?.url;
+      const b64 = data.data?.[0]?.b64_json;
+      let buffer: Buffer;
+
+      if (b64) {
+        buffer = Buffer.from(b64, "base64");
+      } else if (imageUrl) {
+        const imgRes = await fetch(imageUrl);
+        const arrayBuffer = await imgRes.arrayBuffer();
+        buffer = Buffer.from(arrayBuffer);
+      } else {
+        continue; // Intentar el siguiente modelo si este falló
+      }
+
+      const blob = await put(`threads/${titleId}.png`, buffer, {
+        access: "public",
+        contentType: "image/png",
+      });
+      return blob.url;
+    } catch (err) {
+      console.warn(`Fallo al generar imagen para Threads con modelo ${model}:`, err);
+    }
+  }
+  return null;
+}
+
+/**
  * Publica un Hilo automático en Meta Threads tras divulgar el artículo en 10minutesWebsite.
  * Es un proceso no bloqueante: si falla o no está configurado, la publicación del artículo se mantiene exitosa.
  */
@@ -155,12 +219,16 @@ export async function notifyThreads(titleId: string, userId: string): Promise<vo
     const summary = title.summary || "";
     const articleUrl = title.articleUrl;
 
-    const threadsContent = await buildThreadsStorytellingCopy(finalTitle, summary, articleUrl);
+    const [threadsContent, threadsImageUrl] = await Promise.all([
+      buildThreadsStorytellingCopy(finalTitle, summary, articleUrl),
+      generateAndHostThreadsImage(titleId, summary).catch(() => null), // Resguardar fallos para no bloquear la publicación
+    ]);
 
     const result = await publishThread(
       accessToken,
       integration.threadsUserId,
-      threadsContent
+      threadsContent,
+      threadsImageUrl ?? undefined
     );
 
     await prisma.title.update({
