@@ -5,11 +5,9 @@ import {
   publishThread,
   refreshThreadsToken,
 } from "@auto-articulos/shared";
-import { put } from "@vercel/blob";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
-const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
 
 /**
  * Pide a la IA un copy estilo Threads de tipo storytelling, amigable y cercano.
@@ -63,62 +61,6 @@ async function buildThreadsStorytellingCopy(
     return text;
   } catch {
     return `${finalTitle}\n\n${summary}\n\nLeer más: ${articleUrl}`.slice(0, 490);
-  }
-}
-
-/**
- * Genera la imagen con DALL-E al estilo Threads y la sube a Vercel Blob.
- */
-async function generateAndHostThreadsImage(
-  titleId: string,
-  summary: string
-): Promise<string | null> {
-  if (!OPENAI_API_KEY) return null;
-
-  const prompt = `Una imagen de estilo fotografía casual, cálida, real y cercana con personas, libre de texto, que represente de forma conceptual el siguiente tema: ${summary}. Estilo moderno adecuado para la red social Threads.`;
-
-  try {
-    const response = await fetch(OPENAI_IMAGE_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "dall-e-3",
-        prompt: prompt.slice(0, 900),
-        size: "1024x1024",
-        quality: "standard",
-        n: 1,
-      }),
-    });
-    const data = (await response.json()) as {
-      data?: { url?: string; b64_json?: string }[];
-      error?: { message?: string };
-    };
-
-    const imageUrl = data.data?.[0]?.url;
-    const b64 = data.data?.[0]?.b64_json;
-    let buffer: Buffer;
-
-    if (b64) {
-      buffer = Buffer.from(b64, "base64");
-    } else if (imageUrl) {
-      const imgRes = await fetch(imageUrl);
-      const arrayBuffer = await imgRes.arrayBuffer();
-      buffer = Buffer.from(arrayBuffer);
-    } else {
-      throw new Error(data.error?.message ?? "No se recibió imagen de OpenAI.");
-    }
-
-    const blob = await put(`threads/${titleId}.png`, buffer, {
-      access: "public",
-      contentType: "image/png",
-    });
-    return blob.url;
-  } catch (err) {
-    console.error("Fallo al generar imagen para Threads:", err);
-    return null;
   }
 }
 
@@ -177,16 +119,12 @@ export async function notifyThreads(titleId: string, userId: string): Promise<vo
     const summary = title.summary || "";
     const articleUrl = title.articleUrl;
 
-    const [threadsContent, threadsImageUrl] = await Promise.all([
-      buildThreadsStorytellingCopy(finalTitle, summary, articleUrl),
-      generateAndHostThreadsImage(titleId, summary),
-    ]);
+    const threadsContent = await buildThreadsStorytellingCopy(finalTitle, summary, articleUrl);
 
     const result = await publishThread(
       accessToken,
       integration.threadsUserId,
-      threadsContent,
-      threadsImageUrl ?? undefined
+      threadsContent
     );
 
     await prisma.title.update({
