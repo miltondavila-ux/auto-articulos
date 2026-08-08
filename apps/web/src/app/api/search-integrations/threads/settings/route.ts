@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { decryptSecret, encryptSecret } from "@auto-articulos/shared";
-import { getCurrentUserId } from "@/lib/current-user";
+import { getCurrentUser } from "@/lib/current-user";
 
 export async function GET() {
-  await getCurrentUserId();
+  const user = await getCurrentUser();
 
   const [idSetting, secretSetting] = await Promise.all([
     prisma.systemSetting.findUnique({ where: { key: "threads_app_id" } }),
@@ -14,16 +14,25 @@ export async function GET() {
   const envAppId = process.env.THREADS_APP_ID;
   const envAppSecret = process.env.THREADS_APP_SECRET;
 
-  const appId = idSetting
-    ? decryptSecret(idSetting.encryptedValue)
-    : envAppId || null;
-
   const isConfigured = Boolean(
     (idSetting && secretSetting) || (envAppId && envAppSecret)
   );
 
+  // Si no es administrador, retornar únicamente si el sistema está configurado o no
+  if (user.role !== "admin") {
+    return NextResponse.json({
+      configured: isConfigured,
+      isAdmin: false,
+    });
+  }
+
+  const appId = idSetting
+    ? decryptSecret(idSetting.encryptedValue)
+    : envAppId || null;
+
   return NextResponse.json({
     configured: isConfigured,
+    isAdmin: true,
     appId: appId ? `${appId.slice(0, 4)}...${appId.slice(-4)}` : null,
     rawAppId: appId ?? "",
     source: idSetting ? "database" : envAppId ? "environment" : "none",
@@ -31,7 +40,15 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  await getCurrentUserId();
+  const user = await getCurrentUser();
+
+  if (user.role !== "admin") {
+    return NextResponse.json(
+      { error: "No autorizado. Solo los administradores pueden configurar las llaves de la API." },
+      { status: 403 }
+    );
+  }
+
   const { appId, appSecret } = await request.json();
 
   if (typeof appId !== "string" || typeof appSecret !== "string" || !appId || !appSecret) {

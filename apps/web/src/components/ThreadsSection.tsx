@@ -22,6 +22,7 @@ interface AppSettings {
   appId: string | null;
   rawAppId?: string;
   source?: string;
+  isAdmin?: boolean;
 }
 
 export default function ThreadsSection() {
@@ -159,7 +160,7 @@ export default function ThreadsSection() {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {settings?.configured && (
+          {settings?.configured && settings?.isAdmin && (
             <span
               style={{
                 fontSize: 11,
@@ -199,8 +200,28 @@ export default function ThreadsSection() {
         </p>
       ) : (
         <>
-          {/* Bloque de aviso si falta configurar las llaves globales (App ID / App Secret) */}
-          {!settings?.configured && !showConfigForm && (
+          {/* Si no está configurada globalmente y el usuario NO es admin, mostrar advertencia amigable */}
+          {!settings?.configured && !settings?.isAdmin && (
+            <div
+              style={{
+                background: "rgba(239, 68, 68, 0.08)",
+                border: "1px solid rgba(239, 68, 68, 0.2)",
+                padding: 14,
+                borderRadius: 10,
+                marginTop: 12,
+              }}
+            >
+              <div style={{ fontWeight: 700, color: "#991b1b", fontSize: 13 }}>
+                ⚠️ Integración con Threads no lista
+              </div>
+              <p style={{ fontSize: 12, color: "#7f1d1d", margin: "4px 0 0 0" }}>
+                La conexión de Threads no ha sido configurada a nivel global de plataforma por el administrador del sistema. Por favor, solicita al administrador de 10MinutesWebsite que configure las llaves de la API de Meta.
+              </p>
+            </div>
+          )}
+
+          {/* Bloque de aviso si falta configurar las llaves globales (solo para admin) */}
+          {!settings?.configured && settings?.isAdmin && !showConfigForm && (
             <div
               style={{
                 background: "rgba(254, 243, 199, 0.6)",
@@ -214,7 +235,7 @@ export default function ThreadsSection() {
                 ⚠️ Se requieren las llaves globales de la API de Threads (Meta Developers)
               </div>
               <p style={{ fontSize: 12, color: "#78350f", margin: "4px 0 10px 0" }}>
-                Para permitir la conexión OAuth, ingresa tu <strong>App ID</strong> y <strong>App Secret</strong> obtenidos en Meta for Developers. Tus llaves se guardarán cifradas con <strong>AES-256-GCM</strong>.
+                Para permitir la conexión OAuth de todos los usuarios, ingresa tu <strong>App ID</strong> y <strong>App Secret</strong> obtenidos en Meta for Developers. Tus llaves se guardarán cifradas con <strong>AES-256-GCM</strong>.
               </p>
               <button
                 onClick={() => setShowConfigForm(true)}
@@ -232,8 +253,8 @@ export default function ThreadsSection() {
             </div>
           )}
 
-          {/* Formulario expandible para configurar o actualizar App ID / App Secret */}
-          {(showConfigForm || (!settings?.configured && showConfigForm)) && (
+          {/* Formulario expandible para configurar o actualizar App ID / App Secret (solo para admin) */}
+          {settings?.isAdmin && (showConfigForm || (!settings?.configured && showConfigForm)) && (
             <div
               style={{
                 background: "#ffffff",
@@ -248,7 +269,7 @@ export default function ThreadsSection() {
               }}
             >
               <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a" }}>
-                ⚙️ Configuración de Credenciales de Meta Threads
+                ⚙️ Configuración de Credenciales de Meta Threads (Rol: Administrador)
               </div>
 
               {/* Guía paso a paso para el usuario */}
@@ -406,8 +427,8 @@ export default function ThreadsSection() {
             </div>
           )}
 
-          {/* Botón para editar llaves si ya existen */}
-          {settings?.configured && !showConfigForm && (
+          {/* Botón para editar llaves si ya existen (solo para admin) */}
+          {settings?.configured && settings?.isAdmin && !showConfigForm && (
             <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 4 }}>
               <button
                 onClick={() => setShowConfigForm(true)}
@@ -428,45 +449,40 @@ export default function ThreadsSection() {
 
           {/* Estado de conexión del usuario y botón OAuth */}
           {!data?.connected ? (
-            <div
-              style={{
-                background: "rgba(248, 250, 252, 0.8)",
-                padding: 16,
-                borderRadius: 12,
-                border: "1px solid #e2e8f0",
-                marginTop: 12,
-              }}
-            >
-              <p style={{ fontSize: 13, color: "#334155", margin: "0 0 12px 0" }}>
-                Conecta tu cuenta de <strong>Meta Threads</strong> para que tus artículos se publiquen automáticamente en tu perfil con un resumen generado por IA e imagen destacada.
-              </p>
-              <a
-                href={settings?.configured ? "/api/search-integrations/threads/connect" : "#"}
-                onClick={(e) => {
-                  if (!settings?.configured) {
-                    e.preventDefault();
-                    setShowConfigForm(true);
-                    setMessage("⚠️ Por favor, primero ingresa tu App ID y App Secret de Meta Developers a continuación.");
-                  }
-                }}
+            settings?.configured && (
+              <div
                 style={{
-                  ...secondaryButtonStyle,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  background: "#000000",
-                  color: "#ffffff",
-                  border: "none",
-                  padding: "10px 18px",
-                  fontWeight: 700,
-                  textDecoration: "none",
-                  borderRadius: 8,
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                  background: "rgba(248, 250, 252, 0.8)",
+                  padding: 16,
+                  borderRadius: 12,
+                  border: "1px solid #e2e8f0",
+                  marginTop: 12,
                 }}
               >
-                🌀 Conectar Meta Threads
-              </a>
-            </div>
+                <p style={{ fontSize: 13, color: "#334155", margin: "0 0 12px 0" }}>
+                  Conecta tu cuenta de <strong>Meta Threads</strong> para que tus artículos se publiquen automáticamente en tu perfil con un resumen generado por IA e imagen destacada.
+                </p>
+                <a
+                  href="/api/search-integrations/threads/connect"
+                  style={{
+                    ...secondaryButtonStyle,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    background: "#000000",
+                    color: "#ffffff",
+                    border: "none",
+                    padding: "10px 18px",
+                    fontWeight: 700,
+                    textDecoration: "none",
+                    borderRadius: 8,
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                  }}
+                >
+                  🌀 Conectar Meta Threads
+                </a>
+              </div>
+            )
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>
               <div
