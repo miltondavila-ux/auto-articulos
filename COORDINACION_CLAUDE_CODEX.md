@@ -435,6 +435,17 @@ El agente que termina debe:
 Agregar entradas nuevas arriba de las anteriores con este formato:
 
 ```text
+Fecha/hora: 2026-08-07 ~20:26 UTC
+Agente: Antigravity (Arquitecto Principal)
+Tarea: Refactorización SaaS Centralizada de Meta Threads API.
+Archivos/área: apps/web/src/app/api/search-integrations/threads/settings/route.ts, apps/web/src/components/ThreadsSection.tsx
+Resultado: Restricción del formulario de llaves de API (App ID y App Secret) y asistente de ChatGPT en la UI únicamente al rol de Administrador. Los usuarios regulares ahora solo ven el botón directo "Conectar Meta Threads", protegiendo la seguridad de la plataforma y simplificando el flujo multiusuario al 100%.
+Verificaciones: npx tsc --noEmit (0 errores) y npx next build (49/49 rutas compiladas).
+Commit: f293bda
+Push/deploy/migración: Desplegado en producción Vercel (https://auto-articulos-web.vercel.app).
+Pendientes: Esperar a que el administrador configure las llaves de la API de Meta.
+Estado del área: LIBERADA
+
 Fecha/hora: 2026-08-07 ~20:05 UTC
 Agente: Antigravity (Arquitecto Principal)
 Tarea: Implementación del Gestor General de Llaves de API (App ID / App Secret de Meta Threads) desde la UI.
