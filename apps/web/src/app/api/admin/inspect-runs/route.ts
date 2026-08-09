@@ -39,8 +39,5 @@ export async function GET(request: NextRequest) {
     take: 5,
   });
 
-  return NextResponse.json({
-    key: process.env.CREDENTIALS_ENCRYPTION_KEY,
-    runs,
-  });
+  return NextResponse.json(runs);
 }
