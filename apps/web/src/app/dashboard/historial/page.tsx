@@ -56,7 +56,168 @@ export default function HistorialPage() {
   );
 
   return (
-    <section style={sectionStyle}>
+    <>
+      <section style={sectionStyle}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 8,
+          }}
+        >
+          <h2 style={h2Style}>Historial de ejecuciones</h2>
+          {hasDeletableRuns &&
+            (confirmingDelete ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 12, color: "#8a6d1a" }}>
+                  ¿Borrar todo el historial? No se puede deshacer.
+                </span>
+                <button
+                  onClick={handleDeleteHistory}
+                  disabled={deleting}
+                  style={{
+                    background: "#fde8e8",
+                    color: "#d64545",
+                    border: "1px solid #e8b4b4",
+                    borderRadius: 6,
+                    padding: "4px 10px",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: deleting ? "default" : "pointer",
+                  }}
+                >
+                  {deleting ? "Borrando..." : "Sí, borrar"}
+                </button>
+                <button
+                  onClick={() => setConfirmingDelete(false)}
+                  disabled={deleting}
+                  style={{
+                    background: "none",
+                    color: "#6b7280",
+                    border: "1px solid #dfe3e8",
+                    borderRadius: 6,
+                    padding: "4px 10px",
+                    fontSize: 12,
+                    cursor: deleting ? "default" : "pointer",
+                  }}
+                >
+                  No
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmingDelete(true)}
+                style={{
+                  background: "none",
+                  color: "#d64545",
+                  border: "1px solid #fde8e8",
+                  borderRadius: 6,
+                  padding: "4px 10px",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                🗑 Borrar historial
+              </button>
+            ))}
+        </div>
+        {deleteError && (
+          <p style={{ fontSize: 12, color: "#d64545", marginTop: 6 }}>
+            {deleteError}
+          </p>
+        )}
+        {runs.length === 0 && (
+          <p style={{ fontSize: 13, color: "#6b7280", marginTop: 12 }}>
+            Todavía no hay ejecuciones.
+          </p>
+        )}
+        {runs.map((run, index) => (
+          <HistoryEntry
+            key={run.id}
+            run={run}
+            defaultOpen={index === 0}
+            onRetried={loadRuns}
+          />
+        ))}
+      </section>
+
+      <SocialOpportunitiesHistory />
+    </>
+  );
+}
+
+interface SocialOpportunity {
+  id: string;
+  articleTitle: string;
+  articleUrl: string;
+  platform: string;
+  suggestedText: string;
+  status: string; // "pending" | "published" | "skipped" | "error"
+  postId: string | null;
+  errorLog: string | null;
+  createdAt: string;
+  publishedAt: string | null;
+}
+
+function SocialOpportunitiesHistory() {
+  const [opportunities, setOpportunities] = useState<SocialOpportunity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deletingHistory, setDeletingHistory] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function loadOpportunities() {
+    try {
+      const res = await fetch("/api/social-opportunities");
+      if (res.ok) {
+        const data = await res.json();
+        const list = data.opportunities || [];
+        // Filtrar solo las que ya se procesaron (publicadas o error)
+        setOpportunities(list.filter((o: any) => o.status !== "pending"));
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadOpportunities();
+  }, []);
+
+  async function handleDeleteHistory() {
+    setDeletingHistory(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/social-opportunities", { method: "DELETE" });
+      if (res.ok) {
+        setConfirmingDelete(false);
+        loadOpportunities();
+      } else {
+        const data = await res.json();
+        setError(data.error || "No se pudo borrar el historial.");
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setDeletingHistory(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <section style={{ ...sectionStyle, marginTop: 20 }}>
+        <p style={{ fontSize: 13, color: "#6b7280" }}>Cargando historial de redes sociales...</p>
+      </section>
+    );
+  }
+
+  return (
+    <section style={{ ...sectionStyle, marginTop: 20 }}>
       <div
         style={{
           display: "flex",
@@ -64,18 +225,21 @@ export default function HistorialPage() {
           alignItems: "center",
           flexWrap: "wrap",
           gap: 8,
+          borderBottom: "1px solid rgba(232, 236, 245, 0.15)",
+          paddingBottom: 10,
+          marginBottom: 15,
         }}
       >
-        <h2 style={h2Style}>Historial de ejecuciones</h2>
-        {hasDeletableRuns &&
+        <h2 style={h2Style}>Historial de Publicaciones en Redes</h2>
+        {opportunities.length > 0 &&
           (confirmingDelete ? (
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 12, color: "#8a6d1a" }}>
+              <span style={{ fontSize: 12, color: "#d64545" }}>
                 ¿Borrar todo el historial? No se puede deshacer.
               </span>
               <button
                 onClick={handleDeleteHistory}
-                disabled={deleting}
+                disabled={deletingHistory}
                 style={{
                   background: "#fde8e8",
                   color: "#d64545",
@@ -84,14 +248,14 @@ export default function HistorialPage() {
                   padding: "4px 10px",
                   fontSize: 12,
                   fontWeight: 600,
-                  cursor: deleting ? "default" : "pointer",
+                  cursor: deletingHistory ? "default" : "pointer",
                 }}
               >
-                {deleting ? "Borrando..." : "Sí, borrar"}
+                {deletingHistory ? "Borrando..." : "Sí, borrar"}
               </button>
               <button
                 onClick={() => setConfirmingDelete(false)}
-                disabled={deleting}
+                disabled={deletingHistory}
                 style={{
                   background: "none",
                   color: "#6b7280",
@@ -99,7 +263,7 @@ export default function HistorialPage() {
                   borderRadius: 6,
                   padding: "4px 10px",
                   fontSize: 12,
-                  cursor: deleting ? "default" : "pointer",
+                  cursor: deletingHistory ? "default" : "pointer",
                 }}
               >
                 No
@@ -123,24 +287,98 @@ export default function HistorialPage() {
             </button>
           ))}
       </div>
-      {deleteError && (
-        <p style={{ fontSize: 12, color: "#d64545", marginTop: 6 }}>
-          {deleteError}
-        </p>
+
+      {error && (
+        <p style={{ fontSize: 12, color: "#d64545", marginTop: 6 }}>{error}</p>
       )}
-      {runs.length === 0 && (
-        <p style={{ fontSize: 13, color: "#6b7280", marginTop: 12 }}>
-          Todavía no hay ejecuciones.
+
+      {opportunities.length === 0 ? (
+        <p style={{ fontSize: 13, color: "#6b7280" }}>
+          Aún no hay publicaciones de redes sociales en el historial.
         </p>
+      ) : (
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid rgba(232, 236, 245, 0.15)", textAlign: "left" }}>
+                <th style={{ padding: "10px 8px", color: "#6b7280" }}>Fecha</th>
+                <th style={{ padding: "10px 8px", color: "#6b7280" }}>Red</th>
+                <th style={{ padding: "10px 8px", color: "#6b7280" }}>Artículo</th>
+                <th style={{ padding: "10px 8px", color: "#6b7280" }}>Copy Publicado</th>
+                <th style={{ padding: "10px 8px", color: "#6b7280", textAlign: "right" }}>Estado / Enlace</th>
+              </tr>
+            </thead>
+            <tbody>
+              {opportunities.map((opp) => (
+                <tr key={opp.id} style={{ borderBottom: "1px solid rgba(232, 236, 245, 0.08)" }}>
+                  <td style={{ padding: "12px 8px", whiteSpace: "nowrap", color: "#16181d" }}>
+                    {new Date(opp.publishedAt || opp.createdAt).toLocaleString("es-US", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </td>
+                  <td style={{ padding: "12px 8px", whiteSpace: "nowrap" }}>
+                    <span style={{ fontWeight: 600, color: opp.platform === "threads" ? "#0f1419" : "#6b7280" }}>
+                      {opp.platform === "threads" ? "🌀 Threads" : opp.platform.toUpperCase()}
+                    </span>
+                  </td>
+                  <td
+                    style={{
+                      padding: "12px 8px",
+                      maxWidth: 200,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      color: "#16181d",
+                    }}
+                    title={opp.articleTitle}
+                  >
+                    {opp.articleTitle}
+                  </td>
+                  <td
+                    style={{
+                      padding: "12px 8px",
+                      maxWidth: 350,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      color: "#4b5563",
+                    }}
+                    title={opp.suggestedText}
+                  >
+                    "{opp.suggestedText}"
+                  </td>
+                  <td style={{ padding: "12px 8px", textAlign: "right", whiteSpace: "nowrap" }}>
+                    {opp.status === "published" ? (
+                      <a
+                        href={opp.platform === "threads" ? `https://www.threads.net/t/${opp.postId}` : "#"}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          color: "#16a34a",
+                          textDecoration: "none",
+                          fontWeight: 600,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                        }}
+                      >
+                        ✓ Ver post ↗
+                      </a>
+                    ) : (
+                      <span style={{ color: "#dc2626" }} title={opp.errorLog || "Error desconocido"}>
+                        ✗ Error
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
-      {runs.map((run, index) => (
-        <HistoryEntry
-          key={run.id}
-          run={run}
-          defaultOpen={index === 0}
-          onRetried={loadRuns}
-        />
-      ))}
     </section>
   );
 }

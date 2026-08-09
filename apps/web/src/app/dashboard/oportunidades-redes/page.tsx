@@ -30,9 +30,6 @@ export default function OportunidadesRedesPage() {
   const [publishingAll, setPublishingAll] = useState(false);
   const [message, setMessage] = useState<{ kind: "success" | "error" | "info"; text: string } | null>(null);
 
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const [deletingHistory, setDeletingHistory] = useState(false);
-
   useEffect(() => {
     loadOpportunities();
   }, []);
@@ -49,26 +46,6 @@ export default function OportunidadesRedesPage() {
       setMessage({ kind: "error", text: "Error al cargar propuestas: " + err.message });
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleDeleteHistory() {
-    setDeletingHistory(true);
-    setMessage(null);
-    try {
-      const res = await fetch("/api/social-opportunities", { method: "DELETE" });
-      if (res.ok) {
-        setMessage({ kind: "success", text: "Historial de publicaciones de redes sociales borrado." });
-        setConfirmingDelete(false);
-        loadOpportunities();
-      } else {
-        const data = await res.json();
-        setMessage({ kind: "error", text: data.error || "No se pudo borrar el historial." });
-      }
-    } catch (err: any) {
-      setMessage({ kind: "error", text: err.message });
-    } finally {
-      setDeletingHistory(false);
     }
   }
 
@@ -181,7 +158,6 @@ export default function OportunidadesRedesPage() {
   }
 
   const pendingList = opportunities.filter((o) => o.status === "pending");
-  const historyList = opportunities.filter((o) => o.status !== "pending");
 
   return (
     <div style={{ padding: "0 10px", maxWidth: 1200, margin: "0 auto" }}>
@@ -319,166 +295,6 @@ export default function OportunidadesRedesPage() {
                     </div>
                   </div>
                 ))}
-              </div>
-            )}
-          </div>
-
-          <div style={{ ...sectionStyle, background: "#111827", border: "1px solid #374151", color: "#e8ecf5" }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: 8,
-                borderBottom: "1px solid rgba(232, 236, 245, 0.15)",
-                paddingBottom: 10,
-                marginBottom: 15,
-              }}
-            >
-              <h3 style={{ ...h2Style, color: "#e8ecf5", margin: 0, fontSize: 18 }}>
-                Historial de Publicaciones ({historyList.length})
-              </h3>
-              {historyList.length > 0 &&
-                (confirmingDelete ? (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 12, color: "#f87171" }}>
-                      ¿Borrar todo el historial? No se puede deshacer.
-                    </span>
-                    <button
-                      onClick={handleDeleteHistory}
-                      disabled={deletingHistory}
-                      style={{
-                        background: "#fee2e2",
-                        color: "#991b1b",
-                        border: "1px solid #fecaca",
-                        borderRadius: 6,
-                        padding: "4px 10px",
-                        fontSize: 12,
-                        fontWeight: 600,
-                        cursor: deletingHistory ? "default" : "pointer",
-                      }}
-                    >
-                      {deletingHistory ? "Borrando..." : "Sí, borrar"}
-                    </button>
-                    <button
-                      onClick={() => setConfirmingDelete(false)}
-                      disabled={deletingHistory}
-                      style={{
-                        background: "rgba(255,255,255,0.05)",
-                        color: "#e8ecf5",
-                        border: "1px solid #4b5563",
-                        borderRadius: 6,
-                        padding: "4px 10px",
-                        fontSize: 12,
-                        cursor: deletingHistory ? "default" : "pointer",
-                      }}
-                    >
-                      No
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setConfirmingDelete(true)}
-                    style={{
-                      background: "none",
-                      color: "#f87171",
-                      border: "1px solid rgba(248, 113, 113, 0.2)",
-                      borderRadius: 6,
-                      padding: "4px 10px",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                  >
-                    🗑 Borrar historial
-                  </button>
-                ))}
-            </div>
-
-            {historyList.length === 0 ? (
-              <div style={{ color: "#a8b3c7", textAlign: "center", padding: 20 }}>
-                Aún no has publicado propuestas desde este módulo.
-              </div>
-            ) : (
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, color: "#e8ecf5" }}>
-                  <thead>
-                    <tr style={{ borderBottom: "1px solid rgba(232, 236, 245, 0.15)", textAlign: "left" }}>
-                      <th style={{ padding: "10px 8px", color: "#a8b3c7" }}>Fecha</th>
-                      <th style={{ padding: "10px 8px", color: "#a8b3c7" }}>Red</th>
-                      <th style={{ padding: "10px 8px", color: "#a8b3c7" }}>Artículo</th>
-                      <th style={{ padding: "10px 8px", color: "#a8b3c7" }}>Copy Publicado</th>
-                      <th style={{ padding: "10px 8px", color: "#a8b3c7", textAlign: "right" }}>Estado / Enlace</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {historyList.map((opp) => (
-                      <tr key={opp.id} style={{ borderBottom: "1px solid rgba(232, 236, 245, 0.08)" }}>
-                        <td style={{ padding: "12px 8px", whiteSpace: "nowrap" }}>
-                          {new Date(opp.publishedAt || opp.createdAt).toLocaleString("es-US", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </td>
-                        <td style={{ padding: "12px 8px", whiteSpace: "nowrap" }}>
-                          <span style={{ fontWeight: 600, color: opp.platform === "threads" ? "#4dd8e8" : "#9ca3af" }}>
-                            {opp.platform === "threads" ? "🌀 Threads" : opp.platform.toUpperCase()}
-                          </span>
-                        </td>
-                        <td
-                          style={{
-                            padding: "12px 8px",
-                            maxWidth: 200,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                          title={opp.articleTitle}
-                        >
-                          {opp.articleTitle}
-                        </td>
-                        <td
-                          style={{
-                            padding: "12px 8px",
-                            maxWidth: 350,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                          title={opp.suggestedText}
-                        >
-                          "{opp.suggestedText}"
-                        </td>
-                        <td style={{ padding: "12px 8px", textAlign: "right", whiteSpace: "nowrap" }}>
-                          {opp.status === "published" ? (
-                            <a
-                              href={opp.platform === "threads" ? `https://www.threads.net/t/${opp.postId}` : "#"}
-                              target="_blank"
-                              rel="noreferrer"
-                              style={{
-                                color: "#10b981",
-                                textDecoration: "none",
-                                fontWeight: 600,
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 4,
-                              }}
-                            >
-                              ✓ Ver post ↗
-                            </a>
-                          ) : (
-                            <span style={{ color: "#ef4444" }} title={opp.errorLog || "Error desconocido"}>
-                              ✗ Error
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </div>
             )}
           </div>
