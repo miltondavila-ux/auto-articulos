@@ -165,6 +165,35 @@ async function processRunTitle(
       await onStep(result.failed > 0
         ? `Lote completado; ${result.failed} artículo(s) quedan pendientes para reintentar.`
         : "Lote de reparación completado sin errores.");
+
+      // Si se procesó un lote completo y aún quedan más páginas/artículos:
+      const totalProcessed = result.repaired + result.alreadyCorrect;
+      if (totalProcessed >= 20 && result.hasNextPage) {
+        await onStep("Automatización: Lote finalizado. Creando el siguiente lote de forma automática...");
+        
+        const nextRun = await prisma.run.create({
+          data: {
+            userId: run.userId,
+            categoryId: run.categoryId,
+            status: "running",
+            contentLanguage: "es",
+          },
+        });
+        const nextTitleRec = await prisma.title.create({
+          data: {
+            runId: nextRun.id,
+            text: "Reparar el siguiente lote de hasta 20 artículos de Patricia Coy",
+            status: "pending",
+            order: 0,
+          },
+        });
+        await prisma.titleEvent.create({
+          data: {
+            titleId: nextTitleRec.id,
+            message: "Lote solicitado automáticamente por la secuencia recursiva. El worker procesará hasta 20 artículos...",
+          },
+        });
+      }
       return true;
     }
 

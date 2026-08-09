@@ -11,7 +11,7 @@ export async function runPatriciaFix(
   password: string,
   domain: string,
   onStep: (msg: string) => Promise<void> | void
-): Promise<{ repaired: number; alreadyCorrect: number; failed: number }> {
+): Promise<{ repaired: number; alreadyCorrect: number; failed: number; hasNextPage: boolean }> {
   const baseUrl = `https://www.10minuteswebsite.${domain}`;
   await onStep(`Conectando a 10minutesWebsite (${baseUrl}) como ${username}...`);
 
@@ -298,7 +298,7 @@ export async function runPatriciaFix(
       }
     }
 
-    return { repaired: successCount, alreadyCorrect: skippedCount, failed: errorCount };
+    return { repaired: successCount, alreadyCorrect: skippedCount, failed: errorCount, hasNextPage };
 
   } catch (err) {
     await onStep(`Error fatal del worker: ${err instanceof Error ? err.message : String(err)}`);
