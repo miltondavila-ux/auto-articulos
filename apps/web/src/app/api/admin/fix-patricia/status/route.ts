@@ -9,6 +9,11 @@ export async function GET() {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    const sessionUser = await prisma.user.findUnique({ where: { id: sessionUserId } });
+    if (!sessionUser || sessionUser.email !== "miltondavila@gmail.com") {
+      return NextResponse.json({ error: "No autorizado. Solo el administrador principal puede realizar esta acción." }, { status: 403 });
+    }
+
     // 1. Buscar el último Run de reparación (categoría FIX_PATRICIA)
     const run = await prisma.run.findFirst({
       where: {

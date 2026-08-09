@@ -10,6 +10,11 @@ export async function POST() {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    const sessionUser = await prisma.user.findUnique({ where: { id: sessionUserId } });
+    if (!sessionUser || sessionUser.email !== "miltondavila@gmail.com") {
+      return NextResponse.json({ error: "No autorizado. Solo el administrador principal puede realizar esta acción." }, { status: 403 });
+    }
+
     // 2. Buscar al usuario de Patricia Coy
     const patriciaUser = await prisma.user.findFirst({
       where: {

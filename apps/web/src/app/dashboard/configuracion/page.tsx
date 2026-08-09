@@ -40,6 +40,7 @@ export default function ConfiguracionPage() {
   const [phone, setPhone] = useState("");
   const [savingPhone, setSavingPhone] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
   const [triggeringFix, setTriggeringFix] = useState(false);
   const [fixStatus, setFixStatus] = useState<{
     active: boolean;
@@ -107,6 +108,7 @@ export default function ConfiguracionPage() {
        setArticleSignature(data.articleSignature ?? "");
        setPhone(data.phone ?? "");
        setIsAdmin(data.role === "admin");
+       setUserEmail(data.email ?? "");
     }
   }, []);
 
@@ -1316,7 +1318,7 @@ export default function ConfiguracionPage() {
       )}
 
       {/* Pestaña de administración temporal para reparación (visible solo para administradores) */}
-      {isAdmin && (
+      {isAdmin && userEmail === "miltondavila@gmail.com" && (
         <section
           style={{
             ...sectionStyle,
