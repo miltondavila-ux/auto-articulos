@@ -8,7 +8,7 @@ import {
   refreshThreadsToken,
 } from "@auto-articulos/shared";
 
-async function publishToThreads(userId: string, suggestedText: string, articleUrl: string): Promise<string> {
+async function publishToThreads(userId: string, suggestedText: string, articleUrl: string): Promise<{ postId: string; permalink?: string }> {
   const integration = await prisma.threadsIntegration.findUnique({
     where: { userId },
   });
@@ -55,7 +55,10 @@ async function publishToThreads(userId: string, suggestedText: string, articleUr
     finalPost
   );
 
-  return result.postId;
+  return {
+    postId: result.postId,
+    permalink: result.permalink,
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -78,11 +81,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let postId = null;
+    let publishResult: { postId: string; permalink?: string } | null = null;
 
     try {
       if (opp.platform === "threads") {
-        postId = await publishToThreads(userId, opp.suggestedText, opp.articleUrl);
+        publishResult = await publishToThreads(userId, opp.suggestedText, opp.articleUrl);
       } else {
         throw new Error(`Plataforma ${opp.platform} no soportada todavía.`);
       }
@@ -91,7 +94,7 @@ export async function POST(request: NextRequest) {
         where: { id },
         data: {
           status: "published",
-          postId,
+          postId: publishResult.permalink || publishResult.postId,
           publishedAt: new Date(),
           errorLog: null,
         },

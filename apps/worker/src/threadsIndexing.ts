@@ -239,7 +239,7 @@ export async function notifyThreads(titleId: string, userId: string): Promise<vo
       where: { id: titleId },
       data: {
         threadsPublishStatus: "success",
-        threadsPostId: result.postId,
+        threadsPostId: result.permalink || result.postId,
         threadsPublishAt: new Date(),
         threadsPublishError: null,
       },

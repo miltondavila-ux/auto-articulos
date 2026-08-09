@@ -12,6 +12,7 @@ export interface ThreadsTokenExchangeResult {
 
 export interface ThreadsPublishResult {
   postId: string;
+  permalink?: string;
 }
 
 /**
@@ -282,7 +283,23 @@ export async function publishThread(
 
   const publishData = (await publishRes.json()) as { id: string };
 
+  let permalink: string | undefined;
+  try {
+    const permalinkRes = await fetch(
+      `https://graph.threads.net/v1.0/${publishData.id}?fields=permalink&access_token=${accessToken}`
+    );
+    if (permalinkRes.ok) {
+      const permalinkData = (await permalinkRes.json()) as { permalink: string };
+      if (permalinkData.permalink) {
+        permalink = permalinkData.permalink;
+      }
+    }
+  } catch (err) {
+    console.error("Error al obtener el permalink de Threads:", err);
+  }
+
   return {
     postId: publishData.id,
+    permalink,
   };
 }

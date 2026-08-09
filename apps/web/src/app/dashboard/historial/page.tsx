@@ -365,7 +365,7 @@ function SocialOpportunitiesHistory() {
                   </a>
                   {opp.status === "published" && opp.postId && (
                     <a
-                      href={opp.platform === "threads" ? `https://www.threads.net/t/${opp.postId}` : "#"}
+                      href={opp.postId.startsWith("http") ? opp.postId : (opp.platform === "threads" ? `https://www.threads.net/t/${opp.postId}` : "#")}
                       target="_blank"
                       rel="noreferrer"
                       style={{ color: "#16a34a", textDecoration: "none", fontWeight: 600 }}
@@ -632,7 +632,7 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
                   <>
                     <span>🌀</span>
                     <a
-                      href={title.threadsPostId ? `https://www.threads.net/t/${title.threadsPostId}` : "#"}
+                      href={title.threadsPostId ? (title.threadsPostId.startsWith("http") ? title.threadsPostId : `https://www.threads.net/t/${title.threadsPostId}`) : "#"}
                       target="_blank"
                       rel="noreferrer"
                       style={{
