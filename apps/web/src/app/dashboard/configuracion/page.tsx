@@ -1354,7 +1354,7 @@ export default function ConfiguracionPage() {
         >
           <h2 style={{ ...h2Style, color: "#991b1b" }}>⚙️ Herramientas de Administrador (Temporal)</h2>
           <p style={{ fontSize: 13, color: "#7f1d1d", marginBottom: 12 }}>
-            Repara automáticamente hasta 20 artículos por lote. Cada lote conserva su historial y muestra el último artículo procesado. Al iniciar otro lote, el sistema salta los artículos ya correctos y continúa con los pendientes.
+            Repara hasta 20 artículos por lote, completando cada artículo antes de abrir el siguiente.
           </p>
           <button
             onClick={handleTriggerFix}

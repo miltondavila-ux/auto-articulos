@@ -1500,6 +1500,10 @@ página falsa para Bing.
   no persistía. La siguiente versión debe tomar una sola fila, completar su
   edición/verificación, volver por la siguiente y usar exactamente
   `tinyMCE.activeEditor.setContent`, como la prueba exitosa del artículo 89325.
+  Aclaración de Milton: se mantienen lotes de hasta 20, pero dentro del lote
+  cada artículo debe abrirse, corregirse, guardarse, verificarse y registrarse
+  completamente antes de buscar el siguiente. El guardado debe vincular
+  TinyMCE mediante `targetElm` y forzar después el textarea del formulario.
 
 - **El usuario prueba, la IA no.** Nunca disparar corridas de prueba de la
   automatización de publicación por iniciativa propia. Sí está bien:

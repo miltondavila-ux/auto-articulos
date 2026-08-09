@@ -120,7 +120,6 @@ export async function runPatriciaFix(
           editUrl: `${baseUrl}/dashboard/direct-edit-articles?articles_id_=${id}`,
         };
         const progressPrefix = `[Art. ${article.id}]`;
-        processedCount++;
 
         try {
           await onStep(`${progressPrefix} Abriendo: "${article.title}"...`);
@@ -131,6 +130,7 @@ export async function runPatriciaFix(
           await editorTextarea.waitFor({ state: "attached", timeout: 15000 }).catch(() => {});
 
           if (await editorTextarea.count() === 0) {
+            processedCount++;
             throw new Error("No se localizó el editor de contenido.");
           }
 
@@ -154,20 +154,30 @@ export async function runPatriciaFix(
               await onStep(`${progressPrefix} Ya estaba correcto. Continuando al siguiente artículo.`);
               continue;
             }
+            processedCount++;
             contentHtml = repaired.html;
 
             // Escribir el nuevo contenido tanto en el textarea original como en TinyMCE si está presente
             await page.evaluate(({ val }) => {
               const el = document.querySelector('textarea[name="contentes"], textarea[name="content"]') as HTMLTextAreaElement;
+              const tiny = (window as any).tinyMCE;
+              if (tiny && el) {
+                const editors = Array.isArray(tiny.editors) ? tiny.editors : [];
+                const editor = editors.find((candidate: any) =>
+                  candidate.targetElm === el ||
+                  (typeof candidate.getElement === "function" && candidate.getElement() === el)
+                ) || tiny.activeEditor;
+                if (editor) {
+                  editor.setContent(val);
+                  if (typeof editor.save === "function") editor.save();
+                }
+              }
+              // El textarea es el valor enviado por el formulario. Se fuerza
+              // al final para que ningún editor vuelva a poner el HTML viejo.
               if (el) {
                 el.value = val;
+                el.dispatchEvent(new Event("input", { bubbles: true }));
                 el.dispatchEvent(new Event("change", { bubbles: true }));
-              }
-              // Este es exactamente el mecanismo que sí guardó el artículo
-              // 89325 durante la prueba individual validada por Milton.
-              const tiny = (window as any).tinyMCE;
-              if (tiny && tiny.activeEditor) {
-                tiny.activeEditor.setContent(val);
               }
             }, { val: contentHtml });
 
@@ -212,8 +222,8 @@ export async function runPatriciaFix(
         }
       }
 
-      // Cada lote procesa como máximo 20 artículos, sin ocultar fallos ni
-      // quedarse reintentando el mismo artículo dentro de la misma orden.
+      // Cada lote procesa hasta 20 pendientes, terminando completamente cada
+      // artículo antes de abrir el siguiente.
       if (processedCount >= MAX_REPAIRS_PER_RUN) {
         await onStep(`\nLímite del lote alcanzado: ${processedCount} artículos procesados uno por uno.`);
         break;

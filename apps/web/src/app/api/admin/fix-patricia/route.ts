@@ -84,7 +84,7 @@ export async function POST() {
     await prisma.titleEvent.create({
       data: {
         titleId: title.id,
-        message: "Lote solicitado. Esperando que el worker comience a procesar hasta 20 artículos...",
+        message: "Lote solicitado. El worker procesará hasta 20 artículos, uno por uno...",
       },
     });
 
