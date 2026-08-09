@@ -9,6 +9,10 @@ import {
 } from "@auto-articulos/shared";
 
 async function publishToThreads(userId: string, suggestedText: string, articleUrl: string): Promise<{ postId: string; permalink?: string }> {
+  if (!articleUrl) {
+    throw new Error("El artículo no tiene URL publicada. Publica el artículo primero.");
+  }
+
   const integration = await prisma.threadsIntegration.findUnique({
     where: { userId },
   });
@@ -19,7 +23,6 @@ async function publishToThreads(userId: string, suggestedText: string, articleUr
 
   let accessToken = decryptSecret(integration.accessTokenEncrypted);
 
-  // Refrescar automáticamente el token si vence en menos de 7 días
   const daysUntilExpiration =
     (integration.expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
 
@@ -28,7 +31,6 @@ async function publishToThreads(userId: string, suggestedText: string, articleUr
       const refreshed = await refreshThreadsToken(accessToken);
       accessToken = refreshed.accessToken;
       const newExpiresAt = new Date(Date.now() + refreshed.expiresInSeconds * 1000);
-
       await prisma.threadsIntegration.update({
         where: { userId },
         data: {
@@ -41,7 +43,6 @@ async function publishToThreads(userId: string, suggestedText: string, articleUr
     }
   }
 
-  // Reemplazar [ENLACE] por la URL real
   let finalPost = suggestedText;
   if (finalPost.includes("[ENLACE]")) {
     finalPost = finalPost.replace("[ENLACE]", articleUrl);

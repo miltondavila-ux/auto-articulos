@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
+import {
+  decryptSecret,
+  getGoogleAccessToken,
+  queryGoogleSearchAnalytics,
+} from "@auto-articulos/shared";
 
-// Reusamos el generador de copy aleatorio del worker
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
 
@@ -65,34 +69,76 @@ async function generateGPTCopy(
   }
 }
 
+async function selectArticlesWithGSC(userId: string): Promise<{ id: string; finalTitle: string | null; text: string; summary: string | null; articleUrl: string | null }[]> {
+  const gsc = await prisma.searchIntegration.findUnique({
+    where: { userId_provider: { userId, provider: "google" } },
+  });
+  if (!gsc?.siteUrl || !gsc.encryptedRefreshToken) return [];
+
+  try {
+    const accessToken = await getGoogleAccessToken(decryptSecret(gsc.encryptedRefreshToken));
+    const endDate = new Date();
+    const startDate = new Date(Date.now() - 30 * 86400000);
+    const fmt = (d: Date) => d.toISOString().slice(0, 10);
+
+    const rows = await queryGoogleSearchAnalytics(
+      accessToken,
+      gsc.siteUrl,
+      fmt(startDate),
+      fmt(endDate),
+      ["page"],
+    );
+
+    if (rows.length === 0) return [];
+
+    const gscUrls = rows.map((r) => r.keys[0]);
+
+    const articles = await prisma.title.findMany({
+      where: {
+        run: { userId },
+        status: "success",
+        articleUrl: { in: gscUrls },
+      },
+      select: { id: true, finalTitle: true, text: true, summary: true, articleUrl: true },
+    });
+
+    const urlOrder = new Map(gscUrls.map((url, i) => [url, i]));
+    articles.sort((a, b) => (urlOrder.get(a.articleUrl!) ?? 999) - (urlOrder.get(b.articleUrl!) ?? 999));
+
+    return articles;
+  } catch {
+    return [];
+  }
+}
+
+async function selectArticlesWithoutGSC(userId: string): Promise<{ id: string; finalTitle: string | null; text: string; summary: string | null; articleUrl: string | null }[]> {
+  const usedTitleIds = await prisma.socialOpportunity.findMany({
+    where: { userId },
+    select: { titleId: true },
+  });
+  const usedIds: string[] = usedTitleIds.map((o) => o.titleId).filter((id): id is string => id !== null);
+
+  return prisma.title.findMany({
+    where: {
+      run: { userId },
+      status: "success",
+      articleUrl: { not: null },
+      id: { notIn: [...usedIds] },
+    },
+    orderBy: { processedAt: "desc" },
+    take: 3,
+    select: { id: true, finalTitle: true, text: true, summary: true, articleUrl: true },
+  });
+}
+
 export async function POST() {
   try {
     const userId = await getCurrentUserId();
 
-    // Buscar los 3 artículos publicados con éxito más recientes
-    const latestArticles = await prisma.title.findMany({
-      where: {
-        run: { userId },
-        status: "success",
-        articleUrl: { not: null },
-      },
-      orderBy: { processedAt: "desc" },
-      take: 3,
-    });
-
-    if (latestArticles.length === 0) {
-      return NextResponse.json(
-        { error: "No se encontraron artículos publicados con éxito en tu blog para generar oportunidades." },
-        { status: 400 }
-      );
-    }
-
-    // Verificar qué integraciones tiene conectadas el usuario
-    const integrations = [];
+    const integrations: string[] = [];
     const threads = await prisma.threadsIntegration.findUnique({ where: { userId } });
     if (threads) integrations.push("threads");
 
-    // Si no hay redes conectadas
     if (integrations.length === 0) {
       return NextResponse.json(
         { error: "Primero debes conectar al menos una red social (ej. Threads) en tu configuración." },
@@ -100,21 +146,30 @@ export async function POST() {
       );
     }
 
-    const createdOpportunities = [];
+    let candidates = await selectArticlesWithGSC(userId);
 
-    // Generar oportunidades de copy para cada artículo y red conectada
-    for (const article of latestArticles) {
+    if (candidates.length === 0) {
+      candidates = await selectArticlesWithoutGSC(userId);
+    }
+
+    if (candidates.length === 0) {
+      return NextResponse.json(
+        { error: "No hay artículos nuevos disponibles. Todos los artículos publicados ya tienen una oportunidad generada." },
+        { status: 400 }
+      );
+    }
+
+    const createdOpportunities: any[] = [];
+
+    for (const article of candidates) {
       for (const platform of integrations) {
-        // Verificar si ya existe una oportunidad pendiente para este artículo y plataforma
         const exists = await prisma.socialOpportunity.findFirst({
           where: {
             userId,
             titleId: article.id,
             platform,
-            status: "pending",
           },
         });
-
         if (exists) continue;
 
         const copyText = await generateGPTCopy(
@@ -138,8 +193,12 @@ export async function POST() {
       }
     }
 
+    const source = await prisma.searchIntegration.findUnique({
+      where: { userId_provider: { userId, provider: "google" } },
+    });
+
     return NextResponse.json({
-      message: `Se generaron ${createdOpportunities.length} nuevas propuestas de redes sociales.`,
+      message: `Se generaron ${createdOpportunities.length} nuevas propuestas basadas en ${source?.siteUrl ? "Google Search Console (mejores temas)" : "artículos más recientes sin usar"}.`,
       count: createdOpportunities.length,
     });
   } catch (error: any) {
