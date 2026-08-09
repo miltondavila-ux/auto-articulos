@@ -84,39 +84,41 @@ export async function runPatriciaFix(
         }
       }
 
-      const rows = page.locator("table tbody tr");
-      const count = await rows.count();
-      const pageArticles: { id: string; title: string; publicUrl: string; editUrl: string }[] = [];
+      const count = await page.locator("table tbody tr").count();
 
-      // Leer los artículos visibles en esta página
-      for (let i = 0; i < count; i++) {
-        const row = rows.nth(i);
-        
-        const idText = ((await row.locator("input[name='checkbox[]']").getAttribute("value").catch(() => "")) || "").trim();
-        const titleText = (await row.locator("td").nth(3).innerText().catch(() => "")).trim();
-
-        const consultLink = row.locator("a.consultar").first();
-        const href = (await consultLink.getAttribute("href").catch(() => "")) || null;
-
-        if (idText && titleText && idText !== "Loading...") {
-          pageArticles.push({
-            id: idText,
-            title: titleText,
-            publicUrl: href || "",
-            editUrl: `${baseUrl}/dashboard/direct-edit-articles?articles_id_=${idText}`,
-          });
-        }
-      }
-
-      await onStep(`Detectados ${pageArticles.length} artículos en la página ${pageNum}. Analizando al vuelo...`);
-
-      // Procesar los artículos de esta página uno a uno
-      for (let idx = 0; idx < pageArticles.length; idx++) {
+      // Tomar una sola fila, terminar completamente ese artículo y solo
+      // entonces volver a la lista para tomar la fila siguiente.
+      for (let idx = 0; idx < count; idx++) {
         if (processedCount >= MAX_REPAIRS_PER_RUN) {
           break;
         }
 
-        const article = pageArticles[idx];
+        if (idx > 0) {
+          await page.goto(`${baseUrl}/dashboard/user_buyer_seller_articles.php`, {
+            waitUntil: "domcontentloaded",
+          });
+          await page.waitForSelector("table tbody tr td", { timeout: 15000 });
+          for (let p = 1; p < pageNum; p++) {
+            const nextBtn = page.locator("a.next, li.next a, button.next").first();
+            if (await nextBtn.isVisible().catch(() => false)) {
+              await nextBtn.click();
+              await page.waitForTimeout(2000);
+            }
+          }
+        }
+
+        const row = page.locator("table tbody tr").nth(idx);
+        const id = ((await row.locator("input[name='checkbox[]']").getAttribute("value").catch(() => "")) || "").trim();
+        const title = (await row.locator("td").nth(3).innerText().catch(() => "")).trim();
+        const publicUrl = (await row.locator("a.consultar").first().getAttribute("href").catch(() => "")) || "";
+        if (!id || !title || id === "Loading...") continue;
+
+        const article = {
+          id,
+          title,
+          publicUrl,
+          editUrl: `${baseUrl}/dashboard/direct-edit-articles?articles_id_=${id}`,
+        };
         const progressPrefix = `[Art. ${article.id}]`;
         processedCount++;
 
@@ -159,22 +161,13 @@ export async function runPatriciaFix(
               const el = document.querySelector('textarea[name="contentes"], textarea[name="content"]') as HTMLTextAreaElement;
               if (el) {
                 el.value = val;
-                el.dispatchEvent(new Event("input", { bubbles: true }));
                 el.dispatchEvent(new Event("change", { bubbles: true }));
               }
-              // No usar activeEditor: algunas plantillas tienen varios editores
-              // y puede apuntar al campo equivocado. Se busca el editor ligado
-              // específicamente al textarea de contenido y se fuerza su save.
-              const tiny = (window as any).tinymce || (window as any).tinyMCE;
-              if (tiny && el) {
-                const editor = el.id && typeof tiny.get === "function"
-                  ? tiny.get(el.id)
-                  : tiny.activeEditor;
-                if (editor) {
-                  editor.setContent(val);
-                  editor.save();
-                }
-                if (typeof tiny.triggerSave === "function") tiny.triggerSave();
+              // Este es exactamente el mecanismo que sí guardó el artículo
+              // 89325 durante la prueba individual validada por Milton.
+              const tiny = (window as any).tinyMCE;
+              if (tiny && tiny.activeEditor) {
+                tiny.activeEditor.setContent(val);
               }
             }, { val: contentHtml });
 

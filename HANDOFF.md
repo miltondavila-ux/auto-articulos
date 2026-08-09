@@ -1495,6 +1495,11 @@ página falsa para Bing.
   muestra la lista exacta de pendientes para reintentar. Se corrigió también la sincronización de TinyMCE para usar el editor
   ligado al textarea de contenido, no `activeEditor`. No iniciar otra prueba
   hasta que esta corrección esté pusheada y desplegada.
+  Un segundo lote también fue rechazado (0 reparados, 2 correctos, 8 errores):
+  todavía recopilaba diez filas antes de editar y el nuevo enlace de TinyMCE
+  no persistía. La siguiente versión debe tomar una sola fila, completar su
+  edición/verificación, volver por la siguiente y usar exactamente
+  `tinyMCE.activeEditor.setContent`, como la prueba exitosa del artículo 89325.
 
 - **El usuario prueba, la IA no.** Nunca disparar corridas de prueba de la
   automatización de publicación por iniciativa propia. Sí está bien:
