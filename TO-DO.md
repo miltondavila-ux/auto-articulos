@@ -121,6 +121,12 @@ HANDOFF, solo alimenta ideas hacia él).
   - El objetivo es liberar "oportunidades de descanibalización" y que todos
     los artículos existentes (no solo los nuevos) aporten de verdad a la
     indexación y el posicionamiento, en vez de restarse entre ellos.
+- **(9/8/2026)** Bug reportado, de NUEVO (ya se había tocado este tema antes,
+  ver commit "Menú mobile como dropdown y tablas sin scroll horizontal"): el
+  menú principal en iPad no es responsive — no muestra el dropdown que sí
+  aparece correctamente en teléfonos convencionales. Revisar el punto de
+  quiebre (breakpoint) usado para activar el menú dropdown: probablemente
+  está pensado solo para anchos de teléfono y no cubre el ancho de iPad.
 
 ## Hecho
 
