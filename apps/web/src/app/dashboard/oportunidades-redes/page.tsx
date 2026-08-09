@@ -22,10 +22,25 @@ interface SocialOpportunity {
   publishedAt: string | null;
 }
 
+const gscStages = [
+  "Consultando Google Search Console",
+  "Analizando mejores temas por rendimiento",
+  "Generando copy con IA",
+  "Guardando propuestas",
+];
+
+const fallbackStages = [
+  "Buscando artículos recientes sin usar",
+  "Generando copy con IA",
+  "Guardando propuestas",
+];
+
 export default function OportunidadesRedesPage() {
   const [opportunities, setOpportunities] = useState<SocialOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [generateSeconds, setGenerateSeconds] = useState(0);
+  const [usedGsc, setUsedGsc] = useState(false);
   const [publishingId, setPublishingId] = useState<string | null>(null);
   const [publishingAll, setPublishingAll] = useState(false);
   const [message, setMessage] = useState<{ kind: "success" | "error" | "info"; text: string } | null>(null);
@@ -33,6 +48,16 @@ export default function OportunidadesRedesPage() {
   useEffect(() => {
     loadOpportunities();
   }, []);
+
+  useEffect(() => {
+    if (!generating) return;
+    setGenerateSeconds(0);
+    const timer = window.setInterval(
+      () => setGenerateSeconds((s) => s + 1),
+      1000,
+    );
+    return () => window.clearInterval(timer);
+  }, [generating]);
 
   async function loadOpportunities() {
     setLoading(true);
@@ -49,13 +74,24 @@ export default function OportunidadesRedesPage() {
     }
   }
 
+  const stages = usedGsc ? gscStages : fallbackStages;
+  const currentStage = Math.min(
+    stages.length - 1,
+    Math.floor(generateSeconds / 6),
+  );
+  const progress = Math.min(92, 8 + generateSeconds * 4);
+  const elapsed = `${Math.floor(generateSeconds / 60)}:${String(generateSeconds % 60).padStart(2, "0")}`;
+
   async function handleGenerate() {
     setGenerating(true);
     setMessage(null);
+    setUsedGsc(false);
     try {
       const res = await fetch("/api/social-opportunities/generate", { method: "POST" });
       const data = await res.json();
       if (res.ok) {
+        const gscUsed = data.message?.includes("Google Search Console") ?? false;
+        setUsedGsc(gscUsed);
         setMessage({ kind: "success", text: data.message || "Propuestas generadas con éxito." });
         loadOpportunities();
       } else {
@@ -171,8 +207,44 @@ export default function OportunidadesRedesPage() {
             disabled={generating || loading}
             style={disabledStyle(buttonStyle, generating || loading)}
           >
-            {generating ? "Generando Propuestas..." : "🔄 Generar Propuestas de la Semana"}
+            {generating ? "Analizando..." : "🔄 Analizar Oportunidades en Redes"}
           </button>
+          {generating && (
+            <div
+              role="status"
+              aria-live="polite"
+              style={{
+                marginTop: 16,
+                padding: 16,
+                border: "1px solid #b8caf7",
+                borderRadius: 10,
+                background: "#f3f6ff",
+                width: "100%",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "center", marginBottom: 10 }}>
+                <strong style={{ fontSize: 14, color: "#24458f" }}>
+                  {stages[currentStage]}
+                </strong>
+                <span style={{ minWidth: 52, textAlign: "center", padding: "4px 8px", borderRadius: 999, background: "#dfe8ff", color: "#24458f", fontSize: 12, fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>
+                  {elapsed}
+                </span>
+              </div>
+              <div aria-hidden="true" style={{ height: 8, borderRadius: 999, background: "#dfe5f2", overflow: "hidden" }}>
+                <div style={{ width: `${progress}%`, height: "100%", borderRadius: 999, background: "linear-gradient(90deg, #2f5fdb, #4dd8e8)", transition: "width 1s linear" }} />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 8, marginTop: 12 }}>
+                {stages.map((stage, index) => (
+                  <div key={stage} style={{ display: "flex", gap: 7, alignItems: "flex-start", color: index <= currentStage ? "#24458f" : "#8a94a6", fontSize: 11, fontWeight: index === currentStage ? 700 : 500 }}>
+                    <span aria-hidden="true">
+                      {index < currentStage ? "✓" : index === currentStage ? "●" : "○"}
+                    </span>
+                    <span>{stage}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {pendingList.length > 0 && (
             <button
               onClick={handlePublishAll}
@@ -186,7 +258,7 @@ export default function OportunidadesRedesPage() {
       </div>
 
       <p style={{ color: "#a8b3c7", fontSize: 14, marginTop: 8, marginBottom: 20 }}>
-        Genera propuestas de copy personalizadas para tus redes en base a los últimos artículos de tu blog. Revisa, edita los textos y publica cuando quieras.
+        Analiza tus mejores temas con Google Search Console o los artículos más recientes para generar propuestas de copy para redes sociales. Revisa, edita los textos y publica cuando quieras.
       </p>
 
       {message && (
@@ -218,7 +290,7 @@ export default function OportunidadesRedesPage() {
             </h3>
             {pendingList.length === 0 ? (
               <div style={{ color: "#a8b3c7", textAlign: "center", padding: 20, background: "rgba(255,255,255,0.02)", borderRadius: 12 }}>
-                No tienes propuestas pendientes. Haz clic en "Generar Propuestas de la Semana" arriba.
+                No tienes propuestas pendientes. Haz clic en "Analizar Oportunidades en Redes" arriba.
               </div>
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 20, marginTop: 15 }}>
