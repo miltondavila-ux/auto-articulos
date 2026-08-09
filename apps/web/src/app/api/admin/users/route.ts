@@ -293,8 +293,9 @@ export async function DELETE(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  let adminId: string;
   try {
-    await requireAdmin();
+    adminId = (await requireAdmin()).id;
   } catch {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
@@ -440,6 +441,6 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  auditLog("user_created", currentUserId, { newUserId: user.id, email: normalizedEmail, role });
+  auditLog("user_created", adminId, { newUserId: user.id, email: normalizedEmail, role });
   return NextResponse.json({ user });
 }

@@ -7,6 +7,7 @@ import {
   h2Style,
   secondaryButtonStyle,
   sectionStyle,
+  inputStyle,
 } from "@/components/dashboard-ui";
 
 interface SocialOpportunity {
@@ -15,12 +16,21 @@ interface SocialOpportunity {
   articleUrl: string;
   platform: string;
   suggestedText: string;
-  status: string; // "pending" | "published" | "skipped" | "error"
+  status: string; // "pending" | "published" | "skipped" | "error" | "queued" | "processing"
   postId: string | null;
   errorLog: string | null;
+  skipReason: string | null;
   createdAt: string;
   publishedAt: string | null;
 }
+
+const SKIP_REASONS = [
+  "El tema no es relevante para mi audiencia",
+  "El copy no me gusta / no representa mi voz",
+  "El formato no es adecuado para este tema",
+  "Ya publiqué algo similar recientemente",
+  "Prefiero programarlo para después",
+];
 
 const gscStages = [
   "Consultando Google Search Console",
@@ -44,6 +54,7 @@ export default function OportunidadesRedesPage() {
   const [publishingId, setPublishingId] = useState<string | null>(null);
   const [publishingAll, setPublishingAll] = useState(false);
   const [message, setMessage] = useState<{ kind: "success" | "error" | "info"; text: string } | null>(null);
+  const [skipModal, setSkipModal] = useState<{ opp: SocialOpportunity; reason: string; customReason: string } | null>(null);
 
   useEffect(() => {
     loadOpportunities();
@@ -191,6 +202,42 @@ export default function OportunidadesRedesPage() {
     });
     loadOpportunities();
     setPublishingAll(false);
+  }
+
+  async function handleSkipOne(opp: SocialOpportunity) {
+    setSkipModal({ opp, reason: "", customReason: "" });
+  }
+
+  async function handleConfirmSkip() {
+    if (!skipModal) return;
+    const finalReason = skipModal.reason === "__custom__"
+      ? skipModal.customReason.trim() || "Otro"
+      : skipModal.reason;
+
+    if (!finalReason) return;
+
+    try {
+      const res = await fetch("/api/social-opportunities", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: skipModal.opp.id,
+          skip: true,
+          skipReason: finalReason,
+        }),
+      });
+
+      if (res.ok) {
+        setMessage({ kind: "info", text: "Propuesta descartada. Gracias por tu retroalimentación." });
+        setSkipModal(null);
+        loadOpportunities();
+      } else {
+        const data = await res.json();
+        setMessage({ kind: "error", text: data.error || "Error al descartar." });
+      }
+    } catch {
+      setMessage({ kind: "error", text: "Error de conexión al descartar." });
+    }
   }
 
   const pendingList = opportunities.filter((o) => o.status === "pending");
@@ -355,6 +402,12 @@ export default function OportunidadesRedesPage() {
                         >
                           {publishingId === opp.id ? "Publicando..." : "🚀 Publicar Ahora"}
                         </button>
+                        <button
+                          onClick={() => handleSkipOne(opp)}
+                          style={{ ...secondaryButtonStyle, padding: "8px 12px", fontSize: 13, color: "#ef4444", border: "1px solid #ef4444" }}
+                        >
+                          ✕ Descartar
+                        </button>
                         </>
                         )}
                       </div>
@@ -392,6 +445,140 @@ export default function OportunidadesRedesPage() {
             )}
           </div>
         </>
+      )}
+      {/* Modal de descarte */}
+      {skipModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: 20,
+          }}
+          onClick={() => setSkipModal(null)}
+        >
+          <div
+            style={{
+              background: "#1f2937",
+              border: "1px solid #374151",
+              borderRadius: 16,
+              padding: 28,
+              maxWidth: 480,
+              width: "100%",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ color: "#f3f4f6", margin: 0, fontSize: 18 }}>
+              ¿Por qué descartas esta propuesta?
+            </h3>
+            <p style={{ color: "#9ca3af", fontSize: 13, margin: "8px 0 16px 0" }}>
+              Tu respuesta nos ayuda a mejorar las recomendaciones futuras.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {SKIP_REASONS.map((reason) => (
+                <label
+                  key={reason}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "10px 14px",
+                    borderRadius: 10,
+                    background: skipModal.reason === reason ? "rgba(59, 130, 246, 0.15)" : "#111827",
+                    border: `1px solid ${skipModal.reason === reason ? "#3b82f6" : "#374151"}`,
+                    cursor: "pointer",
+                    color: "#e5e7eb",
+                    fontSize: 14,
+                    fontWeight: skipModal.reason === reason ? 600 : 400,
+                    transition: "all 0.15s",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="skipReason"
+                    value={reason}
+                    checked={skipModal.reason === reason}
+                    onChange={() => setSkipModal({ ...skipModal, reason })}
+                    style={{ accentColor: "#3b82f6" }}
+                  />
+                  {reason}
+                </label>
+              ))}
+
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 10,
+                  padding: "10px 14px",
+                  borderRadius: 10,
+                  background: skipModal.reason === "__custom__" ? "rgba(59, 130, 246, 0.15)" : "#111827",
+                  border: `1px solid ${skipModal.reason === "__custom__" ? "#3b82f6" : "#374151"}`,
+                  cursor: "pointer",
+                  flexDirection: "column",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10, width: "100%" }}>
+                  <input
+                    type="radio"
+                    name="skipReason"
+                    value="__custom__"
+                    checked={skipModal.reason === "__custom__"}
+                    onChange={() => setSkipModal({ ...skipModal, reason: "__custom__" })}
+                    style={{ accentColor: "#3b82f6", marginTop: 2 }}
+                  />
+                  <span style={{ color: "#e5e7eb", fontSize: 14 }}>Otro</span>
+                </div>
+                {skipModal.reason === "__custom__" && (
+                  <input
+                    type="text"
+                    placeholder="Escribe tu razón..."
+                    value={skipModal.customReason}
+                    onChange={(e) => setSkipModal({ ...skipModal, customReason: e.target.value })}
+                    style={{
+                      ...inputStyle,
+                      marginLeft: 26,
+                      width: "calc(100% - 26px)",
+                    }}
+                    autoFocus
+                  />
+                )}
+              </label>
+            </div>
+
+            <div style={{ display: "flex", gap: 10, marginTop: 20, justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setSkipModal(null)}
+                style={secondaryButtonStyle}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmSkip}
+                disabled={
+                  !skipModal.reason ||
+                  (skipModal.reason === "__custom__" && !skipModal.customReason.trim())
+                }
+                style={disabledStyle(
+                  {
+                    ...buttonStyle,
+                    background: "#ef4444",
+                  },
+                  !skipModal.reason ||
+                    (skipModal.reason === "__custom__" && !skipModal.customReason.trim())
+                )}
+              >
+                Descartar propuesta
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
