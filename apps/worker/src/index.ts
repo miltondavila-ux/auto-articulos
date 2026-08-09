@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { processNext } from "./queue";
 import { processNextCategorySync } from "./categorySync";
+import { processNextSocialPublish } from "./socialPublish";
 
 const POLL_INTERVAL_MS = 3000;
 let stopping = false;
@@ -10,7 +11,8 @@ async function loop() {
     try {
       const didSyncWork = await processNextCategorySync();
       const didRunWork = await processNext();
-      await sleep(didSyncWork || didRunWork ? 500 : POLL_INTERVAL_MS);
+      const didSocialPublish = await processNextSocialPublish();
+      await sleep(didSyncWork || didRunWork || didSocialPublish ? 500 : POLL_INTERVAL_MS);
     } catch (err) {
       console.error("Error inesperado en el worker:", err);
       await sleep(POLL_INTERVAL_MS);

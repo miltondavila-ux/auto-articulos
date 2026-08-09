@@ -194,6 +194,7 @@ export default function OportunidadesRedesPage() {
   }
 
   const pendingList = opportunities.filter((o) => o.status === "pending");
+  const queuedList = opportunities.filter((o) => o.status === "queued" || o.status === "processing");
 
   return (
     <div style={{ padding: "0 10px", maxWidth: 1200, margin: "0 auto" }}>
@@ -245,7 +246,7 @@ export default function OportunidadesRedesPage() {
               </div>
             </div>
           )}
-          {pendingList.length > 0 && (
+          {pendingList.length > 0 && queuedList.length === 0 && (
             <button
               onClick={handlePublishAll}
               disabled={publishingAll}
@@ -253,6 +254,12 @@ export default function OportunidadesRedesPage() {
             >
               {publishingAll ? "Publicando todo..." : "🚀 Publicar Todo el Lote"}
             </button>
+          )}
+          {queuedList.length > 0 && (
+            <span style={{ color: "#f59e0b", fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: "#f59e0b", animation: queuedList.some(o => o.status === "processing") ? "none" : undefined }} />
+              {queuedList.length} en proceso de publicación
+            </span>
           )}
         </div>
       </div>
@@ -286,16 +293,19 @@ export default function OportunidadesRedesPage() {
         <>
           <div style={{ marginBottom: 40 }}>
             <h3 style={{ color: "#e8ecf5", fontSize: 18, borderBottom: "1px solid rgba(232, 236, 245, 0.15)", paddingBottom: 8 }}>
-              Propuestas Pendientes ({pendingList.length})
+              Propuestas Pendientes ({pendingList.length}){queuedList.length > 0 && <span style={{ color: "#f59e0b", fontSize: 13, marginLeft: 10 }}>· {queuedList.length} en cola/proceso</span>}
             </h3>
-            {pendingList.length === 0 ? (
+            {pendingList.length === 0 && queuedList.length === 0 ? (
               <div style={{ color: "#a8b3c7", textAlign: "center", padding: 20, background: "rgba(255,255,255,0.02)", borderRadius: 12 }}>
                 No tienes propuestas pendientes. Haz clic en "Analizar Oportunidades en Redes" arriba.
               </div>
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 20, marginTop: 15 }}>
-                {pendingList.map((opp) => (
-                  <div key={opp.id} style={{ ...sectionStyle, background: "#111827", border: "1px solid #374151" }}>
+                {[...pendingList, ...queuedList].map((opp) => {
+                  const isQueuedOrProcessing = opp.status === "queued" || opp.status === "processing";
+                  const statusLabel = opp.status === "queued" ? "En cola..." : opp.status === "processing" ? "Procesando..." : null;
+                  return (
+                  <div key={opp.id} style={{ ...sectionStyle, background: "#111827", border: `1px solid ${isQueuedOrProcessing ? "#f59e0b" : "#374151"}` }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10 }}>
                       <div>
                         <span
@@ -312,6 +322,11 @@ export default function OportunidadesRedesPage() {
                         >
                           {opp.platform === "threads" ? "🌀 THREADS" : opp.platform.toUpperCase()}
                         </span>
+                        {statusLabel && (
+                          <span style={{ display: "inline-block", padding: "4px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, background: "rgba(245, 158, 11, 0.15)", color: "#f59e0b", marginLeft: 6 }}>
+                            {statusLabel}
+                          </span>
+                        )}
                         <h4 style={{ color: "#f3f4f6", margin: 0, fontSize: 16 }}>
                           Artículo: {opp.articleTitle}
                         </h4>
@@ -325,6 +340,8 @@ export default function OportunidadesRedesPage() {
                         </a>
                       </div>
                       <div style={{ display: "flex", gap: 8 }}>
+                        {!isQueuedOrProcessing && (
+                          <>
                         <button
                           onClick={() => handleSaveText(opp)}
                           style={{ ...secondaryButtonStyle, padding: "8px 12px", fontSize: 13 }}
@@ -338,22 +355,25 @@ export default function OportunidadesRedesPage() {
                         >
                           {publishingId === opp.id ? "Publicando..." : "🚀 Publicar Ahora"}
                         </button>
+                        </>
+                        )}
                       </div>
                     </div>
 
                     <div style={{ marginTop: 15 }}>
                       <label style={{ display: "block", color: "#9ca3af", fontSize: 12, marginBottom: 4 }}>
-                        Propuesta de Copy (Puedes editar el texto antes de publicar):
+                        Propuesta de Copy{isQueuedOrProcessing ? " (publicación en curso)" : " (Puedes editar el texto antes de publicar)"}:
                       </label>
                       <textarea
                         value={opp.suggestedText}
                         onChange={(e) => handleTextChange(opp.id, e.target.value)}
+                        disabled={isQueuedOrProcessing}
                         style={{
                           width: "100%",
                           minHeight: 100,
                           padding: 10,
                           borderRadius: 8,
-                          background: "#1f2937",
+                          background: isQueuedOrProcessing ? "#374151" : "#1f2937",
                           color: "#f9fafb",
                           border: "1px solid #4b5563",
                           fontSize: 14,
@@ -366,7 +386,8 @@ export default function OportunidadesRedesPage() {
                       </span>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
