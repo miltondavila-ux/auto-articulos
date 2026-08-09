@@ -18,11 +18,23 @@ export async function runPatriciaFix(
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
 
-  const MAX_REPAIRS_PER_RUN = 10;
+  const MAX_REPAIRS_PER_RUN = 20;
   let successCount = 0;
   let skippedCount = 0;
   let errorCount = 0;
   let processedCount = 0;
+
+  // Cargar cursor persistente del lote
+  const category = await prisma.category.findFirst({
+    where: { name: "FIX_PATRICIA" },
+  });
+  let cursorId: number | null = null;
+  if (category && category.externalId.startsWith("FIX_PATRICIA_CURSOR_")) {
+    const parsed = parseInt(category.externalId.replace("FIX_PATRICIA_CURSOR_", ""), 10);
+    if (!isNaN(parsed)) {
+      cursorId = parsed;
+    }
+  }
 
 
   try {
@@ -80,15 +92,24 @@ export async function runPatriciaFix(
 
       const rowLocators = page.locator("table tbody tr");
       const count = await rowLocators.count();
-      const batchLimit = Math.min(count, MAX_REPAIRS_PER_RUN - processedCount);
       
       const idsToProcess: { id: string, title: string, publicUrl: string, editUrl: string }[] = [];
-      for (let i = 0; i < batchLimit; i++) {
+      for (let i = 0; i < count; i++) {
         const id = ((await rowLocators.nth(i).locator("input[name='checkbox[]']").getAttribute("value").catch(() => "")) || "").trim();
+        if (!id || id === "Loading...") continue;
+
+        const idNum = parseInt(id, 10);
+        if (cursorId !== null && !isNaN(idNum) && idNum >= cursorId) {
+          // Omitir artículos ya procesados en base al cursor
+          continue;
+        }
+
         const title = (await rowLocators.nth(i).locator("td").nth(3).innerText().catch(() => "")).trim();
         const publicUrl = (await rowLocators.nth(i).locator("a.consultar").first().getAttribute("href").catch(() => "")) || "";
-        if (id && id !== "Loading...") {
-          idsToProcess.push({ id, title, publicUrl, editUrl: `${baseUrl}/dashboard/direct-edit-articles?articles_id_=${id}` });
+        idsToProcess.push({ id, title, publicUrl, editUrl: `${baseUrl}/dashboard/direct-edit-articles?articles_id_=${id}` });
+
+        if (processedCount + idsToProcess.length >= MAX_REPAIRS_PER_RUN) {
+          break;
         }
       }
 
@@ -229,6 +250,16 @@ export async function runPatriciaFix(
                 throw new Error(`Kill Switch: Fallo estructural en el artículo ${article.id} tras 3 intentos. Causa original: ${errorMessage}`);
               }
             }
+          }
+          
+          // Guardar cursor persistente
+          const artIdNum = parseInt(article.id, 10);
+          if (!isNaN(artIdNum) && category) {
+            await prisma.category.update({
+              where: { id: category.id },
+              data: { externalId: `FIX_PATRICIA_CURSOR_${artIdNum}` },
+            });
+            cursorId = artIdNum;
           }
           processedCount++;
         }
