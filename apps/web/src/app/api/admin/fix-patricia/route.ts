@@ -76,7 +76,7 @@ export async function POST() {
     const title = await prisma.title.create({
       data: {
         runId: run.id,
-        text: "Reparar el siguiente lote de hasta 20 artículos de Patricia Coy",
+        text: "Reparar el siguiente lote de hasta 10 artículos de Patricia Coy",
         status: "pending",
         order: 0,
       },
@@ -84,7 +84,7 @@ export async function POST() {
     await prisma.titleEvent.create({
       data: {
         titleId: title.id,
-        message: "Lote solicitado. El worker procesará hasta 20 artículos, uno por uno...",
+        message: "Lote solicitado. El worker procesará hasta 10 artículos, uno por uno...",
       },
     });
 

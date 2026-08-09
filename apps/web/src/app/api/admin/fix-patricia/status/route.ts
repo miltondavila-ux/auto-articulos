@@ -47,7 +47,7 @@ export async function GET() {
     const events = title.events;
 
     // 2. Parsear los logs para extraer información estructurada
-    let total = 20;
+    let total = 10;
     let processed = 0;
     const repaired: { title: string; url: string }[] = [];
     const logs: string[] = [];

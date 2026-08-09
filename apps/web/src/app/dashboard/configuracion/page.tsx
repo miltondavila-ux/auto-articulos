@@ -1360,7 +1360,7 @@ export default function ConfiguracionPage() {
         >
           <h2 style={{ ...h2Style, color: "#991b1b" }}>⚙️ Herramientas de Administrador (Temporal)</h2>
           <p style={{ fontSize: 13, color: "#7f1d1d", marginBottom: 12 }}>
-            Repara hasta 20 artículos por lote, completando cada artículo antes de abrir el siguiente.
+            Repara hasta 10 artículos por lote, completando cada artículo antes de abrir el siguiente.
           </p>
           <button
             onClick={handleTriggerFix}
@@ -1374,7 +1374,7 @@ export default function ConfiguracionPage() {
               fontWeight: 700,
             }}
           >
-            {triggeringFix ? "Iniciando lote..." : "🚀 Procesar siguiente lote de 20"}
+            {triggeringFix ? "Iniciando lote..." : "🚀 Procesar siguiente lote de 10"}
           </button>
           <button
             onClick={handleClearFixHistory}
@@ -1444,40 +1444,6 @@ export default function ConfiguracionPage() {
                       transition: "width 0.3s ease",
                     }}
                   />
-                </div>
-              ) : null}
-
-              {/* Repaired Articles List */}
-              {fixStatus.repaired && fixStatus.repaired.length > 0 ? (
-                <div style={{ marginBottom: 16 }}>
-                  <h3 style={{ fontSize: 12, fontWeight: 700, color: "#7f1d1d", margin: "0 0 6px 0" }}>
-                    🔗 Artículos reparados con éxito:
-                  </h3>
-                  <div
-                    style={{
-                      maxHeight: 150,
-                      overflowY: "auto",
-                      background: "#fef2f2",
-                      border: "1px solid #fee2e2",
-                      borderRadius: 6,
-                      padding: 8,
-                    }}
-                  >
-                    <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12 }}>
-                      {fixStatus.repaired.map((art, idx) => (
-                        <li key={idx} style={{ marginBottom: 4 }}>
-                          <a
-                            href={art.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{ color: "#2563eb", textDecoration: "underline", fontWeight: 600 }}
-                          >
-                            {art.title}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
                 </div>
               ) : null}
 
@@ -1614,45 +1580,6 @@ export default function ConfiguracionPage() {
                 </div>
               ) : null}
 
-              {/* Persistent History of Repaired Articles List */}
-              {fixStatus && fixStatus.repairedHistory && fixStatus.repairedHistory.length > 0 && (
-                <div
-                  style={{
-                    marginTop: 16,
-                    paddingTop: 16,
-                    borderTop: "1px solid #fee2e2",
-                  }}
-                >
-                  <h3 style={{ fontSize: 13, fontWeight: 700, color: "#991b1b", margin: "0 0 8px 0" }}>
-                    📜 Artículos Reparados en Total ({fixStatus.repairedHistory.length}):
-                  </h3>
-                  <div
-                    style={{
-                      maxHeight: 200,
-                      overflowY: "auto",
-                      background: "#fef2f2",
-                      border: "1px solid #fee2e2",
-                      borderRadius: 6,
-                      padding: 8,
-                    }}
-                  >
-                    <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12 }}>
-                      {fixStatus.repairedHistory.map((art, idx) => (
-                        <li key={idx} style={{ marginBottom: 4 }}>
-                          <a
-                            href={art.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{ color: "#2563eb", textDecoration: "underline", fontWeight: 600 }}
-                          >
-                            {art.title}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </section>
