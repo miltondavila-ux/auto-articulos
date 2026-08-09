@@ -47,7 +47,7 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 
 ### Codex — auditoría del arreglo de Patricia Coy
 
-- **Estado:** `COMMIT LOCAL COMPLETADO — PUSH/DEPLOY BLOQUEADOS POR AUTENTICACIÓN DE ESTA MAC` (9/8/2026).
+- **Estado:** `DESPLEGADO — LISTO PARA PRUEBA CONTROLADA DEL ARTÍCULO 89325` (9/8/2026).
 - **Tarea:** comprender y auditar el botón administrativo y el proceso en segundo plano que reemplaza `PHONE_NUMBER` por el teléfono de Patricia Coy en artículos ya publicados.
 - **Área revisada/reservada:** `apps/worker/src/fix-patricia.ts`, nuevo helper/pruebas de marcadores telefónicos bajo `apps/worker/src/**`, `apps/worker/src/automation/10minutesWebsite.ts`, integración especial en `apps/worker/src/queue.ts`, rutas `apps/web/src/app/api/admin/fix-patricia/**`, panel temporal en `apps/web/src/app/dashboard/configuracion/page.tsx` y `.github/workflows/fix-patricia.yml`.
 - **Límites:** no ejecutar la reparación, no publicar artículos, no modificar datos de producción y no desplegar. Cualquier corrección propuesta requerirá confirmación explícita de Milton.
@@ -63,6 +63,7 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 - **Validación completa posterior con acceso de red autorizado:** 4/4 pruebas del helper pasaron (placeholder, QR codificado, corrección del `+` defectuoso previo y teléfono inválido); Prisma Client generado solo para validación local; `tsc --noEmit` limpio en worker y web; build de producción Next.js limpio (57/57 páginas). Los archivos temporales de `pnpm` fueron retirados. No se contactó 10minutesWebsite, no se ejecutó el botón y no se modificaron datos externos.
 - **Autorización final de Milton:** autorizado explícitamente commit, push y despliegue el 9/8/2026. La ejecución del botón queda separada: el despliegue no inicia por sí mismo ninguna reparación.
 - **Commit local:** `759ca19` (`Reparar enlaces de telefono de Patricia con validacion segura`). El push HTTPS falló porque este Mac no tiene credenciales GitHub disponibles para terminal (`could not read Username`); SSH tampoco tiene llave configurada. Tampoco existe CLI/configuración local de Vercel en este clon. No se modificó producción. Pendiente autenticar GitHub y Vercel en esta Mac o continuar el push/deploy desde un entorno que ya tenga esas sesiones.
+- **Entrega final:** commit definitivo `91ccec5` pusheado a `origin/main`. La integración GitHub→Vercel desplegó automáticamente `auto-articulos-web` a producción: deployment `dpl_ALe7A5FHk6m7QcrRpy6rPTeD1a8A`, estado `READY`, alias `https://auto-articulos-web.vercel.app`. Un primer intento manual creó por error un proyecto Vercel separado llamado `web`; su build falló antes de publicarse por conflicto de dependencias y no alteró el proyecto ni el dominio productivo. Ese proyecto accidental queda pendiente de eliminación administrativa; no tocarlo durante la prueba.
 
 ### Antigravity (Arquitecto Principal del Sistema)
 

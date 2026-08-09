@@ -29,6 +29,11 @@ importante: qué cambió, qué quedó pendiente, qué se rompió.
 - Pendiente después del despliegue: Milton ejecutará una sola vez el botón y
   comprobará los dos accesos de WhatsApp/QR y el botón de llamada del artículo
   `89325`. No generalizar a los demás artículos hasta validar ese resultado.
+- Entrega: commit `91ccec5` pusheado a `main`; Vercel desplegó automáticamente
+  `auto-articulos-web` en `dpl_ALe7A5FHk6m7QcrRpy6rPTeD1a8A` (`READY`).
+  Durante la vinculación manual se creó accidentalmente un proyecto Vercel
+  separado llamado `web`; su build falló y nunca afectó el dominio productivo.
+  Queda pendiente eliminar ese proyecto vacío después de la prueba.
 
 ## Qué es esto
 
