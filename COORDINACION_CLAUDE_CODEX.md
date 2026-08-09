@@ -18,17 +18,16 @@ proyecto; se actúa sobre un ítem solo cuando Milton lo pide explícitamente en
 la conversación activa. Al ejecutar algo de ahí, moverlo a la sección "Hecho"
 de `TO-DO.md` y documentar el cambio real en `HANDOFF.md` como de costumbre.
 
-## Regla obligatoria antes de iniciar cualquier tarea
+## Regla obligatoria antes de iniciar cualquier tarea (OPTIMIZADA PARA MÍNIMO CONSUMO DE TOKENS)
 
 Claude, Codex y Antigravity deben hacer lo siguiente **antes de leer o modificar código**:
 
-1. Leer este archivo completo.
+1. Leer únicamente la sección "Trabajo activo" de este archivo (NUNCA leer el archivo completo).
 2. Ejecutar `git status --short` y `git log -5 --oneline`.
-3. Revisar `HANDOFF.md` y los cambios sin commit relacionados con su tarea.
+3. Revisar únicamente el estado actual de `HANDOFF.md` si es relevante para la tarea.
 4. Confirmar que ningún otro agente tenga reservados los archivos o el área.
 5. Registrar su tarea en "Trabajo activo" antes de editar.
-6. Si existe una reserva que se cruza con la tarea, detenerse y coordinar; no
-   editar, restaurar, formatear, agregar al staging ni desplegar esos archivos.
+6. Si existe una reserva que se cruza con la tarea, detenerse y coordinar.
 
 ## Reglas durante el trabajo
 
@@ -36,13 +35,10 @@ Claude, Codex y Antigravity deben hacer lo siguiente **antes de leer o modificar
 - Una reserva por carpeta incluye todos sus archivos, aunque no estén listados.
 - No usar `git add .` ni `git add -A`; agregar rutas explícitas.
 - No restaurar, borrar ni reformatear cambios que no creó el agente.
-- Antes de hacer push o desplegar, releer este archivo y comprobar que el otro
-  agente no esté desplegando o migrando simultáneamente.
+- Antes de hacer push o desplegar, verificar que no haya otro proceso en curso sin releer documentos completos.
 - No ejecutar pruebas de publicación automática; las realiza el usuario.
-- Toda decisión, cambio, commit, migración, despliegue y pendiente debe quedar
-  documentado en `HANDOFF.md` al cerrar la tarea.
-- Si se descubre trabajo ajeno sin registrar, tratarlo como reservado hasta
-  confirmar con el usuario o con el otro agente.
+- Toda decisión o cambio se documentará en `HANDOFF.md` ÚNICAMENTE cuando Milton lo solicite explícitamente o tras un hito principal.
+- Si se descubre trabajo ajeno sin registrar, tratarlo como reservado hasta confirmar con el usuario o con el otro agente.
 
 ## Trabajo activo
 

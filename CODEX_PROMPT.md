@@ -13,19 +13,7 @@ multi-tenant en producción que automatiza la publicación de artículos en
 está desplegado en Vercel (`https://auto-articulos-web.vercel.app`) con un
 worker corriendo en GitHub Actions.
 
-**Antes de hacer nada, lee completo el archivo `HANDOFF.md` en la raíz del
-repo.** Ese documento es la fuente de verdad: arquitectura, estado actual de
-la base de datos (Supabase, con el patrón de conexión y la lección aprendida
-sobre pooler de sesión vs. transacción), ubicación segura de los secretos,
-modelo de datos, el changelog de la última sesión de trabajo, tareas
-pendientes, y las reglas/preferencias explícitas del usuario que NO se deben
-ignorar (por ejemplo: nunca disparar corridas de prueba de la publicación
-real por iniciativa propia, nunca guardar contraseñas o tokens en archivos
-del repo, nunca usar `git add -A` porque hay un proyecto no relacionado en
-el mismo directorio, siempre correr `tsc --noEmit` antes de commitear, y
-desplegar a Vercel manualmente con
-`cd apps/web && npx vercel --prod --yes` después de cada push porque el
-push por sí solo no dispara el deploy).
+**Trabaja siempre con contexto mínimo.** Revisa únicamente la sección 'Trabajo activo' de `COORDINACION_CLAUDE_CODEX.md` y lee los archivos de código directamente relacionados con la tarea que te pida el usuario. NO leas documentos completos ni historiales largos para ahorrar consumo de tokens.
 
 No asumas nada sobre el estado del código, la base de datos o las
 credenciales que no esté confirmado en `HANDOFF.md` — si algo ahí parece
