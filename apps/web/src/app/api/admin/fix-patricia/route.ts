@@ -1,0 +1,70 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@auto-articulos/db";
+import { getCurrentUserId } from "@/lib/current-user";
+
+export async function POST() {
+  try {
+    // 1. Verificar sesión
+    const sessionUserId = await getCurrentUserId();
+    if (!sessionUserId) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    // 2. Buscar al usuario de Patricia Coy
+    const patriciaUser = await prisma.user.findFirst({
+      where: {
+        email: {
+          contains: "patricia",
+          mode: "insensitive",
+        },
+      },
+    });
+
+    if (!patriciaUser) {
+      return NextResponse.json({ error: "Usuario Patricia Coy no encontrado en el sistema." }, { status: 404 });
+    }
+
+    // 3. Buscar o crear la categoría especial FIX_PATRICIA
+    let category = await prisma.category.findFirst({
+      where: {
+        userId: patriciaUser.id,
+        name: "FIX_PATRICIA",
+      },
+    });
+
+    if (!category) {
+      category = await prisma.category.create({
+        data: {
+          userId: patriciaUser.id,
+          name: "FIX_PATRICIA",
+          externalId: "FIX_PATRICIA",
+        },
+      });
+    }
+
+    // 4. Crear un Run pendiente para gatillar el worker
+    const run = await prisma.run.create({
+      data: {
+        userId: patriciaUser.id,
+        categoryId: category.id,
+        status: "pending",
+        contentLanguage: "es",
+      },
+    });
+
+    // 5. Crear el título para procesar
+    await prisma.title.create({
+      data: {
+        runId: run.id,
+        text: "Reparar marcadores de teléfono (PHONE_NUMBER) en todos los artículos",
+        status: "pending",
+        order: 0,
+      },
+    });
+
+    return NextResponse.json({ ok: true, runId: run.id });
+  } catch (err) {
+    console.error("Error al gatillar reparación de Patricia:", err);
+    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
+  }
+}

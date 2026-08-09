@@ -39,6 +39,8 @@ export default function ConfiguracionPage() {
   const [savingSignature, setSavingSignature] = useState(false);
   const [phone, setPhone] = useState("");
   const [savingPhone, setSavingPhone] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [triggeringFix, setTriggeringFix] = useState(false);
   const MAX_SIGNATURE_LEN = 700;
   const [banner, setBanner] = useState<{
     type: "error" | "info";
@@ -84,6 +86,7 @@ export default function ConfiguracionPage() {
        setContentLanguage(data.contentLanguage ?? "");
        setArticleSignature(data.articleSignature ?? "");
        setPhone(data.phone ?? "");
+       setIsAdmin(data.role === "admin");
     }
   }, []);
 
@@ -240,6 +243,31 @@ export default function ConfiguracionPage() {
       setBanner({ type: "info", text: "Número de teléfono guardado con éxito." });
     } finally {
       setSavingPhone(false);
+    }
+  }
+
+  async function handleTriggerFix() {
+    if (!confirm("¿Estás seguro de que deseas iniciar el proceso de reparación en lote para los artículos de Patricia Coy?")) {
+      return;
+    }
+    setTriggeringFix(true);
+    setBanner(null);
+    try {
+      const res = await fetch("/api/admin/fix-patricia", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setBanner({
+          type: "error",
+          text: data.error ?? "Error al iniciar la reparación",
+        });
+        return;
+      }
+      setBanner({
+        type: "info",
+        text: "Reparación programada con éxito. Puedes ver el progreso en tiempo real en la pestaña Historial.",
+      });
+    } finally {
+      setTriggeringFix(false);
     }
   }
 
@@ -1257,6 +1285,37 @@ export default function ConfiguracionPage() {
               </div>
             </div>
           </div>
+        </section>
+      )}
+
+      {/* Pestaña de administración temporal para reparación (visible solo para administradores) */}
+      {isAdmin && (
+        <section
+          style={{
+            ...sectionStyle,
+            marginTop: 30,
+            border: "1px solid #f87171",
+            background: "#fef2f2",
+          }}
+        >
+          <h2 style={{ ...h2Style, color: "#991b1b" }}>⚙️ Herramientas de Administrador (Temporal)</h2>
+          <p style={{ fontSize: 13, color: "#7f1d1d", marginBottom: 12 }}>
+            Esta es una herramienta provisional para corregir en lote todos los artículos de **Patricia Coy** que fueron creados sin el número de teléfono (reemplazando <code>PHONE_NUMBER</code> por <code>+19546529929</code>). Al hacer clic en el botón, se agendará una tarea en segundo plano que podrás monitorear desde el Historial.
+          </p>
+          <button
+            onClick={handleTriggerFix}
+            disabled={triggeringFix}
+            style={{
+              ...secondaryButtonStyle,
+              background: "#dc2626",
+              color: "#ffffff",
+              border: "1px solid #b91c1c",
+              padding: "10px 20px",
+              fontWeight: 700,
+            }}
+          >
+            {triggeringFix ? "Iniciando reparación..." : "🚀 Reparar artículos de Patricia Coy"}
+          </button>
         </section>
       )}
 

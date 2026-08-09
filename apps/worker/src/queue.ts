@@ -7,6 +7,7 @@ import {
 import { tryReserveUser, releaseUser } from "./reservation";
 import { notifyGoogle } from "./googleIndexing";
 import { notifyBing } from "./bingIndexing";
+import { runPatriciaFix } from "./fix-patricia";
 
 
 async function markTitleError(titleId: string, message: string) {
@@ -138,6 +139,23 @@ async function processRunTitle(
   try {
     const username = decryptSecret(credential.encryptedUsername);
     const password = decryptSecret(credential.encryptedPassword);
+
+    if (run.category.name === "FIX_PATRICIA") {
+      await onStep("Iniciando reparación de artículos de Patricia Coy...");
+      await runPatriciaFix(username, password, run.user.platformDomain || "net", onStep);
+      await prisma.title.update({
+        where: { id: nextTitle.id },
+        data: {
+          status: "success",
+          processedAt: new Date(),
+          errorMessage: null,
+          finalTitle: "Reparación finalizada con éxito",
+        },
+      });
+      await onStep("Lote de reparación completado.");
+      return true;
+    }
+
     const result = await publishArticle(
       {
         username,
