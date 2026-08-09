@@ -64,6 +64,16 @@ HANDOFF, solo alimenta ideas hacia él).
   un espacio nuevo donde el usuario suba: (1) su logo, y (2) una foto suya —
   ambos para que el generador sepa qué logo y qué imagen de la persona usar
   al armar cada infografía.
+- **(9/8/2026)** Bug reportado: Antonio Aguirre tiene DOS cuentas separadas
+  de Auto Artículos (dos logins/emails distintos, cada una con sus propias
+  credenciales guardadas de 10minutesWebsite) — una para su contenido en
+  español y otra para su contenido en inglés. El sistema debería sincronizar
+  categorías y publicar de forma independiente en cada cuenta según cuál esté
+  en uso, pero en la práctica solo revisa/sincroniza las categorías de la
+  cuenta en español y termina publicando ahí, ignorando la cuenta en inglés.
+  Causa raíz sin diagnosticar todavía — investigar con evidencia real (logs
+  de sincronización de categorías y de publicación de ambas cuentas) antes de
+  asumir dónde está el problema.
 
 ## Hecho
 
