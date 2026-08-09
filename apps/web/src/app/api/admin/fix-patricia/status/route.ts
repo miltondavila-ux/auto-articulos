@@ -127,6 +127,29 @@ export async function GET() {
       };
     });
 
+    const repairedHistoryMap = new Map<string, { title: string; url: string; date: Date }>();
+    for (const historyRun of historyRuns) {
+      for (const t of historyRun.titles) {
+        for (const event of t.events) {
+          const repairMatch = event.message.match(
+            /✓\s*¡?Reparado con éxito!?\s*\(\d+ de \d+\):\s*(.*?)\s*—\s*Enlace:\s*(.+)/i,
+          );
+          if (repairMatch) {
+            const titleStr = repairMatch[1].trim();
+            const urlStr = repairMatch[2].trim();
+            repairedHistoryMap.set(urlStr, {
+              title: titleStr,
+              url: urlStr,
+              date: event.createdAt,
+            });
+          }
+        }
+      }
+    }
+    const repairedHistory = Array.from(repairedHistoryMap.values()).sort(
+      (a, b) => b.date.getTime() - a.date.getTime()
+    );
+
     return NextResponse.json({
       active: true,
       status: run.status,
@@ -135,8 +158,9 @@ export async function GET() {
       total,
       processed,
       repaired,
-      logs: logs.slice(-15), // Devolver últimos 15 logs para el panel rápido
+      logs: logs.slice(-15),
       history,
+      repairedHistory,
     });
   } catch (err) {
     console.error("Error al obtener estado de reparación de Patricia:", err);

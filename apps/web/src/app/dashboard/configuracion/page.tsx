@@ -57,6 +57,7 @@ export default function ConfiguracionPage() {
       repairedCount: number;
       stopPoint: string | null;
     }[];
+    repairedHistory?: { title: string; url: string }[];
   } | null>(null);
   const MAX_SIGNATURE_LEN = 700;
   const [banner, setBanner] = useState<{
@@ -1516,6 +1517,46 @@ export default function ConfiguracionPage() {
                   ))}
                 </div>
               ) : null}
+
+              {/* Persistent History of Repaired Articles List */}
+              {fixStatus && fixStatus.repairedHistory && fixStatus.repairedHistory.length > 0 && (
+                <div
+                  style={{
+                    marginTop: 16,
+                    paddingTop: 16,
+                    borderTop: "1px solid #fee2e2",
+                  }}
+                >
+                  <h3 style={{ fontSize: 13, fontWeight: 700, color: "#991b1b", margin: "0 0 8px 0" }}>
+                    📜 Artículos Reparados en Total ({fixStatus.repairedHistory.length}):
+                  </h3>
+                  <div
+                    style={{
+                      maxHeight: 200,
+                      overflowY: "auto",
+                      background: "#fef2f2",
+                      border: "1px solid #fee2e2",
+                      borderRadius: 6,
+                      padding: 8,
+                    }}
+                  >
+                    <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12 }}>
+                      {fixStatus.repairedHistory.map((art, idx) => (
+                        <li key={idx} style={{ marginBottom: 4 }}>
+                          <a
+                            href={art.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ color: "#2563eb", textDecoration: "underline", fontWeight: 600 }}
+                          >
+                            {art.title}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </section>
