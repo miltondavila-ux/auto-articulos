@@ -142,6 +142,7 @@ export async function GET() {
         alreadyCorrectCount,
         totalReviewed: batchArticles.length,
         articles: batchArticles,
+        logs: messages,
         stopPoint: stopPoint ?? null,
       };
     });

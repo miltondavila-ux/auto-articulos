@@ -58,6 +58,7 @@ export default function ConfiguracionPage() {
       alreadyCorrectCount: number;
       totalReviewed: number;
       articles: { title: string; url: string; status: "repaired" | "already_correct" }[];
+      logs: string[];
       stopPoint: string | null;
     }[];
     repairedHistory?: { title: string; url: string }[];
@@ -1575,6 +1576,34 @@ export default function ConfiguracionPage() {
                             {batch.stopPoint ? (
                               <div style={{ color: "#b91c1c", marginTop: 6, fontSize: 11, fontWeight: 500 }}>
                                 🏁 Detenido: {batch.stopPoint}
+                              </div>
+                            ) : null}
+
+                            {/* Logs de este lote específico */}
+                            {batch.logs && batch.logs.length > 0 ? (
+                              <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px dashed #fee2e2" }}>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: "#7f1d1d", marginBottom: 4 }}>
+                                  📋 Registro de avances (Log de la tanda):
+                                </div>
+                                <div
+                                  style={{
+                                    background: "#1e1e2e",
+                                    color: "#cdd6f4",
+                                    fontFamily: "monospace",
+                                    fontSize: 10,
+                                    padding: 8,
+                                    borderRadius: 4,
+                                    maxHeight: 120,
+                                    overflowY: "auto",
+                                    lineHeight: 1.4,
+                                  }}
+                                >
+                                  {batch.logs.map((log, idx) => (
+                                    <div key={idx} style={{ marginBottom: 2, whiteSpace: "pre-wrap" }}>
+                                      {log}
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
                             ) : null}
                           </div>
