@@ -22,7 +22,7 @@ export default async function DashboardLayout({
       }}
     >
       <style>{`
-        @media (min-width: 700px) {
+        @media (min-width: 1024px) {
           .mobile-notice { display: none; }
           .dashboard-main { padding: 32px 40px !important; }
         }
@@ -33,7 +33,7 @@ export default async function DashboardLayout({
          * (truco clásico de "tabla responsive" solo con CSS, sin duplicar
          * la lógica/estado de cada fila).
          */
-        @media (max-width: 699px) {
+        @media (max-width: 1023px) {
           table.responsive-table {
             min-width: 0 !important;
             width: 100% !important;

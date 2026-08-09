@@ -121,13 +121,13 @@ HANDOFF, solo alimenta ideas hacia él).
   - El objetivo es liberar "oportunidades de descanibalización" y que todos
     los artículos existentes (no solo los nuevos) aporten de verdad a la
     indexación y el posicionamiento, en vez de restarse entre ellos.
-- **(9/8/2026)** Bug reportado, de NUEVO (ya se había tocado este tema antes,
-  ver commit "Menú mobile como dropdown y tablas sin scroll horizontal"): el
-  menú principal en iPad no es responsive — no muestra el dropdown que sí
-  aparece correctamente en teléfonos convencionales. Revisar el punto de
-  quiebre (breakpoint) usado para activar el menú dropdown: probablemente
-  está pensado solo para anchos de teléfono y no cubre el ancho de iPad.
-
 ## Hecho
 
-_(vacío por ahora)_
+- **(9/8/2026)** Bug del menú en iPad resuelto: se cambió el breakpoint de
+  700px a 1024px en DashboardNav.tsx y dashboard/layout.tsx, y se agregó
+  `width=device-width, initial-scale=1` al viewport. Ahora iPad portrait
+  (768px) y landscape (1024px) muestran el dropdown, que era el
+  comportamiento esperado. Ver cambios en:
+  - `apps/web/src/app/layout.tsx`
+  - `apps/web/src/components/DashboardNav.tsx`
+  - `apps/web/src/app/dashboard/layout.tsx`

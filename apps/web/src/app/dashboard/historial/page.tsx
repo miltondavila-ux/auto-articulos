@@ -138,7 +138,7 @@ export default function HistorialPage() {
           <HistoryEntry
             key={run.id}
             run={run}
-            defaultOpen={index === 0}
+            defaultOpen={false}
             onRetried={loadRuns}
           />
         ))}
@@ -301,7 +301,7 @@ function SocialOpportunitiesHistory() {
           {opportunities.map((opp, idx) => (
             <details
               key={opp.id}
-              open={idx === 0}
+              open={false}
               style={{
                 background: opp.status === "error" ? "#fff8f8" : "#f7f8fa",
                 border: opp.status === "error" ? "1px solid #fecaca" : "1px solid #dfe3e8",

@@ -50,7 +50,7 @@ export default function DashboardNav() {
   return (
     <nav style={{ position: "relative", marginTop: 20 }}>
       <style>{`
-        @media (min-width: 700px) {
+        @media (min-width: 1024px) {
           .nav-mobile-toggle { display: none !important; }
           .nav-mobile-menu { display: none !important; }
           .nav-desktop-row { display: flex !important; }
