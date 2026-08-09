@@ -41,11 +41,31 @@ export default function ConfiguracionPage() {
   const [savingPhone, setSavingPhone] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [triggeringFix, setTriggeringFix] = useState(false);
+  const [fixStatus, setFixStatus] = useState<{
+    active: boolean;
+    status?: string;
+    total?: number;
+    processed?: number;
+    repaired?: { title: string; url: string }[];
+    logs?: string[];
+  } | null>(null);
   const MAX_SIGNATURE_LEN = 700;
   const [banner, setBanner] = useState<{
     type: "error" | "info";
     text: string;
   } | null>(null);
+
+  const loadFixStatus = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/fix-patricia/status");
+      if (res.ok) {
+        const data = await res.json();
+        setFixStatus(data);
+      }
+    } catch (e) {
+      console.error("Error al cargar estado de reparacion:", e);
+    }
+  }, []);
 
   const syncInProgress =
     lastSyncStatus === "pending" || lastSyncStatus === "running";
@@ -94,7 +114,14 @@ export default function ConfiguracionPage() {
     loadCredentialsStatus();
     loadCategories();
     loadLanguages();
-  }, [loadCredentialsStatus, loadCategories, loadLanguages]);
+    loadFixStatus();
+  }, [loadCredentialsStatus, loadCategories, loadLanguages, loadFixStatus]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const interval = setInterval(loadFixStatus, 3000);
+    return () => clearInterval(interval);
+  }, [isAdmin, loadFixStatus]);
 
   useEffect(() => {
     if (!syncInProgress) return;
@@ -1316,6 +1343,125 @@ export default function ConfiguracionPage() {
           >
             {triggeringFix ? "Iniciando reparación..." : "🚀 Reparar artículos de Patricia Coy"}
           </button>
+
+          {fixStatus && fixStatus.active && (
+            <div
+              style={{
+                marginTop: 20,
+                padding: 16,
+                borderRadius: 8,
+                background: "#ffffff",
+                border: "1px solid #fca5a5",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 8,
+                }}
+              >
+                <span style={{ fontWeight: 700, color: "#991b1b", fontSize: 13 }}>
+                  Estado: {fixStatus.status === "running" ? "⏳ Procesando..." : fixStatus.status === "success" ? "✅ Completado" : `⚠️ ${fixStatus.status}`}
+                </span>
+                {fixStatus.total ? (
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#7f1d1d" }}>
+                    Progreso: {fixStatus.processed} / {fixStatus.total} ({Math.round(((fixStatus.processed || 0) / (fixStatus.total || 1)) * 100)}%)
+                  </span>
+                ) : (
+                  <span style={{ fontSize: 12, color: "#64748b" }}>Cargando información del lote...</span>
+                )}
+              </div>
+
+              {/* Progress Bar */}
+              {fixStatus.total ? (
+                <div
+                  style={{
+                    width: "100%",
+                    height: 10,
+                    background: "#fee2e2",
+                    borderRadius: 999,
+                    overflow: "hidden",
+                    marginBottom: 16,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${Math.round(((fixStatus.processed || 0) / (fixStatus.total || 1)) * 100)}%`,
+                      height: "100%",
+                      background: "#ef4444",
+                      borderRadius: 999,
+                      transition: "width 0.3s ease",
+                    }}
+                  />
+                </div>
+              ) : null}
+
+              {/* Repaired Articles List */}
+              {fixStatus.repaired && fixStatus.repaired.length > 0 ? (
+                <div style={{ marginBottom: 16 }}>
+                  <h3 style={{ fontSize: 12, fontWeight: 700, color: "#7f1d1d", margin: "0 0 6px 0" }}>
+                    🔗 Artículos reparados con éxito:
+                  </h3>
+                  <div
+                    style={{
+                      maxHeight: 150,
+                      overflowY: "auto",
+                      background: "#fef2f2",
+                      border: "1px solid #fee2e2",
+                      borderRadius: 6,
+                      padding: 8,
+                    }}
+                  >
+                    <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12 }}>
+                      {fixStatus.repaired.map((art, idx) => (
+                        <li key={idx} style={{ marginBottom: 4 }}>
+                          <a
+                            href={art.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ color: "#2563eb", textDecoration: "underline", fontWeight: 600 }}
+                          >
+                            {art.title}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Live console logs */}
+              {fixStatus.logs && fixStatus.logs.length > 0 ? (
+                <div>
+                  <h3 style={{ fontSize: 12, fontWeight: 700, color: "#7f1d1d", margin: "0 0 6px 0" }}>
+                    📋 Consola de avance en tiempo real:
+                  </h3>
+                  <div
+                    style={{
+                      background: "#1e1e2e",
+                      color: "#cdd6f4",
+                      fontFamily: "monospace",
+                      fontSize: 11,
+                      padding: 10,
+                      borderRadius: 6,
+                      maxHeight: 180,
+                      overflowY: "auto",
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    {fixStatus.logs.map((log, idx) => (
+                      <div key={idx} style={{ marginBottom: 2, whiteSpace: "pre-wrap" }}>
+                        {log}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          )}
         </section>
       )}
 
