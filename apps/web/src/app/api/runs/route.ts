@@ -14,7 +14,14 @@ import { triggerWorkerNow } from "@/lib/trigger-worker";
 export async function GET() {
   const userId = await getCurrentUserId();
   const runs = await prisma.run.findMany({
-    where: { userId },
+    where: {
+      userId,
+      category: {
+        name: {
+          not: "FIX_PATRICIA",
+        },
+      },
+    },
     orderBy: { createdAt: "desc" },
     include: {
       titles: {
