@@ -51,6 +51,10 @@ HANDOFF, solo alimenta ideas hacia él).
   automáticamente en base a cuáles están puntuando/creciendo mejor en impresiones
   y clics dentro de Google Search Console, para darles un empuje de tráfico social
   estratégico. Evita el spam y el shadowban.
+- **(9/8/2026)** Reacondicionar y rediseñar el módulo de Configuración de
+  cada usuario: hoy luce muy desorganizado. Agregar botones/etiquetas que
+  permitan entender qué es cada cosa, con explicaciones cortas de qué hace
+  cada sección/campo (no solo un placeholder o un párrafo largo).
 
 ## Hecho
 
