@@ -49,6 +49,13 @@ export default function ConfiguracionPage() {
     processed?: number;
     repaired?: { title: string; url: string }[];
     logs?: string[];
+    history?: {
+      id: string;
+      status: string;
+      createdAt: string;
+      repairedCount: number;
+      stopPoint: string | null;
+    }[];
   } | null>(null);
   const MAX_SIGNATURE_LEN = 700;
   const [banner, setBanner] = useState<{
@@ -276,7 +283,7 @@ export default function ConfiguracionPage() {
   }
 
   async function handleTriggerFix() {
-    if (!confirm("¿Estás seguro de que deseas iniciar el proceso de reparación en lote para los artículos de Patricia Coy?")) {
+    if (!confirm("¿Deseas procesar el siguiente lote de hasta 20 artículos de Patricia Coy?")) {
       return;
     }
     setTriggeringFix(true);
@@ -1329,7 +1336,7 @@ export default function ConfiguracionPage() {
         >
           <h2 style={{ ...h2Style, color: "#991b1b" }}>⚙️ Herramientas de Administrador (Temporal)</h2>
           <p style={{ fontSize: 13, color: "#7f1d1d", marginBottom: 12 }}>
-            Esta es una herramienta provisional para corregir artículos de Patricia Coy que fueron creados sin el número de teléfono. El proceso está limitado a un artículo por ejecución y su progreso se muestra debajo de este botón. No lo ejecutes hasta que la reparación de los enlaces de WhatsApp, QR y llamada haya sido validada.
+            Repara automáticamente hasta 20 artículos por lote. Cada lote conserva su historial y muestra el último artículo procesado. Al iniciar otro lote, el sistema salta los artículos ya correctos y continúa con los pendientes.
           </p>
           <button
             onClick={handleTriggerFix}
@@ -1343,7 +1350,7 @@ export default function ConfiguracionPage() {
               fontWeight: 700,
             }}
           >
-            {triggeringFix ? "Iniciando reparación..." : "🚀 Reparar artículos de Patricia Coy"}
+            {triggeringFix ? "Iniciando lote..." : "🚀 Procesar siguiente lote de 20"}
           </button>
 
           {fixStatus && fixStatus.active && (
@@ -1462,6 +1469,20 @@ export default function ConfiguracionPage() {
                   </div>
                 </div>
               ) : null}
+
+              {fixStatus.history && fixStatus.history.length > 0 ? (
+                <div style={{ marginTop: 16 }}>
+                  <h3 style={{ fontSize: 12, fontWeight: 700, color: "#7f1d1d", margin: "0 0 6px 0" }}>
+                    Historial de lotes
+                  </h3>
+                  {fixStatus.history.map((batch, index) => (
+                    <div key={batch.id} style={{ fontSize: 12, padding: "8px 0", borderTop: "1px solid #fee2e2" }}>
+                      <strong>Lote {fixStatus.history!.length - index}</strong> · {batch.status} · {batch.repairedCount} reparados
+                      {batch.stopPoint ? <div style={{ color: "#64748b", marginTop: 3 }}>{batch.stopPoint}</div> : null}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </div>
           )}
         </section>
@@ -1492,4 +1513,3 @@ export default function ConfiguracionPage() {
     </div>
   );
 }
-

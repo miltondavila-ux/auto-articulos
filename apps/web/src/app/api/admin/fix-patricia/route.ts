@@ -29,6 +29,21 @@ export async function POST() {
       return NextResponse.json({ error: "Usuario Patricia Coy no encontrado en el sistema." }, { status: 404 });
     }
 
+    const activeRun = await prisma.run.findFirst({
+      where: {
+        userId: patriciaUser.id,
+        status: { in: ["pending", "running"] },
+        category: { name: "FIX_PATRICIA" },
+      },
+      select: { id: true },
+    });
+    if (activeRun) {
+      return NextResponse.json(
+        { error: "Ya existe un lote de Patricia en curso. Espera a que termine antes de continuar." },
+        { status: 409 },
+      );
+    }
+
     // 3. Buscar o crear la categoría especial FIX_PATRICIA
     let category = await prisma.category.findFirst({
       where: {
@@ -61,7 +76,7 @@ export async function POST() {
     await prisma.title.create({
       data: {
         runId: run.id,
-        text: "Reparar marcadores de teléfono (PHONE_NUMBER) en todos los artículos",
+        text: "Reparar el siguiente lote de hasta 20 artículos de Patricia Coy",
         status: "pending",
         order: 0,
       },

@@ -47,7 +47,7 @@ export async function GET() {
     const events = title.events;
 
     // 2. Parsear los logs para extraer información estructurada
-    let total = 0;
+    let total = 20;
     let processed = 0;
     const repaired: { title: string; url: string }[] = [];
     const logs: string[] = [];
@@ -90,10 +90,41 @@ export async function GET() {
       }
     }
 
-    // Si terminó con éxito, processed = total
-    if (run.status === "success" && total > 0) {
-      processed = total;
-    }
+    processed = repaired.length;
+
+    const historyRuns = await prisma.run.findMany({
+      where: {
+        category: { name: "FIX_PATRICIA" },
+        user: { email: { contains: "patricia", mode: "insensitive" } },
+      },
+      orderBy: { createdAt: "desc" },
+      include: {
+        titles: {
+          include: { events: { orderBy: { createdAt: "asc" } } },
+        },
+      },
+    });
+    const history = historyRuns.map((historyRun) => {
+      const messages = historyRun.titles.flatMap((item) =>
+        item.events.map((event) => event.message),
+      );
+      const repairedCount = messages.filter((message) =>
+        /✓\s*¡?Reparado con éxito/i.test(message),
+      ).length;
+      const stopPoint = [...messages]
+        .reverse()
+        .find((message) =>
+          /^(PUNTO DE PARADA|SIN PENDIENTES|Error general)/i.test(message),
+        );
+      return {
+        id: historyRun.id,
+        status: historyRun.status,
+        createdAt: historyRun.createdAt,
+        finishedAt: historyRun.finishedAt,
+        repairedCount,
+        stopPoint: stopPoint ?? null,
+      };
+    });
 
     return NextResponse.json({
       active: true,
@@ -104,6 +135,7 @@ export async function GET() {
       processed,
       repaired,
       logs: logs.slice(-15), // Devolver últimos 15 logs para el panel rápido
+      history,
     });
   } catch (err) {
     console.error("Error al obtener estado de reparación de Patricia:", err);

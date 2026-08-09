@@ -18,11 +18,11 @@ export async function runPatriciaFix(
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
 
-  // Límite de prueba inicial: exactamente 1 artículo
-  const MAX_REPAIRS_PER_RUN = 1;
-  const TARGET_ARTICLE_ID = "89325";
+  const MAX_REPAIRS_PER_RUN = 20;
   let successCount = 0;
   let skippedCount = 0;
+  let errorCount = 0;
+  let lastRepaired: { id: string; title: string } | null = null;
 
   try {
     // 1. Iniciar sesión
@@ -47,8 +47,8 @@ export async function runPatriciaFix(
     // Recorreremos las páginas de una en una y repararemos al vuelo los artículos
     while (hasNextPage && successCount < MAX_REPAIRS_PER_RUN) {
       await onStep(`Abriendo página ${pageNum} de la lista de artículos...`);
-      await page.goto(`${baseUrl}/dashboard/user_buyer_seller_articles.php?page=${pageNum}`, { waitUntil: "domcontentloaded" }).catch(async () => {
-        await page.goto(`${baseUrl}/dashboard/user_buyer_seller_articles.php`, { waitUntil: "domcontentloaded" });
+      await page.goto(`${baseUrl}/dashboard/user_buyer_seller_articles.php`, {
+        waitUntil: "domcontentloaded",
       });
 
       // Esperar a que la tabla cargue y el indicador "Loading" desaparezca
@@ -117,8 +117,6 @@ export async function runPatriciaFix(
         const article = pageArticles[idx];
         const progressPrefix = `[Art. ${article.id}]`;
 
-        if (article.id !== TARGET_ARTICLE_ID) continue;
-
         try {
           await page.goto(article.editUrl, { waitUntil: "domcontentloaded" });
 
@@ -136,11 +134,20 @@ export async function runPatriciaFix(
 
           if (
             contentHtml.includes("PHONE_NUMBER") ||
+            contentHtml.includes("NUMERO-WHATSAPP") ||
             contentHtml.includes("19546529929")
           ) {
             await onStep(`${progressPrefix} Reparando: "${article.title}"...`);
 
             const repaired = replacePhonePlaceholders(contentHtml, "+19546529929");
+            if (
+              repaired.html === contentHtml &&
+              !contentHtml.includes("PHONE_NUMBER") &&
+              !contentHtml.includes("NUMERO-WHATSAPP")
+            ) {
+              skippedCount++;
+              continue;
+            }
             if (repaired.replacements.whatsapp < 2 || repaired.replacements.call < 1) {
               throw new Error(
                 `Validación abortada: se esperaban al menos 2 enlaces de WhatsApp/QR y 1 de llamada; se detectaron ${repaired.replacements.whatsapp} y ${repaired.replacements.call}.`,
@@ -185,6 +192,7 @@ export async function runPatriciaFix(
                 );
               }
               successCount++;
+              lastRepaired = { id: article.id, title: article.title };
               await onStep(`✓ ¡Reparado con éxito! (${successCount} de ${MAX_REPAIRS_PER_RUN}): ${article.title} — Enlace: ${article.publicUrl || article.editUrl}`);
             } else {
               await onStep(`${progressPrefix} Error: Botón Guardar no encontrado.`);
@@ -196,14 +204,14 @@ export async function runPatriciaFix(
             }
           }
         } catch (articleErr) {
+          errorCount++;
           await onStep(`${progressPrefix} Error en artículo "${article.title}": ${articleErr instanceof Error ? articleErr.message : String(articleErr)}`);
         }
       }
 
       // Si ya alcanzamos el límite de reparación, terminamos el loop
       if (successCount >= MAX_REPAIRS_PER_RUN) {
-        await onStep(`\nLímite de prueba alcanzado: ${successCount} artículo reparado con éxito.`);
-        await onStep("El proceso se ha completado de forma controlada. Revisa el artículo reparado arriba para validar el resultado.");
+        await onStep(`\nLímite del lote alcanzado: ${successCount} artículos reparados.`);
         break;
       }
 
@@ -233,11 +241,20 @@ export async function runPatriciaFix(
       }
     }
 
-    if (successCount === 0) {
-      throw new Error(`No se pudo reparar el artículo objetivo ${TARGET_ARTICLE_ID}.`);
+    if (lastRepaired) {
+      await onStep(
+        `PUNTO DE PARADA: artículo ${lastRepaired.id} — ${lastRepaired.title}. El próximo lote saltará los artículos correctos y continuará con el siguiente pendiente.`,
+      );
+    } else if (errorCount === 0) {
+      await onStep("SIN PENDIENTES: no se encontraron más artículos que requieran esta reparación.");
     }
 
-    await onStep(`\n🎉 PROCESO COMPLETADO: ${successCount} artículos corregidos, ${skippedCount} ya estaban corregidos.`);
+    await onStep(`\nLOTE COMPLETADO: ${successCount} reparados, ${skippedCount} ya correctos, ${errorCount} con error.`);
+    if (errorCount > 0) {
+      throw new Error(
+        `El lote terminó con ${errorCount} artículo(s) que requieren revisión; los cambios confirmados se conservaron.`,
+      );
+    }
 
   } catch (err) {
     await onStep(`Error general: ${err instanceof Error ? err.message : String(err)}`);

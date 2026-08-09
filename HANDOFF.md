@@ -46,6 +46,19 @@ importante: qué cambió, qué quedó pendiente, qué se rompió.
   funcionan. Prueba individual cerrada. La reparación del resto requiere una
   nueva etapa explícita; no ejecutar masivamente con el límite actual de un ID.
 
+### Lotes reanudables de 20 (segunda etapa)
+
+- Cada orden crea un `Run` auditable y modifica como máximo 20 artículos. El
+  robot reescanea la lista, salta los artículos ya correctos y continúa con el
+  primer pendiente; no necesita migración para conservar el punto de avance.
+- Los eventos guardan artículos reparados, errores, resumen y `PUNTO DE
+  PARADA`; Configuración muestra el historial completo de lotes.
+- La API rechaza una nueva orden si otro lote sigue activo.
+- `FIX_PATRICIA` no usa los tres reintentos automáticos normales: cualquier
+  error detiene el lote tras el primer intento, conservando lo ya corregido.
+- Validación: TypeScript limpio en worker/web y `git diff --check` limpio. No
+  se ejecutaron lotes reales durante el desarrollo.
+
 ## Qué es esto
 
 "Auto Artículos" es un sistema multi-tenant que automatiza la publicación de
