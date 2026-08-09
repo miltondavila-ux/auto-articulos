@@ -1364,7 +1364,7 @@ export default function ConfiguracionPage() {
                 }}
               >
                 <span style={{ fontWeight: 700, color: "#991b1b", fontSize: 13 }}>
-                  Estado: {fixStatus.status === "running" ? "⏳ Procesando..." : fixStatus.status === "success" ? "✅ Completado" : `⚠️ ${fixStatus.status}`}
+                  Estado: {fixStatus.status === "running" ? "⏳ Procesando..." : fixStatus.status === "pending" ? "⏳ En cola (Iniciando robot...)" : fixStatus.status === "success" ? "✅ Completado" : `⚠️ ${fixStatus.status}`}
                 </span>
                 {fixStatus.total ? (
                   <span style={{ fontSize: 12, fontWeight: 700, color: "#7f1d1d" }}>
