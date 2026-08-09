@@ -1360,7 +1360,7 @@ export default function ConfiguracionPage() {
         >
           <h2 style={{ ...h2Style, color: "#991b1b" }}>⚙️ Herramientas de Administrador (Temporal)</h2>
           <p style={{ fontSize: 13, color: "#7f1d1d", marginBottom: 12 }}>
-            Repara hasta 10 artículos por lote, completando cada artículo antes de abrir el siguiente.
+            Repara hasta 20 artículos por lote, completando cada artículo antes de abrir el siguiente.
           </p>
           <button
             onClick={handleTriggerFix}
@@ -1374,7 +1374,7 @@ export default function ConfiguracionPage() {
               fontWeight: 700,
             }}
           >
-            {triggeringFix ? "Iniciando lote..." : "🚀 Procesar siguiente lote de 10"}
+            {triggeringFix ? "Iniciando lote..." : "🚀 Procesar siguiente lote de 20"}
           </button>
           <button
             onClick={handleClearFixHistory}
