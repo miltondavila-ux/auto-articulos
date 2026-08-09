@@ -84,7 +84,15 @@ async function processRunTitle(
   });
 
   if (!nextTitle) {
-    // Ya no quedan títulos pendientes: el lote terminó. Si alguno quedó en
+    // Si todavía hay títulos procesándose en otros lanes, no finalizamos el run
+    const processingCount = await prisma.title.count({
+      where: { runId: run.id, status: "processing" },
+    });
+    if (processingCount > 0) {
+      return false;
+    }
+
+    // Ya no quedan títulos pendientes ni en proceso: el lote terminó. Si alguno quedó en
     // "error", el run pasa a "halted" — no porque se haya detenido a mitad
     // de camino (ya se procesaron todos los que se podían), sino para que
     // quede a la espera de que el usuario decida si reintenta esos títulos
