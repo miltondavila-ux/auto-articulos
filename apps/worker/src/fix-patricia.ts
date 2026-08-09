@@ -157,36 +157,51 @@ export async function runPatriciaFix(
             processedCount++;
             contentHtml = repaired.html;
 
-            // Escribir el nuevo contenido tanto en el textarea original como en TinyMCE si está presente
+            // Escribir el nuevo contenido en TODOS los textareas compatibles y en TODOS los editores TinyMCE
             await page.evaluate(({ val }) => {
-              const el = document.querySelector('textarea[name="contentes"], textarea[name="content"]') as HTMLTextAreaElement;
-              const tiny = (window as any).tinyMCE;
-              if (tiny && el) {
-                const editors = Array.isArray(tiny.editors) ? tiny.editors : [];
-                const editor = editors.find((candidate: any) =>
-                  candidate.targetElm === el ||
-                  (typeof candidate.getElement === "function" && candidate.getElement() === el)
-                ) || tiny.activeEditor;
-                if (editor) {
-                  editor.setContent(val);
-                  if (typeof editor.save === "function") editor.save();
+              const textareas = document.querySelectorAll('textarea');
+              textareas.forEach((ta) => {
+                const name = ta.getAttribute('name') || '';
+                const id = ta.getAttribute('id') || '';
+                if (name === 'contentes' || name === 'content' || id === 'contentes' || id === 'content') {
+                  (ta as HTMLTextAreaElement).value = val;
+                  ta.dispatchEvent(new Event('input', { bubbles: true }));
+                  ta.dispatchEvent(new Event('change', { bubbles: true }));
                 }
-              }
-              // El textarea es el valor enviado por el formulario. Se fuerza
-              // al final para que ningún editor vuelva a poner el HTML viejo.
-              if (el) {
-                el.value = val;
-                el.dispatchEvent(new Event("input", { bubbles: true }));
-                el.dispatchEvent(new Event("change", { bubbles: true }));
+              });
+
+              const tiny = (window as any).tinyMCE;
+              if (tiny) {
+                const editors = Array.isArray(tiny.editors) ? tiny.editors : [];
+                editors.forEach((editor: any) => {
+                  if (editor && typeof editor.setContent === 'function') {
+                    editor.setContent(val);
+                    if (typeof editor.save === 'function') editor.save();
+                  }
+                });
+                if (tiny.activeEditor && typeof tiny.activeEditor.setContent === 'function') {
+                  tiny.activeEditor.setContent(val);
+                  if (typeof tiny.activeEditor.save === 'function') tiny.activeEditor.save();
+                }
+                if (typeof tiny.triggerSave === 'function') {
+                  tiny.triggerSave();
+                }
               }
             }, { val: contentHtml });
 
-            // Clic en Guardar
+            // Clic en Guardar y esperar a que 10minutesWebsite procese el formulario antes de recargar
             const saveBtn = page.getByRole("button", { name: /Guardar cambios|Save changes|Guardar/i }).first();
             if (await saveBtn.isVisible()) {
               await onStep(`${progressPrefix} Contenido corregido. Guardando...`);
-              await saveBtn.click();
-              await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
+              
+              await Promise.all([
+                page.waitForNavigation({ waitUntil: "domcontentloaded", timeout: 15000 }).catch(() => {}),
+                saveBtn.click(),
+              ]);
+
+              // Pausa de seguridad para asegurar que el servidor de 10minutesWebsite guardó en BD
+              await page.waitForTimeout(3000);
+
               await onStep(`${progressPrefix} Guardado enviado. Verificando el contenido persistido...`);
               await page.goto(article.editUrl, { waitUntil: "domcontentloaded" });
               const savedTextarea = page

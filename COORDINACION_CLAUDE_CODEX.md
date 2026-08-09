@@ -46,12 +46,17 @@ Claude, Codex y Antigravity deben hacer lo siguiente **antes de leer o modificar
 
 ## Trabajo activo
 
-### Antigravity — pruebas activas de Patricia Coy
+### Antigravity — reparación de Patricia Coy (lotes reanudables)
 
-- **Estado:** `ACTIVO — PRUEBAS EN PRODUCCIÓN` (9/8/2026, indicado por Milton).
-- **Responsable actual:** Antigravity de Google, coordinado directamente con Milton.
-- **Prueba en curso:** lote de hasta 20 artículos de Patricia Coy; cada artículo debe abrirse, corregirse, guardarse, verificarse y registrarse antes de buscar el siguiente.
-- **Regla de coordinación:** Codex y Claude no deben iniciar workers, cancelar corridas, borrar historial ni modificar el reparador Patricia mientras Antigravity realiza estas pruebas, salvo instrucción explícita posterior de Milton.
+- **Estado:** `EN DESARROLLO — REPARACIÓN PATRICIA COY` (9/8/2026).
+- **Rol:** Arquitecto de Software y Desarrollador Principal en Google Antigravity.
+- **Reserva de archivos:**
+  - `apps/worker/src/fix-patricia.ts`
+  - `apps/worker/src/phonePlaceholders.ts`
+  - `apps/web/src/app/api/admin/fix-patricia/**`
+  - `HANDOFF.md`
+  - `COORDINACION_CLAUDE_CODEX.md`
+- **Tarea:** Investigar y solucionar la causa por la que la reparación de Patricia Coy falla o revierte los cambios en el guardado de 10minutesWebsite (asegurar persistencia del HTML en TinyMCE + textarea, paginación estable y verificación estricta sin bucles repetidos).
 
 ### Codex — auditoría del arreglo de Patricia Coy
 

@@ -55,10 +55,12 @@ importante: qué cambió, qué quedó pendiente, qué se rompió.
 
 ### Lotes reanudables de 20 (segunda etapa)
 
-- **Estado vigente (9/8/2026):** commit `a497197` y despliegue de producción
-  `dpl_Bpz8n7aFB6uFNBioqhtquwWVf4Ug` (`READY`). Los workers de pruebas
-  anteriores fueron cancelados y Milton borró el historial. No hay lote
-  activo; la siguiente prueba debe ejecutar `a497197` o posterior.
+- **Diagnóstico y solución de persistencia (9/8/2026, Antigravity):**
+  - Causa raíz identificada del fallo en la reparación: Al hacer clic en "Guardar cambios", TinyMCE ejecutaba `triggerSave()` y sobreescribía el textarea con el HTML viejo almacenado en el iframe del editor no sincronizado. Además, el script ejecutaba `page.goto(article.editUrl)` inmediatamente tras el clic, abortando la petición POST del formulario en `10minutesWebsite` antes de que el servidor guardara en su BD.
+  - Solución aplicada en `apps/worker/src/fix-patricia.ts`:
+    1. Se itera y actualiza el HTML corregido en **todos los textareas** de contenido (`contentes`, `content`) y en **todos los editores** registrados en `window.tinyMCE.editors`, invocando `setContent()`, `save()` y `triggerSave()`.
+    2. Se reemplaza la navegación abrupta por una espera explícita a la respuesta del formulario (`page.waitForNavigation` + pausa de 3s de procesamiento del servidor) antes de reabrir el artículo para verificar el contenido guardado.
+- **Estado vigente (9/8/2026):** Cambios preparados por Antigravity para despliegue en `main`. Los lotes reanudables procesan cada artículo secuencialmente (abrir, corregir, guardar, verificar y registrar antes de tomar el siguiente).
 - Regla definitiva: se mantienen lotes de hasta 20, pero dentro del lote se
   toma una sola fila, se abre, corrige, guarda, verifica y registra; únicamente
   después se vuelve a la lista para buscar la siguiente. No se recopila una
