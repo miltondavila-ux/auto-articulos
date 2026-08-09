@@ -55,6 +55,15 @@ HANDOFF, solo alimenta ideas hacia él).
   cada usuario: hoy luce muy desorganizado. Agregar botones/etiquetas que
   permitan entender qué es cada cosa, con explicaciones cortas de qué hace
   cada sección/campo (no solo un placeholder o un párrafo largo).
+- **(9/8/2026)** Generador de infografías para redes sociales, basado en las
+  consultas/temas que están puntuando mejor en Google Search Console. Es
+  contenido ADICIONAL e independiente de los artículos normales de
+  10minutesWebsite — no una infografía derivada de un artículo ya publicado,
+  sino una pieza nueva (imagen + texto tipo post) creada específicamente para
+  redes sociales, descargable para publicarla ahí. Requiere en Configuración
+  un espacio nuevo donde el usuario suba: (1) su logo, y (2) una foto suya —
+  ambos para que el generador sepa qué logo y qué imagen de la persona usar
+  al armar cada infografía.
 
 ## Hecho
 
