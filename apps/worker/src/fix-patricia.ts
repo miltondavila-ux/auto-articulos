@@ -18,7 +18,7 @@ export async function runPatriciaFix(
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
 
-  const MAX_REPAIRS_PER_RUN = 20;
+  const MAX_REPAIRS_PER_RUN = 2;
   let successCount = 0;
   let skippedCount = 0;
   let errorCount = 0;
@@ -138,6 +138,12 @@ export async function runPatriciaFix(
                 
                 contentHtml = repaired.html;
 
+                await editorTextarea.evaluate((el) => {
+                  el.removeAttribute("disabled");
+                  el.removeAttribute("readonly");
+                });
+                await editorTextarea.fill(repaired.html).catch(() => {});
+
                 await page.evaluate(({ val }) => {
                   const textareas = document.querySelectorAll('textarea');
                   textareas.forEach((ta) => {
@@ -150,9 +156,9 @@ export async function runPatriciaFix(
                     }
                   });
 
-                  const tiny = (window as any).tinyMCE;
+                  const tiny = (window as any).tinyMCE || (window as any).tinymce;
                   if (tiny) {
-                    const editors = Array.isArray(tiny.editors) ? tiny.editors : [];
+                    const editors = Array.isArray(tiny.editors) ? tiny.editors : (tiny.editors ? Object.values(tiny.editors) : []);
                     editors.forEach((editor: any) => {
                       if (editor && typeof editor.setContent === 'function') {
                         editor.setContent(val);
@@ -166,6 +172,16 @@ export async function runPatriciaFix(
                     if (typeof tiny.triggerSave === 'function') {
                       tiny.triggerSave();
                     }
+                  }
+                  
+                  const ck = (window as any).CKEDITOR;
+                  if (ck && ck.instances) {
+                    Object.values(ck.instances).forEach((editor: any) => {
+                      if (editor && typeof editor.setData === 'function') {
+                        editor.setData(val);
+                        if (typeof editor.updateElement === 'function') editor.updateElement();
+                      }
+                    });
                   }
                 }, { val: contentHtml });
 
