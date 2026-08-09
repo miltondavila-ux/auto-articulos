@@ -297,86 +297,101 @@ function SocialOpportunitiesHistory() {
           Aún no hay publicaciones de redes sociales en el historial.
         </p>
       ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid rgba(232, 236, 245, 0.15)", textAlign: "left" }}>
-                <th style={{ padding: "10px 8px", color: "#6b7280" }}>Fecha</th>
-                <th style={{ padding: "10px 8px", color: "#6b7280" }}>Red</th>
-                <th style={{ padding: "10px 8px", color: "#6b7280" }}>Artículo</th>
-                <th style={{ padding: "10px 8px", color: "#6b7280" }}>Copy Publicado</th>
-                <th style={{ padding: "10px 8px", color: "#6b7280", textAlign: "right" }}>Estado / Enlace</th>
-              </tr>
-            </thead>
-            <tbody>
-              {opportunities.map((opp) => (
-                <tr key={opp.id} style={{ borderBottom: "1px solid rgba(232, 236, 245, 0.08)" }}>
-                  <td style={{ padding: "12px 8px", whiteSpace: "nowrap", color: "#16181d" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
+          {opportunities.map((opp, idx) => (
+            <details
+              key={opp.id}
+              open={idx === 0}
+              style={{
+                background: opp.status === "error" ? "#fff8f8" : "#f7f8fa",
+                border: opp.status === "error" ? "1px solid #fecaca" : "1px solid #dfe3e8",
+                borderRadius: 8,
+                padding: "10px 14px",
+              }}
+            >
+              <summary
+                style={{
+                  cursor: "pointer",
+                  fontSize: 13,
+                  listStyle: "none",
+                  display: "flex",
+                  gap: 8,
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <span style={{ color: "#16181d", fontWeight: 600 }}>
                     {new Date(opp.publishedAt || opp.createdAt).toLocaleString("es-US", {
                       day: "2-digit",
                       month: "2-digit",
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
-                  </td>
-                  <td style={{ padding: "12px 8px", whiteSpace: "nowrap" }}>
-                    <span style={{ fontWeight: 600, color: opp.platform === "threads" ? "#0f1419" : "#6b7280" }}>
-                      {opp.platform === "threads" ? "🌀 Threads" : opp.platform.toUpperCase()}
-                    </span>
-                  </td>
-                  <td
-                    style={{
-                      padding: "12px 8px",
-                      maxWidth: 200,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      color: "#16181d",
-                    }}
-                    title={opp.articleTitle}
-                  >
+                  </span>
+                  <span style={{ color: "#6b7280" }}>—</span>
+                  <span style={{ fontWeight: 700, color: opp.platform === "threads" ? "#0f1419" : "#6b7280" }}>
+                    {opp.platform === "threads" ? "🌀 Threads" : opp.platform.toUpperCase()}
+                  </span>
+                  <span style={{ color: "#6b7280" }}>—</span>
+                  <span style={{ color: "#16181d", fontWeight: 500 }}>
                     {opp.articleTitle}
-                  </td>
-                  <td
-                    style={{
-                      padding: "12px 8px",
-                      maxWidth: 350,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      color: "#4b5563",
-                    }}
-                    title={opp.suggestedText}
+                  </span>
+                </div>
+                <div>
+                  {opp.status === "published" ? (
+                    <span style={{ color: "#16a34a", fontWeight: 600 }}>✓ Publicado</span>
+                  ) : (
+                    <span style={{ color: "#dc2626", fontWeight: 600 }}>✗ Error</span>
+                  )}
+                </div>
+              </summary>
+              <div style={{ marginTop: 12, paddingLeft: 10, borderLeft: "3px solid #dfe3e8" }}>
+                <p style={{ margin: "0 0 6px 0", color: "#16181d", fontSize: 13, fontWeight: 600 }}>
+                  Copy publicado:
+                </p>
+                <blockquote style={{ margin: "0 0 12px 0", fontStyle: "italic", color: "#4b5563", fontSize: 13, lineHeight: "1.5" }}>
+                  "{opp.suggestedText}"
+                </blockquote>
+                <div style={{ display: "flex", gap: 15, fontSize: 12, flexWrap: "wrap", marginTop: 10 }}>
+                  <a
+                    href={opp.articleUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ color: "#3b82f6", textDecoration: "none", fontWeight: 600 }}
                   >
-                    "{opp.suggestedText}"
-                  </td>
-                  <td style={{ padding: "12px 8px", textAlign: "right", whiteSpace: "nowrap" }}>
-                    {opp.status === "published" ? (
-                      <a
-                        href={opp.platform === "threads" ? `https://www.threads.net/t/${opp.postId}` : "#"}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{
-                          color: "#16a34a",
-                          textDecoration: "none",
-                          fontWeight: 600,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 4,
-                        }}
-                      >
-                        ✓ Ver post ↗
-                      </a>
-                    ) : (
-                      <span style={{ color: "#dc2626" }} title={opp.errorLog || "Error desconocido"}>
-                        ✗ Error
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    Ver artículo original ↗
+                  </a>
+                  {opp.status === "published" && opp.postId && (
+                    <a
+                      href={opp.platform === "threads" ? `https://www.threads.net/t/${opp.postId}` : "#"}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ color: "#16a34a", textDecoration: "none", fontWeight: 600 }}
+                    >
+                      Ver en la Red Social ↗
+                    </a>
+                  )}
+                </div>
+                {opp.errorLog && (
+                  <div
+                    style={{
+                      marginTop: 12,
+                      padding: 10,
+                      background: "#fee2e2",
+                      color: "#991b1b",
+                      borderRadius: 6,
+                      fontSize: 12,
+                      border: "1px solid #fecaca",
+                    }}
+                  >
+                    <strong>Log de error:</strong> {opp.errorLog}
+                  </div>
+                )}
+              </div>
+            </details>
+          ))}
         </div>
       )}
     </section>
