@@ -134,7 +134,7 @@ export default function HistorialPage() {
             Todavía no hay ejecuciones.
           </p>
         )}
-        {runs.map((run, index) => (
+        {runs.map((run) => (
           <HistoryEntry
             key={run.id}
             run={run}
@@ -298,7 +298,7 @@ function SocialOpportunitiesHistory() {
         </p>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
-          {opportunities.map((opp, idx) => (
+          {opportunities.map((opp) => (
             <details
               key={opp.id}
               open={false}
