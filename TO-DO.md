@@ -108,6 +108,19 @@ HANDOFF, solo alimenta ideas hacia él).
   **Importante:** el administrador principal debe tener, desde su propio
   panel, un control para otorgarle o quitarle a cada usuario el acceso a
   cada red social individualmente (no todo o nada — por red, por usuario).
+- **(9/8/2026)** "Reparador de artículos" — herramienta nueva para detectar y
+  corregir canibalización entre artículos YA PUBLICADOS (distinto de
+  Oportunidades, que genera títulos NUEVOS; esto repara los existentes):
+  - Usar los datos reales de Google Search Console (mismo análisis que ya
+    usa el sistema) para detectar cuándo dos o más artículos de un mismo
+    usuario están canibalizándose entre sí (compitiendo por la misma
+    intención de búsqueda).
+  - Al corregir: NO tocar los títulos de esos artículos — sí acceder y
+    modificar su CONTENIDO, para diferenciarlos entre sí y que dejen de
+    competir.
+  - El objetivo es liberar "oportunidades de descanibalización" y que todos
+    los artículos existentes (no solo los nuevos) aporten de verdad a la
+    indexación y el posicionamiento, en vez de restarse entre ellos.
 
 ## Hecho
 
