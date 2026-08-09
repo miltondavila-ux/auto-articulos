@@ -109,20 +109,39 @@ export async function GET() {
       const messages = historyRun.titles.flatMap((item) =>
         item.events.map((event) => event.message),
       );
-      const repairedCount = messages.filter((message) =>
-        /✓\s*¡?Reparado con éxito/i.test(message),
-      ).length;
+
+      const batchArticles: { title: string; url: string; status: "repaired" | "already_correct" }[] = [];
+      messages.forEach((msg) => {
+        const repairMatch = msg.match(
+          /(?:✓\s*¡?Reparado con éxito!?\s*\(\d+ de \d+\)|Ya corregido):\s*(.*?)\s*—\s*Enlace:\s*(.+)/i,
+        );
+        if (repairMatch) {
+          const type = msg.toLowerCase().includes("reparado con éxito") ? "repaired" : "already_correct";
+          batchArticles.push({
+            title: repairMatch[1].trim(),
+            url: repairMatch[2].trim(),
+            status: type,
+          });
+        }
+      });
+
+      const repairedCount = batchArticles.filter((a) => a.status === "repaired").length;
+      const alreadyCorrectCount = batchArticles.filter((a) => a.status === "already_correct").length;
       const stopPoint = [...messages]
         .reverse()
         .find((message) =>
           /^(PUNTO DE PARADA|SIN PENDIENTES|Error general)/i.test(message),
         );
+
       return {
         id: historyRun.id,
         status: historyRun.status,
         createdAt: historyRun.createdAt,
         finishedAt: historyRun.finishedAt,
         repairedCount,
+        alreadyCorrectCount,
+        totalReviewed: batchArticles.length,
+        articles: batchArticles,
         stopPoint: stopPoint ?? null,
       };
     });

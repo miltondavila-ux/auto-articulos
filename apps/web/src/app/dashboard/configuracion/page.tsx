@@ -55,10 +55,14 @@ export default function ConfiguracionPage() {
       status: string;
       createdAt: string;
       repairedCount: number;
+      alreadyCorrectCount: number;
+      totalReviewed: number;
+      articles: { title: string; url: string; status: "repaired" | "already_correct" }[];
       stopPoint: string | null;
     }[];
     repairedHistory?: { title: string; url: string }[];
   } | null>(null);
+  const [expandedBatches, setExpandedBatches] = useState<Record<string, boolean>>({});
   const MAX_SIGNATURE_LEN = 700;
   const [banner, setBanner] = useState<{
     type: "error" | "info";
@@ -1505,16 +1509,79 @@ export default function ConfiguracionPage() {
               ) : null}
 
               {fixStatus.history && fixStatus.history.length > 0 ? (
-                <div style={{ marginTop: 16 }}>
-                  <h3 style={{ fontSize: 12, fontWeight: 700, color: "#7f1d1d", margin: "0 0 6px 0" }}>
-                    Historial de lotes
-                  </h3>
-                  {fixStatus.history.map((batch, index) => (
-                    <div key={batch.id} style={{ fontSize: 12, padding: "8px 0", borderTop: "1px solid #fee2e2" }}>
-                      <strong>Lote {fixStatus.history!.length - index}</strong> · {new Date(batch.createdAt).toLocaleString()} · {batch.status} · {batch.repairedCount} reparados confirmados
-                      {batch.stopPoint ? <div style={{ color: "#64748b", marginTop: 3 }}>{batch.stopPoint}</div> : null}
-                    </div>
-                  ))}
+                <div style={{ marginTop: 16, borderTop: "1px solid #fee2e2", paddingTop: 16 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <h3 style={{ fontSize: 13, fontWeight: 700, color: "#991b1b", margin: 0 }}>
+                      📋 Historial de Lotes Procesados
+                    </h3>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#7f1d1d", background: "#fecaca", padding: "2px 8px", borderRadius: 999 }}>
+                      Total revisados: {fixStatus.history.reduce((acc, curr) => acc + (curr.totalReviewed || 0), 0)}
+                    </span>
+                  </div>
+
+                  {fixStatus.history.map((batch, index) => {
+                    const isExpanded = !!expandedBatches[batch.id];
+                    return (
+                      <div
+                        key={batch.id}
+                        style={{
+                          fontSize: 12,
+                          padding: "10px 0",
+                          borderBottom: "1px solid #fee2e2",
+                        }}
+                      >
+                        <div
+                          onClick={() => setExpandedBatches(prev => ({ ...prev, [batch.id]: !prev[batch.id] }))}
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            cursor: "pointer",
+                            fontWeight: 600,
+                            color: "#7f1d1d",
+                          }}
+                        >
+                          <span style={{ userSelect: "none" }}>
+                            {isExpanded ? "▼" : "▶"} Lote {fixStatus.history!.length - index} ({new Date(batch.createdAt).toLocaleString("es-ES", { hour: "numeric", minute: "numeric", second: "numeric" })})
+                          </span>
+                          <span style={{ fontSize: 11, color: "#475569" }}>
+                            Revisados: {batch.totalReviewed} (Reparados: {batch.repairedCount}, Correctos: {batch.alreadyCorrectCount})
+                          </span>
+                        </div>
+
+                        {isExpanded && (
+                          <div style={{ marginTop: 8, paddingLeft: 14, background: "#fcf8f8", borderRadius: 6, padding: 8 }}>
+                            {batch.articles && batch.articles.length > 0 ? (
+                              <ul style={{ margin: 0, paddingLeft: 16, fontSize: 11 }}>
+                                {batch.articles.map((art, idx) => (
+                                  <li key={idx} style={{ marginBottom: 4 }}>
+                                    <span style={{ color: art.status === "repaired" ? "#16a34a" : "#64748b", fontWeight: 700, marginRight: 6 }}>
+                                      [{art.status === "repaired" ? "REPARADO" : "CORRECTO"}]
+                                    </span>
+                                    <a
+                                      href={art.url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      style={{ color: "#2563eb", textDecoration: "underline" }}
+                                    >
+                                      {art.title}
+                                    </a>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <div style={{ fontSize: 11, color: "#64748b", fontStyle: "italic" }}>No se procesó ningún artículo en este lote o el worker se detuvo antes de iniciar.</div>
+                            )}
+                            {batch.stopPoint ? (
+                              <div style={{ color: "#b91c1c", marginTop: 6, fontSize: 11, fontWeight: 500 }}>
+                                🏁 Detenido: {batch.stopPoint}
+                              </div>
+                            ) : null}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               ) : null}
 
