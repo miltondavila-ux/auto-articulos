@@ -1,6 +1,13 @@
 # HANDOFF — Auto Artículos
 
-Última actualización: 2026-08-07, por Antigravity (Arquitecto Principal del Sistema).
+Última actualización: 2026-08-09, por Codex.
+
+## Participantes autorizados y coordinación obligatoria
+
+Este proyecto tiene **tres participantes con capacidad de entrar, modificar y
+coordinar trabajo: Claude, Codex y Antigravity de Google**. Los tres deben leer
+`COORDINACION_CLAUDE_CODEX.md`, revisar reservas/cambios activos y documentar
+sus modificaciones en este HANDOFF antes de intervenir o desplegar.
 
 Este documento es la fuente de verdad para retomar el proyecto sin necesitar
 el historial de chat. Mantenlo actualizado después de cada sesión de trabajo
@@ -47,6 +54,17 @@ importante: qué cambió, qué quedó pendiente, qué se rompió.
   nueva etapa explícita; no ejecutar masivamente con el límite actual de un ID.
 
 ### Lotes reanudables de 20 (segunda etapa)
+
+- **Estado vigente (9/8/2026):** commit `a497197` y despliegue de producción
+  `dpl_Bpz8n7aFB6uFNBioqhtquwWVf4Ug` (`READY`). Los workers de pruebas
+  anteriores fueron cancelados y Milton borró el historial. No hay lote
+  activo; la siguiente prueba debe ejecutar `a497197` o posterior.
+- Regla definitiva: se mantienen lotes de hasta 20, pero dentro del lote se
+  toma una sola fila, se abre, corrige, guarda, verifica y registra; únicamente
+  después se vuelve a la lista para buscar la siguiente. No se recopila una
+  lista previa de artículos.
+- El guardado TinyMCE localiza el editor por `targetElm`, ejecuta su guardado y
+  fuerza al final el valor del textarea que envía el formulario.
 
 - Cada orden crea un `Run` auditable y modifica como máximo 20 artículos. El
   robot reescanea la lista, salta los artículos ya correctos y continúa con el

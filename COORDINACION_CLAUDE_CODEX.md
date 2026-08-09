@@ -1,7 +1,8 @@
-# Coordinación de trabajo: Claude y Codex
+# Coordinación de trabajo: Claude, Codex y Antigravity
 
-Este archivo es el tablero operativo compartido para evitar que Claude y Codex
-modifiquen al mismo tiempo los mismos archivos o desplieguen cambios
+Este archivo es el tablero operativo compartido para los **tres participantes
+autorizados: Claude, Codex y Antigravity (Google)**. Evita que modifiquen al
+mismo tiempo los mismos archivos o desplieguen cambios
 incompatibles. `HANDOFF.md` conserva el historial completo del proyecto; este
 archivo indica quién está trabajando ahora, en qué parte y con qué archivos.
 
@@ -19,7 +20,7 @@ de `TO-DO.md` y documentar el cambio real en `HANDOFF.md` como de costumbre.
 
 ## Regla obligatoria antes de iniciar cualquier tarea
 
-Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
+Claude, Codex y Antigravity deben hacer lo siguiente **antes de leer o modificar código**:
 
 1. Leer este archivo completo.
 2. Ejecutar `git status --short` y `git log -5 --oneline`.
@@ -81,6 +82,7 @@ Claude y Codex deben hacer lo siguiente **antes de leer o modificar código**:
 - **Segundo lote rechazado:** terminó con 0 reparados, 2 correctos y 8 errores. Milton señaló correctamente que el worker todavía recopilaba primero las diez filas de la página y luego las procesaba. También se comprobó que el cambio de `tinyMCE.activeEditor` por búsqueda de editor según textarea no persistió ningún guardado, mientras que el artículo 89325 sí se reparó con el mecanismo original. Nueva corrección en curso: tomar solo una fila, abrir/guardar/verificar ese artículo, regresar por la fila siguiente y restaurar exactamente la escritura TinyMCE de la prueba individual exitosa. No ejecutar otro lote hasta nuevo despliegue confirmado.
 - **Incidente de versión del tercer intento:** el cron antiguo `31322888862` seguía vivo con SHA `b967652` y reclamó la nueva solicitud, por eso reapareció el mensaje eliminado “Detectados 10 artículos”. Se solicitó su cancelación y se lanzó manualmente el run `31323415176`, confirmado con SHA correcto `9289a4a`. Milton no debe volver a pulsar el botón durante esta sustitución.
 - **Aclaración final de Milton:** se conservan los lotes de hasta 20, pero dentro del lote el flujo debe completar totalmente un artículo (abrir, corregir, guardar, verificar y registrar) antes de buscar el siguiente. El guardado se refuerza localizando TinyMCE por `targetElm`, guardando el editor y forzando al final el valor del textarea enviado por el formulario. No volver a probar hasta desplegar esta versión.
+- **Estado listo para nueva prueba limpia:** commit `a497197` desplegado en producción (`dpl_Bpz8n7aFB6uFNBioqhtquwWVf4Ug`, `READY`). Los workers anteriores quedaron cancelados y Milton borró el historial. No hay lote activo. La próxima prueba debe usar `a497197` o posterior. Dentro del lote de 20, cada artículo se termina antes de buscar el siguiente; no existe recopilación previa `pageArticles` ni el mensaje “Detectados 10 artículos”.
 
 ### Antigravity (Arquitecto Principal del Sistema)
 
