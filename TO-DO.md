@@ -74,6 +74,16 @@ HANDOFF, solo alimenta ideas hacia él).
   Causa raíz sin diagnosticar todavía — investigar con evidencia real (logs
   de sincronización de categorías y de publicación de ambas cuentas) antes de
   asumir dónde está el problema.
+- **(9/8/2026)** Agregar dos botones de llamada a la acción en la pantalla de
+  Login, dirigidos a quienes todavía no tienen acceso al Programa de
+  Posicionamiento. Deben verse claramente dentro del Login y mantener el
+  mismo estilo visual del resto del sistema.
+  - **Botón 1** — Texto: "Accede al Programa de Posicionamiento – Pago Único
+    $799". Enlace: `https://buy.stripe.com/cN202DaQY4QS8dq28N`.
+  - **Botón 2** — Texto: "Suscripción Mensual – $250/mes". Todavía no tiene
+    enlace asignado; el botón debe mostrarse igual desde ya (sin link activo
+    o deshabilitado, a definir al ejecutar). Cuando el enlace esté listo,
+    solo hay que reemplazar la URL, sin tocar diseño ni funcionalidad.
 
 ## Hecho
 
