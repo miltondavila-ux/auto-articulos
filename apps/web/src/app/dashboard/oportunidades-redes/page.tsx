@@ -30,6 +30,9 @@ export default function OportunidadesRedesPage() {
   const [publishingAll, setPublishingAll] = useState(false);
   const [message, setMessage] = useState<{ kind: "success" | "error" | "info"; text: string } | null>(null);
 
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deletingHistory, setDeletingHistory] = useState(false);
+
   useEffect(() => {
     loadOpportunities();
   }, []);
@@ -46,6 +49,26 @@ export default function OportunidadesRedesPage() {
       setMessage({ kind: "error", text: "Error al cargar propuestas: " + err.message });
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleDeleteHistory() {
+    setDeletingHistory(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/social-opportunities", { method: "DELETE" });
+      if (res.ok) {
+        setMessage({ kind: "success", text: "Historial de publicaciones de redes sociales borrado." });
+        setConfirmingDelete(false);
+        loadOpportunities();
+      } else {
+        const data = await res.json();
+        setMessage({ kind: "error", text: data.error || "No se pudo borrar el historial." });
+      }
+    } catch (err: any) {
+      setMessage({ kind: "error", text: err.message });
+    } finally {
+      setDeletingHistory(false);
     }
   }
 
@@ -300,24 +323,93 @@ export default function OportunidadesRedesPage() {
             )}
           </div>
 
-          <div>
-            <h3 style={{ color: "#e8ecf5", fontSize: 18, borderBottom: "1px solid rgba(232, 236, 245, 0.15)", paddingBottom: 8 }}>
-              Historial de Publicaciones ({historyList.length})
-            </h3>
+          <div style={{ ...sectionStyle, background: "#111827", border: "1px solid #374151", color: "#e8ecf5" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 8,
+                borderBottom: "1px solid rgba(232, 236, 245, 0.15)",
+                paddingBottom: 10,
+                marginBottom: 15,
+              }}
+            >
+              <h3 style={{ ...h2Style, color: "#e8ecf5", margin: 0, fontSize: 18 }}>
+                Historial de Publicaciones ({historyList.length})
+              </h3>
+              {historyList.length > 0 &&
+                (confirmingDelete ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 12, color: "#f87171" }}>
+                      ¿Borrar todo el historial? No se puede deshacer.
+                    </span>
+                    <button
+                      onClick={handleDeleteHistory}
+                      disabled={deletingHistory}
+                      style={{
+                        background: "#fee2e2",
+                        color: "#991b1b",
+                        border: "1px solid #fecaca",
+                        borderRadius: 6,
+                        padding: "4px 10px",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: deletingHistory ? "default" : "pointer",
+                      }}
+                    >
+                      {deletingHistory ? "Borrando..." : "Sí, borrar"}
+                    </button>
+                    <button
+                      onClick={() => setConfirmingDelete(false)}
+                      disabled={deletingHistory}
+                      style={{
+                        background: "rgba(255,255,255,0.05)",
+                        color: "#e8ecf5",
+                        border: "1px solid #4b5563",
+                        borderRadius: 6,
+                        padding: "4px 10px",
+                        fontSize: 12,
+                        cursor: deletingHistory ? "default" : "pointer",
+                      }}
+                    >
+                      No
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmingDelete(true)}
+                    style={{
+                      background: "none",
+                      color: "#f87171",
+                      border: "1px solid rgba(248, 113, 113, 0.2)",
+                      borderRadius: 6,
+                      padding: "4px 10px",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                  >
+                    🗑 Borrar historial
+                  </button>
+                ))}
+            </div>
+
             {historyList.length === 0 ? (
               <div style={{ color: "#a8b3c7", textAlign: "center", padding: 20 }}>
                 Aún no has publicado propuestas desde este módulo.
               </div>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 15, marginTop: 15 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 15 }}>
                 {historyList.map((opp) => (
                   <div
                     key={opp.id}
                     style={{
-                      ...sectionStyle,
-                      background: "rgba(255,255,255,0.02)",
-                      border: "1px solid rgba(232, 236, 245, 0.1)",
                       padding: 15,
+                      borderRadius: 8,
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(232, 236, 245, 0.08)",
                     }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>

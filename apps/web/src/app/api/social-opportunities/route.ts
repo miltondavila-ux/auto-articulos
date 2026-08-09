@@ -48,3 +48,21 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+export async function DELETE() {
+  try {
+    const userId = await getCurrentUserId();
+
+    // Borrar todas las propuestas que no estén pendientes (es decir, publicadas o con error)
+    await prisma.socialOpportunity.deleteMany({
+      where: {
+        userId,
+        status: { not: "pending" },
+      },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
