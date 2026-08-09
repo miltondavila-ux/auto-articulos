@@ -63,6 +63,7 @@ export async function runPatriciaFix(
       });
 
       await page.waitForSelector("table tbody tr td", { timeout: 25000 });
+      await page.waitForSelector(".dt-paging, .pagination, a.next", { timeout: 15000 }).catch(() => {});
       await page.waitForFunction(() => {
         const cell = document.querySelector("table tbody tr td");
         if (!cell) return false;
@@ -271,6 +272,7 @@ export async function runPatriciaFix(
 
       await page.goto(`${baseUrl}/dashboard/user_buyer_seller_articles.php`, { waitUntil: "domcontentloaded" });
       await page.waitForSelector("table tbody tr td", { timeout: 15000 });
+      await page.waitForSelector(".dt-paging, .pagination, a.next", { timeout: 15000 }).catch(() => {});
       for (let p = 1; p < pageNum; p++) {
         const nextBtn = page.locator("a.next, li.next a, button.next").first();
         if (await nextBtn.isVisible().catch(() => false)) {
@@ -281,11 +283,13 @@ export async function runPatriciaFix(
 
       const nextBtn = page.locator("a.next, li.next a, button.next").first();
       const isNextVisible = await nextBtn.isVisible().catch(() => false);
-      const isNextDisabled = await nextBtn.evaluate((el) =>
-        el.classList.contains("disabled") ||
-        el.getAttribute("aria-disabled") === "true" ||
-        (el as HTMLButtonElement).disabled
-      ).catch(() => true);
+      const isNextDisabled = await nextBtn.evaluate((el) => {
+        const parentLi = el.closest("li");
+        return el.classList.contains("disabled") ||
+          el.getAttribute("aria-disabled") === "true" ||
+          (el as HTMLButtonElement).disabled ||
+          (parentLi ? parentLi.classList.contains("disabled") : false);
+      }).catch(() => true);
 
       if (isNextVisible && !isNextDisabled) {
         pageNum++;
