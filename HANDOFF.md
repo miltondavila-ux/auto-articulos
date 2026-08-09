@@ -39,6 +39,12 @@ importante: qué cambió, qué quedó pendiente, qué se rompió.
   descubrió otro marcador en el enlace exterior del QR: `NUMERO-WHATSAPP`.
   Se añadió al transformador y quedó cubierto por prueba; no repetir el botón
   hasta que la siguiente corrida pueda usar el nuevo SHA.
+- Segunda prueba exitosa: workflow `31319899518` usó `e3ffda8` y reparó solo
+  el artículo `89325`. El HTML público quedó verificado sin marcadores: QR y
+  WhatsApp apuntan a `wa.me/19546529929`, y llamada a `tel:+19546529929`.
+  Milton completó la comprobación manual y confirmó que los tres elementos
+  funcionan. Prueba individual cerrada. La reparación del resto requiere una
+  nueva etapa explícita; no ejecutar masivamente con el límite actual de un ID.
 
 ## Qué es esto
 
