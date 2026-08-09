@@ -36,83 +36,129 @@ export async function runPatriciaFix(
 
     // 2. Ir al listado de artículos
     await page.goto(`${baseUrl}/dashboard/user_buyer_seller_articles.php`, { waitUntil: "domcontentloaded" });
-    await onStep("Abierto el listado de artículos.");
+    await onStep("Abierto el listado de artículos. Esperando a que cargue la tabla...");
 
-    // Cambiar la cantidad de filas a 100 para cargar todo en una sola página si es posible
-    const lengthSelect = page.locator('select[name="example_length"]');
-    if (await lengthSelect.isVisible()) {
-      await lengthSelect.selectOption("100").catch(() => {});
-      await page.waitForTimeout(2000);
-      await onStep("Filas del listado configuradas a 100.");
+    // Esperar a que la tabla cargue y el indicador de "Loading..." o "Cargando..." desaparezca de las celdas
+    await page.waitForSelector("table tbody tr td", { timeout: 25000 });
+    await page.waitForFunction(() => {
+      const cell = document.querySelector("table tbody tr td");
+      if (!cell) return false;
+      const text = cell.textContent || "";
+      return !text.toLowerCase().includes("loading") && !text.toLowerCase().includes("cargando");
+    }, { timeout: 25000 }).catch(() => {});
+    await page.waitForTimeout(1500);
+
+    const firstCellText = await page.locator("table tbody tr td").first().innerText().catch(() => "");
+    if (
+      firstCellText.includes("No data") ||
+      firstCellText.includes("No se encontraron") ||
+      firstCellText.includes("Ningún dato")
+    ) {
+      await onStep("La tabla está vacía. Patricia Coy no tiene artículos publicados.");
+      return;
     }
 
-    // Leer todas las filas
-    const rows = page.locator("table tbody tr");
-    const count = await rows.count();
-    await onStep(`Encontradas ${count} filas en la tabla del listado.`);
+    // Configurar cantidad de filas a 100 para reducir el número de páginas a recorrer
+    const lengthSelect = page.locator('select[name="example_length"], select[name*="length"]').first();
+    if (await lengthSelect.isVisible().catch(() => false)) {
+      await lengthSelect.selectOption("100").catch(() => {});
+      await page.waitForTimeout(3000); // Esperar a que cargue la tabla con 100 filas
+      await onStep("Filas del listado configuradas a 100 por página.");
+    }
 
     const articlesToEdit: { id: string; title: string; publicUrl: string; editUrl: string }[] = [];
+    let hasNextPage = true;
+    let pageNum = 1;
 
-    for (let i = 0; i < count; i++) {
-      const row = rows.nth(i);
-      
-      // Primera columna es el ID del artículo
-      const idText = (await row.locator("td").first().innerText().catch(() => "")).trim();
-      
-      // Tercera columna es el Título
-      const titleLink = row.locator("td").nth(2);
-      const titleText = (await titleLink.innerText().catch(() => "")).trim();
+    // Recorrer todas las páginas de la tabla
+    while (hasNextPage) {
+      await onStep(`Escaneando artículos en la página ${pageNum}...`);
+      await page.waitForSelector("table tbody tr td", { timeout: 15000 });
+      await page.waitForFunction(() => {
+        const cell = document.querySelector("table tbody tr td");
+        if (!cell) return false;
+        const text = cell.textContent || "";
+        return !text.toLowerCase().includes("loading") && !text.toLowerCase().includes("cargando");
+      }, { timeout: 15000 }).catch(() => {});
+      await page.waitForTimeout(1500);
 
-      // Enlace de consulta (a.consultar) suele ser la URL pública del artículo
-      const consultLink = row.locator("a.consultar").first();
-      const href = await consultLink.getAttribute("href").catch(() => null);
+      const rows = page.locator("table tbody tr");
+      const count = await rows.count();
 
-      if (idText && titleText) {
-        articlesToEdit.push({
-          id: idText,
-          title: titleText,
-          publicUrl: href || "",
-          editUrl: `${baseUrl}/dashboard/direct-articles?id=${idText}`,
-        });
+      for (let i = 0; i < count; i++) {
+        const row = rows.nth(i);
+        const idText = (await row.locator("td").first().innerText().catch(() => "")).trim();
+        const titleLink = row.locator("td").nth(2);
+        const titleText = (await titleLink.innerText().catch(() => "")).trim();
+
+        const consultLink = row.locator("a.consultar").first();
+        const href = await consultLink.getAttribute("href").catch(() => null);
+
+        if (idText && titleText && !idText.includes("No data") && !idText.includes("Ningún")) {
+          articlesToEdit.push({
+            id: idText,
+            title: titleText,
+            publicUrl: href || "",
+            editUrl: `${baseUrl}/dashboard/direct-articles?id=${idText}`,
+          });
+        }
+      }
+
+      // Paginación: buscar el botón de siguiente página
+      const nextBtn = page.locator("a.next, li.next a, button.next").first();
+      const isNextVisible = await nextBtn.isVisible().catch(() => false);
+      const isNextDisabled = await nextBtn.evaluate((el) =>
+        el.classList.contains("disabled") ||
+        el.getAttribute("aria-disabled") === "true" ||
+        (el as HTMLButtonElement).disabled
+      ).catch(() => true);
+
+      if (isNextVisible && !isNextDisabled) {
+        await nextBtn.click();
+        await page.waitForTimeout(2500); // Esperar a que se cargue la siguiente página
+        pageNum++;
+      } else {
+        hasNextPage = false;
       }
     }
 
-    await onStep(`Se identificaron ${articlesToEdit.length} artículos en total para revisar.`);
+    await onStep(`Escaneo finalizado. Se identificaron ${articlesToEdit.length} artículos en total para revisar.`);
 
     let successCount = 0;
     let skippedCount = 0;
 
-    // 3. Procesar cada artículo
+    // 3. Procesar cada artículo uno a uno
     for (let idx = 0; idx < articlesToEdit.length; idx++) {
       const article = articlesToEdit[idx];
       const progressPrefix = `[${idx + 1}/${articlesToEdit.length}]`;
-      
+
       try {
         await page.goto(article.editUrl, { waitUntil: "domcontentloaded" });
 
-        // Esperar a que cargue el formulario de edición
-        const editorTextarea = page.locator('textarea[name="content"], textarea#respose_content, textarea#editor, textarea.editor').first();
+        const editorTextarea = page
+          .locator('textarea[name="content"], textarea#respose_content, textarea#editor, textarea.editor')
+          .first();
+
         if (!(await editorTextarea.isVisible())) {
-          await onStep(`${progressPrefix} Saltar: No se encontró el editor para "${article.title}" (ID: ${article.id})`);
+          await onStep(`${progressPrefix} Saltar: No se pudo cargar el editor para "${article.title}" (ID: ${article.id})`);
           continue;
         }
 
-        // Obtener el valor actual del contenido
         let contentHtml = await editorTextarea.inputValue();
-        
+
         // Verificar si contiene "PHONE_NUMBER"
         if (contentHtml.includes("PHONE_NUMBER")) {
           await onStep(`${progressPrefix} Reparando: "${article.title}"...`);
-          
+
           contentHtml = contentHtml.replace(/PHONE_NUMBER/g, "+19546529929");
 
           // Escribir el nuevo contenido en el editor
           await editorTextarea.evaluate((el, val) => {
             (el as HTMLTextAreaElement).value = val;
-            el.dispatchEvent(new Event('change', { bubbles: true }));
+            el.dispatchEvent(new Event("change", { bubbles: true }));
           }, contentHtml);
 
-          // Guardar los cambios
+          // Guardar cambios
           const saveBtn = page.getByRole("button", { name: /Guardar cambios|Save changes|Guardar/i }).first();
           if (await saveBtn.isVisible()) {
             await saveBtn.click();
@@ -120,11 +166,10 @@ export async function runPatriciaFix(
             successCount++;
             await onStep(`✓ Reparado con éxito (${successCount} de ${articlesToEdit.length}): ${article.title} — Enlace: ${article.publicUrl || article.editUrl}`);
           } else {
-            await onStep(`${progressPrefix} Error: No se encontró botón Guardar para "${article.title}"`);
+            await onStep(`${progressPrefix} Error: No se localizó el botón Guardar para "${article.title}"`);
           }
         } else {
           skippedCount++;
-          // No requiere cambios
           if (skippedCount % 10 === 0 || idx === articlesToEdit.length - 1) {
             await onStep(`... analizados ${idx + 1}/${articlesToEdit.length} artículos (ya corregidos o sin placeholder)`);
           }
