@@ -14,7 +14,7 @@ export function replacePhonePlaceholders(
   const international = `+${digits}`;
   const replacements = { whatsapp: 0, call: 0, other: 0 };
   let result = html;
-  const phoneToken = `(?:PHONE_NUMBER|(?:\\+|%2B)?${digits})`;
+  const phoneToken = `(?:PHONE_NUMBER|NUMERO-WHATSAPP|(?:\\+|%2B)?${digits})`;
 
   // Incluye enlaces directos y enlaces anidados dentro de un generador de QR.
   result = result.replace(

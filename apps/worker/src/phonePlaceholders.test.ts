@@ -38,6 +38,19 @@ test("quita el signo más incorrecto que dejó la reparación anterior", () => {
   assert.deepEqual(result.replacements, { whatsapp: 2, call: 1, other: 0 });
 });
 
+test("repara el marcador alternativo del enlace exterior del QR", () => {
+  const source = [
+    '<a href="https://wa.me/NUMERO-WHATSAPP">',
+    '<img src="https://quickchart.io/chart?chl=https://wa.me/PHONE_NUMBER">',
+    "</a>",
+  ].join("");
+  const result = replacePhonePlaceholders(source, "+19546529929");
+
+  assert.equal(result.html.includes("NUMERO-WHATSAPP"), false);
+  assert.equal(result.html.includes("PHONE_NUMBER"), false);
+  assert.equal(result.replacements.whatsapp, 2);
+});
+
 test("rechaza teléfonos sin dígitos", () => {
   assert.throws(() => replacePhonePlaceholders("tel:PHONE_NUMBER", "sin teléfono"));
 });

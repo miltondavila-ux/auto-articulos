@@ -34,6 +34,11 @@ importante: qué cambió, qué quedó pendiente, qué se rompió.
   Durante la vinculación manual se creó accidentalmente un proyecto Vercel
   separado llamado `web`; su build falló y nunca afectó el dominio productivo.
   Queda pendiente eliminar ese proyecto vacío después de la prueba.
+- Primera prueba: no fue válida porque el worker ya activo usaba el SHA viejo
+  `1cd590d`; se canceló la corrida `31318654432`. La inspección del HTML público
+  descubrió otro marcador en el enlace exterior del QR: `NUMERO-WHATSAPP`.
+  Se añadió al transformador y quedó cubierto por prueba; no repetir el botón
+  hasta que la siguiente corrida pueda usar el nuevo SHA.
 
 ## Qué es esto
 
