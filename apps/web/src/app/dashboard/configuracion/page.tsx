@@ -37,6 +37,8 @@ export default function ConfiguracionPage() {
   const [savingLanguage, setSavingLanguage] = useState(false);
   const [articleSignature, setArticleSignature] = useState("");
   const [savingSignature, setSavingSignature] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [savingPhone, setSavingPhone] = useState(false);
   const MAX_SIGNATURE_LEN = 700;
   const [banner, setBanner] = useState<{
     type: "error" | "info";
@@ -78,9 +80,10 @@ export default function ConfiguracionPage() {
       setLastLanguageSyncError(data.lastSyncJob?.errorMessage ?? null);
     }
     if (meRes.ok) {
-      const data = await meRes.json();
-      setContentLanguage(data.contentLanguage ?? "");
-      setArticleSignature(data.articleSignature ?? "");
+       const data = await meRes.json();
+       setContentLanguage(data.contentLanguage ?? "");
+       setArticleSignature(data.articleSignature ?? "");
+       setPhone(data.phone ?? "");
     }
   }, []);
 
@@ -214,6 +217,29 @@ export default function ConfiguracionPage() {
       setBanner({ type: "info", text: "Texto final del artículo guardado." });
     } finally {
       setSavingSignature(false);
+    }
+  }
+
+  async function handleSavePhone() {
+    setSavingPhone(true);
+    setBanner(null);
+    try {
+      const res = await fetch("/api/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setBanner({
+          type: "error",
+          text: data.error ?? "Error al guardar el teléfono",
+        });
+        return;
+      }
+      setBanner({ type: "info", text: "Número de teléfono guardado con éxito." });
+    } finally {
+      setSavingPhone(false);
     }
   }
 
@@ -1093,6 +1119,36 @@ export default function ConfiguracionPage() {
                 style={disabledStyle(secondaryButtonStyle, savingSignature)}
               >
                 {savingSignature ? "Guardando firma..." : "Guardar firma final"}
+              </button>
+            </div>
+          </section>
+
+          {/* Teléfono de Contacto (WhatsApp / Llamada) */}
+          <section style={sectionStyle}>
+            <h2 style={h2Style}>Teléfono de Contacto (WhatsApp / Llamadas)</h2>
+            <p style={{ fontSize: 13, color: "#64748b", marginBottom: 12 }}>
+              Ingresa tu número de teléfono (con código de país, ej: <code>+19546529929</code>). Este número se utilizará para enlazar automáticamente los botones de WhatsApp y llamadas en el contenido de tus artículos, previniendo que se publiquen con marcadores vacíos.
+            </p>
+
+            <input
+              type="text"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Ej: +19546529929"
+              style={{
+                ...inputStyle,
+                width: "100%",
+                maxWidth: 400,
+              }}
+            />
+
+            <div style={{ marginTop: 12 }}>
+              <button
+                onClick={handleSavePhone}
+                disabled={savingPhone}
+                style={disabledStyle(secondaryButtonStyle, savingPhone)}
+              >
+                {savingPhone ? "Guardando teléfono..." : "Guardar número de teléfono"}
               </button>
             </div>
           </section>

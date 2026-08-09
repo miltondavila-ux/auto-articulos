@@ -26,6 +26,7 @@ export async function getCurrentUser() {
       contentLanguage: true,
       articleSignature: true,
       opportunitiesDisclosureAcceptedAt: true,
+      phone: true,
       createdAt: true,
     },
   });

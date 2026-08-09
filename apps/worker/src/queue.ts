@@ -35,6 +35,7 @@ export async function processNext(): Promise<boolean> {
           platformDomain: true,
           contentLanguage: true,
           articleSignature: true,
+          phone: true,
         },
       },
     },
@@ -70,6 +71,7 @@ async function processRunTitle(
           platformDomain: true;
           contentLanguage: true;
           articleSignature: true;
+          phone: true;
         };
       };
     };
@@ -146,6 +148,7 @@ async function processRunTitle(
         // configurado del usuario, que es el comportamiento de siempre.
         contentLanguage: run.contentLanguage ?? run.user.contentLanguage,
         articleSignature: run.user.articleSignature,
+        userPhone: run.user.phone,
       },
       nextTitle.text,
       run.category.externalId,

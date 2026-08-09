@@ -20,6 +20,8 @@ export interface TenMinutesWebsiteCredentials {
   // final del contenido de CADA artículo nuevo, antes de guardar — pedido
   // explícito del usuario, 6/8/2026. Null/vacío = no se agrega nada.
   articleSignature?: string | null;
+  // Teléfono del usuario para reemplazar marcadores "PHONE_NUMBER" de WhatsApp/llamada
+  userPhone?: string | null;
 }
 
 function escapeHtml(value: string): string {
@@ -136,6 +138,7 @@ export async function publishArticle(
       disableIndexing,
       credentials.contentLanguage,
       credentials.articleSignature,
+      credentials.userPhone,
       onStep,
     );
     await generateImage(page, finalTitle, summary, onStep);
@@ -337,6 +340,7 @@ async function createArticleDraft(
   disableIndexing: boolean,
   contentLanguage: string | null | undefined,
   articleSignature: string | null | undefined,
+  userPhone: string | null | undefined,
   onStep: OnStep,
 ): Promise<{ summary: string; contentHtml: string; finalTitle: string }> {
   await onStep("Abriendo formulario de creación de artículo...");
@@ -533,11 +537,27 @@ async function createArticleDraft(
   // el Título final que la IA le puso al artículo (índice 3: idea, contenido,
   // resumen, título, prompt de imagen): es justamente el que se usa después
   // para localizar el artículo ya publicado (ver findArticleByTitle).
-  const contentHtml = await dialog
+  let contentHtml = await dialog
     .locator("textarea")
     .nth(1)
     .inputValue()
     .catch(() => "");
+
+  if (contentHtml.includes("PHONE_NUMBER")) {
+    if (userPhone) {
+      contentHtml = contentHtml.replace(/PHONE_NUMBER/g, userPhone);
+      const contentField = dialog.locator("textarea").nth(1);
+      await contentField.evaluate((el) => {
+        el.removeAttribute("disabled");
+        el.removeAttribute("readonly");
+      });
+      await contentField.fill(contentHtml).catch(() => {});
+      await onStep(`✓ Marcador 'PHONE_NUMBER' detectado y reemplazado automáticamente por tu teléfono: ${userPhone}`);
+    } else {
+      await onStep("⚠️ ADVERTENCIA CRÍTICA: Se detectó el marcador de posición 'PHONE_NUMBER' (botones de WhatsApp o llamada) en el artículo generado, pero NO tienes un número de teléfono configurado en tu perfil. El artículo se publicará con 'PHONE_NUMBER'.");
+    }
+  }
+
   const finalTitle =
     (await dialog
       .locator("textarea")

@@ -15,13 +15,14 @@ export async function GET() {
     contentLanguage: user.contentLanguage,
     articleSignature: user.articleSignature,
     opportunitiesDisclosureAcceptedAt: user.opportunitiesDisclosureAcceptedAt,
+    phone: user.phone,
   });
 }
 
 export async function PATCH(request: NextRequest) {
   const userId = await getCurrentUserId();
   const body = await request.json();
-  const data: { contentLanguage?: string; articleSignature?: string | null } =
+  const data: { contentLanguage?: string; articleSignature?: string | null; phone?: string | null } =
     {};
 
   if ("contentLanguage" in body) {
@@ -68,10 +69,22 @@ export async function PATCH(request: NextRequest) {
     data.articleSignature = trimmed || null;
   }
 
+  if ("phone" in body) {
+    const { phone } = body;
+    if (phone !== null && typeof phone !== "string") {
+      return NextResponse.json(
+        { error: "El teléfono debe ser texto o null" },
+        { status: 400 },
+      );
+    }
+    const trimmed = typeof phone === "string" ? phone.trim() : "";
+    data.phone = trimmed || null;
+  }
+
   const user = await prisma.user.update({
     where: { id: userId },
     data,
-    select: { contentLanguage: true, articleSignature: true },
+    select: { contentLanguage: true, articleSignature: true, phone: true },
   });
 
   return NextResponse.json(user);
