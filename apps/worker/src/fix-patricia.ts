@@ -18,7 +18,7 @@ export async function runPatriciaFix(
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
 
-  const MAX_REPAIRS_PER_RUN = 2;
+  const MAX_REPAIRS_PER_RUN = 20;
   let successCount = 0;
   let skippedCount = 0;
   let errorCount = 0;
