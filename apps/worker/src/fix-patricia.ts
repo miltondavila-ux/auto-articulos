@@ -131,6 +131,7 @@ export async function runPatriciaFix(
                   !contentHtml.includes("NUMERO-WHATSAPP")
                 ) {
                   skippedCount++;
+                  await onStep(`[Art. ${article.id}] Ya corregido: ${article.title} — Enlace: ${article.publicUrl || article.editUrl}`);
                   success = true;
                   break;
                 }
