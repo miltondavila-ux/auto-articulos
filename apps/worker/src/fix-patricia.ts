@@ -203,9 +203,13 @@ export async function runPatriciaFix(
                 success = true;
               }
             } catch (articleErr) {
+              const errorMessage = articleErr instanceof Error ? articleErr.stack || articleErr.message : String(articleErr);
+              await onStep(`${progressPrefix} ERROR DETALLADO en intento ${attempt}: ${errorMessage}`);
+              
               attempt++;
               if (attempt > MAX_ATTEMPTS) {
-                throw new Error(`Kill Switch: Fallo estructural en el artículo ${article.id} tras 3 intentos.`);
+                await onStep(`${progressPrefix} FATAL: Se superó el límite de ${MAX_ATTEMPTS} intentos fallidos. Deteniendo el worker.`);
+                throw new Error(`Kill Switch: Fallo estructural en el artículo ${article.id} tras 3 intentos. Causa original: ${errorMessage}`);
               }
             }
           }
