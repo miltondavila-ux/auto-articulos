@@ -84,6 +84,12 @@ HANDOFF, solo alimenta ideas hacia él).
     enlace asignado; el botón debe mostrarse igual desde ya (sin link activo
     o deshabilitado, a definir al ejecutar). Cuando el enlace esté listo,
     solo hay que reemplazar la URL, sin tocar diseño ni funcionalidad.
+- **(9/8/2026)** Bug reportado: las estadísticas de artículos parecen
+  contabilizarse desde el momento en que se solicitan/comienzan a generarse,
+  en vez de contarse solo cuando terminan bien. Corregir para que un
+  artículo sume a las estadísticas ÚNICAMENTE después de que el sistema
+  confirme que quedó guardado con éxito en la plataforma — los que fallen,
+  queden incompletos, se cancelen o nunca lleguen a guardarse no deben sumar.
 
 ## Hecho
 
