@@ -42,6 +42,7 @@ export default function ConfiguracionPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [triggeringFix, setTriggeringFix] = useState(false);
+  const [clearingFixHistory, setClearingFixHistory] = useState(false);
   const [fixStatus, setFixStatus] = useState<{
     active: boolean;
     status?: string;
@@ -304,6 +305,23 @@ export default function ConfiguracionPage() {
       });
     } finally {
       setTriggeringFix(false);
+    }
+  }
+
+  async function handleClearFixHistory() {
+    if (!confirm("¿Borrar definitivamente todo el historial y los logs de la herramienta Patricia Coy? Esto no borra artículos.")) return;
+    setClearingFixHistory(true);
+    try {
+      const res = await fetch("/api/admin/fix-patricia", { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setBanner({ type: "error", text: data.error ?? "No se pudo borrar el historial" });
+        return;
+      }
+      setFixStatus({ active: false, history: [], logs: [], repaired: [] });
+      setBanner({ type: "info", text: `Historial reiniciado: ${data.deletedRuns ?? 0} corridas eliminadas.` });
+    } finally {
+      setClearingFixHistory(false);
     }
   }
 
@@ -1351,6 +1369,21 @@ export default function ConfiguracionPage() {
             }}
           >
             {triggeringFix ? "Iniciando lote..." : "🚀 Procesar siguiente lote de 20"}
+          </button>
+          <button
+            onClick={handleClearFixHistory}
+            disabled={clearingFixHistory || triggeringFix}
+            style={{
+              ...secondaryButtonStyle,
+              marginLeft: 10,
+              background: "#ffffff",
+              color: "#991b1b",
+              border: "1px solid #b91c1c",
+              padding: "10px 20px",
+              fontWeight: 700,
+            }}
+          >
+            {clearingFixHistory ? "Borrando..." : "Borrar historial y logs"}
           </button>
 
           {fixStatus && fixStatus.active && (

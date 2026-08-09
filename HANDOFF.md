@@ -62,6 +62,10 @@ importante: qué cambió, qué quedó pendiente, qué se rompió.
   pruebas individuales antiguas y solo cuenta títulos creados como lotes de
   20; muestra fecha, estado y “reparados confirmados”. Al crear un lote se
   guarda inmediatamente un evento “esperando worker”, evitando paneles vacíos.
+- Por orden explícita de Milton se agregó “Borrar historial y logs”: elimina
+  únicamente los `Run` de Patricia bajo `FIX_PATRICIA`; `Title` y `TitleEvent`
+  se eliminan en cascada. No borra artículos publicados, usuario, categoría ni
+  credenciales. Se usa una vez para reiniciar el contador desde cero.
 
 ## Qué es esto
 

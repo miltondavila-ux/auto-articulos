@@ -97,3 +97,29 @@ export async function POST() {
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
   }
 }
+
+export async function DELETE() {
+  try {
+    const sessionUserId = await getCurrentUserId();
+    if (!sessionUserId) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+    const sessionUser = await prisma.user.findUnique({ where: { id: sessionUserId } });
+    if (!sessionUser || sessionUser.email !== "miltondavila@gmail.com") {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
+    const result = await prisma.run.deleteMany({
+      where: {
+        category: { name: "FIX_PATRICIA" },
+        user: { email: { contains: "patricia", mode: "insensitive" } },
+      },
+    });
+    return NextResponse.json({ ok: true, deletedRuns: result.count });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : String(err) },
+      { status: 500 },
+    );
+  }
+}
