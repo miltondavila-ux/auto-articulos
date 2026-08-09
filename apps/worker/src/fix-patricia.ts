@@ -18,7 +18,6 @@ export async function runPatriciaFix(
   const page = await browser.newPage();
 
   // Cambiamos el límite a exactamente 1 artículo para este test inicial.
-  // Una vez que Milton valide que funciona este único artículo, podemos subirlo a 10.
   const MAX_REPAIRS_PER_RUN = 1; 
   let successCount = 0;
   let skippedCount = 0;
@@ -43,11 +42,10 @@ export async function runPatriciaFix(
     let hasNextPage = true;
     let pageNum = 1;
 
-    // Recorreremos las páginas de una en una, y repararemos AL VUELO los artículos que encontremos
+    // Recorreremos las páginas de una en una y repararemos al vuelo los artículos
     while (hasNextPage && successCount < MAX_REPAIRS_PER_RUN) {
       await onStep(`Abriendo página ${pageNum} de la lista de artículos...`);
       await page.goto(`${baseUrl}/dashboard/user_buyer_seller_articles.php?page=${pageNum}`, { waitUntil: "domcontentloaded" }).catch(async () => {
-        // Fallback si no acepta el query param page: cargamos la url normal
         await page.goto(`${baseUrl}/dashboard/user_buyer_seller_articles.php`, { waitUntil: "domcontentloaded" });
       });
 
@@ -71,9 +69,8 @@ export async function runPatriciaFix(
         break;
       }
 
-      // Si no es la primera página y no usamos query param, navegamos haciendo clic en siguiente
+      // Si no es la primera página y no usamos query param, navegamos haciendo clics
       if (pageNum > 1) {
-        // Volver a la página correcta haciendo clics
         for (let p = 1; p < pageNum; p++) {
           const nextBtn = page.locator("a.next, li.next a, button.next").first();
           if (await nextBtn.isVisible().catch(() => false)) {
@@ -90,19 +87,24 @@ export async function runPatriciaFix(
       // Leer los artículos visibles en esta página
       for (let i = 0; i < count; i++) {
         const row = rows.nth(i);
-        const idText = (await row.locator("td").first().innerText().catch(() => "")).trim();
-        const titleLink = row.locator("td").nth(2);
-        const titleText = (await titleLink.innerText().catch(() => "")).trim();
+        
+        // El ID está dentro de span.text-center b o en el input value
+        const idText = ((await row.locator("input[name='checkbox[]']").getAttribute("value").catch(() => "")) || "").trim();
+        
+        // El título está en la columna 4 (índice 3)
+        const titleText = (await row.locator("td").nth(3).innerText().catch(() => "")).trim();
 
+        // Enlace Ver/Consultar en el dropdown
         const consultLink = row.locator("a.consultar").first();
-        const href = await consultLink.getAttribute("href").catch(() => null);
+        const href = (await consultLink.getAttribute("href").catch(() => "")) || null;
 
-        if (idText && titleText && !idText.includes("No data") && !idText.includes("Ningún") && idText !== "Loading...") {
+        if (idText && titleText && idText !== "Loading...") {
           pageArticles.push({
             id: idText,
             title: titleText,
             publicUrl: href || "",
-            editUrl: `${baseUrl}/dashboard/direct-articles?id=${idText}`,
+            // La URL correcta de edición con articles_id_
+            editUrl: `${baseUrl}/dashboard/direct-edit-articles?articles_id_=${idText}`,
           });
         }
       }
@@ -116,12 +118,12 @@ export async function runPatriciaFix(
         }
 
         const article = pageArticles[idx];
-        const progressPrefix = `[Página ${pageNum} - Art. ${idx + 1}/${pageArticles.length}]`;
+        const progressPrefix = `[Art. ${article.id}]`;
 
         try {
-          // Navegamos directamente al editor del artículo
           await page.goto(article.editUrl, { waitUntil: "domcontentloaded" });
 
+          // Localizar el textarea
           const editorTextarea = page
             .locator('textarea[name="content"], textarea#respose_content, textarea#editor, textarea.editor')
             .first();
@@ -157,8 +159,8 @@ export async function runPatriciaFix(
             }
           } else {
             skippedCount++;
-            if (skippedCount % 5 === 0) {
-              await onStep(`... analizados ${skippedCount} artículos en esta página (ya corregidos)`);
+            if (skippedCount % 5 === 0 || idx === pageArticles.length - 1) {
+              await onStep(`... analizados ${skippedCount} artículos ya corregidos`);
             }
           }
         } catch (articleErr) {
@@ -176,7 +178,6 @@ export async function runPatriciaFix(
       // Si terminamos la página y no logramos el límite, buscamos si hay página siguiente
       await page.goto(`${baseUrl}/dashboard/user_buyer_seller_articles.php`, { waitUntil: "domcontentloaded" });
       await page.waitForSelector("table tbody tr td", { timeout: 15000 });
-      // Volver a la página actual para buscar el botón siguiente
       for (let p = 1; p < pageNum; p++) {
         const nextBtn = page.locator("a.next, li.next a, button.next").first();
         if (await nextBtn.isVisible().catch(() => false)) {
