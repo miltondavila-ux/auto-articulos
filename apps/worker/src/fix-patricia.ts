@@ -46,14 +46,11 @@ export async function runPatriciaFix(
     let hasNextPage = true;
     let pageNum = 1;
 
-    // Recorreremos las páginas de una en una y repararemos al vuelo los artículos
     while (hasNextPage && processedCount < MAX_REPAIRS_PER_RUN) {
-      await onStep(`Abriendo página ${pageNum} de la lista de artículos...`);
       await page.goto(`${baseUrl}/dashboard/user_buyer_seller_articles.php`, {
         waitUntil: "domcontentloaded",
       });
 
-      // Esperar a que la tabla cargue y el indicador "Loading" desaparezca
       await page.waitForSelector("table tbody tr td", { timeout: 25000 });
       await page.waitForFunction(() => {
         const cell = document.querySelector("table tbody tr td");
@@ -69,11 +66,9 @@ export async function runPatriciaFix(
         firstCellText.includes("No se encontraron") ||
         firstCellText.includes("Ningún dato")
       ) {
-        await onStep("La lista de artículos está vacía.");
         break;
       }
 
-      // Si no es la primera página y no usamos query param, navegamos haciendo clics
       if (pageNum > 1) {
         for (let p = 1; p < pageNum; p++) {
           const nextBtn = page.locator("a.next, li.next a, button.next").first();
@@ -84,167 +79,144 @@ export async function runPatriciaFix(
         }
       }
 
-      const count = await page.locator("table tbody tr").count();
-
-      // Tomar una sola fila, terminar completamente ese artículo y solo
-      // entonces volver a la lista para tomar la fila siguiente.
-      for (let idx = 0; idx < count; idx++) {
-        if (processedCount >= MAX_REPAIRS_PER_RUN) {
-          break;
-        }
-
-        if (idx > 0) {
-          await page.goto(`${baseUrl}/dashboard/user_buyer_seller_articles.php`, {
-            waitUntil: "domcontentloaded",
-          });
-          await page.waitForSelector("table tbody tr td", { timeout: 15000 });
-          for (let p = 1; p < pageNum; p++) {
-            const nextBtn = page.locator("a.next, li.next a, button.next").first();
-            if (await nextBtn.isVisible().catch(() => false)) {
-              await nextBtn.click();
-              await page.waitForTimeout(2000);
-            }
-          }
-        }
-
-        const row = page.locator("table tbody tr").nth(idx);
-        const id = ((await row.locator("input[name='checkbox[]']").getAttribute("value").catch(() => "")) || "").trim();
-        const title = (await row.locator("td").nth(3).innerText().catch(() => "")).trim();
-        const publicUrl = (await row.locator("a.consultar").first().getAttribute("href").catch(() => "")) || "";
-        if (!id || !title || id === "Loading...") continue;
-
-        const article = {
-          id,
-          title,
-          publicUrl,
-          editUrl: `${baseUrl}/dashboard/direct-edit-articles?articles_id_=${id}`,
-        };
-        const progressPrefix = `[Art. ${article.id}]`;
-
-        try {
-          await onStep(`${progressPrefix} Abriendo: "${article.title}"...`);
-          await page.goto(article.editUrl, { waitUntil: "domcontentloaded" });
-
-          // El editor textarea real para español es "contentes". Lo buscamos y esperamos a que se adjunte (puede estar oculto por TinyMCE)
-          const editorTextarea = page.locator('textarea[name="contentes"], textarea[name="content"]').first();
-          await editorTextarea.waitFor({ state: "attached", timeout: 15000 }).catch(() => {});
-
-          if (await editorTextarea.count() === 0) {
-            processedCount++;
-            throw new Error("No se localizó el editor de contenido.");
-          }
-
-          // Leer el valor directamente mediante JS en el navegador para evitar problemas si está oculto
-          let contentHtml = await editorTextarea.inputValue();
-
-          if (
-            contentHtml.includes("PHONE_NUMBER") ||
-            contentHtml.includes("NUMERO-WHATSAPP") ||
-            contentHtml.includes("19546529929")
-          ) {
-            await onStep(`${progressPrefix} Reparando: "${article.title}"...`);
-
-            const repaired = replacePhonePlaceholders(contentHtml, "+19546529929");
-            if (
-              repaired.html === contentHtml &&
-              !contentHtml.includes("PHONE_NUMBER") &&
-              !contentHtml.includes("NUMERO-WHATSAPP")
-            ) {
-              skippedCount++;
-              await onStep(`${progressPrefix} Ya estaba correcto. Continuando al siguiente artículo.`);
-              continue;
-            }
-            processedCount++;
-            contentHtml = repaired.html;
-
-            // Escribir el nuevo contenido en TODOS los textareas compatibles y en TODOS los editores TinyMCE
-            await page.evaluate(({ val }) => {
-              const textareas = document.querySelectorAll('textarea');
-              textareas.forEach((ta) => {
-                const name = ta.getAttribute('name') || '';
-                const id = ta.getAttribute('id') || '';
-                if (name === 'contentes' || name === 'content' || id === 'contentes' || id === 'content') {
-                  (ta as HTMLTextAreaElement).value = val;
-                  ta.dispatchEvent(new Event('input', { bubbles: true }));
-                  ta.dispatchEvent(new Event('change', { bubbles: true }));
-                }
-              });
-
-              const tiny = (window as any).tinyMCE;
-              if (tiny) {
-                const editors = Array.isArray(tiny.editors) ? tiny.editors : [];
-                editors.forEach((editor: any) => {
-                  if (editor && typeof editor.setContent === 'function') {
-                    editor.setContent(val);
-                    if (typeof editor.save === 'function') editor.save();
-                  }
-                });
-                if (tiny.activeEditor && typeof tiny.activeEditor.setContent === 'function') {
-                  tiny.activeEditor.setContent(val);
-                  if (typeof tiny.activeEditor.save === 'function') tiny.activeEditor.save();
-                }
-                if (typeof tiny.triggerSave === 'function') {
-                  tiny.triggerSave();
-                }
-              }
-            }, { val: contentHtml });
-
-            // Clic en Guardar y esperar a que 10minutesWebsite procese el formulario antes de recargar
-            const saveBtn = page.getByRole("button", { name: /Guardar cambios|Save changes|Guardar/i }).first();
-            if (await saveBtn.isVisible()) {
-              await onStep(`${progressPrefix} Contenido corregido. Guardando...`);
-              
-              await Promise.all([
-                page.waitForNavigation({ waitUntil: "domcontentloaded", timeout: 15000 }).catch(() => {}),
-                saveBtn.click(),
-              ]);
-
-              // Pausa de seguridad para asegurar que el servidor de 10minutesWebsite guardó en BD
-              await page.waitForTimeout(3000);
-
-              await onStep(`${progressPrefix} Guardado enviado. Verificando el contenido persistido...`);
-              await page.goto(article.editUrl, { waitUntil: "domcontentloaded" });
-              const savedTextarea = page
-                .locator('textarea[name="contentes"], textarea[name="content"]')
-                .first();
-              await savedTextarea.waitFor({ state: "attached", timeout: 15000 });
-              const savedHtml = await savedTextarea.inputValue();
-              const verified = replacePhonePlaceholders(savedHtml, "+19546529929");
-              if (
-                savedHtml.includes("PHONE_NUMBER") ||
-                savedHtml.includes("NUMERO-WHATSAPP") ||
-                verified.html !== savedHtml
-              ) {
-                throw new Error(
-                  "La verificación posterior detectó un marcador o enlace telefónico que todavía requiere corrección.",
-                );
-              }
-              successCount++;
-              lastRepaired = { id: article.id, title: article.title };
-              await onStep(`✓ ¡Reparado con éxito! (${successCount} de ${MAX_REPAIRS_PER_RUN}): ${article.title} — Enlace: ${article.publicUrl || article.editUrl}`);
-            } else {
-              throw new Error("No se encontró el botón Guardar.");
-            }
-          } else {
-            skippedCount++;
-            await onStep(`${progressPrefix} Ya estaba correcto. Continuando al siguiente artículo.`);
-          }
-        } catch (articleErr) {
-          errorCount++;
-          failedArticles.push({ id: article.id, title: article.title });
-          await onStep(`${progressPrefix} Error en artículo "${article.title}": ${articleErr instanceof Error ? articleErr.message : String(articleErr)}`);
-          await onStep(`${progressPrefix} Fallo registrado. Continuando con el siguiente artículo.`);
+      const rowLocators = page.locator("table tbody tr");
+      const count = await rowLocators.count();
+      const batchLimit = Math.min(count, MAX_REPAIRS_PER_RUN - processedCount);
+      
+      const idsToProcess: { id: string, title: string, publicUrl: string, editUrl: string }[] = [];
+      for (let i = 0; i < batchLimit; i++) {
+        const id = ((await rowLocators.nth(i).locator("input[name='checkbox[]']").getAttribute("value").catch(() => "")) || "").trim();
+        const title = (await rowLocators.nth(i).locator("td").nth(3).innerText().catch(() => "")).trim();
+        const publicUrl = (await rowLocators.nth(i).locator("a.consultar").first().getAttribute("href").catch(() => "")) || "";
+        if (id && id !== "Loading...") {
+          idsToProcess.push({ id, title, publicUrl, editUrl: `${baseUrl}/dashboard/direct-edit-articles?articles_id_=${id}` });
         }
       }
 
-      // Cada lote procesa hasta 20 pendientes, terminando completamente cada
-      // artículo antes de abrir el siguiente.
+      if (idsToProcess.length > 0) {
+        const startId = idsToProcess[0].id;
+        const endId = idsToProcess[idsToProcess.length - 1].id;
+        await onStep(`Iniciando lote: Se revisarán los artículos desde el ID_INICIO [${startId}] hasta el ID_FIN [${endId}]`);
+
+        for (const article of idsToProcess) {
+          if (processedCount >= MAX_REPAIRS_PER_RUN) break;
+          const progressPrefix = `[Art. ${article.id}]`;
+          
+          let attempt = 1;
+          const MAX_ATTEMPTS = 3;
+          let success = false;
+          
+          while (attempt <= MAX_ATTEMPTS && !success) {
+            try {
+              await onStep(`${progressPrefix} (Intento ${attempt}/${MAX_ATTEMPTS}) Procesando: "${article.title}"...`);
+              await page.goto(article.editUrl, { waitUntil: "domcontentloaded" });
+
+              const editorTextarea = page.locator('textarea[name="contentes"], textarea[name="content"]').first();
+              await editorTextarea.waitFor({ state: "attached", timeout: 15000 }).catch(() => {});
+
+              if (await editorTextarea.count() === 0) {
+                throw new Error("No se localizó el editor de contenido.");
+              }
+
+              let contentHtml = await editorTextarea.inputValue();
+
+              if (
+                contentHtml.includes("PHONE_NUMBER") ||
+                contentHtml.includes("NUMERO-WHATSAPP") ||
+                contentHtml.includes("19546529929")
+              ) {
+                const repaired = replacePhonePlaceholders(contentHtml, "+19546529929");
+                if (
+                  repaired.html === contentHtml &&
+                  !contentHtml.includes("PHONE_NUMBER") &&
+                  !contentHtml.includes("NUMERO-WHATSAPP")
+                ) {
+                  skippedCount++;
+                  success = true;
+                  break;
+                }
+                
+                contentHtml = repaired.html;
+
+                await page.evaluate(({ val }) => {
+                  const textareas = document.querySelectorAll('textarea');
+                  textareas.forEach((ta) => {
+                    const name = ta.getAttribute('name') || '';
+                    const id = ta.getAttribute('id') || '';
+                    if (name === 'contentes' || name === 'content' || id === 'contentes' || id === 'content') {
+                      (ta as HTMLTextAreaElement).value = val;
+                      ta.dispatchEvent(new Event('input', { bubbles: true }));
+                      ta.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                  });
+
+                  const tiny = (window as any).tinyMCE;
+                  if (tiny) {
+                    const editors = Array.isArray(tiny.editors) ? tiny.editors : [];
+                    editors.forEach((editor: any) => {
+                      if (editor && typeof editor.setContent === 'function') {
+                        editor.setContent(val);
+                        if (typeof editor.save === 'function') editor.save();
+                      }
+                    });
+                    if (tiny.activeEditor && typeof tiny.activeEditor.setContent === 'function') {
+                      tiny.activeEditor.setContent(val);
+                      if (typeof tiny.activeEditor.save === 'function') tiny.activeEditor.save();
+                    }
+                    if (typeof tiny.triggerSave === 'function') {
+                      tiny.triggerSave();
+                    }
+                  }
+                }, { val: contentHtml });
+
+                const saveBtn = page.getByRole("button", { name: /Guardar cambios|Save changes|Guardar/i }).first();
+                if (await saveBtn.isVisible()) {
+                  await Promise.all([
+                    page.waitForNavigation({ waitUntil: "domcontentloaded", timeout: 15000 }).catch(() => {}),
+                    saveBtn.click(),
+                  ]);
+
+                  await page.waitForTimeout(3000);
+
+                  await page.goto(article.editUrl, { waitUntil: "domcontentloaded" });
+                  const savedTextarea = page
+                    .locator('textarea[name="contentes"], textarea[name="content"]')
+                    .first();
+                  await savedTextarea.waitFor({ state: "attached", timeout: 15000 });
+                  const savedHtml = await savedTextarea.inputValue();
+                  const verified = replacePhonePlaceholders(savedHtml, "+19546529929");
+                  if (
+                    savedHtml.includes("PHONE_NUMBER") ||
+                    savedHtml.includes("NUMERO-WHATSAPP") ||
+                    verified.html !== savedHtml
+                  ) {
+                    throw new Error("Verificación fallida. HTML incorrecto persistido.");
+                  }
+                  successCount++;
+                  lastRepaired = { id: article.id, title: article.title };
+                  success = true;
+                } else {
+                  throw new Error("No se encontró el botón Guardar.");
+                }
+              } else {
+                skippedCount++;
+                success = true;
+              }
+            } catch (articleErr) {
+              attempt++;
+              if (attempt > MAX_ATTEMPTS) {
+                throw new Error(`Kill Switch: Fallo estructural en el artículo ${article.id} tras 3 intentos.`);
+              }
+            }
+          }
+          processedCount++;
+        }
+      }
+
       if (processedCount >= MAX_REPAIRS_PER_RUN) {
-        await onStep(`\nLímite del lote alcanzado: ${processedCount} artículos procesados uno por uno.`);
         break;
       }
 
-      // Si terminamos la página y no logramos el límite, buscamos si hay página siguiente
       await page.goto(`${baseUrl}/dashboard/user_buyer_seller_articles.php`, { waitUntil: "domcontentloaded" });
       await page.waitForSelector("table tbody tr td", { timeout: 15000 });
       for (let p = 1; p < pageNum; p++) {
@@ -270,28 +242,13 @@ export async function runPatriciaFix(
       }
     }
 
-    if (lastRepaired) {
-      await onStep(
-        `PUNTO DE PARADA: artículo ${lastRepaired.id} — ${lastRepaired.title}. El próximo lote saltará los artículos correctos y continuará con el siguiente pendiente.`,
-      );
-    } else if (errorCount === 0) {
-      await onStep("SIN PENDIENTES: no se encontraron más artículos que requieran esta reparación.");
-    }
-
-    await onStep(`\nLOTE COMPLETADO: ${successCount} reparados, ${skippedCount} ya correctos, ${errorCount} con error.`);
-    if (failedArticles.length > 0) {
-      await onStep(
-        `PENDIENTES PARA REINTENTAR: ${failedArticles.map((article) => `${article.id} — ${article.title}`).join(" | ")}`,
-      );
-    }
     return { repaired: successCount, alreadyCorrect: skippedCount, failed: errorCount };
 
   } catch (err) {
-    await onStep(`Error general: ${err instanceof Error ? err.message : String(err)}`);
+    await onStep(`Error fatal del worker: ${err instanceof Error ? err.message : String(err)}`);
     throw err;
   } finally {
     await browser.close();
-    await onStep("Proceso finalizado.");
   }
 }
 
