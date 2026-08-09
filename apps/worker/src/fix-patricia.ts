@@ -124,11 +124,18 @@ export async function runPatriciaFix(
 
     await onStep(`Escaneo finalizado. Se identificaron ${articlesToEdit.length} artículos en total para revisar.`);
 
+    const MAX_REPAIRS_PER_RUN = 10;
     let successCount = 0;
     let skippedCount = 0;
 
     // 3. Procesar cada artículo uno a uno
     for (let idx = 0; idx < articlesToEdit.length; idx++) {
+      if (successCount >= MAX_REPAIRS_PER_RUN) {
+        await onStep(`\nLímite de ${MAX_REPAIRS_PER_RUN} artículos reparados alcanzado para este lote.`);
+        await onStep("Proceso pausado temporalmente para asegurar estabilidad. Puedes presionar el botón de nuevo para continuar con el siguiente lote de 10.");
+        break;
+      }
+
       const article = articlesToEdit[idx];
       const progressPrefix = `[${idx + 1}/${articlesToEdit.length}]`;
 
@@ -139,7 +146,10 @@ export async function runPatriciaFix(
           .locator('textarea[name="content"], textarea#respose_content, textarea#editor, textarea.editor')
           .first();
 
-        if (!(await editorTextarea.isVisible())) {
+        // Esperar a que el editor cargue y sea visible
+        await editorTextarea.waitFor({ state: "visible", timeout: 12000 }).catch(() => {});
+
+        if (!(await editorTextarea.isVisible().catch(() => false))) {
           await onStep(`${progressPrefix} Saltar: No se pudo cargar el editor para "${article.title}" (ID: ${article.id})`);
           continue;
         }
