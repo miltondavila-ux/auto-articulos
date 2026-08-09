@@ -32,6 +32,8 @@ export async function GET() {
       },
     });
 
+    console.log("FIX_PATRICIA run inspect:", run ? { id: run.id, status: run.status, titlesCount: run.titles.length, eventsCount: run.titles[0]?.events.length } : null);
+
     if (!run || run.titles.length === 0) {
       return NextResponse.json({ active: false });
     }
