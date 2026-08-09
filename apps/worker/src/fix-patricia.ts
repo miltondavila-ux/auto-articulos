@@ -49,60 +49,51 @@ export async function runPatriciaFix(
     // Leer todas las filas
     const rows = page.locator("table tbody tr");
     const count = await rows.count();
-    await onStep(`Encontradas ${count} filas en el listado de artículos.`);
+    await onStep(`Encontradas ${count} filas en la tabla del listado.`);
 
-    const articlesToEdit: { title: string; viewUrl: string }[] = [];
+    const articlesToEdit: { id: string; title: string; publicUrl: string; editUrl: string }[] = [];
 
     for (let i = 0; i < count; i++) {
       const row = rows.nth(i);
-      const titleLink = row.locator("td").nth(2); // La tercera columna suele ser el título
+      
+      // Primera columna es el ID del artículo
+      const idText = (await row.locator("td").first().innerText().catch(() => "")).trim();
+      
+      // Tercera columna es el Título
+      const titleLink = row.locator("td").nth(2);
       const titleText = (await titleLink.innerText().catch(() => "")).trim();
 
+      // Enlace de consulta (a.consultar) suele ser la URL pública del artículo
       const consultLink = row.locator("a.consultar").first();
       const href = await consultLink.getAttribute("href").catch(() => null);
 
-      if (titleText && href) {
+      if (idText && titleText) {
         articlesToEdit.push({
+          id: idText,
           title: titleText,
-          viewUrl: href.startsWith("http") ? href : `${baseUrl}/dashboard/${href}`,
+          publicUrl: href || "",
+          editUrl: `${baseUrl}/dashboard/direct-articles?id=${idText}`,
         });
       }
     }
 
-    await onStep(`Se encontraron ${articlesToEdit.length} artículos válidos para revisar.`);
+    await onStep(`Se identificaron ${articlesToEdit.length} artículos en total para revisar.`);
+
+    let successCount = 0;
+    let skippedCount = 0;
 
     // 3. Procesar cada artículo
     for (let idx = 0; idx < articlesToEdit.length; idx++) {
       const article = articlesToEdit[idx];
-      await onStep(`[${idx + 1}/${articlesToEdit.length}] Procesando: "${article.title}"`);
+      const progressPrefix = `[${idx + 1}/${articlesToEdit.length}]`;
       
       try {
-        // Ir a la página de consulta/vista
-        await page.goto(article.viewUrl, { waitUntil: "domcontentloaded" });
-
-        // Buscar si hay un botón de edición en la página
-        const editLink = page.locator('a[href*="direct-articles?id="], a[href*="direct-articles.php?id="], a:has-text("Edit"), a:has-text("Editar")').first();
-        
-        let editUrl = await editLink.getAttribute("href").catch(() => null);
-        if (!editUrl) {
-          const match = article.viewUrl.match(/[?&]id=(\d+)/);
-          if (match && match[1]) {
-            editUrl = `${baseUrl}/dashboard/direct-articles?id=${match[1]}`;
-          }
-        }
-
-        if (!editUrl) {
-          await onStep(`- No se pudo determinar el enlace de edición para: "${article.title}"`);
-          continue;
-        }
-
-        const finalEditUrl = editUrl.startsWith("http") ? editUrl : `${baseUrl}/dashboard/${editUrl}`;
-        await page.goto(finalEditUrl, { waitUntil: "domcontentloaded" });
+        await page.goto(article.editUrl, { waitUntil: "domcontentloaded" });
 
         // Esperar a que cargue el formulario de edición
         const editorTextarea = page.locator('textarea[name="content"], textarea#respose_content, textarea#editor, textarea.editor').first();
         if (!(await editorTextarea.isVisible())) {
-          await onStep(`- No se encontró el campo de contenido/editor para: "${article.title}"`);
+          await onStep(`${progressPrefix} Saltar: No se encontró el editor para "${article.title}" (ID: ${article.id})`);
           continue;
         }
 
@@ -111,7 +102,7 @@ export async function runPatriciaFix(
         
         // Verificar si contiene "PHONE_NUMBER"
         if (contentHtml.includes("PHONE_NUMBER")) {
-          await onStep(`- Detectado placeholder 'PHONE_NUMBER'. Reemplazando por '+19546529929'...`);
+          await onStep(`${progressPrefix} Reparando: "${article.title}"...`);
           
           contentHtml = contentHtml.replace(/PHONE_NUMBER/g, "+19546529929");
 
@@ -126,15 +117,24 @@ export async function runPatriciaFix(
           if (await saveBtn.isVisible()) {
             await saveBtn.click();
             await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
-            await onStep(`✓ Artículo "${article.title}" actualizado con éxito.`);
+            successCount++;
+            await onStep(`✓ Reparado con éxito (${successCount} de ${articlesToEdit.length}): ${article.title} — Enlace: ${article.publicUrl || article.editUrl}`);
           } else {
-            await onStep(`- No se encontró el botón de Guardar cambios en: "${article.title}"`);
+            await onStep(`${progressPrefix} Error: No se encontró botón Guardar para "${article.title}"`);
+          }
+        } else {
+          skippedCount++;
+          // No requiere cambios
+          if (skippedCount % 10 === 0 || idx === articlesToEdit.length - 1) {
+            await onStep(`... analizados ${idx + 1}/${articlesToEdit.length} artículos (ya corregidos o sin placeholder)`);
           }
         }
       } catch (articleErr) {
-        await onStep(`- Error procesando artículo "${article.title}": ${articleErr instanceof Error ? articleErr.message : String(articleErr)}`);
+        await onStep(`${progressPrefix} Error en artículo "${article.title}": ${articleErr instanceof Error ? articleErr.message : String(articleErr)}`);
       }
     }
+
+    await onStep(`\n🎉 PROCESO COMPLETADO: ${successCount} artículos corregidos con éxito, ${skippedCount} ya estaban corregidos.`);
 
   } catch (err) {
     await onStep(`Error general en el proceso de Playwright: ${err instanceof Error ? err.message : String(err)}`);

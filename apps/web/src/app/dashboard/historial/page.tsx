@@ -560,6 +560,27 @@ function RunTable({ titles }: { titles: TitleRow[] }) {
   );
 }
 
+function renderMessageWithLinks(message: string) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = message.split(urlRegex);
+  return parts.map((part, i) => {
+    if (part.match(urlRegex)) {
+      return (
+        <a
+          key={i}
+          href={part}
+          target="_blank"
+          rel="noreferrer"
+          style={{ color: "#3b82f6", textDecoration: "underline", fontWeight: 600 }}
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+}
+
 function TitleRowWithLog({ title }: { title: TitleRow }) {
   // El log queda visible siempre (no solo en errores): sirve para revisar
   // el paso a paso incluso de títulos ya publicados con éxito. El log
@@ -715,7 +736,7 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
                           />
                         </>
                       ) : (
-                        <>— {e.message}</>
+                        <>— {renderMessageWithLinks(e.message)}</>
                       )}
                     </li>
                   );
