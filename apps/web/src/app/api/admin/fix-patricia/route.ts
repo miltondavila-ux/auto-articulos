@@ -62,6 +62,9 @@ export async function POST() {
       },
     });
 
+    const { triggerWorkerNow } = await import("@/lib/trigger-worker");
+    await triggerWorkerNow().catch((e) => console.error("Error triggerWorkerNow:", e));
+
     return NextResponse.json({ ok: true, runId: run.id });
   } catch (err) {
     console.error("Error al gatillar reparación de Patricia:", err);
