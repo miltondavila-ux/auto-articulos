@@ -1392,7 +1392,7 @@ export default function ConfiguracionPage() {
             {clearingFixHistory ? "Borrando..." : "Borrar historial y logs"}
           </button>
 
-          {fixStatus && fixStatus.active && (
+          {fixStatus && (fixStatus.active || (fixStatus.history && fixStatus.history.length > 0)) && (
             <div
               style={{
                 marginTop: 20,
@@ -1403,77 +1403,82 @@ export default function ConfiguracionPage() {
                 boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: 8,
-                }}
-              >
-                <span style={{ fontWeight: 700, color: "#991b1b", fontSize: 13 }}>
-                  Estado: {fixStatus.status === "running" ? "⏳ Procesando..." : fixStatus.status === "pending" ? "⏳ En cola (Iniciando robot...)" : fixStatus.status === "success" ? "✅ Completado" : `⚠️ ${fixStatus.status}`}
-                </span>
-                {fixStatus.total ? (
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#7f1d1d" }}>
-                    Progreso: {fixStatus.processed} / {fixStatus.total} ({Math.round(((fixStatus.processed || 0) / (fixStatus.total || 1)) * 100)}%)
-                  </span>
-                ) : (
-                  <span style={{ fontSize: 12, color: "#64748b" }}>Cargando información del lote...</span>
-                )}
-              </div>
-
-              {/* Progress Bar */}
-              {fixStatus.total ? (
-                <div
-                  style={{
-                    width: "100%",
-                    height: 10,
-                    background: "#fee2e2",
-                    borderRadius: 999,
-                    overflow: "hidden",
-                    marginBottom: 16,
-                  }}
-                >
+              {/* Área de trabajo activa (Visible solo cuando está en proceso o en cola) */}
+              {fixStatus.active && (fixStatus.status === "running" || fixStatus.status === "pending") && (
+                <div style={{ marginBottom: 16 }}>
                   <div
                     style={{
-                      width: `${Math.round(((fixStatus.processed || 0) / (fixStatus.total || 1)) * 100)}%`,
-                      height: "100%",
-                      background: "#ef4444",
-                      borderRadius: 999,
-                      transition: "width 0.3s ease",
-                    }}
-                  />
-                </div>
-              ) : null}
-
-              {/* Live console logs */}
-              {fixStatus.logs && fixStatus.logs.length > 0 ? (
-                <div>
-                  <h3 style={{ fontSize: 12, fontWeight: 700, color: "#7f1d1d", margin: "0 0 6px 0" }}>
-                    📋 Consola de avance en tiempo real:
-                  </h3>
-                  <div
-                    style={{
-                      background: "#1e1e2e",
-                      color: "#cdd6f4",
-                      fontFamily: "monospace",
-                      fontSize: 11,
-                      padding: 10,
-                      borderRadius: 6,
-                      maxHeight: 180,
-                      overflowY: "auto",
-                      lineHeight: 1.4,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: 8,
                     }}
                   >
-                    {fixStatus.logs.map((log, idx) => (
-                      <div key={idx} style={{ marginBottom: 2, whiteSpace: "pre-wrap" }}>
-                        {log}
-                      </div>
-                    ))}
+                    <span style={{ fontWeight: 700, color: "#991b1b", fontSize: 13 }}>
+                      Estado: {fixStatus.status === "running" ? "⏳ Procesando..." : "⏳ En cola (Iniciando robot...)"}
+                    </span>
+                    {fixStatus.total ? (
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#7f1d1d" }}>
+                        Progreso: {fixStatus.processed} / {fixStatus.total} ({Math.round(((fixStatus.processed || 0) / (fixStatus.total || 1)) * 100)}%)
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 12, color: "#64748b" }}>Cargando información del lote...</span>
+                    )}
                   </div>
+
+                  {/* Progress Bar */}
+                  {fixStatus.total ? (
+                    <div
+                      style={{
+                        width: "100%",
+                        height: 10,
+                        background: "#fee2e2",
+                        borderRadius: 999,
+                        overflow: "hidden",
+                        marginBottom: 16,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${Math.round(((fixStatus.processed || 0) / (fixStatus.total || 1)) * 100)}%`,
+                          height: "100%",
+                          background: "#ef4444",
+                          borderRadius: 999,
+                          transition: "width 0.3s ease",
+                        }}
+                      />
+                    </div>
+                  ) : null}
+
+                  {/* Live console logs */}
+                  {fixStatus.logs && fixStatus.logs.length > 0 ? (
+                    <div>
+                      <h3 style={{ fontSize: 12, fontWeight: 700, color: "#7f1d1d", margin: "0 0 6px 0" }}>
+                        📋 Consola de avance en tiempo real:
+                      </h3>
+                      <div
+                        style={{
+                          background: "#1e1e2e",
+                          color: "#cdd6f4",
+                          fontFamily: "monospace",
+                          fontSize: 11,
+                          padding: 10,
+                          borderRadius: 6,
+                          maxHeight: 180,
+                          overflowY: "auto",
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        {fixStatus.logs.map((log, idx) => (
+                          <div key={idx} style={{ marginBottom: 2, whiteSpace: "pre-wrap" }}>
+                            {log}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
-              ) : null}
+              )}
 
               {fixStatus.history && fixStatus.history.length > 0 ? (
                 <div style={{ marginTop: 16, borderTop: "1px solid #fee2e2", paddingTop: 16 }}>
