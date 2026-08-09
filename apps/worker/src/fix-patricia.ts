@@ -23,8 +23,7 @@ export async function runPatriciaFix(
   let skippedCount = 0;
   let errorCount = 0;
   let processedCount = 0;
-  let lastRepaired: { id: string; title: string } | null = null;
-  const failedArticles: { id: string; title: string }[] = [];
+
 
   try {
     // 1. Iniciar sesión
@@ -209,13 +208,14 @@ export async function runPatriciaFix(
                     throw new Error("Verificación fallida. HTML incorrecto persistido.");
                   }
                   successCount++;
-                  lastRepaired = { id: article.id, title: article.title };
+                  await onStep(`✓ ¡Reparado con éxito! (${successCount} de ${MAX_REPAIRS_PER_RUN}): ${article.title} — Enlace: ${article.publicUrl || article.editUrl}`);
                   success = true;
                 } else {
                   throw new Error("No se encontró el botón Guardar.");
                 }
               } else {
                 skippedCount++;
+                await onStep(`${progressPrefix} Ya corregido / sin cambios.`);
                 success = true;
               }
             } catch (articleErr) {
