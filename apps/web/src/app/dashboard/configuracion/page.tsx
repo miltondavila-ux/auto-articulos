@@ -54,6 +54,7 @@ export default function ConfiguracionPage() {
       id: string;
       status: string;
       createdAt: string;
+      finishedAt: string | null;
       repairedCount: number;
       alreadyCorrectCount: number;
       totalReviewed: number;
@@ -1514,10 +1515,33 @@ export default function ConfiguracionPage() {
                           }}
                         >
                           <span style={{ userSelect: "none" }}>
-                            {isExpanded ? "▼" : "▶"} Lote {fixStatus.history!.length - index} ({new Date(batch.createdAt).toLocaleString("es-ES", { hour: "numeric", minute: "numeric", second: "numeric" })})
+                            {isExpanded ? "▼" : "▶"}{" "}
+                            <strong>Lote #{fixStatus.history!.length - index}</strong>{" "}
+                            <span style={{ fontWeight: 400, color: "#475569", marginLeft: 4 }}>
+                              (Iniciado: {new Date(batch.createdAt).toLocaleTimeString("es-ES")}
+                              {batch.finishedAt ? ` | Finalizado: ${new Date(batch.finishedAt).toLocaleTimeString("es-ES")} | Duración: ${(() => {
+                                const sec = Math.round((new Date(batch.finishedAt).getTime() - new Date(batch.createdAt).getTime()) / 1000);
+                                return sec > 60 ? `${Math.floor(sec / 60)} min ${sec % 60}s` : `${sec}s`;
+                              })()}` : " | En curso"})
+                            </span>
                           </span>
-                          <span style={{ fontSize: 11, color: "#475569" }}>
-                            Revisados: {batch.totalReviewed} (Reparados: {batch.repairedCount}, Correctos: {batch.alreadyCorrectCount})
+                          <span style={{ fontSize: 11, color: "#475569", display: "flex", alignItems: "center", gap: 8 }}>
+                            <span
+                              style={{
+                                fontSize: 9,
+                                fontWeight: 700,
+                                textTransform: "uppercase",
+                                padding: "2px 6px",
+                                borderRadius: 4,
+                                background: batch.status === "success" ? "#dcfce7" : batch.status === "running" ? "#fef9c3" : "#fee2e2",
+                                color: batch.status === "success" ? "#166534" : batch.status === "running" ? "#854d0e" : "#991b1b",
+                              }}
+                            >
+                              {batch.status === "success" ? "Completado" : batch.status === "running" ? "Procesando" : batch.status}
+                            </span>
+                            <span>
+                              Revisados: {batch.totalReviewed} (Reparados: {batch.repairedCount}, Correctos: {batch.alreadyCorrectCount})
+                            </span>
                           </span>
                         </div>
 
