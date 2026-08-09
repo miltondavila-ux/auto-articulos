@@ -46,6 +46,13 @@ Claude, Codex y Antigravity deben hacer lo siguiente **antes de leer o modificar
 
 ## Trabajo activo
 
+### Antigravity — pruebas activas de Patricia Coy
+
+- **Estado:** `ACTIVO — PRUEBAS EN PRODUCCIÓN` (9/8/2026, indicado por Milton).
+- **Responsable actual:** Antigravity de Google, coordinado directamente con Milton.
+- **Prueba en curso:** lote de hasta 20 artículos de Patricia Coy; cada artículo debe abrirse, corregirse, guardarse, verificarse y registrarse antes de buscar el siguiente.
+- **Regla de coordinación:** Codex y Claude no deben iniciar workers, cancelar corridas, borrar historial ni modificar el reparador Patricia mientras Antigravity realiza estas pruebas, salvo instrucción explícita posterior de Milton.
+
 ### Codex — auditoría del arreglo de Patricia Coy
 
 - **Estado:** `EN DESARROLLO — LOTES REANUDABLES DE 20 CON HISTORIAL` (9/8/2026).
