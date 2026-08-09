@@ -47,7 +47,7 @@ export async function POST() {
       data: {
         userId: patriciaUser.id,
         categoryId: category.id,
-        status: "pending",
+        status: "running",
         contentLanguage: "es",
       },
     });
