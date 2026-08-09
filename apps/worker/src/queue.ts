@@ -7,7 +7,7 @@ import {
 import { tryReserveUser, releaseUser } from "./reservation";
 import { notifyGoogle } from "./googleIndexing";
 import { notifyBing } from "./bingIndexing";
-import { notifyThreads } from "./threadsIndexing";
+
 
 async function markTitleError(titleId: string, message: string) {
   await prisma.title.update({
