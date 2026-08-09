@@ -80,7 +80,7 @@ export async function GET() {
       // El worker escribe "✓ ¡Reparado con éxito! (...)". La expresión
       // anterior esperaba otro texto y por eso nunca mostraba el artículo.
       const repairMatch = event.message.match(
-        /✓\s*¡?Reparado con éxito!?\s*\(\d+ de \d+\):\s*(.*?)\s*—\s*Enlace:\s*(.+)/i,
+        /(?:✓\s*¡?Reparado con éxito!?\s*\(\d+ de \d+\)|Ya corregido):\s*(.*?)\s*—\s*Enlace:\s*(.+)/i,
       );
       if (repairMatch) {
         repaired.push({
@@ -132,7 +132,7 @@ export async function GET() {
       for (const t of historyRun.titles) {
         for (const event of t.events) {
           const repairMatch = event.message.match(
-            /✓\s*¡?Reparado con éxito!?\s*\(\d+ de \d+\):\s*(.*?)\s*—\s*Enlace:\s*(.+)/i,
+            /(?:✓\s*¡?Reparado con éxito!?\s*\(\d+ de \d+\)|Ya corregido):\s*(.*?)\s*—\s*Enlace:\s*(.+)/i,
           );
           if (repairMatch) {
             const titleStr = repairMatch[1].trim();

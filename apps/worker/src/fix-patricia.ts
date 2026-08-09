@@ -215,7 +215,7 @@ export async function runPatriciaFix(
                 }
               } else {
                 skippedCount++;
-                await onStep(`${progressPrefix} Ya corregido / sin cambios.`);
+                await onStep(`[Art. ${article.id}] Ya corregido: ${article.title} — Enlace: ${article.publicUrl || article.editUrl}`);
                 success = true;
               }
             } catch (articleErr) {
