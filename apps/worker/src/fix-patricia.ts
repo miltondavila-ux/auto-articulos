@@ -17,7 +17,7 @@ export async function runPatriciaFix(
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
 
-  // Cambiamos el límite a exactamente 1 artículo para este test inicial.
+  // Límite de prueba inicial: exactamente 1 artículo
   const MAX_REPAIRS_PER_RUN = 1; 
   let successCount = 0;
   let skippedCount = 0;
@@ -88,13 +88,9 @@ export async function runPatriciaFix(
       for (let i = 0; i < count; i++) {
         const row = rows.nth(i);
         
-        // El ID está dentro de span.text-center b o en el input value
         const idText = ((await row.locator("input[name='checkbox[]']").getAttribute("value").catch(() => "")) || "").trim();
-        
-        // El título está en la columna 4 (índice 3)
         const titleText = (await row.locator("td").nth(3).innerText().catch(() => "")).trim();
 
-        // Enlace Ver/Consultar en el dropdown
         const consultLink = row.locator("a.consultar").first();
         const href = (await consultLink.getAttribute("href").catch(() => "")) || null;
 
@@ -103,7 +99,6 @@ export async function runPatriciaFix(
             id: idText,
             title: titleText,
             publicUrl: href || "",
-            // La URL correcta de edición con articles_id_
             editUrl: `${baseUrl}/dashboard/direct-edit-articles?articles_id_=${idText}`,
           });
         }
@@ -123,19 +118,16 @@ export async function runPatriciaFix(
         try {
           await page.goto(article.editUrl, { waitUntil: "domcontentloaded" });
 
-          // Localizar el textarea
-          const editorTextarea = page
-            .locator('textarea[name="content"], textarea#respose_content, textarea#editor, textarea.editor')
-            .first();
+          // El editor textarea real para español es "contentes". Lo buscamos y esperamos a que se adjunte (puede estar oculto por TinyMCE)
+          const editorTextarea = page.locator('textarea[name="contentes"], textarea[name="content"]').first();
+          await editorTextarea.waitFor({ state: "attached", timeout: 15000 }).catch(() => {});
 
-          // Esperar a que el editor cargue y sea visible
-          await editorTextarea.waitFor({ state: "visible", timeout: 12000 }).catch(() => {});
-
-          if (!(await editorTextarea.isVisible().catch(() => false))) {
-            await onStep(`${progressPrefix} Saltar: No se cargó el editor para "${article.title}"`);
+          if (await editorTextarea.count() === 0) {
+            await onStep(`${progressPrefix} Saltar: No se localizó el textarea 'contentes' para "${article.title}"`);
             continue;
           }
 
+          // Leer el valor directamente mediante JS en el navegador para evitar problemas si está oculto
           let contentHtml = await editorTextarea.inputValue();
 
           if (contentHtml.includes("PHONE_NUMBER")) {
@@ -143,11 +135,21 @@ export async function runPatriciaFix(
 
             contentHtml = contentHtml.replace(/PHONE_NUMBER/g, "+19546529929");
 
-            await editorTextarea.evaluate((el, val) => {
-              (el as HTMLTextAreaElement).value = val;
-              el.dispatchEvent(new Event("change", { bubbles: true }));
-            }, contentHtml);
+            // Escribir el nuevo contenido tanto en el textarea original como en TinyMCE si está presente
+            await page.evaluate(({ val }) => {
+              const el = document.querySelector('textarea[name="contentes"], textarea[name="content"]') as HTMLTextAreaElement;
+              if (el) {
+                el.value = val;
+                el.dispatchEvent(new Event("change", { bubbles: true }));
+              }
+              // Sincronizar con TinyMCE si está cargado en la página
+              const tiny = (window as any).tinyMCE;
+              if (tiny && tiny.activeEditor) {
+                tiny.activeEditor.setContent(val);
+              }
+            }, { val: contentHtml });
 
+            // Clic en Guardar
             const saveBtn = page.getByRole("button", { name: /Guardar cambios|Save changes|Guardar/i }).first();
             if (await saveBtn.isVisible()) {
               await saveBtn.click();
