@@ -66,10 +66,7 @@ export default function BusinessProfileSection() {
     <section style={sectionStyle}>
       <h2 style={h2Style}>Google Business Profile</h2>
       <p style={{ fontSize: 13, color: "#6b7280" }}>
-        Cada vez que se publique un artículo, se creará automáticamente una
-        publicación en tu perfil de negocio de Google, con un resumen corto,
-        una imagen y un botón que lleva al artículo. Puedes conectar la misma
-        cuenta de Google que usas para Search Console, u otra distinta.
+        Cada vez que publiques un artículo, el sistema creará automáticamente una publicación en tu Perfil de Negocio de Google con un resumen, imagen y enlace al artículo completo. Es una forma adicional de que tus clientes te encuentren.
       </p>
       {!data?.connected ? (
         <div>
@@ -86,8 +83,7 @@ export default function BusinessProfileSection() {
             Conectar Google Business Profile
           </button>
           <p style={{ fontSize: 12, color: "#8a6d1a", marginTop: 6 }}>
-            Todavía no disponible — estamos esperando la aprobación de Google
-            para usar esta API. Te avisaremos cuando esté lista.
+            Esta función está en espera de aprobación por parte de Google. Te avisaremos en cuanto esté disponible para conectarla.
           </p>
         </div>
       ) : data.needsLocation ? (

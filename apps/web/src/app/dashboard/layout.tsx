@@ -22,6 +22,9 @@ export default async function DashboardLayout({
       }}
     >
       <style>{`
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .dashboard-main { padding-bottom: 48px !important; }
+        }
         @media (min-width: 1024px) {
           .mobile-notice { display: none; }
           .dashboard-main { padding: 32px 40px !important; }

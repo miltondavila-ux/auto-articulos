@@ -80,10 +80,7 @@ export default function BingWebmasterSection() {
     <section style={sectionStyle}>
       <h2 style={h2Style}>Bing Webmaster Tools</h2>
       <p style={{ fontSize: 13, color: "#6b7280" }}>
-        Conecta tu cuenta de Bing Webmaster Tools. A diferencia de Google, Bing
-        permite pedir indexación instantánea de cada artículo apenas se
-        publica — se hace automáticamente sin que tengas que hacer nada aquí,
-        una vez conectado.
+        Conecta tu cuenta de Bing para que tus artículos aparezcan en los resultados de búsqueda de Bing. A diferencia de Google, Bing permite solicitar indexación instantánea de cada artículo ni bien se publica — el sistema lo hace solo.
       </p>
       {!data?.connected ? (
         <a

@@ -49,12 +49,11 @@ export async function GET() {
       )
     ).flat();
     return NextResponse.json({ connected: true, needsLocation: true, locations });
-  } catch (error) {
+  } catch {
     return NextResponse.json({
       connected: true,
       needsLocation: true,
       locations: [],
-      error: error instanceof Error ? error.message : String(error),
     });
   }
 }

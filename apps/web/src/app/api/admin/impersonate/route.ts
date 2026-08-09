@@ -8,6 +8,7 @@ import {
   createImpersonationToken,
   verifySessionToken,
 } from "@/lib/session";
+import { auditLog } from "@/lib/audit";
 
 /**
  * Identidad real del admin, leída directamente de la cookie de sesión (no de
@@ -65,15 +66,20 @@ export async function POST(request: NextRequest) {
   response.cookies.set(IMPERSONATION_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: "strict",
     path: "/",
     maxAge: IMPERSONATION_TTL_MS / 1000,
   });
+  auditLog("impersonation_start", admin.id, { targetUserId: target.id });
   return response;
 }
 
 export async function DELETE() {
+  const admin = await getRealAdmin();
   const response = NextResponse.json({ ok: true });
   response.cookies.set(IMPERSONATION_COOKIE, "", { path: "/", maxAge: 0 });
+  if (admin) {
+    auditLog("impersonation_stop", admin.id);
+  }
   return response;
 }

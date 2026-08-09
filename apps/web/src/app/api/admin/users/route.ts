@@ -1,7 +1,8 @@
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
-import { encryptSecret, decryptSecret } from "@auto-articulos/shared";
+import { encryptSecret } from "@auto-articulos/shared";
+import { auditLog } from "@/lib/audit";
 import { getCurrentUserId, requireAdmin } from "@/lib/current-user";
 
 interface PublishedCountRow {
@@ -75,18 +76,10 @@ export async function GET() {
   return NextResponse.json({
     currentUserId,
     users: users.map((u) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { initialPasswordEncrypted, ...rest } = u;
-      let currentPassword: string | null = null;
-      if (initialPasswordEncrypted) {
-        try {
-          currentPassword = decryptSecret(initialPasswordEncrypted);
-        } catch {
-          currentPassword = null;
-        }
-      }
       return {
         ...rest,
-        currentPassword,
         articlesPublished: publishedByUser.get(u.id) ?? 0,
       };
     }),
@@ -270,6 +263,7 @@ export async function PATCH(request: NextRequest) {
     },
   });
 
+  auditLog("user_updated", currentUserId, { targetUserId: userId, changes: Object.keys(data) });
   return NextResponse.json({ user });
 }
 
@@ -294,6 +288,7 @@ export async function DELETE(request: NextRequest) {
   }
 
   await prisma.user.delete({ where: { id: userId } });
+  auditLog("user_deleted", currentUserId, { targetUserId: userId });
   return NextResponse.json({ ok: true });
 }
 
@@ -445,5 +440,6 @@ export async function POST(request: NextRequest) {
     },
   });
 
+  auditLog("user_created", currentUserId, { newUserId: user.id, email: normalizedEmail, role });
   return NextResponse.json({ user });
 }

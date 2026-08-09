@@ -10,19 +10,20 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json({ opportunities });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Error al obtener propuestas" }, { status: 500 });
   }
 }
 
 export async function PUT(request: NextRequest) {
   try {
     const userId = await getCurrentUserId();
-    const { id, suggestedText } = await request.json();
+    const body = await request.json();
+    const { id } = body;
 
-    if (!id || typeof suggestedText !== "string") {
+    if (!id) {
       return NextResponse.json(
-        { error: "id y suggestedText son requeridos" },
+        { error: "id es requerido" },
         { status: 400 }
       );
     }
@@ -38,14 +39,34 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const updated = await prisma.socialOpportunity.update({
-      where: { id },
-      data: { suggestedText },
-    });
+    // Si es un descarte (skip)
+    if (body.skip && body.skipReason) {
+      const updated = await prisma.socialOpportunity.update({
+        where: { id },
+        data: {
+          status: "skipped",
+          skipReason: body.skipReason,
+          errorLog: null,
+        },
+      });
+      return NextResponse.json({ opportunity: updated });
+    }
 
-    return NextResponse.json({ opportunity: updated });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    // Si es solo actualización de texto
+    if (typeof body.suggestedText === "string") {
+      const updated = await prisma.socialOpportunity.update({
+        where: { id },
+        data: { suggestedText: body.suggestedText },
+      });
+      return NextResponse.json({ opportunity: updated });
+    }
+
+    return NextResponse.json(
+      { error: "Envío inválido: falta suggestedText o skip+skipReason" },
+      { status: 400 }
+    );
+  } catch {
+    return NextResponse.json({ error: "Error al actualizar propuesta" }, { status: 500 });
   }
 }
 
@@ -62,7 +83,7 @@ export async function DELETE() {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Error al eliminar propuestas" }, { status: 500 });
   }
 }

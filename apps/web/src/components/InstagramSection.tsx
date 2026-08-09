@@ -9,10 +9,10 @@ import {
   disabledStyle,
 } from "./dashboard-ui";
 
-interface ThreadsData {
+interface InstagramData {
   connected: boolean;
-  threadsUserId?: string;
-  threadsUsername?: string;
+  instagramBusinessAccountId?: string;
+  instagramUsername?: string;
   expiresAt?: string;
   isExpired?: boolean;
 }
@@ -25,28 +25,27 @@ interface AppSettings {
   isAdmin?: boolean;
 }
 
-export default function ThreadsSection() {
-  const [data, setData] = useState<ThreadsData | null>(null);
+export default function InstagramSection() {
+  const [data, setData] = useState<InstagramData | null>(null);
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [disconnecting, setDisconnecting] = useState(false);
   const [message, setMessage] = useState("");
 
-  // Formulario de credenciales generales de la API (App ID / App Secret)
   const [showConfigForm, setShowConfigForm] = useState(false);
   const [appIdInput, setAppIdInput] = useState("");
   const [appSecretInput, setAppSecretInput] = useState("");
   const [savingSettings, setSavingSettings] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const redirectUri = "https://auto-articulos-web.vercel.app/api/search-integrations/threads/callback";
+  const redirectUri = "https://auto-articulos-web.vercel.app/api/search-integrations/instagram/callback";
 
   async function load() {
     try {
       setLoading(true);
       const [resData, resSettings] = await Promise.all([
-        fetch("/api/search-integrations/threads"),
-        fetch("/api/search-integrations/threads/settings"),
+        fetch("/api/search-integrations/instagram"),
+        fetch("/api/search-integrations/instagram/settings"),
       ]);
 
       const json = await resData.json();
@@ -79,7 +78,7 @@ export default function ThreadsSection() {
     setMessage("");
 
     try {
-      const res = await fetch("/api/search-integrations/threads/settings", {
+      const res = await fetch("/api/search-integrations/instagram/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -90,7 +89,7 @@ export default function ThreadsSection() {
 
       const result = await res.json();
       if (res.ok) {
-        setMessage("✓ Llaves de Meta Threads API guardadas correctamente con cifrado AES-256-GCM.");
+        setMessage("✓ Llaves de Instagram API guardadas correctamente con cifrado AES-256-GCM.");
         setShowConfigForm(false);
         setAppSecretInput("");
         await load();
@@ -105,14 +104,14 @@ export default function ThreadsSection() {
   }
 
   async function handleDisconnect() {
-    if (!confirm("¿Estás seguro de que deseas desconectar tu cuenta de Meta Threads?")) {
+    if (!confirm("¿Estás seguro de que deseas desconectar tu cuenta de Instagram?")) {
       return;
     }
     setDisconnecting(true);
     setMessage("");
     try {
-      await fetch("/api/search-integrations/threads", { method: "DELETE" });
-      setMessage("Cuenta de Meta Threads desconectada.");
+      await fetch("/api/search-integrations/instagram", { method: "DELETE" });
+      setMessage("Cuenta de Instagram desconectada.");
       await load();
     } catch {
       setMessage("Ocurrió un error al desconectar.");
@@ -139,7 +138,7 @@ export default function ThreadsSection() {
               width: 38,
               height: 38,
               borderRadius: 10,
-              background: "linear-gradient(135deg, #000000 0%, #1c1c1e 100%)",
+              background: "linear-gradient(135deg, #f58529 0%, #dd2a7b 50%, #8134af 100%)",
               color: "#ffffff",
               display: "flex",
               alignItems: "center",
@@ -149,12 +148,12 @@ export default function ThreadsSection() {
               boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
             }}
           >
-            @
+            IG
           </div>
           <div>
-            <h2 style={{ ...h2Style, margin: 0 }}>Meta Threads API</h2>
+            <h2 style={{ ...h2Style, margin: 0 }}>Instagram API</h2>
             <p style={{ fontSize: 12, color: "#64748b", margin: "2px 0 0 0" }}>
-              Cada artículo nuevo se publicará automáticamente como un hilo en Threads con resumen, imagen destacada y enlace.
+               3 tipos de contenido: Carousels (hasta 5 imágenes), imágenes estilo Reel, e Infografías.
             </p>
           </div>
         </div>
@@ -188,7 +187,7 @@ export default function ThreadsSection() {
                 border: "1px solid rgba(22,163,74,0.2)",
               }}
             >
-              🟢 Conectado {data.threadsUsername ? `@${data.threadsUsername}` : ""}
+              🟢 Conectado {data.instagramUsername ? `@${data.instagramUsername}` : ""}
             </span>
           )}
         </div>
@@ -196,11 +195,10 @@ export default function ThreadsSection() {
 
       {loading ? (
         <p style={{ fontSize: 13, color: "#64748b", margin: "12px 0 0 0" }}>
-          Cargando estado de la integración de Meta...
+          Cargando estado de la integración de Instagram...
         </p>
       ) : (
         <>
-          {/* Si no está configurada globalmente y el usuario NO es admin, mostrar advertencia amigable */}
           {!settings?.configured && !settings?.isAdmin && (
             <div
               style={{
@@ -212,15 +210,14 @@ export default function ThreadsSection() {
               }}
             >
               <div style={{ fontWeight: 700, color: "#991b1b", fontSize: 13 }}>
-                ⚠️ Integración con Threads no lista
+                ⚠️ Integración con Instagram no lista
               </div>
               <p style={{ fontSize: 12, color: "#7f1d1d", margin: "4px 0 0 0" }}>
-                La conexión de Threads no ha sido configurada a nivel global de plataforma por el administrador del sistema. Por favor, solicita al administrador de 10MinutesWebsite que configure las llaves de la API de Meta.
+                La conexión de Instagram no ha sido configurada a nivel global de plataforma por el administrador del sistema. Por favor, solicita al administrador de 10MinutesWebsite que configure las llaves de la API de Meta.
               </p>
             </div>
           )}
 
-          {/* Bloque de aviso si falta configurar las llaves globales (solo para admin) */}
           {!settings?.configured && settings?.isAdmin && !showConfigForm && (
             <div
               style={{
@@ -232,7 +229,7 @@ export default function ThreadsSection() {
               }}
             >
               <div style={{ fontWeight: 700, color: "#92400e", fontSize: 13 }}>
-                ⚠️ Se requieren las llaves globales de la API de Threads (Meta Developers)
+                ⚠️ Se requieren las llaves globales de la API de Instagram (Meta Developers)
               </div>
               <p style={{ fontSize: 12, color: "#78350f", margin: "4px 0 10px 0" }}>
                 Para permitir la conexión OAuth de todos los usuarios, ingresa tu <strong>App ID</strong> y <strong>App Secret</strong> obtenidos en Meta for Developers. Tus llaves se guardarán cifradas con <strong>AES-256-GCM</strong>.
@@ -253,7 +250,6 @@ export default function ThreadsSection() {
             </div>
           )}
 
-          {/* Formulario expandible para configurar o actualizar App ID / App Secret (solo para admin) */}
           {settings?.isAdmin && (showConfigForm || (!settings?.configured && showConfigForm)) && (
             <div
               style={{
@@ -269,10 +265,9 @@ export default function ThreadsSection() {
               }}
             >
               <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a" }}>
-                ⚙️ Configuración de Credenciales de Meta Threads (Rol: Administrador)
+                ⚙️ Configuración de Credenciales de Instagram (Rol: Administrador)
               </div>
 
-              {/* Guía paso a paso para el usuario */}
               <div
                 style={{
                   background: "#f8fafc",
@@ -297,7 +292,7 @@ export default function ThreadsSection() {
                   <span>📖 ¿Cómo obtener estas llaves de API?</span>
                   <a
                     href={`https://chatgpt.com/?q=${encodeURIComponent(
-                      "Actúa como un experto en Meta Developers. Necesito configurar la API de Threads para mi aplicación. Por favor, guíame paso a paso para: 1. Crear una cuenta y una aplicación de tipo Threads en developers.facebook.com 2. Configurar la URL de redirección (Redirect URI) de OAuth con el valor: https://auto-articulos-web.vercel.app/api/search-integrations/threads/callback 3. Obtener el App ID (Identificador de la aplicación) y el App Secret (Clave secreta de la aplicación). Explícame de manera extremadamente sencilla, paso a paso, dónde hacer clic."
+                      "Actúa como un experto en Meta Developers. Necesito configurar la API de Instagram (Graph API) para mi aplicación. Por favor, guíame paso a paso para: 1. Crear una cuenta y una aplicación de tipo Empresarial/Consumidor en developers.facebook.com 2. Configurar la URL de redirección (Redirect URI) de OAuth con el valor: https://auto-articulos-web.vercel.app/api/search-integrations/instagram/callback 3. Agregar los productos Instagram Graph API y Pages. 4. Solicitar los permisos instagram_basic, instagram_content_publish, pages_show_list 5. Obtener el App ID y el App Secret. Explícame de manera extremadamente sencilla, paso a paso, dónde hacer clic."
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -331,9 +326,9 @@ export default function ThreadsSection() {
                     </a>{" "}
                     e inicia sesión.
                   </li>
-                  <li>Crea una aplicación o selecciona una existente. Asegúrate de agregar el producto <strong>Threads API</strong>.</li>
+                  <li>Crea una aplicación de tipo <strong>Empresarial</strong> o agrega los productos <strong>Instagram Graph API</strong> y <strong>Pages</strong> a una app existente.</li>
                   <li>
-                    En la sección de Threads ➔ Configuración, añade esta dirección como <strong>URI de redireccionamiento de OAuth</strong> válida:
+                    En Configuración de la app ➔ Configuración básica, añade esta dirección como <strong>URI de redireccionamiento de OAuth</strong> válida:
                     <div
                       style={{
                         display: "flex",
@@ -370,7 +365,8 @@ export default function ThreadsSection() {
                       </button>
                     </div>
                   </li>
-                  <li>Copia el <strong>App ID de Threads</strong> y el <strong>App Secret de Threads</strong> y pégalos abajo.</li>
+                  <li>Solicita los permisos <strong>instagram_basic</strong>, <strong>instagram_content_publish</strong> y <strong>pages_show_list</strong> (Revisión de la app requerida por Meta para publicar).</li>
+                  <li>Copia el <strong>App ID</strong> y el <strong>App Secret</strong> y pégalos abajo.</li>
                 </ol>
               </div>
 
@@ -427,7 +423,6 @@ export default function ThreadsSection() {
             </div>
           )}
 
-          {/* Botón para editar llaves si ya existen (solo para admin) */}
           {settings?.configured && settings?.isAdmin && !showConfigForm && (
             <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 4 }}>
               <button
@@ -447,7 +442,6 @@ export default function ThreadsSection() {
             </div>
           )}
 
-          {/* Estado de conexión del usuario y botón OAuth */}
           {!data?.connected ? (
             settings?.configured && (
               <div
@@ -460,16 +454,19 @@ export default function ThreadsSection() {
                 }}
               >
                 <p style={{ fontSize: 13, color: "#334155", margin: "0 0 12px 0" }}>
-                  Conecta tu cuenta de <strong>Meta Threads</strong> para que cada artículo se publique automáticamente como un hilo en tu perfil, con un resumen generado por IA, imagen destacada y enlace al artículo completo.
+                  Conecta tu cuenta profesional de <strong>Instagram</strong> (Business o Creator) para que los temas más populares de tu sitio se publiquen automáticamente como <strong>Carousels</strong> con varias imágenes generadas por IA y descripciones profesionales.
+                </p>
+                <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 12px 0" }}>
+                  ⚠️ Requisitos: Cuenta de Instagram Business o Creator vinculada a una Página de Facebook. La app de Meta debe tener los permisos <strong>instagram_basic</strong>, <strong>instagram_content_publish</strong> y <strong>pages_show_list</strong> aprobados por Meta.
                 </p>
                 <a
-                  href="/api/search-integrations/threads/connect"
+                  href="/api/search-integrations/instagram/connect"
                   style={{
                     ...secondaryButtonStyle,
                     display: "inline-flex",
                     alignItems: "center",
                     gap: 8,
-                    background: "#000000",
+                    background: "linear-gradient(135deg, #f58529 0%, #dd2a7b 50%, #8134af 100%)",
                     color: "#ffffff",
                     border: "none",
                     padding: "10px 18px",
@@ -479,7 +476,7 @@ export default function ThreadsSection() {
                     boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                   }}
                 >
-                  🌀 Conectar Meta Threads
+                  📸 Conectar Instagram
                 </a>
               </div>
             )
@@ -495,7 +492,7 @@ export default function ThreadsSection() {
                 }}
               >
                 <div style={{ fontWeight: 600, color: "#1e293b" }}>
-                  Perfil vinculado: {data.threadsUsername ? `@${data.threadsUsername}` : data.threadsUserId}
+                  Perfil vinculado: {data.instagramUsername ? `@${data.instagramUsername}` : data.instagramBusinessAccountId}
                 </div>
                 <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>
                   Estado del token: {data.isExpired ? "⚠️ Token expirado (requiere reconectar)" : "✓ Activo (Válido hasta " + (data.expiresAt ? new Date(data.expiresAt).toLocaleDateString("es-US") : "60 días") + ")"}
@@ -508,7 +505,7 @@ export default function ThreadsSection() {
                   disabled={disconnecting}
                   style={disabledStyle(secondaryButtonStyle, disconnecting)}
                 >
-                  {disconnecting ? "Desconectando..." : "Desconectar Threads"}
+                  {disconnecting ? "Desconectando..." : "Desconectar Instagram"}
                 </button>
               </div>
             </div>

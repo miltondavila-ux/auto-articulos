@@ -35,6 +35,10 @@ export interface TitleRow {
   threadsPostId: string | null;
   threadsPublishError: string | null;
   threadsPublishAt: string | null;
+  instagramPublishStatus: string | null;
+  instagramPostId: string | null;
+  instagramPublishError: string | null;
+  instagramPublishAt: string | null;
   events: TitleEventRow[];
 }
 

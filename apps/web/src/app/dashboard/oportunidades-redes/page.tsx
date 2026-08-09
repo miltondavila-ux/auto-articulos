@@ -315,12 +315,12 @@ export default function OportunidadesRedesPage() {
                             borderRadius: 6,
                             fontSize: 11,
                             fontWeight: 700,
-                            background: opp.platform === "threads" ? "rgba(77, 216, 232, 0.15)" : "#374151",
-                            color: opp.platform === "threads" ? "#4dd8e8" : "#9ca3af",
+                            background: opp.platform === "threads" ? "rgba(77, 216, 232, 0.15)" : opp.platform.startsWith("instagram") ? "rgba(221, 42, 123, 0.15)" : "#374151",
+                            color: opp.platform === "threads" ? "#4dd8e8" : opp.platform.startsWith("instagram") ? "#dd2a7b" : "#9ca3af",
                             marginBottom: 8,
                           }}
                         >
-                          {opp.platform === "threads" ? "🌀 THREADS" : opp.platform.toUpperCase()}
+                          {opp.platform === "threads" ? "🌀 THREADS" : opp.platform === "instagram-carousel" ? "📸 IG CARRUSEL" : opp.platform === "instagram-reel-image" ? "📸 IG REEL-IMG" : opp.platform === "instagram-infografia" ? "📸 IG INFOGRAFÍA" : opp.platform.toUpperCase()}
                         </span>
                         {statusLabel && (
                           <span style={{ display: "inline-block", padding: "4px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, background: "rgba(245, 158, 11, 0.15)", color: "#f59e0b", marginLeft: 6 }}>

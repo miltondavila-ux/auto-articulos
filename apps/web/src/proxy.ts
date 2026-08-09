@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   IMPERSONATION_COOKIE,
   SESSION_COOKIE,
+  SESSION_TTL_MS,
+  createSessionToken,
   verifyImpersonationToken,
   verifySessionToken,
 } from "./lib/session";
@@ -17,11 +19,6 @@ const PUBLIC_PATHS = [
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Bug real encontrado el 31/7/2026: el matcher de abajo excluye
-  // _next/static pero NO los archivos estáticos servidos directamente
-  // desde /public (como la imagen del login) — sin esta línea, la imagen
-  // se pedía sin sesión válida y el middleware la redirigía al login en
-  // vez de servirla, así que nunca se veía.
   if (
     PUBLIC_PATHS.some((path) => pathname === path) ||
     pathname.startsWith("/_next") ||
@@ -44,12 +41,6 @@ export async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-user-id", userId);
 
-  // Suplantación: un admin puede estar "actuando como" otro usuario sin
-  // cerrar su propia sesión. La cookie de suplantación solo es válida si
-  // quedó firmada para ESTE admin real (userId de arriba) — así no se puede
-  // reutilizar copiándola a otra cuenta. Si es válida, el resto de la app
-  // (getCurrentUser, todas las rutas API) opera como el usuario objetivo;
-  // x-acting-admin-id queda para que el layout muestre "Actuando como".
   const impersonationToken = request.cookies.get(IMPERSONATION_COOKIE)?.value;
   const impersonation = await verifyImpersonationToken(impersonationToken);
   if (impersonation && impersonation.adminUserId === userId) {
@@ -57,7 +48,32 @@ export async function proxy(request: NextRequest) {
     requestHeaders.set("x-acting-admin-id", impersonation.adminUserId);
   }
 
-  return NextResponse.next({ request: { headers: requestHeaders } });
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+
+  // Sliding session: si queda menos de la mitad del TTL, renueva expiración
+  // para que sesiones activas no caduquen. Costo: una operación HMAC cada
+  // ~3.5 días por sesión, irrelevante.
+  if (token) {
+    const payload = token.split(".").slice(0, 2).join(".");
+    const decoded = atob(
+      payload.split(".")[1]?.replace(/-/g, "+").replace(/_/g, "/") ?? "",
+    );
+    if (decoded) {
+      const remaining = Number(decoded) - Date.now();
+      if (remaining > 0 && remaining < SESSION_TTL_MS / 2) {
+        const newToken = await createSessionToken(userId);
+        response.cookies.set(SESSION_COOKIE, newToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+          path: "/",
+          maxAge: Math.floor(SESSION_TTL_MS / 1000),
+        });
+      }
+    }
+  }
+
+  return response;
 }
 
 export const config = {

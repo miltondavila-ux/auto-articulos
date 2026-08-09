@@ -29,7 +29,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (opp.platform !== "threads") {
+    const supported = [
+      "threads",
+      "instagram-carousel",
+      "instagram-reel-image",
+      "instagram-infografia",
+    ];
+    if (!supported.includes(opp.platform)) {
       return NextResponse.json(
         { error: `Plataforma ${opp.platform} no soportada todavía.` },
         { status: 400 }
@@ -43,7 +49,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Publicación encolada. El sistema generará la imagen y publicará en Threads en segundo plano.",
+      message: opp.platform.startsWith("instagram")
+        ? "Publicación encolada. El sistema generará las imágenes y publicará en Instagram en segundo plano."
+        : "Publicación encolada. El sistema generará la imagen y publicará en Threads en segundo plano.",
     });
   } catch {
     return NextResponse.json({ error: "Error interno al publicar" }, { status: 500 });

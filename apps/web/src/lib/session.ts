@@ -111,4 +111,4 @@ export async function verifyImpersonationToken(
   return valid ? { adminUserId, targetUserId } : null;
 }
 
-export { SESSION_COOKIE, IMPERSONATION_COOKIE, IMPERSONATION_TTL_MS };
+export { SESSION_COOKIE, SESSION_TTL_MS, IMPERSONATION_COOKIE, IMPERSONATION_TTL_MS };

@@ -15,6 +15,7 @@ import GoogleSearchConsoleSection from "@/components/GoogleSearchConsoleSection"
 import BusinessProfileSection from "@/components/BusinessProfileSection";
 import BingWebmasterSection from "@/components/BingWebmasterSection";
 import ThreadsSection from "@/components/ThreadsSection";
+import InstagramSection from "@/components/InstagramSection";
 
 export default function ConfiguracionPage() {
   const [username, setUsername] = useState("");
@@ -333,7 +334,7 @@ export default function ConfiguracionPage() {
   }
 
   const [activeTab, setActiveTab] = useState<
-    "integrations" | "platform" | "editor" | "mobile"
+    "integrations" | "social" | "platform" | "mobile"
   >("integrations");
 
   const showCredentialsForm = editingCredentials || !credentialsConfigured;
@@ -351,7 +352,7 @@ export default function ConfiguracionPage() {
         : "#2563eb";
 
   const tabs: {
-    id: "integrations" | "platform" | "editor" | "mobile";
+    id: "integrations" | "social" | "platform" | "mobile";
     eyebrow: string;
     label: string;
     description: string;
@@ -359,32 +360,32 @@ export default function ConfiguracionPage() {
   }[] = [
     {
       id: "integrations",
-      eyebrow: "Buscadores y Redes",
-      label: "🔍 Integraciones",
+      eyebrow: "Buscadores",
+      label: "🔍 Indexación & SEO",
       description:
-        "Conecta Google Search Console, Bing Webmaster Tools y Google Business Profile.",
+        "Conecta Google Search Console y Bing Webmaster Tools para monitorear y mejorar la indexación de tus artículos.",
+    },
+    {
+      id: "social",
+      eyebrow: "Redes Sociales",
+      label: "📱 Publicación Automática",
+      description:
+        "Conecta Instagram, Threads y Google Business Profile para publicar tus artículos en redes sociales.",
     },
     {
       id: "platform",
       eyebrow: "10minutesWebsite",
-      label: "🔐 Cuenta & Categorías",
+      label: "🔐 Cuenta & Contenido",
       description:
-        "Credenciales cifradas de tu cuenta y sincronización de categorías.",
+        "Credenciales, categorías, idioma de redacción, firma y teléfono de contacto.",
       badge: credentialsConfigured ? "✓ Listo" : undefined,
-    },
-    {
-      id: "editor",
-      eyebrow: "IA & Estilo",
-      label: "✍️ Redacción & Firma",
-      description:
-        "Idioma por defecto de tus artículos y texto o firma final automática.",
     },
     {
       id: "mobile",
       eyebrow: "Dispositivos",
-      label: "📱 App Móvil & PWA",
+      label: "📲 App Móvil",
       description:
-        "Código QR para escanear e instrucciones de instalación en tu celular.",
+        "Código QR e instrucciones para instalar Auto Artículos en tu celular.",
     },
   ];
 
@@ -471,8 +472,8 @@ export default function ConfiguracionPage() {
                 lineHeight: 1.45,
               }}
             >
-              Gestiona integraciones con buscadores, credenciales cifradas de
-              10minutesWebsite, preferencias de redacción e instalación móvil desde un panel unificado.
+              Conecta tus buscadores y redes sociales, configura tu cuenta de
+               10minutesWebsite, personaliza el contenido de tus artículos y accede desde tu celular.
             </p>
           </div>
 
@@ -665,19 +666,28 @@ export default function ConfiguracionPage() {
         })}
       </div>
 
-      {/* Pestaña 1: Buscadores & Redes (Integraciones Marketplace) */}
+      {/* Pestaña 1: Buscadores — Indexación en Google y Bing */}
       {activeTab === "integrations" && (
         <div
           style={{ display: "flex", flexDirection: "column", gap: 16 }}
         >
           <GoogleSearchConsoleSection />
           <BingWebmasterSection />
-          <BusinessProfileSection />
-          <ThreadsSection />
         </div>
       )}
 
-      {/* Pestaña 2: 10minutesWebsite Hub */}
+      {/* Pestaña 2: Redes Sociales — Publicación automática */}
+      {activeTab === "social" && (
+        <div
+          style={{ display: "flex", flexDirection: "column", gap: 16 }}
+        >
+          <BusinessProfileSection />
+          <ThreadsSection />
+          <InstagramSection />
+        </div>
+      )}
+
+      {/* Pestaña 3: Cuenta & Contenido */}
       {activeTab === "platform" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {/* Credenciales Card */}
@@ -743,7 +753,7 @@ export default function ConfiguracionPage() {
                       margin: "2px 0 0 0",
                     }}
                   >
-                    Tus datos se usan únicamente por el worker headless para publicar artículos a tu nombre.
+                    Tus credenciales se usan solo para que el sistema publique artículos automáticamente en tu cuenta de 10minutesWebsite. Nadie puede verlas.
                   </p>
                 </div>
                 <button
@@ -793,8 +803,7 @@ export default function ConfiguracionPage() {
             )}
             {showCredentialsForm && (
               <p style={{ fontSize: 12, color: "#64748b", marginTop: 10 }}>
-                Son tu usuario y contraseña de 10minutesWebsite, no los de Auto
-                Artículos. Si no recuerdas tu contraseña de 10minutesWebsite,{" "}
+                Ingresa tu usuario y contraseña de 10minutesWebsite (no los de Auto Artículos). Si no recuerdas tu contraseña,{" "}
                 <a
                   href="https://10minuteswebsite.net/dashboard/forgot-password.php"
                   target="_blank"
@@ -845,8 +854,7 @@ export default function ConfiguracionPage() {
             </div>
 
             <p style={{ fontSize: 13, color: "#64748b", marginBottom: 14 }}>
-              Sincroniza las categorías reales de tu cuenta de 10minutesWebsite.
-              Se actualizan solas al hacer clic en el botón inferior.
+              Las categorías definen en qué secciones se publicarán tus artículos. Sincronízalas desde tu cuenta de 10minutesWebsite para mantenerlas actualizadas.
             </p>
 
             <button
@@ -1018,13 +1026,8 @@ export default function ConfiguracionPage() {
               </div>
             )}
           </section>
-        </div>
-      )}
 
-      {/* Pestaña 3: Redacción & Estilo Hub */}
-      {activeTab === "editor" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {/* Idioma Card */}
+          {/* Idioma Predeterminado de Redacción */}
           <section style={sectionStyle}>
             <div
               style={{
@@ -1036,7 +1039,7 @@ export default function ConfiguracionPage() {
                 marginBottom: 6,
               }}
             >
-              <h2 style={{ ...h2Style, margin: 0 }}>Idioma Predeterminado de Redacción</h2>
+              <h2 style={{ ...h2Style, margin: 0 }}>Idioma de Redacción</h2>
               <span
                 style={{
                   fontSize: 12,
@@ -1052,7 +1055,7 @@ export default function ConfiguracionPage() {
             </div>
 
             <p style={{ fontSize: 13, color: "#64748b", marginBottom: 14 }}>
-              Sincroniza los idiomas que soporta tu cuenta en 10minutesWebsite y elige cuál quieres usar por defecto.
+              Tus artículos se redactarán en este idioma. Sincroniza los idiomas disponibles desde tu cuenta de 10minutesWebsite y elige el que prefieras.
             </p>
 
             <div
@@ -1130,7 +1133,7 @@ export default function ConfiguracionPage() {
             )}
           </section>
 
-          {/* Firma / Texto Final Card con Barra de Progreso Dinámica */}
+          {/* Firma / Texto al Final del Artículo */}
           <section style={sectionStyle}>
             <div
               style={{
@@ -1142,7 +1145,7 @@ export default function ConfiguracionPage() {
                 marginBottom: 6,
               }}
             >
-              <h2 style={{ ...h2Style, margin: 0 }}>Firma / Texto al Final del Artículo</h2>
+              <h2 style={{ ...h2Style, margin: 0 }}>Firma al Final del Artículo</h2>
               <span
                 style={{
                   fontSize: 12,
@@ -1159,7 +1162,7 @@ export default function ConfiguracionPage() {
             </div>
 
             <p style={{ fontSize: 13, color: "#64748b", marginBottom: 12 }}>
-              Este texto o firma profesional se añadirá automáticamente al final de cada artículo nuevo publicado.
+              Este texto se agregará automáticamente al final de cada artículo nuevo. Puedes usarlo como firma profesional, datos de contacto o un llamado a la acción.
             </p>
 
             <textarea
@@ -1179,7 +1182,6 @@ export default function ConfiguracionPage() {
               }}
             />
 
-            {/* Dynamic Character Progress Bar */}
             <div
               style={{
                 width: "100%",
@@ -1212,11 +1214,11 @@ export default function ConfiguracionPage() {
             </div>
           </section>
 
-          {/* Teléfono de Contacto (WhatsApp / Llamada) */}
+          {/* Teléfono de Contacto */}
           <section style={sectionStyle}>
-            <h2 style={h2Style}>Teléfono de Contacto (WhatsApp / Llamadas)</h2>
+            <h2 style={h2Style}>Teléfono de Contacto</h2>
             <p style={{ fontSize: 13, color: "#64748b", marginBottom: 12 }}>
-              Ingresa tu número de teléfono (con código de país, ej: <code>+19546529929</code>). Este número se utilizará para enlazar automáticamente los botones de WhatsApp y llamadas en el contenido de tus artículos, previniendo que se publiquen con marcadores vacíos.
+              Este número se usará en los botones de WhatsApp y llamada dentro de tus artículos. Incluye el código de país (ej: <code>+19546529929</code>).
             </p>
 
             <input
@@ -1244,7 +1246,7 @@ export default function ConfiguracionPage() {
         </div>
       )}
 
-      {/* Pestaña 4: Acceso Móvil Hub */}
+      {/* Pestaña 4: App Móvil */}
       {activeTab === "mobile" && (
         <section
           style={{

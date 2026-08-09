@@ -87,8 +87,7 @@ export default function GoogleSearchConsoleSection() {
     <section style={sectionStyle}>
       <h2 style={h2Style}>Google Search Console</h2>
       <p style={{ fontSize: 13, color: "#6b7280" }}>
-        Conecta tu propia cuenta de Google. Auto Artículos nunca recibe tu
-        contraseña y ningún usuario puede ver las propiedades de otro.
+        Conecta tu cuenta de Google para que tus artículos aparezcan en los resultados de búsqueda de Google. Auto Artículos enviará tu sitemap automáticamente y te mostrará el estado de indexación de cada artículo.
       </p>
       {!data?.connected ? (
         <a
@@ -202,11 +201,7 @@ export default function GoogleSearchConsoleSection() {
       )}
       {message && <p style={{ fontSize: 13, color: "#1e8a4b" }}>{message}</p>}
       <p style={{ fontSize: 12, color: "#6b7280" }}>
-        Cada día a las 12:00 a. m. la app enviará tu sitemap a Google. Después
-        de publicar, seguirá consultando el estado de cada URL. Si Google
-        todavía no la indexó, verás un acceso directo para abrir Search Console
-        y pulsar “Solicitar indexación” manualmente; Google no ofrece ese último
-        botón mediante API.
+        El sistema enviará tu sitemap a Google todas las noches y consultará el estado de cada URL automáticamente. Si un artículo no se indexa, verás un acceso directo para solicitar la indexación manual desde Search Console.
       </p>
     </section>
   );

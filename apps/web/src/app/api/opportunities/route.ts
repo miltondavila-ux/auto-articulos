@@ -191,14 +191,7 @@ export async function POST() {
       lastAnalysisAt: now,
     });
   } catch (error) {
-    // Nunca se le muestra al usuario el error técnico crudo (ej. un
-    // SyntaxError de JSON.parse) — se registra en el log del servidor para
-    // poder diagnosticarlo, y se devuelve un mensaje entendible.
     console.error("POST /api/opportunities falló:", error);
-    const message =
-      error instanceof Error
-        ? error.message
-        : "No se pudo completar el análisis esta vez.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "No se pudo completar el análisis esta vez." }, { status: 500 });
   }
 }

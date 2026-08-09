@@ -9,9 +9,6 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    DATABASE_URL: process.env.DATABASE_URL,
-    DIRECT_URL: process.env.DIRECT_URL,
-    GITHUB_ACTIONS_TOKEN: process.env.GITHUB_ACTIONS_TOKEN ? "present" : "missing",
     GITHUB_REPO: process.env.GITHUB_REPO,
   });
 }

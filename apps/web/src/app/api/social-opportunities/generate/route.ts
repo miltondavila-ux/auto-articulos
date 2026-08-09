@@ -138,10 +138,16 @@ export async function POST() {
     const integrations: string[] = [];
     const threads = await prisma.threadsIntegration.findUnique({ where: { userId } });
     if (threads) integrations.push("threads");
+    const instagram = await prisma.instagramIntegration.findUnique({ where: { userId } });
+    if (instagram) {
+      integrations.push("instagram-carousel");
+      integrations.push("instagram-reel-image");
+      integrations.push("instagram-infografia");
+    }
 
     if (integrations.length === 0) {
       return NextResponse.json(
-        { error: "Primero debes conectar al menos una red social (ej. Threads) en tu configuración." },
+        { error: "Primero debes conectar al menos una red social (ej. Threads, Instagram) en tu configuración." },
         { status: 400 }
       );
     }
@@ -201,7 +207,7 @@ export async function POST() {
       message: `Se generaron ${createdOpportunities.length} nuevas propuestas basadas en ${source?.siteUrl ? "Google Search Console (mejores temas)" : "artículos más recientes sin usar"}.`,
       count: createdOpportunities.length,
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Error interno al generar propuestas" }, { status: 500 });
   }
 }

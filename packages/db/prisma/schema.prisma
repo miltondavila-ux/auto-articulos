@@ -82,6 +82,7 @@ model User {
   opportunityGroups          OpportunityGroup[]
   businessProfileIntegration BusinessProfileIntegration?
   threadsIntegration         ThreadsIntegration?
+  instagramIntegration       InstagramIntegration?
   socialOpportunities        SocialOpportunity[]
 }
 
@@ -118,6 +119,21 @@ model ThreadsIntegration {
   expiresAt            DateTime
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Conexión OAuth 2.0 con Instagram Graph API (Meta) — publicación de
+// Carousels y Reels usando la Instagram Content Publishing API.
+model InstagramIntegration {
+  id                       String   @id @default(cuid())
+  userId                   String   @unique
+  instagramBusinessAccountId String
+  instagramUsername        String?
+  accessTokenEncrypted     String
+  expiresAt                DateTime
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -337,6 +353,10 @@ model Title {
   threadsPostId         String?
   threadsPublishError   String?
   threadsPublishAt      DateTime?
+  instagramPublishStatus String? // "pending" | "success" | "error" | "not_configured" | "skipped"
+  instagramPostId       String?
+  instagramPublishError String?
+  instagramPublishAt    DateTime?
 
   run                 Run                  @relation(fields: [runId], references: [id], onDelete: Cascade)
   events              TitleEvent[]
@@ -396,6 +416,7 @@ model SocialOpportunity {
   status        String    @default("pending") // "pending" | "published" | "skipped"
   postId        String?
   errorLog      String?   @db.Text
+  skipReason    String?
   createdAt     DateTime  @default(now())
   publishedAt   DateTime?
 
