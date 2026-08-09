@@ -100,11 +100,12 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
       include: {
         titles: {
+          where: { text: { contains: "hasta 20 artículos" } },
           include: { events: { orderBy: { createdAt: "asc" } } },
         },
       },
     });
-    const history = historyRuns.map((historyRun) => {
+    const history = historyRuns.filter((historyRun) => historyRun.titles.length > 0).map((historyRun) => {
       const messages = historyRun.titles.flatMap((item) =>
         item.events.map((event) => event.message),
       );

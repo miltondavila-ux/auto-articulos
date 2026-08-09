@@ -58,6 +58,10 @@ importante: qué cambió, qué quedó pendiente, qué se rompió.
   error detiene el lote tras el primer intento, conservando lo ya corregido.
 - Validación: TypeScript limpio en worker/web y `git diff --check` limpio. No
   se ejecutaron lotes reales durante el desarrollo.
+- Ajuste de transparencia tras feedback de Milton: el historial excluye las
+  pruebas individuales antiguas y solo cuenta títulos creados como lotes de
+  20; muestra fecha, estado y “reparados confirmados”. Al crear un lote se
+  guarda inmediatamente un evento “esperando worker”, evitando paneles vacíos.
 
 ## Qué es esto
 

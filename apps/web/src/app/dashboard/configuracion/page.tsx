@@ -1477,7 +1477,7 @@ export default function ConfiguracionPage() {
                   </h3>
                   {fixStatus.history.map((batch, index) => (
                     <div key={batch.id} style={{ fontSize: 12, padding: "8px 0", borderTop: "1px solid #fee2e2" }}>
-                      <strong>Lote {fixStatus.history!.length - index}</strong> · {batch.status} · {batch.repairedCount} reparados
+                      <strong>Lote {fixStatus.history!.length - index}</strong> · {new Date(batch.createdAt).toLocaleString()} · {batch.status} · {batch.repairedCount} reparados confirmados
                       {batch.stopPoint ? <div style={{ color: "#64748b", marginTop: 3 }}>{batch.stopPoint}</div> : null}
                     </div>
                   ))}

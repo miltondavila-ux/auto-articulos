@@ -73,12 +73,18 @@ export async function POST() {
     });
 
     // 5. Crear el título para procesar
-    await prisma.title.create({
+    const title = await prisma.title.create({
       data: {
         runId: run.id,
         text: "Reparar el siguiente lote de hasta 20 artículos de Patricia Coy",
         status: "pending",
         order: 0,
+      },
+    });
+    await prisma.titleEvent.create({
+      data: {
+        titleId: title.id,
+        message: "Lote solicitado. Esperando que el worker comience a procesar hasta 20 artículos...",
       },
     });
 
