@@ -6,6 +6,30 @@ Este documento es la fuente de verdad para retomar el proyecto sin necesitar
 el historial de chat. Mantenlo actualizado después de cada sesión de trabajo
 importante: qué cambió, qué quedó pendiente, qué se rompió.
 
+## Reparación Patricia Coy — preparada y validada (9/8/2026, Codex)
+
+- Se identificó el artículo de prueba que Antigravity modificó: ID `89325`,
+  **“Errores comunes al elegir propiedades en Miami”**,
+  `https://www.patriciacoy.com/news/errores-comunes-al-elegir-propiedades-en-miami`.
+- Causa: el reemplazo global insertaba `+19546529929` en todos los marcadores.
+  Los enlaces WhatsApp/QR deben llevar `19546529929` sin `+`; `tel:` conserva
+  `+19546529929`.
+- Se creó un transformador contextual compartido por publicaciones nuevas y
+  el reparador. Admite marcadores, enlaces codificados de QR y los enlaces con
+  `+` que dejó la reparación anterior.
+- El reparador temporal está bloqueado al ID `89325`, exige al menos dos
+  enlaces WhatsApp/QR y uno de llamada antes de guardar, vuelve a abrir el
+  editor para comprobar persistencia y propaga errores para evitar falsos
+  éxitos.
+- Se corrigió el panel de estado: su parser no reconocía el mensaje real
+  `✓ ¡Reparado con éxito!`; también se retiró la instrucción incorrecta de
+  buscar la corrida en Historial.
+- Verificaciones locales: 4/4 pruebas, TypeScript limpio en worker/web, build
+  Next.js de producción limpio (57/57 páginas) y `git diff --check` limpio.
+- Pendiente después del despliegue: Milton ejecutará una sola vez el botón y
+  comprobará los dos accesos de WhatsApp/QR y el botón de llamada del artículo
+  `89325`. No generalizar a los demás artículos hasta validar ese resultado.
+
 ## Qué es esto
 
 "Auto Artículos" es un sistema multi-tenant que automatiza la publicación de

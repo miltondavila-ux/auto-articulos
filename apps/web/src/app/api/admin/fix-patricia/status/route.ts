@@ -77,7 +77,11 @@ export async function GET() {
         processed = parseInt(progressMatch[1], 10);
       }
 
-      const repairMatch = event.message.match(/✓ Reparado con éxito \(\d+ de \d+\): (.*) — Enlace: (.*)/i);
+      // El worker escribe "✓ ¡Reparado con éxito! (...)". La expresión
+      // anterior esperaba otro texto y por eso nunca mostraba el artículo.
+      const repairMatch = event.message.match(
+        /✓\s*¡?Reparado con éxito!?\s*\(\d+ de \d+\):\s*(.*?)\s*—\s*Enlace:\s*(.+)/i,
+      );
       if (repairMatch) {
         repaired.push({
           title: repairMatch[1].trim(),

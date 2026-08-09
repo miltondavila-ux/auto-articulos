@@ -293,7 +293,7 @@ export default function ConfiguracionPage() {
       }
       setBanner({
         type: "info",
-        text: "Reparación programada con éxito. Puedes ver el progreso en tiempo real en la pestaña Historial.",
+        text: "Reparación programada con éxito. El progreso aparecerá debajo de este botón.",
       });
     } finally {
       setTriggeringFix(false);
@@ -1329,7 +1329,7 @@ export default function ConfiguracionPage() {
         >
           <h2 style={{ ...h2Style, color: "#991b1b" }}>⚙️ Herramientas de Administrador (Temporal)</h2>
           <p style={{ fontSize: 13, color: "#7f1d1d", marginBottom: 12 }}>
-            Esta es una herramienta provisional para corregir en lote todos los artículos de **Patricia Coy** que fueron creados sin el número de teléfono (reemplazando <code>PHONE_NUMBER</code> por <code>+19546529929</code>). Al hacer clic en el botón, se agendará una tarea en segundo plano que podrás monitorear desde el Historial.
+            Esta es una herramienta provisional para corregir artículos de Patricia Coy que fueron creados sin el número de teléfono. El proceso está limitado a un artículo por ejecución y su progreso se muestra debajo de este botón. No lo ejecutes hasta que la reparación de los enlaces de WhatsApp, QR y llamada haya sido validada.
           </p>
           <button
             onClick={handleTriggerFix}
@@ -1492,5 +1492,4 @@ export default function ConfiguracionPage() {
     </div>
   );
 }
-
 

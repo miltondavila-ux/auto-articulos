@@ -2,6 +2,7 @@ import { chromium, type Page } from "playwright";
 import { buildImagePrompt, isImageRelevant } from "../imagePrompt";
 import { generateFaqs, type Faq } from "../faqPrompt";
 import { translateText } from "../translateText";
+import { replacePhonePlaceholders } from "../phonePlaceholders";
 
 export interface TenMinutesWebsiteCredentials {
   username: string;
@@ -545,14 +546,17 @@ async function createArticleDraft(
 
   if (contentHtml.includes("PHONE_NUMBER")) {
     if (userPhone) {
-      contentHtml = contentHtml.replace(/PHONE_NUMBER/g, userPhone);
+      const repaired = replacePhonePlaceholders(contentHtml, userPhone);
+      contentHtml = repaired.html;
       const contentField = dialog.locator("textarea").nth(1);
       await contentField.evaluate((el) => {
         el.removeAttribute("disabled");
         el.removeAttribute("readonly");
       });
       await contentField.fill(contentHtml).catch(() => {});
-      await onStep(`✓ Marcador 'PHONE_NUMBER' detectado y reemplazado automáticamente por tu teléfono: ${userPhone}`);
+      await onStep(
+        `✓ Marcador 'PHONE_NUMBER' reemplazado: ${repaired.replacements.whatsapp} enlace(s) de WhatsApp/QR, ${repaired.replacements.call} de llamada y ${repaired.replacements.other} uso(s) adicional(es).`,
+      );
     } else {
       await onStep("⚠️ ADVERTENCIA CRÍTICA: Se detectó el marcador de posición 'PHONE_NUMBER' (botones de WhatsApp o llamada) en el artículo generado, pero NO tienes un número de teléfono configurado en tu perfil. El artículo se publicará con 'PHONE_NUMBER'.");
     }

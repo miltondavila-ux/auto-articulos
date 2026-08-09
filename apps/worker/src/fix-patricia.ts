@@ -2,6 +2,7 @@ import { prisma } from "@auto-articulos/db";
 import { decryptSecret } from "@auto-articulos/shared";
 import { chromium } from "playwright";
 import dotenv from "dotenv";
+import { replacePhonePlaceholders } from "./phonePlaceholders";
 
 dotenv.config();
 
@@ -18,7 +19,8 @@ export async function runPatriciaFix(
   const page = await browser.newPage();
 
   // Límite de prueba inicial: exactamente 1 artículo
-  const MAX_REPAIRS_PER_RUN = 1; 
+  const MAX_REPAIRS_PER_RUN = 1;
+  const TARGET_ARTICLE_ID = "89325";
   let successCount = 0;
   let skippedCount = 0;
 
@@ -115,6 +117,8 @@ export async function runPatriciaFix(
         const article = pageArticles[idx];
         const progressPrefix = `[Art. ${article.id}]`;
 
+        if (article.id !== TARGET_ARTICLE_ID) continue;
+
         try {
           await page.goto(article.editUrl, { waitUntil: "domcontentloaded" });
 
@@ -130,10 +134,19 @@ export async function runPatriciaFix(
           // Leer el valor directamente mediante JS en el navegador para evitar problemas si está oculto
           let contentHtml = await editorTextarea.inputValue();
 
-          if (contentHtml.includes("PHONE_NUMBER")) {
+          if (
+            contentHtml.includes("PHONE_NUMBER") ||
+            contentHtml.includes("19546529929")
+          ) {
             await onStep(`${progressPrefix} Reparando: "${article.title}"...`);
 
-            contentHtml = contentHtml.replace(/PHONE_NUMBER/g, "+19546529929");
+            const repaired = replacePhonePlaceholders(contentHtml, "+19546529929");
+            if (repaired.replacements.whatsapp < 2 || repaired.replacements.call < 1) {
+              throw new Error(
+                `Validación abortada: se esperaban al menos 2 enlaces de WhatsApp/QR y 1 de llamada; se detectaron ${repaired.replacements.whatsapp} y ${repaired.replacements.call}.`,
+              );
+            }
+            contentHtml = repaired.html;
 
             // Escribir el nuevo contenido tanto en el textarea original como en TinyMCE si está presente
             await page.evaluate(({ val }) => {
@@ -154,6 +167,23 @@ export async function runPatriciaFix(
             if (await saveBtn.isVisible()) {
               await saveBtn.click();
               await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
+              await page.goto(article.editUrl, { waitUntil: "domcontentloaded" });
+              const savedTextarea = page
+                .locator('textarea[name="contentes"], textarea[name="content"]')
+                .first();
+              await savedTextarea.waitFor({ state: "attached", timeout: 15000 });
+              const savedHtml = await savedTextarea.inputValue();
+              const verified = replacePhonePlaceholders(savedHtml, "+19546529929");
+              if (
+                savedHtml.includes("PHONE_NUMBER") ||
+                verified.html !== savedHtml ||
+                verified.replacements.whatsapp < 2 ||
+                verified.replacements.call < 1
+              ) {
+                throw new Error(
+                  "La verificación posterior al guardado no confirmó los 2 enlaces de WhatsApp/QR y el enlace de llamada.",
+                );
+              }
               successCount++;
               await onStep(`✓ ¡Reparado con éxito! (${successCount} de ${MAX_REPAIRS_PER_RUN}): ${article.title} — Enlace: ${article.publicUrl || article.editUrl}`);
             } else {
@@ -203,10 +233,15 @@ export async function runPatriciaFix(
       }
     }
 
+    if (successCount === 0) {
+      throw new Error(`No se pudo reparar el artículo objetivo ${TARGET_ARTICLE_ID}.`);
+    }
+
     await onStep(`\n🎉 PROCESO COMPLETADO: ${successCount} artículos corregidos, ${skippedCount} ya estaban corregidos.`);
 
   } catch (err) {
     await onStep(`Error general: ${err instanceof Error ? err.message : String(err)}`);
+    throw err;
   } finally {
     await browser.close();
     await onStep("Proceso finalizado.");
