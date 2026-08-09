@@ -90,6 +90,24 @@ HANDOFF, solo alimenta ideas hacia él).
   artículo sume a las estadísticas ÚNICAMENTE después de que el sistema
   confirme que quedó guardado con éxito en la plataforma — los que fallen,
   queden incompletos, se cancelen o nunca lleguen a guardarse no deben sumar.
+- **(9/8/2026)** Redes sociales a conectar para envío automático, hasta 3
+  veces por semana cada una (relacionado con el ítem del 8/8/2026 "Motor de
+  Distribución Inteligente SEO para Redes Sociales", que hablaba de 2 veces
+  por semana — revisar y unificar el número al ejecutar):
+  - Threads
+  - X
+  - LinkedIn
+  - Instagram — publicaciones normales y carruseles (dos formatos distintos)
+  - Facebook — Página, Grupos y Perfil personal (tres superficies distintas)
+  - Bluesky
+  - Mastodon
+  - Pinterest
+  - Tumblr
+  - Reddit (fase eventual, no prioritaria)
+
+  **Importante:** el administrador principal debe tener, desde su propio
+  panel, un control para otorgarle o quitarle a cada usuario el acceso a
+  cada red social individualmente (no todo o nada — por red, por usuario).
 
 ## Hecho
 
