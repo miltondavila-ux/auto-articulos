@@ -142,17 +142,21 @@ async function processRunTitle(
 
     if (run.category.name === "FIX_PATRICIA") {
       await onStep("Iniciando reparación de artículos de Patricia Coy...");
-      await runPatriciaFix(username, password, run.user.platformDomain || "net", onStep);
+      const result = await runPatriciaFix(username, password, run.user.platformDomain || "net", onStep);
       await prisma.title.update({
         where: { id: nextTitle.id },
         data: {
           status: "success",
           processedAt: new Date(),
           errorMessage: null,
-          finalTitle: "Reparación finalizada con éxito",
+          finalTitle: result.failed > 0
+            ? `Lote completado con ${result.failed} pendiente(s)`
+            : "Lote completado sin errores",
         },
       });
-      await onStep("Lote de reparación completado.");
+      await onStep(result.failed > 0
+        ? `Lote completado; ${result.failed} artículo(s) quedan pendientes para reintentar.`
+        : "Lote de reparación completado sin errores.");
       return true;
     }
 

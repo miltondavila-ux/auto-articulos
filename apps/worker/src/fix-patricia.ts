@@ -11,7 +11,7 @@ export async function runPatriciaFix(
   password: string,
   domain: string,
   onStep: (msg: string) => Promise<void> | void
-): Promise<void> {
+): Promise<{ repaired: number; alreadyCorrect: number; failed: number }> {
   const baseUrl = `https://www.10minuteswebsite.${domain}`;
   await onStep(`Conectando a 10minutesWebsite (${baseUrl}) como ${username}...`);
 
@@ -22,7 +22,9 @@ export async function runPatriciaFix(
   let successCount = 0;
   let skippedCount = 0;
   let errorCount = 0;
+  let processedCount = 0;
   let lastRepaired: { id: string; title: string } | null = null;
+  const failedArticles: { id: string; title: string }[] = [];
 
   try {
     // 1. Iniciar sesión
@@ -45,7 +47,7 @@ export async function runPatriciaFix(
     let pageNum = 1;
 
     // Recorreremos las páginas de una en una y repararemos al vuelo los artículos
-    while (hasNextPage && successCount < MAX_REPAIRS_PER_RUN) {
+    while (hasNextPage && processedCount < MAX_REPAIRS_PER_RUN) {
       await onStep(`Abriendo página ${pageNum} de la lista de artículos...`);
       await page.goto(`${baseUrl}/dashboard/user_buyer_seller_articles.php`, {
         waitUntil: "domcontentloaded",
@@ -110,14 +112,16 @@ export async function runPatriciaFix(
 
       // Procesar los artículos de esta página uno a uno
       for (let idx = 0; idx < pageArticles.length; idx++) {
-        if (successCount >= MAX_REPAIRS_PER_RUN) {
+        if (processedCount >= MAX_REPAIRS_PER_RUN) {
           break;
         }
 
         const article = pageArticles[idx];
         const progressPrefix = `[Art. ${article.id}]`;
+        processedCount++;
 
         try {
+          await onStep(`${progressPrefix} Abriendo: "${article.title}"...`);
           await page.goto(article.editUrl, { waitUntil: "domcontentloaded" });
 
           // El editor textarea real para español es "contentes". Lo buscamos y esperamos a que se adjunte (puede estar oculto por TinyMCE)
@@ -125,8 +129,7 @@ export async function runPatriciaFix(
           await editorTextarea.waitFor({ state: "attached", timeout: 15000 }).catch(() => {});
 
           if (await editorTextarea.count() === 0) {
-            await onStep(`${progressPrefix} Saltar: No se localizó el textarea 'contentes' para "${article.title}"`);
-            continue;
+            throw new Error("No se localizó el editor de contenido.");
           }
 
           // Leer el valor directamente mediante JS en el navegador para evitar problemas si está oculto
@@ -146,12 +149,8 @@ export async function runPatriciaFix(
               !contentHtml.includes("NUMERO-WHATSAPP")
             ) {
               skippedCount++;
+              await onStep(`${progressPrefix} Ya estaba correcto. Continuando al siguiente artículo.`);
               continue;
-            }
-            if (repaired.replacements.whatsapp < 2 || repaired.replacements.call < 1) {
-              throw new Error(
-                `Validación abortada: se esperaban al menos 2 enlaces de WhatsApp/QR y 1 de llamada; se detectaron ${repaired.replacements.whatsapp} y ${repaired.replacements.call}.`,
-              );
             }
             contentHtml = repaired.html;
 
@@ -160,20 +159,32 @@ export async function runPatriciaFix(
               const el = document.querySelector('textarea[name="contentes"], textarea[name="content"]') as HTMLTextAreaElement;
               if (el) {
                 el.value = val;
+                el.dispatchEvent(new Event("input", { bubbles: true }));
                 el.dispatchEvent(new Event("change", { bubbles: true }));
               }
-              // Sincronizar con TinyMCE si está cargado en la página
-              const tiny = (window as any).tinyMCE;
-              if (tiny && tiny.activeEditor) {
-                tiny.activeEditor.setContent(val);
+              // No usar activeEditor: algunas plantillas tienen varios editores
+              // y puede apuntar al campo equivocado. Se busca el editor ligado
+              // específicamente al textarea de contenido y se fuerza su save.
+              const tiny = (window as any).tinymce || (window as any).tinyMCE;
+              if (tiny && el) {
+                const editor = el.id && typeof tiny.get === "function"
+                  ? tiny.get(el.id)
+                  : tiny.activeEditor;
+                if (editor) {
+                  editor.setContent(val);
+                  editor.save();
+                }
+                if (typeof tiny.triggerSave === "function") tiny.triggerSave();
               }
             }, { val: contentHtml });
 
             // Clic en Guardar
             const saveBtn = page.getByRole("button", { name: /Guardar cambios|Save changes|Guardar/i }).first();
             if (await saveBtn.isVisible()) {
+              await onStep(`${progressPrefix} Contenido corregido. Guardando...`);
               await saveBtn.click();
               await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
+              await onStep(`${progressPrefix} Guardado enviado. Verificando el contenido persistido...`);
               await page.goto(article.editUrl, { waitUntil: "domcontentloaded" });
               const savedTextarea = page
                 .locator('textarea[name="contentes"], textarea[name="content"]')
@@ -183,35 +194,35 @@ export async function runPatriciaFix(
               const verified = replacePhonePlaceholders(savedHtml, "+19546529929");
               if (
                 savedHtml.includes("PHONE_NUMBER") ||
-                verified.html !== savedHtml ||
-                verified.replacements.whatsapp < 2 ||
-                verified.replacements.call < 1
+                savedHtml.includes("NUMERO-WHATSAPP") ||
+                verified.html !== savedHtml
               ) {
                 throw new Error(
-                  "La verificación posterior al guardado no confirmó los 2 enlaces de WhatsApp/QR y el enlace de llamada.",
+                  "La verificación posterior detectó un marcador o enlace telefónico que todavía requiere corrección.",
                 );
               }
               successCount++;
               lastRepaired = { id: article.id, title: article.title };
               await onStep(`✓ ¡Reparado con éxito! (${successCount} de ${MAX_REPAIRS_PER_RUN}): ${article.title} — Enlace: ${article.publicUrl || article.editUrl}`);
             } else {
-              await onStep(`${progressPrefix} Error: Botón Guardar no encontrado.`);
+              throw new Error("No se encontró el botón Guardar.");
             }
           } else {
             skippedCount++;
-            if (skippedCount % 5 === 0 || idx === pageArticles.length - 1) {
-              await onStep(`... analizados ${skippedCount} artículos ya corregidos`);
-            }
+            await onStep(`${progressPrefix} Ya estaba correcto. Continuando al siguiente artículo.`);
           }
         } catch (articleErr) {
           errorCount++;
+          failedArticles.push({ id: article.id, title: article.title });
           await onStep(`${progressPrefix} Error en artículo "${article.title}": ${articleErr instanceof Error ? articleErr.message : String(articleErr)}`);
+          await onStep(`${progressPrefix} Fallo registrado. Continuando con el siguiente artículo.`);
         }
       }
 
-      // Si ya alcanzamos el límite de reparación, terminamos el loop
-      if (successCount >= MAX_REPAIRS_PER_RUN) {
-        await onStep(`\nLímite del lote alcanzado: ${successCount} artículos reparados.`);
+      // Cada lote procesa como máximo 20 artículos, sin ocultar fallos ni
+      // quedarse reintentando el mismo artículo dentro de la misma orden.
+      if (processedCount >= MAX_REPAIRS_PER_RUN) {
+        await onStep(`\nLímite del lote alcanzado: ${processedCount} artículos procesados uno por uno.`);
         break;
       }
 
@@ -250,11 +261,12 @@ export async function runPatriciaFix(
     }
 
     await onStep(`\nLOTE COMPLETADO: ${successCount} reparados, ${skippedCount} ya correctos, ${errorCount} con error.`);
-    if (errorCount > 0) {
-      throw new Error(
-        `El lote terminó con ${errorCount} artículo(s) que requieren revisión; los cambios confirmados se conservaron.`,
+    if (failedArticles.length > 0) {
+      await onStep(
+        `PENDIENTES PARA REINTENTAR: ${failedArticles.map((article) => `${article.id} — ${article.title}`).join(" | ")}`,
       );
     }
+    return { repaired: successCount, alreadyCorrect: skippedCount, failed: errorCount };
 
   } catch (err) {
     await onStep(`Error general: ${err instanceof Error ? err.message : String(err)}`);

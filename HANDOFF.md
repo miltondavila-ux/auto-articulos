@@ -1486,6 +1486,16 @@ página falsa para Bing.
 
 ## Reglas y preferencias del usuario (NO ignorar)
 
+- **Reparación Patricia Coy (9/8/2026):** el primer lote real fue rechazado
+  (1 reparado, 1 correcto, 8 errores) porque continuó tras los fallos y la
+  verificación exigía una cantidad fija de botones. La nueva ejecución debe
+  ser estrictamente secuencial: abrir un artículo, corregir, guardar,
+  verificar el contenido persistido y registrar el resultado definitivo antes
+  de pasar al siguiente. Si falla, registra el artículo y continúa; al final
+  muestra la lista exacta de pendientes para reintentar. Se corrigió también la sincronización de TinyMCE para usar el editor
+  ligado al textarea de contenido, no `activeEditor`. No iniciar otra prueba
+  hasta que esta corrección esté pusheada y desplegada.
+
 - **El usuario prueba, la IA no.** Nunca disparar corridas de prueba de la
   automatización de publicación por iniciativa propia. Sí está bien:
   desplegar, hacer diagnósticos de solo-lectura, revisar logs.
