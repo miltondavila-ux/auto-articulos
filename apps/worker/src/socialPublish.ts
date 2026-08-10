@@ -29,17 +29,18 @@ async function generateAndHostThreadsImage(titleId: string, summary: string): Pr
       const data = (await response.json()) as { data?: { url?: string; b64_json?: string }[] };
       const imageUrl = data.data?.[0]?.url;
       const b64 = data.data?.[0]?.b64_json;
-      let buffer: Buffer;
-      if (b64) {
-        buffer = Buffer.from(b64, "base64");
-      } else if (imageUrl) {
-        const imgRes = await fetch(imageUrl);
-        buffer = Buffer.from(await imgRes.arrayBuffer());
-      } else {
-        continue;
+
+      if (imageUrl) {
+        return imageUrl;
       }
-      const blob = await put(`threads/${titleId}.png`, buffer, { access: "public", contentType: "image/png" });
-      return blob.url;
+
+      if (b64) {
+        const buffer = Buffer.from(b64, "base64");
+        const blob = await put(`threads/${titleId}.png`, buffer, { access: "public", contentType: "image/png" });
+        return blob.url;
+      }
+
+      continue;
     } catch (err) {
       console.warn(`Fallo al generar imagen para Threads con modelo ${model}:`, err);
     }
@@ -172,18 +173,19 @@ async function generateInstagramImage(
       const data = (await response.json()) as { data?: { url?: string; b64_json?: string }[] };
       const imageUrl = data.data?.[0]?.url;
       const b64 = data.data?.[0]?.b64_json;
-      let buffer: Buffer;
-      if (b64) {
-        buffer = Buffer.from(b64, "base64");
-      } else if (imageUrl) {
-        const imgRes = await fetch(imageUrl);
-        buffer = Buffer.from(await imgRes.arrayBuffer());
-      } else {
-        continue;
+
+      if (imageUrl) {
+        return imageUrl;
       }
-      const filename = index !== undefined ? `${index}.png` : "0.png";
-      const blob = await put(`${pathPrefix}/${filename}`, buffer, { access: "public", contentType: "image/png" });
-      return blob.url;
+
+      if (b64) {
+        const buffer = Buffer.from(b64, "base64");
+        const filename = index !== undefined ? `${index}.png` : "0.png";
+        const blob = await put(`${pathPrefix}/${filename}`, buffer, { access: "public", contentType: "image/png" });
+        return blob.url;
+      }
+
+      continue;
     } catch (err) {
       console.warn(`Fallo al generar imagen Instagram ${format}/${index} con modelo ${model}:`, err);
     }
