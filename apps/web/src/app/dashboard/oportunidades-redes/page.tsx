@@ -49,6 +49,8 @@ export default function OportunidadesRedesPage() {
   const [opportunities, setOpportunities] = useState<SocialOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [generatingNetwork, setGeneratingNetwork] = useState<"threads" | "instagram" | null>(null);
+  const [connectedNetworks, setConnectedNetworks] = useState({ threads: false, instagram: false });
   const [generateSeconds, setGenerateSeconds] = useState(0);
   const [usedGsc, setUsedGsc] = useState(false);
   const [publishingId, setPublishingId] = useState<string | null>(null);
@@ -58,6 +60,7 @@ export default function OportunidadesRedesPage() {
 
   useEffect(() => {
     loadOpportunities();
+    loadConnectedNetworks();
   }, []);
 
   useEffect(() => {
@@ -85,6 +88,21 @@ export default function OportunidadesRedesPage() {
     }
   }
 
+  async function loadConnectedNetworks() {
+    try {
+      const response = await fetch("/api/social-opportunities/generate");
+      if (response.ok) {
+        const data = await response.json();
+        setConnectedNetworks({
+          threads: Boolean(data.threads),
+          instagram: Boolean(data.instagram),
+        });
+      }
+    } catch {
+      setConnectedNetworks({ threads: false, instagram: false });
+    }
+  }
+
   const stages = usedGsc ? gscStages : fallbackStages;
   const currentStage = Math.min(
     stages.length - 1,
@@ -93,12 +111,17 @@ export default function OportunidadesRedesPage() {
   const progress = Math.min(92, 8 + generateSeconds * 4);
   const elapsed = `${Math.floor(generateSeconds / 60)}:${String(generateSeconds % 60).padStart(2, "0")}`;
 
-  async function handleGenerate() {
+  async function handleGenerate(network: "threads" | "instagram") {
     setGenerating(true);
+    setGeneratingNetwork(network);
     setMessage(null);
     setUsedGsc(false);
     try {
-      const res = await fetch("/api/social-opportunities/generate", { method: "POST" });
+      const res = await fetch("/api/social-opportunities/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ networks: [network] }),
+      });
       const data = await res.json();
       if (res.ok) {
         const gscUsed = data.message?.includes("Google Search Console") ?? false;
@@ -112,6 +135,7 @@ export default function OportunidadesRedesPage() {
       setMessage({ kind: "error", text: err.message });
     } finally {
       setGenerating(false);
+      setGeneratingNetwork(null);
     }
   }
 
@@ -250,13 +274,29 @@ export default function OportunidadesRedesPage() {
           Oportunidades en Redes Sociales
         </h2>
         <div style={{ display: "flex", gap: 12 }}>
-          <button
-            onClick={handleGenerate}
-            disabled={generating || loading}
-            style={disabledStyle(buttonStyle, generating || loading)}
-          >
-            {generating ? "Analizando..." : "🔄 Analizar Oportunidades en Redes"}
-          </button>
+          {connectedNetworks.threads && (
+            <button
+              onClick={() => handleGenerate("threads")}
+              disabled={generating || loading}
+              style={disabledStyle({ ...buttonStyle, background: "#111827" }, generating || loading)}
+            >
+              {generatingNetwork === "threads" ? "Analizando Threads..." : "Solicitar para Threads"}
+            </button>
+          )}
+          {connectedNetworks.instagram && (
+            <button
+              onClick={() => handleGenerate("instagram")}
+              disabled={generating || loading}
+              style={disabledStyle({ ...buttonStyle, background: "linear-gradient(135deg, #f58529, #dd2a7b, #8134af)" }, generating || loading)}
+            >
+              {generatingNetwork === "instagram" ? "Analizando Instagram..." : "Solicitar para Instagram"}
+            </button>
+          )}
+          {!connectedNetworks.threads && !connectedNetworks.instagram && !loading && (
+            <span style={{ color: "#f59e0b", fontSize: 13 }}>
+              Conecta una red social en Configuración para solicitar oportunidades.
+            </span>
+          )}
           {generating && (
             <div
               role="status"
@@ -312,7 +352,7 @@ export default function OportunidadesRedesPage() {
       </div>
 
       <p style={{ color: "#a8b3c7", fontSize: 14, marginTop: 8, marginBottom: 20 }}>
-        Analiza tus mejores temas con Google Search Console o los artículos más recientes para generar propuestas de copy para redes sociales. Revisa, edita los textos y publica cuando quieras.
+        Elige la red para la que quieres solicitar oportunidades. El sistema usa Google Search Console y también artículos recientes como alternativa.
       </p>
 
       {message && (
@@ -344,7 +384,7 @@ export default function OportunidadesRedesPage() {
             </h3>
             {pendingList.length === 0 && queuedList.length === 0 ? (
               <div style={{ color: "#a8b3c7", textAlign: "center", padding: 20, background: "rgba(255,255,255,0.02)", borderRadius: 12 }}>
-                No tienes propuestas pendientes. Haz clic en "Analizar Oportunidades en Redes" arriba.
+                No tienes propuestas pendientes. Usa arriba el botón de la red que quieras analizar.
               </div>
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 20, marginTop: 15 }}>

@@ -132,15 +132,37 @@ async function selectArticlesWithoutGSC(userId: string): Promise<ArticleCandidat
   });
 }
 
-export async function POST() {
+async function getConnectedNetworks(userId: string) {
+  const [threads, instagram] = await Promise.all([
+    prisma.threadsIntegration.findUnique({ where: { userId }, select: { id: true } }),
+    prisma.instagramIntegration.findUnique({ where: { userId }, select: { id: true } }),
+  ]);
+  return { threads: Boolean(threads), instagram: Boolean(instagram) };
+}
+
+export async function GET() {
   try {
     const userId = await getCurrentUserId();
+    return NextResponse.json(await getConnectedNetworks(userId));
+  } catch {
+    return NextResponse.json({ error: "Error al consultar redes conectadas" }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const userId = await getCurrentUserId();
+    const body = await request.json().catch(() => ({})) as { networks?: string[] };
+    const connected = await getConnectedNetworks(userId);
+    const requestedNetworks = Array.isArray(body.networks)
+      ? body.networks.filter((network) => network === "threads" || network === "instagram")
+      : ["threads", "instagram"];
 
     const integrations: string[] = [];
-    const threads = await prisma.threadsIntegration.findUnique({ where: { userId } });
-    if (threads) integrations.push("threads");
-    const instagram = await prisma.instagramIntegration.findUnique({ where: { userId } });
-    if (instagram) {
+    if (requestedNetworks.includes("threads") && connected.threads) {
+      integrations.push("threads");
+    }
+    if (requestedNetworks.includes("instagram") && connected.instagram) {
       integrations.push("instagram-carousel");
       integrations.push("instagram-reel-image");
       integrations.push("instagram-infografia");
@@ -148,7 +170,7 @@ export async function POST() {
 
     if (integrations.length === 0) {
       return NextResponse.json(
-        { error: "Primero debes conectar al menos una red social (ej. Threads, Instagram) en tu configuración." },
+        { error: "La red seleccionada no está conectada en tu configuración." },
         { status: 400 }
       );
     }
