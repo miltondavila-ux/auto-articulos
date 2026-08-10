@@ -263,6 +263,8 @@ export async function publishInstagramImage(
   const containerData = (await containerRes.json()) as { id: string };
   const creationId = containerData.id;
 
+  console.log(`[Instagram API] Container creado: creation_id=${creationId} image_url=${imageUrl.substring(0, 100)}`);
+
   await pollMediaContainerStatus(accessToken, creationId);
 
   return publishMediaContainer(accessToken, instagramBusinessAccountId, creationId);

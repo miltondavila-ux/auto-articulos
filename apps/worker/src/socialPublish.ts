@@ -168,24 +168,34 @@ async function generateInstagramImage(
       const response = await fetch(OPENAI_IMAGE_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
-        body: JSON.stringify({ model, prompt: prompt + variation, size: "1024x1024", n: 1 }),
+        body: JSON.stringify({ model, prompt: prompt + variation, size: "1024x1024", n: 1, response_format: "b64_json" }),
       });
       const data = (await response.json()) as { data?: { url?: string; b64_json?: string }[] };
-      const imageUrl = data.data?.[0]?.url;
       const b64 = data.data?.[0]?.b64_json;
 
-      if (imageUrl) {
-        return imageUrl;
+      if (!b64) {
+        console.warn(`[Instagram Image] Modelo ${model} no devolvió b64_json`);
+        continue;
       }
 
-      if (b64) {
-        const buffer = Buffer.from(b64, "base64");
-        const filename = index !== undefined ? `${index}.png` : "0.png";
-        const blob = await put(`${pathPrefix}/${filename}`, buffer, { access: "public", contentType: "image/png" });
-        return blob.url;
+      const buffer = Buffer.from(b64, "base64");
+      const filename = index !== undefined ? `${index}.png` : "0.png";
+      const blob = await put(`${pathPrefix}/${filename}`, buffer, {
+        access: "public",
+        contentType: "image/png",
+        addRandomSuffix: false,
+      });
+
+      console.log(`[Instagram Image] Subida a Vercel Blob: ${blob.url.substring(0, 100)}`);
+
+      // Verificar que la URL sea accesible
+      const checkRes = await fetch(blob.url, { method: "HEAD" });
+      if (!checkRes.ok) {
+        console.warn(`[Instagram Image] URL no accesible: ${blob.url} status=${checkRes.status}`);
+        continue;
       }
 
-      continue;
+      return blob.url;
     } catch (err) {
       console.warn(`Fallo al generar imagen Instagram ${format}/${index} con modelo ${model}:`, err);
     }
