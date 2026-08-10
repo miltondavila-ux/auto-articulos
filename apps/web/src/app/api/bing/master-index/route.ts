@@ -51,15 +51,38 @@ export async function POST() {
     orderBy: { processedAt: "asc" },
   });
 
+  // Contar artículos que YA fueron enviados anteriormente
+  const yaIndexados = await prisma.title.count({
+    where: {
+      run: { userId },
+      articleUrl: { not: null },
+      bingIndexingStatus: "submitted",
+    },
+  });
+
+  const ultimoEnvio = await prisma.title.findFirst({
+    where: {
+      run: { userId },
+      articleUrl: { not: null },
+      bingIndexingStatus: "submitted",
+      bingIndexingAt: { not: null },
+    },
+    orderBy: { bingIndexingAt: "desc" },
+    select: { bingIndexingAt: true },
+  });
+
   if (titles.length === 0) {
     return NextResponse.json({
       ok: true,
       total: 0,
       enviados: 0,
       errores: 0,
-      yaIndexados: 0,
+      yaIndexados,
+      ultimoEnvio: ultimoEnvio?.bingIndexingAt ?? null,
       message:
-        "Todos tus artículos ya fueron enviados a Bing o no hay artículos publicados.",
+        yaIndexados > 0
+          ? `Todos tus artículos ya fueron enviados a Bing (${yaIndexados} indexados).`
+          : "No hay artículos publicados.",
     });
   }
 
@@ -130,6 +153,8 @@ export async function POST() {
     total: titles.length,
     enviados,
     errores,
+    yaIndexados,
+    ultimoEnvio: ultimoEnvio?.bingIndexingAt ?? null,
     erroresDetalle: erroresDetalle.length > 0 ? erroresDetalle : undefined,
   });
 }

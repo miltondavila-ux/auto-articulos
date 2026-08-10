@@ -31,6 +31,8 @@ export default function BingWebmasterSection() {
     enviados: number;
     errores: number;
     total: number;
+    yaIndexados: number;
+    ultimoEnvio?: string | null;
     erroresDetalle?: string[];
   } | null>(null);
 
@@ -80,6 +82,8 @@ export default function BingWebmasterSection() {
           enviados: value.enviados ?? 0,
           errores: value.errores ?? 0,
           total: value.total ?? 0,
+          yaIndexados: value.yaIndexados ?? 0,
+          ultimoEnvio: value.ultimoEnvio,
           erroresDetalle: value.erroresDetalle,
         });
         setMessage(
@@ -268,10 +272,17 @@ export default function BingWebmasterSection() {
                 {masterResult.errores > 0 ? "Resultados parciales:" : "Completado:"}
               </p>
               <p style={{ margin: "4px 0 0" }}>
-                ✓ {masterResult.enviados} enviados de {masterResult.total} artículos
+                ✓ {masterResult.enviados} enviados de {masterResult.total} artículos nuevos
                 {masterResult.errores > 0 &&
                   ` · ✗ ${masterResult.errores} errores`}
               </p>
+              {masterResult.yaIndexados > 0 && (
+                <p style={{ margin: "4px 0 0", color: "#16a34a" }}>
+                  ✓ {masterResult.yaIndexados} artículos ya estaban indexados en Bing
+                  {masterResult.ultimoEnvio &&
+                    ` — último envío: ${new Date(masterResult.ultimoEnvio).toLocaleString("es-US")}`}
+                </p>
+              )}
               {masterResult.erroresDetalle &&
                 masterResult.erroresDetalle.length > 0 && (
                   <ul
