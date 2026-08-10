@@ -129,8 +129,12 @@ async function processThreadsJob(job: {
       prisma.title.findUnique({ where: { id: job.titleId } }),
       prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true } }),
     ]);
-    if (title?.summary) {
-      imageUrl = (await generateAndHostThreadsImage(job.titleId, title.summary, user?.imagePrompt)) ?? undefined;
+    // Respaldo: si el artículo no tiene "summary" guardado (común en
+    // artículos publicados antes de que existiera ese campo), usar el
+    // título como base del prompt en vez de omitir la imagen por completo.
+    const imageBasis = title?.summary || job.articleTitle;
+    if (imageBasis) {
+      imageUrl = (await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt)) ?? undefined;
     }
   }
 
@@ -213,8 +217,9 @@ async function processTwitterJob(job: {
       prisma.title.findUnique({ where: { id: job.titleId } }),
       prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true } }),
     ]);
-    if (title?.summary) {
-      imageUrl = (await generateAndHostThreadsImage(job.titleId, title.summary, user?.imagePrompt)) ?? undefined;
+    const imageBasis = title?.summary || job.articleTitle;
+    if (imageBasis) {
+      imageUrl = (await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt)) ?? undefined;
     }
   }
 
@@ -292,8 +297,9 @@ async function processLinkedInJob(job: {
       prisma.title.findUnique({ where: { id: job.titleId } }),
       prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true } }),
     ]);
-    if (title?.summary) {
-      const imageUrl = await generateAndHostThreadsImage(job.titleId, title.summary, user?.imagePrompt);
+    const imageBasis = title?.summary || job.articleTitle;
+    if (imageBasis) {
+      const imageUrl = await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt);
       if (imageUrl) {
         imageAssetUrn =
           (await uploadLinkedInImage(accessToken, integration.linkedinUserId, imageUrl)) ?? undefined;
