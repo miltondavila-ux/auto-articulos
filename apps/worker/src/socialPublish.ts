@@ -8,6 +8,7 @@ import {
   publishTweet,
   refreshTwitterToken,
   publishLinkedInPost,
+  uploadLinkedInImage,
   publishInstagramCarousel,
   publishInstagramImage,
 } from "@auto-articulos/shared";
@@ -269,12 +270,30 @@ async function processLinkedInJob(job: {
     finalPost = `${finalPost}\n\n${job.articleUrl}`;
   }
 
+  // Genera una imagen (mismo generador que usa Threads) y la sube a LinkedIn
+  // como imagen nativa. Si algo falla en el camino, se publica solo con
+  // texto — nunca bloquea la publicación por un problema de imagen.
+  let imageAssetUrn: string | undefined;
+  if (job.titleId) {
+    const [title, user] = await Promise.all([
+      prisma.title.findUnique({ where: { id: job.titleId } }),
+      prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true } }),
+    ]);
+    if (title?.summary) {
+      const imageUrl = await generateAndHostThreadsImage(job.titleId, title.summary, user?.imagePrompt);
+      if (imageUrl) {
+        imageAssetUrn =
+          (await uploadLinkedInImage(accessToken, integration.linkedinUserId, imageUrl)) ?? undefined;
+      }
+    }
+  }
+
   const result = await publishLinkedInPost(
     accessToken,
     integration.linkedinUserId,
     finalPost,
     job.articleUrl,
-    undefined,
+    imageAssetUrn,
     job.articleTitle
   );
 
@@ -288,13 +307,13 @@ async function processLinkedInJob(job: {
     },
   });
 
-  console.log(`Publicado en LinkedIn: ${job.id} — postId: ${result.postId}`);
+  console.log(`Publicado en LinkedIn: ${job.id} — postId: ${result.postId}${imageAssetUrn ? " (con imagen)" : " (solo texto)"}`);
 
   if (job.titleId) {
     await prisma.titleEvent.create({
       data: {
         titleId: job.titleId,
-        message: `Publicado exitosamente en LinkedIn (${integration.linkedinUsername || integration.linkedinUserId}) - ID: ${result.postId}`,
+        message: `Publicado exitosamente en LinkedIn (${integration.linkedinUsername || integration.linkedinUserId}) - ID: ${result.postId}${imageAssetUrn ? " (con imagen)" : " (solo texto)"}`,
       },
     });
   }

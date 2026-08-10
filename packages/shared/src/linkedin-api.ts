@@ -160,15 +160,101 @@ export async function refreshLinkedInToken(
 }
 
 /**
+ * Registra y sube una imagen a LinkedIn (flujo nativo de 2 pasos) para
+ * adjuntarla a un post. Devuelve el asset URN (ej. "urn:li:digitalmediaAsset:C5...")
+ * o null si algo falla (en cuyo caso el post se publica solo con texto).
+ *
+ * Nota: LinkedIn no permite combinar una imagen nativa con la vista previa
+ * de "ARTICLE" (link con miniatura automática) en el mismo post — son
+ * shareMediaCategory distintos. Por eso, cuando hay imagen, el enlace del
+ * artículo se incluye como texto plano dentro del comentario en vez de como
+ * adjunto ARTICLE.
+ */
+export async function uploadLinkedInImage(
+  accessToken: string,
+  linkedinUserId: string,
+  imageUrl: string
+): Promise<string | null> {
+  try {
+    // Paso 1: registrar la subida
+    const registerRes = await fetch("https://api.linkedin.com/v2/assets?action=registerUpload", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        "X-Restli-Protocol-Version": "2.0.0",
+      },
+      body: JSON.stringify({
+        registerUploadRequest: {
+          recipes: ["urn:li:digitalmediaRecipe:feedshare-image"],
+          owner: `urn:li:person:${linkedinUserId}`,
+          serviceRelationships: [
+            { relationshipType: "OWNER", identifier: "urn:li:userGeneratedContent" },
+          ],
+        },
+      }),
+    });
+
+    if (!registerRes.ok) {
+      console.warn("Error al registrar subida de imagen en LinkedIn:", await registerRes.text());
+      return null;
+    }
+
+    const registerData = (await registerRes.json()) as {
+      value: {
+        uploadMechanism: {
+          "com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest": { uploadUrl: string };
+        };
+        asset: string;
+      };
+    };
+
+    const uploadUrl =
+      registerData.value.uploadMechanism["com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"]
+        .uploadUrl;
+    const asset = registerData.value.asset;
+
+    // Paso 2: descargar la imagen generada y subir los bytes a LinkedIn
+    const imageRes = await fetch(imageUrl);
+    if (!imageRes.ok) {
+      console.warn("No se pudo descargar la imagen para subir a LinkedIn:", imageUrl);
+      return null;
+    }
+    const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
+
+    const uploadRes = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/octet-stream",
+      },
+      body: imageBuffer,
+    });
+
+    if (!uploadRes.ok) {
+      console.warn("Error al subir los bytes de la imagen a LinkedIn:", await uploadRes.text());
+      return null;
+    }
+
+    return asset;
+  } catch (err) {
+    console.error("Error al subir imagen a LinkedIn:", err);
+    return null;
+  }
+}
+
+/**
  * Publica un post en LinkedIn.
- * Soporta texto de hasta 3000 caracteres y opcionalmente una imagen y URL de artículo.
+ * Soporta texto de hasta 3000 caracteres, opcionalmente con una imagen
+ * nativa (imageAssetUrn, obtenido de uploadLinkedInImage) o con vista
+ * previa de artículo (articleUrl, solo si no hay imagen).
  */
 export async function publishLinkedInPost(
   accessToken: string,
   linkedinUserId: string,
   text: string,
   articleUrl?: string,
-  imageUrl?: string,
+  imageAssetUrn?: string,
   title?: string
 ): Promise<LinkedInPublishResult> {
   // Truncar texto a 3000 caracteres con puntos suspensivos si excede el límite
@@ -184,7 +270,7 @@ export async function publishLinkedInPost(
         shareCommentary: {
           text: safeText,
         },
-        shareMediaCategory: articleUrl ? "ARTICLE" : imageUrl ? "IMAGE" : "NONE",
+        shareMediaCategory: imageAssetUrn ? "IMAGE" : articleUrl ? "ARTICLE" : "NONE",
       },
     },
     visibility: {
@@ -192,8 +278,16 @@ export async function publishLinkedInPost(
     },
   };
 
-  // Agregar URL del artículo si existe
-  if (articleUrl) {
+  // Prioridad: imagen nativa (no se puede combinar con vista previa ARTICLE).
+  // El enlace del artículo ya viene incluido como texto plano en `text`.
+  if (imageAssetUrn) {
+    (postBody.specificContent as any)["com.linkedin.ugc.ShareContent"].media = [
+      {
+        status: "READY",
+        media: imageAssetUrn,
+      },
+    ];
+  } else if (articleUrl) {
     (postBody.specificContent as any)["com.linkedin.ugc.ShareContent"].media = [
       {
         status: "READY",
@@ -201,16 +295,6 @@ export async function publishLinkedInPost(
         title: {
           text: title || "Artículo",
         },
-      },
-    ];
-  }
-
-  // Agregar imagen si existe (y no hay artículo)
-  if (imageUrl && !articleUrl) {
-    (postBody.specificContent as any)["com.linkedin.ugc.ShareContent"].media = [
-      {
-        status: "READY",
-        media: imageUrl,
       },
     ];
   }
