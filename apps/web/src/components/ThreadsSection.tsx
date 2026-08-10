@@ -16,30 +16,61 @@ interface ApiSettings {
   isAdmin?: boolean;
 }
 
+interface ThreadsConnection {
+  connected: boolean;
+  threadsUsername?: string;
+  threadsUserId?: string;
+  isExpired?: boolean;
+}
+
+interface InstagramConnection {
+  connected: boolean;
+  instagramUsername?: string;
+  instagramBusinessAccountId?: string;
+  isExpired?: boolean;
+}
+
 type CredentialType = "meta" | "threads";
 
 export default function ThreadsSection() {
   const [metaSettings, setMetaSettings] = useState<ApiSettings | null>(null);
   const [threadsSettings, setThreadsSettings] = useState<ApiSettings | null>(null);
+  const [threadsConnection, setThreadsConnection] = useState<ThreadsConnection | null>(null);
+  const [instagramConnection, setInstagramConnection] = useState<InstagramConnection | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<CredentialType | null>(null);
   const [appId, setAppId] = useState("");
   const [appSecret, setAppSecret] = useState("");
   const [saving, setSaving] = useState(false);
+  const [disconnecting, setDisconnecting] = useState<CredentialType | null>(null);
   const [message, setMessage] = useState("");
 
   async function load() {
     try {
       setLoading(true);
-      const [metaResponse, threadsResponse] = await Promise.all([
+      const [metaResponse, threadsResponse, threadsConnectionResponse, instagramConnectionResponse] = await Promise.all([
         fetch("/api/search-integrations/instagram/settings"),
         fetch("/api/search-integrations/threads/settings"),
+        fetch("/api/search-integrations/threads"),
+        fetch("/api/search-integrations/instagram"),
       ]);
       setMetaSettings(await metaResponse.json());
       setThreadsSettings(await threadsResponse.json());
+      setThreadsConnection(
+        threadsConnectionResponse.ok
+          ? await threadsConnectionResponse.json()
+          : { connected: false },
+      );
+      setInstagramConnection(
+        instagramConnectionResponse.ok
+          ? await instagramConnectionResponse.json()
+          : { connected: false },
+      );
     } catch {
       setMetaSettings({ configured: false, appId: null });
       setThreadsSettings({ configured: false, appId: null });
+      setThreadsConnection({ connected: false });
+      setInstagramConnection({ connected: false });
     } finally {
       setLoading(false);
     }
@@ -89,6 +120,27 @@ export default function ThreadsSection() {
       setMessage("Error de conexión al guardar las credenciales.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function disconnect(type: CredentialType) {
+    const network = type === "meta" ? "Instagram" : "Threads";
+    if (!confirm(`¿Deseas desconectar ${network}?`)) return;
+
+    setDisconnecting(type);
+    setMessage("");
+    try {
+      const endpoint = type === "meta"
+        ? "/api/search-integrations/instagram"
+        : "/api/search-integrations/threads";
+      const response = await fetch(endpoint, { method: "DELETE" });
+      if (!response.ok) throw new Error();
+      setMessage(`${network} fue desconectado.`);
+      await load();
+    } catch {
+      setMessage(`No se pudo desconectar ${network}.`);
+    } finally {
+      setDisconnecting(null);
     }
   }
 
@@ -175,6 +227,49 @@ export default function ThreadsSection() {
             "Credenciales específicas del producto Threads.",
             threadsSettings,
           )}
+
+          <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 18, paddingTop: 16 }}>
+            <strong style={{ color: "#1e293b", fontSize: 14 }}>Conectar cuentas</strong>
+            <p style={{ color: "#64748b", fontSize: 12, margin: "3px 0 12px" }}>
+              Auto Artículos no guarda contraseñas de redes sociales. La autorización se realiza directamente en Meta.
+            </p>
+
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              {threadsConnection?.connected ? (
+                <button
+                  onClick={() => disconnect("threads")}
+                  disabled={disconnecting === "threads"}
+                  style={disabledStyle(secondaryButtonStyle, disconnecting === "threads")}
+                >
+                  {disconnecting === "threads" ? "Desconectando..." : `Desconectar Threads${threadsConnection.threadsUsername ? ` (@${threadsConnection.threadsUsername})` : ""}`}
+                </button>
+              ) : (
+                <a
+                  href="/api/search-integrations/threads/connect"
+                  style={{ ...secondaryButtonStyle, display: "inline-flex", background: "#000", color: "#fff", border: "none", textDecoration: "none", fontWeight: 700 }}
+                >
+                  Conectar Threads
+                </a>
+              )}
+
+              {instagramConnection?.connected ? (
+                <button
+                  onClick={() => disconnect("meta")}
+                  disabled={disconnecting === "meta"}
+                  style={disabledStyle(secondaryButtonStyle, disconnecting === "meta")}
+                >
+                  {disconnecting === "meta" ? "Desconectando..." : `Desconectar Instagram${instagramConnection.instagramUsername ? ` (@${instagramConnection.instagramUsername})` : ""}`}
+                </button>
+              ) : (
+                <a
+                  href="/api/search-integrations/instagram/connect"
+                  style={{ ...secondaryButtonStyle, display: "inline-flex", background: "linear-gradient(135deg, #f58529, #dd2a7b, #8134af)", color: "#fff", border: "none", textDecoration: "none", fontWeight: 700 }}
+                >
+                  Conectar Instagram
+                </a>
+              )}
+            </div>
+          </div>
         </>
       )}
 
