@@ -7,7 +7,6 @@ import {
   refreshThreadsToken,
   publishInstagramCarousel,
   publishInstagramImage,
-  refreshInstagramToken,
 } from "@auto-articulos/shared";
 import { put } from "@vercel/blob";
 
@@ -211,20 +210,8 @@ async function processInstagramJob(job: {
 
   let accessToken = decryptSecret(integration.accessTokenEncrypted);
 
-  const daysUntilExpiration =
-    (integration.expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
-
-  if (daysUntilExpiration < 7) {
-    const refreshed = await refreshInstagramToken(accessToken);
-    accessToken = refreshed.accessToken;
-    const newExpiresAt = new Date(Date.now() + refreshed.expiresInSeconds * 1000);
-    await prisma.instagramIntegration.update({
-      where: { userId: job.userId },
-      data: {
-        accessTokenEncrypted: encryptSecret(accessToken),
-        expiresAt: newExpiresAt,
-      },
-    });
+  if (integration.expiresAt <= new Date()) {
+    throw new Error("La autorización de Instagram expiró. Debes volver a conectar la cuenta.");
   }
 
   const format = job.platform.replace("instagram-", "") as "carousel" | "reel-image" | "infografia";

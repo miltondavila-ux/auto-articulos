@@ -1,5 +1,5 @@
 /**
- * Módulo de integración con Instagram Graph API v21.0 (Meta)
+ * Módulo de integración con Instagram Graph API (Meta)
  * Documentación oficial: https://developers.facebook.com/docs/instagram-api
  *
  * Soporta:
@@ -8,6 +8,9 @@
  *
  * Flujo OAuth 2.0 idéntico al de Threads: Short-Lived Token → Long-Lived Token.
  */
+
+const GRAPH_API_VERSION = "v25.0";
+const GRAPH_API_URL = `https://graph.facebook.com/${GRAPH_API_VERSION}`;
 
 export interface InstagramTokenExchangeResult {
   longLivedToken: string;
@@ -47,7 +50,7 @@ export function getInstagramAuthUrl(
   appCredentials?: { appId: string; appSecret: string }
 ): string {
   const { appId } = appCredentials || getInstagramAppCredentials();
-  const scope = "instagram_basic,instagram_content_publish,pages_show_list";
+  const scope = "instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement";
   const params = new URLSearchParams({
     client_id: appId,
     redirect_uri: redirectUri,
@@ -56,7 +59,7 @@ export function getInstagramAuthUrl(
     state,
   });
 
-  return `https://www.facebook.com/v21.0/dialog/oauth?${params.toString()}`;
+  return `https://www.facebook.com/${GRAPH_API_VERSION}/dialog/oauth?${params.toString()}`;
 }
 
 /**
@@ -79,7 +82,7 @@ export async function exchangeCodeForInstagramTokens(
     code,
   });
 
-  const shortLivedRes = await fetch("https://graph.facebook.com/v21.0/oauth/access_token", {
+  const shortLivedRes = await fetch(`${GRAPH_API_URL}/oauth/access_token`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: shortLivedBody.toString(),
@@ -105,7 +108,7 @@ export async function exchangeCodeForInstagramTokens(
   });
 
   const longLivedRes = await fetch(
-    `https://graph.facebook.com/v21.0/oauth/access_token?${longLivedParams.toString()}`,
+    `${GRAPH_API_URL}/oauth/access_token?${longLivedParams.toString()}`,
     { method: "GET" }
   );
 
@@ -121,11 +124,12 @@ export async function exchangeCodeForInstagramTokens(
   };
 
   const longLivedToken = longLivedData.access_token;
+  let publishingAccessToken = longLivedToken;
   const expiresInSeconds = longLivedData.expires_in || 60 * 86400;
 
   // Paso 3: Obtener las páginas de Facebook del usuario
   const pagesRes = await fetch(
-    `https://graph.facebook.com/v21.0/me/accounts?access_token=${longLivedToken}`
+    `${GRAPH_API_URL}/me/accounts?access_token=${longLivedToken}`
   );
 
   if (!pagesRes.ok) {
@@ -150,7 +154,7 @@ export async function exchangeCodeForInstagramTokens(
 
   for (const page of pagesData.data) {
     const pageRes = await fetch(
-      `https://graph.facebook.com/v21.0/${page.id}?fields=instagram_business_account{id,username}&access_token=${longLivedToken}`
+      `${GRAPH_API_URL}/${page.id}?fields=instagram_business_account{id,username}&access_token=${longLivedToken}`
     );
 
     if (pageRes.ok) {
@@ -161,6 +165,7 @@ export async function exchangeCodeForInstagramTokens(
       if (pageData.instagram_business_account) {
         instagramBusinessAccountId = pageData.instagram_business_account.id;
         instagramUsername = pageData.instagram_business_account.username || "";
+        publishingAccessToken = page.access_token || longLivedToken;
         break;
       }
     }
@@ -175,7 +180,7 @@ export async function exchangeCodeForInstagramTokens(
   }
 
   return {
-    longLivedToken,
+    longLivedToken: publishingAccessToken,
     expiresInSeconds,
     instagramBusinessAccountId,
     instagramUsername,
@@ -194,7 +199,7 @@ export async function refreshInstagramToken(
   });
 
   const res = await fetch(
-    `https://graph.facebook.com/v21.0/oauth/access_token?${params.toString()}`,
+    `${GRAPH_API_URL}/oauth/access_token?${params.toString()}`,
     { method: "GET" }
   );
 
@@ -235,11 +240,12 @@ export async function publishInstagramImage(
     media_type: "IMAGE",
     image_url: imageUrl,
     caption: safeCaption,
+    is_ai_generated: "true",
     access_token: accessToken,
   });
 
   const containerRes = await fetch(
-    `https://graph.facebook.com/v21.0/${instagramBusinessAccountId}/media`,
+    `${GRAPH_API_URL}/${instagramBusinessAccountId}/media`,
     {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -301,7 +307,7 @@ export async function publishInstagramCarousel(
     });
 
     const containerRes = await fetch(
-      `https://graph.facebook.com/v21.0/${instagramBusinessAccountId}/media`,
+      `${GRAPH_API_URL}/${instagramBusinessAccountId}/media`,
       {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -328,11 +334,12 @@ export async function publishInstagramCarousel(
     media_type: "CAROUSEL",
     children: childMediaIds.join(","),
     caption: safeCaption,
+    is_ai_generated: "true",
     access_token: accessToken,
   });
 
   const carouselRes = await fetch(
-    `https://graph.facebook.com/v21.0/${instagramBusinessAccountId}/media`,
+    `${GRAPH_API_URL}/${instagramBusinessAccountId}/media`,
     {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -394,7 +401,7 @@ export async function publishInstagramReel(
   const containerBody = new URLSearchParams(containerParams);
 
   const containerRes = await fetch(
-    `https://graph.facebook.com/v21.0/${instagramBusinessAccountId}/media`,
+    `${GRAPH_API_URL}/${instagramBusinessAccountId}/media`,
     {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -433,7 +440,7 @@ async function publishMediaContainer(
   });
 
   const publishRes = await fetch(
-    `https://graph.facebook.com/v21.0/${instagramBusinessAccountId}/media_publish`,
+    `${GRAPH_API_URL}/${instagramBusinessAccountId}/media_publish`,
     {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -452,7 +459,7 @@ async function publishMediaContainer(
   let permalink: string | undefined;
   try {
     const mediaRes = await fetch(
-      `https://graph.facebook.com/v21.0/${publishData.id}?fields=permalink&access_token=${accessToken}`
+      `${GRAPH_API_URL}/${publishData.id}?fields=permalink&access_token=${accessToken}`
     );
     if (mediaRes.ok) {
       const mediaData = (await mediaRes.json()) as { permalink?: string };
@@ -489,7 +496,7 @@ async function pollMediaContainerStatus(
 
     try {
       const statusRes = await fetch(
-        `https://graph.facebook.com/v21.0/${creationId}?fields=status_code,error_message,id&access_token=${accessToken}`
+        `${GRAPH_API_URL}/${creationId}?fields=status_code,error_message,id&access_token=${accessToken}`
       );
 
       if (statusRes.ok) {
