@@ -90,7 +90,7 @@ export default function ThreadsSection() {
 
       const result = await res.json();
       if (res.ok) {
-        setMessage("✓ Llaves de Meta Threads API guardadas correctamente con cifrado AES-256-GCM.");
+        setMessage("✓ Llaves de Meta API guardadas para Threads, Instagram y Facebook.");
         setShowConfigForm(false);
         setAppSecretInput("");
         await load();
@@ -152,9 +152,9 @@ export default function ThreadsSection() {
             @
           </div>
           <div>
-            <h2 style={{ ...h2Style, margin: 0 }}>Meta Threads API</h2>
+            <h2 style={{ ...h2Style, margin: 0 }}>Meta API</h2>
             <p style={{ fontSize: 12, color: "#64748b", margin: "2px 0 0 0" }}>
-              Cada artículo nuevo se publicará automáticamente como un hilo en Threads con resumen, imagen destacada y enlace.
+              Credenciales compartidas para Threads, Instagram y Facebook.
             </p>
           </div>
         </div>
@@ -269,7 +269,7 @@ export default function ThreadsSection() {
               }}
             >
               <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a" }}>
-                ⚙️ Configuración de Credenciales de Meta Threads (Rol: Administrador)
+                ⚙️ Credenciales compartidas de Meta (Threads, Instagram y Facebook)
               </div>
 
               {/* Guía paso a paso para el usuario */}
