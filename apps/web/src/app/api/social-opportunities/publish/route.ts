@@ -43,6 +43,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (opp.platform.startsWith("instagram")) {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { allowInstagramPublishing: true },
+      });
+      if (!user?.allowInstagramPublishing) {
+        return NextResponse.json(
+          { error: "No tienes permiso para publicar en Instagram. Contacta al administrador." },
+          { status: 403 }
+        );
+      }
+    }
+
     await prisma.socialOpportunity.update({
       where: { id },
       data: { status: "queued", errorLog: null },

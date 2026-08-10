@@ -54,6 +54,9 @@ export async function GET() {
         maxTitlesPerBatch: true,
         platformDomain: true,
         contentLanguage: true,
+        allowInstagramPublishing: true,
+        profilePhotoUrl: true,
+        businessLogoUrl: true,
         opportunitiesDisclosureAcceptedAt: true,
         createdAt: true,
         initialPasswordEncrypted: true,
@@ -108,6 +111,9 @@ export async function PATCH(request: NextRequest) {
     lastName,
     phone,
     role,
+    allowInstagramPublishing,
+    profilePhotoUrl,
+    businessLogoUrl,
   } = body;
 
   if (typeof userId !== "string" || !userId) {
@@ -127,6 +133,9 @@ export async function PATCH(request: NextRequest) {
     passwordHash?: string;
     initialPasswordEncrypted?: string;
     role?: "admin" | "user";
+    allowInstagramPublishing?: boolean;
+    profilePhotoUrl?: string | null;
+    businessLogoUrl?: string | null;
   } = {};
 
   if ("role" in body) {
@@ -217,6 +226,18 @@ export async function PATCH(request: NextRequest) {
       );
     }
     data.platformDomain = platformDomain;
+  }
+
+  if ("allowInstagramPublishing" in body) {
+    data.allowInstagramPublishing = Boolean(allowInstagramPublishing);
+  }
+
+  if ("profilePhotoUrl" in body) {
+    data.profilePhotoUrl = typeof profilePhotoUrl === "string" ? profilePhotoUrl.trim() || null : null;
+  }
+
+  if ("businessLogoUrl" in body) {
+    data.businessLogoUrl = typeof businessLogoUrl === "string" ? businessLogoUrl.trim() || null : null;
   }
 
   if (typeof email === "string" && email.trim()) {

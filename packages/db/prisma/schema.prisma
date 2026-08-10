@@ -74,6 +74,11 @@ model User {
   // Control de acceso a publicación en Instagram. Solo el admin puede
   // activarlo por usuario. Default: false (nadie tiene acceso).
   allowInstagramPublishing          Boolean   @default(false)
+  // Foto de perfil del usuario y logo de su negocio/marca.
+  // Se usan como elementos visuales en las publicaciones de redes sociales
+  // (carruseles, reels, infografías). Subidas como URLs de Vercel Blob.
+  profilePhotoUrl                   String?
+  businessLogoUrl                   String?
 
   credentials                Credential[]
   runs                       Run[]

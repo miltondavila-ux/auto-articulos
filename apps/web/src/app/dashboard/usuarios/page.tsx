@@ -35,6 +35,8 @@ interface UserRow {
   platformDomain: string;
   contentLanguage: string;
   allowInstagramPublishing: boolean;
+  profilePhotoUrl: string | null;
+  businessLogoUrl: string | null;
   opportunitiesDisclosureAcceptedAt: string | null;
   createdAt: string;
   articlesPublished: number;
@@ -1279,6 +1281,71 @@ function UserCard({
                 {roleError}
               </div>
             )}
+          </Field>
+
+          <Field label="Acceso Instagram">
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: "#e5e7eb" }}>
+                <input
+                  type="checkbox"
+                  checked={user.allowInstagramPublishing}
+                  onChange={async (e) => {
+                    await fetch("/api/admin/users", {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ userId: user.id, allowInstagramPublishing: e.target.checked }),
+                    });
+                    onUpdated();
+                  }}
+                  style={{ accentColor: "#8134af", width: 16, height: 16 }}
+                />
+                Publicar en Instagram
+              </label>
+            </div>
+          </Field>
+
+          <Field label="Foto de perfil (URL)">
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input
+                type="text"
+                placeholder="https://..."
+                defaultValue={user.profilePhotoUrl ?? ""}
+                onBlur={async (e) => {
+                  const val = e.target.value.trim() || null;
+                  if (val !== user.profilePhotoUrl) {
+                    await fetch("/api/admin/users", {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ userId: user.id, profilePhotoUrl: val }),
+                    });
+                    onUpdated();
+                  }
+                }}
+                style={{ ...inputStyle, width: 200 }}
+              />
+            </div>
+          </Field>
+
+          <Field label="Logo del negocio (URL)">
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input
+                type="text"
+                placeholder="https://..."
+                defaultValue={user.businessLogoUrl ?? ""}
+                onBlur={async (e) => {
+                  const val = e.target.value.trim() || null;
+                  if (val !== user.businessLogoUrl) {
+                    await fetch("/api/admin/users", {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ userId: user.id, businessLogoUrl: val }),
+                    });
+                    onUpdated();
+                  }
+                }}
+                style={{ ...inputStyle, width: 200 }}
+              />
+            </div>
           </Field>
 
           <Field label="Límite mensual">

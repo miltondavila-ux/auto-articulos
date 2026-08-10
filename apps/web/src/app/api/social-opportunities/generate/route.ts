@@ -163,9 +163,15 @@ export async function POST(request: Request) {
       integrations.push("threads");
     }
     if (requestedNetworks.includes("instagram") && connected.instagram) {
-      integrations.push("instagram-carousel");
-      integrations.push("instagram-reel-image");
-      integrations.push("instagram-infografia");
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { allowInstagramPublishing: true },
+      });
+      if (user?.allowInstagramPublishing) {
+        integrations.push("instagram-carousel");
+        integrations.push("instagram-reel-image");
+        integrations.push("instagram-infografia");
+      }
     }
 
     if (integrations.length === 0) {
