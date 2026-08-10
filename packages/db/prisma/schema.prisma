@@ -470,6 +470,11 @@ model SocialOpportunity {
   articleTitle  String
   platform      String    // "threads" | "linkedin" | "x" | "instagram" | "facebook"
   suggestedText String    @db.Text
+  // Imagen generada por IA en el momento de crear la propuesta (no al
+  // publicar) — el usuario la ve como miniatura antes de aprobar, y el
+  // worker la reutiliza al publicar en vez de generar una nueva. Pedido
+  // explícito del usuario, 10/8/2026.
+  imageUrl      String?
   status        String    @default("pending") // "pending" | "published" | "skipped"
   postId        String?
   errorLog      String?   @db.Text

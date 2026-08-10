@@ -5,7 +5,41 @@ import {
   decryptSecret,
   getGoogleAccessToken,
   queryGoogleSearchAnalytics,
+  generateSocialImageRaw,
 } from "@auto-articulos/shared";
+import { put } from "@vercel/blob";
+
+// Redes que usan una sola imagen adjunta al post (Instagram tiene su propio
+// flujo de carrusel/reel con múltiples imágenes generadas al publicar, no se
+// toca aquí).
+const SINGLE_IMAGE_PLATFORMS = new Set(["threads", "x", "linkedin"]);
+
+async function generateAndStoreOpportunityImage(
+  opportunityId: string,
+  summary: string,
+  customImagePrompt?: string | null
+): Promise<string | null> {
+  try {
+    const result = await generateSocialImageRaw(summary, customImagePrompt);
+    if (!result) return null;
+
+    if (result.url) return result.url;
+
+    if (result.b64) {
+      const buffer = Buffer.from(result.b64, "base64");
+      const blob = await put(`social-opportunities/${opportunityId}.png`, buffer, {
+        access: "public",
+        contentType: "image/png",
+      });
+      return blob.url;
+    }
+
+    return null;
+  } catch (err) {
+    console.error(`Error al generar/guardar imagen para oportunidad ${opportunityId}:`, err);
+    return null;
+  }
+}
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
@@ -233,6 +267,10 @@ export async function POST(request: Request) {
     }
 
     const createdOpportunities: any[] = [];
+    const requestingUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { imagePrompt: true },
+    });
 
     for (const article of candidates) {
       for (const platform of integrations) {
@@ -256,6 +294,28 @@ export async function POST(request: Request) {
             status: "pending",
           },
         });
+
+        // Genera la imagen AHORA (no al publicar) para que el usuario la vea
+        // como miniatura antes de aprobar, y el worker la reutilice sin
+        // tener que generarla de nuevo. Usa el resumen del artículo o, si
+        // no existe, su título como respaldo. Falla en silencio (sin
+        // imagen, se puede publicar solo con texto/enlace igual).
+        if (SINGLE_IMAGE_PLATFORMS.has(platform)) {
+          const imageBasis = article.summary || article.finalTitle || article.text;
+          const imageUrl = await generateAndStoreOpportunityImage(
+            opp.id,
+            imageBasis,
+            requestingUser?.imagePrompt,
+          );
+          if (imageUrl) {
+            await prisma.socialOpportunity.update({
+              where: { id: opp.id },
+              data: { imageUrl },
+            });
+            opp.imageUrl = imageUrl;
+          }
+        }
+
         createdOpportunities.push(opp);
         activeKeys.add(opportunityKey);
       }

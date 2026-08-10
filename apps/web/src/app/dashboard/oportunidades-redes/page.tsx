@@ -22,6 +22,7 @@ interface SocialOpportunity {
   skipReason: string | null;
   createdAt: string;
   publishedAt: string | null;
+  imageUrl: string | null;
 }
 
 const SKIP_REASONS = [
@@ -502,6 +503,19 @@ export default function OportunidadesRedesPage() {
                         )}
                       </div>
                     </div>
+
+                    {opp.imageUrl && (
+                      <div style={{ marginTop: 15 }}>
+                        <label style={{ display: "block", color: "#9ca3af", fontSize: 12, marginBottom: 6 }}>
+                          Imagen que se publicará junto al post:
+                        </label>
+                        <img
+                          src={opp.imageUrl}
+                          alt="Miniatura de la publicación"
+                          style={{ width: 180, height: 180, objectFit: "cover", borderRadius: 8, border: "1px solid #374151" }}
+                        />
+                      </div>
+                    )}
 
                     <div style={{ marginTop: 15 }}>
                       <label style={{ display: "block", color: "#9ca3af", fontSize: 12, marginBottom: 4 }}>

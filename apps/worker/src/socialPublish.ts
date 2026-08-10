@@ -83,6 +83,7 @@ async function processThreadsJob(job: {
   articleUrl: string;
   articleTitle: string;
   suggestedText: string;
+  imageUrl: string | null;
 }): Promise<boolean> {
   const integration = await prisma.threadsIntegration.findUnique({
     where: { userId: job.userId },
@@ -123,15 +124,15 @@ async function processThreadsJob(job: {
     finalPost = `${finalPost}\n\n${job.articleUrl}`;
   }
 
-  let imageUrl: string | undefined;
-  if (job.titleId) {
+  // Preferir la imagen ya generada al crear la propuesta (el usuario la vio
+  // como miniatura antes de aprobar). Solo se genera una nueva aquí como
+  // respaldo, para propuestas creadas antes de que existiera este flujo.
+  let imageUrl: string | undefined = job.imageUrl ?? undefined;
+  if (!imageUrl && job.titleId) {
     const [title, user] = await Promise.all([
       prisma.title.findUnique({ where: { id: job.titleId } }),
       prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true } }),
     ]);
-    // Respaldo: si el artículo no tiene "summary" guardado (común en
-    // artículos publicados antes de que existiera ese campo), usar el
-    // título como base del prompt en vez de omitir la imagen por completo.
     const imageBasis = title?.summary || job.articleTitle;
     if (imageBasis) {
       imageUrl = (await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt)) ?? undefined;
@@ -173,6 +174,7 @@ async function processTwitterJob(job: {
   articleUrl: string;
   articleTitle: string;
   suggestedText: string;
+  imageUrl: string | null;
 }): Promise<boolean> {
   const integration = await prisma.twitterIntegration.findUnique({
     where: { userId: job.userId },
@@ -211,8 +213,8 @@ async function processTwitterJob(job: {
     finalPost = `${finalPost}\n\n${job.articleUrl}`;
   }
 
-  let imageUrl: string | undefined;
-  if (job.titleId) {
+  let imageUrl: string | undefined = job.imageUrl ?? undefined;
+  if (!imageUrl && job.titleId) {
     const [title, user] = await Promise.all([
       prisma.title.findUnique({ where: { id: job.titleId } }),
       prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true } }),
@@ -258,6 +260,7 @@ async function processLinkedInJob(job: {
   articleUrl: string;
   articleTitle: string;
   suggestedText: string;
+  imageUrl: string | null;
 }): Promise<boolean> {
   const integration = await prisma.linkedInIntegration.findUnique({
     where: { userId: job.userId },
@@ -288,23 +291,27 @@ async function processLinkedInJob(job: {
     finalPost = `${finalPost}\n\n${job.articleUrl}`;
   }
 
-  // Genera una imagen (mismo generador que usa Threads) y la sube a LinkedIn
-  // como imagen nativa. Si algo falla en el camino, se publica solo con
-  // texto — nunca bloquea la publicación por un problema de imagen.
-  let imageAssetUrn: string | undefined;
-  if (job.titleId) {
+  // Preferir la imagen ya generada al crear la propuesta; solo se genera
+  // una nueva aquí como respaldo (propuestas creadas antes de este flujo).
+  // En ambos casos, LinkedIn requiere subirla a su sistema de assets nativo
+  // antes de poder adjuntarla a un post.
+  let sourceImageUrl: string | undefined = job.imageUrl ?? undefined;
+  if (!sourceImageUrl && job.titleId) {
     const [title, user] = await Promise.all([
       prisma.title.findUnique({ where: { id: job.titleId } }),
       prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true } }),
     ]);
     const imageBasis = title?.summary || job.articleTitle;
     if (imageBasis) {
-      const imageUrl = await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt);
-      if (imageUrl) {
-        imageAssetUrn =
-          (await uploadLinkedInImage(accessToken, integration.linkedinUserId, imageUrl)) ?? undefined;
-      }
+      sourceImageUrl =
+        (await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt)) ?? undefined;
     }
+  }
+
+  let imageAssetUrn: string | undefined;
+  if (sourceImageUrl) {
+    imageAssetUrn =
+      (await uploadLinkedInImage(accessToken, integration.linkedinUserId, sourceImageUrl)) ?? undefined;
   }
 
   const result = await publishLinkedInPost(

@@ -7,5 +7,6 @@ export * from "./twitter-api";
 export * from "./linkedin-api";
 export * from "./instagram-api";
 export * from "./image-prompt";
+export * from "./social-image";
 
 export const MAX_ATTEMPTS = 3;

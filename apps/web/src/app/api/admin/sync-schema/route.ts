@@ -47,6 +47,8 @@ const STATEMENTS: string[] = [
   `ALTER TABLE "Title" ADD COLUMN IF NOT EXISTS "linkedinPostId" TEXT`,
   `ALTER TABLE "Title" ADD COLUMN IF NOT EXISTS "linkedinPublishError" TEXT`,
   `ALTER TABLE "Title" ADD COLUMN IF NOT EXISTS "linkedinPublishAt" TIMESTAMP(3)`,
+
+  `ALTER TABLE "SocialOpportunity" ADD COLUMN IF NOT EXISTS "imageUrl" TEXT`,
 ];
 
 export async function POST() {
