@@ -33,6 +33,7 @@ export default function LinkedInSection() {
   const [saving, setSaving] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [message, setMessage] = useState("");
+  const [syncing, setSyncing] = useState(false);
 
   async function load() {
     try {
@@ -111,6 +112,24 @@ export default function LinkedInSection() {
     }
   }
 
+  async function syncSchema() {
+    setSyncing(true);
+    setMessage("");
+    try {
+      const res = await fetch("/api/admin/sync-schema", { method: "POST" });
+      const data = await res.json();
+      if (data.ok) {
+        setMessage(`Base de datos sincronizada correctamente (${data.total} pasos).`);
+      } else {
+        setMessage(`Sincronización con errores: ${JSON.stringify(data.results.filter((r: any) => !r.ok))}`);
+      }
+    } catch {
+      setMessage("Error al sincronizar la base de datos.");
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   const isConfigured = settings?.configured ?? false;
 
   return (
@@ -148,6 +167,14 @@ export default function LinkedInSection() {
                   )}
                   <button onClick={startEditing} style={secondaryButtonStyle}>
                     {isConfigured ? "Editar credenciales global" : "Configurar credenciales de LinkedIn"}
+                  </button>
+                  <button
+                    onClick={syncSchema}
+                    disabled={syncing}
+                    style={disabledStyle({ ...secondaryButtonStyle, marginLeft: 8 }, syncing)}
+                    title="Crea las tablas de Twitter/LinkedIn en la base de datos si no existen todavía. Seguro ejecutar varias veces."
+                  >
+                    {syncing ? "Sincronizando..." : "🛠 Sincronizar base de datos"}
                   </button>
                 </div>
               ) : (
