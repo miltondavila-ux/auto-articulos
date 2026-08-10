@@ -10,6 +10,12 @@ import {
 
 type Site = { Url: string; IsVerified: boolean };
 
+type Message = {
+  text: string;
+  link?: { label: string; href: string };
+  type: "success" | "error" | "info";
+};
+
 export default function BingWebmasterSection() {
   const [data, setData] = useState<{
     connected: boolean;
@@ -23,7 +29,7 @@ export default function BingWebmasterSection() {
   } | null>(null);
   const [siteUrl, setSiteUrl] = useState("");
   const [sitemapUrl, setSitemapUrl] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<Message | null>(null);
   const [sendingSitemap, setSendingSitemap] = useState(false);
   const [editingSitemap, setEditingSitemap] = useState(false);
   const [masterIndexing, setMasterIndexing] = useState(false);
@@ -56,24 +62,35 @@ export default function BingWebmasterSection() {
       body: JSON.stringify({ siteUrl, sitemapUrl }),
     });
     const value = await res.json().catch(() => ({}));
-    setMessage(
-      res.ok
-        ? "Configuración de Bing guardada."
-        : (value.error ?? "No se pudo guardar."),
-    );
-    if (res.ok) load();
+    if (res.ok) {
+      setMessage({
+        text: "Configuración de Bing guardada.",
+        type: "success",
+        link: { label: "Ver historial de artículos", href: "/dashboard/historial" },
+      });
+      load();
+    } else {
+      setMessage({
+        text: value.error ?? "No se pudo guardar.",
+        type: "error",
+      });
+    }
   }
 
   async function disconnect() {
     await fetch("/api/search-integrations/bing", { method: "DELETE" });
-    setMessage("Bing Webmaster Tools desconectado.");
+    setMessage({
+      text: "Bing Webmaster Tools desconectado.",
+      type: "info",
+      link: { label: "Volver a conectar", href: "/dashboard/configuracion" },
+    });
     load();
   }
 
   async function masterIndexAll() {
     setMasterIndexing(true);
     setMasterResult(null);
-    setMessage("");
+    setMessage(null);
     try {
       const res = await fetch("/api/bing/master-index", { method: "POST" });
       const value = await res.json().catch(() => ({}));
@@ -86,13 +103,25 @@ export default function BingWebmasterSection() {
           ultimoEnvio: value.ultimoEnvio,
           erroresDetalle: value.erroresDetalle,
         });
-        setMessage(
-          value.total === 0
-            ? value.message ?? "No hay artículos pendientes."
-            : `MASTER INDEXACION: ${value.enviados} enviados, ${value.errores} errores de ${value.total} totales.`,
-        );
+        if (value.total === 0) {
+          setMessage({
+            text: value.message ?? "No hay artículos pendientes.",
+            type: "info",
+            link: { label: "Ver historial", href: "/dashboard/historial" },
+          });
+        } else {
+          setMessage({
+            text: `MASTER INDEXACION: ${value.enviados} enviados, ${value.errores} errores de ${value.total} totales.`,
+            type: value.errores > 0 ? "error" : "success",
+            link: { label: "Ver artículos en historial", href: "/dashboard/historial" },
+          });
+        }
       } else {
-        setMessage(value.error ?? "No se pudo ejecutar la indexación masiva.");
+        setMessage({
+          text: value.error ?? "No se pudo ejecutar la indexación masiva.",
+          type: "error",
+          link: { label: "Revisar configuración de Bing", href: "/dashboard/configuracion" },
+        });
       }
       await load();
     } finally {
@@ -102,15 +131,23 @@ export default function BingWebmasterSection() {
 
   async function sendSitemapNow() {
     setSendingSitemap(true);
-    setMessage("");
+    setMessage(null);
     try {
       const res = await fetch("/api/sitemap/send-bing", { method: "POST" });
       const value = await res.json().catch(() => ({}));
-      setMessage(
-        res.ok
-          ? "Sitemap enviado a Bing correctamente."
-          : (value.error ?? "No se pudo enviar el sitemap."),
-      );
+      if (res.ok) {
+        setMessage({
+          text: "Sitemap enviado a Bing correctamente.",
+          type: "success",
+          link: { label: "Ver historial de envíos", href: "/dashboard/historial" },
+        });
+      } else {
+        setMessage({
+          text: value.error ?? "No se pudo enviar el sitemap.",
+          type: "error",
+          link: { label: "Revisar configuración", href: "/dashboard/configuracion" },
+        });
+      }
       await load();
     } finally {
       setSendingSitemap(false);
@@ -305,7 +342,33 @@ export default function BingWebmasterSection() {
           )}
         </div>
       )}
-      {message && <p style={{ fontSize: 13, color: "#1e8a4b" }}>{message}</p>}
+      {message && (
+        <p
+          style={{
+            fontSize: 13,
+            color: message.type === "error" ? "#d64545" : message.type === "success" ? "#16a34a" : "#6b7280",
+            margin: 0,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            flexWrap: "wrap",
+          }}
+        >
+          {message.text}
+          {message.link && (
+            <a
+              href={message.link.href}
+              style={{
+                color: "#1358a3",
+                fontWeight: 600,
+                textDecoration: "underline",
+              }}
+            >
+              {message.link.label}
+            </a>
+          )}
+        </p>
+      )}
       <p style={{ fontSize: 12, color: "#6b7280" }}>
         El sistema enviará tu sitemap a Bing todas las noches. Bing permite indexación instantánea para cada artículo nuevo — cuando publiques, el sistema lo enviará a Bing automáticamente para que aparezca en los resultados de búsqueda más rápido.
       </p>
