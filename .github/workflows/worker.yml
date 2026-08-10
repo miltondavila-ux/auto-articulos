@@ -12,7 +12,18 @@ concurrency:
 jobs:
   procesar:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Causa raíz confirmada el 10/8/2026 con evidencia directa de logs: con
+    # el presupuesto interno de 18 min (BUDGET_MS en run-once.ts) + ~45s de
+    # instalación de dependencias/Chromium + el margen normal que toma
+    # terminar el último artículo en curso tras vencer ese presupuesto, el
+    # job total llegaba a rozar o superar por segundos este límite de 20 min
+    # — un caso documentado terminó de forma limpia ("Trabajo pendiente
+    # procesado.") apenas 7 segundos DESPUÉS del límite, y GitHub lo mató a
+    # mitad de la salida en vez de dejarlo completar. No era un cuelgue real
+    # de Playwright/Chromium, sino un margen de tiempo insuficiente. Se sube
+    # a 25 min como red de seguridad adicional, junto con la baja del
+    # presupuesto interno a 15 min (ver run-once.ts).
+    timeout-minutes: 25
     # 10 shards × 4 lanes de artículos = capacidad para 40 usuarios
     # publicando simultáneamente. El repo es público y usa runners estándar:
     # GitHub Actions los ofrece sin costo. Usamos 10 de los 20 jobs concurrentes

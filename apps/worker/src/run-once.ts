@@ -10,7 +10,24 @@ import { cleanupOldEvents, recoverStuckTitles } from "./cleanup";
 // 24/7 como index.ts. Procesa todo el trabajo pendiente hasta que no quede
 // nada, o hasta agotar el presupuesto de tiempo (para no exceder el límite
 // del job y dejar que la siguiente corrida programada continúe).
-const BUDGET_MS = 18 * 60 * 1000;
+//
+// Bajado de 18 a 15 minutos el 10/8/2026: causa raíz confirmada con evidencia
+// directa de logs de que el job entero (instalar dependencias + Chromium +
+// este script) llegaba a rozar o superar por segundos el límite de 20 min
+// del workflow (ver .github/workflows/worker.yml) — un caso documentado
+// terminó de forma limpia ("Trabajo pendiente procesado.") apenas 7 segundos
+// DESPUÉS del límite, y GitHub Actions lo mató a mitad de la salida (SIGKILL,
+// sin dejar correr los `finally` que liberan la reserva del usuario o marcan
+// el título para reintentar) en vez de dejarlo completar solo. La razón es
+// que `Date.now() < deadline` solo se revisa ENTRE unidades de trabajo, no
+// DURANTE una: si el último artículo en curso justo al vencer el presupuesto
+// tarda un poco más de lo normal (reintentos de imagen, generación de
+// contenido lenta, etc.), el script sigue esperando a que termine antes de
+// cortar, y ese excedente sumado al ~45s de instalación de dependencias podía
+// empujar el total por encima de los 20 min. Se baja a 15 min (con el límite
+// del job subido a 25 min como red de seguridad) para dejar varios minutos de
+// margen real en vez de unos pocos segundos.
+const BUDGET_MS = 15 * 60 * 1000;
 
 // Cuántos usuarios distintos se procesan en paralelo (cada uno con su propia
 // sesión de 10minutesWebsite, nunca dos lanes en la misma cuenta a la vez —
