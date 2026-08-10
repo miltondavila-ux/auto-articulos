@@ -30,6 +30,8 @@ export async function getCurrentUser() {
       businessLogoUrl: true,
       opportunitiesDisclosureAcceptedAt: true,
       phone: true,
+      imagePrompt: true,
+      infographicPrompt: true,
       createdAt: true,
     },
   });

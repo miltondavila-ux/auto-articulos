@@ -9,9 +9,11 @@
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 const IMAGE_PROMPT_MAX_LEN = 590; // #images tiene maxlength=600 en la plataforma
+const DEFAULT_IMAGE_PROMPT = "Crea una imagen hiperrealista donde haya humanos y tomando en cuenta este texto:";
 
-export function buildImagePrompt(summary: string): string {
-  const prompt = `Crea una imagen hiperrealista donde haya humanos y tomando en cuenta este texto: ${summary}`;
+export function buildImagePrompt(summary: string, customPrompt?: string | null): string {
+  const base = (customPrompt && customPrompt.trim()) || DEFAULT_IMAGE_PROMPT;
+  const prompt = `${base} ${summary}`;
   return prompt.slice(0, IMAGE_PROMPT_MAX_LEN);
 }
 

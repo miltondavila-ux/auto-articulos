@@ -5,6 +5,8 @@ import {
   encryptSecret,
   publishThread,
   refreshThreadsToken,
+  publishTweet,
+  refreshTwitterToken,
   publishInstagramCarousel,
   publishInstagramImage,
 } from "@auto-articulos/shared";
@@ -15,9 +17,9 @@ const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
 
 // ─── THREADS ──────────────────────────────────────────────────────────────
 
-async function generateAndHostThreadsImage(titleId: string, summary: string): Promise<string | null> {
+async function generateAndHostThreadsImage(titleId: string, summary: string, customImagePrompt?: string | null): Promise<string | null> {
   if (!OPENAI_API_KEY) return null;
-  const prompt = buildImagePrompt(summary);
+  const prompt = buildImagePrompt(summary, customImagePrompt);
   const models = ["gpt-image-1", "dall-e-3"];
   for (const model of models) {
     try {
@@ -91,9 +93,12 @@ async function processThreadsJob(job: {
 
   let imageUrl: string | undefined;
   if (job.titleId) {
-    const title = await prisma.title.findUnique({ where: { id: job.titleId } });
+    const [title, user] = await Promise.all([
+      prisma.title.findUnique({ where: { id: job.titleId } }),
+      prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true } }),
+    ]);
     if (title?.summary) {
-      imageUrl = (await generateAndHostThreadsImage(job.titleId, title.summary)) ?? undefined;
+      imageUrl = (await generateAndHostThreadsImage(job.titleId, title.summary, user?.imagePrompt)) ?? undefined;
     }
   }
 
@@ -123,17 +128,102 @@ async function processThreadsJob(job: {
   return true;
 }
 
+// ─── X (TWITTER) ───────────────────────────────────────────────────────────
+
+async function processTwitterJob(job: {
+  id: string;
+  userId: string;
+  titleId: string | null;
+  articleUrl: string;
+  articleTitle: string;
+  suggestedText: string;
+}): Promise<boolean> {
+  const integration = await prisma.twitterIntegration.findUnique({
+    where: { userId: job.userId },
+  });
+
+  if (!integration) {
+    throw new Error("X (Twitter) no está configurado en tu cuenta.");
+  }
+
+  let accessToken = decryptSecret(integration.accessTokenEncrypted);
+  let refreshToken = decryptSecret(integration.refreshTokenEncrypted);
+
+  const daysUntilExpiration =
+    (integration.expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+
+  if (daysUntilExpiration < 7) {
+    const refreshed = await refreshTwitterToken(refreshToken);
+    accessToken = refreshed.accessToken;
+    refreshToken = refreshed.refreshToken;
+    const newExpiresAt = new Date(Date.now() + refreshed.expiresInSeconds * 1000);
+    await prisma.twitterIntegration.update({
+      where: { userId: job.userId },
+      data: {
+        accessTokenEncrypted: encryptSecret(accessToken),
+        refreshTokenEncrypted: encryptSecret(refreshToken),
+        expiresAt: newExpiresAt,
+      },
+    });
+  }
+
+  let finalPost = job.suggestedText;
+  if (finalPost.includes("[ENLACE]")) {
+    finalPost = finalPost.replace("[ENLACE]", job.articleUrl);
+  } else {
+    finalPost = `${finalPost}\n\n${job.articleUrl}`;
+  }
+
+  let imageUrl: string | undefined;
+  if (job.titleId) {
+    const [title, user] = await Promise.all([
+      prisma.title.findUnique({ where: { id: job.titleId } }),
+      prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true } }),
+    ]);
+    if (title?.summary) {
+      imageUrl = (await generateAndHostThreadsImage(job.titleId, title.summary, user?.imagePrompt)) ?? undefined;
+    }
+  }
+
+  const result = await publishTweet(accessToken, finalPost, imageUrl);
+
+  await prisma.socialOpportunity.update({
+    where: { id: job.id },
+    data: {
+      status: "published",
+      postId: result.tweetUrl || result.tweetId,
+      publishedAt: new Date(),
+      errorLog: null,
+    },
+  });
+
+  console.log(`Publicado en X (Twitter): ${job.id} — tweetId: ${result.tweetId}`);
+
+  if (job.titleId) {
+    await prisma.titleEvent.create({
+      data: {
+        titleId: job.titleId,
+        message: `Publicado exitosamente en X (Twitter) (@${integration.twitterUsername || integration.twitterUserId}) - ID: ${result.tweetId}${imageUrl ? " (con imagen)" : " (solo texto)"}`,
+      },
+    });
+  }
+
+  return true;
+}
+
 // ─── INSTAGRAM ────────────────────────────────────────────────────────────
 
 async function generateInstagramImage(
   titleId: string,
   summary: string,
   format: string,
-  index?: number
+  index?: number,
+  customImagePrompt?: string | null,
+  customInfographicPrompt?: string | null,
 ): Promise<string | null> {
   if (!OPENAI_API_KEY) return null;
 
-  const basePrompt = buildImagePrompt(summary);
+  const basePrompt = buildImagePrompt(summary, customImagePrompt);
   const models = ["gpt-image-1", "dall-e-3"];
 
   let styleInstruction: string;
@@ -153,7 +243,8 @@ async function generateInstagramImage(
       pathPrefix = `instagram/reel-image/${titleId}`;
       break;
     case "infografia":
-      styleInstruction = `Estilo infografía profesional con datos, números, iconos y gráficos minimalistas. Fondo claro con acentos de color. Diseño informativo y fácil de leer.`;
+      styleInstruction = (customInfographicPrompt && customInfographicPrompt.trim())
+        || `Estilo infografía profesional con datos, números, iconos y gráficos minimalistas. Fondo claro con acentos de color. Diseño informativo y fácil de leer.`;
       pathPrefix = `instagram/infografia/${titleId}`;
       break;
     default:
@@ -227,9 +318,10 @@ async function processInstagramJob(job: {
   }
 
   const format = job.platform.replace("instagram-", "") as "carousel" | "reel-image" | "infografia";
-  const title = job.titleId
-    ? await prisma.title.findUnique({ where: { id: job.titleId } })
-    : null;
+  const [title, user] = await Promise.all([
+    job.titleId ? prisma.title.findUnique({ where: { id: job.titleId } }) : Promise.resolve(null),
+    prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true, infographicPrompt: true } }),
+  ]);
   const summary = title?.summary || job.articleTitle || "";
   const finalPost = job.suggestedText.includes("[ENLACE]")
     ? job.suggestedText.replace("[ENLACE]", job.articleUrl)
@@ -248,6 +340,8 @@ async function processInstagramJob(job: {
           summary,
           "carousel",
           i,
+          user?.imagePrompt,
+          user?.infographicPrompt,
         );
         if (url) imageUrls.push(url);
       }
@@ -265,7 +359,7 @@ async function processInstagramJob(job: {
     }
 
     case "reel-image": {
-      const imageUrl = await generateInstagramImage(job.titleId || job.id, summary, "reel-image");
+      const imageUrl = await generateInstagramImage(job.titleId || job.id, summary, "reel-image", undefined, user?.imagePrompt, user?.infographicPrompt);
       console.log(`[Instagram Reel-Image] generated image: ${imageUrl?.substring(0, 80)}`);
       if (!imageUrl) throw new Error("No se pudo generar la imagen estilo Reel.");
       result = await publishInstagramImage(
@@ -278,7 +372,7 @@ async function processInstagramJob(job: {
     }
 
     case "infografia": {
-      const imageUrl = await generateInstagramImage(job.titleId || job.id, summary, "infografia");
+      const imageUrl = await generateInstagramImage(job.titleId || job.id, summary, "infografia", undefined, user?.imagePrompt, user?.infographicPrompt);
       console.log(`[Instagram Infografia] generated image: ${imageUrl?.substring(0, 80)}`);
       if (!imageUrl) throw new Error("No se pudo generar la infografía.");
       result = await publishInstagramImage(
@@ -339,6 +433,8 @@ export async function processNextSocialPublish(): Promise<boolean> {
 
     if (job.platform === "threads") {
       return await processThreadsJob(job);
+    } else if (job.platform === "x") {
+      return await processTwitterJob(job);
     } else if (job.platform.startsWith("instagram-")) {
       return await processInstagramJob(job);
     } else {

@@ -97,6 +97,7 @@ model User {
   opportunityGroups          OpportunityGroup[]
   businessProfileIntegration BusinessProfileIntegration?
   threadsIntegration         ThreadsIntegration?
+  twitterIntegration        TwitterIntegration?
   instagramIntegration       InstagramIntegration?
   socialOpportunities        SocialOpportunity[]
 }
@@ -131,6 +132,23 @@ model ThreadsIntegration {
   threadsUserId        String
   threadsUsername      String?
   accessTokenEncrypted String
+  expiresAt            DateTime
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Conexión OAuth 2.0 con X (Twitter) API v2 — publicación automática de
+// tweets tras la publicación del artículo. Usa OAuth 2.0 PKCE con refresh
+// token para mantener la sesión activa.
+model TwitterIntegration {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  twitterUserId        String
+  twitterUsername      String?
+  accessTokenEncrypted String
+  refreshTokenEncrypted String
   expiresAt            DateTime
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
@@ -368,6 +386,10 @@ model Title {
   threadsPostId         String?
   threadsPublishError   String?
   threadsPublishAt      DateTime?
+  twitterPublishStatus  String? // "pending" | "success" | "error" | "not_configured" | "skipped"
+  twitterPostId         String?
+  twitterPublishError   String?
+  twitterPublishAt      DateTime?
   instagramPublishStatus String? // "pending" | "success" | "error" | "not_configured" | "skipped"
   instagramPostId       String?
   instagramPublishError String?

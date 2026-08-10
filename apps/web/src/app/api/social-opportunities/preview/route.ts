@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildImagePrompt } from "@auto-articulos/shared";
+import { prisma } from "@auto-articulos/db";
+import { getCurrentUserId } from "@/lib/current-user";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
@@ -22,8 +24,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "summary y platform son requeridos" }, { status: 400 });
   }
 
-  const style = STYLE_MAP[platform] || STYLE_MAP["threads"];
-  const basePrompt = buildImagePrompt(summary);
+  let userPrompts: { imagePrompt: string | null; infographicPrompt: string | null } | null = null;
+  try {
+    const userId = await getCurrentUserId();
+    userPrompts = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { imagePrompt: true, infographicPrompt: true },
+    });
+  } catch {
+    // Sin usuario autenticado, usar prompts por defecto
+  }
+
+  const isInfografia = platform === "instagram-infografia";
+  const basePrompt = buildImagePrompt(summary, userPrompts?.imagePrompt);
+  let style = STYLE_MAP[platform] || STYLE_MAP["threads"];
+  if (isInfografia && userPrompts?.infographicPrompt?.trim()) {
+    style = userPrompts.infographicPrompt.trim();
+  }
   const prompt = `${basePrompt}\n\n${style}`;
 
   try {

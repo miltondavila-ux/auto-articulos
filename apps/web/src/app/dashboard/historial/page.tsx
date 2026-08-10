@@ -18,6 +18,15 @@ import type {
 import GoogleIndexingStatus from "@/components/GoogleIndexingStatus";
 
 export default function HistorialPage() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <HistorialEjecuciones />
+      <HistorialRedes />
+    </div>
+  );
+}
+
+function HistorialEjecuciones() {
   const [runs, setRuns] = useState<RunRow[]>([]);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -66,23 +75,37 @@ export default function HistorialPage() {
   }, [runs]);
 
   return (
-    <>
-      <section style={sectionStyle}>
+    <details open={false} style={sectionStyle}>
+      <summary
+        style={{
+          cursor: "pointer",
+          listStyle: "none",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 10,
+          userSelect: "none",
+        }}
+      >
+        <h2 style={{ ...h2Style, margin: 0 }}>Historial de ejecuciones</h2>
+        <span style={{ fontSize: 12, color: "#6b7280" }}>
+          {runs.length} ejecución{runs.length !== 1 ? "es" : ""}
+        </span>
+      </summary>
+      <div style={{ marginTop: 12 }}>
         <div
           style={{
             display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
+            justifyContent: "flex-end",
             gap: 8,
+            marginBottom: 10,
           }}
         >
-          <h2 style={h2Style}>Historial de ejecuciones</h2>
           {hasDeletableRuns &&
             (confirmingDelete ? (
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 12, color: "#8a6d1a" }}>
-                  ¿Borrar todo el historial? No se puede deshacer.
+                  ¿Borrar todo? No se puede deshacer.
                 </span>
                 <button
                   onClick={handleDeleteHistory}
@@ -140,7 +163,7 @@ export default function HistorialPage() {
           </p>
         )}
         {runs.length === 0 && (
-          <p style={{ fontSize: 13, color: "#6b7280", marginTop: 12 }}>
+          <p style={{ fontSize: 13, color: "#6b7280" }}>
             Todavía no hay ejecuciones.
           </p>
         )}
@@ -152,10 +175,8 @@ export default function HistorialPage() {
             onRetried={loadRuns}
           />
         ))}
-      </section>
-
-      <SocialOpportunitiesHistory />
-    </>
+      </div>
+    </details>
   );
 }
 
@@ -179,7 +200,7 @@ function CategoryGroup({
     <details
       open={false}
       style={{
-        marginBottom: 10,
+        marginBottom: 8,
         background: hasErrors ? "#fff8e6" : "#f7f8fa",
         border: hasErrors ? "1px solid #f0deac" : "1px solid #dfe3e8",
         borderRadius: 8,
@@ -196,20 +217,11 @@ function CategoryGroup({
           display: "flex",
           alignItems: "center",
           gap: 10,
-          padding: "12px 14px",
+          padding: "10px 14px",
           userSelect: "none",
         }}
       >
-        <span
-          style={{
-            display: "inline-block",
-            transition: "transform 0.2s",
-            fontSize: 12,
-            color: "#6b7280",
-          }}
-        >
-          ▶
-        </span>
+        <span style={{ fontSize: 11, color: "#6b7280" }}>▶</span>
         <span>{categoryName}</span>
         <span style={{ fontSize: 12, fontWeight: 500, color: "#6b7280" }}>
           — {runs.length} ejecución{runs.length !== 1 ? "es" : ""}
@@ -240,7 +252,7 @@ interface SocialOpportunity {
   publishedAt: string | null;
 }
 
-function SocialOpportunitiesHistory() {
+function HistorialRedes() {
   const [opportunities, setOpportunities] = useState<SocialOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -285,193 +297,204 @@ function SocialOpportunitiesHistory() {
     }
   }
 
-  if (loading) {
-    return (
-      <section style={{ ...sectionStyle, marginTop: 20 }}>
-        <p style={{ fontSize: 13, color: "#6b7280" }}>Cargando historial de redes sociales...</p>
-      </section>
-    );
-  }
-
   return (
-    <section style={{ ...sectionStyle, marginTop: 20 }}>
-      <div
+    <details open={false} style={sectionStyle}>
+      <summary
         style={{
+          cursor: "pointer",
+          listStyle: "none",
           display: "flex",
-          justifyContent: "space-between",
           alignItems: "center",
-          flexWrap: "wrap",
-          gap: 8,
-          borderBottom: "1px solid rgba(232, 236, 245, 0.15)",
-          paddingBottom: 10,
-          marginBottom: 15,
+          justifyContent: "space-between",
+          gap: 10,
+          userSelect: "none",
         }}
       >
-        <h2 style={h2Style}>Historial de Publicaciones en Redes</h2>
-        {opportunities.length > 0 &&
-          (confirmingDelete ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 12, color: "#d64545" }}>
-                ¿Borrar todo el historial? No se puede deshacer.
-              </span>
-              <button
-                onClick={handleDeleteHistory}
-                disabled={deletingHistory}
-                style={{
-                  background: "#fde8e8",
-                  color: "#d64545",
-                  border: "1px solid #e8b4b4",
-                  borderRadius: 6,
-                  padding: "4px 10px",
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: deletingHistory ? "default" : "pointer",
-                }}
-              >
-                {deletingHistory ? "Borrando..." : "Sí, borrar"}
-              </button>
-              <button
-                onClick={() => setConfirmingDelete(false)}
-                disabled={deletingHistory}
-                style={{
-                  background: "none",
-                  color: "#6b7280",
-                  border: "1px solid #dfe3e8",
-                  borderRadius: 6,
-                  padding: "4px 10px",
-                  fontSize: 12,
-                  cursor: deletingHistory ? "default" : "pointer",
-                }}
-              >
-                No
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setConfirmingDelete(true)}
+        <h2 style={{ ...h2Style, margin: 0 }}>Historial de Publicaciones en Redes</h2>
+        {!loading && (
+          <span style={{ fontSize: 12, color: "#6b7280" }}>
+            {opportunities.length} publicación{opportunities.length !== 1 ? "es" : ""}
+          </span>
+        )}
+      </summary>
+      <div style={{ marginTop: 12 }}>
+        {loading ? (
+          <p style={{ fontSize: 13, color: "#6b7280" }}>Cargando...</p>
+        ) : (
+          <>
+            <div
               style={{
-                background: "none",
-                color: "#d64545",
-                border: "1px solid #fde8e8",
-                borderRadius: 6,
-                padding: "4px 10px",
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: "pointer",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 8,
+                marginBottom: 10,
               }}
             >
-              🗑 Borrar historial
-            </button>
-          ))}
-      </div>
-
-      {error && (
-        <p style={{ fontSize: 12, color: "#d64545", marginTop: 6 }}>{error}</p>
-      )}
-
-      {opportunities.length === 0 ? (
-        <p style={{ fontSize: 13, color: "#6b7280" }}>
-          Aún no hay publicaciones de redes sociales en el historial.
-        </p>
-      ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
-          {opportunities.map((opp) => (
-            <details
-              key={opp.id}
-              open={false}
-              style={{
-                background: opp.status === "error" ? "#fff8f8" : "#f7f8fa",
-                border: opp.status === "error" ? "1px solid #fecaca" : "1px solid #dfe3e8",
-                borderRadius: 8,
-                padding: "10px 14px",
-              }}
-            >
-              <summary
-                style={{
-                  cursor: "pointer",
-                  fontSize: 13,
-                  listStyle: "none",
-                  display: "flex",
-                  gap: 8,
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  flexWrap: "wrap",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  <span style={{ color: "#16181d", fontWeight: 600 }}>
-                    {new Date(opp.publishedAt || opp.createdAt).toLocaleString("es-US", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                  <span style={{ color: "#6b7280" }}>—</span>
-                  <span style={{ fontWeight: 700, color: opp.platform === "threads" ? "#0f1419" : "#6b7280" }}>
-                    {opp.platform === "threads" ? "🌀 Threads" : opp.platform.toUpperCase()}
-                  </span>
-                  <span style={{ color: "#6b7280" }}>—</span>
-                  <span style={{ color: "#16181d", fontWeight: 500 }}>
-                    {opp.articleTitle}
-                  </span>
-                </div>
-                <div>
-                  {opp.status === "published" ? (
-                    <span style={{ color: "#16a34a", fontWeight: 600 }}>✓ Publicado</span>
-                  ) : (
-                    <span style={{ color: "#dc2626", fontWeight: 600 }}>✗ Error</span>
-                  )}
-                </div>
-              </summary>
-              <div style={{ marginTop: 12, paddingLeft: 10, borderLeft: "3px solid #dfe3e8" }}>
-                <p style={{ margin: "0 0 6px 0", color: "#16181d", fontSize: 13, fontWeight: 600 }}>
-                  Copy publicado:
-                </p>
-                <blockquote style={{ margin: "0 0 12px 0", fontStyle: "italic", color: "#4b5563", fontSize: 13, lineHeight: "1.5" }}>
-                  &ldquo;{opp.suggestedText}&rdquo;
-                </blockquote>
-                <div style={{ display: "flex", gap: 15, fontSize: 12, flexWrap: "wrap", marginTop: 10 }}>
-                  <a
-                    href={opp.articleUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ color: "#3b82f6", textDecoration: "none", fontWeight: 600 }}
-                  >
-                    Ver artículo original ↗
-                  </a>
-                  {opp.status === "published" && opp.postId && (
-                    <a
-                      href={opp.postId.startsWith("http") ? opp.postId : (opp.platform === "threads" ? `https://www.threads.net/t/${opp.postId}` : "#")}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{ color: "#16a34a", textDecoration: "none", fontWeight: 600 }}
+              {opportunities.length > 0 &&
+                (confirmingDelete ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 12, color: "#d64545" }}>
+                      ¿Borrar todo? No se puede deshacer.
+                    </span>
+                    <button
+                      onClick={handleDeleteHistory}
+                      disabled={deletingHistory}
+                      style={{
+                        background: "#fde8e8",
+                        color: "#d64545",
+                        border: "1px solid #e8b4b4",
+                        borderRadius: 6,
+                        padding: "4px 10px",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: deletingHistory ? "default" : "pointer",
+                      }}
                     >
-                      Ver en la Red Social ↗
-                    </a>
-                  )}
-                </div>
-                {opp.errorLog && (
-                  <div
+                      {deletingHistory ? "Borrando..." : "Sí, borrar"}
+                    </button>
+                    <button
+                      onClick={() => setConfirmingDelete(false)}
+                      disabled={deletingHistory}
+                      style={{
+                        background: "none",
+                        color: "#6b7280",
+                        border: "1px solid #dfe3e8",
+                        borderRadius: 6,
+                        padding: "4px 10px",
+                        fontSize: 12,
+                        cursor: deletingHistory ? "default" : "pointer",
+                      }}
+                    >
+                      No
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmingDelete(true)}
                     style={{
-                      marginTop: 12,
-                      padding: 10,
-                      background: "#fee2e2",
-                      color: "#991b1b",
+                      background: "none",
+                      color: "#d64545",
+                      border: "1px solid #fde8e8",
                       borderRadius: 6,
+                      padding: "4px 10px",
                       fontSize: 12,
-                      border: "1px solid #fecaca",
+                      fontWeight: 600,
+                      cursor: "pointer",
                     }}
                   >
-                    <strong>Log de error:</strong> {opp.errorLog}
-                  </div>
-                )}
+                    🗑 Borrar historial
+                  </button>
+                ))}
+            </div>
+            {error && (
+              <p style={{ fontSize: 12, color: "#d64545", marginTop: 6 }}>{error}</p>
+            )}
+            {opportunities.length === 0 ? (
+              <p style={{ fontSize: 13, color: "#6b7280" }}>
+                Aún no hay publicaciones en el historial.
+              </p>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
+                {opportunities.map((opp) => (
+                  <details
+                    key={opp.id}
+                    open={false}
+                    style={{
+                      background: opp.status === "error" ? "#fff8f8" : "#f7f8fa",
+                      border: opp.status === "error" ? "1px solid #fecaca" : "1px solid #dfe3e8",
+                      borderRadius: 8,
+                      padding: "10px 14px",
+                    }}
+                  >
+                    <summary
+                      style={{
+                        cursor: "pointer",
+                        fontSize: 13,
+                        listStyle: "none",
+                        display: "flex",
+                        gap: 8,
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                        <span style={{ color: "#16181d", fontWeight: 600 }}>
+                          {new Date(opp.publishedAt || opp.createdAt).toLocaleString("es-US", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                        <span style={{ color: "#6b7280" }}>—</span>
+                        <span style={{ fontWeight: 700, color: opp.platform === "threads" ? "#0f1419" : "#6b7280" }}>
+                          {opp.platform === "threads" ? "🌀 Threads" : opp.platform.toUpperCase()}
+                        </span>
+                        <span style={{ color: "#6b7280" }}>—</span>
+                        <span style={{ color: "#16181d", fontWeight: 500 }}>
+                          {opp.articleTitle}
+                        </span>
+                      </div>
+                      <div>
+                        {opp.status === "published" ? (
+                          <span style={{ color: "#16a34a", fontWeight: 600 }}>✓ Publicado</span>
+                        ) : (
+                          <span style={{ color: "#dc2626", fontWeight: 600 }}>✗ Error</span>
+                        )}
+                      </div>
+                    </summary>
+                    <div style={{ marginTop: 12, paddingLeft: 10, borderLeft: "3px solid #dfe3e8" }}>
+                      <p style={{ margin: "0 0 6px 0", color: "#16181d", fontSize: 13, fontWeight: 600 }}>
+                        Copy publicado:
+                      </p>
+                      <blockquote style={{ margin: "0 0 12px 0", fontStyle: "italic", color: "#4b5563", fontSize: 13, lineHeight: "1.5" }}>
+                        &ldquo;{opp.suggestedText}&rdquo;
+                      </blockquote>
+                      <div style={{ display: "flex", gap: 15, fontSize: 12, flexWrap: "wrap", marginTop: 10 }}>
+                        <a
+                          href={opp.articleUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ color: "#3b82f6", textDecoration: "none", fontWeight: 600 }}
+                        >
+                          Ver artículo original ↗
+                        </a>
+                        {opp.status === "published" && opp.postId && (
+                          <a
+                            href={opp.postId.startsWith("http") ? opp.postId : (opp.platform === "threads" ? `https://www.threads.net/t/${opp.postId}` : "#")}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ color: "#16a34a", textDecoration: "none", fontWeight: 600 }}
+                          >
+                            Ver en la Red Social ↗
+                          </a>
+                        )}
+                      </div>
+                      {opp.errorLog && (
+                        <div
+                          style={{
+                            marginTop: 12,
+                            padding: 10,
+                            background: "#fee2e2",
+                            color: "#991b1b",
+                            borderRadius: 6,
+                            fontSize: 12,
+                            border: "1px solid #fecaca",
+                          }}
+                        >
+                          <strong>Log de error:</strong> {opp.errorLog}
+                        </div>
+                      )}
+                    </div>
+                  </details>
+                ))}
               </div>
-            </details>
-          ))}
-        </div>
-      )}
-    </section>
+            )}
+          </>
+        )}
+      </div>
+    </details>
   );
 }
 
