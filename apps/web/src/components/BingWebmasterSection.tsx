@@ -26,6 +26,13 @@ export default function BingWebmasterSection() {
   const [message, setMessage] = useState("");
   const [sendingSitemap, setSendingSitemap] = useState(false);
   const [editingSitemap, setEditingSitemap] = useState(false);
+  const [masterIndexing, setMasterIndexing] = useState(false);
+  const [masterResult, setMasterResult] = useState<{
+    enviados: number;
+    errores: number;
+    total: number;
+    erroresDetalle?: string[];
+  } | null>(null);
 
   async function load() {
     const res = await fetch("/api/search-integrations/bing");
@@ -59,6 +66,34 @@ export default function BingWebmasterSection() {
     await fetch("/api/search-integrations/bing", { method: "DELETE" });
     setMessage("Bing Webmaster Tools desconectado.");
     load();
+  }
+
+  async function masterIndexAll() {
+    setMasterIndexing(true);
+    setMasterResult(null);
+    setMessage("");
+    try {
+      const res = await fetch("/api/bing/master-index", { method: "POST" });
+      const value = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setMasterResult({
+          enviados: value.enviados ?? 0,
+          errores: value.errores ?? 0,
+          total: value.total ?? 0,
+          erroresDetalle: value.erroresDetalle,
+        });
+        setMessage(
+          value.total === 0
+            ? value.message ?? "No hay artículos pendientes."
+            : `MASTER INDEXACION: ${value.enviados} enviados, ${value.errores} errores de ${value.total} totales.`,
+        );
+      } else {
+        setMessage(value.error ?? "No se pudo ejecutar la indexación masiva.");
+      }
+      await load();
+    } finally {
+      setMasterIndexing(false);
+    }
   }
 
   async function sendSitemapNow() {
@@ -189,6 +224,71 @@ export default function BingWebmasterSection() {
               Desconectar Bing
             </button>
           </div>
+          <div style={{ borderTop: "1px solid #e5e8ec", marginTop: 12, paddingTop: 12 }}>
+            <button
+              onClick={masterIndexAll}
+              disabled={masterIndexing}
+              style={{
+                padding: "12px 20px",
+                borderRadius: 8,
+                border: "2px solid #d97706",
+                background: masterIndexing
+                  ? "#fef3c7"
+                  : "linear-gradient(135deg, #f59e0b, #d97706)",
+                color: masterIndexing ? "#92400e" : "#ffffff",
+                fontWeight: 700,
+                fontSize: 14,
+                cursor: masterIndexing ? "wait" : "pointer",
+                letterSpacing: 0.5,
+                boxShadow: masterIndexing
+                  ? "none"
+                  : "0 2px 8px rgba(217, 119, 6, 0.3)",
+              }}
+            >
+              {masterIndexing
+                ? "Enviando artículos a Bing..."
+                : "⚡ MASTER INDEXACION BING"}
+            </button>
+            <p style={{ fontSize: 11, color: "#6b7280", margin: "6px 0 0" }}>
+              Envía TODOS tus artículos publicados a Bing para indexación
+              instantánea de una sola vez.
+            </p>
+          </div>
+          {masterResult && (
+            <div
+              style={{
+                background: masterResult.errores > 0 ? "#fef2f2" : "#f0fdf4",
+                border: `1px solid ${masterResult.errores > 0 ? "#fecaca" : "#bbf7d0"}`,
+                borderRadius: 8,
+                padding: 12,
+                fontSize: 13,
+              }}
+            >
+              <p style={{ margin: 0, fontWeight: 600 }}>
+                {masterResult.errores > 0 ? "Resultados parciales:" : "Completado:"}
+              </p>
+              <p style={{ margin: "4px 0 0" }}>
+                ✓ {masterResult.enviados} enviados de {masterResult.total} artículos
+                {masterResult.errores > 0 &&
+                  ` · ✗ ${masterResult.errores} errores`}
+              </p>
+              {masterResult.erroresDetalle &&
+                masterResult.erroresDetalle.length > 0 && (
+                  <ul
+                    style={{
+                      margin: "6px 0 0",
+                      paddingLeft: 16,
+                      fontSize: 12,
+                      color: "#991b1b",
+                    }}
+                  >
+                    {masterResult.erroresDetalle.map((e, i) => (
+                      <li key={i}>{e}</li>
+                    ))}
+                  </ul>
+                )}
+            </div>
+          )}
           {data.error && (
             <p style={{ color: "#d64545", fontSize: 12 }}>{data.error}</p>
           )}

@@ -183,6 +183,15 @@ backfills de teléfono y nombre/apellido.
 vacíos) — no confiar en él nunca, usar el patrón de endpoint temporal o
 scripts directos con Prisma (ver sección de patrones más abajo).
 
+## Acceso directo a plataformas
+
+| Plataforma | Cuenta | Email |
+|------------|--------|-------|
+| **Supabase** (Base de datos) | 10minuteswebsite | 10minuteswebsite |
+| **GitHub** (Código fuente) | Milton Davila | miltondavila@gmail.com |
+| **Vercel** (Despliegue) | Milton Davila | miltondavila@gmail.com |
+| **Vercel** (alternativa) | 10minuteswebsite | 10minuteswebsite |
+
 ## Credenciales de acceso
 
 - No guardar contraseñas reales en este archivo ni en ningún archivo del

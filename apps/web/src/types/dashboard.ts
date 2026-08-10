@@ -39,6 +39,10 @@ export interface TitleRow {
   twitterPostId: string | null;
   twitterPublishError: string | null;
   twitterPublishAt: string | null;
+  linkedinPublishStatus: string | null;
+  linkedinPostId: string | null;
+  linkedinPublishError: string | null;
+  linkedinPublishAt: string | null;
   instagramPublishStatus: string | null;
   instagramPostId: string | null;
   instagramPublishError: string | null;

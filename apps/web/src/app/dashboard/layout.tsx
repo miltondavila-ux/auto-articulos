@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import DashboardNav from "@/components/DashboardNav";
 import LogoutButton from "@/components/LogoutButton";
 import StopImpersonationButton from "@/components/StopImpersonationButton";
+import ConfigurationStatus from "@/components/ConfigurationStatus";
 import { displayName, getSessionContext } from "@/lib/current-user";
 
 export default async function DashboardLayout({
@@ -157,29 +158,7 @@ export default async function DashboardLayout({
         desde una computadora para una mejor experiencia.
       </p>
       <DashboardNav />
-      {!user.phone && (
-        <div
-          style={{
-            background: "#fee2e2",
-            border: "1px solid #fecaca",
-            borderRadius: 8,
-            padding: "12px 16px",
-            marginTop: 15,
-            marginBottom: 5,
-            color: "#991b1b",
-            fontSize: 14,
-            fontWeight: 500,
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-          }}
-        >
-          <span style={{ fontSize: 18 }}>⚠️</span>
-          <div>
-            <strong>ADVERTENCIA IMPORTANTE:</strong> No tienes configurado tu número de teléfono en tu perfil. Los artículos que generes con botones de WhatsApp o de llamada se publicarán con el marcador de posición genérico <code>PHONE_NUMBER</code>. Por favor, ve a la pestaña de <a href="/dashboard/configuracion" style={{ color: "#b91c1c", textDecoration: "underline", fontWeight: 700 }}>Configuración</a> para ingresar tu número de teléfono.
-          </div>
-        </div>
-      )}
+      <ConfigurationStatus />
       {children}
     </main>
   );

@@ -7,6 +7,7 @@ import {
   refreshThreadsToken,
   publishTweet,
   refreshTwitterToken,
+  publishLinkedInPost,
   publishInstagramCarousel,
   publishInstagramImage,
 } from "@auto-articulos/shared";
@@ -204,6 +205,88 @@ async function processTwitterJob(job: {
       data: {
         titleId: job.titleId,
         message: `Publicado exitosamente en X (Twitter) (@${integration.twitterUsername || integration.twitterUserId}) - ID: ${result.tweetId}${imageUrl ? " (con imagen)" : " (solo texto)"}`,
+      },
+    });
+  }
+
+  return true;
+}
+
+// ─── LINKEDIN ─────────────────────────────────────────────────────────────
+
+async function processLinkedInJob(job: {
+  id: string;
+  userId: string;
+  titleId: string | null;
+  articleUrl: string;
+  articleTitle: string;
+  suggestedText: string;
+}): Promise<boolean> {
+  const integration = await prisma.linkedinIntegration.findUnique({
+    where: { userId: job.userId },
+  });
+
+  if (!integration) {
+    throw new Error("LinkedIn no está configurado en tu cuenta.");
+  }
+
+  let accessToken = decryptSecret(integration.accessTokenEncrypted);
+
+  const daysUntilExpiration =
+    (integration.expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+
+  // LinkedIn tokens duran 60 días; si faltan menos de 7, intentar refrescar
+  if (daysUntilExpiration < 7) {
+    try {
+      const refreshed = await refreshLinkedInToken(accessToken);
+      accessToken = refreshed.accessToken;
+      const newExpiresAt = new Date(Date.now() + refreshed.expiresIn * 1000);
+      await prisma.linkedinIntegration.update({
+        where: { userId: job.userId },
+        data: {
+          accessTokenEncrypted: encryptSecret(accessToken),
+          expiresAt: newExpiresAt,
+        },
+      });
+    } catch {
+      // Si el refresh falla, continuar con el token actual (puede que aún funcione)
+      console.warn("No se pudo refrescar token de LinkedIn, usando el actual.");
+    }
+  }
+
+  let finalPost = job.suggestedText;
+  if (finalPost.includes("[ENLACE]")) {
+    finalPost = finalPost.replace("[ENLACE]", job.articleUrl);
+  } else {
+    finalPost = `${finalPost}\n\n${job.articleUrl}`;
+  }
+
+  const result = await publishLinkedInPost(
+    accessToken,
+    integration.linkedinUserId,
+    finalPost,
+    job.articleUrl,
+    undefined,
+    job.articleTitle
+  );
+
+  await prisma.socialOpportunity.update({
+    where: { id: job.id },
+    data: {
+      status: "published",
+      postId: result.postUrl || result.postId,
+      publishedAt: new Date(),
+      errorLog: null,
+    },
+  });
+
+  console.log(`Publicado en LinkedIn: ${job.id} — postId: ${result.postId}`);
+
+  if (job.titleId) {
+    await prisma.titleEvent.create({
+      data: {
+        titleId: job.titleId,
+        message: `Publicado exitosamente en LinkedIn (${integration.linkedinUsername || integration.linkedinUserId}) - ID: ${result.postId}`,
       },
     });
   }
@@ -435,6 +518,8 @@ export async function processNextSocialPublish(): Promise<boolean> {
       return await processThreadsJob(job);
     } else if (job.platform === "x") {
       return await processTwitterJob(job);
+    } else if (job.platform === "linkedin") {
+      return await processLinkedInJob(job);
     } else if (job.platform.startsWith("instagram-")) {
       return await processInstagramJob(job);
     } else {

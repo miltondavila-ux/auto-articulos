@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
     const supported = [
       "threads",
       "x",
+      "linkedin",
       "instagram-carousel",
       "instagram-reel-image",
       "instagram-infografia",
@@ -70,6 +71,8 @@ export async function POST(request: NextRequest) {
         ? "Publicación encolada. El sistema generará las imágenes y publicará en Instagram en segundo plano."
         : opp.platform === "x"
         ? "Publicación encolada. El sistema generará la imagen y publicará en X (Twitter) en segundo plano."
+        : opp.platform === "linkedin"
+        ? "Publicación encolada. El sistema publicará en LinkedIn en segundo plano."
         : "Publicación encolada. El sistema generará la imagen y publicará en Threads en segundo plano.",
     });
   } catch {

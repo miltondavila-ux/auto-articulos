@@ -428,8 +428,8 @@ function HistorialRedes() {
                           })}
                         </span>
                         <span style={{ color: "#6b7280" }}>—</span>
-                        <span style={{ fontWeight: 700, color: opp.platform === "threads" ? "#0f1419" : opp.platform === "x" ? "#1da1f2" : "#6b7280" }}>
-                          {opp.platform === "threads" ? "🌀 Threads" : opp.platform === "x" ? "🐦 X (Twitter)" : opp.platform.toUpperCase()}
+                        <span style={{ fontWeight: 700, color: opp.platform === "threads" ? "#0f1419" : opp.platform === "x" ? "#1da1f2" : opp.platform === "linkedin" ? "#0077b5" : "#6b7280" }}>
+                          {opp.platform === "threads" ? "🌀 Threads" : opp.platform === "x" ? "🐦 X (Twitter)" : opp.platform === "linkedin" ? "💼 LinkedIn" : opp.platform.toUpperCase()}
                         </span>
                         <span style={{ color: "#6b7280" }}>—</span>
                         <span style={{ color: "#16181d", fontWeight: 500 }}>
@@ -462,7 +462,7 @@ function HistorialRedes() {
                         </a>
                         {opp.status === "published" && opp.postId && (
                           <a
-                            href={opp.postId.startsWith("http") ? opp.postId : (opp.platform === "threads" ? `https://www.threads.net/t/${opp.postId}` : opp.platform === "x" ? `https://x.com/i/status/${opp.postId}` : "#")}
+                            href={opp.postId.startsWith("http") ? opp.postId : (opp.platform === "threads" ? `https://www.threads.net/t/${opp.postId}` : opp.platform === "x" ? `https://x.com/i/status/${opp.postId}` : opp.platform === "linkedin" ? `https://www.linkedin.com/feed/update/${opp.postId}` : "#")}
                             target="_blank"
                             rel="noreferrer"
                             style={{ color: "#16a34a", textDecoration: "none", fontWeight: 600 }}
@@ -814,6 +814,48 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
                 ) : (
                   <span style={{ color: "#b45309" }}>
                     🐦 X: {title.twitterPublishStatus}
+                  </span>
+                )}
+              </div>
+            )}
+            {title.linkedinPublishStatus && (
+              <div
+                style={{
+                  fontSize: 11,
+                  color: "#6b7280",
+                  marginTop: 6,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                {title.linkedinPublishStatus === "success" ? (
+                  <>
+                    <span>💼</span>
+                    <a
+                      href={title.linkedinPostId ? (title.linkedinPostId.startsWith("http") ? title.linkedinPostId : `https://www.linkedin.com/feed/update/${title.linkedinPostId}`) : "#"}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        color: "#0077b5",
+                        fontWeight: 600,
+                        textDecoration: "none",
+                      }}
+                    >
+                      Ver post en LinkedIn
+                    </a>
+                  </>
+                ) : title.linkedinPublishStatus === "error" ? (
+                  <span style={{ color: "#d64545" }} title={title.linkedinPublishError ?? undefined}>
+                    💼 Error en LinkedIn
+                  </span>
+                ) : title.linkedinPublishStatus === "not_configured" ? (
+                  <span style={{ color: "#9ca3af" }}>
+                    💼 LinkedIn no configurado
+                  </span>
+                ) : (
+                  <span style={{ color: "#b45309" }}>
+                    💼 LinkedIn: {title.linkedinPublishStatus}
                   </span>
                 )}
               </div>

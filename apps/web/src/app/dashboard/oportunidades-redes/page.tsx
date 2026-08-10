@@ -49,8 +49,8 @@ export default function OportunidadesRedesPage() {
   const [opportunities, setOpportunities] = useState<SocialOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [generatingNetwork, setGeneratingNetwork] = useState<"threads" | "x" | "instagram" | null>(null);
-  const [connectedNetworks, setConnectedNetworks] = useState({ threads: false, x: false, instagram: false });
+  const [generatingNetwork, setGeneratingNetwork] = useState<"threads" | "x" | "linkedin" | "instagram" | null>(null);
+  const [connectedNetworks, setConnectedNetworks] = useState({ threads: false, x: false, linkedin: false, instagram: false });
   const [generateSeconds, setGenerateSeconds] = useState(0);
   const [usedGsc, setUsedGsc] = useState(false);
   const [publishingId, setPublishingId] = useState<string | null>(null);
@@ -97,11 +97,12 @@ export default function OportunidadesRedesPage() {
         setConnectedNetworks({
           threads: Boolean(data.threads),
           x: Boolean(data.x),
+          linkedin: Boolean(data.linkedin),
           instagram: Boolean(data.instagram),
         });
       }
     } catch {
-      setConnectedNetworks({ threads: false, x: false, instagram: false });
+      setConnectedNetworks({ threads: false, x: false, linkedin: false, instagram: false });
     }
   }
 
@@ -113,7 +114,7 @@ export default function OportunidadesRedesPage() {
   const progress = Math.min(92, 8 + generateSeconds * 4);
   const elapsed = `${Math.floor(generateSeconds / 60)}:${String(generateSeconds % 60).padStart(2, "0")}`;
 
-  async function handleGenerate(network: "threads" | "x" | "instagram") {
+  async function handleGenerate(network: "threads" | "x" | "linkedin" | "instagram") {
     setGenerating(true);
     setGeneratingNetwork(network);
     setMessage(null);
@@ -315,6 +316,15 @@ export default function OportunidadesRedesPage() {
               {generatingNetwork === "x" ? "Analizando X..." : "Solicitar para X"}
             </button>
           )}
+          {connectedNetworks.linkedin && (
+            <button
+              onClick={() => handleGenerate("linkedin")}
+              disabled={generating || loading}
+              style={disabledStyle({ ...buttonStyle, background: "#0077b5" }, generating || loading)}
+            >
+              {generatingNetwork === "linkedin" ? "Analizando LinkedIn..." : "Solicitar para LinkedIn"}
+            </button>
+          )}
           {connectedNetworks.instagram && (
             <button
               onClick={() => handleGenerate("instagram")}
@@ -324,7 +334,7 @@ export default function OportunidadesRedesPage() {
               {generatingNetwork === "instagram" ? "Analizando Instagram..." : "Solicitar para Instagram"}
             </button>
           )}
-          {!connectedNetworks.threads && !connectedNetworks.x && !connectedNetworks.instagram && !loading && (
+          {!connectedNetworks.threads && !connectedNetworks.x && !connectedNetworks.linkedin && !connectedNetworks.instagram && !loading && (
             <span style={{ color: "#f59e0b", fontSize: 13 }}>
               Conecta una red social en Configuración para solicitar oportunidades.
             </span>
@@ -434,12 +444,12 @@ export default function OportunidadesRedesPage() {
                             borderRadius: 6,
                             fontSize: 11,
                             fontWeight: 700,
-                            background: opp.platform === "threads" ? "rgba(77, 216, 232, 0.15)" : opp.platform === "x" ? "rgba(29, 161, 242, 0.15)" : opp.platform.startsWith("instagram") ? "rgba(221, 42, 123, 0.15)" : "#374151",
-                            color: opp.platform === "threads" ? "#4dd8e8" : opp.platform === "x" ? "#1da1f2" : opp.platform.startsWith("instagram") ? "#dd2a7b" : "#9ca3af",
+                            background: opp.platform === "threads" ? "rgba(77, 216, 232, 0.15)" : opp.platform === "x" ? "rgba(29, 161, 242, 0.15)" : opp.platform === "linkedin" ? "rgba(0, 119, 181, 0.15)" : opp.platform.startsWith("instagram") ? "rgba(221, 42, 123, 0.15)" : "#374151",
+                            color: opp.platform === "threads" ? "#4dd8e8" : opp.platform === "x" ? "#1da1f2" : opp.platform === "linkedin" ? "#0077b5" : opp.platform.startsWith("instagram") ? "#dd2a7b" : "#9ca3af",
                             marginBottom: 8,
                           }}
                         >
-                          {opp.platform === "threads" ? "🌀 THREADS" : opp.platform === "x" ? "🐦 X (TWITTER)" : opp.platform === "instagram-carousel" ? "📸 IG CARRUSEL" : opp.platform === "instagram-reel-image" ? "📸 IG REEL-IMG" : opp.platform === "instagram-infografia" ? "📸 IG INFOGRAFÍA" : opp.platform.toUpperCase()}
+                          {opp.platform === "threads" ? "🌀 THREADS" : opp.platform === "x" ? "🐦 X (TWITTER)" : opp.platform === "linkedin" ? "💼 LINKEDIN" : opp.platform === "instagram-carousel" ? "📸 IG CARRUSEL" : opp.platform === "instagram-reel-image" ? "📸 IG REEL-IMG" : opp.platform === "instagram-infografia" ? "📸 IG INFOGRAFÍA" : opp.platform.toUpperCase()}
                         </span>
                         {statusLabel && (
                           <span style={{ display: "inline-block", padding: "4px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, background: "rgba(245, 158, 11, 0.15)", color: "#f59e0b", marginLeft: 6 }}>

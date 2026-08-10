@@ -16,6 +16,7 @@ import BusinessProfileSection from "@/components/BusinessProfileSection";
 import BingWebmasterSection from "@/components/BingWebmasterSection";
 import ThreadsSection from "@/components/ThreadsSection";
 import TwitterSection from "@/components/TwitterSection";
+import LinkedInSection from "@/components/LinkedInSection";
 
 export default function ConfiguracionPage() {
   const [username, setUsername] = useState("");
@@ -738,6 +739,7 @@ export default function ConfiguracionPage() {
           <BusinessProfileSection />
           <ThreadsSection />
           <TwitterSection />
+          <LinkedInSection />
         </div>
       )}
 
