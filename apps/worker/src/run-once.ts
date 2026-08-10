@@ -3,6 +3,7 @@ import { processNext } from "./queue";
 import { processNextCategorySync } from "./categorySync";
 import { processNextLanguageSync } from "./languageSync";
 import { processNextBusinessProfilePost } from "./businessProfilePublish";
+import { processNextSocialPublish } from "./socialPublish";
 import { cleanupOldEvents, recoverStuckTitles } from "./cleanup";
 
 // Pensado para correr en un runner efímero (GitHub Actions), no como proceso
@@ -88,6 +89,19 @@ async function runBusinessProfileLane(deadline: number): Promise<boolean> {
   return didWork;
 }
 
+async function runSocialPublishLane(deadline: number): Promise<boolean> {
+  let didWork = false;
+  while (Date.now() < deadline) {
+    const did = await processNextSocialPublish();
+    if (did) {
+      didWork = true;
+      continue;
+    }
+    await sleep(IDLE_DELAY_MS);
+  }
+  return didWork;
+}
+
 async function main() {
   // Con varios shards, ejecutar mantenimiento en todos duplicaría consultas y
   // limpiezas. El shard 1 se encarga; todos publican en paralelo.
@@ -112,6 +126,9 @@ async function main() {
     ),
     ...Array.from({ length: SYNC_LANE_CONCURRENCY }, () =>
       runBusinessProfileLane(deadline),
+    ),
+    ...Array.from({ length: SYNC_LANE_CONCURRENCY }, () =>
+      runSocialPublishLane(deadline),
     ),
     ...Array.from({ length: TITLE_LANE_CONCURRENCY }, () =>
       runTitleLane(deadline),
