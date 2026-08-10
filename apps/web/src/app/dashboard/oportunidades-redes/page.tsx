@@ -57,6 +57,7 @@ export default function OportunidadesRedesPage() {
   const [publishingAll, setPublishingAll] = useState(false);
   const [message, setMessage] = useState<{ kind: "success" | "error" | "info"; text: string } | null>(null);
   const [skipModal, setSkipModal] = useState<{ opp: SocialOpportunity; reason: string; customReason: string } | null>(null);
+  const [previewModal, setPreviewModal] = useState<{ imageUrl: string | null; loading: boolean; platform: string; title: string } | null>(null);
 
   useEffect(() => {
     loadOpportunities();
@@ -264,6 +265,27 @@ export default function OportunidadesRedesPage() {
     }
   }
 
+  async function handlePreview(opp: SocialOpportunity) {
+    setPreviewModal({ imageUrl: null, loading: true, platform: opp.platform, title: opp.articleTitle });
+    try {
+      const res = await fetch("/api/social-opportunities/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ summary: opp.articleTitle, platform: opp.platform }),
+      });
+      const data = await res.json();
+      if (data.imageUrl) {
+        setPreviewModal({ imageUrl: data.imageUrl, loading: false, platform: opp.platform, title: opp.articleTitle });
+      } else if (data.imageBase64) {
+        setPreviewModal({ imageUrl: `data:image/png;base64,${data.imageBase64}`, loading: false, platform: opp.platform, title: opp.articleTitle });
+      } else {
+        setPreviewModal({ imageUrl: null, loading: false, platform: opp.platform, title: opp.articleTitle });
+      }
+    } catch {
+      setPreviewModal({ imageUrl: null, loading: false, platform: opp.platform, title: opp.articleTitle });
+    }
+  }
+
   const pendingList = opportunities.filter((o) => o.status === "pending");
   const queuedList = opportunities.filter((o) => o.status === "queued" || o.status === "processing");
 
@@ -429,6 +451,14 @@ export default function OportunidadesRedesPage() {
                       <div style={{ display: "flex", gap: 8 }}>
                         {!isQueuedOrProcessing && (
                           <>
+                        {opp.platform.startsWith("instagram") && (
+                          <button
+                            onClick={() => handlePreview(opp)}
+                            style={{ ...secondaryButtonStyle, padding: "8px 12px", fontSize: 13 }}
+                          >
+                            👁 Ver preview
+                          </button>
+                        )}
                         <button
                           onClick={() => handleSaveText(opp)}
                           style={{ ...secondaryButtonStyle, padding: "8px 12px", fontSize: 13 }}
@@ -615,6 +645,66 @@ export default function OportunidadesRedesPage() {
                 )}
               >
                 Descartar propuesta
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal de preview */}
+      {previewModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.8)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: 20,
+          }}
+          onClick={() => setPreviewModal(null)}
+        >
+          <div
+            style={{
+              background: "#1f2937",
+              border: "1px solid #374151",
+              borderRadius: 16,
+              padding: 28,
+              maxWidth: 520,
+              width: "100%",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ color: "#f3f4f6", margin: 0, fontSize: 18 }}>
+              Preview: {previewModal.title}
+            </h3>
+            <p style={{ color: "#9ca3af", fontSize: 12, margin: "6px 0 16px 0" }}>
+              Formato: {previewModal.platform}
+            </p>
+
+            <div style={{ background: "#111827", borderRadius: 12, overflow: "hidden", minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {previewModal.loading ? (
+                <div style={{ color: "#9ca3af", textAlign: "center", padding: 40 }}>
+                  <div style={{ fontSize: 24, marginBottom: 8 }}>⏳</div>
+                  Generando preview...
+                </div>
+              ) : previewModal.imageUrl ? (
+                <img src={previewModal.imageUrl} alt="Preview" style={{ width: "100%", borderRadius: 8 }} />
+              ) : (
+                <div style={{ color: "#ef4444", textAlign: "center", padding: 40 }}>
+                  No se pudo generar el preview
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: "flex", gap: 10, marginTop: 16, justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setPreviewModal(null)}
+                style={secondaryButtonStyle}
+              >
+                Cerrar
               </button>
             </div>
           </div>
