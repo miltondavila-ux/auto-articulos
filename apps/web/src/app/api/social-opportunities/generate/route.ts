@@ -167,6 +167,7 @@ export async function POST() {
             userId,
             titleId: article.id,
             platform,
+            status: { in: ["pending", "queued", "processing"] },
           },
         });
         if (exists) continue;
