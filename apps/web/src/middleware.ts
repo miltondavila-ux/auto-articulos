@@ -15,6 +15,7 @@ const PUBLIC_PATHS = [
   "/terminos",
   "/api/auth/login",
   "/api/debug/instagram-errors",
+  "/api/debug/activate-instagram",
 ];
 
 export async function middleware(request: NextRequest) {
