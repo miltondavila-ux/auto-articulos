@@ -67,8 +67,12 @@ export default function ConfigurationStatus() {
 
   const { checks, summary } = data;
 
-  // Si todo está configurado, mostrar solo un banner verde colapsable
-  if (summary.isFullyConfigured) {
+  // Si TODO (obligatorio + opcional) está configurado, mostrar solo un banner
+  // verde colapsable. Ojo: no usar "isFullyConfigured" aquí, porque ese
+  // booleano solo mira los campos obligatorios y puede ser true con
+  // opcionales pendientes, mostrando un 100% engañoso junto a un porcentaje
+  // menor (ej. "73%" con banner de "todo listo").
+  if (summary.percentage === 100) {
     return (
       <details
         style={{

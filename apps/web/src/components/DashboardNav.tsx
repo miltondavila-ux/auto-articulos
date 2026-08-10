@@ -13,6 +13,7 @@ const BASE_TABS = [
   { href: "/dashboard/oportunidades-redes", label: "Oportunidades Redes" },
   { href: "/dashboard/historial", label: "Historial" },
   { href: "/dashboard/configuracion", label: "Configuración" },
+  { href: "/dashboard/actualizaciones", label: "Actualizaciones" },
 ];
 
 const ADMIN_TAB = { href: "/dashboard/usuarios", label: "Administración" };

@@ -100,18 +100,17 @@ export default function BingWebmasterSection() {
           errores: value.errores ?? 0,
           total: value.total ?? 0,
           yaIndexados: value.yaIndexados ?? 0,
-          ultimoEnvio: value.ultimoEnvio,
           erroresDetalle: value.erroresDetalle,
         });
         if (value.total === 0) {
           setMessage({
-            text: value.message ?? "No hay artículos pendientes.",
+            text: value.message ?? "No hay artículos publicados para enviar.",
             type: "info",
             link: { label: "Ver historial", href: "/dashboard/historial" },
           });
         } else {
           setMessage({
-            text: `MASTER INDEXACION: ${value.enviados} enviados, ${value.errores} errores de ${value.total} totales.`,
+            text: `MASTER INDEXACION COMPLETADA: Se enviaron ${value.enviados} de ${value.total} artículos a Bing.`,
             type: value.errores > 0 ? "error" : "success",
             link: { label: "Ver artículos en historial", href: "/dashboard/historial" },
           });
@@ -305,26 +304,22 @@ export default function BingWebmasterSection() {
                 fontSize: 13,
               }}
             >
-              <p style={{ margin: 0, fontWeight: 600 }}>
-                {masterResult.errores > 0 ? "Resultados parciales:" : "Completado:"}
+              <p style={{ margin: 0, fontWeight: 600, color: masterResult.errores > 0 ? "#991b1b" : "#166534" }}>
+                {masterResult.errores > 0 ? "⚠️ Indexación masiva completada con algunos errores:" : "✓ Indexación masiva completada exitosamente:"}
               </p>
-              <p style={{ margin: "4px 0 0" }}>
-                ✓ {masterResult.enviados} enviados de {masterResult.total} artículos nuevos
-                {masterResult.errores > 0 &&
-                  ` · ✗ ${masterResult.errores} errores`}
+              <p style={{ margin: "4px 0 0", color: "#1f2937" }}>
+                • <strong>{masterResult.enviados}</strong> artículos enviados a Bing para indexar de un total de <strong>{masterResult.total}</strong> publicados.
+                {masterResult.errores > 0 && (
+                  <span style={{ color: "#dc2626", marginLeft: 8 }}>
+                    ({masterResult.errores} no se pudieron enviar)
+                  </span>
+                )}
               </p>
-              {masterResult.yaIndexados > 0 && (
-                <p style={{ margin: "4px 0 0", color: "#16a34a" }}>
-                  ✓ {masterResult.yaIndexados} artículos ya estaban indexados en Bing
-                  {masterResult.ultimoEnvio &&
-                    ` — último envío: ${new Date(masterResult.ultimoEnvio).toLocaleString("es-US")}`}
-                </p>
-              )}
               {masterResult.erroresDetalle &&
                 masterResult.erroresDetalle.length > 0 && (
                   <ul
                     style={{
-                      margin: "6px 0 0",
+                      margin: "8px 0 0",
                       paddingLeft: 16,
                       fontSize: 12,
                       color: "#991b1b",
