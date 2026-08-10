@@ -234,6 +234,21 @@ export default function ThreadsSection() {
               Auto Artículos no guarda contraseñas de redes sociales. La autorización se realiza directamente en Meta.
             </p>
 
+            {!instagramConnection?.connected && (
+              <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12, marginBottom: 14, fontSize: 12, color: "#475569", lineHeight: 1.5 }}>
+                <strong style={{ color: "#1e293b" }}>Requisitos para conectar Instagram:</strong>
+                <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+                  <li>Tener una <strong>cuenta de Instagram Profesional</strong> (Business o Creator)</li>
+                  <li>Tener una <strong>Página de Facebook</strong> vinculada a esa cuenta de Instagram</li>
+                  <li>Tener acceso a <strong>Meta Business Suite</strong> (<a href="https://business.facebook.com" target="_blank" rel="noopener noreferrer" style={{ color: "#6366f1" }}>business.facebook.com</a>)</li>
+                  <li>Ser <strong>Administrador o Editor</strong> de la Página de Facebook</li>
+                </ul>
+                <p style={{ margin: "8px 0 0", color: "#94a3b8" }}>
+                  ¿No tienes cuenta profesional? <a href="https://help.instagram.com/502981923235522" target="_blank" rel="noopener noreferrer" style={{ color: "#6366f1" }}>Conviértela aquí</a>
+                </p>
+              </div>
+            )}
+
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               {threadsConnection?.connected ? (
                 <button
