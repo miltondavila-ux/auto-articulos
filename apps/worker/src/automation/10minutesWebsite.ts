@@ -1,4 +1,8 @@
-import { chromium, type Page } from "playwright";
+import {
+  chromium,
+  type Page,
+  type Response as PlaywrightResponse,
+} from "playwright";
 import { buildImagePrompt, isImageRelevant } from "../imagePrompt";
 import { generateFaqs, type Faq } from "../faqPrompt";
 import { translateText } from "../translateText";
@@ -792,7 +796,47 @@ async function generateImage(
   const generarImagenBtn = await openImageSection(page);
   await dismissImageGenerationDisclaimer(page, onStep);
 
+  // Diagnóstico agregado el 10/8/2026: reportado por el usuario que el error
+  // "es posible que se hayan acabado los tokens..." es solo una SUPOSICIÓN
+  // del código (no viene de ningún mensaje real de 10minutesWebsite). Un
+  // volcado de pantalla real (cuenta de Mariana Romero) mostró que la vista
+  // previa (`img[alt="Preview"]`) se queda en 0px/oculta en los intentos
+  // fallidos, sin ningún error visible en el DOM que confirme la causa real.
+  // Para dejar de adivinar, capturamos aquí la respuesta HTTP real que el
+  // sitio recibe al pedir la generación de imagen (status code y cuerpo si es
+  // texto/JSON): así el próximo fallo va a decir la causa real del backend
+  // (p. ej. 429 límite de cuota, 402 sin créditos, 500 error interno) en vez
+  // de una hipótesis. Se ignora tráfico irrelevante (CSS, fuentes, analytics)
+  // para no inflar el log ni intentar leer el cuerpo de respuestas binarias.
+  const networkLog: string[] = [];
+  let currentImageAttempt = 0;
+  const onImageNetworkResponse = (response: PlaywrightResponse) => {
+    const url = response.url();
+    const status = response.status();
+    const looksRelevant = /imag|generat/i.test(url);
+    if (!looksRelevant && status < 400) return;
+    const contentType = response.headers()["content-type"] ?? "";
+    const canReadBody = /json|text/i.test(contentType);
+    void (async () => {
+      const bodySnippet = canReadBody
+        ? await response
+            .text()
+            .then((t) =>
+              t ? ` cuerpo: "${t.slice(0, 200).replace(/\s+/g, " ")}"` : "",
+            )
+            .catch(() => "")
+        : "";
+      networkLog.push(
+        `[intento ${currentImageAttempt}] ${response
+          .request()
+          .method()} ${url} → ${status} ${response.statusText()}${bodySnippet}`,
+      );
+    })();
+  };
+  page.on("response", onImageNetworkResponse);
+
   for (let attempt = 1; attempt <= MAX_IMAGE_ATTEMPTS; attempt++) {
+    currentImageAttempt = attempt;
     // El textarea del prompt se llamaba `#images` en la cuenta donde se mapeó
     // el flujo (29/7/2026), pero los ids de este formulario NO son iguales en
     // todas las cuentas: en la de Gustavo Torres el campo `#images` sencillamente
@@ -965,6 +1009,15 @@ async function generateImage(
         })
         .catch(() => null);
 
+      // Pequeña espera para dar tiempo a que terminen de leerse los cuerpos
+      // de respuestas de red que ya llegaron pero cuyo `.text()` async
+      // todavía no se había resuelto en el instante exacto del timeout.
+      await page.waitForTimeout(500).catch(() => {});
+
+      const networkSummary = networkLog.length
+        ? networkLog.slice(-6).join(" ; ")
+        : "no se observó ninguna petición de red relacionada con la generación de imagen (posible bloqueo del lado del cliente antes de llamar al servidor, o la petición seguía pendiente sin responder).";
+
       await onStep(
         screenState
           ? `DIAGNÓSTICO [pantalla al agotarse la espera de la imagen] campos del formulario: ${
@@ -975,14 +1028,16 @@ async function generateImage(
                 : " || el prompt se escribió sin error"
             } || campos obligatorios vacíos: ${
               screenState.requiredFields
-            } || imágenes: ${screenState.imgs} || mensajes: ${screenState.alerts}`
-          : "DIAGNÓSTICO [pantalla al agotarse la espera de la imagen]: no se pudo leer el estado de la página",
+            } || imágenes: ${screenState.imgs} || mensajes: ${screenState.alerts} || red: ${networkSummary}`
+          : `DIAGNÓSTICO [pantalla al agotarse la espera de la imagen]: no se pudo leer el estado de la página || red: ${networkSummary}`,
       );
 
       const message = err instanceof Error ? err.message : String(err);
-      throw new Error(
-        `${message} — es posible que se hayan acabado los tokens de generación de imágenes de la cuenta en 10minutesWebsite.`,
-      );
+      const causaReal = networkLog.length
+        ? ` Respuesta real del servidor: ${networkLog.slice(-2).join(" ; ")}`
+        : " No se detectó ninguna respuesta de red del servidor para la generación de imagen; es posible que se hayan acabado los tokens/créditos de la cuenta en 10minutesWebsite, o que la petición nunca haya llegado a enviarse.";
+      page.off("response", onImageNetworkResponse);
+      throw new Error(`${message}${causaReal}`);
     }
 
     const relevant = await checkPreviewRelevant(page, title, summary);
@@ -993,12 +1048,14 @@ async function generateImage(
           ? "Imagen generada."
           : `Imagen generada (intento ${attempt} de ${MAX_IMAGE_ATTEMPTS}).`,
       );
+      page.off("response", onImageNetworkResponse);
       return;
     }
     await onStep(
       `La imagen no parece corresponder al tema del artículo, generando una nueva (intento ${attempt + 1} de ${MAX_IMAGE_ATTEMPTS})...`,
     );
   }
+  page.off("response", onImageNetworkResponse);
 }
 
 /**
