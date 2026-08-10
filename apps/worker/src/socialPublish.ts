@@ -8,6 +8,7 @@ import {
   publishTweet,
   refreshTwitterToken,
   publishLinkedInPost,
+  refreshLinkedInToken,
   publishInstagramCarousel,
   publishInstagramImage,
 } from "@auto-articulos/shared";
@@ -15,6 +16,17 @@ import { put } from "@vercel/blob";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
+
+async function validateArticleUrl(url: string): Promise<void> {
+  if (!url) throw new Error("La oportunidad no tiene URL de artículo.");
+
+  try {
+    const res = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(10000) });
+    if (!res.ok) throw new Error(`La URL del artículo devuelve error ${res.status}. Verifica que el artículo siga publicado en tu blog.`);
+  } catch (err) {
+    throw new Error(`No se pudo validar la URL del artículo (${url}): ${err instanceof Error ? err.message : String(err)}. Verifica que el artículo siga publicado.`);
+  }
+}
 
 // ─── THREADS ──────────────────────────────────────────────────────────────
 
@@ -67,23 +79,29 @@ async function processThreadsJob(job: {
     throw new Error("Threads no está configurado en tu cuenta.");
   }
 
-  let accessToken = decryptSecret(integration.accessTokenEncrypted);
+   let accessToken = decryptSecret(integration.accessTokenEncrypted);
 
   const daysUntilExpiration =
     (integration.expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
 
   if (daysUntilExpiration < 7) {
-    const refreshed = await refreshThreadsToken(accessToken);
-    accessToken = refreshed.accessToken;
-    const newExpiresAt = new Date(Date.now() + refreshed.expiresInSeconds * 1000);
-    await prisma.threadsIntegration.update({
-      where: { userId: job.userId },
-      data: {
-        accessTokenEncrypted: encryptSecret(accessToken),
-        expiresAt: newExpiresAt,
-      },
-    });
+    try {
+      const refreshed = await refreshThreadsToken(accessToken);
+      accessToken = refreshed.accessToken;
+      const newExpiresAt = new Date(Date.now() + refreshed.expiresInSeconds * 1000);
+      await prisma.threadsIntegration.update({
+        where: { userId: job.userId },
+        data: {
+          accessTokenEncrypted: encryptSecret(accessToken),
+          expiresAt: newExpiresAt,
+        },
+      });
+    } catch {
+      console.warn("No se pudo autorrefrescar token de Threads, usando el actual.");
+    }
   }
+
+  await validateArticleUrl(job.articleUrl);
 
   let finalPost = job.suggestedText;
   if (finalPost.includes("[ENLACE]")) {
@@ -168,6 +186,7 @@ async function processTwitterJob(job: {
     });
   }
 
+  await validateArticleUrl(job.articleUrl);
   let finalPost = job.suggestedText;
   if (finalPost.includes("[ENLACE]")) {
     finalPost = finalPost.replace("[ENLACE]", job.articleUrl);
@@ -222,7 +241,7 @@ async function processLinkedInJob(job: {
   articleTitle: string;
   suggestedText: string;
 }): Promise<boolean> {
-  const integration = await prisma.linkedinIntegration.findUnique({
+  const integration = await prisma.linkedInIntegration.findUnique({
     where: { userId: job.userId },
   });
 
@@ -241,7 +260,7 @@ async function processLinkedInJob(job: {
       const refreshed = await refreshLinkedInToken(accessToken);
       accessToken = refreshed.accessToken;
       const newExpiresAt = new Date(Date.now() + refreshed.expiresIn * 1000);
-      await prisma.linkedinIntegration.update({
+      await prisma.linkedInIntegration.update({
         where: { userId: job.userId },
         data: {
           accessTokenEncrypted: encryptSecret(accessToken),
@@ -254,6 +273,7 @@ async function processLinkedInJob(job: {
     }
   }
 
+  await validateArticleUrl(job.articleUrl);
   let finalPost = job.suggestedText;
   if (finalPost.includes("[ENLACE]")) {
     finalPost = finalPost.replace("[ENLACE]", job.articleUrl);
@@ -396,9 +416,11 @@ async function processInstagramJob(job: {
 
   let accessToken = decryptSecret(integration.accessTokenEncrypted);
 
-  if (integration.expiresAt <= new Date()) {
+   if (integration.expiresAt <= new Date()) {
     throw new Error("La autorización de Instagram expiró. Debes volver a conectar la cuenta.");
   }
+
+  await validateArticleUrl(job.articleUrl);
 
   const format = job.platform.replace("instagram-", "") as "carousel" | "reel-image" | "infografia";
   const [title, user] = await Promise.all([
