@@ -87,17 +87,81 @@ export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
       {message && (
         <div style={{ color: "#6b7280", marginTop: 2 }}>{message}</div>
       )}
+      {/* Bing Indexing Status */}
       {title.bingIndexingStatus && title.bingIndexingStatus !== "not_configured" && (
         <div
           style={{
-            marginTop: 4,
-            color:
-              title.bingIndexingStatus === "error" ? "#d64545" : "#1e8a4b",
+            marginTop: 6,
+            padding: "6px 10px",
+            borderRadius: 6,
+            fontSize: 12,
+            background:
+              title.bingIndexingStatus === "error"
+                ? "#fef2f2"
+                : title.bingIndexingStatus === "submitted"
+                  ? "#f0fdf4"
+                  : "#f8fafc",
+            border: `1px solid ${
+              title.bingIndexingStatus === "error"
+                ? "#fecaca"
+                : title.bingIndexingStatus === "submitted"
+                  ? "#bbf7d0"
+                  : "#e2e8f0"
+            }`,
           }}
         >
-          {title.bingIndexingStatus === "error"
-            ? `Bing: error al pedir indexación${title.bingIndexingMessage ? ` (${title.bingIndexingMessage})` : "."}`
-            : "✓ Indexación instantánea solicitada a Bing"}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              color:
+                title.bingIndexingStatus === "error" ? "#d64545" : "#16a34a",
+              fontWeight: 600,
+            }}
+          >
+            <span style={{ fontSize: 14 }}>
+              {title.bingIndexingStatus === "error" ? "✗" : "✓"}
+            </span>
+            <span>
+              {title.bingIndexingStatus === "error"
+                ? "Bing: error al solicitar indexación"
+                : title.bingIndexingStatus === "submitted"
+                  ? "Indexación instantánea solicitada a Bing"
+                  : `Bing: ${title.bingIndexingStatus}`}
+            </span>
+          </div>
+          {title.bingIndexingMessage && (
+            <div style={{ color: "#6b7280", marginTop: 3, paddingLeft: 20 }}>
+              {title.bingIndexingMessage}
+            </div>
+          )}
+          {title.bingIndexingAt && (
+            <div style={{ color: "#9ca3af", marginTop: 2, paddingLeft: 20, fontSize: 11 }}>
+              {new Date(title.bingIndexingAt).toLocaleString("es-US")}
+            </div>
+          )}
+        </div>
+      )}
+      {title.bingIndexingStatus === "not_configured" && (
+        <div
+          style={{
+            marginTop: 6,
+            padding: "6px 10px",
+            borderRadius: 6,
+            fontSize: 12,
+            background: "#f8fafc",
+            border: "1px solid #e2e8f0",
+            color: "#6b7280",
+          }}
+        >
+          Bing Webmaster Tools no estaba conectado cuando se publicó este artículo.{" "}
+          <a
+            href="/dashboard/configuracion"
+            style={{ color: "#1358a3", fontWeight: 600 }}
+          >
+            Conectar Bing
+          </a>
         </div>
       )}
       <div style={{ marginTop: 5 }}>

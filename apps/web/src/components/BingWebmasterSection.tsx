@@ -25,6 +25,7 @@ export default function BingWebmasterSection() {
   const [sitemapUrl, setSitemapUrl] = useState("");
   const [message, setMessage] = useState("");
   const [sendingSitemap, setSendingSitemap] = useState(false);
+  const [editingSitemap, setEditingSitemap] = useState(false);
 
   async function load() {
     const res = await fetch("/api/search-integrations/bing");
@@ -32,6 +33,7 @@ export default function BingWebmasterSection() {
     setData(value);
     setSiteUrl(value.siteUrl ?? "");
     setSitemapUrl(value.sitemapUrl ?? "");
+    setEditingSitemap(false);
   }
 
   useEffect(() => {
@@ -107,12 +109,41 @@ export default function BingWebmasterSection() {
               </option>
             ))}
           </select>
-          <input
-            value={sitemapUrl}
-            onChange={(e) => setSitemapUrl(e.target.value)}
-            placeholder="URL del sitemap, por ejemplo https://tusitio.com/sitemap.xml"
-            style={inputStyle}
-          />
+          {data.sitemapUrl && !editingSitemap ? (
+            <div style={{ fontSize: 13, color: "#1e8a4b" }}>
+              ✓ Sitemap detectado: {data.sitemapUrl}{" "}
+              <button
+                type="button"
+                onClick={() => setEditingSitemap(true)}
+                style={{
+                  border: 0,
+                  padding: 0,
+                  background: "transparent",
+                  color: "#1358a3",
+                  cursor: "pointer",
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+              >
+                Cambiar
+              </button>
+            </div>
+          ) : (
+            <>
+              {!data.sitemapUrl && (
+                <p style={{ fontSize: 12, color: "#8a6d1a", margin: 0 }}>
+                  No pudimos detectar tu sitemap automáticamente — podés
+                  escribirlo a mano si lo conocés.
+                </p>
+              )}
+              <input
+                value={sitemapUrl}
+                onChange={(e) => setSitemapUrl(e.target.value)}
+                placeholder="URL del sitemap, por ejemplo https://tusitio.com/sitemap.xml"
+                style={inputStyle}
+              />
+            </>
+          )}
           {data.sitemapUrl && (
             <div style={{ fontSize: 12 }}>
               {data.lastSitemapSyncStatus === "success" && (
@@ -164,6 +195,9 @@ export default function BingWebmasterSection() {
         </div>
       )}
       {message && <p style={{ fontSize: 13, color: "#1e8a4b" }}>{message}</p>}
+      <p style={{ fontSize: 12, color: "#6b7280" }}>
+        El sistema enviará tu sitemap a Bing todas las noches. Bing permite indexación instantánea para cada artículo nuevo — cuando publiques, el sistema lo enviará a Bing automáticamente para que aparezca en los resultados de búsqueda más rápido.
+      </p>
     </section>
   );
 }
