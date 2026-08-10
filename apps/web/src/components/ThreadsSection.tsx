@@ -105,14 +105,14 @@ export default function ThreadsSection() {
   }
 
   async function handleDisconnect() {
-    if (!confirm("¿Estás seguro de que deseas desconectar tu cuenta de Meta Threads?")) {
+    if (!confirm("¿Estás seguro de que deseas desconectar tu cuenta de Threads?")) {
       return;
     }
     setDisconnecting(true);
     setMessage("");
     try {
       await fetch("/api/search-integrations/threads", { method: "DELETE" });
-      setMessage("Cuenta de Meta Threads desconectada.");
+      setMessage("Cuenta de Threads desconectada.");
       await load();
     } catch {
       setMessage("Ocurrió un error al desconectar.");
@@ -232,7 +232,7 @@ export default function ThreadsSection() {
               }}
             >
               <div style={{ fontWeight: 700, color: "#92400e", fontSize: 13 }}>
-                ⚠️ Se requieren las llaves globales de la API de Threads (Meta Developers)
+                ⚠️ Se requieren las llaves globales de Meta API
               </div>
               <p style={{ fontSize: 12, color: "#78350f", margin: "4px 0 10px 0" }}>
                 Para permitir la conexión OAuth de todos los usuarios, ingresa tu <strong>App ID</strong> y <strong>App Secret</strong> obtenidos en Meta for Developers. Tus llaves se guardarán cifradas con <strong>AES-256-GCM</strong>.
@@ -297,7 +297,7 @@ export default function ThreadsSection() {
                   <span>📖 ¿Cómo obtener estas llaves de API?</span>
                   <a
                     href={`https://chatgpt.com/?q=${encodeURIComponent(
-                      "Actúa como un experto en Meta Developers. Necesito configurar la API de Threads para mi aplicación. Por favor, guíame paso a paso para: 1. Crear una cuenta y una aplicación de tipo Threads en developers.facebook.com 2. Configurar la URL de redirección (Redirect URI) de OAuth con el valor: https://auto-articulos-web.vercel.app/api/search-integrations/threads/callback 3. Obtener el App ID (Identificador de la aplicación) y el App Secret (Clave secreta de la aplicación). Explícame de manera extremadamente sencilla, paso a paso, dónde hacer clic."
+                      "Actúa como un experto en Meta Developers. Necesito configurar una sola aplicación de Meta para conectar Threads, Instagram y Facebook. Guíame paso a paso para habilitar los productos requeridos, configurar sus URL de redirección OAuth y obtener el App ID y App Secret compartidos."
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -370,7 +370,7 @@ export default function ThreadsSection() {
                       </button>
                     </div>
                   </li>
-                  <li>Copia el <strong>App ID de Threads</strong> y el <strong>App Secret de Threads</strong> y pégalos abajo.</li>
+                  <li>Copia el <strong>App ID de Meta</strong> y el <strong>App Secret de Meta</strong> compartidos y pégalos abajo.</li>
                 </ol>
               </div>
 
@@ -460,7 +460,7 @@ export default function ThreadsSection() {
                 }}
               >
                 <p style={{ fontSize: 13, color: "#334155", margin: "0 0 12px 0" }}>
-                  Conecta tu cuenta de <strong>Meta Threads</strong> para que cada artículo se publique automáticamente como un hilo en tu perfil, con un resumen generado por IA, imagen destacada y enlace al artículo completo.
+                  Conecta tu cuenta de <strong>Threads</strong> para publicar hilos desde las oportunidades sociales.
                 </p>
                 <a
                   href="/api/search-integrations/threads/connect"
@@ -479,7 +479,7 @@ export default function ThreadsSection() {
                     boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                   }}
                 >
-                  🌀 Conectar Meta Threads
+                  🌀 Conectar Threads
                 </a>
               </div>
             )

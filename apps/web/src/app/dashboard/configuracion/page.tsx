@@ -15,7 +15,6 @@ import GoogleSearchConsoleSection from "@/components/GoogleSearchConsoleSection"
 import BusinessProfileSection from "@/components/BusinessProfileSection";
 import BingWebmasterSection from "@/components/BingWebmasterSection";
 import ThreadsSection from "@/components/ThreadsSection";
-import InstagramSection from "@/components/InstagramSection";
 
 export default function ConfiguracionPage() {
   const [username, setUsername] = useState("");
@@ -683,7 +682,6 @@ export default function ConfiguracionPage() {
         >
           <BusinessProfileSection />
           <ThreadsSection />
-          <InstagramSection />
         </div>
       )}
 
