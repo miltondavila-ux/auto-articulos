@@ -41,7 +41,19 @@ async function generateAndHostThreadsImage(titleId: string, summary: string, cus
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
         body: JSON.stringify({ model, prompt, size: "1024x1024", n: 1 }),
       });
-      const data = (await response.json()) as { data?: { url?: string; b64_json?: string }[] };
+      const data = (await response.json()) as {
+        data?: { url?: string; b64_json?: string }[];
+        error?: { message?: string; code?: string; type?: string };
+      };
+
+      if (!response.ok || data.error) {
+        console.warn(
+          `OpenAI rechazó la generación de imagen con modelo ${model} (status ${response.status}):`,
+          data.error?.message || JSON.stringify(data),
+        );
+        continue;
+      }
+
       const imageUrl = data.data?.[0]?.url;
       const b64 = data.data?.[0]?.b64_json;
 
@@ -55,6 +67,7 @@ async function generateAndHostThreadsImage(titleId: string, summary: string, cus
         return blob.url;
       }
 
+      console.warn(`Modelo ${model} respondió OK pero sin url ni b64_json:`, JSON.stringify(data));
       continue;
     } catch (err) {
       console.warn(`Fallo al generar imagen para Threads con modelo ${model}:`, err);
