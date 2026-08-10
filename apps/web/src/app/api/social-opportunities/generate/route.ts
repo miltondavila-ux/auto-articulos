@@ -112,21 +112,14 @@ async function selectArticlesWithGSC(userId: string): Promise<{ id: string; fina
 }
 
 async function selectArticlesWithoutGSC(userId: string): Promise<{ id: string; finalTitle: string | null; text: string; summary: string | null; articleUrl: string | null }[]> {
-  const usedTitleIds = await prisma.socialOpportunity.findMany({
-    where: { userId },
-    select: { titleId: true },
-  });
-  const usedIds: string[] = usedTitleIds.map((o) => o.titleId).filter((id): id is string => id !== null);
-
   return prisma.title.findMany({
     where: {
       run: { userId },
       status: "success",
       articleUrl: { not: null },
-      id: { notIn: [...usedIds] },
     },
     orderBy: { processedAt: "desc" },
-    take: 3,
+    take: 10,
     select: { id: true, finalTitle: true, text: true, summary: true, articleUrl: true },
   });
 }
@@ -202,6 +195,13 @@ export async function POST() {
     const source = await prisma.searchIntegration.findUnique({
       where: { userId_provider: { userId, provider: "google" } },
     });
+
+    if (createdOpportunities.length === 0) {
+      return NextResponse.json(
+        { error: "Los artículos encontrados ya tienen propuestas para todas las redes y formatos conectados." },
+        { status: 400 },
+      );
+    }
 
     return NextResponse.json({
       message: `Se generaron ${createdOpportunities.length} nuevas propuestas basadas en ${source?.siteUrl ? "Google Search Console (mejores temas)" : "artículos más recientes sin usar"}.`,
