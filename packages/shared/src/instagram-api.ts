@@ -485,7 +485,7 @@ async function publishMediaContainer(
 async function pollMediaContainerStatus(
   accessToken: string,
   creationId: string,
-  maxSeconds: number = 15
+  maxSeconds: number = 60
 ): Promise<void> {
   let attempts = 0;
   const maxAttempts = maxSeconds * 2; // cada 2s
@@ -506,6 +506,8 @@ async function pollMediaContainerStatus(
           error_message?: string;
         };
 
+        console.log(`[Instagram Poll] creation_id=${creationId} status=${statusData.status_code} attempt=${attempts}/${maxAttempts}`);
+
         if (statusData.status_code === "FINISHED") {
           finished = true;
         } else if (statusData.status_code === "ERROR") {
@@ -513,6 +515,9 @@ async function pollMediaContainerStatus(
             `El procesamiento del media en Instagram falló: ${statusData.error_message || "Error desconocido"}`
           );
         }
+      } else {
+        const errText = await statusRes.text();
+        console.warn(`[Instagram Poll] HTTP ${statusRes.status} for ${creationId}: ${errText}`);
       }
     } catch (err: any) {
       if (err.message?.includes("procesamiento del media")) {
