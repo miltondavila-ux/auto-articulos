@@ -47,10 +47,11 @@ export async function GET(request: NextRequest) {
     );
     response.cookies.delete(INSTAGRAM_STATE_COOKIE);
     return response;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error en Instagram OAuth callback:", error);
+    const errorMsg = encodeURIComponent(error?.message || "Error desconocido");
     return NextResponse.redirect(
-      new URL("/dashboard/configuracion?instagram=error", request.url)
+      new URL(`/dashboard/configuracion?instagram=error&msg=${errorMsg}`, request.url)
     );
   }
 }

@@ -50,7 +50,7 @@ export function getInstagramAuthUrl(
   appCredentials?: { appId: string; appSecret: string }
 ): string {
   const { appId } = appCredentials || getInstagramAppCredentials();
-  const scope = "instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement";
+  const scope = "instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement,business_management";
   const params = new URLSearchParams({
     client_id: appId,
     redirect_uri: redirectUri,
