@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   sectionStyle,
   h2Style,
@@ -54,6 +54,16 @@ export default function HistorialPage() {
   const hasDeletableRuns = runs.some(
     (r) => r.status !== "pending" && r.status !== "running",
   );
+
+  const runsByCategory = useMemo(() => {
+    const map = new Map<string, RunRow[]>();
+    for (const run of runs) {
+      const cat = run.category?.name ?? "Sin categoría";
+      if (!map.has(cat)) map.set(cat, []);
+      map.get(cat)!.push(run);
+    }
+    return Array.from(map.entries());
+  }, [runs]);
 
   return (
     <>
@@ -134,11 +144,11 @@ export default function HistorialPage() {
             Todavía no hay ejecuciones.
           </p>
         )}
-        {runs.map((run) => (
-          <HistoryEntry
-            key={run.id}
-            run={run}
-            defaultOpen={false}
+        {runsByCategory.map(([categoryName, categoryRuns]) => (
+          <CategoryGroup
+            key={categoryName}
+            categoryName={categoryName}
+            runs={categoryRuns}
             onRetried={loadRuns}
           />
         ))}
@@ -149,13 +159,81 @@ export default function HistorialPage() {
   );
 }
 
+function CategoryGroup({
+  categoryName,
+  runs,
+  onRetried,
+}: {
+  categoryName: string;
+  runs: RunRow[];
+  onRetried: () => void;
+}) {
+  const totalSuccess = runs.reduce(
+    (acc, r) => acc + r.titles.filter((t) => t.status === "success").length,
+    0,
+  );
+  const totalTitles = runs.reduce((acc, r) => acc + r.titles.length, 0);
+  const hasErrors = runs.some((r) => r.status === "halted");
+
+  return (
+    <details
+      open={false}
+      style={{
+        marginBottom: 10,
+        background: hasErrors ? "#fff8e6" : "#f7f8fa",
+        border: hasErrors ? "1px solid #f0deac" : "1px solid #dfe3e8",
+        borderRadius: 8,
+        overflow: "hidden",
+      }}
+    >
+      <summary
+        style={{
+          cursor: "pointer",
+          fontSize: 14,
+          fontWeight: 700,
+          color: "#16181d",
+          listStyle: "none",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "12px 14px",
+          userSelect: "none",
+        }}
+      >
+        <span
+          style={{
+            display: "inline-block",
+            transition: "transform 0.2s",
+            fontSize: 12,
+            color: "#6b7280",
+          }}
+        >
+          ▶
+        </span>
+        <span>{categoryName}</span>
+        <span style={{ fontSize: 12, fontWeight: 500, color: "#6b7280" }}>
+          — {runs.length} ejecución{runs.length !== 1 ? "es" : ""}
+        </span>
+        <span style={{ fontSize: 12, fontWeight: 500, color: "#6b7280" }}>
+          — {totalSuccess}/{totalTitles} publicados
+        </span>
+      </summary>
+      <div style={{ padding: "0 14px 14px 14px" }}>
+        {runs.map((run) => (
+          <HistoryEntry key={run.id} run={run} onRetried={onRetried} />
+        ))}
+      </div>
+    </details>
+  );
+}
+
 interface SocialOpportunity {
   id: string;
   articleTitle: string;
   articleUrl: string;
   platform: string;
   suggestedText: string;
-  status: string; // "pending" | "published" | "skipped" | "error"
+  status: string;
   postId: string | null;
   errorLog: string | null;
   createdAt: string;
@@ -175,7 +253,6 @@ function SocialOpportunitiesHistory() {
       if (res.ok) {
         const data = await res.json();
         const list = data.opportunities || [];
-        // Filtrar solo las que ya se procesaron (publicadas o error)
         setOpportunities(list.filter((o: any) => o.status !== "pending"));
       }
     } catch (err: any) {
@@ -352,7 +429,7 @@ function SocialOpportunitiesHistory() {
                   Copy publicado:
                 </p>
                 <blockquote style={{ margin: "0 0 12px 0", fontStyle: "italic", color: "#4b5563", fontSize: 13, lineHeight: "1.5" }}>
-                  "{opp.suggestedText}"
+                  &ldquo;{opp.suggestedText}&rdquo;
                 </blockquote>
                 <div style={{ display: "flex", gap: 15, fontSize: 12, flexWrap: "wrap", marginTop: 10 }}>
                   <a
@@ -400,11 +477,9 @@ function SocialOpportunitiesHistory() {
 
 function HistoryEntry({
   run,
-  defaultOpen,
   onRetried,
 }: {
   run: RunRow;
-  defaultOpen: boolean;
   onRetried: () => void;
 }) {
   const successCount = run.titles.filter((t) => t.status === "success").length;
@@ -413,6 +488,7 @@ function HistoryEntry({
 
   async function handleRetryRun(e: React.MouseEvent) {
     e.preventDefault();
+    e.stopPropagation();
     setRetrying(true);
     try {
       await fetch(`/api/runs/${run.id}/retry`, { method: "POST" });
@@ -424,13 +500,13 @@ function HistoryEntry({
 
   return (
     <details
-      open={defaultOpen}
+      open={false}
       style={{
-        marginBottom: 10,
-        background: hasErrors ? "#fff8e6" : "#f7f8fa",
-        border: hasErrors ? "1px solid #f0deac" : "1px solid #dfe3e8",
-        borderRadius: 8,
-        padding: "10px 14px",
+        marginBottom: 8,
+        background: hasErrors ? "#fffdf5" : "#ffffff",
+        border: hasErrors ? "1px solid #f0deac" : "1px solid #e8ecf1",
+        borderRadius: 6,
+        overflow: "hidden",
       }}
     >
       <summary
@@ -442,12 +518,14 @@ function HistoryEntry({
           gap: 8,
           alignItems: "center",
           flexWrap: "wrap",
+          padding: "8px 12px",
+          userSelect: "none",
         }}
       >
+        <span style={{ fontSize: 10, color: "#6b7280" }}>▶</span>
         <span style={{ color: "#16181d", fontWeight: 600 }}>
           {new Date(run.createdAt).toLocaleString()}
         </span>
-        <span style={{ color: "#6b7280" }}>— {run.category?.name ?? "—"}</span>
         <span style={{ color: "#6b7280" }}>
           — {successCount}/{run.titles.length} publicados
         </span>
@@ -475,7 +553,7 @@ function HistoryEntry({
         )}
         <RunStatusBadge status={run.status} />
       </summary>
-      <div style={{ marginTop: 12 }}>
+      <div style={{ padding: "0 12px 12px 12px" }}>
         <RunTable titles={run.titles} />
       </div>
     </details>
@@ -582,11 +660,6 @@ function renderMessageWithLinks(message: string) {
 }
 
 function TitleRowWithLog({ title }: { title: TitleRow }) {
-  // El log queda visible siempre (no solo en errores): sirve para revisar
-  // el paso a paso incluso de títulos ya publicados con éxito. El log
-  // completo (con imágenes de diagnóstico) se trae bajo demanda al abrir
-  // "Ver log", no en la carga inicial del historial — ver el comentario en
-  // /api/runs/route.ts sobre el consumo de transferencia de datos.
   const [fullEvents, setFullEvents] = useState<TitleEventRow[] | null>(null);
   const [loadingEvents, setLoadingEvents] = useState(false);
 
