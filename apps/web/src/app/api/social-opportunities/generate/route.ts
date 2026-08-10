@@ -10,6 +10,14 @@ import {
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
 
+type ArticleCandidate = {
+  id: string;
+  finalTitle: string | null;
+  text: string;
+  summary: string | null;
+  articleUrl: string | null;
+};
+
 const formulas = [
   `Fórmula: Historia personal / Anécdota cercana.
    Pautas: Empieza contando una pequeña anécdota en primera persona como si le hablaras a un amigo (Ej: "Ayer conversaba con una cliente...", "Estaba revisando unos casos de..."). Relata la lección y dile que escribiste un post rápido en tu blog para ayudarlos en esa situación.`,
@@ -69,7 +77,7 @@ async function generateGPTCopy(
   }
 }
 
-async function selectArticlesWithGSC(userId: string): Promise<{ id: string; finalTitle: string | null; text: string; summary: string | null; articleUrl: string | null }[]> {
+async function selectArticlesWithGSC(userId: string): Promise<ArticleCandidate[]> {
   const gsc = await prisma.searchIntegration.findUnique({
     where: { userId_provider: { userId, provider: "google" } },
   });
@@ -111,7 +119,7 @@ async function selectArticlesWithGSC(userId: string): Promise<{ id: string; fina
   }
 }
 
-async function selectArticlesWithoutGSC(userId: string): Promise<{ id: string; finalTitle: string | null; text: string; summary: string | null; articleUrl: string | null }[]> {
+async function selectArticlesWithoutGSC(userId: string): Promise<ArticleCandidate[]> {
   return prisma.title.findMany({
     where: {
       run: { userId },
@@ -145,11 +153,33 @@ export async function POST() {
       );
     }
 
-    let candidates = await selectArticlesWithGSC(userId);
-
-    if (candidates.length === 0) {
-      candidates = await selectArticlesWithoutGSC(userId);
+    const [gscCandidates, recentCandidates] = await Promise.all([
+      selectArticlesWithGSC(userId),
+      selectArticlesWithoutGSC(userId),
+    ]);
+    const candidateMap = new Map<string, ArticleCandidate>();
+    for (const article of [...gscCandidates, ...recentCandidates]) {
+      candidateMap.set(article.id, article);
     }
+    const allCandidates = Array.from(candidateMap.values());
+
+    const activeOpportunities = await prisma.socialOpportunity.findMany({
+      where: {
+        userId,
+        titleId: { in: allCandidates.map((article) => article.id) },
+        platform: { in: integrations },
+        status: { in: ["pending", "queued", "processing"] },
+      },
+      select: { titleId: true, platform: true },
+    });
+    const activeKeys = new Set(
+      activeOpportunities.map((opportunity) => `${opportunity.titleId}:${opportunity.platform}`),
+    );
+    const candidates = allCandidates
+      .filter((article) =>
+        integrations.some((platform) => !activeKeys.has(`${article.id}:${platform}`)),
+      )
+      .slice(0, 3);
 
     if (candidates.length === 0) {
       return NextResponse.json(
@@ -162,15 +192,8 @@ export async function POST() {
 
     for (const article of candidates) {
       for (const platform of integrations) {
-        const exists = await prisma.socialOpportunity.findFirst({
-          where: {
-            userId,
-            titleId: article.id,
-            platform,
-            status: { in: ["pending", "queued", "processing"] },
-          },
-        });
-        if (exists) continue;
+        const opportunityKey = `${article.id}:${platform}`;
+        if (activeKeys.has(opportunityKey)) continue;
 
         const copyText = await generateGPTCopy(
           platform,
@@ -190,6 +213,7 @@ export async function POST() {
           },
         });
         createdOpportunities.push(opp);
+        activeKeys.add(opportunityKey);
       }
     }
 
@@ -205,7 +229,7 @@ export async function POST() {
     }
 
     return NextResponse.json({
-      message: `Se generaron ${createdOpportunities.length} nuevas propuestas basadas en ${source?.siteUrl ? "Google Search Console (mejores temas)" : "artículos más recientes sin usar"}.`,
+      message: `Se generaron ${createdOpportunities.length} nuevas propuestas usando ${source?.siteUrl ? "Google Search Console y artículos recientes" : "artículos publicados recientes"}.`,
       count: createdOpportunities.length,
     });
   } catch {

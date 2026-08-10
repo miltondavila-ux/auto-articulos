@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
+import { triggerWorkerNow } from "@/lib/trigger-worker";
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,6 +47,8 @@ export async function POST(request: NextRequest) {
       where: { id },
       data: { status: "queued", errorLog: null },
     });
+
+    await triggerWorkerNow();
 
     return NextResponse.json({
       success: true,
