@@ -133,11 +133,12 @@ async function selectArticlesWithoutGSC(userId: string): Promise<ArticleCandidat
 }
 
 async function getConnectedNetworks(userId: string) {
-  const [threads, instagram] = await Promise.all([
+  const [threads, twitter, instagram] = await Promise.all([
     prisma.threadsIntegration.findUnique({ where: { userId }, select: { id: true } }),
+    prisma.twitterIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.instagramIntegration.findUnique({ where: { userId }, select: { id: true } }),
   ]);
-  return { threads: Boolean(threads), instagram: Boolean(instagram) };
+  return { threads: Boolean(threads), x: Boolean(twitter), instagram: Boolean(instagram) };
 }
 
 export async function GET() {
@@ -155,12 +156,15 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({})) as { networks?: string[] };
     const connected = await getConnectedNetworks(userId);
     const requestedNetworks = Array.isArray(body.networks)
-      ? body.networks.filter((network) => network === "threads" || network === "instagram")
-      : ["threads", "instagram"];
+      ? body.networks.filter((network) => network === "threads" || network === "x" || network === "instagram")
+      : ["threads", "x", "instagram"];
 
     const integrations: string[] = [];
     if (requestedNetworks.includes("threads") && connected.threads) {
       integrations.push("threads");
+    }
+    if (requestedNetworks.includes("x") && connected.x) {
+      integrations.push("x");
     }
     if (requestedNetworks.includes("instagram") && connected.instagram) {
       const user = await prisma.user.findUnique({

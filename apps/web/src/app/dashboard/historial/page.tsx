@@ -428,8 +428,8 @@ function HistorialRedes() {
                           })}
                         </span>
                         <span style={{ color: "#6b7280" }}>—</span>
-                        <span style={{ fontWeight: 700, color: opp.platform === "threads" ? "#0f1419" : "#6b7280" }}>
-                          {opp.platform === "threads" ? "🌀 Threads" : opp.platform.toUpperCase()}
+                        <span style={{ fontWeight: 700, color: opp.platform === "threads" ? "#0f1419" : opp.platform === "x" ? "#1da1f2" : "#6b7280" }}>
+                          {opp.platform === "threads" ? "🌀 Threads" : opp.platform === "x" ? "🐦 X (Twitter)" : opp.platform.toUpperCase()}
                         </span>
                         <span style={{ color: "#6b7280" }}>—</span>
                         <span style={{ color: "#16181d", fontWeight: 500 }}>
@@ -462,7 +462,7 @@ function HistorialRedes() {
                         </a>
                         {opp.status === "published" && opp.postId && (
                           <a
-                            href={opp.postId.startsWith("http") ? opp.postId : (opp.platform === "threads" ? `https://www.threads.net/t/${opp.postId}` : "#")}
+                            href={opp.postId.startsWith("http") ? opp.postId : (opp.platform === "threads" ? `https://www.threads.net/t/${opp.postId}` : opp.platform === "x" ? `https://x.com/i/status/${opp.postId}` : "#")}
                             target="_blank"
                             rel="noreferrer"
                             style={{ color: "#16a34a", textDecoration: "none", fontWeight: 600 }}
@@ -772,6 +772,48 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
                 ) : (
                   <span style={{ color: "#b45309" }}>
                     🌀 Threads: {title.threadsPublishStatus}
+                  </span>
+                )}
+              </div>
+            )}
+            {title.twitterPublishStatus && (
+              <div
+                style={{
+                  fontSize: 11,
+                  color: "#6b7280",
+                  marginTop: 6,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                {title.twitterPublishStatus === "success" ? (
+                  <>
+                    <span>🐦</span>
+                    <a
+                      href={title.twitterPostId ? (title.twitterPostId.startsWith("http") ? title.twitterPostId : `https://x.com/i/status/${title.twitterPostId}`) : "#"}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        color: "#1da1f2",
+                        fontWeight: 600,
+                        textDecoration: "none",
+                      }}
+                    >
+                      Ver post en X
+                    </a>
+                  </>
+                ) : title.twitterPublishStatus === "error" ? (
+                  <span style={{ color: "#d64545" }} title={title.twitterPublishError ?? undefined}>
+                    🐦 Error en X
+                  </span>
+                ) : title.twitterPublishStatus === "not_configured" ? (
+                  <span style={{ color: "#9ca3af" }}>
+                    🐦 X no configurado
+                  </span>
+                ) : (
+                  <span style={{ color: "#b45309" }}>
+                    🐦 X: {title.twitterPublishStatus}
                   </span>
                 )}
               </div>

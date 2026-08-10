@@ -15,6 +15,7 @@ import GoogleSearchConsoleSection from "@/components/GoogleSearchConsoleSection"
 import BusinessProfileSection from "@/components/BusinessProfileSection";
 import BingWebmasterSection from "@/components/BingWebmasterSection";
 import ThreadsSection from "@/components/ThreadsSection";
+import TwitterSection from "@/components/TwitterSection";
 
 export default function ConfiguracionPage() {
   const [username, setUsername] = useState("");
@@ -736,6 +737,7 @@ export default function ConfiguracionPage() {
         >
           <BusinessProfileSection />
           <ThreadsSection />
+          <TwitterSection />
         </div>
       )}
 
@@ -1296,7 +1298,8 @@ export default function ConfiguracionPage() {
             </div>
           </section>
 
-          {/* Prompts Personalizados para Imágenes */}
+          {/* Prompts Personalizados para Imágenes (solo admins) */}
+          {isAdmin && (
           <section style={sectionStyle}>
             <div
               style={{
@@ -1408,6 +1411,7 @@ export default function ConfiguracionPage() {
               </div>
             </div>
           </section>
+          )}
         </div>
       )}
 
