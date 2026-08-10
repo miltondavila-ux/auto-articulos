@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
-import { encryptSecret } from "@auto-articulos/shared";
+import { decryptSecret, encryptSecret } from "@auto-articulos/shared";
 import { auditLog } from "@/lib/audit";
 import { getCurrentUserId, requireAdmin } from "@/lib/current-user";
 
@@ -79,10 +79,19 @@ export async function GET() {
   return NextResponse.json({
     currentUserId,
     users: users.map((u) => {
+      let currentPassword: string | null = null;
+      if (u.initialPasswordEncrypted) {
+        try {
+          currentPassword = decryptSecret(u.initialPasswordEncrypted);
+        } catch {
+          currentPassword = null;
+        }
+      }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { initialPasswordEncrypted, ...rest } = u;
       return {
         ...rest,
+        currentPassword,
         articlesPublished: publishedByUser.get(u.id) ?? 0,
       };
     }),
