@@ -41,7 +41,11 @@ export function getLinkedInAuthUrl(
   appCredentials?: { clientId: string; clientSecret: string }
 ): string {
   const { clientId } = appCredentials || getLinkedInAppCredentials();
-  const scope = "w_member_social";
+  // openid + profile: requeridos para leer /v2/userinfo (obtener el ID del
+  // usuario que necesitamos para publicar). w_member_social: publicar posts.
+  // El developer debe tener agregados ambos productos en su app de LinkedIn:
+  // "Sign In with LinkedIn using OpenID Connect" y "Share on LinkedIn".
+  const scope = "openid profile w_member_social";
   const params = new URLSearchParams({
     response_type: "code",
     client_id: clientId,

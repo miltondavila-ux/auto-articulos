@@ -40,6 +40,14 @@ async function generateGPTCopy(
     return `${finalTitle}\n\n${summary}\n\nLeer más: [ENLACE]`;
   }
   const selectedFormula = formulas[Math.floor(Math.random() * formulas.length)];
+  // LinkedIn permite hasta 3000 caracteres y funciona mejor con posts más
+  // elaborados; Threads/X son de formato corto (límites reales 500/280).
+  const isLinkedIn = platform === "linkedin";
+  const charLimit = isLinkedIn ? 1300 : 360;
+  const maxTokens = isLinkedIn ? 700 : 300;
+  const styleNote = isLinkedIn
+    ? "Tono profesional pero cercano (LinkedIn), con más contexto y valor. Puedes usar párrafos cortos separados por saltos de línea."
+    : "Tono súper casual y directo, como un mensaje rápido a un amigo.";
   try {
     const response = await fetch(OPENAI_CHAT_URL, {
       method: "POST",
@@ -54,11 +62,11 @@ async function generateGPTCopy(
             role: "user",
             content:
               `Eres Lorena Alvarez, una asesora de seguros en Florida súper cercana, alegre, empática y de gran confianza. ` +
-              `Escribe una publicación optimizada para la red social ${platform}. Debe sonar 100% natural, en primera persona del singular ("yo", "mi", "me").\n\n` +
+              `Escribe una publicación optimizada para la red social ${platform}. Debe sonar 100% natural, en primera persona del singular ("yo", "mi", "me"). ${styleNote}\n\n` +
               `INSTRUCCIONES DE ESTILO ESPECÍFICAS:\n` +
               `${selectedFormula}\n\n` +
               `REGLAS CRÍTICAS:\n` +
-              `- El texto debe ser menor a 360 caracteres.\n` +
+              `- El texto debe ser menor a ${charLimit} caracteres.\n` +
               `- No uses hashtags (#) ni formato markdown.\n` +
               `- NO escribas la URL del artículo directamente. Escribe la palabra exacta "[ENLACE]" (en mayúsculas y con corchetes) al final, integrada en tu frase de cierre (Ej: "Te lo explico con peras y manzanas aquí: [ENLACE]").\n\n` +
               `Datos:\n` +
@@ -67,7 +75,7 @@ async function generateGPTCopy(
           },
         ],
         temperature: 0.85,
-        max_tokens: 300,
+        max_tokens: maxTokens,
       }),
     });
     const data = (await response.json()) as any;

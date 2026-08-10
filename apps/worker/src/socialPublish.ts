@@ -8,7 +8,6 @@ import {
   publishTweet,
   refreshTwitterToken,
   publishLinkedInPost,
-  refreshLinkedInToken,
   publishInstagramCarousel,
   publishInstagramImage,
 } from "@auto-articulos/shared";
@@ -249,28 +248,17 @@ async function processLinkedInJob(job: {
     throw new Error("LinkedIn no está configurado en tu cuenta.");
   }
 
-  let accessToken = decryptSecret(integration.accessTokenEncrypted);
+  const accessToken = decryptSecret(integration.accessTokenEncrypted);
 
-  const daysUntilExpiration =
-    (integration.expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
-
-  // LinkedIn tokens duran 60 días; si faltan menos de 7, intentar refrescar
-  if (daysUntilExpiration < 7) {
-    try {
-      const refreshed = await refreshLinkedInToken(accessToken);
-      accessToken = refreshed.accessToken;
-      const newExpiresAt = new Date(Date.now() + refreshed.expiresIn * 1000);
-      await prisma.linkedInIntegration.update({
-        where: { userId: job.userId },
-        data: {
-          accessTokenEncrypted: encryptSecret(accessToken),
-          expiresAt: newExpiresAt,
-        },
-      });
-    } catch {
-      // Si el refresh falla, continuar con el token actual (puede que aún funcione)
-      console.warn("No se pudo refrescar token de LinkedIn, usando el actual.");
-    }
+  // LinkedIn (en el flujo estándar sin aprobación de partner) NO entrega
+  // refresh_token — el access token dura 60 días y luego el usuario debe
+  // reconectar manualmente desde Configuración. No hay forma de renovarlo
+  // en segundo plano, así que fallamos con un mensaje claro en vez de
+  // intentar un "refresh" que siempre fallaría.
+  if (integration.expiresAt <= new Date()) {
+    throw new Error(
+      "La autorización de LinkedIn expiró. Debes volver a conectar la cuenta en Configuración."
+    );
   }
 
   await validateArticleUrl(job.articleUrl);
