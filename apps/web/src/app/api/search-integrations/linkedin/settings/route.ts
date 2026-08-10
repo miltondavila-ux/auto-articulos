@@ -3,6 +3,10 @@ import { prisma } from "@auto-articulos/db";
 import { decryptSecret, encryptSecret } from "@auto-articulos/shared";
 import { getCurrentUser } from "@/lib/current-user";
 
+export const dynamic = "force-dynamic";
+
+const NO_CACHE = { "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate" };
+
 export async function GET() {
   const user = await getCurrentUser();
 
@@ -22,7 +26,7 @@ export async function GET() {
     return NextResponse.json({
       configured: isConfigured,
       isAdmin: false,
-    });
+    }, { headers: NO_CACHE });
   }
 
   const clientId = idSetting
@@ -35,7 +39,7 @@ export async function GET() {
     clientId: clientId ? `${clientId.slice(0, 4)}...${clientId.slice(-4)}` : null,
     rawClientId: clientId ?? "",
     source: idSetting ? "database" : envClientId ? "environment" : "none",
-  });
+  }, { headers: NO_CACHE });
 }
 
 export async function POST(request: NextRequest) {
@@ -70,5 +74,5 @@ export async function POST(request: NextRequest) {
     }),
   ]);
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true }, { headers: NO_CACHE });
 }

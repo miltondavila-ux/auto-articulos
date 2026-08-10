@@ -14,10 +14,6 @@ export type OpportunityAnalysisResult =
   | { status: "ok"; groups: OpportunityAnalysisGroup[] }
   | { status: "no_new" };
 
-// Search Console devuelve el país como código ISO 3166-1 alpha-3 en
-// minúsculas. Se traducen los más frecuentes para un sitio en español con
-// audiencia en EE. UU. y Latinoamérica; cualquier código no mapeado se le
-// pasa igual al modelo (gpt-4o-mini reconoce la mayoría de todas formas).
 const COUNTRY_NAMES: Record<string, string> = {
   usa: "Estados Unidos",
   mex: "México",
@@ -51,41 +47,84 @@ const COUNTRY_NAMES: Record<string, string> = {
 function normalizeTitle(value: string) {
   return value
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 }
 
-const PROMPT_HEADER = `Actúa como analista senior de Google Search Console y estratega SEO en español. Debes crear clusters long tail que amplíen los artículos que este usuario YA TIENE PUBLICADOS (ver TÍTULOS YA EXISTENTES) y produzcan un efecto de bola de nieve, sin repetir títulos ni provocar canibalización.
-
-REGLA ANTI-INVENCIÓN — LA MÁS IMPORTANTE DE TODAS, APLICA A CUALQUIER DATO ESPECÍFICO, LÉELA CON CUIDADO:
-Ya pasó antes que un análisis inventó una lista de títulos mencionando un estado de EE. UU. distinto en cada uno (Georgia, Texas, California, Nevada, Illinois...) sin ninguna evidencia real de que este usuario tenga tráfico o contenido relacionado con esos lugares — eso es fabricar datos y está terminantemente prohibido. La misma regla aplica a CUALQUIER dato específico, no solo ubicaciones: ingredientes, materiales, características de producto, cifras, precios, marcas, profesiones, nacionalidades, situaciones legales o migratorias, fechas, nombres propios, etc.
-- NUNCA menciones un dato específico y concreto (ciudad, condado, estado, país, nacionalidad, ingrediente, material, característica, cifra, precio, marca, profesión, etc.) en un título a menos que ese dato EXACTO aparezca literalmente en: (a) el texto de una consulta real, (b) una página real, o (c) un título que este usuario YA publicó (ver TÍTULOS YA EXISTENTES).
-- "Suena lógicamente relacionado con la categoría" NO es evidencia. Ejemplo: si la categoría es "Repostería" y existe un título real sobre tortas, SÍ puedes variar la intención de búsqueda de ese mismo tema real ("mejores recetas de torta", "errores comunes al hacer torta"), pero NO puedes agregar ingredientes específicos como "harina sin gluten" o "azúcar de coco" a menos que esas palabras EXACTAS ya aparezcan en una consulta, página o título real — inventar ingredientes/materiales/características que "encajan" temáticamente es exactamente el mismo error que inventar ciudades.
-- Los datos de "DISTRIBUCIÓN GEOGRÁFICA REAL" son SOLO por país (Search Console no da ciudad ni estado). NO inventes un estado o ciudad de EE. UU. solo porque "Estados Unidos" aparezca ahí — ese dato únicamente sirve para detectar audiencia real en OTRO país (ej. inversionistas extranjeros), nunca para inventar geografía dentro de un mismo país.
-- Si la evidencia no alcanza para un nivel de detalle específico en una categoría puntual, quédate en el nivel de detalle que SÍ esté respaldado (intención de búsqueda genérica sobre el mismo tema real) — es preferible un título menos específico a uno con un dato inventado.
-- El campo "rationale" de cada título debe citar o parafrasear muy de cerca la evidencia real (la consulta, página o título existente concreto) que respalda cualquier dato específico que uses. Si no puedes señalar esa evidencia concreta, no la incluyas.
-
-SEGMENTACIÓN AVANZADA (aplícala solo cuando la evidencia real la respalde, según la regla anterior):
-Cuando SÍ haya evidencia real, combina hasta tres niveles en el título:
-1. Perfil del cliente (quién es, de dónde viene, qué lo distingue).
-2. Ubicación real (solo si aparece literalmente en la evidencia, ver regla anti-invención).
-3. Producto/servicio/solución concreto (ya visible en categorías, consultas y títulos existentes).
-Ejemplos del ESTILO esperado cuando SÍ hay evidencia real de ubicación (son solo referencia de formato, no los copies ni los uses si no aplican a este usuario):
-- "Cómo encontrar las mejores escuelas de Miami-Dade si vivo en Broward"
-- "Cómo invertir en propiedades en Miami si soy mexicano y vivo en Colombia"
-
-REGLAS OBLIGATORIAS:
-- Selecciona como máximo 10 categorías de la lista permitida. Si hay más, prioriza las respaldadas por mayores impresiones y tendencia positiva.
-- Devuelve EXACTAMENTE 9 títulos por categoría elegida.
-- Cada título debe responder a una intención long tail distinta, ser específico, seguir la regla anti-invención de arriba y estar relacionado con evidencia real de Search Console o con los títulos ya existentes de este usuario.
-- No repitas, reformules de manera casi idéntica ni compitas con ningún título existente ni con otra propuesta.
-- Usa únicamente categoryId existentes en la lista permitida.
-- No inventes estadísticas. impressions y clicks del grupo deben ser la suma aproximada de la evidencia que usaste.
-- Si genuinamente no hay evidencia suficiente para armar ni un solo grupo de 9 títulos únicos, no duplicados y sin datos específicos inventados, responde exactamente {"opportunities":[]} — no inventes títulos débiles ni datos falsos (ubicaciones, ingredientes, cifras, características, etc.) solo para llenar el formato.
-- Responde SOLO con un objeto JSON válido (sin markdown, sin texto fuera del JSON), con esta forma exacta:
-{"opportunities":[{"categoryId":"id","rationale":"explicación breve basada en datos","impressions":123,"clicks":4,"titles":[{"text":"título","rationale":"oportunidad/intención, citando la consulta/página/título existente concreto que respalda cualquier ubicación o perfil de cliente usado"}]}]}`;
+const PROMPT_HEADER = [
+  "Actua como estratega SEO experto y analista de datos de busqueda. Tu objetivo es encontrar TODAS las oportunidades posibles para aumentar el trafico organico del usuario, siendo creativo pero siempre basado en evidencia real de los datos proporcionados.",
+  "",
+  "FILOSOFIA DEL ANALISIS:",
+  "- No busques solo lo obvio; analiza patrones, tendencias y oportunidades ocultas",
+  "- Infieren temas relacionados basandote en consultas y paginas reales",
+  "- Crea clusters tematicos que generen un efecto bola de nieve",
+  "- Piensa como un usuario real: que mas buscaria alguien que ya busco esto?",
+  "- La meta es VOLUMEN de oportunidades reales, no solo las mas faciles",
+  "",
+  "ANALISIS INTELIGENTE REQUERIDO:",
+  "",
+  "1. CONSULTAS DE ALTO POTENCIAL (prioridad maxima):",
+  "   - Consultas con impresiones altas pero clics bajos (oportunidad de optimizacion)",
+  "   - Consultas en posiciones 2-10 (faciles de mejorar con buen contenido)",
+  "   - Consultas con tendencia creciente mes a mes",
+  "",
+  "2. CLUSTERS TEMATICOS:",
+  "   - Agrupa consultas relacionadas entre si",
+  "   - Identifica temas paraguas y sus variantes long tail",
+  "   - Crea contenido que cubra un tema desde multiples angulos",
+  "",
+  "3. OPORTUNIDADES DE LONG TAIL:",
+  "   - Transforma consultas genericas en especificas",
+  '   - Agrega modificadores: "como", "mejores", "errores", "guia completa", "ejemplos"',
+  "   - Personaliza segun perfil de cliente y ubicacion (cuando haya evidencia real)",
+  "",
+  "4. ANALISIS DE COMPETENCIA IMPLICITO:",
+  "   - Si una posicion es 5-10, hay 4+ competidores arriba = oportunidad de superarlos",
+  "   - Si CTR es bajo para impressions altas, el titulo/meta necesita mejorar",
+  "",
+  "REGLAS FLEXIBLES (NO restrictivas):",
+  "",
+  "SI PUEDES:",
+  "- Inferir temas relacionados a partir de patrones en las consultas",
+  "- Sugerir contenido que complemente lo que ya existe",
+  "- Crear variaciones long tail de consultas exitosas",
+  "- Identificar nichos no explotados basados en datos reales",
+  "- Usar ubicaciones y perfiles de cliente que aparezcan en las consultas, paginas o titulos existentes",
+  "- Combinar temas de diferentes categorias cuando tenga sentido",
+  "- Proponer intenciones de busqueda nuevas que se infieran de los patrones de las consultas existentes",
+  "",
+  "PRECAUCIONES (no restricciones):",
+  "- Evita repetir titulos existentes o canibalizarlos internamente",
+  "- Cada titulo debe ser UNICO y no superponerse con otros",
+  "- Si no tienes evidencia directa para un detalle muy especifico (precio exacto, cifra concreta), mantenlo generico pero relevante",
+  "",
+  "SOLO EVITA:",
+  "- Copiar exactamente titulos que ya existen en TITULOS YA EXISTENTES",
+  "- Crear 2+ titulos dentro del mismo grupo que compitan por la misma intencion de busqueda",
+  "- Datos completamente falsos sin ninguna base en los datos",
+  "",
+  "SEGMENTACION INTELIGENTE:",
+  "Cuando haya evidencia real (consultas con ubicacion, perfil de cliente, etc.), combina:",
+  "1. Intencion de busqueda (que quiere hacer el usuario)",
+  "2. Contexto especifico (donde, quien, cuando - solo con evidencia)",
+  "3. Formato optimo (guia, comparacion, lista, error comun, etc.)",
+  "",
+  "REGLAS OBLIGATORIAS:",
+  "- Selecciona como maximo 10 categorias (prioriza por volumen total de oportunidad)",
+  "- Devuelve 5-9 titulos por categoria (calidad sobre cantidad fija)",
+  "- Cada titulo debe tener una justificacion basada en datos reales",
+  "- Evita canibalizacion entre titulos del MISMO grupo",
+  "- Usa unicamente categoryId existentes en la lista permitida",
+  "- impressions y clicks del grupo deben ser representativos de la evidencia usada",
+  "",
+  "FORMATO DE RESPUESTA:",
+  "Responde SOLO con JSON valido (sin markdown, sin texto adicional):",
+  '{"opportunities":[{"categoryId":"id","rationale":"analisis de oportunidad basado en datos","impressions":123,"clicks":4,"titles":[{"text":"titulo long tail inteligente","rationale":"justificacion con datos reales que respalda esta oportunidad"}]}]}',
+  "",
+  'Si genuinamente no hay datos suficientes para crear oportunidades reales, responde: {"opportunities":[]}',
+].join("\n");
 
 async function callOpenAi(prompt: string, apiKey: string): Promise<string> {
   const response = await fetch(OPENAI_URL, {
@@ -97,12 +136,8 @@ async function callOpenAi(prompt: string, apiKey: string): Promise<string> {
     body: JSON.stringify({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.35,
-      max_tokens: 7000,
-      // Fuerza al modelo a devolver JSON válido (objeto, no array suelto).
-      // Antes de esto, un texto largo generado por el modelo con una
-      // comilla o salto de línea sin escapar rompía JSON.parse() con un
-      // SyntaxError críptico que se le mostraba tal cual al usuario.
+      temperature: 0.4,
+      max_tokens: 10000,
       response_format: { type: "json_object" },
     }),
   });
@@ -118,12 +153,6 @@ async function callOpenAi(prompt: string, apiKey: string): Promise<string> {
   return data.choices?.[0]?.message?.content ?? "";
 }
 
-/**
- * Aun con response_format:"json_object" el modelo puede, en casos raros,
- * devolver JSON técnicamente inválido (truncado por el límite de tokens,
- * etc.). En vez de fallar de inmediato y mostrarle al usuario un error de
- * parseo críptico, se reintenta una vez antes de darlo por perdido.
- */
 async function callOpenAiWithRetry(
   prompt: string,
   apiKey: string,
@@ -136,15 +165,91 @@ async function callOpenAiWithRetry(
       if (parsed && typeof parsed === "object") {
         return parsed as Record<string, unknown>;
       }
-      lastError = new Error("El análisis no devolvió un objeto JSON válido.");
+      lastError = new Error("El analisis no devolvio un objeto JSON valido.");
     } catch (err) {
       lastError = err;
     }
   }
-  console.error("analyzeSeoOpportunities: JSON inválido tras reintento:", lastError);
+  console.error("analyzeSeoOpportunities: JSON invalido tras reintento:", lastError);
   throw new Error(
-    "No se pudo interpretar la respuesta del análisis esta vez. Intenta de nuevo en unos minutos.",
+    "No se pudo interpretar la respuesta del analisis esta vez. Intenta de nuevo en unos minutos.",
   );
+}
+
+interface ProcessedRow {
+  query: string;
+  page: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+  previousImpressions: number;
+  impressionTrend: number;
+  opportunityScore: number;
+}
+
+function processPerformanceData(
+  currentRows: GoogleSearchAnalyticsRow[],
+  previousRows: GoogleSearchAnalyticsRow[],
+): ProcessedRow[] {
+  const previous = new Map(
+    previousRows.map((row) => [row.keys.join(" "), row]),
+  );
+
+  return currentRows
+    .map((row) => {
+      const old = previous.get(row.keys.join(" "));
+      const impressions = row.impressions;
+      const clicks = row.clicks;
+      const ctr = row.ctr;
+      const position = row.position;
+      const previousImpressions = old?.impressions ?? 0;
+      const impressionTrend = impressions - previousImpressions;
+
+      let opportunityScore = 0;
+
+      if (impressions > 100 && clicks < 5) {
+        opportunityScore += 30;
+      }
+      if (position >= 2 && position <= 10) {
+        opportunityScore += 25;
+      }
+      if (impressionTrend > 10) {
+        opportunityScore += 20;
+      }
+      if (impressions > 50) {
+        opportunityScore += 15;
+      }
+      if (position <= 10 && ctr < 0.05) {
+        opportunityScore += 10;
+      }
+
+      return {
+        query: row.keys[0] ?? "",
+        page: row.keys[1] ?? "",
+        clicks,
+        impressions,
+        ctr,
+        position,
+        previousImpressions,
+        impressionTrend,
+        opportunityScore,
+      };
+    })
+    .sort((a, b) => b.opportunityScore - a.opportunityScore);
+}
+
+function buildPerformanceBatches(
+  allRows: GoogleSearchAnalyticsRow[],
+  previousRows: GoogleSearchAnalyticsRow[],
+  batchSize: number,
+): Array<Array<ProcessedRow>> {
+  const processed = processPerformanceData(allRows, previousRows);
+  const batches: Array<Array<ProcessedRow>> = [];
+  for (let i = 0; i < processed.length; i += batchSize) {
+    batches.push(processed.slice(i, i + batchSize));
+  }
+  return batches;
 }
 
 export async function analyzeSeoOpportunities(input: {
@@ -155,32 +260,16 @@ export async function analyzeSeoOpportunities(input: {
   existingTitles: string[];
 }): Promise<OpportunityAnalysisResult> {
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) throw new Error("OPENAI_API_KEY no está configurada.");
+  if (!apiKey) throw new Error("OPENAI_API_KEY no esta configurada.");
 
-  const previous = new Map(
-    input.previousRows.map((row) => [row.keys.join(" "), row]),
+  const BATCH_SIZE = 250;
+  const MAX_BATCHES = 20;
+  const batches = buildPerformanceBatches(
+    input.currentRows,
+    input.previousRows,
+    BATCH_SIZE,
   );
-  const performance = input.currentRows
-    .map((row) => {
-      const old = previous.get(row.keys.join(" "));
-      return {
-        query: row.keys[0] ?? "",
-        page: row.keys[1] ?? "",
-        clicks: row.clicks,
-        impressions: row.impressions,
-        ctr: row.ctr,
-        position: row.position,
-        previousImpressions: old?.impressions ?? 0,
-        impressionTrend: row.impressions - (old?.impressions ?? 0),
-      };
-    })
-    .sort(
-      (a, b) =>
-        b.impressions +
-        Math.max(0, b.impressionTrend) -
-        (a.impressions + Math.max(0, a.impressionTrend)),
-    )
-    .slice(0, 250);
+  const batchesToProcess = batches.slice(0, MAX_BATCHES);
 
   const topCountries = input.countryRows
     .map((row) => {
@@ -195,84 +284,90 @@ export async function analyzeSeoOpportunities(input: {
     .sort((a, b) => b.impressions - a.impressions)
     .slice(0, 20);
 
-  const prompt = `${PROMPT_HEADER}
+  const seen = new Set(input.existingTitles.map(normalizeTitle));
+  const selectedCategoryIds = new Set<string>();
+  const allResult: OpportunityAnalysisGroup[] = [];
 
-CATEGORÍAS PERMITIDAS:
+  for (let batchIndex = 0; batchIndex < batchesToProcess.length; batchIndex++) {
+    const batch = batchesToProcess[batchIndex];
+
+    const prompt = `${PROMPT_HEADER}
+
+CATEGORIAS PERMITIDAS:
 ${JSON.stringify(input.categories)}
 
-DISTRIBUCIÓN GEOGRÁFICA REAL POR PAÍS (Search Console solo da país, NUNCA ciudad ni estado — úsala solo para detectar audiencia real en OTRO país, nunca para inventar ciudades/estados dentro de un mismo país):
+DISTRIBUCION GEOGRAFICA REAL POR PAIS:
 ${JSON.stringify(topCountries)}
 
-RENDIMIENTO ACTUAL Y COMPARACIÓN (consulta, página, métricas — solo puedes citar una ciudad/condado/estado si aparece LITERALMENTE en este texto):
-${JSON.stringify(performance)}
+RENDIMIENTO ACTUAL Y COMPARACION (lote ${batchIndex + 1} de ${batchesToProcess.length}):
+${JSON.stringify(batch)}
 
-TÍTULOS YA EXISTENTES (lo que este usuario YA publicó — evidencia real válida para long tail y para cualquier ubicación/perfil que ya hayan usado antes; prohibido repetir o canibalizar):
-${JSON.stringify(input.existingTitles.slice(0, 800))}`;
+TITULOS YA EXISTENTES:
+${JSON.stringify(input.existingTitles.slice(0, 800))}
 
-  const parsed = await callOpenAiWithRetry(prompt, apiKey);
-  const opportunities = parsed.opportunities;
-  if (!Array.isArray(opportunities)) {
-    throw new Error("Formato de análisis inválido.");
-  }
-  if (opportunities.length === 0) {
-    return { status: "no_new" };
-  }
+TITULOS YA PROPUESTOS EN ESTA SESION (NO REPETIR):
+${JSON.stringify(Array.from(seen).slice(-200))}`;
 
-  const validCategoryIds = new Set(input.categories.map((item) => item.id));
-  const selectedCategoryIds = new Set<string>();
-  const seen = new Set(input.existingTitles.map(normalizeTitle));
-  const result: OpportunityAnalysisGroup[] = [];
-  for (const item of opportunities.slice(0, 10)) {
-    if (!item || typeof item !== "object") continue;
-    const group = item as Record<string, unknown>;
-    if (
-      typeof group.categoryId !== "string" ||
-      !validCategoryIds.has(group.categoryId) ||
-      selectedCategoryIds.has(group.categoryId) ||
-      !Array.isArray(group.titles)
-    )
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = await callOpenAiWithRetry(prompt, apiKey);
+    } catch (err) {
+      console.error(`Lote ${batchIndex + 1} fallo, continuando con siguientes lotes:`, err);
       continue;
-    const titles: OpportunityAnalysisGroup["titles"] = [];
-    for (const candidate of group.titles) {
-      if (!candidate || typeof candidate !== "object") continue;
-      const value = candidate as Record<string, unknown>;
-      if (typeof value.text !== "string") continue;
-      const text = value.text.trim();
-      const normalized = normalizeTitle(text);
-      if (!text || seen.has(normalized)) continue;
-      seen.add(normalized);
-      titles.push({
-        text,
-        rationale:
-          typeof value.rationale === "string" ? value.rationale.trim() : "",
-      });
     }
-    // Antes se exigía EXACTAMENTE 9 títulos por categoría (lo que el prompt le
-    // pide al modelo) y se descartaba el grupo ENTERO si, tras filtrar
-    // duplicados contra lo ya publicado, quedaba en 8 o menos. Pedido
-    // explícito del usuario (8/8/2026, cuenta de Lorena Álvarez: dejó de
-    // recibir oportunidades nuevas y sospechaba que el esquema era muy
-    // rígido): para una cuenta con historial largo es fácil que una categoría
-    // caiga por debajo de 9 tras el filtro de duplicados aunque sí había
-    // oportunidad real, y esa categoría completa se perdía. Ahora se acepta
-    // cualquier cantidad de al menos 1 título válido por categoría — mostrar
-    // menos títulos reales es preferible a no mostrar la categoría. El
-    // enfriamiento de 3 días (ver route.ts) sigue aplicando solo cuando el
-    // resultado total es CERO categorías, que es la intención original.
-    if (titles.length === 0) continue;
-    selectedCategoryIds.add(group.categoryId);
-    result.push({
-      categoryId: group.categoryId,
-      rationale:
-        typeof group.rationale === "string" ? group.rationale.trim() : "",
-      impressions:
-        typeof group.impressions === "number" ? group.impressions : 0,
-      clicks: typeof group.clicks === "number" ? group.clicks : 0,
-      titles,
-    });
+
+    const opportunities = parsed.opportunities;
+    if (!Array.isArray(opportunities)) continue;
+
+    const validCategoryIds = new Set(input.categories.map((item) => item.id));
+
+    for (const item of opportunities.slice(0, 10)) {
+      if (!item || typeof item !== "object") continue;
+      const group = item as Record<string, unknown>;
+      if (
+        typeof group.categoryId !== "string" ||
+        !validCategoryIds.has(group.categoryId) ||
+        selectedCategoryIds.has(group.categoryId) ||
+        !Array.isArray(group.titles)
+      )
+        continue;
+
+      const titles: OpportunityAnalysisGroup["titles"] = [];
+      for (const candidate of group.titles) {
+        if (!candidate || typeof candidate !== "object") continue;
+        const value = candidate as Record<string, unknown>;
+        if (typeof value.text !== "string") continue;
+        const text = value.text.trim();
+        const normalized = normalizeTitle(text);
+        if (!text || seen.has(normalized)) continue;
+        seen.add(normalized);
+        titles.push({
+          text,
+          rationale:
+            typeof value.rationale === "string" ? value.rationale.trim() : "",
+        });
+      }
+
+      if (titles.length === 0) continue;
+      selectedCategoryIds.add(group.categoryId);
+      allResult.push({
+        categoryId: group.categoryId,
+        rationale:
+          typeof group.rationale === "string" ? group.rationale.trim() : "",
+        impressions:
+          typeof group.impressions === "number" ? group.impressions : 0,
+        clicks: typeof group.clicks === "number" ? group.clicks : 0,
+        titles,
+      });
+
+      if (allResult.length >= 10) break;
+    }
+
+    if (allResult.length >= 10) break;
   }
-  if (result.length === 0) {
+
+  if (allResult.length === 0) {
     return { status: "no_new" };
   }
-  return { status: "ok", groups: result };
+  return { status: "ok", groups: allResult };
 }
