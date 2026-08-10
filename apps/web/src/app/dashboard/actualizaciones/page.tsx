@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { sectionStyle, h2Style } from "@/components/dashboard-ui";
+import ConfigurationStatus from "@/components/ConfigurationStatus";
 
 type Categoria = "nuevas-herramientas" | "arreglos";
 
@@ -80,6 +81,9 @@ export default function ActualizacionesPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* Estado de configuración — solo visible aquí, no en todo el dashboard */}
+      <ConfigurationStatus />
+
       {/* Cabecera explicativa */}
       <div style={sectionStyle}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>

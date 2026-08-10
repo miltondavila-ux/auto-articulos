@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import DashboardNav from "@/components/DashboardNav";
 import LogoutButton from "@/components/LogoutButton";
 import StopImpersonationButton from "@/components/StopImpersonationButton";
-import ConfigurationStatus from "@/components/ConfigurationStatus";
 import { displayName, getSessionContext } from "@/lib/current-user";
 
 export default async function DashboardLayout({
@@ -158,7 +157,6 @@ export default async function DashboardLayout({
         desde una computadora para una mejor experiencia.
       </p>
       <DashboardNav />
-      <ConfigurationStatus />
       {children}
     </main>
   );
