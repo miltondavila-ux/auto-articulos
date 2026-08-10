@@ -17,6 +17,13 @@ interface ThreadsData {
   isExpired?: boolean;
 }
 
+interface InstagramData {
+  connected: boolean;
+  instagramBusinessAccountId?: string;
+  instagramUsername?: string;
+  isExpired?: boolean;
+}
+
 interface AppSettings {
   configured: boolean;
   appId: string | null;
@@ -27,9 +34,11 @@ interface AppSettings {
 
 export default function ThreadsSection() {
   const [data, setData] = useState<ThreadsData | null>(null);
+  const [instagramData, setInstagramData] = useState<InstagramData | null>(null);
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [disconnecting, setDisconnecting] = useState(false);
+  const [disconnectingInstagram, setDisconnectingInstagram] = useState(false);
   const [message, setMessage] = useState("");
 
   // Formulario de credenciales generales de la API (App ID / App Secret)
@@ -44,21 +53,28 @@ export default function ThreadsSection() {
   async function load() {
     try {
       setLoading(true);
-      const [resData, resSettings] = await Promise.all([
+      const [resData, resSettings, instagramResponse] = await Promise.all([
         fetch("/api/search-integrations/threads"),
         fetch("/api/search-integrations/threads/settings"),
+        fetch("/api/search-integrations/instagram"),
       ]);
 
       const json = await resData.json();
       const settingsJson = await resSettings.json();
 
       setData(json);
+      setInstagramData(
+        instagramResponse.ok
+          ? await instagramResponse.json()
+          : { connected: false },
+      );
       setSettings(settingsJson);
       if (settingsJson.rawAppId) {
         setAppIdInput(settingsJson.rawAppId);
       }
     } catch {
       setData({ connected: false });
+      setInstagramData({ connected: false });
       setSettings({ configured: false, appId: null });
     } finally {
       setLoading(false);
@@ -118,6 +134,22 @@ export default function ThreadsSection() {
       setMessage("Ocurrió un error al desconectar.");
     } finally {
       setDisconnecting(false);
+    }
+  }
+
+  async function handleDisconnectInstagram() {
+    if (!confirm("¿Estás seguro de que deseas desconectar tu cuenta de Instagram?")) return;
+
+    setDisconnectingInstagram(true);
+    setMessage("");
+    try {
+      await fetch("/api/search-integrations/instagram", { method: "DELETE" });
+      setMessage("Cuenta de Instagram desconectada.");
+      await load();
+    } catch {
+      setMessage("Ocurrió un error al desconectar Instagram.");
+    } finally {
+      setDisconnectingInstagram(false);
     }
   }
 
@@ -447,69 +479,47 @@ export default function ThreadsSection() {
             </div>
           )}
 
-          {/* Estado de conexión del usuario y botón OAuth */}
-          {!data?.connected ? (
-            settings?.configured && (
-              <div
-                style={{
-                  background: "rgba(248, 250, 252, 0.8)",
-                  padding: 16,
-                  borderRadius: 12,
-                  border: "1px solid #e2e8f0",
-                  marginTop: 12,
-                }}
-              >
-                <p style={{ fontSize: 13, color: "#334155", margin: "0 0 12px 0" }}>
-                  Conecta tu cuenta de <strong>Threads</strong> para publicar hilos desde las oportunidades sociales.
-                </p>
-                <a
-                  href="/api/search-integrations/threads/connect"
-                  style={{
-                    ...secondaryButtonStyle,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                    background: "#000000",
-                    color: "#ffffff",
-                    border: "none",
-                    padding: "10px 18px",
-                    fontWeight: 700,
-                    textDecoration: "none",
-                    borderRadius: 8,
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                  }}
-                >
-                  🌀 Conectar Threads
-                </a>
-              </div>
-            )
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>
-              <div
-                style={{
-                  background: "#f8fafc",
-                  padding: "12px 16px",
-                  borderRadius: 10,
-                  border: "1px solid #e2e8f0",
-                  fontSize: 13,
-                }}
-              >
-                <div style={{ fontWeight: 600, color: "#1e293b" }}>
-                  Perfil vinculado: {data.threadsUsername ? `@${data.threadsUsername}` : data.threadsUserId}
-                </div>
-                <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>
-                  Estado del token: {data.isExpired ? "⚠️ Token expirado (requiere reconectar)" : "✓ Activo (Válido hasta " + (data.expiresAt ? new Date(data.expiresAt).toLocaleDateString("es-US") : "60 días") + ")"}
-                </div>
+          {/* Conexiones que comparten el mismo App ID y App Secret de Meta */}
+          {settings?.configured && (
+            <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+              <div style={{ background: "#f8fafc", padding: 14, borderRadius: 10, border: "1px solid #e2e8f0" }}>
+                <div style={{ fontWeight: 700, color: "#1e293b", marginBottom: 8 }}>Threads</div>
+                {data?.connected ? (
+                  <>
+                    <p style={{ fontSize: 13, color: "#475569" }}>
+                      Conectado: {data.threadsUsername ? `@${data.threadsUsername}` : data.threadsUserId}
+                    </p>
+                    <button onClick={handleDisconnect} disabled={disconnecting} style={disabledStyle(secondaryButtonStyle, disconnecting)}>
+                      {disconnecting ? "Desconectando..." : "Desconectar Threads"}
+                    </button>
+                  </>
+                ) : (
+                  <a href="/api/search-integrations/threads/connect" style={{ ...secondaryButtonStyle, display: "inline-flex", background: "#000", color: "#fff", border: "none", textDecoration: "none", fontWeight: 700 }}>
+                    Conectar Threads
+                  </a>
+                )}
               </div>
 
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <button
-                  onClick={handleDisconnect}
-                  disabled={disconnecting}
-                  style={disabledStyle(secondaryButtonStyle, disconnecting)}
-                >
-                  {disconnecting ? "Desconectando..." : "Desconectar Threads"}
-                </button>
+              <div style={{ background: "#f8fafc", padding: 14, borderRadius: 10, border: "1px solid #e2e8f0" }}>
+                <div style={{ fontWeight: 700, color: "#1e293b", marginBottom: 8 }}>Instagram</div>
+                {instagramData?.connected ? (
+                  <>
+                    <p style={{ fontSize: 13, color: "#475569" }}>
+                      Conectado: {instagramData.instagramUsername ? `@${instagramData.instagramUsername}` : instagramData.instagramBusinessAccountId}
+                    </p>
+                    <button onClick={handleDisconnectInstagram} disabled={disconnectingInstagram} style={disabledStyle(secondaryButtonStyle, disconnectingInstagram)}>
+                      {disconnectingInstagram ? "Desconectando..." : "Desconectar Instagram"}
+                    </button>
+                  </>
+                ) : (
+                  <a href="/api/search-integrations/instagram/connect" style={{ ...secondaryButtonStyle, display: "inline-flex", background: "linear-gradient(135deg, #f58529, #dd2a7b, #8134af)", color: "#fff", border: "none", textDecoration: "none", fontWeight: 700 }}>
+                    Conectar Instagram
+                  </a>
+                )}
+              </div>
+
+              <div style={{ background: "#f8fafc", padding: 14, borderRadius: 10, border: "1px solid #e2e8f0", color: "#64748b", fontSize: 13 }}>
+                <strong style={{ color: "#1e293b" }}>Facebook</strong>: conexión próximamente.
               </div>
             </div>
           )}
