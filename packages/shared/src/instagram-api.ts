@@ -57,6 +57,7 @@ export function getInstagramAuthUrl(
     scope,
     response_type: "code",
     state,
+    auth_type: "rerequest",
   });
 
   return `https://www.facebook.com/${GRAPH_API_VERSION}/dialog/oauth?${params.toString()}`;
@@ -129,7 +130,7 @@ export async function exchangeCodeForInstagramTokens(
 
   // Paso 3: Obtener las páginas de Facebook del usuario
   const pagesRes = await fetch(
-    `${GRAPH_API_URL}/me/accounts?access_token=${longLivedToken}`
+    `${GRAPH_API_URL}/me/accounts?fields=id,name,access_token&access_token=${longLivedToken}`
   );
 
   if (!pagesRes.ok) {
