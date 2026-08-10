@@ -227,6 +227,8 @@ async function processInstagramJob(job: {
 
   let result;
 
+  console.log(`[Instagram Publish] user=${job.userId} format=${format} businessAccountId=${integration.instagramBusinessAccountId}`);
+
   switch (format) {
     case "carousel": {
       const imageUrls: string[] = [];
@@ -239,6 +241,7 @@ async function processInstagramJob(job: {
         );
         if (url) imageUrls.push(url);
       }
+      console.log(`[Instagram Carousel] generated ${imageUrls.length} images:`, imageUrls.map(u => u.substring(0, 80)));
       if (imageUrls.length < 2) {
         throw new Error(`No se pudieron generar suficientes imágenes para el carrusel (solo ${imageUrls.length}).`);
       }
@@ -253,6 +256,7 @@ async function processInstagramJob(job: {
 
     case "reel-image": {
       const imageUrl = await generateInstagramImage(job.titleId || job.id, summary, "reel-image");
+      console.log(`[Instagram Reel-Image] generated image: ${imageUrl?.substring(0, 80)}`);
       if (!imageUrl) throw new Error("No se pudo generar la imagen estilo Reel.");
       result = await publishInstagramImage(
         accessToken,
@@ -265,6 +269,7 @@ async function processInstagramJob(job: {
 
     case "infografia": {
       const imageUrl = await generateInstagramImage(job.titleId || job.id, summary, "infografia");
+      console.log(`[Instagram Infografia] generated image: ${imageUrl?.substring(0, 80)}`);
       if (!imageUrl) throw new Error("No se pudo generar la infografía.");
       result = await publishInstagramImage(
         accessToken,

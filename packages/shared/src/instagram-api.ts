@@ -232,6 +232,7 @@ export async function publishInstagramImage(
   imageUrl: string,
   caption: string
 ): Promise<InstagramPublishResult> {
+  console.log(`[Instagram API] publishImage: businessAccountId=${instagramBusinessAccountId} imageUrl=${imageUrl.substring(0, 100)}`);
   const maxCaption = 2200;
   const safeCaption = caption.length > maxCaption
     ? caption.substring(0, maxCaption - 3) + "..."
