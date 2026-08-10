@@ -79,6 +79,13 @@ model User {
   // (carruseles, reels, infografías). Subidas como URLs de Vercel Blob.
   profilePhotoUrl                   String?
   businessLogoUrl                   String?
+  // Plantilla de prompt personalizada para la generación de imágenes de
+  // artículos y redes sociales. Null = usar el prompt por defecto del
+  // sistema. Guardado en texto plano (no sensible).
+  imagePrompt                       String?
+  // Plantilla de prompt personalizada para la generación de infografías
+  // de Instagram. Null = usar el prompt por defecto del sistema.
+  infographicPrompt                 String?
 
   credentials                Credential[]
   runs                       Run[]

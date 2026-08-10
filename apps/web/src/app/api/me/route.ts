@@ -16,14 +16,21 @@ export async function GET() {
     articleSignature: user.articleSignature,
     opportunitiesDisclosureAcceptedAt: user.opportunitiesDisclosureAcceptedAt,
     phone: user.phone,
+    imagePrompt: user.imagePrompt,
+    infographicPrompt: user.infographicPrompt,
   });
 }
 
 export async function PATCH(request: NextRequest) {
   const userId = await getCurrentUserId();
   const body = await request.json();
-  const data: { contentLanguage?: string; articleSignature?: string | null; phone?: string | null } =
-    {};
+  const data: {
+    contentLanguage?: string;
+    articleSignature?: string | null;
+    phone?: string | null;
+    imagePrompt?: string | null;
+    infographicPrompt?: string | null;
+  } = {};
 
   if ("contentLanguage" in body) {
     const { contentLanguage } = body;
@@ -81,10 +88,40 @@ export async function PATCH(request: NextRequest) {
     data.phone = trimmed || null;
   }
 
+  if ("imagePrompt" in body) {
+    const { imagePrompt } = body;
+    if (imagePrompt !== null && typeof imagePrompt !== "string") {
+      return NextResponse.json(
+        { error: "imagePrompt debe ser texto o null" },
+        { status: 400 },
+      );
+    }
+    const trimmed = typeof imagePrompt === "string" ? imagePrompt.trim() : "";
+    data.imagePrompt = trimmed || null;
+  }
+
+  if ("infographicPrompt" in body) {
+    const { infographicPrompt } = body;
+    if (infographicPrompt !== null && typeof infographicPrompt !== "string") {
+      return NextResponse.json(
+        { error: "infographicPrompt debe ser texto o null" },
+        { status: 400 },
+      );
+    }
+    const trimmed = typeof infographicPrompt === "string" ? infographicPrompt.trim() : "";
+    data.infographicPrompt = trimmed || null;
+  }
+
   const user = await prisma.user.update({
     where: { id: userId },
     data,
-    select: { contentLanguage: true, articleSignature: true, phone: true },
+    select: {
+      contentLanguage: true,
+      articleSignature: true,
+      phone: true,
+      imagePrompt: true,
+      infographicPrompt: true,
+    },
   });
 
   return NextResponse.json(user);
