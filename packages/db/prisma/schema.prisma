@@ -71,6 +71,9 @@ model User {
   // (ver reservation.ts), con vencimiento automático como red de
   // seguridad si un proceso muere sin liberarlo.
   workerBusyUntil                   DateTime?
+  // Control de acceso a publicación en Instagram. Solo el admin puede
+  // activarlo por usuario. Default: false (nadie tiene acceso).
+  allowInstagramPublishing          Boolean   @default(false)
 
   credentials                Credential[]
   runs                       Run[]

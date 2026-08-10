@@ -34,6 +34,7 @@ interface UserRow {
   maxTitlesPerBatch: number;
   platformDomain: string;
   contentLanguage: string;
+  allowInstagramPublishing: boolean;
   opportunitiesDisclosureAcceptedAt: string | null;
   createdAt: string;
   articlesPublished: number;
