@@ -28,8 +28,8 @@ export interface InstagramPublishResult {
  * Obtiene las credenciales de la aplicación de Instagram (App ID y App Secret).
  */
 export function getInstagramAppCredentials(overrideId?: string, overrideSecret?: string) {
-  const appId = overrideId || process.env.INSTAGRAM_APP_ID;
-  const appSecret = overrideSecret || process.env.INSTAGRAM_APP_SECRET;
+  const appId = overrideId || process.env.META_APP_ID || process.env.INSTAGRAM_APP_ID;
+  const appSecret = overrideSecret || process.env.META_APP_SECRET || process.env.INSTAGRAM_APP_SECRET;
 
   if (!appId || !appSecret) {
     throw new Error(

@@ -29,7 +29,7 @@ export default function ThreadsSection() {
   async function load() {
     try {
       setLoading(true);
-      const response = await fetch("/api/search-integrations/threads/settings");
+      const response = await fetch("/api/search-integrations/instagram/settings");
       const result = await response.json();
       setSettings(result);
       if (result.rawAppId) setAppId(result.rawAppId);
@@ -53,7 +53,7 @@ export default function ThreadsSection() {
     setSaving(true);
     setMessage("");
     try {
-      const response = await fetch("/api/search-integrations/threads/settings", {
+      const response = await fetch("/api/search-integrations/instagram/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
