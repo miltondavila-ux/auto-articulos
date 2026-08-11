@@ -631,12 +631,16 @@ async function createArticleDraft(
   // correctamente, dejando el botón "Guardar cambios" deshabilitado con el mensaje
   // "Este campo es obligatorio". Verificamos que el editor tenga contenido real
   // y, si no, lo inyectamos directamente vía JavaScript.
-  const contentResult = await verifyAndFixContentEditor(page, contentHtml);
+  await page.waitForTimeout(2000);
+  const editorInfo = await diagnoseEditorState(page);
   await onStep(
-    contentResult.ok
-      ? `Contenido en editor OK (detectado: ${contentResult.editor}).`
-      : `Aviso: no se pudo inyectar contenido en el editor (${contentResult.editor}).`,
+    `Editor post-Usar contenido: textarea#contentes=${editorInfo.contentesLen}chars, contenteditable=${editorInfo.editableLen}chars, saveBtn=${editorInfo.saveBtnEnabled ? "habilitado" : "DESHABILITADO"}`,
   );
+
+  if (!editorInfo.saveBtnEnabled) {
+    await onStep("El contenido no llegó al editor. Intentando inyección múltiple...");
+    await injectContentIntoEditor(page, contentHtml, onStep);
+  }
 
   // Bug real encontrado el 29/7/2026: la IA a veces escribe el resumen por
   // encima del límite de 300 caracteres del campo #excerptes. La plataforma
@@ -694,148 +698,165 @@ async function createArticleDraft(
   return { summary, contentHtml, finalTitle };
 }
 
-async function verifyAndFixContentEditor(
+async function diagnoseEditorState(page: Page): Promise<{
+  contentesLen: number;
+  editableLen: number;
+  saveBtnEnabled: boolean;
+}> {
+  return page.evaluate(() => {
+    const contentesEl = document.querySelector("#contentes") as HTMLTextAreaElement | null;
+    const editableEl = document.querySelector("[contenteditable='true']") as HTMLElement | null;
+    const saveBtn = Array.from(document.querySelectorAll("button")).find((b) =>
+      /guardar cambios|save changes/i.test(b.textContent || ""),
+    ) as HTMLButtonElement | undefined;
+
+    return {
+      contentesLen: (contentesEl?.value || "").replace(/<[^>]+>/g, "").trim().length,
+      editableLen: (editableEl?.innerHTML || "").replace(/<[^>]+>/g, "").trim().length,
+      saveBtnEnabled: saveBtn ? !saveBtn.disabled && !saveBtn.classList.contains("disabled") : false,
+    };
+  });
+}
+
+async function injectContentIntoEditor(
   page: Page,
   contentHtml: string,
-): Promise<{ ok: boolean; editor: string }> {
-  try {
-    const result = await page.evaluate((html) => {
-      // Paso 1: Identificar el campo que tiene el error "required"
-      const requiredErrors = Array.from(
-        document.querySelectorAll('[class*="error"], [class*="invalid"], [class*="required"], .invalid, .red-text, [role="alert"]'),
-      ).filter((el) => {
-        const t = (el.textContent || "").trim();
-        return /required|obligatorio|mandatory/i.test(t) && (el as HTMLElement).offsetParent !== null;
-      });
+  onStep: OnStep,
+): Promise<void> {
+  const plainText = contentHtml
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
-      // Paso 2: Por cada error "required", buscar el input/textarea asociado
-      for (const errEl of requiredErrors) {
-        const scope = errEl.closest("div, .input-field, .row, section, .col") ?? errEl.parentElement;
-        if (!scope) continue;
-
-        // Buscar textarea o contenteditable dentro del scope
-        const field = scope.querySelector("textarea, [contenteditable='true']") as
-          | HTMLTextAreaElement
-          | HTMLElement
-          | null;
-        if (!field) continue;
-
-        const isTextarea = field.tagName === "TEXTAREA";
-        const currentLen = isTextarea
-          ? ((field as HTMLTextAreaElement).value || "").replace(/<[^>]+>/g, "").trim().length
-          : ((field as HTMLElement).innerHTML || "").replace(/<[^>]+>/g, "").trim().length;
-
-        if (currentLen < 100) {
-          if (isTextarea) {
-            (field as HTMLTextAreaElement).value = html;
-            field.dispatchEvent(new Event("input", { bubbles: true }));
-            field.dispatchEvent(new Event("change", { bubbles: true }));
-          } else {
-            (field as HTMLElement).innerHTML = html;
-            field.dispatchEvent(new Event("input", { bubbles: true }));
-            field.dispatchEvent(new Event("change", { bubbles: true }));
-          }
-          const after = isTextarea
-            ? ((field as HTMLTextAreaElement).value || "").replace(/<[^>]+>/g, "").trim().length
-            : ((field as HTMLElement).innerHTML || "").replace(/<[^>]+>/g, "").trim().length;
-          return { ok: after > 100, editor: `error-scope:${field.id || (field as HTMLTextAreaElement).name || field.tagName}` };
+  // Estrategia 1: TinyMCE setContent
+  const tinymceResult = await page.evaluate((html) => {
+    const tinymce = (window as unknown as { tinymce?: { editors?: Array<{ setContent: (h: string) => void; id: string }> } }).tinymce;
+    if (tinymce?.editors?.length) {
+      for (const ed of tinymce.editors) {
+        if (ed.setContent) {
+          ed.setContent(html);
+          return true;
         }
       }
+    }
+    return false;
+  }, contentHtml).catch(() => false);
 
-      // Paso 3: Si no hay error visible, buscar textarea con id que incluya "contentes"
-      // (el mensaje de error muestra "contentesBarras de herramientas del editor")
-      const allTextareas = Array.from(document.querySelectorAll("textarea")) as HTMLTextAreaElement[];
-      for (const ta of allTextareas) {
-        if (/contentes/i.test(ta.id)) {
-          if (ta.value.replace(/<[^>]+>/g, "").trim().length < 100) {
-            ta.value = html;
-            ta.dispatchEvent(new Event("input", { bubbles: true }));
-            ta.dispatchEvent(new Event("change", { bubbles: true }));
-          }
-          return { ok: ta.value.replace(/<[^>]+>/g, "").trim().length > 100, editor: `contentes:${ta.id}` };
-        }
-      }
-
-      // Paso 4: TinyMCE
-      const tinymce = (window as unknown as { tinymce?: {
-        editors?: Array<{ id: string; getContent: () => string; setContent: (h: string) => void }>;
-      } }).tinymce;
-      if (tinymce?.editors?.length) {
-        for (const ed of tinymce.editors) {
-          if (!ed.getContent || !ed.setContent) continue;
-          const cur = (ed.getContent() || "").replace(/<[^>]+>/g, "").trim().length;
-          if (cur < 100) ed.setContent(html);
-          const after = (ed.getContent() || "").replace(/<[^>]+>/g, "").trim().length;
-          return { ok: after > 100, editor: `tinymce:${ed.id}` };
-        }
-      }
-
-      // Paso 5: CKEditor
-      const ckeditor = (window as unknown as { CKEDITOR?: {
-        instances?: Record<string, { getData: () => string; setData: (h: string) => void }>;
-      } }).CKEDITOR;
-      if (ckeditor?.instances) {
-        for (const key of Object.keys(ckeditor.instances)) {
-          const inst = ckeditor.instances[key];
-          if (!inst.getData || !inst.setData) continue;
-          const cur = (inst.getData() || "").replace(/<[^>]+>/g, "").trim().length;
-          if (cur < 100) inst.setData(html);
-          const after = (inst.getData() || "").replace(/<[^>]+>/g, "").trim().length;
-          return { ok: after > 100, editor: `ckeditor:${key}` };
-        }
-      }
-
-      // Paso 6: Cualquier textarea/contenteditable con contenido o id relacionado
-      const candidates = Array.from(
-        document.querySelectorAll("textarea, [contenteditable='true']"),
-      ) as (HTMLTextAreaElement | HTMLElement)[];
-      for (const el of candidates) {
-        const id = (el.id || "").toLowerCase();
-        const name = ((el as HTMLTextAreaElement).name || "").toLowerCase();
-        if (/content|contenido|cuerpo|body|article|editor|materia|text/i.test(id) ||
-            /content|contenido|cuerpo|body|article|editor|materia|text/i.test(name)) {
-          const isTA = el.tagName === "TEXTAREA";
-          const cur = isTA
-            ? ((el as HTMLTextAreaElement).value || "").replace(/<[^>]+>/g, "").trim().length
-            : ((el as HTMLElement).innerHTML || "").replace(/<[^>]+>/g, "").trim().length;
-          if (cur < 100) {
-            if (isTA) {
-              (el as HTMLTextAreaElement).value = html;
-            } else {
-              (el as HTMLElement).innerHTML = html;
-            }
-            el.dispatchEvent(new Event("input", { bubbles: true }));
-            el.dispatchEvent(new Event("change", { bubbles: true }));
-          }
-          const after = isTA
-            ? ((el as HTMLTextAreaElement).value || "").replace(/<[^>]+>/g, "").trim().length
-            : ((el as HTMLElement).innerHTML || "").replace(/<[^>]+>/g, "").trim().length;
-          return { ok: after > 100, editor: `${el.tagName}#${id || name}` };
-        }
-      }
-
-      // Paso 7: Buscar en iframes
-      const iframes = Array.from(document.querySelectorAll("iframe"));
-      for (const iframe of iframes) {
-        try {
-          const doc = iframe.contentDocument || iframe.contentWindow?.document;
-          if (!doc) continue;
-          const body = doc.querySelector("[contenteditable='true']") as HTMLElement | null;
-          if (body && body.innerHTML.replace(/<[^>]+>/g, "").trim().length < 100) {
-            body.innerHTML = html;
-            body.dispatchEvent(new Event("input", { bubbles: true }));
-            return { ok: true, editor: `iframe:${iframe.id || "editor"}` };
-          }
-        } catch { /* cross-origin */ }
-      }
-
-      return { ok: false, editor: "no encontrado" };
-    }, contentHtml);
-
-    return result;
-  } catch {
-    return { ok: false, editor: "exception" };
+  if (tinymceResult) {
+    await onStep("Inyección vía TinyMCE setContent ejecutada.");
+    await page.waitForTimeout(1000);
+    const state = await diagnoseEditorState(page);
+    if (state.saveBtnEnabled) {
+      await onStep("✓ Guardar cambios HABILITADO después de TinyMCE.");
+      return;
+    }
   }
+
+  // Estrategia 2: CKEditor setData
+  const ckResult = await page.evaluate((html) => {
+    const ck = (window as unknown as { CKEDITOR?: { instances?: Record<string, { setData: (h: string) => void }> } }).CKEDITOR;
+    if (ck?.instances) {
+      for (const key of Object.keys(ck.instances)) {
+        try {
+          ck.instances[key].setData(html);
+          return true;
+        } catch { /* intentar siguiente */ }
+      }
+    }
+    return false;
+  }, contentHtml).catch(() => false);
+
+  if (ckResult) {
+    await onStep("Inyección vía CKEditor setData ejecutada.");
+    await page.waitForTimeout(1000);
+    const state = await diagnoseEditorState(page);
+    if (state.saveBtnEnabled) {
+      await onStep("✓ Guardar cambios HABILITADO después de CKEditor.");
+      return;
+    }
+  }
+
+  // Estrategia 3: Encontrar contenteditable visible y usar execCommand('insertHTML')
+  const editableResult = await page.evaluate((html) => {
+    const editables = Array.from(document.querySelectorAll("[contenteditable='true']")) as HTMLElement[];
+    for (const el of editables) {
+      if ((el as HTMLElement).offsetParent !== null) {
+        el.focus();
+        document.execCommand("selectAll", false, undefined);
+        document.execCommand("insertHTML", false, html);
+        return true;
+      }
+    }
+    return false;
+  }, contentHtml).catch(() => false);
+
+  if (editableResult) {
+    await onStep("Inyección vía execCommand insertHTML en contenteditable.");
+    await page.waitForTimeout(1000);
+    const state = await diagnoseEditorState(page);
+    if (state.saveBtnEnabled) {
+      await onStep("✓ Guardar cambios HABILITADO después de insertHTML.");
+      return;
+    }
+  }
+
+  // Estrategia 4: Click en el editor visual + keyboard.insertText (simula tecleo real)
+  const visualEditor = page.locator("[contenteditable='true']").first();
+  const isVisible = await visualEditor.isVisible().catch(() => false);
+  if (isVisible) {
+    await visualEditor.click();
+    await page.waitForTimeout(300);
+    await page.keyboard.press("Control+a");
+    await page.keyboard.press("Delete");
+    await page.waitForTimeout(200);
+    await page.keyboard.insertText(plainText.slice(0, 500));
+    await page.waitForTimeout(1000);
+    const state = await diagnoseEditorState(page);
+    if (state.saveBtnEnabled) {
+      await onStep("✓ Guardar cambios HABILITADO después de keyboard.insertText.");
+      return;
+    }
+  }
+
+  // Estrategia 5: Materialize - el textarea #contentes puede necesitar un trigger especial
+  // Materialize hace sync desde el textarea al visual con ciertos eventos
+  const materializeResult = await page.evaluate((html) => {
+    const ta = document.querySelector("#contentes") as HTMLTextAreaElement | null;
+    if (!ta) return false;
+
+    // Materialize: destruir y recrear el editor
+    ta.value = html;
+    ta.style.display = "block";
+    ta.style.visibility = "visible";
+    ta.style.height = "auto";
+    ta.style.position = "relative";
+    ta.classList.remove("initialized");
+
+    // Disparar eventos en orden específico para Materialize
+    ta.dispatchEvent(new Event("focus", { bubbles: true }));
+    ta.dispatchEvent(new Event("input", { bubbles: true }));
+    ta.dispatchEvent(new Event("keyup", { bubbles: true }));
+    ta.dispatchEvent(new Event("change", { bubbles: true }));
+    ta.dispatchEvent(new Event("blur", { bubbles: true }));
+
+    // Si hay una instancia Materialize de TextareaResize, triggers
+    const instance = (ta as unknown as { M_TextareaResize?: { handleResize?: () => void } }).M_TextareaResize;
+    if (instance?.handleResize) instance.handleResize();
+
+    return true;
+  }, contentHtml).catch(() => false);
+
+  if (materializeResult) {
+    await onStep("Inyección vía Materialize textarea trigger.");
+    await page.waitForTimeout(1500);
+    const state = await diagnoseEditorState(page);
+    if (state.saveBtnEnabled) {
+      await onStep("✓ Guardar cambios HABILITADO después de Materialize trigger.");
+      return;
+    }
+  }
+
+  await onStep("⚠️ Ninguna estrategia logró habilitar Guardar cambios. Se continúa de todas formas.");
 }
 
 const MAX_IMAGE_ATTEMPTS = 3;
@@ -1514,31 +1535,6 @@ async function saveAndGetUrl(
   await onStep(
     `Diagnóstico de guardado: sigue en el formulario=${stillOnForm}, botón deshabilitado=${buttonDisabled}, mensajes visibles="${alertText}"`,
   );
-
-  if (stillOnForm && buttonDisabled) {
-    await onStep("El botón está deshabilitado; intentando forzar envío del formulario vía JavaScript...");
-    const forced = await page.evaluate(() => {
-      const form = document.querySelector("form");
-      if (!form) return { ok: false, motivo: "no se encontró formulario" };
-      // Remover atributo disabled del botón por si acaso
-      const btn = Array.from(document.querySelectorAll("button")).find((b) =>
-        /guardar cambios|save changes/i.test(b.textContent || ""),
-      ) as HTMLButtonElement | undefined;
-      if (btn) {
-        btn.disabled = false;
-        btn.classList.remove("disabled");
-      }
-      // Intentar submit directo
-      try {
-        form.submit();
-        return { ok: true, motivo: "form.submit() ejecutado" };
-      } catch (e) {
-        return { ok: false, motivo: (e as Error).message };
-      }
-    });
-    await onStep(`Resultado del intento forzado: ${JSON.stringify(forced)}`);
-    await page.waitForLoadState("networkidle", { timeout: NAV_TIMEOUT_MS }).catch(() => {});
-  }
 
   await onStep(
     `Buscando el artículo publicado por su título: "${expectedTitle}"...`,
