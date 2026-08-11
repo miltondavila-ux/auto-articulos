@@ -553,6 +553,19 @@ export default function OportunidadesRedesPage() {
                         <div style={{ height: "100%", width: opp.status === "processing" ? "70%" : "30%", borderRadius: 2, background: "linear-gradient(90deg, #3b82f6, #f59e0b)", transition: "width 1s ease", animation: "pulse 1.5s ease-in-out infinite" }} />
                       </div>
                     )}
+                    {opp.status === "error" && opp.errorLog && (
+                      <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: 6, background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)" }}>
+                        <details style={{ fontSize: 12, color: "#ef4444" }}>
+                          <summary style={{ cursor: "pointer", fontWeight: 600 }}>❌ Ver detalle del error</summary>
+                          <p style={{ margin: "8px 0 0", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{opp.errorLog}</p>
+                        </details>
+                      </div>
+                    )}
+                    {opp.status === "published" && opp.postId && (
+                      <div style={{ marginTop: 12, fontSize: 12, color: "#10b981" }}>
+                        ✅ Publicado — ID: {opp.postId}
+                      </div>
+                    )}
                   </div>
                   );
                 })}
