@@ -625,6 +625,19 @@ async function createArticleDraft(
   await dialog.getByRole("button", { name: TEXT_USAR_CONTENIDO }).click();
   await dialog.waitFor({ state: "hidden", timeout: NAV_TIMEOUT_MS });
 
+  // Bug encontrado el 11/8/2026 (cuenta de Lorena Álvarez): en algunas cuentas,
+  // "Usar contenido" transfiere el texto del modal al editor visual (WYSIWYG)
+  // pero el campo subyacente del contenido queda vacío o el editor no sincroniza
+  // correctamente, dejando el botón "Guardar cambios" deshabilitado con el mensaje
+  // "Este campo es obligatorio". Verificamos que el editor tenga contenido real
+  // y, si no, lo inyectamos directamente vía JavaScript.
+  const contentReady = await verifyAndFixContentEditor(page, contentHtml);
+  await onStep(
+    contentReady
+      ? "Contenido transferido correctamente al editor."
+      : "Aviso: no se pudo verificar el contenido del editor; se intenta guardar igual.",
+  );
+
   // Bug real encontrado el 29/7/2026: la IA a veces escribe el resumen por
   // encima del límite de 300 caracteres del campo #excerptes. La plataforma
   // no lanza ningún error visible para Playwright: solo deshabilita
@@ -679,6 +692,96 @@ async function createArticleDraft(
   }
 
   return { summary, contentHtml, finalTitle };
+}
+
+/**
+ * Verifica que el contenido se haya transferido correctamente al editor visual
+ * (WYSIWYG) después de hacer clic en "Usar contenido". En algunas cuentas (ej.
+ * Lorena Álvarez, 11/8/2026) el contenido no llega al campo subyacente, lo que
+ * deja "Guardar cambios" deshabilitado con "Este campo es obligatorio".
+ *
+ * Estrategia:
+ * 1. Buscar el campo de contenido real (textarea oculto o contenteditable).
+ * 2. Si está vacío, inyectar el HTML directamente vía JavaScript (TinyMCE y
+ *    editores similares exponen API para setContent).
+ * 3. Confirmar que el contenido quedó.
+ */
+async function verifyAndFixContentEditor(
+  page: Page,
+  contentHtml: string,
+): Promise<boolean> {
+  try {
+    const result = await page.evaluate((html) => {
+      // 1. TinyMCE (el más común en estos CMS)
+      const tinymce = (window as unknown as { tinymce?: {
+        get: (id: string) => { getContent: () => string; setContent: (h: string) => void } | null;
+        editors?: Array<{ id: string; getContent: () => string; setContent: (h: string) => void }>;
+      } }).tinymce;
+      if (tinymce) {
+        const editors = tinymce.editors || [];
+        for (const ed of editors) {
+          if (!ed.getContent || !ed.setContent) continue;
+          const current = ed.getContent();
+          if (!current || current.length < 50) {
+            ed.setContent(html);
+          }
+          return { ok: (ed.getContent()?.length ?? 0) > 50, editor: `tinymce:${ed.id}` };
+        }
+      }
+
+      // 2. CKEditor
+      const ckeditor = (window as unknown as { CKEDITOR?: {
+        instances: Record<string, { getData: () => string; setData: (h: string) => void }>;
+      } }).CKEDITOR;
+      if (ckeditor) {
+        const instances = ckeditor.instances || {};
+        for (const key of Object.keys(instances)) {
+          const inst = instances[key];
+          if (!inst.getData || !inst.setData) continue;
+          const current = inst.getData();
+          if (!current || current.length < 50) {
+            inst.setData(html);
+          }
+          return { ok: (inst.getData()?.length ?? 0) > 50, editor: `ckeditor:${key}` };
+        }
+      }
+
+      // 3. Buscar textarea oculto con id/name que indique contenido principal
+      const candidates = Array.from(
+        document.querySelectorAll("textarea, [contenteditable='true']"),
+      ) as (HTMLTextAreaElement | HTMLElement)[];
+      for (const el of candidates) {
+        const id = el.id?.toLowerCase() || "";
+        const name = (el as HTMLTextAreaElement).name?.toLowerCase() || "";
+        if (/content|contenido|article|cuerpo|body/i.test(id) || /content|contenido|article|cuerpo|body/i.test(name)) {
+          const isTextarea = el.tagName === "TEXTAREA";
+          const current = isTextarea
+            ? (el as HTMLTextAreaElement).value
+            : (el as HTMLElement).innerHTML;
+          if (!current || current.replace(/<[^>]+>/g, "").trim().length < 50) {
+            if (isTextarea) {
+              (el as HTMLTextAreaElement).value = html;
+              el.dispatchEvent(new Event("input", { bubbles: true }));
+              el.dispatchEvent(new Event("change", { bubbles: true }));
+            } else {
+              (el as HTMLElement).innerHTML = html;
+              el.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+          }
+          const after = isTextarea
+            ? (el as HTMLTextAreaElement).value
+            : (el as HTMLElement).innerHTML;
+          return { ok: after.replace(/<[^>]+>/g, "").trim().length > 50, editor: `${el.tagName}#${id || name}` };
+        }
+      }
+
+      return { ok: false, editor: "no encontrado" };
+    }, contentHtml);
+
+    return result.ok;
+  } catch {
+    return false;
+  }
 }
 
 const MAX_IMAGE_ATTEMPTS = 3;
@@ -1334,15 +1437,6 @@ async function saveAndGetUrl(
     .waitForLoadState("networkidle", { timeout: NAV_TIMEOUT_MS })
     .catch(() => {});
 
-  // Diagnóstico: se han visto fallos repetidos de guardado SOLO en la
-  // ejecución automatizada (nunca al reproducir el mismo flujo a mano), sin
-  // ninguna pista visible en el log de texto. La primera vez que se capturó
-  // esto (30/7/2026), la captura mostró que seguíamos en el formulario de
-  // edición (no se redirigió a la lista) apenas ~1s después del clic —
-  // sospecha de que el clic no disparó el guardado real o de que hay algún
-  // mensaje de error fuera del viewport. Por eso: página completa + estado
-  // real del botón + cualquier texto tipo alerta/error visible en ese
-  // momento, como evento normal (no error) para verlo en el Historial.
   const stillOnForm = await page
     .getByRole("button", { name: TEXT_GUARDAR_CAMBIOS })
     .first()
@@ -1366,18 +1460,7 @@ async function saveAndGetUrl(
   await onStep(
     `Diagnóstico de guardado: sigue en el formulario=${stillOnForm}, botón deshabilitado=${buttonDisabled}, mensajes visibles="${alertText}"`,
   );
-  // Bug de consumo de datos encontrado el 30/7/2026: esta captura se estaba
-  // guardando SIEMPRE, incluso cuando el artículo se publica bien (que es el
-  // caso normal). Cada captura pesa cientos de KB en base64, y el dashboard
-  // la vuelve a transferir cada vez que alguien mira el progreso en vivo o el
-  // historial — eso agotó la cuota gratuita de transferencia de Neon. Ahora
-  // se captura en memoria pero solo se guarda en la base de datos si
-  // realmente no se encuentra el artículo después (más abajo).
-  const postSaveScreenshot = await captureScreenshotBase64(page);
 
-  // Localizamos el artículo por el título real que la IA le asignó (guardado
-  // en createArticleDraft), no por posición de fila ni por comparar N° antes
-  // vs. después: se pidió explícitamente localizarlo así.
   await onStep(
     `Buscando el artículo publicado por su título: "${expectedTitle}"...`,
   );
@@ -1392,35 +1475,7 @@ async function saveAndGetUrl(
     await page.waitForTimeout(1500);
   }
 
-  // No se encontró dentro del plazo: recién aquí vale la pena guardar la
-  // captura de justo después de guardar, más una última del listado tal
-  // como quedó, para diagnosticar sin adivinar.
-  if (postSaveScreenshot) {
-    await onStep(
-      `DIAGNÓSTICO [Estado justo después de hacer clic en Guardar cambios]: data:image/jpeg;base64,${postSaveScreenshot}`,
-    );
-  }
-  await emitScreenshot(
-    page,
-    "Listado de artículos al agotarse el plazo de búsqueda",
-    onStep,
-  );
   return null;
 }
 
-async function captureScreenshotBase64(page: Page): Promise<string | null> {
-  const buffer = await page
-    .screenshot({ type: "jpeg", quality: 40, fullPage: true })
-    .catch(() => null);
-  return buffer ? buffer.toString("base64") : null;
-}
 
-async function emitScreenshot(
-  page: Page,
-  label: string,
-  onStep: OnStep,
-): Promise<void> {
-  const base64 = await captureScreenshotBase64(page);
-  if (!base64) return;
-  await onStep(`DIAGNÓSTICO [${label}]: data:image/jpeg;base64,${base64}`);
-}
