@@ -694,85 +694,111 @@ async function createArticleDraft(
   return { summary, contentHtml, finalTitle };
 }
 
-/**
- * Verifica que el contenido se haya transferido correctamente al editor visual
- * (WYSIWYG) después de hacer clic en "Usar contenido". En algunas cuentas (ej.
- * Lorena Álvarez, 11/8/2026) el contenido no llega al campo subyacente, lo que
- * deja "Guardar cambios" deshabilitado con "Este campo es obligatorio".
- *
- * Estrategia:
- * 1. Buscar el campo de contenido real (textarea oculto o contenteditable).
- * 2. Si está vacío, inyectar el HTML directamente vía JavaScript (TinyMCE y
- *    editores similares exponen API para setContent).
- * 3. Confirmar que el contenido quedó.
- */
 async function verifyAndFixContentEditor(
   page: Page,
   contentHtml: string,
 ): Promise<boolean> {
   try {
     const result = await page.evaluate((html) => {
-      // 1. TinyMCE (el más común en estos CMS)
+      // Estrategia 1: TinyMCE
       const tinymce = (window as unknown as { tinymce?: {
-        get: (id: string) => { getContent: () => string; setContent: (h: string) => void } | null;
         editors?: Array<{ id: string; getContent: () => string; setContent: (h: string) => void }>;
       } }).tinymce;
-      if (tinymce) {
-        const editors = tinymce.editors || [];
-        for (const ed of editors) {
+      if (tinymce?.editors?.length) {
+        for (const ed of tinymce.editors) {
           if (!ed.getContent || !ed.setContent) continue;
-          const current = ed.getContent();
-          if (!current || current.length < 50) {
+          const cur = ed.getContent() || "";
+          if (cur.replace(/<[^>]+>/g, "").trim().length < 100) {
             ed.setContent(html);
           }
-          return { ok: (ed.getContent()?.length ?? 0) > 50, editor: `tinymce:${ed.id}` };
+          const after = ed.getContent() || "";
+          return { ok: after.replace(/<[^>]+>/g, "").trim().length > 100, editor: `tinymce:${ed.id}` };
         }
       }
 
-      // 2. CKEditor
+      // Estrategia 2: CKEditor
       const ckeditor = (window as unknown as { CKEDITOR?: {
-        instances: Record<string, { getData: () => string; setData: (h: string) => void }>;
+        instances?: Record<string, { getData: () => string; setData: (h: string) => void }>;
       } }).CKEDITOR;
-      if (ckeditor) {
-        const instances = ckeditor.instances || {};
-        for (const key of Object.keys(instances)) {
-          const inst = instances[key];
+      if (ckeditor?.instances) {
+        for (const key of Object.keys(ckeditor.instances)) {
+          const inst = ckeditor.instances[key];
           if (!inst.getData || !inst.setData) continue;
-          const current = inst.getData();
-          if (!current || current.length < 50) {
+          const cur = inst.getData() || "";
+          if (cur.replace(/<[^>]+>/g, "").trim().length < 100) {
             inst.setData(html);
           }
-          return { ok: (inst.getData()?.length ?? 0) > 50, editor: `ckeditor:${key}` };
+          const after = inst.getData() || "";
+          return { ok: after.replace(/<[^>]+>/g, "").trim().length > 100, editor: `ckeditor:${key}` };
         }
       }
 
-      // 3. Buscar textarea oculto con id/name que indique contenido principal
+      // Estrategia 3: textarea o contenteditable con id/name que indique contenido
+      // (incluye "contentes", "content", "contenido", "cuerpo", "body", "article", "editor")
       const candidates = Array.from(
         document.querySelectorAll("textarea, [contenteditable='true']"),
       ) as (HTMLTextAreaElement | HTMLElement)[];
+
+      const isContentField = (id: string, name: string): boolean => {
+        return /content|contenido|cuerpo|body|article|editor|materia|principal|text/i.test(id) ||
+               /content|contenido|cuerpo|body|article|editor|materia|principal|text/i.test(name);
+      };
+
       for (const el of candidates) {
-        const id = el.id?.toLowerCase() || "";
-        const name = (el as HTMLTextAreaElement).name?.toLowerCase() || "";
-        if (/content|contenido|article|cuerpo|body/i.test(id) || /content|contenido|article|cuerpo|body/i.test(name)) {
-          const isTextarea = el.tagName === "TEXTAREA";
-          const current = isTextarea
-            ? (el as HTMLTextAreaElement).value
-            : (el as HTMLElement).innerHTML;
-          if (!current || current.replace(/<[^>]+>/g, "").trim().length < 50) {
-            if (isTextarea) {
-              (el as HTMLTextAreaElement).value = html;
-              el.dispatchEvent(new Event("input", { bubbles: true }));
-              el.dispatchEvent(new Event("change", { bubbles: true }));
-            } else {
-              (el as HTMLElement).innerHTML = html;
-              el.dispatchEvent(new Event("input", { bubbles: true }));
-            }
+        const id = (el.id || "").toLowerCase();
+        const name = ((el as HTMLTextAreaElement).name || "").toLowerCase();
+        if (!isContentField(id, name)) continue;
+
+        const isTextarea = el.tagName === "TEXTAREA";
+        const current = isTextarea
+          ? (el as HTMLTextAreaElement).value || ""
+          : (el as HTMLElement).innerHTML || "";
+
+        if (current.replace(/<[^>]+>/g, "").trim().length < 100) {
+          if (isTextarea) {
+            (el as HTMLTextAreaElement).value = html;
+            el.dispatchEvent(new Event("input", { bubbles: true }));
+            el.dispatchEvent(new Event("change", { bubbles: true }));
+          } else {
+            (el as HTMLElement).innerHTML = html;
+            el.dispatchEvent(new Event("input", { bubbles: true }));
+            el.dispatchEvent(new Event("change", { bubbles: true }));
           }
-          const after = isTextarea
-            ? (el as HTMLTextAreaElement).value
-            : (el as HTMLElement).innerHTML;
-          return { ok: after.replace(/<[^>]+>/g, "").trim().length > 50, editor: `${el.tagName}#${id || name}` };
         }
+
+        const after = isTextarea
+          ? (el as HTMLTextAreaElement).value || ""
+          : (el as HTMLElement).innerHTML || "";
+        return { ok: after.replace(/<[^>]+>/g, "").trim().length > 100, editor: `${el.tagName}#${id || name}` };
+      }
+
+      // Estrategia 4: buscar cualquier textarea vacío que sea grande (campo principal)
+      const allTextareas = Array.from(document.querySelectorAll("textarea")) as HTMLTextAreaElement[];
+      for (const ta of allTextareas) {
+        if (ta.value.length > 100) continue; // Ya tiene contenido
+        if (ta.offsetParent === null && ta.style.display === "none") continue; // Oculto real
+        // Si es un textarea grande (rows > 5) y está vacío, probablemente es el contenido principal
+        if ((ta.rows > 5 || ta.style.height !== "" || ta.className.includes("editor")) && ta.value.length < 100) {
+          ta.value = html;
+          ta.dispatchEvent(new Event("input", { bubbles: true }));
+          ta.dispatchEvent(new Event("change", { bubbles: true }));
+          return { ok: (ta.value?.length ?? 0) > 100, editor: `textarea:${ta.id || ta.name || "unknown"}` };
+        }
+      }
+
+      // Estrategia 5: buscar en iframes
+      const iframes = Array.from(document.querySelectorAll("iframe"));
+      for (const iframe of iframes) {
+        try {
+          const doc = iframe.contentDocument || iframe.contentWindow?.document;
+          if (!doc) continue;
+          const body = doc.querySelector("[contenteditable='true']") as HTMLElement | null;
+          if (body && body.innerHTML.replace(/<[^>]+>/g, "").trim().length < 100) {
+            body.innerHTML = html;
+            body.dispatchEvent(new Event("input", { bubbles: true }));
+            return { ok: true, editor: `iframe:${iframe.id || "editor"}` };
+          }
+        } catch { /* cross-origin iframe, ignorar */ }
       }
 
       return { ok: false, editor: "no encontrado" };
@@ -1460,6 +1486,31 @@ async function saveAndGetUrl(
   await onStep(
     `Diagnóstico de guardado: sigue en el formulario=${stillOnForm}, botón deshabilitado=${buttonDisabled}, mensajes visibles="${alertText}"`,
   );
+
+  if (stillOnForm && buttonDisabled) {
+    await onStep("El botón está deshabilitado; intentando forzar envío del formulario vía JavaScript...");
+    const forced = await page.evaluate(() => {
+      const form = document.querySelector("form");
+      if (!form) return { ok: false, motivo: "no se encontró formulario" };
+      // Remover atributo disabled del botón por si acaso
+      const btn = Array.from(document.querySelectorAll("button")).find((b) =>
+        /guardar cambios|save changes/i.test(b.textContent || ""),
+      ) as HTMLButtonElement | undefined;
+      if (btn) {
+        btn.disabled = false;
+        btn.classList.remove("disabled");
+      }
+      // Intentar submit directo
+      try {
+        form.submit();
+        return { ok: true, motivo: "form.submit() ejecutado" };
+      } catch (e) {
+        return { ok: false, motivo: (e as Error).message };
+      }
+    });
+    await onStep(`Resultado del intento forzado: ${JSON.stringify(forced)}`);
+    await page.waitForLoadState("networkidle", { timeout: NAV_TIMEOUT_MS }).catch(() => {});
+  }
 
   await onStep(
     `Buscando el artículo publicado por su título: "${expectedTitle}"...`,
