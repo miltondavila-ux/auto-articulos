@@ -85,7 +85,7 @@ export default function ConfiguracionPage() {
 
   const loadFixStatus = useCallback(async () => {
     try {
-      const res = await fetch("/api/admin/fix-patricia/status");
+      const res = await fetch("/api/admin/fix-patricia/status", { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         setFixStatus(data);
@@ -101,7 +101,7 @@ export default function ConfiguracionPage() {
     lastLanguageSyncStatus === "pending" || lastLanguageSyncStatus === "running";
 
   const loadCredentialsStatus = useCallback(async () => {
-    const res = await fetch("/api/credentials");
+    const res = await fetch("/api/credentials", { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       setCredentialsConfigured(Boolean(data.configured));
@@ -109,7 +109,7 @@ export default function ConfiguracionPage() {
   }, []);
 
   const loadCategories = useCallback(async () => {
-    const res = await fetch("/api/categories");
+    const res = await fetch("/api/categories", { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       setCategories(data.categories);
@@ -120,8 +120,8 @@ export default function ConfiguracionPage() {
 
   const loadLanguages = useCallback(async () => {
     const [langRes, meRes] = await Promise.all([
-      fetch("/api/languages"),
-      fetch("/api/me"),
+      fetch("/api/languages", { cache: "no-store" }),
+      fetch("/api/me", { cache: "no-store" }),
     ]);
     if (langRes.ok) {
       const data = await langRes.json();
