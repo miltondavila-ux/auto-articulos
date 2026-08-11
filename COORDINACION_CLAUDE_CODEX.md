@@ -484,6 +484,33 @@ El agente que termina debe:
 
 ## Registro de entregas
 
+### 2026-08-11 ~20:30 UTC — Claude: caída total de login (500) resuelta
+
+- **Agente:** Claude.
+- **Tarea:** un informe de traspaso reportó login caído (500, cuerpo vacío)
+  para todos los usuarios, atribuyéndolo a `DATABASE_URL`/`DIRECT_URL`
+  faltantes en Vercel.
+- **Diagnóstico real (con `vercel logs --json`, NO la hipótesis del
+  informe):** `PrismaClientKnownRequestError P2022` — `User.allowLinkedInPublishing`
+  no existía en la base real. Campos nuevos (`allowLinkedInPublishing`,
+  `allowThreadsPublishing`) se agregaron al schema pero la migración nunca se
+  aplicó contra producción; el arreglo previo solo quitó referencias de
+  algunos archivos y se le escapó `lib/auth.ts` (usado por TODO login).
+- **Archivos/área:** ninguno modificado — el fix fue de infraestructura
+  (aplicar la migración pendiente), no de código.
+- **Resultado:** se disparó `.github/workflows/migrate.yml`
+  (`prisma db push`, ya existente). Log confirmado: *"Your database is now in
+  sync with your Prisma schema"*. Verificado con un login real post-fix: 401
+  normal en vez de 500. Usuario puntual (Yolanda Landinez) necesitó reseteo
+  de contraseña aparte, sin relación con la caída general — no hay patrón de
+  fallos masivos en los logs de las 3h previas.
+- **Detalle completo:** ver `HANDOFF.md`, sección "RESUELTO (11/8/2026): caída
+  total de login por columna sin migrar" — incluye la lección para el
+  próximo agente sobre migraciones y verificación de logs crudos.
+- **Confirmado por el usuario:** login, editor de Lorena Álvarez e indexación
+  de Bing, los tres estables tras el fix.
+- **Estado del área:** LIBERADA.
+
 Agregar entradas nuevas arriba de las anteriores con este formato:
 
 ```text

@@ -1416,6 +1416,66 @@ página falsa para Bing.
   asumir el formato, volcar el estado real a un log de diagnóstico si algo
   falla).
 
+## RESUELTO (11/8/2026): caída total de login por columna sin migrar
+
+**Síntoma:** `POST /api/auth/login` devolvía 500 con cuerpo vacío para
+**cualquier** usuario — nadie podía entrar al sistema.
+
+**Diagnóstico que llegó de otro agente/sesión, y que resultó INCORRECTO:** un
+informe de traspaso atribuía la causa a que `DATABASE_URL`/`DIRECT_URL`
+faltaban o estaban mal configuradas en Vercel, y pedía revisar las variables
+de entorno. Esa hipótesis nunca se confirmó con logs reales — y era falsa.
+
+**Causa real, confirmada con el log crudo de producción (`vercel logs`):**
+```
+Error [PrismaClientKnownRequestError]: Invalid `prisma.user.findUnique()` invocation:
+The column `User.allowLinkedInPublishing` does not exist in the current database.
+code: 'P2022'
+```
+
+Es el mismo patrón de bug que el del idioma de contenido (ver sesión del
+7/8/2026 más abajo en este archivo): se agregaron campos nuevos al schema de
+Prisma (`allowLinkedInPublishing`, `allowThreadsPublishing`, para permisos de
+publicación por red social) pero **nunca se aplicó la migración contra la
+base de datos real**. El intento de arreglo documentado en el informe de
+traspaso ("se quitaron las referencias a esos campos de `getCurrentUser`,
+`/api/me` y `/api/admin/users`") fue parcial: se les escapó `lib/auth.ts`
+(`verifyCredentials()`, usado por el login), que seguía haciendo
+`prisma.user.findUnique()` sin excluir esos campos — de ahí que **todo** el
+login quedara roto, no solo las pantallas que sí se habían corregido.
+
+**Fix aplicado:** se encontró que ya existía preparado (sin ejecutar)
+`migration_add_permissions.sql` con el `ALTER TABLE ... ADD COLUMN IF NOT
+EXISTS` correcto, y un workflow ya probado (`.github/workflows/migrate.yml`,
+corre `prisma db push` contra el Session pooler). Se disparó ese workflow
+manualmente (`gh workflow run migrate.yml`). El log confirmó *"Your database
+is now in sync with your Prisma schema"* — no la falsa alarma de "sin
+cambios pendientes" que se vio esa misma mañana con el otro incidente (ver
+sección del 7/8/2026: siempre verificar el CONTENIDO del log, nunca solo el
+resultado `success`/`completed`).
+
+**Verificado en producción:** un intento de login real (`POST
+/api/auth/login`) 13 segundos después del fix devolvió 401 normal
+("Correo o contraseña incorrectos") en vez del 500 anterior — confirma que
+el crash desapareció. Un usuario específico (Yolanda Landinez) seguía sin
+poder entrar con la contraseña que traía el informe de traspaso; resultó ser
+un problema de contraseña de ESA cuenta puntual (se resolvió reseteándosela
+desde Administración → Usuarios → Editar), no relacionado con la caída
+general — se revisaron los logs de las 3 horas previas y no había ningún
+otro patrón de fallos masivos, así que no hizo falta resetear contraseñas de
+más usuarios.
+
+**Lección para el próximo agente:** cuando se agregue un campo nuevo a
+`schema.prisma`, aplicar la migración contra producción es un paso
+OBLIGATORIO e inmediato, no opcional ni "para después" — y no alcanza con
+quitar las referencias del código en algunos archivos: si el campo queda en
+el `select` de CUALQUIER query real (fácil de olvidar un archivo, como pasó
+acá con `lib/auth.ts`), la app se rompe igual. Ante un 500 nuevo en
+producción, **siempre pedir el log crudo real primero** (`vercel logs ...
+--json`) en vez de aceptar o escribir una hipótesis sin confirmar — acá la
+hipótesis equivocada (env vars) habría hecho perder tiempo revisando algo
+que ya estaba bien.
+
 ## Pendiente / próximos pasos
 
 0. ~~Construir módulo **Oportunidades**~~ — **HECHO** en commits `05d8d6b` y
