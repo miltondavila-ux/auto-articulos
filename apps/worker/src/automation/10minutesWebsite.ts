@@ -622,24 +622,50 @@ async function createArticleDraft(
     );
   }
 
+  // DIAGNÓSTICO: inspeccionar el botón "Usar contenido" para saber qué función llama
+  const usearContenidoInfo = await dialog.evaluate(() => {
+    const btns = Array.from(document.querySelectorAll("button"));
+    const usarBtn = btns.find((b) => /usar contenido|use content/i.test(b.textContent || ""));
+    if (!usarBtn) return { found: false };
+    // Obtener atributos del botón
+    const attrs: Record<string, string> = {};
+    for (const attr of Array.from(usarBtn.attributes)) {
+      attrs[attr.name] = attr.value;
+    }
+    // Buscar en el HTML del modal alguna función relacionada
+    const modalHTML = usarBtn.closest(".modal")?.innerHTML || "";
+    const functionMatch = modalHTML.match(/onclick=["']([^"']+)["']/g) || [];
+    // Buscar en scripts globales funciones que manejen "Usar contenido"
+    const scriptsInfo = Array.from(document.querySelectorAll("script"))
+      .map((s) => s.textContent || "")
+      .filter((t) => /usarcontenido|usar_contenido|useContent|applyContent/i.test(t))
+      .map((t) => t.slice(0, 300));
+    return {
+      found: true,
+      buttonText: usarBtn.textContent?.trim(),
+      attributes: attrs,
+      onclick: usarBtn.getAttribute("onclick") || "(sin onclick directo)",
+      modalFunctions: functionMatch.slice(0, 10),
+      relatedScripts: scriptsInfo.slice(0, 3),
+    };
+  });
+  await onStep(`DIAGNÓSTICO [Usar contenido]: ${JSON.stringify(usearContenidoInfo).slice(0, 1500)}`);
+
+  // Guardar contenido del modal ANTES de hacer clic, para reinyectar después si falla
+  const modalContentBefore = await dialog.locator("textarea").nth(1).inputValue().catch(() => "");
+
   await dialog.getByRole("button", { name: TEXT_USAR_CONTENIDO }).click();
   await dialog.waitFor({ state: "hidden", timeout: NAV_TIMEOUT_MS });
-
-  // Bug encontrado el 11/8/2026 (cuenta de Lorena Álvarez): en algunas cuentas,
-  // "Usar contenido" transfiere el texto del modal al editor visual (WYSIWYG)
-  // pero el campo subyacente del contenido queda vacío o el editor no sincroniza
-  // correctamente, dejando el botón "Guardar cambios" deshabilitado con el mensaje
-  // "Este campo es obligatorio". Verificamos que el editor tenga contenido real
-  // y, si no, lo inyectamos directamente vía JavaScript.
   await page.waitForTimeout(2000);
+
   const editorInfo = await diagnoseEditorState(page);
   await onStep(
-    `Editor post-Usar contenido: textarea#contentes=${editorInfo.contentesLen}chars, contenteditable=${editorInfo.editableLen}chars, saveBtn=${editorInfo.saveBtnEnabled ? "habilitado" : "DESHABILITADO"}`,
+    `Editor post-Usar contenido: textarea#contentes=${editorInfo.contentesLen}chars, saveBtn=${editorInfo.saveBtnEnabled ? "habilitado" : "DESHABILITADO"}`,
   );
 
-  if (!editorInfo.saveBtnEnabled) {
-    await onStep("El contenido no llegó al editor. Intentando inyección múltiple...");
-    await injectContentIntoEditor(page, contentHtml, onStep);
+  if (!editorInfo.saveBtnEnabled && modalContentBefore.length > 100) {
+    await onStep("El contenido no llegó al editor. Intentando inyección con contenido del modal...");
+    await injectContentIntoEditor(page, modalContentBefore, onStep);
   }
 
   // Bug real encontrado el 29/7/2026: la IA a veces escribe el resumen por
