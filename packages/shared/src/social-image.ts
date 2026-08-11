@@ -33,6 +33,7 @@ export async function generateSocialImageRaw(
   customImagePrompt?: string | null,
   extraStyle?: string,
   logoUrl?: string | null,
+  platform?: string | null,
 ): Promise<GeneratedImageResult | null> {
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
   if (!OPENAI_API_KEY) return null;
@@ -42,8 +43,12 @@ export async function generateSocialImageRaw(
 
   const hasLogo = Boolean(logoUrl);
 
+  // Tamaño según plataforma: LinkedIn prefiere landscape, los demás square
+  const isLinkedIn = platform === "linkedin";
+  const editSize = "1024x1024";
+  const genSize = isLinkedIn ? "1792x1024" : "1024x1024";
+
   // Lista de intentos: primero con logo (image edits), luego fallback a texto solo.
-  // Cada entrada: { model, useEdits }
   const attempts: Array<{ model: "gpt-image-1" | "dall-e-3"; useEdits: boolean }> = hasLogo
     ? [
         { model: "gpt-image-1", useEdits: true },
@@ -72,7 +77,7 @@ export async function generateSocialImageRaw(
           "prompt",
           `${prompt}\n\nIncorpora el logo proporcionado de forma natural y profesional en la imagen, como una marca de agua o en una esquina.`,
         );
-        formData.append("size", "1024x1024");
+        formData.append("size", editSize);
         formData.append("n", "1");
 
         const blob = new Blob([Buffer.from(logoData.base64, "base64")], { type: logoData.mimeType });
@@ -84,10 +89,11 @@ export async function generateSocialImageRaw(
           body: formData,
         });
       } else {
+        const size = model === "dall-e-3" ? genSize : isLinkedIn ? "1536x1024" : "1024x1024";
         response = await fetch(OPENAI_IMAGE_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
-          body: JSON.stringify({ model, prompt, size: "1024x1024", n: 1 }),
+          body: JSON.stringify({ model, prompt, size, n: 1 }),
         });
       }
 

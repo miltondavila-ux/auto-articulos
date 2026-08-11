@@ -36,10 +36,10 @@ async function generateAndHostThreadsImage(
   summary: string,
   customImagePrompt?: string | null,
   logoUrl?: string | null,
+  platform?: string | null,
 ): Promise<string | null> {
-  // 50% de probabilidad de incluir el logo si existe
   const shouldIncludeLogo = logoUrl && Math.random() < 0.5;
-  const result = await generateSocialImageRaw(summary, customImagePrompt, undefined, shouldIncludeLogo ? logoUrl : null);
+  const result = await generateSocialImageRaw(summary, customImagePrompt, undefined, shouldIncludeLogo ? logoUrl : null, platform);
 
   if (!result) return null;
 
@@ -110,7 +110,7 @@ async function processThreadsJob(job: {
     ]);
     if (title?.summary) {
       const imageBasis = title.summary || job.articleTitle;
-      imageUrl = (await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt, user?.businessLogoUrl)) ?? undefined;
+      imageUrl = (await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt, user?.businessLogoUrl, "threads")) ?? undefined;
     }
   }
 
@@ -195,7 +195,7 @@ async function processTwitterJob(job: {
     ]);
     const imageBasis = title?.summary || job.articleTitle;
     if (title?.summary) {
-      imageUrl = (await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt, user?.businessLogoUrl)) ?? undefined;
+      imageUrl = (await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt, user?.businessLogoUrl, "x")) ?? undefined;
     }
   }
 
@@ -277,7 +277,7 @@ async function processLinkedInJob(job: {
     const imageBasis = title?.summary || job.articleTitle;
     if (imageBasis) {
       sourceImageUrl =
-        (await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt, user?.businessLogoUrl)) ?? undefined;
+        (await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt, user?.businessLogoUrl, "linkedin")) ?? undefined;
     }
   }
 

@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
   // 50% de probabilidad de incluir el logo del usuario si existe
   const logoUrl = userPrompts?.businessLogoUrl && Math.random() < 0.5 ? userPrompts.businessLogoUrl : null;
 
-  const result = await generateSocialImageRaw(summary, userPrompts?.imagePrompt, extraStyle, logoUrl);
+  const result = await generateSocialImageRaw(summary, userPrompts?.imagePrompt, extraStyle, logoUrl, platform);
 
   if (!result) {
     return NextResponse.json({ error: "No se pudo generar la imagen" }, { status: 500 });
