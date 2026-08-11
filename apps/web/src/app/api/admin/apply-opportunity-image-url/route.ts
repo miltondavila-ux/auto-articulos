@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Client } from "pg";
+import { requireAdmin } from "@/lib/current-user";
 
 export async function POST(request: NextRequest) {
-  const token = request.headers.get("x-admin-token");
-  const expected = process.env.ADMIN_MIGRATION_TOKEN;
-  if (!expected || token !== expected) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await requireAdmin();
+  if (!auth.ok) return NextResponse.json({ error: "Solo administradores" }, { status: 403 });
 
   const url = process.env.DIRECT_URL || process.env.DATABASE_URL;
   if (!url) {
@@ -23,3 +21,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
   }
 }
+
