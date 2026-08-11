@@ -7,10 +7,6 @@ import { auditLog } from "@/lib/audit";
 export async function POST(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? request.headers.get("x-real-ip") ?? "unknown";
 
-  if (!checkLoginRateLimit(ip)) {
-    return NextResponse.json({ error: "Demasiados intentos. Intenta de nuevo en 15 minutos." }, { status: 429 });
-  }
-
   const { email, password } = await request.json();
 
   if (typeof email !== "string" || typeof password !== "string") {
@@ -20,12 +16,16 @@ export async function POST(request: NextRequest) {
   try {
     const user = await verifyCredentials(email, password);
     if (!user) {
-      auditLog("login_failed", "unknown", { email, ip });
-      return NextResponse.json({ error: "Correo o contraseña incorrectos" }, { status: 401 });
+      const response = NextResponse.json({ error: "Correo o contraseña incorrectos" }, { status: 401 });
+      response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+      response.headers.set("Pragma", "no-cache");
+      return response;
     }
 
     const token = await createSessionToken(user.id);
     const response = NextResponse.json({ ok: true });
+    response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+    response.headers.set("Pragma", "no-cache");
     response.cookies.set(SESSION_COOKIE, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -33,11 +33,13 @@ export async function POST(request: NextRequest) {
       path: "/",
       maxAge: 60 * 60 * 24 * 7,
     });
-    auditLog("login_success", user.id, { ip });
     return response;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    auditLog("login_failed", "unknown", { email, ip, error: message });
-    return NextResponse.json({ error: "Error interno del servidor", detail: message }, { status: 500 });
+    console.error(`[LOGIN ERROR] ${email}: ${message}`);
+    const response = NextResponse.json({ error: "Error interno", detail: message }, { status: 500 });
+    response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+    response.headers.set("Pragma", "no-cache");
+    return response;
   }
 }
