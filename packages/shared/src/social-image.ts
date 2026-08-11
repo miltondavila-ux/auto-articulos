@@ -42,15 +42,24 @@ export async function generateSocialImageRaw(
 
   const hasLogo = Boolean(logoUrl);
 
-  // Modelos a probar: si hay logo, usar solo gpt-image-1 con edits.
-  // Si no hay logo, usar gpt-image-1 (generación) y dall-e-3 como fallback.
-  const models: Array<"gpt-image-1" | "dall-e-3"> = hasLogo ? ["gpt-image-1"] : ["gpt-image-1", "dall-e-3"];
+  // Lista de intentos: primero con logo (image edits), luego fallback a texto solo.
+  // Cada entrada: { model, useEdits }
+  const attempts: Array<{ model: "gpt-image-1" | "dall-e-3"; useEdits: boolean }> = hasLogo
+    ? [
+        { model: "gpt-image-1", useEdits: true },
+        { model: "gpt-image-1", useEdits: false },
+        { model: "dall-e-3", useEdits: false },
+      ]
+    : [
+        { model: "gpt-image-1", useEdits: false },
+        { model: "dall-e-3", useEdits: false },
+      ];
 
-  for (const model of models) {
+  for (const { model, useEdits } of attempts) {
     try {
       let response: Response;
 
-      if (hasLogo && model === "gpt-image-1") {
+      if (useEdits && hasLogo) {
         const logoData = await downloadImageAsBase64(logoUrl!);
         if (!logoData) {
           console.warn(`[social-image] No se pudo descargar el logo ${logoUrl}, fallback a texto`);
