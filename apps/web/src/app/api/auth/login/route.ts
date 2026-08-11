@@ -17,21 +17,27 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
   }
 
-  const user = await verifyCredentials(email, password);
-  if (!user) {
-    auditLog("login_failed", "unknown", { email, ip });
-    return NextResponse.json({ error: "Correo o contraseña incorrectos" }, { status: 401 });
-  }
+  try {
+    const user = await verifyCredentials(email, password);
+    if (!user) {
+      auditLog("login_failed", "unknown", { email, ip });
+      return NextResponse.json({ error: "Correo o contraseña incorrectos" }, { status: 401 });
+    }
 
-  const token = await createSessionToken(user.id);
-  const response = NextResponse.json({ ok: true });
-  response.cookies.set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,
-  });
-  auditLog("login_success", user.id, { ip });
-  return response;
+    const token = await createSessionToken(user.id);
+    const response = NextResponse.json({ ok: true });
+    response.cookies.set(SESSION_COOKIE, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+    auditLog("login_success", user.id, { ip });
+    return response;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    auditLog("login_failed", "unknown", { email, ip, error: message });
+    return NextResponse.json({ error: "Error interno del servidor", detail: message }, { status: 500 });
+  }
 }
