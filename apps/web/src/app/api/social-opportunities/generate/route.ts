@@ -1,45 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
+import { triggerWorkerNow } from "@/lib/trigger-worker";
 import {
   decryptSecret,
   getGoogleAccessToken,
   queryGoogleSearchAnalytics,
-  generateSocialImageRaw,
 } from "@auto-articulos/shared";
-import { put } from "@vercel/blob";
-
-// Redes que usan una sola imagen adjunta al post (Instagram tiene su propio
-// flujo de carrusel/reel con múltiples imágenes generadas al publicar, no se
-// toca aquí).
-const SINGLE_IMAGE_PLATFORMS = new Set(["threads", "x", "linkedin"]);
-
-async function generateAndStoreOpportunityImage(
-  opportunityId: string,
-  summary: string,
-  customImagePrompt?: string | null
-): Promise<string | null> {
-  try {
-    const result = await generateSocialImageRaw(summary, customImagePrompt);
-    if (!result) return null;
-
-    if (result.url) return result.url;
-
-    if (result.b64) {
-      const buffer = Buffer.from(result.b64, "base64");
-      const blob = await put(`social-opportunities/${opportunityId}.png`, buffer, {
-        access: "public",
-        contentType: "image/png",
-      });
-      return blob.url;
-    }
-
-    return null;
-  } catch (err) {
-    console.error(`Error al generar/guardar imagen para oportunidad ${opportunityId}:`, err);
-    return null;
-  }
-}
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
@@ -267,10 +234,6 @@ export async function POST(request: Request) {
     }
 
     const createdOpportunities: any[] = [];
-    const requestingUser = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { imagePrompt: true },
-    });
 
     for (const article of candidates) {
       for (const platform of integrations) {
@@ -292,29 +255,13 @@ export async function POST(request: Request) {
             platform,
             suggestedText: copyText,
             status: "pending",
+            imageUrl: null,
           },
         });
 
-        // Genera la imagen AHORA (no al publicar) para que el usuario la vea
-        // como miniatura antes de aprobar, y el worker la reutilice sin
-        // tener que generarla de nuevo. Usa el resumen del artículo o, si
-        // no existe, su título como respaldo. Falla en silencio (sin
-        // imagen, se puede publicar solo con texto/enlace igual).
-        if (SINGLE_IMAGE_PLATFORMS.has(platform)) {
-          const imageBasis = article.summary || article.finalTitle || article.text;
-          const imageUrl = await generateAndStoreOpportunityImage(
-            opp.id,
-            imageBasis,
-            requestingUser?.imagePrompt,
-          );
-          if (imageUrl) {
-            await prisma.socialOpportunity.update({
-              where: { id: opp.id },
-              data: { imageUrl },
-            });
-            opp.imageUrl = imageUrl;
-          }
-        }
+        // La imagen la genera el worker (processNextOpportunityImage) en
+        // background para no agotar el timeout de Vercel Functions con la
+        // llamada a DALL-E. El usuario la ve aparecer automáticamente.
 
         createdOpportunities.push(opp);
         activeKeys.add(opportunityKey);
@@ -332,11 +279,29 @@ export async function POST(request: Request) {
       );
     }
 
+    // Disparar al worker para que genere las imágenes en background y la UI
+    // se actualice automáticamente al refrescar. No esperamos la respuesta
+    // para no bloquear el handler de Vercel.
+    if (createdOpportunities.length > 0) {
+      void triggerWorkerNow().catch((err) => {
+        console.error("[social-opportunities/generate] triggerWorkerNow falló:", err);
+      });
+    }
+
     return NextResponse.json({
       message: `Se generaron ${createdOpportunities.length} nuevas propuestas usando ${source?.siteUrl ? "Google Search Console y artículos recientes" : "artículos publicados recientes"}.`,
       count: createdOpportunities.length,
     });
-  } catch {
-    return NextResponse.json({ error: "Error interno al generar propuestas" }, { status: 500 });
+  } catch (unexpected) {
+    const errorMessage = unexpected instanceof Error ? unexpected.message : String(unexpected);
+    const errorStack = unexpected instanceof Error ? unexpected.stack : undefined;
+    console.error("[social-opportunities/generate] Error inesperado:", errorMessage);
+    if (errorStack) console.error(errorStack);
+    return NextResponse.json(
+      {
+        error: `Error interno al generar propuestas: ${errorMessage}`,
+      },
+      { status: 500 },
+    );
   }
 }
