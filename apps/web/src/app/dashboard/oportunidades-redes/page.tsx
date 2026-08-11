@@ -550,7 +550,7 @@ export default function OportunidadesRedesPage() {
                     </div>
                     {isQueuedOrProcessing && (
                       <div style={{ marginTop: 12, height: 4, borderRadius: 2, background: "#374151", overflow: "hidden" }}>
-                        <div style={{ height: "100%", width: opp.status === "processing" ? "70%" : "30%", borderRadius: 2, background: "linear-gradient(90deg, #3b82f6, #f59e0b)", transition: "width 1s ease", animation: "pulse 1.5s ease-in-out infinite" }} />
+                        <div style={{ height: "100%", width: "30%", borderRadius: 2, background: "linear-gradient(90deg, transparent, #3b82f6, transparent)", animation: "slide 1.5s linear infinite" }} />
                       </div>
                     )}
                     {opp.status === "error" && opp.errorLog && (
@@ -777,9 +777,9 @@ export default function OportunidadesRedesPage() {
            from { transform: rotate(0deg); }
            to { transform: rotate(360deg); }
          }
-         @keyframes pulse {
-           0%, 100% { opacity: 1; }
-           50% { opacity: 0.5; }
+         @keyframes slide {
+           0% { transform: translateX(-100%); }
+           100% { transform: translateX(400%); }
          }
        `}</style>
      </div>
