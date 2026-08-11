@@ -65,6 +65,17 @@ export default function OportunidadesRedesPage() {
   }, []);
 
   useEffect(() => {
+    const hasActiveItems = opportunities.some(
+      (o) => o.status === "queued" || o.status === "processing",
+    );
+    if (!hasActiveItems) return;
+    const interval = setInterval(() => {
+      loadOpportunities();
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [opportunities]);
+
+  useEffect(() => {
     if (!generating) return;
     setGenerateSeconds(0);
     const timer = window.setInterval(
@@ -386,8 +397,8 @@ export default function OportunidadesRedesPage() {
           )}
           {queuedList.length > 0 && (
             <span style={{ color: "#f59e0b", fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: "#f59e0b", animation: queuedList.some(o => o.status === "processing") ? "none" : undefined }} />
-              {queuedList.length} en proceso de publicación
+              <span style={{ display: "inline-block", animation: "spin 1s linear infinite" }}>🔄</span>
+              {queuedList.length} en proceso de publicación — se actualiza automáticamente...
             </span>
           )}
         </div>
@@ -432,7 +443,15 @@ export default function OportunidadesRedesPage() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 20, marginTop: 15 }}>
                 {[...pendingList, ...queuedList].map((opp) => {
                   const isQueuedOrProcessing = opp.status === "queued" || opp.status === "processing";
-                  const statusLabel = opp.status === "queued" ? "En cola..." : opp.status === "processing" ? "Procesando..." : null;
+                  const statusConfig = {
+                    queued: { label: "En cola...", icon: "⏳", color: "#f59e0b", bg: "rgba(245, 158, 11, 0.15)" },
+                    processing: { label: "Publicando...", icon: "🔄", color: "#3b82f6", bg: "rgba(59, 130, 246, 0.15)" },
+                    published: { label: "Publicado", icon: "✅", color: "#10b981", bg: "rgba(16, 185, 129, 0.15)" },
+                    error: { label: "Error", icon: "❌", color: "#ef4444", bg: "rgba(239, 68, 68, 0.15)" },
+                    pending: { label: "Pendiente", icon: "📝", color: "#9ca3af", bg: "rgba(156, 163, 175, 0.15)" },
+                  };
+                  const statusInfo = statusConfig[opp.status as keyof typeof statusConfig] || statusConfig.pending;
+                  const showSpinner = opp.status === "processing";
                   return (
                   <div key={opp.id} style={{ ...sectionStyle, background: "#111827", border: `1px solid ${isQueuedOrProcessing ? "#f59e0b" : "#374151"}` }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10 }}>
@@ -451,11 +470,11 @@ export default function OportunidadesRedesPage() {
                         >
                           {opp.platform === "threads" ? "🌀 THREADS" : opp.platform === "x" ? "🐦 X (TWITTER)" : opp.platform === "linkedin" ? "💼 LINKEDIN" : opp.platform === "instagram-carousel" ? "📸 IG CARRUSEL" : opp.platform === "instagram-reel-image" ? "📸 IG REEL-IMG" : opp.platform === "instagram-infografia" ? "📸 IG INFOGRAFÍA" : opp.platform.toUpperCase()}
                         </span>
-                        {statusLabel && (
-                          <span style={{ display: "inline-block", padding: "4px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, background: "rgba(245, 158, 11, 0.15)", color: "#f59e0b", marginLeft: 6 }}>
-                            {statusLabel}
-                          </span>
-                        )}
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, background: statusInfo.bg, color: statusInfo.color, marginLeft: 6 }}>
+                          {showSpinner && <span style={{ display: "inline-block", animation: "spin 1s linear infinite" }}>🔄</span>}
+                          {!showSpinner && <span>{statusInfo.icon}</span>}
+                          {statusInfo.label}
+                        </span>
                         <h4 style={{ color: "#f3f4f6", margin: 0, fontSize: 16 }}>
                           Artículo: {opp.articleTitle}
                         </h4>
@@ -529,6 +548,11 @@ export default function OportunidadesRedesPage() {
                         Caracteres: {opp.suggestedText.length}
                       </span>
                     </div>
+                    {isQueuedOrProcessing && (
+                      <div style={{ marginTop: 12, height: 4, borderRadius: 2, background: "#374151", overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: opp.status === "processing" ? "70%" : "30%", borderRadius: 2, background: "linear-gradient(90deg, #3b82f6, #f59e0b)", transition: "width 1s ease", animation: "pulse 1.5s ease-in-out infinite" }} />
+                      </div>
+                    )}
                   </div>
                   );
                 })}
@@ -726,15 +750,25 @@ export default function OportunidadesRedesPage() {
 
             <div style={{ display: "flex", gap: 10, marginTop: 16, justifyContent: "flex-end" }}>
               <button
-                onClick={() => setPreviewModal(null)}
-                style={secondaryButtonStyle}
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+                 onClick={() => setPreviewModal(null)}
+                 style={secondaryButtonStyle}
+               >
+                 Cerrar
+               </button>
+             </div>
+           </div>
+         </div>
+       )}
+       <style>{`
+         @keyframes spin {
+           from { transform: rotate(0deg); }
+           to { transform: rotate(360deg); }
+         }
+         @keyframes pulse {
+           0%, 100% { opacity: 1; }
+           50% { opacity: 0.5; }
+         }
+       `}</style>
+     </div>
+   );
 }
