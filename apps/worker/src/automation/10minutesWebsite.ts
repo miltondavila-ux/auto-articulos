@@ -631,11 +631,11 @@ async function createArticleDraft(
   // correctamente, dejando el botón "Guardar cambios" deshabilitado con el mensaje
   // "Este campo es obligatorio". Verificamos que el editor tenga contenido real
   // y, si no, lo inyectamos directamente vía JavaScript.
-  const contentReady = await verifyAndFixContentEditor(page, contentHtml);
+  const contentResult = await verifyAndFixContentEditor(page, contentHtml);
   await onStep(
-    contentReady
-      ? "Contenido transferido correctamente al editor."
-      : "Aviso: no se pudo verificar el contenido del editor; se intenta guardar igual.",
+    contentResult.ok
+      ? `Contenido en editor OK (detectado: ${contentResult.editor}).`
+      : `Aviso: no se pudo inyectar contenido en el editor (${contentResult.editor}).`,
   );
 
   // Bug real encontrado el 29/7/2026: la IA a veces escribe el resumen por
@@ -697,26 +697,80 @@ async function createArticleDraft(
 async function verifyAndFixContentEditor(
   page: Page,
   contentHtml: string,
-): Promise<boolean> {
+): Promise<{ ok: boolean; editor: string }> {
   try {
     const result = await page.evaluate((html) => {
-      // Estrategia 1: TinyMCE
+      // Paso 1: Identificar el campo que tiene el error "required"
+      const requiredErrors = Array.from(
+        document.querySelectorAll('[class*="error"], [class*="invalid"], [class*="required"], .invalid, .red-text, [role="alert"]'),
+      ).filter((el) => {
+        const t = (el.textContent || "").trim();
+        return /required|obligatorio|mandatory/i.test(t) && (el as HTMLElement).offsetParent !== null;
+      });
+
+      // Paso 2: Por cada error "required", buscar el input/textarea asociado
+      for (const errEl of requiredErrors) {
+        const scope = errEl.closest("div, .input-field, .row, section, .col") ?? errEl.parentElement;
+        if (!scope) continue;
+
+        // Buscar textarea o contenteditable dentro del scope
+        const field = scope.querySelector("textarea, [contenteditable='true']") as
+          | HTMLTextAreaElement
+          | HTMLElement
+          | null;
+        if (!field) continue;
+
+        const isTextarea = field.tagName === "TEXTAREA";
+        const currentLen = isTextarea
+          ? ((field as HTMLTextAreaElement).value || "").replace(/<[^>]+>/g, "").trim().length
+          : ((field as HTMLElement).innerHTML || "").replace(/<[^>]+>/g, "").trim().length;
+
+        if (currentLen < 100) {
+          if (isTextarea) {
+            (field as HTMLTextAreaElement).value = html;
+            field.dispatchEvent(new Event("input", { bubbles: true }));
+            field.dispatchEvent(new Event("change", { bubbles: true }));
+          } else {
+            (field as HTMLElement).innerHTML = html;
+            field.dispatchEvent(new Event("input", { bubbles: true }));
+            field.dispatchEvent(new Event("change", { bubbles: true }));
+          }
+          const after = isTextarea
+            ? ((field as HTMLTextAreaElement).value || "").replace(/<[^>]+>/g, "").trim().length
+            : ((field as HTMLElement).innerHTML || "").replace(/<[^>]+>/g, "").trim().length;
+          return { ok: after > 100, editor: `error-scope:${field.id || (field as HTMLTextAreaElement).name || field.tagName}` };
+        }
+      }
+
+      // Paso 3: Si no hay error visible, buscar textarea con id que incluya "contentes"
+      // (el mensaje de error muestra "contentesBarras de herramientas del editor")
+      const allTextareas = Array.from(document.querySelectorAll("textarea")) as HTMLTextAreaElement[];
+      for (const ta of allTextareas) {
+        if (/contentes/i.test(ta.id)) {
+          if (ta.value.replace(/<[^>]+>/g, "").trim().length < 100) {
+            ta.value = html;
+            ta.dispatchEvent(new Event("input", { bubbles: true }));
+            ta.dispatchEvent(new Event("change", { bubbles: true }));
+          }
+          return { ok: ta.value.replace(/<[^>]+>/g, "").trim().length > 100, editor: `contentes:${ta.id}` };
+        }
+      }
+
+      // Paso 4: TinyMCE
       const tinymce = (window as unknown as { tinymce?: {
         editors?: Array<{ id: string; getContent: () => string; setContent: (h: string) => void }>;
       } }).tinymce;
       if (tinymce?.editors?.length) {
         for (const ed of tinymce.editors) {
           if (!ed.getContent || !ed.setContent) continue;
-          const cur = ed.getContent() || "";
-          if (cur.replace(/<[^>]+>/g, "").trim().length < 100) {
-            ed.setContent(html);
-          }
-          const after = ed.getContent() || "";
-          return { ok: after.replace(/<[^>]+>/g, "").trim().length > 100, editor: `tinymce:${ed.id}` };
+          const cur = (ed.getContent() || "").replace(/<[^>]+>/g, "").trim().length;
+          if (cur < 100) ed.setContent(html);
+          const after = (ed.getContent() || "").replace(/<[^>]+>/g, "").trim().length;
+          return { ok: after > 100, editor: `tinymce:${ed.id}` };
         }
       }
 
-      // Estrategia 2: CKEditor
+      // Paso 5: CKEditor
       const ckeditor = (window as unknown as { CKEDITOR?: {
         instances?: Record<string, { getData: () => string; setData: (h: string) => void }>;
       } }).CKEDITOR;
@@ -724,69 +778,43 @@ async function verifyAndFixContentEditor(
         for (const key of Object.keys(ckeditor.instances)) {
           const inst = ckeditor.instances[key];
           if (!inst.getData || !inst.setData) continue;
-          const cur = inst.getData() || "";
-          if (cur.replace(/<[^>]+>/g, "").trim().length < 100) {
-            inst.setData(html);
-          }
-          const after = inst.getData() || "";
-          return { ok: after.replace(/<[^>]+>/g, "").trim().length > 100, editor: `ckeditor:${key}` };
+          const cur = (inst.getData() || "").replace(/<[^>]+>/g, "").trim().length;
+          if (cur < 100) inst.setData(html);
+          const after = (inst.getData() || "").replace(/<[^>]+>/g, "").trim().length;
+          return { ok: after > 100, editor: `ckeditor:${key}` };
         }
       }
 
-      // Estrategia 3: textarea o contenteditable con id/name que indique contenido
-      // (incluye "contentes", "content", "contenido", "cuerpo", "body", "article", "editor")
+      // Paso 6: Cualquier textarea/contenteditable con contenido o id relacionado
       const candidates = Array.from(
         document.querySelectorAll("textarea, [contenteditable='true']"),
       ) as (HTMLTextAreaElement | HTMLElement)[];
-
-      const isContentField = (id: string, name: string): boolean => {
-        return /content|contenido|cuerpo|body|article|editor|materia|principal|text/i.test(id) ||
-               /content|contenido|cuerpo|body|article|editor|materia|principal|text/i.test(name);
-      };
-
       for (const el of candidates) {
         const id = (el.id || "").toLowerCase();
         const name = ((el as HTMLTextAreaElement).name || "").toLowerCase();
-        if (!isContentField(id, name)) continue;
-
-        const isTextarea = el.tagName === "TEXTAREA";
-        const current = isTextarea
-          ? (el as HTMLTextAreaElement).value || ""
-          : (el as HTMLElement).innerHTML || "";
-
-        if (current.replace(/<[^>]+>/g, "").trim().length < 100) {
-          if (isTextarea) {
-            (el as HTMLTextAreaElement).value = html;
-            el.dispatchEvent(new Event("input", { bubbles: true }));
-            el.dispatchEvent(new Event("change", { bubbles: true }));
-          } else {
-            (el as HTMLElement).innerHTML = html;
+        if (/content|contenido|cuerpo|body|article|editor|materia|text/i.test(id) ||
+            /content|contenido|cuerpo|body|article|editor|materia|text/i.test(name)) {
+          const isTA = el.tagName === "TEXTAREA";
+          const cur = isTA
+            ? ((el as HTMLTextAreaElement).value || "").replace(/<[^>]+>/g, "").trim().length
+            : ((el as HTMLElement).innerHTML || "").replace(/<[^>]+>/g, "").trim().length;
+          if (cur < 100) {
+            if (isTA) {
+              (el as HTMLTextAreaElement).value = html;
+            } else {
+              (el as HTMLElement).innerHTML = html;
+            }
             el.dispatchEvent(new Event("input", { bubbles: true }));
             el.dispatchEvent(new Event("change", { bubbles: true }));
           }
-        }
-
-        const after = isTextarea
-          ? (el as HTMLTextAreaElement).value || ""
-          : (el as HTMLElement).innerHTML || "";
-        return { ok: after.replace(/<[^>]+>/g, "").trim().length > 100, editor: `${el.tagName}#${id || name}` };
-      }
-
-      // Estrategia 4: buscar cualquier textarea vacío que sea grande (campo principal)
-      const allTextareas = Array.from(document.querySelectorAll("textarea")) as HTMLTextAreaElement[];
-      for (const ta of allTextareas) {
-        if (ta.value.length > 100) continue; // Ya tiene contenido
-        if (ta.offsetParent === null && ta.style.display === "none") continue; // Oculto real
-        // Si es un textarea grande (rows > 5) y está vacío, probablemente es el contenido principal
-        if ((ta.rows > 5 || ta.style.height !== "" || ta.className.includes("editor")) && ta.value.length < 100) {
-          ta.value = html;
-          ta.dispatchEvent(new Event("input", { bubbles: true }));
-          ta.dispatchEvent(new Event("change", { bubbles: true }));
-          return { ok: (ta.value?.length ?? 0) > 100, editor: `textarea:${ta.id || ta.name || "unknown"}` };
+          const after = isTA
+            ? ((el as HTMLTextAreaElement).value || "").replace(/<[^>]+>/g, "").trim().length
+            : ((el as HTMLElement).innerHTML || "").replace(/<[^>]+>/g, "").trim().length;
+          return { ok: after > 100, editor: `${el.tagName}#${id || name}` };
         }
       }
 
-      // Estrategia 5: buscar en iframes
+      // Paso 7: Buscar en iframes
       const iframes = Array.from(document.querySelectorAll("iframe"));
       for (const iframe of iframes) {
         try {
@@ -798,15 +826,15 @@ async function verifyAndFixContentEditor(
             body.dispatchEvent(new Event("input", { bubbles: true }));
             return { ok: true, editor: `iframe:${iframe.id || "editor"}` };
           }
-        } catch { /* cross-origin iframe, ignorar */ }
+        } catch { /* cross-origin */ }
       }
 
       return { ok: false, editor: "no encontrado" };
     }, contentHtml);
 
-    return result.ok;
+    return result;
   } catch {
-    return false;
+    return { ok: false, editor: "exception" };
   }
 }
 
