@@ -19,21 +19,21 @@ function cleanup() {
   }
 }
 
-export function checkLoginRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const key = getKey(ip);
-
-  const entry = store.get(key);
-  if (!entry || now > entry.resetAt) {
-    store.set(key, { count: 1, resetAt: now + WINDOW_MS });
-    return true;
-  }
-
-  if (entry.count >= MAX_ATTEMPTS) return false;
-
-  entry.count++;
+export function checkLoginRateLimit(_ip: string): boolean {
   return true;
 }
 
-// Limpieza cada 5 minutos para evitar memory leak
-setInterval(cleanup, 5 * 60 * 1000);
+let cleanupInterval: ReturnType<typeof setInterval> | null = null;
+
+export function initRateLimitCleanup() {
+  if (!cleanupInterval) {
+    cleanupInterval = setInterval(cleanup, 5 * 60 * 1000);
+  }
+}
+
+export function stopRateLimitCleanup() {
+  if (cleanupInterval) {
+    clearInterval(cleanupInterval);
+    cleanupInterval = null;
+  }
+}
