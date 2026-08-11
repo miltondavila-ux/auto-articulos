@@ -1,38 +1,86 @@
 import { buildImagePrompt } from "./image-prompt";
 
 const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
+const OPENAI_IMAGE_EDITS_URL = "https://api.openai.com/v1/images/edits";
 
 export interface GeneratedImageResult {
   url?: string;
   b64?: string;
 }
 
+async function downloadImageAsBase64(imageUrl: string): Promise<{ base64: string; mimeType: string } | null> {
+  try {
+    const res = await fetch(imageUrl);
+    if (!res.ok) return null;
+    const contentType = res.headers.get("content-type") || "image/png";
+    const arrayBuffer = await res.arrayBuffer();
+    const base64 = Buffer.from(arrayBuffer).toString("base64");
+    return { base64, mimeType: contentType };
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Genera una imagen con IA para una publicación social (Threads/X/LinkedIn).
- * Prueba gpt-image-1 y cae a dall-e-3 si el primero falla. Registra el
- * motivo real de cualquier error de OpenAI (antes fallaba en silencio).
- * No sube nada a almacenamiento — eso lo hace el llamador con su propia
- * integración de Vercel Blob, según si necesita una URL persistente o no.
+ * Prueba gpt-image-1 y cae a dall-e-3 si el primero falla. Si se pasa logoUrl,
+ * usa gpt-image-1 image-edits para incorporar el logo en la imagen. Registra el
+ * motivo real de cualquier error de OpenAI. No sube nada a almacenamiento — eso
+ * lo hace el llamador con su propia integración de Vercel Blob.
  */
 export async function generateSocialImageRaw(
   summary: string,
   customImagePrompt?: string | null,
-  extraStyle?: string
+  extraStyle?: string,
+  logoUrl?: string | null,
 ): Promise<GeneratedImageResult | null> {
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
   if (!OPENAI_API_KEY) return null;
 
   const basePrompt = buildImagePrompt(summary, customImagePrompt);
   const prompt = extraStyle ? `${basePrompt}\n\n${extraStyle}` : basePrompt;
-  const models = ["gpt-image-1", "dall-e-3"];
+
+  const hasLogo = Boolean(logoUrl);
+
+  // Modelos a probar: si hay logo, usar solo gpt-image-1 con edits.
+  // Si no hay logo, usar gpt-image-1 (generación) y dall-e-3 como fallback.
+  const models: Array<"gpt-image-1" | "dall-e-3"> = hasLogo ? ["gpt-image-1"] : ["gpt-image-1", "dall-e-3"];
 
   for (const model of models) {
     try {
-      const response = await fetch(OPENAI_IMAGE_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
-        body: JSON.stringify({ model, prompt, size: "1024x1024", n: 1 }),
-      });
+      let response: Response;
+
+      if (hasLogo && model === "gpt-image-1") {
+        const logoData = await downloadImageAsBase64(logoUrl!);
+        if (!logoData) {
+          console.warn(`[social-image] No se pudo descargar el logo ${logoUrl}, fallback a texto`);
+          continue;
+        }
+
+        const formData = new FormData();
+        formData.append("model", "gpt-image-1");
+        formData.append(
+          "prompt",
+          `${prompt}\n\nIncorpora el logo proporcionado de forma natural y profesional en la imagen, como una marca de agua o en una esquina.`,
+        );
+        formData.append("size", "1024x1024");
+        formData.append("n", "1");
+
+        const blob = new Blob([Buffer.from(logoData.base64, "base64")], { type: logoData.mimeType });
+        formData.append("image[]", blob, "logo");
+
+        response = await fetch(OPENAI_IMAGE_EDITS_URL, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${OPENAI_API_KEY}` },
+          body: formData,
+        });
+      } else {
+        response = await fetch(OPENAI_IMAGE_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
+          body: JSON.stringify({ model, prompt, size: "1024x1024", n: 1 }),
+        });
+      }
 
       const data = (await response.json()) as {
         data?: { url?: string; b64_json?: string }[];
@@ -41,7 +89,7 @@ export async function generateSocialImageRaw(
 
       if (!response.ok || data.error) {
         console.warn(
-          `OpenAI rechazó la generación de imagen con modelo ${model} (status ${response.status}):`,
+          `[social-image] OpenAI rechazó con modelo ${model} (status ${response.status}):`,
           data.error?.message || JSON.stringify(data),
         );
         continue;
@@ -53,9 +101,9 @@ export async function generateSocialImageRaw(
       if (url) return { url };
       if (b64) return { b64 };
 
-      console.warn(`Modelo ${model} respondió OK pero sin url ni b64_json:`, JSON.stringify(data));
+      console.warn(`[social-image] Modelo ${model} respondió OK pero sin url ni b64_json:`, JSON.stringify(data));
     } catch (err) {
-      console.warn(`Fallo al generar imagen social con modelo ${model}:`, err);
+      console.warn(`[social-image] Fallo con modelo ${model}:`, err);
     }
   }
 

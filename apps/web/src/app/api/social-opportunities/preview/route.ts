@@ -10,12 +10,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "summary y platform son requeridos" }, { status: 400 });
   }
 
-  let userPrompts: { imagePrompt: string | null; infographicPrompt: string | null } | null = null;
+  let userPrompts: { imagePrompt: string | null; infographicPrompt: string | null; businessLogoUrl: string | null } | null = null;
   try {
     const userId = await getCurrentUserId();
     userPrompts = await prisma.user.findUnique({
       where: { id: userId },
-      select: { imagePrompt: true, infographicPrompt: true },
+      select: { imagePrompt: true, infographicPrompt: true, businessLogoUrl: true },
     });
   } catch {
     // Sin usuario autenticado, usar prompts por defecto
@@ -25,7 +25,10 @@ export async function POST(request: NextRequest) {
     ? "Imagen profesional y limpia para LinkedIn. Colores corporativos azul oscuro y blanco, composición minimalista con texto claro y legible."
     : undefined;
 
-  const result = await generateSocialImageRaw(summary, userPrompts?.imagePrompt, extraStyle);
+  // 50% de probabilidad de incluir el logo del usuario si existe
+  const logoUrl = userPrompts?.businessLogoUrl && Math.random() < 0.5 ? userPrompts.businessLogoUrl : null;
+
+  const result = await generateSocialImageRaw(summary, userPrompts?.imagePrompt, extraStyle, logoUrl);
 
   if (!result) {
     return NextResponse.json({ error: "No se pudo generar la imagen" }, { status: 500 });
