@@ -23,7 +23,11 @@ interface ApiSettings {
   isAdmin?: boolean;
 }
 
-export default function LinkedInSection() {
+interface LinkedInSectionProps {
+  allowed?: boolean;
+}
+
+export default function LinkedInSection({ allowed = true }: LinkedInSectionProps) {
   const [connection, setConnection] = useState<LinkedInConnection | null>(null);
   const [settings, setSettings] = useState<ApiSettings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -206,6 +210,7 @@ export default function LinkedInSection() {
           )}
 
           {/* Bloque de conexión del usuario final */}
+          {allowed && (
           <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 16, paddingTop: 16 }}>
             <strong style={{ color: "#1e293b", fontSize: 14 }}>Conectar cuenta de usuario</strong>
             <p style={{ color: "#64748b", fontSize: 12, margin: "3px 0 12px" }}>
@@ -251,7 +256,14 @@ export default function LinkedInSection() {
               </a>
             )}
           </div>
+          )}
         </>
+      )}
+
+      {!allowed && (
+        <p style={{ color: "#92400e", fontSize: 13, background: "#fffbeb", border: "1px solid #fef3c7", padding: 10, borderRadius: 8, marginTop: 16 }}>
+          LinkedIn no está disponible para tu cuenta. Contacta al administrador para activar esta integración.
+        </p>
       )}
 
       {message && <p style={{ color: "#16a34a", fontSize: 13, marginTop: 10 }}>{message}</p>}

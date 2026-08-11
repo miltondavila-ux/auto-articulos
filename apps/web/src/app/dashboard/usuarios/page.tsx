@@ -35,6 +35,8 @@ interface UserRow {
   platformDomain: string;
   contentLanguage: string;
   allowInstagramPublishing: boolean;
+  allowLinkedInPublishing: boolean;
+  allowThreadsPublishing: boolean;
   profilePhotoUrl: string | null;
   businessLogoUrl: string | null;
   opportunitiesDisclosureAcceptedAt: string | null;
@@ -1300,6 +1302,48 @@ function UserCard({
                   style={{ accentColor: "#8134af", width: 16, height: 16 }}
                 />
                 Publicar en Instagram
+              </label>
+            </div>
+          </Field>
+
+          <Field label="Acceso LinkedIn">
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: "#e5e7eb" }}>
+                <input
+                  type="checkbox"
+                  checked={user.allowLinkedInPublishing}
+                  onChange={async (e) => {
+                    await fetch("/api/admin/users", {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ userId: user.id, allowLinkedInPublishing: e.target.checked }),
+                    });
+                    onUpdated();
+                  }}
+                  style={{ accentColor: "#0077b5", width: 16, height: 16 }}
+                />
+                Publicar en LinkedIn
+              </label>
+            </div>
+          </Field>
+
+          <Field label="Acceso Threads">
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: "#e5e7eb" }}>
+                <input
+                  type="checkbox"
+                  checked={user.allowThreadsPublishing}
+                  onChange={async (e) => {
+                    await fetch("/api/admin/users", {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ userId: user.id, allowThreadsPublishing: e.target.checked }),
+                    });
+                    onUpdated();
+                  }}
+                  style={{ accentColor: "#000000", width: 16, height: 16 }}
+                />
+                Publicar en Threads
               </label>
             </div>
           </Field>

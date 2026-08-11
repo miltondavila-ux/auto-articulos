@@ -32,7 +32,12 @@ interface InstagramConnection {
 
 type CredentialType = "meta" | "threads";
 
-export default function ThreadsSection() {
+interface ThreadsSectionProps {
+  allowThreads?: boolean;
+  allowInstagram?: boolean;
+}
+
+export default function ThreadsSection({ allowThreads = true, allowInstagram = true }: ThreadsSectionProps) {
   const [metaSettings, setMetaSettings] = useState<ApiSettings | null>(null);
   const [threadsSettings, setThreadsSettings] = useState<ApiSettings | null>(null);
   const [threadsConnection, setThreadsConnection] = useState<ThreadsConnection | null>(null);
@@ -228,13 +233,14 @@ export default function ThreadsSection() {
             threadsSettings,
           )}
 
+          {(allowThreads || allowInstagram) && (
           <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 18, paddingTop: 16 }}>
             <strong style={{ color: "#1e293b", fontSize: 14 }}>Conectar cuentas</strong>
             <p style={{ color: "#64748b", fontSize: 12, margin: "3px 0 12px" }}>
               Auto Artículos no guarda contraseñas de redes sociales. La autorización se realiza directamente en Meta.
             </p>
 
-            {!instagramConnection?.connected && (
+            {allowInstagram && !instagramConnection?.connected && (
               <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12, marginBottom: 14, fontSize: 12, color: "#475569", lineHeight: 1.5 }}>
                 <strong style={{ color: "#1e293b" }}>Requisitos para conectar Instagram:</strong>
                 <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
@@ -250,7 +256,7 @@ export default function ThreadsSection() {
             )}
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              {threadsConnection?.connected ? (
+              {allowThreads && (threadsConnection?.connected ? (
                 <button
                   onClick={() => disconnect("threads")}
                   disabled={disconnecting === "threads"}
@@ -265,9 +271,9 @@ export default function ThreadsSection() {
                 >
                   Conectar Threads
                 </a>
-              )}
+              ))}
 
-              {instagramConnection?.connected ? (
+              {allowInstagram && (instagramConnection?.connected ? (
                 <button
                   onClick={() => disconnect("meta")}
                   disabled={disconnecting === "meta"}
@@ -282,10 +288,17 @@ export default function ThreadsSection() {
                 >
                   Conectar Instagram
                 </a>
-              )}
+              ))}
             </div>
           </div>
+          )}
         </>
+      )}
+
+      {!allowThreads && !allowInstagram && (
+        <p style={{ color: "#92400e", fontSize: 13, background: "#fffbeb", border: "1px solid #fef3c7", padding: 10, borderRadius: 8, marginTop: 16 }}>
+          Las integraciones de Meta no están disponibles para tu cuenta. Contacta al administrador para activarlas.
+        </p>
       )}
 
       {message && <p style={{ color: "#16a34a", fontSize: 13 }}>{message}</p>}

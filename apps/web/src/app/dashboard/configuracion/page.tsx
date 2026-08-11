@@ -53,6 +53,9 @@ export default function ConfiguracionPage() {
   const [imageUploadError, setImageUploadError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [allowInstagramPublishing, setAllowInstagramPublishing] = useState(false);
+  const [allowLinkedInPublishing, setAllowLinkedInPublishing] = useState(false);
+  const [allowThreadsPublishing, setAllowThreadsPublishing] = useState(false);
   const [triggeringFix, setTriggeringFix] = useState(false);
   const [clearingFixHistory, setClearingFixHistory] = useState(false);
   const [fixStatus, setFixStatus] = useState<{
@@ -138,8 +141,11 @@ export default function ConfiguracionPage() {
        setInfographicPrompt(data.infographicPrompt ?? "");
        setProfilePhotoUrl(data.profilePhotoUrl ?? null);
        setBusinessLogoUrl(data.businessLogoUrl ?? null);
-       setIsAdmin(data.role === "admin");
-       setUserEmail(data.email ?? "");
+        setIsAdmin(data.role === "admin");
+        setUserEmail(data.email ?? "");
+        setAllowInstagramPublishing(data.allowInstagramPublishing ?? false);
+        setAllowLinkedInPublishing(data.allowLinkedInPublishing ?? false);
+        setAllowThreadsPublishing(data.allowThreadsPublishing ?? false);
     }
   }, []);
 
@@ -805,9 +811,11 @@ export default function ConfiguracionPage() {
           style={{ display: "flex", flexDirection: "column", gap: 16 }}
         >
           <BusinessProfileSection />
-          <ThreadsSection />
+          {(allowThreadsPublishing || allowInstagramPublishing || isAdmin) && (
+            <ThreadsSection allowThreads={allowThreadsPublishing} allowInstagram={allowInstagramPublishing} />
+          )}
           <TwitterSection />
-          <LinkedInSection />
+          {(allowLinkedInPublishing || isAdmin) && <LinkedInSection allowed={allowLinkedInPublishing} />}
         </div>
       )}
 

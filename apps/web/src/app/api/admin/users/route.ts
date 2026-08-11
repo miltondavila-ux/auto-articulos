@@ -55,6 +55,8 @@ export async function GET() {
         platformDomain: true,
         contentLanguage: true,
         allowInstagramPublishing: true,
+        allowLinkedInPublishing: true,
+        allowThreadsPublishing: true,
         profilePhotoUrl: true,
         businessLogoUrl: true,
         opportunitiesDisclosureAcceptedAt: true,
@@ -121,6 +123,8 @@ export async function PATCH(request: NextRequest) {
     phone,
     role,
     allowInstagramPublishing,
+    allowLinkedInPublishing,
+    allowThreadsPublishing,
     profilePhotoUrl,
     businessLogoUrl,
   } = body;
@@ -143,6 +147,8 @@ export async function PATCH(request: NextRequest) {
     initialPasswordEncrypted?: string;
     role?: "admin" | "user";
     allowInstagramPublishing?: boolean;
+    allowLinkedInPublishing?: boolean;
+    allowThreadsPublishing?: boolean;
     profilePhotoUrl?: string | null;
     businessLogoUrl?: string | null;
   } = {};
@@ -239,6 +245,14 @@ export async function PATCH(request: NextRequest) {
 
   if ("allowInstagramPublishing" in body) {
     data.allowInstagramPublishing = Boolean(allowInstagramPublishing);
+  }
+
+  if ("allowLinkedInPublishing" in body) {
+    data.allowLinkedInPublishing = Boolean(allowLinkedInPublishing);
+  }
+
+  if ("allowThreadsPublishing" in body) {
+    data.allowThreadsPublishing = Boolean(allowThreadsPublishing);
   }
 
   if ("profilePhotoUrl" in body) {

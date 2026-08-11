@@ -74,6 +74,12 @@ model User {
   // Control de acceso a publicación en Instagram. Solo el admin puede
   // activarlo por usuario. Default: false (nadie tiene acceso).
   allowInstagramPublishing          Boolean   @default(false)
+  // Control de acceso a publicación en LinkedIn. Solo el admin puede
+  // activarlo por usuario. Default: false (nadie tiene acceso).
+  allowLinkedInPublishing           Boolean   @default(false)
+  // Control de acceso a publicación en Threads. Solo el admin puede
+  // activarlo por usuario. Default: false (nadie tiene acceso).
+  allowThreadsPublishing            Boolean   @default(false)
   // Foto de perfil del usuario y logo de su negocio/marca.
   // Se usan como elementos visuales en las publicaciones de redes sociales
   // (carruseles, reels, infografías). Subidas como URLs de Vercel Blob.
