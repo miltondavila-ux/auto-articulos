@@ -18,6 +18,8 @@ export async function GET() {
     phone: user.phone,
     imagePrompt: user.imagePrompt,
     infographicPrompt: user.infographicPrompt,
+    profilePhotoUrl: user.profilePhotoUrl,
+    businessLogoUrl: user.businessLogoUrl,
   });
 }
 

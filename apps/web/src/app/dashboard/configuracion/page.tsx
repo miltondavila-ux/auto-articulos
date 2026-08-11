@@ -17,6 +17,7 @@ import BingWebmasterSection from "@/components/BingWebmasterSection";
 import ThreadsSection from "@/components/ThreadsSection";
 import TwitterSection from "@/components/TwitterSection";
 import LinkedInSection from "@/components/LinkedInSection";
+import PhotoLogoUploader from "@/components/PhotoLogoUploader";
 
 export default function ConfiguracionPage() {
   const [username, setUsername] = useState("");
@@ -45,6 +46,11 @@ export default function ConfiguracionPage() {
   const [savingImagePrompt, setSavingImagePrompt] = useState(false);
   const [infographicPrompt, setInfographicPrompt] = useState("");
   const [savingInfographicPrompt, setSavingInfographicPrompt] = useState(false);
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
+  const [businessLogoUrl, setBusinessLogoUrl] = useState<string | null>(null);
+  const [uploadingProfilePhoto, setUploadingProfilePhoto] = useState(false);
+  const [uploadingBusinessLogo, setUploadingBusinessLogo] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [triggeringFix, setTriggeringFix] = useState(false);
@@ -130,6 +136,8 @@ export default function ConfiguracionPage() {
        setPhone(data.phone ?? "");
        setImagePrompt(data.imagePrompt ?? "");
        setInfographicPrompt(data.infographicPrompt ?? "");
+       setProfilePhotoUrl(data.profilePhotoUrl ?? null);
+       setBusinessLogoUrl(data.businessLogoUrl ?? null);
        setIsAdmin(data.role === "admin");
        setUserEmail(data.email ?? "");
     }
@@ -343,6 +351,66 @@ export default function ConfiguracionPage() {
       setBanner({ type: "info", text: "Prompt de infografía guardado con éxito." });
     } finally {
       setSavingInfographicPrompt(false);
+    }
+  }
+
+  async function handleUploadImage(type: "profile" | "logo", file: File) {
+    const setUploading = type === "profile" ? setUploadingProfilePhoto : setUploadingBusinessLogo;
+    setUploading(true);
+    setImageUploadError(null);
+    try {
+      const formData = new FormData();
+      formData.append("type", type);
+      formData.append("file", file);
+      const res = await fetch("/api/me/upload-image", { method: "POST", body: formData });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = data.error ?? "Error al subir la imagen.";
+        setImageUploadError(msg);
+        throw new Error(msg);
+      }
+      if (type === "profile") {
+        setProfilePhotoUrl(data.url);
+      } else {
+        setBusinessLogoUrl(data.url);
+      }
+      const kb = data.sizeBytes ? Math.round(data.sizeBytes / 1024) : null;
+      const sizeNote = kb ? ` (${kb}KB)` : "";
+      setBanner({
+        type: "info",
+        text:
+          (type === "profile" ? "Foto de perfil guardada" : "Logo guardado") + sizeNote + ".",
+      });
+    } catch (err) {
+      const msg =
+        err instanceof Error && err.message
+          ? err.message
+          : "Error de conexión al subir la imagen.";
+      setImageUploadError(msg);
+      throw err;
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleRemoveImage(type: "profile" | "logo") {
+    const label = type === "profile" ? "tu foto de perfil" : "el logo del negocio";
+    if (!confirm(`¿Deseas eliminar ${label}?`)) return;
+    const setUploading = type === "profile" ? setUploadingProfilePhoto : setUploadingBusinessLogo;
+    setUploading(true);
+    try {
+      await fetch("/api/me/upload-image", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type }),
+      });
+      if (type === "profile") {
+        setProfilePhotoUrl(null);
+      } else {
+        setBusinessLogoUrl(null);
+      }
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -1298,6 +1366,72 @@ export default function ConfiguracionPage() {
                 {savingPhone ? "Guardando teléfono..." : "Guardar número de teléfono"}
               </button>
             </div>
+          </section>
+
+          {/* Foto de perfil y Logo del negocio — cada usuario sube los suyos */}
+          <section style={sectionStyle}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 8,
+                marginBottom: 6,
+              }}
+            >
+              <h2 style={{ ...h2Style, margin: 0 }}>Tu foto y logo para redes sociales</h2>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#7c3aed",
+                  background: "#f3e8ff",
+                  padding: "4px 10px",
+                  borderRadius: 999,
+                  border: "1px solid #ddd6fe",
+                }}
+              >
+                📸 Marca personal
+              </span>
+            </div>
+
+            <p style={{ fontSize: 13, color: "#64748b", marginBottom: 14 }}>
+              Estas dos imágenes se usan como elementos visuales al generar las
+              publicaciones de Instagram, Threads, X y LinkedIn (carruseles,
+              reels e infografías). Sube aquí las tuyas y el sistema las
+              optimizará automáticamente. No necesitas preocuparte por el
+              tamaño: el servidor las deja listas en óptimas condiciones para
+              que el prompt de redes sociales las use sin perder calidad.
+            </p>
+
+            <PhotoLogoUploader
+              type="profile"
+              currentUrl={profilePhotoUrl}
+              uploading={uploadingProfilePhoto}
+              onUpload={handleUploadImage}
+              onRemove={handleRemoveImage}
+              errorMessage={imageUploadError}
+              label="Tu foto de perfil"
+              description="Una foto tuya con buen encuadre. Aparece en cada composición de redes sociales que genere el sistema."
+              targetWidth={600}
+              targetHeight={600}
+              maxKb={200}
+            />
+
+            <PhotoLogoUploader
+              type="logo"
+              currentUrl={businessLogoUrl}
+              uploading={uploadingBusinessLogo}
+              onUpload={handleUploadImage}
+              onRemove={handleRemoveImage}
+              errorMessage={imageUploadError}
+              label="Logo de tu negocio"
+              description="El logo de tu marca o negocio. Idealmente con fondo transparente. Se estampa en una esquina de cada publicación."
+              targetWidth={500}
+              targetHeight={250}
+              maxKb={200}
+            />
           </section>
 
           {/* Prompts Personalizados para Imágenes (solo admins) */}
