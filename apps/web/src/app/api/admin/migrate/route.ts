@@ -10,7 +10,7 @@ export async function POST() {
   }
 
   try {
-    const result = await prisma.$executeRawUnsafe(`
+    await prisma.$executeRawUnsafe(`
       ALTER TABLE "User"
         ADD COLUMN IF NOT EXISTS "allowLinkedInPublishing" BOOLEAN NOT NULL DEFAULT false,
         ADD COLUMN IF NOT EXISTS "allowThreadsPublishing" BOOLEAN NOT NULL DEFAULT false;
