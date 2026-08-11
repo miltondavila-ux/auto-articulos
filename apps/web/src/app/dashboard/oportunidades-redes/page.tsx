@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Head from "next/head";
 import {
   buttonStyle,
   disabledStyle,
@@ -452,8 +453,14 @@ export default function OportunidadesRedesPage() {
                   };
                   const statusInfo = statusConfig[opp.status as keyof typeof statusConfig] || statusConfig.pending;
                   const showSpinner = opp.status === "processing";
-                  return (
-                  <div key={opp.id} style={{ ...sectionStyle, background: "#111827", border: `1px solid ${isQueuedOrProcessing ? "#f59e0b" : "#374151"}` }}>
+  return (
+    <>
+    <Head>
+      <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+      <meta httpEquiv="Pragma" content="no-cache" />
+      <meta httpEquiv="Expires" content="0" />
+    </Head>
+    <div style={{ padding: "0 10px", maxWidth: 1200, margin: "0 auto" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10 }}>
                       <div>
                         <span
@@ -781,7 +788,9 @@ export default function OportunidadesRedesPage() {
            0% { transform: translateX(-100%); }
            100% { transform: translateX(400%); }
          }
-       `}</style>
-     </div>
-   );
+        `}</style>
+      </div>
+    </>
+    );
+  }
 }
