@@ -57,7 +57,7 @@ export default function OportunidadesRedesPage() {
   const [publishingAll, setPublishingAll] = useState(false);
   const [message, setMessage] = useState<{ kind: "success" | "error" | "info"; text: string } | null>(null);
   const [skipModal, setSkipModal] = useState<{ opp: SocialOpportunity; reason: string; customReason: string } | null>(null);
-  const [previewModal, setPreviewModal] = useState<{ loading: boolean; platform: string; title: string } | null>(null);
+  const [previewModal, setPreviewModal] = useState<{ loading: boolean; imageUrl: string | null; imageBase64: string | null; platform: string; title: string } | null>(null);
 
   useEffect(() => {
     loadOpportunities();
@@ -268,7 +268,7 @@ export default function OportunidadesRedesPage() {
   }
 
   async function handlePreview(opp: SocialOpportunity) {
-    setPreviewModal({ loading: true, platform: opp.platform, title: opp.articleTitle });
+    setPreviewModal({ loading: true, imageUrl: null, imageBase64: null, platform: opp.platform, title: opp.articleTitle });
     try {
       const res = await fetch("/api/social-opportunities/preview", {
         method: "POST",
@@ -276,13 +276,15 @@ export default function OportunidadesRedesPage() {
         body: JSON.stringify({ summary: opp.articleTitle, platform: opp.platform }),
       });
       const data = await res.json();
-      if (data.imageUrl || data.imageBase64) {
-        setPreviewModal({ loading: false, platform: opp.platform, title: opp.articleTitle });
-      } else {
-        setPreviewModal({ loading: false, platform: opp.platform, title: opp.articleTitle });
-      }
+      setPreviewModal({
+        loading: false,
+        imageUrl: data.imageUrl || null,
+        imageBase64: data.imageBase64 || null,
+        platform: opp.platform,
+        title: opp.articleTitle,
+      });
     } catch {
-      setPreviewModal({ loading: false, platform: opp.platform, title: opp.articleTitle });
+      setPreviewModal({ loading: false, imageUrl: null, imageBase64: null, platform: opp.platform, title: opp.articleTitle });
     }
   }
 
@@ -469,7 +471,7 @@ export default function OportunidadesRedesPage() {
                       <div style={{ display: "flex", gap: 8 }}>
                         {!isQueuedOrProcessing && (
                           <>
-                        {opp.platform.startsWith("instagram") && (
+                        {(opp.platform.startsWith("instagram") || opp.platform === "threads" || opp.platform === "linkedin") && (
                           <button
                             onClick={() => handlePreview(opp)}
                             style={{ ...secondaryButtonStyle, padding: "8px 12px", fontSize: 13 }}
@@ -709,9 +711,15 @@ export default function OportunidadesRedesPage() {
                   <div style={{ fontSize: 24, marginBottom: 8 }}>⏳</div>
                   Generando preview...
                 </div>
+              ) : previewModal.imageUrl || previewModal.imageBase64 ? (
+                <img
+                  src={previewModal.imageBase64 ? `data:image/png;base64,${previewModal.imageBase64}` : previewModal.imageUrl!}
+                  alt="Preview"
+                  style={{ width: "100%", maxHeight: 400, objectFit: "contain" }}
+                />
               ) : (
-                <div style={{ color: "#9ca3af", textAlign: "center", padding: 40 }}>
-                  Preview no disponible
+                <div style={{ color: "#ef4444", textAlign: "center", padding: 40 }}>
+                  No se pudo generar el preview
                 </div>
               )}
             </div>

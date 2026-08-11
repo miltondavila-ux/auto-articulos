@@ -9,8 +9,9 @@ const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
 const STYLE_MAP: Record<string, string> = {
   "instagram-carousel": `Imagen con texto superpuesto grande y llamativo. Fondo visual moderno, colores vibrantes, con una frase clave o tip escrita directamente en la imagen en tipografía grande y audaz. Diseño tipo slide informativo para redes sociales.`,
   "instagram-reel-image": `Formato vertical 9:16 tipo portada de Instagram Reel. Texto grande y llamativo superpuesto, fondo degradado con colores profesionales, tipografía moderna. Diseñado para detener el scroll.`,
-  "instagram-infografia": `Estilo infografía profesional con datos, números, iconos y gráficos minimalistas. Fondo claro con acentos de color. Diseño informativo y fácil de leer.`,
+  "instagram-infografia": `Estilo infografía profesional con datos, números, iconos y gráficos minimalistas. Fondo claro con acentes de color. Diseño informativo y fácil de leer.`,
   "threads": `Imagen moderna para redes sociales, colores vibrantes, composición profesional, tipografía llamativa.`,
+  "linkedin": `Imagen profesional y limpia para LinkedIn. Colores corporativos azul oscuro y blanco, composición minimalista con texto claro y legible. Diseño tipo presentación profesional.`,
 };
 
 export async function POST(request: NextRequest) {
