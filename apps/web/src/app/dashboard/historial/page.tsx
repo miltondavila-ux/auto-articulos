@@ -248,6 +248,7 @@ interface SocialOpportunity {
   status: string;
   postId: string | null;
   errorLog: string | null;
+  titleId: string | null;
   createdAt: string;
   publishedAt: string | null;
 }
@@ -258,6 +259,24 @@ function HistorialRedes() {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deletingHistory, setDeletingHistory] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [socialEvents, setSocialEvents] = useState<Record<string, TitleEventRow[]>>({});
+  const [loadingSocialEvent, setLoadingSocialEvent] = useState<string | null>(null);
+
+  async function loadSocialEvents(titleId: string) {
+    if (socialEvents[titleId]) return;
+    setLoadingSocialEvent(titleId);
+    try {
+      const res = await fetch(`/api/titles/${titleId}/events`);
+      if (res.ok) {
+        const data = await res.json();
+        setSocialEvents((prev) => ({ ...prev, [titleId]: data.events || [] }));
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoadingSocialEvent(null);
+    }
+  }
 
   async function loadOpportunities() {
     try {
@@ -485,6 +504,30 @@ function HistorialRedes() {
                         >
                           <strong>Log de error:</strong> {opp.errorLog}
                         </div>
+                      )}
+                      {opp.titleId && (
+                        <details
+                          style={{ marginTop: 12 }}
+                          onToggle={(e) => {
+                            if ((e.target as HTMLDetailsElement).open) loadSocialEvents(opp.titleId!);
+                          }}
+                        >
+                          <summary style={{ cursor: "pointer", color: "#6b7280", fontSize: 12, fontWeight: 600 }}>
+                            Ver log del proceso
+                          </summary>
+                          {loadingSocialEvent === opp.titleId && !socialEvents[opp.titleId] && (
+                            <p style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>Cargando...</p>
+                          )}
+                          {socialEvents[opp.titleId] && (
+                            <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: "#6b7280", fontSize: 11 }}>
+                              {socialEvents[opp.titleId].map((e) => (
+                                <li key={e.id} style={{ marginBottom: 3 }}>
+                                  <span>{new Date(e.createdAt).toLocaleTimeString()}</span> — {e.message}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </details>
                       )}
                     </div>
                   </details>
