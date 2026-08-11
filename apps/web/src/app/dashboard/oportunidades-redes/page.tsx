@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Head from "next/head";
 import {
   buttonStyle,
   disabledStyle,
@@ -398,7 +397,7 @@ export default function OportunidadesRedesPage() {
           )}
           {queuedList.length > 0 && (
             <span style={{ color: "#f59e0b", fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ display: "inline-block", animation: "spin 1s linear infinite" }}>🔄</span>
+              <span style={{ display: "inline-block", animation: "spin-v2 1s linear infinite" }}>🔄</span>
               {queuedList.length} en proceso de publicación — se actualiza automáticamente...
             </span>
           )}
@@ -453,14 +452,8 @@ export default function OportunidadesRedesPage() {
                   };
                   const statusInfo = statusConfig[opp.status as keyof typeof statusConfig] || statusConfig.pending;
                   const showSpinner = opp.status === "processing";
-  return (
-    <>
-    <Head>
-      <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-      <meta httpEquiv="Pragma" content="no-cache" />
-      <meta httpEquiv="Expires" content="0" />
-    </Head>
-    <div style={{ padding: "0 10px", maxWidth: 1200, margin: "0 auto" }}>
+                  return (
+                  <div key={opp.id} style={{ ...sectionStyle, background: "#111827", border: `1px solid ${isQueuedOrProcessing ? "#f59e0b" : "#374151"}` }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10 }}>
                       <div>
                         <span
@@ -478,7 +471,7 @@ export default function OportunidadesRedesPage() {
                           {opp.platform === "threads" ? "🌀 THREADS" : opp.platform === "x" ? "🐦 X (TWITTER)" : opp.platform === "linkedin" ? "💼 LINKEDIN" : opp.platform === "instagram-carousel" ? "📸 IG CARRUSEL" : opp.platform === "instagram-reel-image" ? "📸 IG REEL-IMG" : opp.platform === "instagram-infografia" ? "📸 IG INFOGRAFÍA" : opp.platform.toUpperCase()}
                         </span>
                         <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, background: statusInfo.bg, color: statusInfo.color, marginLeft: 6 }}>
-                          {showSpinner && <span style={{ display: "inline-block", animation: "spin 1s linear infinite" }}>🔄</span>}
+                          {showSpinner && <span style={{ display: "inline-block", animation: "spin-v2 1s linear infinite" }}>🔄</span>}
                           {!showSpinner && <span>{statusInfo.icon}</span>}
                           {statusInfo.label}
                         </span>
@@ -557,7 +550,7 @@ export default function OportunidadesRedesPage() {
                     </div>
                     {isQueuedOrProcessing && (
                       <div style={{ marginTop: 12, height: 4, borderRadius: 2, background: "#374151", overflow: "hidden" }}>
-                        <div style={{ height: "100%", width: "30%", borderRadius: 2, background: "linear-gradient(90deg, transparent, #3b82f6, transparent)", animation: "slide 1.5s linear infinite" }} />
+                        <div style={{ height: "100%", width: "30%", borderRadius: 2, background: "linear-gradient(90deg, transparent, #3b82f6, transparent)", animation: "slide-v2 1.5s linear infinite" }} />
                       </div>
                     )}
                     {opp.status === "error" && opp.errorLog && (
@@ -779,18 +772,16 @@ export default function OportunidadesRedesPage() {
            </div>
          </div>
        )}
-       <style>{`
-         @keyframes spin {
-           from { transform: rotate(0deg); }
-           to { transform: rotate(360deg); }
-         }
-         @keyframes slide {
-           0% { transform: translateX(-100%); }
-           100% { transform: translateX(400%); }
-         }
+        <style>{`
+          @keyframes spin-v2 {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+          @keyframes slide-v2 {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(400%); }
+          }
         `}</style>
-      </div>
-    </>
-    );
-  }
+     </div>
+   );
 }
