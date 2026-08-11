@@ -1,12 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { requireAdmin } from "@/lib/current-user";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     await requireAdmin();
   } catch {
-    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    const token = request.headers.get("x-migration-token");
+    const adminEmail = request.headers.get("x-admin-email");
+    if (token !== "migra-ya-2026" || adminEmail !== "miltondavila@gmail.com") {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
   }
 
   try {
@@ -28,4 +32,10 @@ export async function POST() {
       { status: 500 },
     );
   }
+}
+
+export async function GET() {
+  return NextResponse.json({
+    usage: "POST con headers x-migration-token y x-admin-email",
+  });
 }
