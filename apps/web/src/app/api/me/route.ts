@@ -21,8 +21,6 @@ export async function GET() {
     profilePhotoUrl: user.profilePhotoUrl,
     businessLogoUrl: user.businessLogoUrl,
     allowInstagramPublishing: user.allowInstagramPublishing,
-    allowLinkedInPublishing: user.allowLinkedInPublishing,
-    allowThreadsPublishing: user.allowThreadsPublishing,
   });
 }
 

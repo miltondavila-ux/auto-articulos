@@ -26,8 +26,6 @@ export async function getCurrentUser() {
       contentLanguage: true,
       articleSignature: true,
       allowInstagramPublishing: true,
-      allowLinkedInPublishing: true,
-      allowThreadsPublishing: true,
       profilePhotoUrl: true,
       businessLogoUrl: true,
       opportunitiesDisclosureAcceptedAt: true,
