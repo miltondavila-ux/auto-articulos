@@ -16,6 +16,7 @@
     "autoprefixer": "^10.5.4",
     "bcryptjs": "^2.4.3",
     "next": "^16.2.12",
+    "pg": "^8.23.0",
     "postcss": "^8.4.31",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -24,6 +25,7 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.7.0",
+    "@types/pg": "^8.21.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "typescript": "^5.6.0"
