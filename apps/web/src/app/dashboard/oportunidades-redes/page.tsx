@@ -22,7 +22,6 @@ interface SocialOpportunity {
   skipReason: string | null;
   createdAt: string;
   publishedAt: string | null;
-  imageUrl: string | null;
 }
 
 const SKIP_REASONS = [
@@ -58,7 +57,7 @@ export default function OportunidadesRedesPage() {
   const [publishingAll, setPublishingAll] = useState(false);
   const [message, setMessage] = useState<{ kind: "success" | "error" | "info"; text: string } | null>(null);
   const [skipModal, setSkipModal] = useState<{ opp: SocialOpportunity; reason: string; customReason: string } | null>(null);
-  const [previewModal, setPreviewModal] = useState<{ imageUrl: string | null; loading: boolean; platform: string; title: string } | null>(null);
+  const [previewModal, setPreviewModal] = useState<{ loading: boolean; platform: string; title: string } | null>(null);
 
   useEffect(() => {
     loadOpportunities();
@@ -269,7 +268,7 @@ export default function OportunidadesRedesPage() {
   }
 
   async function handlePreview(opp: SocialOpportunity) {
-    setPreviewModal({ imageUrl: null, loading: true, platform: opp.platform, title: opp.articleTitle });
+    setPreviewModal({ loading: true, platform: opp.platform, title: opp.articleTitle });
     try {
       const res = await fetch("/api/social-opportunities/preview", {
         method: "POST",
@@ -277,15 +276,13 @@ export default function OportunidadesRedesPage() {
         body: JSON.stringify({ summary: opp.articleTitle, platform: opp.platform }),
       });
       const data = await res.json();
-      if (data.imageUrl) {
-        setPreviewModal({ imageUrl: data.imageUrl, loading: false, platform: opp.platform, title: opp.articleTitle });
-      } else if (data.imageBase64) {
-        setPreviewModal({ imageUrl: `data:image/png;base64,${data.imageBase64}`, loading: false, platform: opp.platform, title: opp.articleTitle });
+      if (data.imageUrl || data.imageBase64) {
+        setPreviewModal({ loading: false, platform: opp.platform, title: opp.articleTitle });
       } else {
-        setPreviewModal({ imageUrl: null, loading: false, platform: opp.platform, title: opp.articleTitle });
+        setPreviewModal({ loading: false, platform: opp.platform, title: opp.articleTitle });
       }
     } catch {
-      setPreviewModal({ imageUrl: null, loading: false, platform: opp.platform, title: opp.articleTitle });
+      setPreviewModal({ loading: false, platform: opp.platform, title: opp.articleTitle });
     }
   }
 
@@ -504,18 +501,6 @@ export default function OportunidadesRedesPage() {
                       </div>
                     </div>
 
-                    {opp.imageUrl && (
-                      <div style={{ marginTop: 15 }}>
-                        <label style={{ display: "block", color: "#9ca3af", fontSize: 12, marginBottom: 6 }}>
-                          Imagen que se publicará junto al post:
-                        </label>
-                        <img
-                          src={opp.imageUrl}
-                          alt="Miniatura de la publicación"
-                          style={{ width: 180, height: 180, objectFit: "cover", borderRadius: 8, border: "1px solid #374151" }}
-                        />
-                      </div>
-                    )}
 
                     <div style={{ marginTop: 15 }}>
                       <label style={{ display: "block", color: "#9ca3af", fontSize: 12, marginBottom: 4 }}>
@@ -724,11 +709,9 @@ export default function OportunidadesRedesPage() {
                   <div style={{ fontSize: 24, marginBottom: 8 }}>⏳</div>
                   Generando preview...
                 </div>
-              ) : previewModal.imageUrl ? (
-                <img src={previewModal.imageUrl} alt="Preview" style={{ width: "100%", borderRadius: 8 }} />
               ) : (
-                <div style={{ color: "#ef4444", textAlign: "center", padding: 40 }}>
-                  No se pudo generar el preview
+                <div style={{ color: "#9ca3af", textAlign: "center", padding: 40 }}>
+                  Preview no disponible
                 </div>
               )}
             </div>

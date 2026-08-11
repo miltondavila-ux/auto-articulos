@@ -2,7 +2,6 @@ import "dotenv/config";
 import { processNext } from "./queue";
 import { processNextCategorySync } from "./categorySync";
 import { processNextSocialPublish } from "./socialPublish";
-import { processNextOpportunityImage } from "./opportunityImage";
 
 const POLL_INTERVAL_MS = 3000;
 let stopping = false;
@@ -13,9 +12,8 @@ async function loop() {
       const didSyncWork = await processNextCategorySync();
       const didRunWork = await processNext();
       const didSocialPublish = await processNextSocialPublish();
-      const didOppImage = await processNextOpportunityImage();
       await sleep(
-        didSyncWork || didRunWork || didSocialPublish || didOppImage
+        didSyncWork || didRunWork || didSocialPublish
           ? 500
           : POLL_INTERVAL_MS,
       );

@@ -255,7 +255,6 @@ export async function POST(request: Request) {
             platform,
             suggestedText: copyText,
             status: "pending",
-            imageUrl: null,
           },
         });
 

@@ -83,7 +83,6 @@ async function processThreadsJob(job: {
   articleUrl: string;
   articleTitle: string;
   suggestedText: string;
-  imageUrl: string | null;
 }): Promise<boolean> {
   const integration = await prisma.threadsIntegration.findUnique({
     where: { userId: job.userId },
@@ -124,10 +123,8 @@ async function processThreadsJob(job: {
     finalPost = `${finalPost}\n\n${job.articleUrl}`;
   }
 
-  // Preferir la imagen ya generada al crear la propuesta (el usuario la vio
-  // como miniatura antes de aprobar). Solo se genera una nueva aquí como
-  // respaldo, para propuestas creadas antes de que existiera este flujo.
-  let imageUrl: string | undefined = job.imageUrl ?? undefined;
+  // Generar imagen como respaldo para propuestas creadas antes de este flujo.
+  let imageUrl: string | undefined = undefined;
   if (!imageUrl && job.titleId) {
     const [title, user] = await Promise.all([
       prisma.title.findUnique({ where: { id: job.titleId } }),
@@ -174,7 +171,6 @@ async function processTwitterJob(job: {
   articleUrl: string;
   articleTitle: string;
   suggestedText: string;
-  imageUrl: string | null;
 }): Promise<boolean> {
   const integration = await prisma.twitterIntegration.findUnique({
     where: { userId: job.userId },
@@ -213,14 +209,14 @@ async function processTwitterJob(job: {
     finalPost = `${finalPost}\n\n${job.articleUrl}`;
   }
 
-  let imageUrl: string | undefined = job.imageUrl ?? undefined;
+  let imageUrl: string | undefined = undefined;
   if (!imageUrl && job.titleId) {
     const [title, user] = await Promise.all([
       prisma.title.findUnique({ where: { id: job.titleId } }),
       prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true } }),
     ]);
     const imageBasis = title?.summary || job.articleTitle;
-    if (imageBasis) {
+    if (title?.summary) {
       imageUrl = (await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt)) ?? undefined;
     }
   }
@@ -260,7 +256,6 @@ async function processLinkedInJob(job: {
   articleUrl: string;
   articleTitle: string;
   suggestedText: string;
-  imageUrl: string | null;
 }): Promise<boolean> {
   const integration = await prisma.linkedInIntegration.findUnique({
     where: { userId: job.userId },
@@ -295,7 +290,7 @@ async function processLinkedInJob(job: {
   // una nueva aquí como respaldo (propuestas creadas antes de este flujo).
   // En ambos casos, LinkedIn requiere subirla a su sistema de assets nativo
   // antes de poder adjuntarla a un post.
-  let sourceImageUrl: string | undefined = job.imageUrl ?? undefined;
+  let sourceImageUrl: string | undefined = undefined;
   if (!sourceImageUrl && job.titleId) {
     const [title, user] = await Promise.all([
       prisma.title.findUnique({ where: { id: job.titleId } }),
