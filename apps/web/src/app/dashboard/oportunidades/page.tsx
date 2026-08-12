@@ -71,14 +71,31 @@ export default function OportunidadesPage() {
   // nuevo, se ofrece la opción de forzar un análisis nuevo bajo el propio
   // criterio del usuario, en vez de dejarlo bloqueado sin poder intentar.
   const [canForce, setCanForce] = useState(false);
+  // Pedido explícito del usuario (11/8/2026, cuenta de Lorena Álvarez, ya
+  // conectada): el aviso "Necesitas tener Google conectado..." se mostraba
+  // SIEMPRE, sin revisar nada — ni siquiera esta página consultaba el
+  // estado real de la conexión. Ahora sí, y solo se muestra si de verdad
+  // falta algo.
+  const [setupStatus, setSetupStatus] = useState<{
+    googleConnected: boolean;
+    hasSiteUrl: boolean;
+    hasCategories: boolean;
+  } | null>(null);
 
   const load = useCallback(async () => {
-    const [opportunitiesResponse, meResponse, languagesResponse] =
-      await Promise.all([
-        fetch("/api/opportunities", { cache: "no-store" }),
-        fetch("/api/me", { cache: "no-store" }),
-        fetch("/api/languages", { cache: "no-store" }),
-      ]);
+    const [
+      opportunitiesResponse,
+      meResponse,
+      languagesResponse,
+      googleResponse,
+      categoriesResponse,
+    ] = await Promise.all([
+      fetch("/api/opportunities", { cache: "no-store" }),
+      fetch("/api/me", { cache: "no-store" }),
+      fetch("/api/languages", { cache: "no-store" }),
+      fetch("/api/search-integrations/google", { cache: "no-store" }),
+      fetch("/api/categories", { cache: "no-store" }),
+    ]);
     const data = await opportunitiesResponse.json().catch(() => ({}));
     if (opportunitiesResponse.ok) {
       setGroups(data.groups ?? []);
@@ -101,6 +118,15 @@ export default function OportunidadesPage() {
       const langs = await languagesResponse.json().catch(() => ({}));
       setLanguages(langs.languages ?? []);
     }
+    const google = await googleResponse.json().catch(() => ({}));
+    const categoriesData = await categoriesResponse.json().catch(() => ({}));
+    setSetupStatus({
+      googleConnected: Boolean(google.connected),
+      hasSiteUrl: Boolean(google.siteUrl),
+      hasCategories: Array.isArray(categoriesData.categories)
+        ? categoriesData.categories.length > 0
+        : false,
+    });
     setLoading(false);
   }, []);
 
@@ -419,14 +445,28 @@ export default function OportunidadesPage() {
             </p>
           </div>
         )}
-        <p style={{ color: "#6b7280", fontSize: 12 }}>
-          Necesitas tener Google conectado, una propiedad elegida y categorías
-          sincronizadas en{" "}
-          <Link href="/dashboard/configuracion" style={{ color: "#2f5fdb" }}>
-            Configuración
-          </Link>
-          .
-        </p>
+        {setupStatus &&
+          (!setupStatus.googleConnected ||
+            !setupStatus.hasSiteUrl ||
+            !setupStatus.hasCategories) && (
+            <p style={{ color: "#6b7280", fontSize: 12 }}>
+              Todavía te falta{" "}
+              {[
+                !setupStatus.googleConnected && "conectar Google",
+                setupStatus.googleConnected &&
+                  !setupStatus.hasSiteUrl &&
+                  "elegir una propiedad de Search Console",
+                !setupStatus.hasCategories && "sincronizar tus categorías",
+              ]
+                .filter(Boolean)
+                .join(", ")}{" "}
+              en{" "}
+              <Link href="/dashboard/configuracion" style={{ color: "#2f5fdb" }}>
+                Configuración
+              </Link>
+              .
+            </p>
+          )}
         <p style={{ color: "#6b7280", fontSize: 12 }}>
           Tu máximo permitido es de {maxTitlesPerBatch} títulos por lote.
         </p>
