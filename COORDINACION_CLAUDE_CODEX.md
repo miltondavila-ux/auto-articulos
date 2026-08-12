@@ -42,6 +42,21 @@ Claude, Codex y Antigravity deben hacer lo siguiente **antes de leer o modificar
 
 ## Trabajo activo
 
+### Claude — investigación en curso: bucle de reconexión de Bing (cuenta de Julio Paso)
+
+- **Estado:** `EN INVESTIGACIÓN` (11/8/2026).
+- **Reserva de archivos:**
+  - `apps/web/src/components/BingWebmasterSection.tsx`
+  - `apps/web/src/app/api/search-integrations/bing/route.ts`
+  - `apps/web/src/lib/bing-oauth.ts`
+  - `packages/shared/src/bing-webmaster.ts`
+- **Síntoma original:** cuenta de Julio Paso — selector de sitio vacío, "Refresh token is invalid or expired." y, al presionar "MASTER INDEXACION BING", un segundo mensaje distinto ("conecta y elige tu sitio primero"). Diagnosticado como el mismo problema mostrado de dos formas confusas (ver commit `3fa0f8b`).
+- **Fix 1 (`3fa0f8b`):** un solo aviso claro ("⚠️ Tu conexión con Bing venció") con botón "Reconectar Bing" cuando se detecta ese patrón de error.
+- **Al probarlo:** el botón sí apareció y el usuario reconectó correctamente (el selector mostró el sitio real: `https://www.juliopasopargainmobiliario.es/`), pero al presionar "Guardar sitio" dio un genérico "No se pudo guardar." — encontrado que el `PATCH` de guardar sitio (a diferencia de `GET` y de `master-index`) no tenía try/catch, así que cualquier error real de Bing se perdía. **Fix 2 (`6fb5125`):** se agregó captura del error real.
+- **Nuevo síntoma reportado (sin resolver todavía):** el usuario reconectó desde cero (desconectar + volver a conectar) y el aviso rojo "Tu conexión con Bing venció" **volvió a aparecer casi de inmediato**, en bucle — esto NO es un vencimiento natural por tiempo, apunta a un bug real en el proceso de conexión/guardado del token, no solo a que "Bing revoca tokens" (explicación que ya no alcanza para explicar un bucle instantáneo).
+- **Investigación en curso:** se dejó un `Monitor` en vivo sobre `vercel logs -f` filtrando por "bing|error" para capturar el error real la próxima vez que el usuario reproduzca el bucle (los intentos anteriores de leer logs con `--since` fallaron porque el buffer de Vercel rota muy rápido). Revisado hasta ahora sin encontrar el bug: `bing-oauth.ts` y `bing-webmaster.ts` usan las mismas variables de entorno (`BING_WEBMASTER_CLIENT_ID/SECRET`) en connect/callback y en el refresh posterior — sin discrepancia visible ahí todavía.
+- **Pendiente:** esperar el próximo intento del usuario con el monitor activo, leer el error real capturado, y recién ahí diagnosticar la causa de fondo (sospechas sin confirmar: posible problema de encriptación/desencriptación del refresh token al guardarlo, o alguna otra parte del sistema sobrescribiendo el token bueno).
+
 ### Antigravity — reparación de Patricia Coy (lotes reanudables)
 
 - **Estado:** `TERMINADO — ESPERANDO CONFIRMACIÓN DEL USUARIO` (9/8/2026).
