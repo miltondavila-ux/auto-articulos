@@ -51,6 +51,18 @@ export default function BingWebmasterSection() {
     setEditingSitemap(false);
   }
 
+  // Bug real encontrado el 11/8/2026 (cuenta de Julio Paso): cuando el token
+  // de Bing vence, la lista de sitios queda vacía (no se puede volver a
+  // traer de Bing) y por eso nunca se pudo guardar un `siteUrl`. Eso hacía
+  // que "MASTER INDEXACION BING" fallara con OTRO mensaje distinto ("conecta
+  // y elige tu sitio primero"), sin relación aparente con el error real de
+  // arriba ("Refresh token is invalid or expired") — dos síntomas de la
+  // MISMA causa, mostrados como si fueran dos problemas separados, sin decir
+  // qué hacer. Se detecta ese patrón específico para mostrar un solo aviso
+  // claro con la acción correcta (reconectar), en vez de dos.
+  const tokenExpired =
+    !!data?.error && /invalid.*token|expired|unauthorized|401/i.test(data.error);
+
   useEffect(() => {
     load();
   }, []);
@@ -170,6 +182,39 @@ export default function BingWebmasterSection() {
         >
           Conectar Bing Webmaster Tools
         </a>
+      ) : tokenExpired ? (
+        <div
+          style={{
+            background: "#fef2f2",
+            border: "1px solid #fecaca",
+            borderRadius: 8,
+            padding: 14,
+          }}
+        >
+          <p style={{ margin: 0, fontWeight: 700, color: "#991b1b", fontSize: 14 }}>
+            ⚠️ Tu conexión con Bing venció
+          </p>
+          <p style={{ margin: "6px 0 10px", color: "#991b1b", fontSize: 13 }}>
+            Esto pasa del lado de Bing (no es un error del sistema) — hay que
+            volver a autorizar la cuenta. Es rápido: al reconectar, tu sitio y
+            tu sitemap guardados no se pierden.
+          </p>
+          <a
+            href="/api/search-integrations/bing/connect"
+            style={{
+              display: "inline-block",
+              background: "#991b1b",
+              color: "#fff",
+              padding: "8px 16px",
+              borderRadius: 8,
+              fontWeight: 700,
+              textDecoration: "none",
+              fontSize: 13,
+            }}
+          >
+            Reconectar Bing
+          </a>
+        </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <select
@@ -332,7 +377,7 @@ export default function BingWebmasterSection() {
                 )}
             </div>
           )}
-          {data.error && (
+          {data.error && !tokenExpired && (
             <p style={{ color: "#d64545", fontSize: 12 }}>{data.error}</p>
           )}
         </div>
