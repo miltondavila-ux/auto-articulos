@@ -767,13 +767,28 @@ async function injectContentIntoEditor(
     .replace(/\s+/g, " ")
     .trim();
 
-  // Estrategia 1: TinyMCE setContent
+  // Bug real encontrado el 11/8/2026 (cuenta de Lorena Álvarez): tanto
+  // TinyMCE.setContent() como CKEditor.setData() solo actualizan el
+  // contenido INTERNO del editor — ninguno de los dos sincroniza por sí solo
+  // el <textarea id="contentes"> real que el sitio valida antes de guardar.
+  // El sitio habilita "Guardar cambios" de forma OPTIMISTA en cuanto detecta
+  // el evento de cambio del editor visual, aunque el textarea real siga
+  // vacío — por eso el log decía "✓ HABILITADO" segundos después de inyectar,
+  // pero minutos más tarde, al guardar de verdad, seguía en 0 chars. Mismo
+  // patrón que el bug ya arreglado en el chequeo inicial (ver más arriba):
+  // el estado del botón es un dato que llega tarde/optimista, no confiable.
+  // Fix: forzar la sincronización real (TinyMCE.save(), CKEditor
+  // updateElement()) y verificar contra el LARGO REAL del textarea, no
+  // contra el estado del botón.
+
+  // Estrategia 1: TinyMCE setContent + save() (sincroniza al textarea real)
   const tinymceResult = await page.evaluate((html) => {
-    const tinymce = (window as unknown as { tinymce?: { editors?: Array<{ setContent: (h: string) => void; id: string }> } }).tinymce;
+    const tinymce = (window as unknown as { tinymce?: { editors?: Array<{ setContent: (h: string) => void; save?: () => void; id: string }> } }).tinymce;
     if (tinymce?.editors?.length) {
       for (const ed of tinymce.editors) {
         if (ed.setContent) {
           ed.setContent(html);
+          ed.save?.();
           return true;
         }
       }
@@ -785,19 +800,22 @@ async function injectContentIntoEditor(
     await onStep("Inyección vía TinyMCE setContent ejecutada.");
     await page.waitForTimeout(1000);
     const state = await diagnoseEditorState(page);
-    if (state.saveBtnEnabled) {
-      await onStep("✓ Guardar cambios HABILITADO después de TinyMCE.");
+    if (state.contentesLen > 0) {
+      await onStep(
+        `✓ Contenido confirmado en el textarea real después de TinyMCE (${state.contentesLen} chars).`,
+      );
       return;
     }
   }
 
-  // Estrategia 2: CKEditor setData
+  // Estrategia 2: CKEditor setData + updateElement() (sincroniza al textarea real)
   const ckResult = await page.evaluate((html) => {
-    const ck = (window as unknown as { CKEDITOR?: { instances?: Record<string, { setData: (h: string) => void }> } }).CKEDITOR;
+    const ck = (window as unknown as { CKEDITOR?: { instances?: Record<string, { setData: (h: string) => void; updateElement: () => void }> } }).CKEDITOR;
     if (ck?.instances) {
       for (const key of Object.keys(ck.instances)) {
         try {
           ck.instances[key].setData(html);
+          ck.instances[key].updateElement();
           return true;
         } catch { /* intentar siguiente */ }
       }
@@ -809,8 +827,10 @@ async function injectContentIntoEditor(
     await onStep("Inyección vía CKEditor setData ejecutada.");
     await page.waitForTimeout(1000);
     const state = await diagnoseEditorState(page);
-    if (state.saveBtnEnabled) {
-      await onStep("✓ Guardar cambios HABILITADO después de CKEditor.");
+    if (state.contentesLen > 0) {
+      await onStep(
+        `✓ Contenido confirmado en el textarea real después de CKEditor (${state.contentesLen} chars).`,
+      );
       return;
     }
   }
@@ -833,8 +853,10 @@ async function injectContentIntoEditor(
     await onStep("Inyección vía execCommand insertHTML en contenteditable.");
     await page.waitForTimeout(1000);
     const state = await diagnoseEditorState(page);
-    if (state.saveBtnEnabled) {
-      await onStep("✓ Guardar cambios HABILITADO después de insertHTML.");
+    if (state.contentesLen > 0 || state.editableLen > 100) {
+      await onStep(
+        `✓ Contenido confirmado después de insertHTML (textarea=${state.contentesLen} chars, editable=${state.editableLen} chars).`,
+      );
       return;
     }
   }
@@ -851,8 +873,10 @@ async function injectContentIntoEditor(
     await page.keyboard.insertText(plainText.slice(0, 500));
     await page.waitForTimeout(1000);
     const state = await diagnoseEditorState(page);
-    if (state.saveBtnEnabled) {
-      await onStep("✓ Guardar cambios HABILITADO después de keyboard.insertText.");
+    if (state.contentesLen > 0 || state.editableLen > 100) {
+      await onStep(
+        `✓ Contenido confirmado después de keyboard.insertText (textarea=${state.contentesLen} chars, editable=${state.editableLen} chars).`,
+      );
       return;
     }
   }
@@ -889,13 +913,15 @@ async function injectContentIntoEditor(
     await onStep("Inyección vía Materialize textarea trigger.");
     await page.waitForTimeout(1500);
     const state = await diagnoseEditorState(page);
-    if (state.saveBtnEnabled) {
-      await onStep("✓ Guardar cambios HABILITADO después de Materialize trigger.");
+    if (state.contentesLen > 0) {
+      await onStep(
+        `✓ Contenido confirmado en el textarea real después de Materialize (${state.contentesLen} chars).`,
+      );
       return;
     }
   }
 
-  await onStep("⚠️ Ninguna estrategia logró habilitar Guardar cambios. Se continúa de todas formas.");
+  await onStep("⚠️ Ninguna estrategia logró poner el contenido real en el textarea. Se continúa de todas formas.");
 }
 
 const MAX_IMAGE_ATTEMPTS = 3;
