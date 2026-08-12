@@ -622,34 +622,38 @@ async function createArticleDraft(
     );
   }
 
-  // DIAGNÓSTICO: inspeccionar el botón "Usar contenido" para saber qué función llama
+  // DIAGNÓSTICO: inspeccionar el botón "Usar contenido" (#btncopy) para saber qué función llama
   const usearContenidoInfo = await dialog.evaluate(() => {
-    const btns = Array.from(document.querySelectorAll("button"));
-    const usarBtn = btns.find((b) => /usar contenido|use content/i.test(b.textContent || ""));
+    const usarBtn = document.getElementById("btncopy") || Array.from(document.querySelectorAll("button")).find((b) => /usar contenido|use content/i.test(b.textContent || ""));
     if (!usarBtn) return { found: false };
-    // Obtener atributos del botón
     const attrs: Record<string, string> = {};
     for (const attr of Array.from(usarBtn.attributes)) {
       attrs[attr.name] = attr.value;
     }
-    // Buscar en el HTML del modal alguna función relacionada
-    const modalHTML = usarBtn.closest(".modal")?.innerHTML || "";
-    const functionMatch = modalHTML.match(/onclick=["']([^"']+)["']/g) || [];
-    // Buscar en scripts globales funciones que manejen "Usar contenido"
-    const scriptsInfo = Array.from(document.querySelectorAll("script"))
+    // Buscar en TODOS los scripts del documento funciones que manejen #btncopy o "Usar contenido"
+    const allScriptText = Array.from(document.querySelectorAll("script"))
       .map((s) => s.textContent || "")
-      .filter((t) => /usarcontenido|usar_contenido|useContent|applyContent/i.test(t))
-      .map((t) => t.slice(0, 300));
+      .join("\n");
+    // Buscar referencias a btncopy
+    const btncopyRefs = allScriptText.match(/btncopy|#btncopy/gi) || [];
+    // Buscar la función que se asigna al click
+    const clickHandlerMatch = allScriptText.match(/(\$|jQuery)?\s*\(?["']?#btncopy["']?\)?\s*.\s*click\s*\(?\s*function\s*\([^)]*\)\s*\{[^}]*response_content[^}]*\}/i);
+    // Buscar cualquier función que use response_content
+    const responseContentRefs = allScriptText.match(/[^{]{0,100}response_content[^}]{0,200}/gi) || [];
+    // Buscar la función que llena el campo de contenido
+    const contentFillMatch = allScriptText.match(/contentes|response_content|copy_content|paste_content/gi) || [];
     return {
       found: true,
       buttonText: usarBtn.textContent?.trim(),
       attributes: attrs,
-      onclick: usarBtn.getAttribute("onclick") || "(sin onclick directo)",
-      modalFunctions: functionMatch.slice(0, 10),
-      relatedScripts: scriptsInfo.slice(0, 3),
+      btncopyRefs: btncopyRefs.slice(0, 10),
+      clickHandlerFound: !!clickHandlerMatch,
+      clickHandlerSnippet: clickHandlerMatch ? clickHandlerMatch[0].slice(0, 300) : null,
+      responseContentRefs: responseContentRefs.slice(0, 5),
+      contentFillRefs: contentFillMatch.slice(0, 10),
     };
   });
-  await onStep(`DIAGNÓSTICO [Usar contenido]: ${JSON.stringify(usearContenidoInfo).slice(0, 1500)}`);
+  await onStep(`DIAGNÓSTICO [Usar contenido]: ${JSON.stringify(usearContenidoInfo).slice(0, 2000)}`);
 
   // Guardar contenido del modal ANTES de hacer clic, para reinyectar después si falla
   const modalContentBefore = await dialog.locator("textarea").nth(1).inputValue().catch(() => "");
