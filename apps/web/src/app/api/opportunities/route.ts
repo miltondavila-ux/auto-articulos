@@ -35,8 +35,16 @@ export async function GET() {
   });
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   const userId = await getCurrentUserId();
+  // Pedido explícito del usuario (11/8/2026): el enfriamiento de 3 días
+  // bloqueaba el análisis por completo — ni siquiera volvía a consultar
+  // Search Console — dejando al usuario sin poder intentarlo de nuevo pase
+  // lo que pase. Ahora es una RECOMENDACIÓN, no un bloqueo: si el usuario
+  // decide forzar un análisis nuevo antes de que pasen los 3 días (bajo su
+  // propio criterio, ver botón "Analizar de todas formas" en el frontend),
+  // se le permite.
+  const { force } = await request.json().catch(() => ({ force: false }));
   const integration = await prisma.searchIntegration.findUnique({
     where: { userId_provider: { userId, provider: "google" } },
   });
@@ -62,14 +70,15 @@ export async function POST() {
     where: { id: userId },
     select: { lastOpportunityAnalysisAt: true },
   });
-  // Pedido explícito del usuario: si la última corrida no encontró nada
-  // nuevo, no dejar reintentar antes de 3 días (le da tiempo real a que
-  // cambien los datos de Search Console) en vez de gastar otra consulta a
-  // la IA para muy probablemente confirmar lo mismo.
+  // Recomendación (ya NO bloqueo, ver arriba): si la última corrida no
+  // encontró nada nuevo y no pasaron 3 días, se le avisa al usuario y se le
+  // da la opción de forzarlo bajo su propio criterio (`force: true`) en vez
+  // de dejarlo sin poder intentar de nuevo.
   const existingGroupsCount = await prisma.opportunityGroup.count({
     where: { userId },
   });
   if (
+    !force &&
     existingGroupsCount === 0 &&
     user.lastOpportunityAnalysisAt &&
     Date.now() - user.lastOpportunityAnalysisAt.getTime() < COOLDOWN_MS
@@ -82,6 +91,7 @@ export async function POST() {
       lastAnalysisAt: user.lastOpportunityAnalysisAt,
       noNewOpportunities: true,
       nextAvailableAt,
+      canForce: true,
     });
   }
 

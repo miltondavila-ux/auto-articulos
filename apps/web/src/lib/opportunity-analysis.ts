@@ -53,6 +53,17 @@ function normalizeTitle(value: string) {
     .trim();
 }
 
+function isFullyStocked(
+  groupsByCategory: Map<string, OpportunityAnalysisGroup>,
+  maxTitlesPerCategory: number,
+): boolean {
+  if (groupsByCategory.size < 10) return false;
+  for (const group of groupsByCategory.values()) {
+    if (group.titles.length < maxTitlesPerCategory) return false;
+  }
+  return true;
+}
+
 const PROMPT_HEADER = [
   "Actua como estratega SEO experto y analista de datos de busqueda. Tu objetivo es encontrar TODAS las oportunidades posibles para aumentar el trafico organico del usuario, siendo creativo pero siempre basado en evidencia real de los datos proporcionados.",
   "",
@@ -293,7 +304,15 @@ export async function analyzeSeoOpportunities(input: {
     .slice(0, 20);
 
   const seen = new Set(input.existingTitles.map(normalizeTitle));
-  const selectedCategoryIds = new Set<string>();
+  // Bug real encontrado el 11/8/2026 (cuenta de Lorena Álvarez, dejó de
+  // recibir oportunidades nuevas): antes, apenas un lote proponía ALGO para
+  // una categoría (aunque fuera poco), esa categoría quedaba "cerrada" para
+  // el resto de los hasta 20 lotes restantes — descartando datos reales
+  // buenos de lotes posteriores solo porque un lote anterior llegó primero.
+  // Ahora cada categoría acumula títulos de TODOS los lotes (hasta el tope
+  // por categoría de abajo), no solo del primero que la mencionó.
+  const MAX_TITLES_PER_CATEGORY = 9;
+  const groupsByCategory = new Map<string, OpportunityAnalysisGroup>();
   const allResult: OpportunityAnalysisGroup[] = [];
 
   for (let batchIndex = 0; batchIndex < batchesToProcess.length; batchIndex++) {
@@ -335,13 +354,23 @@ ${JSON.stringify(Array.from(seen).slice(-200))}`;
       if (
         typeof group.categoryId !== "string" ||
         !validCategoryIds.has(group.categoryId) ||
-        selectedCategoryIds.has(group.categoryId) ||
         !Array.isArray(group.titles)
       )
         continue;
 
-      const titles: OpportunityAnalysisGroup["titles"] = [];
+      const existingGroup = groupsByCategory.get(group.categoryId);
+      // Categoría nueva (no vista todavía) pero ya llegamos al máximo de 10
+      // categorías distintas: no la agregamos. Si YA existe, sí seguimos
+      // sumándole títulos de este lote aunque ya hayamos llegado a 10.
+      if (!existingGroup && groupsByCategory.size >= 10) continue;
+
+      const remainingSlots =
+        MAX_TITLES_PER_CATEGORY - (existingGroup?.titles.length ?? 0);
+      if (remainingSlots <= 0) continue;
+
+      const newTitles: OpportunityAnalysisGroup["titles"] = [];
       for (const candidate of group.titles) {
+        if (newTitles.length >= remainingSlots) break;
         if (!candidate || typeof candidate !== "object") continue;
         const value = candidate as Record<string, unknown>;
         if (typeof value.text !== "string") continue;
@@ -349,29 +378,33 @@ ${JSON.stringify(Array.from(seen).slice(-200))}`;
         const normalized = normalizeTitle(text);
         if (!text || seen.has(normalized)) continue;
         seen.add(normalized);
-        titles.push({
+        newTitles.push({
           text,
           rationale:
             typeof value.rationale === "string" ? value.rationale.trim() : "",
         });
       }
 
-      if (titles.length === 0) continue;
-      selectedCategoryIds.add(group.categoryId);
-      allResult.push({
-        categoryId: group.categoryId,
-        rationale:
-          typeof group.rationale === "string" ? group.rationale.trim() : "",
-        impressions:
-          typeof group.impressions === "number" ? group.impressions : 0,
-        clicks: typeof group.clicks === "number" ? group.clicks : 0,
-        titles,
-      });
+      if (newTitles.length === 0) continue;
 
-      if (allResult.length >= 10) break;
+      if (existingGroup) {
+        existingGroup.titles.push(...newTitles);
+      } else {
+        const newGroup: OpportunityAnalysisGroup = {
+          categoryId: group.categoryId,
+          rationale:
+            typeof group.rationale === "string" ? group.rationale.trim() : "",
+          impressions:
+            typeof group.impressions === "number" ? group.impressions : 0,
+          clicks: typeof group.clicks === "number" ? group.clicks : 0,
+          titles: newTitles,
+        };
+        groupsByCategory.set(group.categoryId, newGroup);
+        allResult.push(newGroup);
+      }
     }
 
-    if (allResult.length >= 10) break;
+    if (isFullyStocked(groupsByCategory, MAX_TITLES_PER_CATEGORY)) break;
   }
 
   if (allResult.length === 0) {

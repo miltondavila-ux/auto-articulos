@@ -66,6 +66,11 @@ export default function OportunidadesPage() {
     kind: "error" | "info" | "success";
     text: string;
   } | null>(null);
+  // Pedido explícito del usuario (11/8/2026): el enfriamiento de 3 días es
+  // ahora solo una recomendación — si el último análisis no encontró nada
+  // nuevo, se ofrece la opción de forzar un análisis nuevo bajo el propio
+  // criterio del usuario, en vez de dejarlo bloqueado sin poder intentar.
+  const [canForce, setCanForce] = useState(false);
 
   const load = useCallback(async () => {
     const [opportunitiesResponse, meResponse, languagesResponse] =
@@ -143,11 +148,16 @@ export default function OportunidadesPage() {
     analysisSeconds % 60,
   ).padStart(2, "0")}`;
 
-  async function analyze() {
+  async function analyze(force = false) {
     setAnalyzing(true);
     setMessage(null);
+    setCanForce(false);
     try {
-      const response = await fetch("/api/opportunities", { method: "POST" });
+      const response = await fetch("/api/opportunities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ force }),
+      });
       const data = await response.json().catch(() => ({}));
       if (!response.ok)
         throw new Error(data.error ?? "No se pudo completar el análisis.");
@@ -159,8 +169,11 @@ export default function OportunidadesPage() {
           : null;
         setMessage({
           kind: "info",
-          text: `Con la información actual de Search Console no encontramos nuevas oportunidades para publicar. Te recomendamos esperar al menos 3 días antes de repetir el análisis${nextDate ? ` (podrás volver a intentarlo a partir del ${nextDate})` : ""}, para darle tiempo a Google de reflejar cambios en tus datos.`,
+          text: force
+            ? "Con la información actual de Search Console no encontramos nuevas oportunidades para publicar, ni siquiera forzando el análisis."
+            : `Con la información actual de Search Console no encontramos nuevas oportunidades para publicar. Te recomendamos esperar al menos 3 días antes de repetir el análisis${nextDate ? ` (podrás volver a intentarlo a partir del ${nextDate})` : ""}, para darle tiempo a Google de reflejar cambios en tus datos. Si prefieres, puedes intentarlo de todas formas ahora mismo.`,
         });
+        if (!force && data.canForce) setCanForce(true);
       } else {
         setMessage({
           kind: "success",
@@ -294,7 +307,7 @@ export default function OportunidadesPage() {
           }}
         >
           <button
-            onClick={analyze}
+            onClick={() => analyze()}
             disabled={analyzing}
             style={disabledStyle({ ...buttonStyle, marginTop: 0 }, analyzing)}
           >
@@ -539,6 +552,22 @@ export default function OportunidadesPage() {
           }}
         >
           {message.text}
+          {canForce && (
+            <div style={{ marginTop: 10 }}>
+              <button
+                onClick={() => analyze(true)}
+                disabled={analyzing}
+                style={{
+                  ...buttonStyle,
+                  background: "#8a6d1a",
+                  fontSize: 13,
+                  padding: "6px 14px",
+                }}
+              >
+                Analizar de todas formas ahora
+              </button>
+            </div>
+          )}
         </div>
       )}
 
