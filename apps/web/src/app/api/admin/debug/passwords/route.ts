@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { requireAdmin } from "@/lib/current-user";
 import { decryptSecret } from "@auto-articulos/shared";
@@ -10,7 +10,7 @@ import bcrypt from "bcryptjs";
  * Verifica que el hash de contraseña de cada usuario coincida con su
  * contraseña inicial guardada (initialPasswordEncrypted).
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     await requireAdmin();
   } catch {

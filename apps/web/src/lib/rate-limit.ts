@@ -1,16 +1,9 @@
-const WINDOW_MS = 15 * 60 * 1000;
-const MAX_ATTEMPTS = 5;
-
 interface Entry {
   count: number;
   resetAt: number;
 }
 
 const store = new Map<string, Entry>();
-
-function getKey(ip: string): string {
-  return `login:${ip}`;
-}
 
 function cleanup() {
   const now = Date.now();

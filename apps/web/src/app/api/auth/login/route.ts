@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyCredentials } from "@/lib/auth";
 import { createSessionToken, SESSION_COOKIE } from "@/lib/session";
-import { checkLoginRateLimit } from "@/lib/rate-limit";
-import { auditLog } from "@/lib/audit";
 
 export async function POST(request: NextRequest) {
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? request.headers.get("x-real-ip") ?? "unknown";
-
   const { email, password } = await request.json();
 
   if (typeof email !== "string" || typeof password !== "string") {
