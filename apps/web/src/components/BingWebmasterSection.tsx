@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   sectionStyle,
   h2Style,
@@ -17,6 +18,21 @@ type Message = {
 };
 
 export default function BingWebmasterSection() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  // Bug real encontrado el 11/8/2026 (cuenta de Julio Paso): el enlace
+  // "Reconectar Bing"/"Conectar Bing Webmaster Tools" no daba NINGUNA señal
+  // visual al hacer clic — el usuario, al no ver nada, hacía varios clics
+  // seguidos (confirmado en logs: 5 solicitudes a /connect en menos de 1
+  // segundo). Cada clic pisa la cookie de estado OAuth del clic anterior, y
+  // cuando el callback finalmente llega, el estado ya no coincide con el más
+  // reciente — la reconexión falla EN SILENCIO (el callback redirige a
+  // `?bing=error` pero nada en esta pantalla leía ese parámetro), dejando al
+  // usuario de vuelta en el mismo aviso rojo sin ninguna explicación ni forma
+  // de saber qué pasó. Se agrega: (1) estado de "conectando" que bloquea
+  // clics repetidos, y (2) lectura real de `?bing=error`/`?bing=connected`
+  // para mostrar qué pasó de verdad.
+  const [connecting, setConnecting] = useState(false);
   const [data, setData] = useState<{
     connected: boolean;
     siteUrl?: string | null;
@@ -65,6 +81,20 @@ export default function BingWebmasterSection() {
 
   useEffect(() => {
     load();
+    const bingParam = searchParams.get("bing");
+    if (bingParam === "connected") {
+      setMessage({ text: "Bing reconectado correctamente.", type: "success" });
+      setConnecting(false);
+      router.replace("/dashboard/configuracion");
+    } else if (bingParam === "error") {
+      setMessage({
+        text: "No se pudo completar la reconexión con Bing (puede pasar si se hizo clic varias veces seguidas). Probá una sola vez y esperá a que la página redirija sola.",
+        type: "error",
+      });
+      setConnecting(false);
+      router.replace("/dashboard/configuracion");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function save() {
@@ -174,13 +204,24 @@ export default function BingWebmasterSection() {
       {!data?.connected ? (
         <a
           href="/api/search-integrations/bing/connect"
+          aria-disabled={connecting}
+          onClick={(e) => {
+            if (connecting) {
+              e.preventDefault();
+              return;
+            }
+            setConnecting(true);
+          }}
           style={{
             ...secondaryButtonStyle,
             display: "inline-block",
             textDecoration: "none",
+            opacity: connecting ? 0.6 : 1,
+            pointerEvents: connecting ? "none" : "auto",
+            cursor: connecting ? "wait" : "pointer",
           }}
         >
-          Conectar Bing Webmaster Tools
+          {connecting ? "Conectando..." : "Conectar Bing Webmaster Tools"}
         </a>
       ) : tokenExpired ? (
         <div
@@ -201,6 +242,14 @@ export default function BingWebmasterSection() {
           </p>
           <a
             href="/api/search-integrations/bing/connect"
+            aria-disabled={connecting}
+            onClick={(e) => {
+              if (connecting) {
+                e.preventDefault();
+                return;
+              }
+              setConnecting(true);
+            }}
             style={{
               display: "inline-block",
               background: "#991b1b",
@@ -210,10 +259,19 @@ export default function BingWebmasterSection() {
               fontWeight: 700,
               textDecoration: "none",
               fontSize: 13,
+              opacity: connecting ? 0.6 : 1,
+              pointerEvents: connecting ? "none" : "auto",
+              cursor: connecting ? "wait" : "pointer",
             }}
           >
-            Reconectar Bing
+            {connecting ? "Conectando con Bing..." : "Reconectar Bing"}
           </a>
+          {connecting && (
+            <p style={{ margin: "8px 0 0", color: "#991b1b", fontSize: 12 }}>
+              Un solo clic alcanza — te vamos a redirigir a Bing y de vuelta
+              automáticamente. Esperá, no hace falta volver a presionar.
+            </p>
+          )}
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
