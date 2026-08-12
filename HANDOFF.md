@@ -1416,6 +1416,55 @@ página falsa para Bing.
   asumir el formato, volcar el estado real a un log de diagnóstico si algo
   falla).
 
+## RESUELTO (11/8/2026): editor vacío en Lorena, aviso de créditos agotados, y build de producción roto
+
+**1. Editor de Lorena Álvarez seguía fallando de forma intermitente.** El log
+real mostró la causa exacta: en `createArticleDraft()`
+(`apps/worker/src/automation/10minutesWebsite.ts`), la reparación automática
+del contenido (`injectContentIntoEditor`) solo se disparaba si
+`editorInfo.saveBtnEnabled` era `false` — pero el sitio tarda en correr su
+propia validación y deshabilita el botón recién cerca del guardado real, no
+apenas termina "Usar contenido". En el log, a los 2 segundos el botón seguía
+"habilitado" con el editor en `0 chars`; la condición nunca disparaba la
+inyección, y minutos después, al guardar de verdad, el campo seguía vacío
+sin tiempo de corregirlo. **Fix:** la condición ahora mira
+`editorInfo.contentesLen === 0` (el largo real del contenido, dato
+confiable) en vez del estado del botón (dato que llega tarde).
+
+**2. Aviso claro cuando se agotan los créditos de imagen de una cuenta.**
+Pedido explícito del usuario, repetido varias veces (casos reales: Mariana
+Romero el 10/8 y Eira Rivas el 11/8, ambas sin darse cuenta de que el
+problema era de su propia cuenta en 10minutesWebsite). Antes el mensaje real
+del servidor ("Se han agotado los créditos de tu imagen...") quedaba
+enterrado como un párrafo rojo chico entre el resto del log de errores.
+Ahora `LiveRunProgress.tsx` detecta ese mensaje específico (ver
+`generateImage()`, que ya deja el texto real del servidor en
+`title.errorMessage` desde el 10/8) y muestra un aviso grande y distinto,
+con enlace directo a `https://www.10minuteswebsite.com/ayuda` para
+solicitar más créditos — mismo dominio de soporte que ya usa el aviso de
+límite diario.
+
+**3. El build de producción estaba roto desde antes de esta sesión — bloqueaba
+CUALQUIER deploy, no solo estos dos cambios.** Al intentar `vercel --prod`
+para el punto 2, `next build` falló en el paso de TypeScript
+(`noUnusedLocals`) con errores en tres archivos tocados esa misma mañana
+durante el arreglo de emergencia de login: `checkLoginRateLimit`, `auditLog`
+e `ip` quedaron importados/declarados sin usar en
+`api/auth/login/route.ts` tras desactivar el rate limit; `WINDOW_MS`,
+`MAX_ATTEMPTS` y `getKey` quedaron sin usar en `lib/rate-limit.ts`; y el
+parámetro `request` sin usar en el endpoint temporal
+`api/admin/debug/passwords/route.ts`. Se limpiaron los tres sin cambiar
+ningún comportamiento (el rate limit sigue desactivado a propósito). **Ojo
+para el próximo agente:** después de cualquier cambio de código, antes de
+darlo por terminado, correr `npx tsc --noEmit` (o directamente el build) en
+`apps/web` — un error de build no siempre se nota hasta que alguien más
+intenta desplegar algo sin relación, como pasó acá.
+
+**Verificado:** `tsc --noEmit` limpio, `vercel --prod --yes` exitoso
+(`READY`), logs de producción sin errores nuevos en los 2 minutos
+posteriores al deploy. Commits: `92f044a` (Lorena + aviso de créditos),
+`e157a84` (arreglo del build).
+
 ## RESUELTO (11/8/2026): caída total de login por columna sin migrar
 
 **Síntoma:** `POST /api/auth/login` devolvía 500 con cuerpo vacío para

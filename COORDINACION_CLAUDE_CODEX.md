@@ -484,6 +484,40 @@ El agente que termina debe:
 
 ## Registro de entregas
 
+### 2026-08-11 ~21:15 UTC — Claude: editor de Lorena, aviso de créditos, build roto
+
+- **Agente:** Claude.
+- **Tarea:** dos bugs reportados por el usuario (editor vacío recurrente en
+  Lorena Álvarez, y falta de un aviso claro cuando 10minutesWebsite se queda
+  sin créditos de imagen) + un build de producción roto encontrado de paso.
+- **Archivos/área:** `apps/worker/src/automation/10minutesWebsite.ts`,
+  `apps/web/src/components/LiveRunProgress.tsx`,
+  `apps/web/src/app/api/auth/login/route.ts`, `apps/web/src/lib/rate-limit.ts`,
+  `apps/web/src/app/api/admin/debug/passwords/route.ts`.
+- **Resultado:**
+  1. La reparación automática del editor de Lorena disparaba según el
+     estado del botón "Guardar cambios" (dato que el sitio actualiza tarde);
+     ahora dispara según el largo real del contenido.
+  2. Aviso grande y claro en el dashboard cuando se detecta el mensaje real
+     de créditos de imagen agotados, con enlace a soporte de
+     10minutesWebsite.
+  3. **Hallazgo importante:** `vercel --prod` fallaba (TypeScript
+     `noUnusedLocals`) por variables sin usar dejadas en el arreglo de
+     emergencia de login de esa misma mañana — esto bloqueaba CUALQUIER
+     deploy a producción, no solo estos cambios. Se limpiaron sin alterar
+     comportamiento (rate limit sigue desactivado a propósito).
+- **Verificaciones:** `tsc --noEmit` limpio, `vercel --prod --yes` exitoso
+  (`READY`), logs de producción sin errores nuevos post-deploy.
+- **Commits:** `92f044a`, `e157a84`. Pusheados a `main`, desplegados.
+- **Detalle completo:** ver `HANDOFF.md`, sección "RESUELTO (11/8/2026):
+  editor vacío en Lorena, aviso de créditos agotados, y build de producción
+  roto".
+- **Advertencia para el próximo agente:** correr `tsc --noEmit` en `apps/web`
+  después de cualquier cambio, ANTES de darlo por terminado — un build roto
+  puede pasar desapercibido hasta que alguien intente desplegar algo sin
+  relación.
+- **Estado del área:** LIBERADA.
+
 ### 2026-08-11 ~20:30 UTC — Claude: caída total de login (500) resuelta
 
 - **Agente:** Claude.
