@@ -1,5 +1,16 @@
 const TOKEN_URL = "https://www.bing.com/webmasters/oauth/token";
 const API_BASE = "https://ssl.bing.com/webmaster/api.svc/json";
+// Bug real encontrado el 12/8/2026 (cuenta de Julio Paso): SubmitUrl fallaba
+// siempre con "ERROR!!! InvalidToken", con el mismo access token que
+// funcionaba bien un instante antes para listar sitios. La documentación
+// oficial de Microsoft (learn.microsoft.com/en-us/bingwebmaster/oauth2,
+// actualizada 7/8/2026) muestra el endpoint de SubmitUrl como
+// www.bing.com/webmaster/api.svc/json/SubmitUrl — no ssl.bing.com. Se separa
+// la base para las operaciones de ESCRITURA (SubmitUrl, SubmitFeed, mismo
+// patrón), sin tocar listBingSites (lectura), que sí funciona hoy en
+// ssl.bing.com — no arriesgar algo que ya funciona sin evidencia de que
+// también esté roto.
+const API_BASE_WRITE = "https://www.bing.com/webmaster/api.svc/json";
 
 function bingConfig() {
   const clientId = process.env.BING_WEBMASTER_CLIENT_ID;
@@ -92,7 +103,7 @@ export async function submitBingSitemap(
   siteUrl: string,
   feedUrl: string,
 ) {
-  const response = await fetch(`${API_BASE}/SubmitFeed`, {
+  const response = await fetch(`${API_BASE_WRITE}/SubmitFeed`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -121,7 +132,7 @@ export async function submitBingUrl(
   siteUrl: string,
   url: string,
 ) {
-  const response = await fetch(`${API_BASE}/SubmitUrl`, {
+  const response = await fetch(`${API_BASE_WRITE}/SubmitUrl`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
