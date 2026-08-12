@@ -581,13 +581,13 @@ export default function OportunidadesPage() {
               message.kind === "error"
                 ? "#fdecec"
                 : message.kind === "info"
-                  ? "#fff8e6"
+                  ? "#f1f5f9"
                   : "#eafaf0",
             color:
               message.kind === "error"
                 ? "#d64545"
                 : message.kind === "info"
-                  ? "#8a6d1a"
+                  ? "#475569"
                   : "#1e8a4b",
           }}
         >
@@ -598,8 +598,7 @@ export default function OportunidadesPage() {
                 onClick={() => analyze(true)}
                 disabled={analyzing}
                 style={{
-                  ...buttonStyle,
-                  background: "#8a6d1a",
+                  ...secondaryButtonStyle,
                   fontSize: 13,
                   padding: "6px 14px",
                 }}
