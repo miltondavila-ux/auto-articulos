@@ -87,8 +87,18 @@ export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
       {message && (
         <div style={{ color: "#6b7280", marginTop: 2 }}>{message}</div>
       )}
-      {/* Bing Indexing Status */}
-      {title.bingIndexingStatus && title.bingIndexingStatus !== "not_configured" && (
+      {/* Bing Indexing Status.
+          Pedido explícito del usuario (11/8/2026): el error "InvalidToken" de
+          Bing es intermitente del lado de Bing (reintenta 2 veces con token
+          fresco en notifyBing() y aun así falla para algunos títulos del
+          mismo lote, con el mismo token válido) — no es algo que más
+          reintentos de nuestro código vayan a resolver, y el artículo ya se
+          publicó bien de todas formas (esto es solo la indexación instantánea
+          opcional). Se deja de mostrar el estado "error" para no alarmar por
+          algo fuera de nuestro control; "submitted" sigue mostrándose. */}
+      {title.bingIndexingStatus &&
+        title.bingIndexingStatus !== "not_configured" &&
+        title.bingIndexingStatus !== "error" && (
         <div
           style={{
             marginTop: 6,
