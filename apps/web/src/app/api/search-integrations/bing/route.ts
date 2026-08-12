@@ -4,6 +4,7 @@ import {
   decryptSecret,
   getBingAccessToken,
   listBingSites,
+  listBingSitemaps,
 } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
 
@@ -22,10 +23,33 @@ export async function GET() {
       decryptSecret(integration.encryptedRefreshToken),
     );
     const sites = await listBingSites(accessToken);
+
+    // Pedido explícito del usuario (11/8/2026): Google ya detecta el
+    // sitemap automáticamente (ver /api/search-integrations/google); Bing
+    // obligaba siempre a escribirlo a mano. Mismo criterio: solo si ya hay
+    // un sitio elegido pero todavía no se guardó un sitemap, y sin bloquear
+    // la carga de la página si Bing no devuelve nada o falla.
+    let sitemapUrl = integration.sitemapUrl;
+    if (!sitemapUrl && integration.siteUrl) {
+      try {
+        const detected = await listBingSitemaps(accessToken, integration.siteUrl);
+        if (detected.length > 0) {
+          sitemapUrl = detected[0];
+          await prisma.searchIntegration.update({
+            where: { id: integration.id },
+            data: { sitemapUrl },
+          });
+        }
+      } catch {
+        // No bloquear la carga de la página si falla la detección
+        // automática — el usuario todavía puede escribirlo a mano.
+      }
+    }
+
     return NextResponse.json({
       connected: true,
       siteUrl: integration.siteUrl,
-      sitemapUrl: integration.sitemapUrl,
+      sitemapUrl,
       sites,
       lastSitemapSyncAt: integration.lastSitemapSyncAt,
       lastSitemapSyncStatus: integration.lastSitemapSyncStatus,

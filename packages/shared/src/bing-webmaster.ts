@@ -56,6 +56,37 @@ export async function listBingSites(accessToken: string): Promise<BingSite[]> {
   return (data.d ?? []).filter((site) => site.IsVerified);
 }
 
+/**
+ * Pedido explícito del usuario (11/8/2026): Google ya detecta y precarga el
+ * sitemap automáticamente cuando el usuario elige su propiedad (ver
+ * listGoogleSitemaps en google-search-console.ts); Bing no tenía el mismo
+ * comportamiento y obligaba a escribirlo siempre a mano. Mismo patrón
+ * defensivo: si esto falla (nombre real del endpoint no confirmado contra
+ * una cuenta real todavía), no bloquea nada — el campo sigue editable a mano
+ * como respaldo, igual que ya pasa con Google.
+ */
+export async function listBingSitemaps(
+  accessToken: string,
+  siteUrl: string,
+): Promise<string[]> {
+  const response = await fetch(
+    `${API_BASE}/GetSitemaps?siteUrl=${encodeURIComponent(siteUrl)}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  const data = (await response.json().catch(() => ({}))) as {
+    d?: Array<{ Url?: string }>;
+    Message?: string;
+  };
+  if (!response.ok) {
+    throw new Error(
+      data.Message ?? "No se pudieron listar los sitemaps de Bing Webmaster Tools.",
+    );
+  }
+  return (data.d ?? [])
+    .map((s) => s.Url)
+    .filter((url): url is string => Boolean(url));
+}
+
 export async function submitBingSitemap(
   accessToken: string,
   siteUrl: string,
