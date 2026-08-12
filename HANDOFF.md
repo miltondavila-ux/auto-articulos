@@ -1416,6 +1416,51 @@ página falsa para Bing.
   asumir el formato, volcar el estado real a un log de diagnóstico si algo
   falla).
 
+## RESUELTO (11/8/2026): Oportunidades dejaba de dar resultados a cuentas activas (caso Lorena Álvarez)
+
+**Contexto importante:** `opportunity-analysis.ts` se había reescrito por
+completo el 10/8/2026 (dos commits, 371 líneas cambiadas) con un enfoque más
+permisivo y por lotes (hasta 20 lotes de 250 filas de Search Console cada
+uno). El detalle de la sesión del 7-8/8/2026 sobre la regla anti-invención
+estricta y el prompt original ya NO refleja el código actual — si algo de
+esa sección no coincide con lo que ves en el archivo, confía en el archivo.
+
+**Síntoma:** Lorena dejó de recibir oportunidades nuevas por completo ("no da
+ninguna"), no solo menos de las esperadas.
+
+**Causa #1 — bug real en el algoritmo:** dentro del bucle de lotes, apenas UN
+lote proponía algo (aunque fuera poco) para una categoría, esa categoría
+quedaba marcada como "ya elegida" (`selectedCategoryIds`) y se descartaba
+CUALQUIER propuesta para esa misma categoría en los hasta 19 lotes
+restantes — aunque tuvieran datos reales mejores. Para una cuenta con mucho
+historial (como Lorena), cuyas consultas de mayor puntaje ya están agotadas
+de corridas anteriores, esto significaba que las categorías se "cerraban"
+temprano con poco o nada, sin nunca llegar a los lotes más profundos donde sí
+había ángulos frescos. **Fix:** ahora cada categoría acumula títulos de
+TODOS los lotes que la mencionen (tope de 9 títulos por categoría, 10
+categorías en total) — ver `isFullyStocked()` y `groupsByCategory` en
+`analyzeSeoOpportunities()`.
+
+**Causa #2 — el enfriamiento de 3 días bloqueaba, no solo desalentaba:** en
+`POST /api/opportunities`, si la corrida anterior no encontró nada
+(`existingGroupsCount === 0`), el endpoint devolvía "sin oportunidades" de
+memoria durante 3 días **sin volver a consultar Search Console ni correr el
+análisis**. Lorena quedó atrapada así tras una corrida fallida real (con el
+bug #1 todavía sin arreglar), mostrando "podrás volver a intentarlo a partir
+del 14/08/2026" sin ninguna forma de saltárselo. **Fix, pedido explícito del
+usuario ("Lorena debería poder destrabarlo bajo su propia responsabilidad")**:
+el enfriamiento pasó de bloqueo a recomendación. El endpoint acepta
+`{force: true}` en el body y omite el chequeo; el frontend
+(`dashboard/oportunidades/page.tsx`) muestra un botón "Analizar de todas
+formas ahora" cuando `canForce` viene en la respuesta, para que cada usuario
+decida conscientemente en vez de quedar bloqueado.
+
+**Verificado:** `tsc --noEmit` y `next build` limpios, `vercel --prod --yes`
+exitoso (`READY`). Pendiente que el usuario confirme con Lorena (o forzando
+el análisis ahora mismo) que sí aparecen oportunidades nuevas — no se pudo
+verificar en vivo por no tener acceso a su Search Console real desde acá.
+Commit: `12c9240`.
+
 ## RESUELTO (11/8/2026): editor vacío en Lorena, aviso de créditos agotados, y build de producción roto
 
 **1. Editor de Lorena Álvarez seguía fallando de forma intermitente.** El log

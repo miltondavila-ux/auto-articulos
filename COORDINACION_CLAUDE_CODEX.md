@@ -484,6 +484,39 @@ El agente que termina debe:
 
 ## Registro de entregas
 
+### 2026-08-11 ~22:00 UTC — Claude: Oportunidades dejaba de dar resultados (caso Lorena)
+
+- **Agente:** Claude.
+- **Aviso importante:** `opportunity-analysis.ts` fue reescrito por completo
+  el 10/8/2026 por otro agente (commits `877f23c`, `5dc84e6`). Cualquier
+  detalle sobre el prompt/algoritmo en secciones de `HANDOFF.md` anteriores
+  al 10/8 puede estar desactualizado — confiar en el archivo, no en la
+  documentación vieja.
+- **Tarea:** Lorena Álvarez dejó de recibir oportunidades nuevas por
+  completo.
+- **Archivos/área:** `apps/web/src/lib/opportunity-analysis.ts`,
+  `apps/web/src/app/api/opportunities/route.ts`,
+  `apps/web/src/app/dashboard/oportunidades/page.tsx`.
+- **Resultado:**
+  1. Bug real: una categoría quedaba "cerrada" apenas el primer lote (de
+     hasta 20) proponía algo para ella, descartando datos reales de lotes
+     posteriores. Ahora acumula títulos de todos los lotes (hasta 9 por
+     categoría).
+  2. El enfriamiento de 3 días bloqueaba reintentar, no solo lo
+     desalentaba — dejó a Lorena atrapada tras una corrida fallida real.
+     Pedido explícito del usuario: pasa a ser recomendación. Nuevo
+     `force:true` en el endpoint + botón "Analizar de todas formas ahora"
+     en el frontend.
+- **Verificaciones:** `tsc --noEmit` y `next build` limpios, `vercel --prod
+  --yes` exitoso (`READY`).
+- **Commits:** `12c9240`. Pusheado y desplegado.
+- **Detalle completo:** ver `HANDOFF.md`, sección "RESUELTO (11/8/2026):
+  Oportunidades dejaba de dar resultados a cuentas activas".
+- **Pendiente:** el usuario debe confirmar con Lorena (o forzando el
+  análisis) que ahora sí aparecen oportunidades — no se pudo verificar en
+  vivo desde acá por no tener acceso a su Search Console real.
+- **Estado del área:** LIBERADA.
+
 ### 2026-08-11 ~21:15 UTC — Claude: editor de Lorena, aviso de créditos, build roto
 
 - **Agente:** Claude.
