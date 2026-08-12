@@ -667,7 +667,16 @@ async function createArticleDraft(
     `Editor post-Usar contenido: textarea#contentes=${editorInfo.contentesLen}chars, saveBtn=${editorInfo.saveBtnEnabled ? "habilitado" : "DESHABILITADO"}`,
   );
 
-  if (!editorInfo.saveBtnEnabled && modalContentBefore.length > 100) {
+  // Bug real encontrado el 11/8/2026 (cuenta de Lorena Álvarez): esta
+  // verificación disparaba la reparación solo si el botón "Guardar cambios"
+  // ya estaba deshabilitado — pero el sitio tarda en correr su propia
+  // validación (deshabilita el botón recién cerca del guardado real, no
+  // apenas termina "Usar contenido"). En el log real, a los 2s el botón
+  // seguía "habilitado" con el editor en 0 chars; como la condición miraba el
+  // botón, nunca se disparó la inyección, y minutos después, al guardar de
+  // verdad, el campo seguía vacío. El dato confiable es el LARGO real del
+  // contenido, no el estado (todavía no actualizado) del botón.
+  if (editorInfo.contentesLen === 0 && modalContentBefore.length > 100) {
     await onStep("El contenido no llegó al editor. Intentando inyección con contenido del modal...");
     await injectContentIntoEditor(page, modalContentBefore, onStep);
   }

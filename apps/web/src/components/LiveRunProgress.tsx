@@ -211,9 +211,64 @@ function TitleProgressRow({
 
       {title.status === "error" && title.errorMessage && (
         <div style={{ margin: "6px 0 0 24px" }}>
-          <p style={{ fontSize: 13, color: "#d64545", margin: 0 }}>
-            {title.errorMessage}
-          </p>
+          {/* Pedido explícito del usuario (repetido varias veces): cuando
+              10minutesWebsite se queda sin créditos de generación de imagen
+              con IA, el error pasaba desapercibido como un párrafo rojo
+              chico entre el resto del log. Casos reales: Mariana Romero y
+              Eira Rivas (11/8/2026), ambas sin darse cuenta de que el
+              problema era de su cuenta en 10minutesWebsite, no del sistema.
+              El worker deja el mensaje real del servidor ("Se han agotado
+              los créditos de tu imagen...") textual dentro de errorMessage
+              (ver generateImage() en automation/10minutesWebsite.ts) —
+              suficiente para detectarlo acá sin adivinar. */}
+          {/créditos.*imagen|imagen.*créditos/i.test(title.errorMessage) ? (
+            <div
+              style={{
+                background: "#fff7ed",
+                border: "2px solid #f59e0b",
+                borderRadius: 8,
+                padding: "12px 14px",
+                marginBottom: 8,
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "#9a3412",
+                  margin: 0,
+                }}
+              >
+                ⚠️ Se agotaron los créditos de generación de imágenes de tu
+                cuenta en 10minutesWebsite
+              </p>
+              <p style={{ fontSize: 13, color: "#9a3412", margin: "6px 0 0" }}>
+                Esto no es un error del sistema — la cuenta de 10minutesWebsite
+                usada para publicar ya no tiene créditos para crear imágenes
+                con IA. Solicita más créditos directamente con ellos y luego
+                reintenta este artículo.
+              </p>
+              <a
+                href="https://www.10minuteswebsite.com/ayuda"
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: "inline-block",
+                  marginTop: 8,
+                  color: "#9a3412",
+                  fontWeight: 700,
+                  textDecoration: "underline",
+                }}
+              >
+                Solicitar más créditos al servicio al cliente de
+                10minutesWebsite →
+              </a>
+            </div>
+          ) : (
+            <p style={{ fontSize: 13, color: "#d64545", margin: 0 }}>
+              {title.errorMessage}
+            </p>
+          )}
           <button
             onClick={handleRetry}
             disabled={retrying}
