@@ -290,6 +290,30 @@ ejecutar de forma explícita y auditada después del despliegue.
   efectos. Antes de reclamar un lote futuro, revisar `git status --short`:
   permanecen fuera de este despliegue los archivos excluidos ya listados.
 
+### Alexa+ — Configuración guiada del add-on real (siguiente fase)
+
+- **Estado:** `EN CURSO — PASO 1: crear add-on y obtener credenciales`
+  (13/8/2026). Milton pidió ejecutar el proceso paso a paso junto con Codex;
+  no se avanza a un paso posterior sin confirmar el resultado del actual.
+- **Objetivo:** conectar el MCP ya desplegado con Alexa+ mediante account
+  linking OAuth 2.1/PKCE. Producción ya expone el servidor y sus metadatos;
+  faltan crear el add-on, obtener Client ID/Secret y redirect URIs, cargarlos
+  como secretos y completar la vinculación.
+- **Regla de seguridad:** no pegar secretos en este documento, chat, terminal
+  ni repositorio. Si Amazon muestra un secreto, Milton lo guarda directamente
+  en el gestor/entorno correspondiente; Codex solo confirma que existe.
+- **Paso 1 actual:** entrar a Alexa+ for Builders/Developer Hub con la cuenta
+  Amazon que administrará el add-on. Corrección tras consultar la guía oficial:
+  primero registrar/verificar la cuenta de desarrollador y comprobar que tiene
+  acceso a MCP Toolkit; Amazon indica que dicho Toolkit sigue disponible solo
+  para socios seleccionados. El punto de entrada de cuenta es
+  `https://developer.amazon.com/alexa/console/ask`; si aparece el flujo de
+  registro, completarlo con datos de developer/empresa. Solo cuando el portal
+  muestre Alexa+ Add-ons/MCP Toolkit se instala y configura la CLI, y después
+  se crea el add-on con URL canónica
+  `https://auto-articulos-web.vercel.app/api/mcp`. Al finalizar se anotará el
+  Add-on ID (no secreto) y se pasará al account linking.
+
 ## Reglas durante el trabajo
 
 - **Registro obligatorio reforzado por Milton (13/8/2026):** todo agente debe
@@ -329,7 +353,7 @@ ejecutar de forma explícita y auditada después del despliegue.
 
 ### Antigravity — Control de visibilidad de módulos para Admin (13/8/2026)
 
-- **Estado:** `IMPLEMENTADO Y VERIFICADO ESTÁTICAMENTE — TYPECHECK LIMPIO` (13/8/2026).
+- **Estado:** `COMPLETADO Y DESPLEGADO EN PRODUCCIÓN — VERIFICADO CON ÉXITO` (13/8/2026).
 - **Objetivo:** Permitir al Administrador principal ocultar módulos enteros del sistema (ej. Oportunidades Redes, Actualizaciones, Publicaciones en Curso, etc.) del menú y de la navegación, tanto de forma global (mantenimiento/desarrollo general) como de forma individual por usuario.
 - **Área reservada y modificada:**
   - `packages/db/prisma/schema.prisma` y migración `20260813180000_add_user_disabled_modules` (`User.disabledModules TEXT`).
@@ -572,6 +596,22 @@ ejecutar de forma explícita y auditada después del despliegue.
   hook local informó una falla no bloqueante de OpenAI por `temperature=0.2`
   incompatible con el modelo actual; no afectó la restauración y queda como
   corrección separada. No se tocaron las actualizaciones nuevas.
+- **Decisión de Milton para el chat (13/8/2026):** el asistente flotante se
+  muestra solo dentro del dashboard con acceso activo. No debe aparecer en la
+  pantalla de prueba vencida. Codex corregirá el parámetro de OpenAI que falló
+  en el hook y montará el componente después de los gates de acceso y módulos,
+  preservando la navegación y el bloqueo existentes.
+- **Integración realizada según la decisión:** `FloatingAssistant` quedó
+  montado únicamente dentro de la rama `blocked === false` del layout, después
+  de navegación y `ModuleGuard`; `TrialBlockedScreen` no lo renderiza. También
+  se eliminó `temperature=0.2` del generador de Actualizaciones y de la ruta
+  del chat, porque el modelo actual de OpenAI la rechazaba. Pendiente:
+  typecheck y prueba local autenticada; no se hizo migración, push ni
+  despliegue.
+- **Verificación completada:** `npm --prefix apps/web run typecheck`, el
+  typecheck del generador y `git diff --check` terminaron sin errores. El chat
+  queda listo para probar con una sesión autenticada y para el próximo
+  push/despliegue coordinado; no requiere migración nueva.
 - **Capitán de migración liberó el lote:** Codex. Resultado: workflow
   `31751572529` exitoso: entradas históricas de `ProductUpdate` repuestas
   idempotentemente en producción. Revisar cambios ajenos restantes antes de
