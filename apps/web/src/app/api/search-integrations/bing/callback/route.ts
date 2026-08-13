@@ -19,6 +19,13 @@ export async function GET(request: NextRequest) {
       new URL("/dashboard/configuracion?bing=error&motivo=estado", request.url),
     );
   }
+  // El error real de Bing solo iba a `console.error`, y los logs de Vercel
+  // rotan en minutos: en la práctica nunca se llegaba a leer y había que
+  // adivinar. Se propaga a la pantalla, que es donde está el usuario cuando
+  // pasa. No hay riesgo de filtrar nada: lo que Bing devuelve acá es un código
+  // de error (`invalid_client`, `invalid_grant`, ...) y su descripción, nunca
+  // el secreto ni el token.
+  let detalle = "";
   try {
     const { clientId, clientSecret, redirectUri } = bingOAuthConfig();
     const tokenResponse = await fetch(
@@ -41,8 +48,11 @@ export async function GET(request: NextRequest) {
       error_description?: string;
     };
     if (!tokenResponse.ok || !token.refresh_token) {
+      detalle =
+        [token.error, token.error_description].filter(Boolean).join(": ") ||
+        `HTTP ${tokenResponse.status} sin refresh_token`;
       console.error(
-        `[bing/callback] Bing rechazó el intercambio del código: HTTP ${tokenResponse.status} ${token.error ?? ""} ${token.error_description ?? ""}`.trim(),
+        `[bing/callback] Bing rechazó el intercambio del código: HTTP ${tokenResponse.status} ${detalle}`,
       );
       throw new Error("Bing no entregó refresh token.");
     }
@@ -60,9 +70,17 @@ export async function GET(request: NextRequest) {
     );
     response.cookies.delete(BING_STATE_COOKIE);
     return response;
-  } catch {
-    return NextResponse.redirect(
-      new URL("/dashboard/configuracion?bing=error&motivo=token", request.url),
-    );
+  } catch (error) {
+    if (!detalle) {
+      // No fue Bing quien rechazó: falló algo nuestro (variables de entorno,
+      // guardado en base de datos). Distinguirlo importa, porque la solución
+      // es completamente distinta.
+      detalle = `fallo interno: ${error instanceof Error ? error.message : String(error)}`;
+    }
+    const destino = new URL("/dashboard/configuracion", request.url);
+    destino.searchParams.set("bing", "error");
+    destino.searchParams.set("motivo", "token");
+    destino.searchParams.set("detalle", detalle.slice(0, 200));
+    return NextResponse.redirect(destino);
   }
 }

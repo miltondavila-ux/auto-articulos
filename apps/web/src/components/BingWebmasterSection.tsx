@@ -102,7 +102,11 @@ export default function BingWebmasterSection() {
       setMessage({
         text:
           searchParams.get("motivo") === "token"
-            ? "Bing aceptó el permiso pero rechazó el último paso de la conexión. Esto no se arregla reintentando: revisá que el Client ID, el Client Secret y la Redirect URI configurados coincidan exactamente con los de tu app en Bing Webmaster Tools."
+            ? `Bing aceptó el permiso pero rechazó el último paso de la conexión. Esto no se arregla reintentando: revisá que el Client ID, el Client Secret y la Redirect URI configurados coincidan exactamente con los de tu app en Bing Webmaster Tools.${
+                searchParams.get("detalle")
+                  ? ` — Bing respondió: "${searchParams.get("detalle")}"`
+                  : ""
+              }`
             : "No se pudo completar la reconexión con Bing (puede pasar si se hizo clic varias veces seguidas). Probá una sola vez y esperá a que la página redirija sola.",
         type: "error",
       });
