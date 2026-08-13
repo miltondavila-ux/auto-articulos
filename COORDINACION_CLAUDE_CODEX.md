@@ -685,6 +685,10 @@ ejecutar de forma explícita y auditada después del despliegue.
   migración ni cambios de datos. **PARA: todos los agentes. ENTREGA:** área
   `FloatingAssistant.tsx` liberada; el capitán de despliegue se libera después
   de publicar este cierre documental.
+- **Capitán de migración liberó el lote:** Codex. Resultado: Despliegue del
+  asistente flotante confirmado Ready en Vercel; sin migración. Los archivos
+  de diagnóstico ajenos sin seguimiento siguen fuera del lote y deberán
+  revisarse antes de que alguien reclame una tarea nueva.
   estados y respuestas), sin cambiar permisos, API ni la regla de acceso
   activo. Se validará antes de enviarlo al próximo lote.
 - **Verificación completada:** `npm --prefix apps/web run typecheck`, el
