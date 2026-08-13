@@ -3,25 +3,18 @@
 import { useState } from "react";
 import type { TitleRow } from "@/types/dashboard";
 
+// Pedido explícito del usuario (13/8/2026): los estados intermedios/pendientes
+// ("Sitemap: todavía no se confirmó...", "Google: pendiente de indexación",
+// el mensaje de "Google no reconoce esta URL", "Bing no estaba conectado...")
+// y el botón "Actualizar estado" generaban confusión y alarma constante en el
+// historial, sin ser accionables — indexar en Google/Bing lleva tiempo y es
+// normal que un artículo recién publicado todavía no aparezca. Ahora solo se
+// muestran los estados POSITIVOS confirmados (✓ enviado / ✓ indexado / ✓
+// enviado a Bing) y errores reales; el silencio es el estado normal de
+// "todavía no, pero va a pasar".
 export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
-  const [status, setStatus] = useState(title.googleIndexingStatus);
-  const [message, setMessage] = useState(title.googleIndexingMessage);
-  const [checking, setChecking] = useState(false);
-
-  async function check() {
-    setChecking(true);
-    const response = await fetch(`/api/titles/${title.id}/google-inspection`, {
-      method: "POST",
-    });
-    const data = await response.json().catch(() => ({}));
-    if (response.ok) {
-      setStatus(data.googleIndexingStatus);
-      setMessage(data.googleIndexingMessage);
-    } else {
-      setMessage(data.error ?? "No se pudo consultar Google.");
-    }
-    setChecking(false);
-  }
+  const [status] = useState(title.googleIndexingStatus);
+  const [message] = useState(title.googleIndexingMessage);
 
   const indexed = status === "indexed";
 
@@ -46,11 +39,11 @@ export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
 
   return (
     <div style={{ marginTop: 7, fontSize: 12 }}>
-      <div style={{ color: title.lastSitemapSentAt ? "#1e8a4b" : "#6b7280" }}>
-        {title.lastSitemapSentAt
-          ? `✓ Sitemap enviado: ${new Date(title.lastSitemapSentAt).toLocaleString("es-US")}`
-          : "Sitemap: todavía no se confirmó un envío para este artículo."}
-      </div>
+      {title.lastSitemapSentAt && (
+        <div style={{ color: "#1e8a4b" }}>
+          {`✓ Sitemap enviado: ${new Date(title.lastSitemapSentAt).toLocaleString("es-US")}`}
+        </div>
+      )}
       {title.businessProfilePost && (
         <div
           style={{
@@ -72,19 +65,14 @@ export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
                 : "Publicando en Google Business Profile..."}
         </div>
       )}
-      <div
-        style={{
-          color:
-            status === "error" ? "#d64545" : indexed ? "#1e8a4b" : "#8a6d1a",
-        }}
-      >
-        {status === "error"
-          ? "Google: error al consultar la indexación"
-          : indexed
-            ? "✓ Indexada en Google"
-            : "Google: pendiente de indexación"}
-      </div>
-      {message && (
+      {(status === "error" || indexed) && (
+        <div style={{ color: status === "error" ? "#d64545" : "#1e8a4b" }}>
+          {status === "error"
+            ? "Google: error al consultar la indexación"
+            : "✓ Indexada en Google"}
+        </div>
+      )}
+      {message && status === "error" && (
         <div style={{ color: "#6b7280", marginTop: 2 }}>{message}</div>
       )}
       {/* Bing Indexing Status.
@@ -153,45 +141,6 @@ export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
           )}
         </div>
       )}
-      {title.bingIndexingStatus === "not_configured" && (
-        <div
-          style={{
-            marginTop: 6,
-            padding: "6px 10px",
-            borderRadius: 6,
-            fontSize: 12,
-            background: "#f8fafc",
-            border: "1px solid #e2e8f0",
-            color: "#6b7280",
-          }}
-        >
-          Bing Webmaster Tools no estaba conectado cuando se publicó este artículo.{" "}
-          <a
-            href="/dashboard/configuracion"
-            style={{ color: "#1358a3", fontWeight: 600 }}
-          >
-            Conectar Bing
-          </a>
-        </div>
-      )}
-      <div style={{ marginTop: 5 }}>
-        <button
-          type="button"
-          onClick={check}
-          disabled={checking}
-          style={{
-            border: 0,
-            padding: 0,
-            background: "transparent",
-            color: "#1358a3",
-            cursor: checking ? "default" : "pointer",
-            fontSize: 12,
-            fontWeight: 600,
-          }}
-        >
-          {checking ? "Consultando Google..." : "Actualizar estado"}
-        </button>
-      </div>
     </div>
   );
 }
