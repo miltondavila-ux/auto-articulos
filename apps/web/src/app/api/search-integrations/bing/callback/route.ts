@@ -42,17 +42,24 @@ export async function GET(request: NextRequest) {
         }),
       },
     );
-    const token = (await tokenResponse.json().catch(() => ({}))) as {
+    const rawText = await tokenResponse.text();
+    let token: {
       access_token?: string;
       refresh_token?: string;
       expires_in?: number;
       error?: string;
       error_description?: string;
-    };
-    if (!tokenResponse.ok || !token.refresh_token) {
+    } = {};
+    try {
+      token = JSON.parse(rawText);
+    } catch {
+      console.error(`[bing/callback] Respuesta no-JSON de Bing (HTTP ${tokenResponse.status}):`, rawText);
+    }
+
+    if (!token.refresh_token) {
       detalle =
         [token.error, token.error_description].filter(Boolean).join(": ") ||
-        `HTTP ${tokenResponse.status} sin refresh_token`;
+        `HTTP ${tokenResponse.status}: ${rawText.slice(0, 150)}`;
       console.error(
         `[bing/callback] Bing rechazó el intercambio del código: HTTP ${tokenResponse.status} ${detalle}`,
       );
