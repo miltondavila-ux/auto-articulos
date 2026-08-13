@@ -126,15 +126,20 @@ HANDOFF, solo alimenta ideas hacia él).
   formalizado como rol, o puede que Milton quiera dos cosas distintas
   (cuentas internas de prueba de Milton vs. registros públicos de clientes
   potenciales); confirmar con él antes de asumir cuál es.
-- **(13/8/2026)** Mejorar el wizard de inicio (`OnboardingSteps` en
-  `dashboard/page.tsx`) para que sea más sencillo de usar. Debe explicar que,
-  si el usuario no sabe su contraseña de 10minutesWebsite, puede cambiarla en
-  `https://10minuteswebsite.net/dashboard/forgot-password.php`, y sugerirle
-  que después de cambiarla vuelva y use esa MISMA contraseña (la que el
-  sistema le generó, o la que él mismo puso) también en Auto Artículos, para
-  que las credenciales guardadas coincidan con las reales.
-
 ## Hecho
+
+- **(13/8/2026)** Wizard de Inicio y Configuración Inicial interactivo paso a paso:
+  - Flujo vertical estructurado en 4 pasos obligatorios secuenciales + paso final con sombreado/dessombreado dinámico (paso activo iluminado con foco azul y sombra; pasos completados en verde con check; pasos futuros atenuados/muted).
+  - **Paso 1 (10minutesWebsite)**: Explica las credenciales, incluye enlace directo de reseteo de contraseña (`https://10minuteswebsite.net/dashboard/forgot-password.php`), sugerencia de sincronizar contraseñas, y formulario/edición rápida.
+  - **Paso 2 (Categorías)**: Explicación y botón para sincronizar/descargar categorías de 10minutesWebsite en vivo con badge de estado y etiquetas.
+  - **Paso 3 (Idioma de redacción)**: Selector de idioma principal con guardado directo y botón de recarga de lista de idiomas.
+  - **Paso 4 (Google Search Console)**: Instrucción explícita de abrir GSC en una pestaña contigua para verificar activación antes de conectar, flujo OAuth y selector de sitio web.
+  - **Paso 5 (Meta final)**: Felicitación y acceso directo a publicar el primer artículo o explorar Oportunidades SEO.
+  - Disponible tanto en la página de Inicio (`/dashboard`) como en la nueva pestaña **"🚀 Configuración Inicial"** (`/dashboard/configuracion?tab=wizard`).
+  - Ver cambios en:
+    - `apps/web/src/components/OnboardingWizard.tsx`
+    - `apps/web/src/app/dashboard/page.tsx`
+    - `apps/web/src/app/dashboard/configuracion/page.tsx`
 
 - **(13/8/2026)** Validación preventiva de idioma (`User.contentLanguage`) antes de permitir publicar o ejecutar oportunidades:
   - Verificación estricta en endpoints (`POST /api/runs`, `POST /api/opportunities/execute`, `POST /api/opportunities/execute-all`) rechazando con `400` y mensaje explicativo si `contentLanguage` del lote o del perfil está vacío.

@@ -338,6 +338,25 @@ ejecutar de forma explícita y auditada después del despliegue.
 
 ## Trabajo activo
 
+### Antigravity — Wizard de Inicio y Configuración Inicial Paso a Paso (13/8/2026)
+
+- **Estado:** `IMPLEMENTADO LOCALMENTE — VERIFICADO Y SIN CONFLICTOS` (13/8/2026).
+- **Objetivo:** Renovar completamente la experiencia de onboarding inicial para que los usuarios nuevos comprendan con total claridad los pasos necesarios para poner en marcha su cuenta de Auto Artículos, implementando una guía visual vertical con sombreado y dessombreado dinámico de pasos (en foco, completados y atenuados), y habilitando una pestaña dedicada dentro de Configuración.
+- **Área reservada y modificada:**
+  - `apps/web/src/components/OnboardingWizard.tsx` (nuevo componente modular autocontenido con los 4 pasos secuenciales + meta final:
+    - **Paso 1 (10minutesWebsite)**: Explica las credenciales, incluye enlace directo de reseteo de contraseña (`https://10minuteswebsite.net/dashboard/forgot-password.php`), sugerencia de sincronizar contraseñas, y formulario de guardado/edición rápida.
+    - **Paso 2 (Categorías)**: Explicación y botón para sincronizar/descargar categorías de 10minutesWebsite en vivo con badge de estado y etiquetas.
+    - **Paso 3 (Idioma de redacción)**: Selector de idioma principal con guardado directo y botón de recarga de lista de idiomas.
+    - **Paso 4 (Google Search Console)**: Instrucción explícita de abrir GSC en una pestaña contigua para verificar activación antes de conectar, flujo OAuth y selector de sitio web.
+    - **Paso 5 (Meta final)**: Felicitación y acceso directo a publicar el primer artículo o explorar Oportunidades SEO).
+  - `apps/web/src/app/dashboard/page.tsx` (integración del nuevo `OnboardingWizard` en la página principal).
+  - `apps/web/src/app/dashboard/configuracion/page.tsx` (nueva pestaña `"wizard"` / `"🚀 Configuración Inicial"` agregada a `tabs`, lectura de parámetro `?tab=wizard`, y renderizado de `<OnboardingWizard variant="standalone" />`, preservando el control de visibilidad de módulos).
+  - `TO-DO.md` (ítem movido a la sección *Hecho*).
+- **Coordinación y no-interferencia:**
+  - Esta tarea NO introduce migraciones nuevas ni modifica el schema de Prisma.
+  - No invade los archivos reservados por Codex (servidor MCP de Alexa+ y manual de actualizaciones).
+  - Preserva intactos los controles de visibilidad de módulos (`showSocialTab`, `disabledModules`) y no altera ninguna funcionalidad existente.
+
 ### Antigravity — Validación preventiva de idioma (User.contentLanguage) (13/8/2026)
 
 - **Estado:** `IMPLEMENTADO — PENDIENTE DE REVISIÓN Y DESPLIEGUE EN LOTE CONJUNTO` (13/8/2026).
@@ -368,11 +387,12 @@ ejecutar de forma explícita y auditada después del despliegue.
   - `apps/web/src/components/ModuleGuard.tsx` (pantalla defensiva de mantenimiento si un usuario regular intenta acceder directamente por URL a una ruta deshabilitada).
   - `apps/web/src/app/dashboard/layout.tsx` (envoltorio con `ModuleGuard`).
   - `apps/web/src/app/dashboard/usuarios/page.tsx` (nueva pestaña "Visibilidad de módulos" para control global con guardado/actualización inmediata, y bloque "Visibilidad de módulos (esta cuenta)" en cada tarjeta de usuario `UserCard`).
+  - `apps/web/src/app/dashboard/configuracion/page.tsx` (oculta la pestaña "📱 Publicación Automática" / Redes Sociales cuando el módulo `oportunidades-redes` está deshabilitado para el usuario o de forma global).
 - **Verificaciones técnicas realizadas:**
   - `npm --prefix packages/db run generate` (Prisma Client regenerado exitosamente).
   - `npm --prefix apps/web run typecheck` (`tsc --noEmit` completó limpio con 0 errores).
   - `npm --prefix apps/web run build` (`next build` completó limpio con 0 errores).
-  - **Blindaje estricto de NO caché (13/8/2026):** se agregaron `export const dynamic = "force-dynamic"`, `export const revalidate = 0`, encabezados `Cache-Control: "no-store, no-cache, must-revalidate, max-age=0"` en los endpoints de API (`/api/me`, `/api/admin/modules`, `/api/admin/users`) y en el layout de dashboard, junto con parámetros `?_t=${Date.now()}` y opciones `cache: "no-store"` en todos los fetches de cliente (`DashboardNav`, `ModuleGuard`, `usuarios/page.tsx`) para asegurar que el navegador nunca sirva respuestas cacheadas viejas.
+  - **Blindaje estricto de NO caché (13/8/2026):** se agregaron `export const dynamic = "force-dynamic"`, `export const revalidate = 0`, encabezados `Cache-Control: "no-store, no-cache, must-revalidate, max-age=0"` en los endpoints de API (`/api/me`, `/api/admin/modules`, `/api/admin/users`) y en el layout de dashboard, junto con parámetros `?_t=${Date.now()}` y opciones `cache: "no-store"` en todos los fetches de cliente (`DashboardNav`, `ModuleGuard`, `usuarios/page.tsx`, `configuracion/page.tsx`) para asegurar que el navegador nunca sirva respuestas cacheadas viejas.
   - Sin efectos secundarios en el resto del dashboard ni en integraciones existentes.
 
 
@@ -614,6 +634,23 @@ ejecutar de forma explícita y auditada después del despliegue.
   typecheck del generador y `git diff --check` terminaron sin errores. El chat
   queda listo para probar con una sesión autenticada y para el próximo
   push/despliegue coordinado; no requiere migración nueva.
+- **Despliegue del lote iniciado y bloqueado por build ajeno:** el commit
+  `d5d85fc` se subió a `main` y Vercel inició el deploy
+  `dpl_2aCHemM6PkZNttQtaniVLLDTiABQ`, que compiló la aplicación correctamente
+  pero falló en tres errores TypeScript preexistentes de
+  `apps/web/src/components/OnboardingWizard.tsx` (dos imports/props sin usar y
+  `LanguageRow.isDefault` ausente). No es un fallo del chat; producción
+  anterior sigue activa. Como Milton autorizó pasar el lote completo a
+  producción, Codex corregirá esos tres errores mínimos, volverá a validar y
+  reintentará el despliegue antes de liberar el lote.
+- **Segundo despliegue detenido por alcance:** la corrección de los errores de
+  TypeScript forma parte de un módulo amplio, aún sin commit, de “Configuración
+  Inicial” (`OnboardingWizard`, cambios de Inicio, Configuración y TO-DO). El
+  control de seguridad rechazó incluirlo automáticamente en `main`/producción,
+  porque añade más de mil líneas y sustituye el wizard anterior. Milton debe
+  autorizar expresamente publicar este asistente de configuración inicial junto
+  con el chat antes de que Codex haga el segundo commit y despliegue. Producción
+  anterior continúa intacta.
 - **Capitán de migración liberó el lote:** Codex. Resultado: workflow
   `31751572529` exitoso: entradas históricas de `ProductUpdate` repuestas
   idempotentemente en producción. Revisar cambios ajenos restantes antes de

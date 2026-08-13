@@ -18,6 +18,7 @@ import ThreadsSection from "@/components/ThreadsSection";
 import TwitterSection from "@/components/TwitterSection";
 import LinkedInSection from "@/components/LinkedInSection";
 import PhotoLogoUploader from "@/components/PhotoLogoUploader";
+import OnboardingWizard from "@/components/OnboardingWizard";
 
 export default function ConfiguracionPage() {
   const [username, setUsername] = useState("");
@@ -56,6 +57,7 @@ export default function ConfiguracionPage() {
   const [allowInstagramPublishing, setAllowInstagramPublishing] = useState(false);
   const [allowLinkedInPublishing, setAllowLinkedInPublishing] = useState(false);
   const [allowThreadsPublishing, setAllowThreadsPublishing] = useState(false);
+  const [disabledModules, setDisabledModules] = useState<string[]>([]);
   const [triggeringFix, setTriggeringFix] = useState(false);
   const [clearingFixHistory, setClearingFixHistory] = useState(false);
   const [fixStatus, setFixStatus] = useState<{
@@ -146,6 +148,9 @@ export default function ConfiguracionPage() {
         setAllowInstagramPublishing(data.allowInstagramPublishing ?? false);
         setAllowLinkedInPublishing(data.allowLinkedInPublishing ?? false);
         setAllowThreadsPublishing(data.allowThreadsPublishing ?? false);
+        if (Array.isArray(data.disabledModules)) {
+          setDisabledModules(data.disabledModules);
+        }
     }
   }, []);
 
@@ -463,8 +468,23 @@ export default function ConfiguracionPage() {
   }
 
   const [activeTab, setActiveTab] = useState<
-    "integrations" | "social" | "platform" | "mobile"
+    "wizard" | "integrations" | "social" | "platform" | "mobile"
   >("integrations");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get("tab");
+    if (
+      tabParam === "wizard" ||
+      tabParam === "integrations" ||
+      tabParam === "social" ||
+      tabParam === "platform" ||
+      tabParam === "mobile"
+    ) {
+      setActiveTab(tabParam);
+    }
+  }, []);
 
   const showCredentialsForm = editingCredentials || !credentialsConfigured;
 
@@ -480,13 +500,30 @@ export default function ConfiguracionPage() {
         ? "#f59e0b"
         : "#2563eb";
 
+  const showSocialTab =
+    isAdmin || !disabledModules.includes("oportunidades-redes");
+
+  useEffect(() => {
+    if (activeTab === "social" && !showSocialTab) {
+      setActiveTab("integrations");
+    }
+  }, [activeTab, showSocialTab]);
+
   const tabs: {
-    id: "integrations" | "social" | "platform" | "mobile";
+    id: "wizard" | "integrations" | "social" | "platform" | "mobile";
     eyebrow: string;
     label: string;
     description: string;
     badge?: string;
   }[] = [
+    {
+      id: "wizard",
+      eyebrow: "Paso a Paso",
+      label: "🚀 Configuración Inicial",
+      description:
+        "Guía paso a paso interactiva para conectar tu web, categorías, idioma y Google Search Console.",
+      badge: credentialsConfigured && categories.length > 0 && contentLanguage ? "✓ Listo" : "Guiado",
+    },
     {
       id: "integrations",
       eyebrow: "Buscadores",
@@ -494,13 +531,17 @@ export default function ConfiguracionPage() {
       description:
         "Conecta Google Search Console y Bing Webmaster Tools para monitorear y mejorar la indexación de tus artículos.",
     },
-    {
-      id: "social",
-      eyebrow: "Redes Sociales",
-      label: "📱 Publicación Automática",
-      description:
-        "Conecta Instagram, Threads y Google Business Profile para publicar tus artículos en redes sociales.",
-    },
+    ...(showSocialTab
+      ? [
+          {
+            id: "social" as const,
+            eyebrow: "Redes Sociales",
+            label: "📱 Publicación Automática",
+            description:
+              "Conecta Instagram, Threads y Google Business Profile para publicar tus artículos en redes sociales.",
+          },
+        ]
+      : []),
     {
       id: "platform",
       eyebrow: "10minutesWebsite",
@@ -794,6 +835,20 @@ export default function ConfiguracionPage() {
           );
         })}
       </div>
+
+      {/* Pestaña 0: Wizard — Configuración Inicial Paso a Paso */}
+      {activeTab === "wizard" && (
+        <div>
+          <OnboardingWizard
+            variant="standalone"
+            onUpdated={() => {
+              loadCredentialsStatus();
+              loadCategories();
+              loadLanguages();
+            }}
+          />
+        </div>
+      )}
 
       {/* Pestaña 1: Buscadores — Indexación en Google y Bing */}
       {activeTab === "integrations" && (

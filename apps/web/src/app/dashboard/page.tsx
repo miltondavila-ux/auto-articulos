@@ -2,9 +2,9 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
-import { sectionStyle, h2Style } from "@/components/dashboard-ui";
 import type { RunRow } from "@/types/dashboard";
 import PerformanceDashboard from "@/components/PerformanceDashboard";
+import OnboardingWizard from "@/components/OnboardingWizard";
 import { TRIAL_DAYS } from "@/lib/trial";
 
 interface PublishedNotification {
@@ -18,8 +18,6 @@ export default function InicioPage() {
   const [notifications, setNotifications] = useState<PublishedNotification[]>(
     [],
   );
-  const [credentialsConfigured, setCredentialsConfigured] = useState(false);
-  const [categoriesCount, setCategoriesCount] = useState(0);
   // Banner grande de bienvenida a la prueba gratuita (pedido explícito del
   // usuario, 13/8/2026): /api/auth/trial-signup redirige acá con `?trial=1`
   // apenas se crea la cuenta. Se lee con window.location en vez de
@@ -48,26 +46,6 @@ export default function InicioPage() {
   const activeRun = runs.find(
     (r) => r.status === "pending" || r.status === "running",
   );
-  const hasPublishedAny = runs.some((r) =>
-    r.titles.some((t) => t.status === "success"),
-  );
-
-  useEffect(() => {
-    (async () => {
-      const [credRes, catRes] = await Promise.all([
-        fetch("/api/credentials"),
-        fetch("/api/categories"),
-      ]);
-      if (credRes.ok) {
-        const data = await credRes.json();
-        setCredentialsConfigured(Boolean(data.configured));
-      }
-      if (catRes.ok) {
-        const data = await catRes.json();
-        setCategoriesCount(data.categories?.length ?? 0);
-      }
-    })();
-  }, []);
 
   const loadRuns = useCallback(async () => {
     const res = await fetch("/api/runs");
@@ -225,11 +203,7 @@ export default function InicioPage() {
 
       <PerformanceDashboard />
 
-      <OnboardingWizard
-        credentialsConfigured={credentialsConfigured}
-        categoriesConfigured={categoriesCount > 0}
-        hasPublishedAny={hasPublishedAny}
-      />
+      <OnboardingWizard />
 
       {activeRun && (
         <div
@@ -252,147 +226,6 @@ export default function InicioPage() {
           .
         </div>
       )}
-    </div>
-  );
-}
-
-function OnboardingWizard({
-  credentialsConfigured,
-  categoriesConfigured,
-  hasPublishedAny,
-}: {
-  credentialsConfigured: boolean;
-  categoriesConfigured: boolean;
-  hasPublishedAny: boolean;
-}) {
-  const steps = [
-    {
-      done: credentialsConfigured,
-      title: "Configura tu usuario y contraseña de 10minutesWebsite",
-      description:
-        "Son las credenciales con las que entras a 10minutesWebsite, no las de Auto Artículos.",
-      href: "/dashboard/configuracion",
-      cta: "Ir a Configuración",
-    },
-    {
-      done: categoriesConfigured,
-      title: "Conecta tus categorías",
-      description:
-        "Sincroniza las categorías reales de tu cuenta para poder elegir dónde publicar.",
-      href: "/dashboard/configuracion",
-      cta: "Ir a Configuración",
-    },
-    {
-      done: hasPublishedAny,
-      title: "Publica tu primer artículo",
-      description:
-        "Pega al menos un título y deja que Auto Artículos lo publique por ti.",
-      href: "/dashboard/publicar",
-      cta: "Ir a Publicar",
-    },
-  ];
-
-  const allDone = steps.every((s) => s.done);
-
-  if (allDone) {
-    return (
-      <details style={{ ...sectionStyle, padding: "12px 20px" }}>
-        <summary
-          style={{
-            cursor: "pointer",
-            fontSize: 13,
-            color: "#031537",
-            fontWeight: 600,
-          }}
-        >
-          ✓ Ya completaste los primeros pasos — haz clic para revisarlos
-        </summary>
-        <div style={{ marginTop: 12 }}>
-          <OnboardingSteps steps={steps} />
-        </div>
-      </details>
-    );
-  }
-
-  return (
-    <section style={sectionStyle}>
-      <h2 style={h2Style}>¡Bienvenido a Auto Artículos! 👋</h2>
-      <p style={{ fontSize: 13, color: "#6b7280", marginTop: -6 }}>
-        Estos son los primeros pasos para dejar todo listo. Puedes volver a esta
-        lista cuando quieras si te pierdes en el camino.
-      </p>
-      <OnboardingSteps steps={steps} />
-    </section>
-  );
-}
-
-function OnboardingSteps({
-  steps,
-}: {
-  steps: {
-    done: boolean;
-    title: string;
-    description: string;
-    href: string;
-    cta: string;
-  }[];
-}) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      {steps.map((step, index) => (
-        <div
-          key={step.title}
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            gap: 12,
-            padding: "10px 14px",
-            borderRadius: 8,
-            background: step.done ? "#f3fbf6" : "#f7f8fa",
-            border: step.done ? "1px solid #a8dfc0" : "1px solid #dfe3e8",
-          }}
-        >
-          <span
-            style={{
-              fontSize: 18,
-              lineHeight: "22px",
-              flexShrink: 0,
-            }}
-          >
-            {step.done ? "✅" : `${index + 1}.`}
-          </span>
-          <div style={{ flex: 1 }}>
-            <p
-              style={{
-                margin: 0,
-                fontSize: 14,
-                fontWeight: 600,
-                color: step.done ? "#031537" : "#16181d",
-              }}
-            >
-              {step.title}
-            </p>
-            <p style={{ margin: "4px 0 0", fontSize: 12, color: "#6b7280" }}>
-              {step.description}
-            </p>
-            {!step.done && (
-              <Link
-                href={step.href}
-                style={{
-                  display: "inline-block",
-                  marginTop: 8,
-                  fontSize: 12,
-                  color: "#2f5fdb",
-                  textDecoration: "none",
-                  fontWeight: 600,
-                }}
-              >
-                {step.cta} →
-              </Link>
-            )}
-          </div>
-        </div>
-      ))}
     </div>
   );
 }
