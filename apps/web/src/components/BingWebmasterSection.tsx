@@ -242,9 +242,16 @@ export default function BingWebmasterSection() {
   return (
     <section style={sectionStyle}>
       <h2 style={h2Style}>Bing Webmaster Tools</h2>
-      <p style={{ fontSize: 13, color: "#6b7280" }}>
-        Conecta tu cuenta de Bing para que tus artículos aparezcan en los resultados de búsqueda de Bing. A diferencia de Google, Bing permite solicitar indexación instantánea de cada artículo ni bien se publica — el sistema lo hace solo.
-      </p>
+      <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12, marginBottom: 12 }}>
+        <p style={{ margin: "0 0 6px", fontSize: 13, fontWeight: 700, color: "#1e293b" }}>
+          💡 Paso a paso para conectar:
+        </p>
+        <p style={{ margin: 0, fontSize: 13, color: "#475569", lineHeight: 1.6 }}>
+          1. Abre una pestaña en tu navegador con <strong>Bing Webmaster Tools</strong> (con tu sesión ya iniciada).<br />
+          2. Vuelve a esta pestaña de Creador de artículos y presiona el botón de abajo <strong>"Conectar Bing Webmaster Tools"</strong>.<br />
+          3. Acepta los permisos en Microsoft y el sistema se conectará solo.
+        </p>
+      </div>
       {!data?.connected ? (
         <a
           href="/api/search-integrations/bing/connect"
@@ -279,10 +286,11 @@ export default function BingWebmasterSection() {
           <p style={{ margin: 0, fontWeight: 700, color: "#991b1b", fontSize: 14 }}>
             ⚠️ Tu conexión con Bing venció
           </p>
-          <p style={{ margin: "6px 0 10px", color: "#991b1b", fontSize: 13 }}>
-            Esto pasa del lado de Bing (no es un error del sistema) — hay que
-            volver a autorizar la cuenta. Es rápido: al reconectar, tu sitio y
-            tu sitemap guardados no se pierden.
+          <p style={{ margin: "6px 0 10px", color: "#991b1b", fontSize: 13, lineHeight: 1.6 }}>
+            Para reconectar de forma fácil y rápida:<br />
+            1. Abre en otra pestaña tu cuenta de <strong>Bing Webmaster Tools</strong> (para tener la sesión iniciada).<br />
+            2. Vuelve aquí y haz clic en <strong>"Reconectar Bing"</strong>.<br />
+            3. Al autorizar, tu sitio y tu sitemap se mantendrán guardados exactamente como los tenías.
           </p>
           {/*
             El recuadro rojo tapaba el texto real que devuelve Bing, que es lo
