@@ -121,6 +121,54 @@ HANDOFF, solo alimenta ideas hacia él).
   - El objetivo es liberar "oportunidades de descanibalización" y que todos
     los artículos existentes (no solo los nuevos) aporten de verdad a la
     indexación y el posicionamiento, en vez de restarse entre ellos.
+- **(13/8/2026)** Terminar la investigación de Bing que quedó a mitad de
+  camino (cuenta de Julio Paso): verificar en el portal de Bing Webmaster
+  Tools (Configuración → API Access) si el Client ID/Secret ahí coincide con
+  lo guardado en `BING_WEBMASTER_CLIENT_ID`/`BING_WEBMASTER_CLIENT_SECRET` de
+  Vercel — sospecha de que el secret guardado ya no es válido, causando el
+  bucle de "reconectar" → "vuelve a decir que venció" casi inmediato. Ver
+  `COORDINACION_CLAUDE_CODEX.md`, sección "Claude — investigación en curso"
+  para el detalle completo de lo ya descartado.
+- **(13/8/2026)** Validar que el idioma por defecto del usuario
+  (`User.contentLanguage`) esté configurado correctamente ANTES de publicar
+  artículos — relacionado con los bugs reales de idioma vacío/mal
+  sincronizado ya resueltos el 7-11/8/2026 con Gustavo Torres, Svetlana y
+  Mariana Romero (ver `HANDOFF.md`); esto pide una validación preventiva
+  explícita, no solo los parches puntuales que ya se aplicaron caso por caso.
+- **(13/8/2026)** Pre-validación inteligente antes de publicar un artículo o
+  correr Oportunidades: revisar que el usuario tenga (a) 10minutesWebsite
+  conectado, (b) categorías sincronizadas, (c) Google Search Console
+  conectado, (d) créditos de imagen disponibles en su cuenta de
+  10minutesWebsite. Si algo falla, llevar al usuario DIRECTO al lugar exacto
+  donde debe resolverlo (con ancla/link directo a esa sección específica, no
+  solo a Configuración en general), con un mensaje claro de qué falta. La
+  validación se hace una vez de forma visible al entrar, y después en segundo
+  plano cada vez que se intenta publicar/analizar — si algo falla en ese
+  momento, lleva al usuario a resolver ese punto exacto antes de continuar.
+- **(13/8/2026)** Módulo de control de módulos para el administrador
+  principal: poder ocultar/deshabilitar secciones completas del sistema
+  (ejemplo dado: "Oportunidades de redes") para que un usuario específico no
+  las vea en absoluto en su menú/UI — no solo permisos de acción dentro de un
+  módulo (eso ya existe por red social, ver ítem del 9/8/2026), sino esconder
+  el módulo entero. Debe poder aplicarse por usuario individual Y de forma
+  global (para todos a la vez) — pedido explícito: hoy hay partes en
+  reparación que no deberían verse mientras se arreglan.
+- **(13/8/2026)** Crear un tercer tipo de usuario, "PRUEBAS": acceso a todo
+  igual que un usuario normal, pero SIN restricciones de uso (límites
+  mensuales/diarios, etc.). Nota para quien lo ejecute: revisar si esto se
+  solapa con el sistema de "Solicitar prueba" (registro público de 7 días)
+  que se implementó este mismo día — puede que sean el mismo concepto
+  formalizado como rol, o puede que Milton quiera dos cosas distintas
+  (cuentas internas de prueba de Milton vs. registros públicos de clientes
+  potenciales); confirmar con él antes de asumir cuál es.
+- **(13/8/2026)** Mejorar el wizard de inicio (`OnboardingSteps` en
+  `dashboard/page.tsx`) para que sea más sencillo de usar. Debe explicar que,
+  si el usuario no sabe su contraseña de 10minutesWebsite, puede cambiarla en
+  `https://10minuteswebsite.net/dashboard/forgot-password.php`, y sugerirle
+  que después de cambiarla vuelva y use esa MISMA contraseña (la que el
+  sistema le generó, o la que él mismo puso) también en Auto Artículos, para
+  que las credenciales guardadas coincidan con las reales.
+
 ## Hecho
 
 - **(9/8/2026)** Bug del menú en iPad resuelto: se cambió el breakpoint de
