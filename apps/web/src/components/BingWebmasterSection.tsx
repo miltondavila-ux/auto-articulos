@@ -103,20 +103,25 @@ export default function BingWebmasterSection() {
     );
 
   useEffect(() => {
-    load();
     const bingParam = searchParams.get("bing");
     if (bingParam === "connected") {
       setMessage({ text: "Bing reconectado correctamente.", type: "success" });
       setConnecting(false);
       setReconectando(true);
-      // Bing tarda un instante en aceptar el token recién emitido; se vuelve a
-      // consultar en vez de dejar en pantalla un error que ya no es cierto.
+      // Acá NO se llama a load() de entrada, a propósito. El refresh token de
+      // Bing es de un solo uso: dos consultas simultáneas se pisan entre sí
+      // (la rotación de una anula el token que está usando la otra) y la
+      // conexión recién hecha queda rota. Como `router.replace` puede volver a
+      // montar el componente y disparar este efecto otra vez, una sola consulta
+      // diferida es más segura que dos inmediatas.
       const t = setTimeout(() => {
         load().finally(() => setReconectando(false));
       }, 2500);
       router.replace("/dashboard/configuracion");
       return () => clearTimeout(t);
-    } else if (bingParam === "error") {
+    }
+    load();
+    if (bingParam === "error") {
       setMessage({
         text:
           searchParams.get("motivo") === "token"
@@ -279,6 +284,24 @@ export default function BingWebmasterSection() {
             volver a autorizar la cuenta. Es rápido: al reconectar, tu sitio y
             tu sitemap guardados no se pierden.
           </p>
+          {/*
+            El recuadro rojo tapaba el texto real que devuelve Bing, que es lo
+            único que permite distinguir un token vencido de un problema de
+            credenciales o de rotación. Se muestra en letra chica: al usuario no
+            le cambia nada, y evita otra ronda de diagnóstico a ciegas.
+          */}
+          {data.error && (
+            <p
+              style={{
+                margin: "0 0 10px",
+                color: "#b45309",
+                fontSize: 11,
+                fontFamily: "monospace",
+              }}
+            >
+              {data.error}
+            </p>
+          )}
           <a
             href="/api/search-integrations/bing/connect"
             aria-disabled={connecting}
