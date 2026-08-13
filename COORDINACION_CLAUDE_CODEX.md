@@ -671,6 +671,12 @@ ejecutar de forma explícita y auditada después del despliegue.
   intentar crear un proceso/enlazar un puerto (`Operation not permitted`). No
   hay error de TypeScript ni del componente. El build de Vercel será la
   verificación definitiva antes de declarar el cambio publicado.
+- **Commit coordinado:** `52fbfcf` (`Mejorar diseno del asistente flotante`).
+  Contiene solo `FloatingAssistant.tsx` y esta coordinación; los diagnósticos
+  ajenos permanecen sin incluir. El hook del proyecto generó correctamente la
+  entrada local de actualización. **SIGUIENTE ACCIÓN (Codex, capitán activo):**
+  push a `main` y despliegue de Vercel; no se ejecutará migración porque el lote
+  no modifica el esquema.
   estados y respuestas), sin cambiar permisos, API ni la regla de acceso
   activo. Se validará antes de enviarlo al próximo lote.
 - **Verificación completada:** `npm --prefix apps/web run typecheck`, el
