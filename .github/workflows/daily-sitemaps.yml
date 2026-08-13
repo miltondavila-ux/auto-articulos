@@ -21,6 +21,15 @@ jobs:
       CREDENTIALS_ENCRYPTION_KEY: ${{ secrets.CREDENTIALS_ENCRYPTION_KEY }}
       GOOGLE_SEARCH_CONSOLE_CLIENT_ID: ${{ secrets.GOOGLE_SEARCH_CONSOLE_CLIENT_ID }}
       GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET: ${{ secrets.GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET }}
+      # send-daily-sitemaps.ts procesa integraciones de Google Y de Bing, pero
+      # aquí solo se pasaban las credenciales de Google. Por eso cada corrida
+      # nocturna fallaba para TODOS los usuarios de Bing con el mensaje
+      # "Bing Webmaster Tools OAuth no está configurado." (lo lanza bingConfig()
+      # en packages/shared/src/bing-webmaster.ts cuando faltan estas variables),
+      # que quedaba guardado en lastSitemapSyncError y se mostraba en
+      # Configuración como si fuera un problema de la cuenta del usuario.
+      BING_WEBMASTER_CLIENT_ID: ${{ secrets.BING_WEBMASTER_CLIENT_ID }}
+      BING_WEBMASTER_CLIENT_SECRET: ${{ secrets.BING_WEBMASTER_CLIENT_SECRET }}
     steps:
       - name: Confirmar medianoche de Nueva York
         id: horario

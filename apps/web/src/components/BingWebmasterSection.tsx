@@ -76,8 +76,18 @@ export default function BingWebmasterSection() {
   // MISMA causa, mostrados como si fueran dos problemas separados, sin decir
   // qué hacer. Se detecta ese patrón específico para mostrar un solo aviso
   // claro con la acción correcta (reconectar), en vez de dos.
+  //
+  // Ampliado el 13/8/2026 (cuenta de Lorena Álvarez): Bing también reporta la
+  // conexión muerta como `invalid_client` / "Client authentication failed.",
+  // que no coincidía con ninguno de los patrones de arriba. Resultado: el
+  // selector de sitios quedaba vacío, se mostraba ese texto en inglés en letra
+  // chica y NO aparecía el botón "Reconectar Bing" — el usuario no tenía forma
+  // de salir del problema desde la pantalla.
   const tokenExpired =
-    !!data?.error && /invalid.*token|expired|unauthorized|401/i.test(data.error);
+    !!data?.error &&
+    /invalid.*token|invalid_client|invalid_grant|client authentication|volver a autorizar|expired|unauthorized|401/i.test(
+      data.error,
+    );
 
   useEffect(() => {
     load();
@@ -88,7 +98,10 @@ export default function BingWebmasterSection() {
       router.replace("/dashboard/configuracion");
     } else if (bingParam === "error") {
       setMessage({
-        text: "No se pudo completar la reconexión con Bing (puede pasar si se hizo clic varias veces seguidas). Probá una sola vez y esperá a que la página redirija sola.",
+        text:
+          searchParams.get("motivo") === "token"
+            ? "Bing aceptó el permiso pero rechazó el último paso de la conexión. Esto no se arregla reintentando: revisá que el Client ID, el Client Secret y la Redirect URI configurados coincidan exactamente con los de tu app en Bing Webmaster Tools."
+            : "No se pudo completar la reconexión con Bing (puede pasar si se hizo clic varias veces seguidas). Probá una sola vez y esperá a que la página redirija sola.",
         type: "error",
       });
       setConnecting(false);

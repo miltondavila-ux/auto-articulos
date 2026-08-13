@@ -10,9 +10,13 @@ export async function GET(request: NextRequest) {
   const cookieStore = await cookies();
   const state = request.nextUrl.searchParams.get("state");
   const code = request.nextUrl.searchParams.get("code");
+  // Los dos motivos de falla se veían idénticos desde la pantalla, así que el
+  // aviso siempre culpaba al doble clic (`motivo=estado`), incluso cuando el
+  // problema real era que Bing rechazó el intercambio del código
+  // (`motivo=token`, típicamente credenciales de la app mal configuradas).
   if (!state || state !== cookieStore.get(BING_STATE_COOKIE)?.value || !code) {
     return NextResponse.redirect(
-      new URL("/dashboard/configuracion?bing=error", request.url),
+      new URL("/dashboard/configuracion?bing=error&motivo=estado", request.url),
     );
   }
   try {
@@ -31,9 +35,17 @@ export async function GET(request: NextRequest) {
         }),
       },
     );
-    const token = (await tokenResponse.json()) as { refresh_token?: string };
-    if (!tokenResponse.ok || !token.refresh_token)
+    const token = (await tokenResponse.json().catch(() => ({}))) as {
+      refresh_token?: string;
+      error?: string;
+      error_description?: string;
+    };
+    if (!tokenResponse.ok || !token.refresh_token) {
+      console.error(
+        `[bing/callback] Bing rechazó el intercambio del código: HTTP ${tokenResponse.status} ${token.error ?? ""} ${token.error_description ?? ""}`.trim(),
+      );
       throw new Error("Bing no entregó refresh token.");
+    }
     await prisma.searchIntegration.upsert({
       where: { userId_provider: { userId, provider: "bing" } },
       create: {
@@ -50,7 +62,7 @@ export async function GET(request: NextRequest) {
     return response;
   } catch {
     return NextResponse.redirect(
-      new URL("/dashboard/configuracion?bing=error", request.url),
+      new URL("/dashboard/configuracion?bing=error&motivo=token", request.url),
     );
   }
 }

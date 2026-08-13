@@ -33,13 +33,26 @@ export async function getBingAccessToken(refreshToken: string) {
       grant_type: "refresh_token",
     }),
   });
-  const data = (await response.json()) as {
+  const data = (await response.json().catch(() => ({}))) as {
     access_token?: string;
+    error?: string;
     error_description?: string;
   };
   if (!response.ok || !data.access_token) {
+    // Bug real encontrado el 13/8/2026 (cuenta de Lorena Álvarez): cuando la
+    // conexión guardada deja de servir, Bing responde SIEMPRE
+    // {"error":"invalid_client","error_description":"Client authentication
+    // failed."} — verificado a mano contra el endpoint real: devuelve ese
+    // mismo texto con credenciales de cliente VÁLIDAS y un refresh token
+    // inválido. O sea que "Client authentication failed" no habla del cliente,
+    // habla de la conexión del usuario, y es el mismo caso que el viejo
+    // "Refresh token is invalid or expired": hay que volver a autorizar.
+    // Ese texto crudo en inglés no le decía nada al usuario ni coincidía con
+    // la detección de "token vencido" de la UI, así que la pantalla quedaba
+    // sin el botón "Reconectar Bing" — un callejón sin salida.
+    const detalle = data.error_description ?? data.error ?? `HTTP ${response.status}`;
     throw new Error(
-      data.error_description ?? "Bing Webmaster Tools rechazó el token OAuth.",
+      `La conexión con Bing venció o fue revocada: hay que volver a autorizar la cuenta. (Bing respondió: ${detalle})`,
     );
   }
   return data.access_token;
