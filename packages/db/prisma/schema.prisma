@@ -92,6 +92,19 @@ model User {
   // Plantilla de prompt personalizada para la generación de infografías
   // de Instagram. Null = usar el prompt por defecto del sistema.
   infographicPrompt                 String?
+  // Sistema de prueba gratuita (13/8/2026): cuentas creadas por la propia
+  // persona desde el botón "Solicitar prueba" en Login (no por el admin)
+  // obtienen 7 días de acceso completo, y después quedan bloqueadas salvo
+  // que el admin las desbloquee manualmente. isTrialSignup marca ese origen
+  // (para que el admin las identifique y las contacte); trialStartedAt
+  // cuenta los 7 días; trialUnlocked es el "check de desbloqueo" manual del
+  // admin — en true por defecto para TODOS los usuarios existentes/creados
+  // por admin (nunca se bloquean por esto), pero se crea en false para
+  // quienes se inscriben solos, así que su acceso depende del período de
+  // prueba hasta que el admin los desbloquee. Ver lib/trial.ts.
+  isTrialSignup                     Boolean   @default(false)
+  trialStartedAt                    DateTime?
+  trialUnlocked                     Boolean   @default(true)
 
   credentials                Credential[]
   runs                       Run[]
@@ -103,8 +116,8 @@ model User {
   opportunityGroups          OpportunityGroup[]
   businessProfileIntegration BusinessProfileIntegration?
   threadsIntegration         ThreadsIntegration?
-  twitterIntegration        TwitterIntegration?
-  linkedinIntegration       LinkedInIntegration?
+  twitterIntegration         TwitterIntegration?
+  linkedinIntegration        LinkedInIntegration?
   instagramIntegration       InstagramIntegration?
   socialOpportunities        SocialOpportunity[]
 }
@@ -150,15 +163,15 @@ model ThreadsIntegration {
 // tweets tras la publicación del artículo. Usa OAuth 2.0 PKCE con refresh
 // token para mantener la sesión activa.
 model TwitterIntegration {
-  id                   String   @id @default(cuid())
-  userId               String   @unique
-  twitterUserId        String
-  twitterUsername      String?
-  accessTokenEncrypted String
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  twitterUserId         String
+  twitterUsername       String?
+  accessTokenEncrypted  String
   refreshTokenEncrypted String
-  expiresAt            DateTime
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  expiresAt             DateTime
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -169,7 +182,7 @@ model LinkedInIntegration {
   id                   String   @id @default(cuid())
   userId               String   @unique
   linkedinUserId       String
-  linkedinUsername      String?
+  linkedinUsername     String?
   accessTokenEncrypted String
   expiresAt            DateTime
   createdAt            DateTime @default(now())
@@ -181,14 +194,14 @@ model LinkedInIntegration {
 // Conexión OAuth 2.0 con Instagram Graph API (Meta) — publicación de
 // Carousels y Reels usando la Instagram Content Publishing API.
 model InstagramIntegration {
-  id                       String   @id @default(cuid())
-  userId                   String   @unique
+  id                         String   @id @default(cuid())
+  userId                     String   @unique
   instagramBusinessAccountId String
-  instagramUsername        String?
-  accessTokenEncrypted     String
-  expiresAt                DateTime
-  createdAt                DateTime @default(now())
-  updatedAt                DateTime @updatedAt
+  instagramUsername          String?
+  accessTokenEncrypted       String
+  expiresAt                  DateTime
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -372,54 +385,54 @@ enum TitleStatus {
 }
 
 model Title {
-  id                    String      @id @default(cuid())
-  runId                 String
-  text                  String
-  order                 Int
-  status                TitleStatus @default(pending)
-  attempts              Int         @default(0)
-  articleUrl            String?
-  finalTitle            String?
-  errorMessage          String?
-  processedAt           DateTime?
-  googleIndexingStatus  String?
-  googleIndexingMessage String?
-  googleIndexingAt      DateTime?
+  id                     String      @id @default(cuid())
+  runId                  String
+  text                   String
+  order                  Int
+  status                 TitleStatus @default(pending)
+  attempts               Int         @default(0)
+  articleUrl             String?
+  finalTitle             String?
+  errorMessage           String?
+  processedAt            DateTime?
+  googleIndexingStatus   String?
+  googleIndexingMessage  String?
+  googleIndexingAt       DateTime?
   // Bing sí permite pedir indexación instantánea de cualquier URL
   // (SubmitUrl), a diferencia de Google que solo lo permite para tipos de
   // contenido muy específicos — pedido explícito del usuario, 5/8/2026.
-  bingIndexingStatus    String?
-  bingIndexingMessage   String?
-  bingIndexingAt        DateTime?
+  bingIndexingStatus     String?
+  bingIndexingMessage    String?
+  bingIndexingAt         DateTime?
   // Se marca solo cuando el envío diario del sitemap a Google Search
   // Console fue confirmado exitoso (respuesta ok de la API) — nunca en un
   // intento fallido, pendiente o sin verificar.
-  lastSitemapSentAt     DateTime?
+  lastSitemapSentAt      DateTime?
   // Resumen/excerpt real del artículo (el mismo texto que ya se usa para
   // armar el prompt de imagen, ver apps/worker/src/imagePrompt.ts), guardado
   // en el momento de publicar para poder reusarlo después al armar la
   // publicación de Google Business Profile sin tener que volver a abrir el
   // artículo. Null en artículos publicados antes de este campo.
-  summary               String?
+  summary                String?
   // Seguimiento de publicación automática en Meta Threads — pedido explícito
   // del usuario, 7/8/2026. Se llena cuando el worker publica el artículo y
   // envía el Hilo a Meta Threads en 2 pasos (Container API).
-  threadsPublishStatus  String? // "pending" | "success" | "error" | "not_configured" | "skipped"
-  threadsPostId         String?
-  threadsPublishError   String?
-  threadsPublishAt      DateTime?
-  twitterPublishStatus  String? // "pending" | "success" | "error" | "not_configured" | "skipped"
-  twitterPostId         String?
-  twitterPublishError   String?
-  twitterPublishAt      DateTime?
-  linkedinPublishStatus String? // "pending" | "success" | "error" | "not_configured" | "skipped"
-  linkedinPostId        String?
-  linkedinPublishError  String?
-  linkedinPublishAt     DateTime?
+  threadsPublishStatus   String? // "pending" | "success" | "error" | "not_configured" | "skipped"
+  threadsPostId          String?
+  threadsPublishError    String?
+  threadsPublishAt       DateTime?
+  twitterPublishStatus   String? // "pending" | "success" | "error" | "not_configured" | "skipped"
+  twitterPostId          String?
+  twitterPublishError    String?
+  twitterPublishAt       DateTime?
+  linkedinPublishStatus  String? // "pending" | "success" | "error" | "not_configured" | "skipped"
+  linkedinPostId         String?
+  linkedinPublishError   String?
+  linkedinPublishAt      DateTime?
   instagramPublishStatus String? // "pending" | "success" | "error" | "not_configured" | "skipped"
-  instagramPostId       String?
-  instagramPublishError String?
-  instagramPublishAt    DateTime?
+  instagramPostId        String?
+  instagramPublishError  String?
+  instagramPublishAt     DateTime?
 
   run                 Run                  @relation(fields: [runId], references: [id], onDelete: Cascade)
   events              TitleEvent[]
@@ -474,7 +487,7 @@ model SocialOpportunity {
   titleId       String?
   articleUrl    String
   articleTitle  String
-  platform      String    // "threads" | "linkedin" | "x" | "instagram" | "facebook"
+  platform      String // "threads" | "linkedin" | "x" | "instagram" | "facebook"
   suggestedText String    @db.Text
   status        String    @default("pending") // "pending" | "published" | "skipped"
   postId        String?
@@ -483,7 +496,6 @@ model SocialOpportunity {
   createdAt     DateTime  @default(now())
   publishedAt   DateTime?
 
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title         Title?    @relation(fields: [titleId], references: [id], onDelete: SetNull)
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title Title? @relation(fields: [titleId], references: [id], onDelete: SetNull)
 }
-
