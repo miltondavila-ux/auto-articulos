@@ -3,41 +3,54 @@ import {
   decryptSecret,
   encryptSecret,
   getBingAccessToken,
+  parseBingTokenPayload,
+  formatBingTokenPayload,
 } from "@auto-articulos/shared";
 
 /**
  * Único punto por el que la web pide un access token de Bing.
  *
- * Existe para que nadie se olvide de guardar el refresh token rotado: Bing
- * anula el anterior en cada canje, así que si no se persiste el nuevo, la
- * conexión del usuario queda muerta después de un solo uso. Ese era el bug que
- * hacía aparecer "Tu conexión con Bing venció" a los pocos minutos de
- * reconectar (cuenta de Lorena Álvarez, 13/8/2026).
+ * Utiliza el access token persistido en base de datos si aún es válido
+ * (evitando consultas repetitivas a Bing OAuth), y si ya expiró, solicita
+ * uno nuevo con el refresh token original y lo guarda actualizado.
  */
 export async function getBingTokenForIntegration(integration: {
   id: string;
   encryptedRefreshToken: string;
 }): Promise<string> {
-  const { accessToken, rotatedRefreshToken } = await getBingAccessToken(
-    decryptSecret(integration.encryptedRefreshToken),
+  const decrypted = decryptSecret(integration.encryptedRefreshToken);
+  const tokenData = parseBingTokenPayload(decrypted);
+
+  // Si tenemos un accessToken válido en DB (con margen de 2 minutos antes de expirar), lo usamos directo
+  if (
+    tokenData.accessToken &&
+    tokenData.expiresAt &&
+    Date.now() < tokenData.expiresAt - 120000
+  ) {
+    return tokenData.accessToken;
+  }
+
+  // Si no hay accessToken válido en DB o ya expiró, refrescamos con Bing
+  const { accessToken, expiresInSeconds } = await getBingAccessToken(
+    tokenData.refreshToken,
   );
 
-  if (rotatedRefreshToken) {
-    try {
-      await prisma.searchIntegration.update({
-        where: { id: integration.id },
-        data: { encryptedRefreshToken: encryptSecret(rotatedRefreshToken) },
-      });
-    } catch (error) {
-      // Si no se pudo guardar, el token viejo ya quedó anulado del lado de
-      // Bing igual, así que la próxima llamada va a fallar y el usuario va a
-      // ver el aviso de reconectar. Se registra para poder distinguir esta
-      // causa de un token realmente vencido.
-      console.error(
-        "[bing] No se pudo guardar el refresh token rotado:",
-        error instanceof Error ? error.message : String(error),
-      );
-    }
+  // Guardamos el nuevo accessToken actualizado junto al refreshToken original
+  try {
+    const updatedPayload = formatBingTokenPayload({
+      refreshToken: tokenData.refreshToken,
+      accessToken,
+      expiresAt: Date.now() + Math.max(((expiresInSeconds ?? 3600) - 300) * 1000, 60000),
+    });
+    await prisma.searchIntegration.update({
+      where: { id: integration.id },
+      data: { encryptedRefreshToken: encryptSecret(updatedPayload) },
+    });
+  } catch (error) {
+    console.error(
+      "[bing] No se pudo persistir el access token actualizado en DB:",
+      error instanceof Error ? error.message : String(error),
+    );
   }
 
   return accessToken;

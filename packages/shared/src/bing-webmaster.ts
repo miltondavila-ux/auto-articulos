@@ -16,28 +16,35 @@ function bingConfig() {
 
 export interface BingTokenResult {
   accessToken: string;
+  expiresInSeconds?: number;
   rotatedRefreshToken?: string;
+}
+
+export interface BingTokenPayload {
+  refreshToken: string;
+  accessToken?: string;
+  expiresAt?: number;
+}
+
+export function parseBingTokenPayload(raw: string): BingTokenPayload {
+  try {
+    if (raw.startsWith("{")) {
+      const parsed = JSON.parse(raw);
+      if (parsed.refreshToken) return parsed;
+    }
+  } catch {}
+  return { refreshToken: raw };
+}
+
+export function formatBingTokenPayload(payload: BingTokenPayload): string {
+  return JSON.stringify(payload);
 }
 
 /** Espera con backoff entre reintentos. */
 const dormir = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/**
- * Cache en memoria de Access Tokens por refresh token.
- * Evita llamadas redundantes a Bing en cada recarga de página (Command+R)
- * o dentro del ciclo de vida de una misma sesión (los tokens de Bing duran 1 hora).
- */
 const tokenCache = new Map<string, { accessToken: string; expiresAt: number }>();
 
-/**
- * CAUSA RAÍZ REAL:
- * 1. Bing rechaza tokens válidos de forma intermitente con `invalid_grant`.
- * 2. Si Bing devuelve un nuevo `refresh_token` durante el refresco, ese token
- *    nuevo es INVÁLIDO (bug conocido en la API de Microsoft OAuth 2.0).
- *    Por tanto, NUNCA se debe sobreescribir el refresh token original.
- * 3. Se cachea el access token en memoria durante 50 minutos para evitar
- *    sobrecargar el endpoint de tokens de Bing ante múltiples recargas de página.
- */
 export async function getBingAccessToken(
   refreshToken: string,
 ): Promise<BingTokenResult> {
@@ -85,6 +92,7 @@ export async function getBingAccessToken(
 
         return {
           accessToken: data.access_token,
+          expiresInSeconds,
           // No rotar refresh token: conservar el original emitido en callback
           rotatedRefreshToken: undefined,
         };

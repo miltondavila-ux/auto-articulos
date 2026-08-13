@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
-import { encryptSecret } from "@auto-articulos/shared";
+import { encryptSecret, formatBingTokenPayload } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
 import { BING_STATE_COOKIE, bingOAuthConfig } from "@/lib/bing-oauth";
 
@@ -43,7 +43,9 @@ export async function GET(request: NextRequest) {
       },
     );
     const token = (await tokenResponse.json().catch(() => ({}))) as {
+      access_token?: string;
       refresh_token?: string;
+      expires_in?: number;
       error?: string;
       error_description?: string;
     };
@@ -56,14 +58,19 @@ export async function GET(request: NextRequest) {
       );
       throw new Error("Bing no entregó refresh token.");
     }
+    const payload = formatBingTokenPayload({
+      refreshToken: token.refresh_token,
+      accessToken: token.access_token,
+      expiresAt: Date.now() + Math.max(((token.expires_in ?? 3600) - 300) * 1000, 60000),
+    });
     await prisma.searchIntegration.upsert({
       where: { userId_provider: { userId, provider: "bing" } },
       create: {
         userId,
         provider: "bing",
-        encryptedRefreshToken: encryptSecret(token.refresh_token),
+        encryptedRefreshToken: encryptSecret(payload),
       },
-      update: { encryptedRefreshToken: encryptSecret(token.refresh_token) },
+      update: { encryptedRefreshToken: encryptSecret(payload) },
     });
     const response = NextResponse.redirect(
       new URL("/dashboard/configuracion?bing=connected", request.url),

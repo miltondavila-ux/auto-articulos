@@ -3,34 +3,48 @@ import {
   decryptSecret,
   encryptSecret,
   getBingAccessToken,
+  parseBingTokenPayload,
+  formatBingTokenPayload,
 } from "@auto-articulos/shared";
 
 /**
  * Mismo criterio que apps/web/src/lib/bing-token.ts: único punto por el que el
- * worker pide un access token de Bing, para que el refresh token rotado se
- * guarde siempre. Bing anula el anterior en cada canje; si no se persiste el
- * nuevo, la conexión del usuario muere después de un solo uso.
+ * worker pide un access token de Bing.
  */
 export async function getBingTokenForIntegration(integration: {
   id: string;
   encryptedRefreshToken: string;
 }): Promise<string> {
-  const { accessToken, rotatedRefreshToken } = await getBingAccessToken(
-    decryptSecret(integration.encryptedRefreshToken),
+  const decrypted = decryptSecret(integration.encryptedRefreshToken);
+  const tokenData = parseBingTokenPayload(decrypted);
+
+  if (
+    tokenData.accessToken &&
+    tokenData.expiresAt &&
+    Date.now() < tokenData.expiresAt - 120000
+  ) {
+    return tokenData.accessToken;
+  }
+
+  const { accessToken, expiresInSeconds } = await getBingAccessToken(
+    tokenData.refreshToken,
   );
 
-  if (rotatedRefreshToken) {
-    try {
-      await prisma.searchIntegration.update({
-        where: { id: integration.id },
-        data: { encryptedRefreshToken: encryptSecret(rotatedRefreshToken) },
-      });
-    } catch (error) {
-      console.error(
-        "[bing] No se pudo guardar el refresh token rotado:",
-        error instanceof Error ? error.message : String(error),
-      );
-    }
+  try {
+    const updatedPayload = formatBingTokenPayload({
+      refreshToken: tokenData.refreshToken,
+      accessToken,
+      expiresAt: Date.now() + Math.max(((expiresInSeconds ?? 3600) - 300) * 1000, 60000),
+    });
+    await prisma.searchIntegration.update({
+      where: { id: integration.id },
+      data: { encryptedRefreshToken: encryptSecret(updatedPayload) },
+    });
+  } catch (error) {
+    console.error(
+      "[bing] No se pudo persistir el access token en worker DB:",
+      error instanceof Error ? error.message : String(error),
+    );
   }
 
   return accessToken;
