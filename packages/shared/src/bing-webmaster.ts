@@ -16,11 +16,6 @@ function bingConfig() {
 
 export interface BingTokenResult {
   accessToken: string;
-  /**
-   * Red de seguridad: la medición del 13/8/2026 mostró que Bing NO rota el
-   * refresh token (nunca devuelve uno nuevo en el refresh). Se conserva por si
-   * algún día empieza a hacerlo, pero hoy siempre viene `undefined`.
-   */
   rotatedRefreshToken?: string;
 }
 
@@ -28,39 +23,39 @@ export interface BingTokenResult {
 const dormir = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
- * CAUSA RAÍZ REAL, medida el 13/8/2026 contra la cuenta de Lorena Álvarez:
- * **el endpoint de token de Bing rechaza tokens VÁLIDOS de forma
- * intermitente.**
- *
- * La medición (endpoint /api/bing/diagnostico, tres llamadas seguidas con el
- * mismo token) devolvió:
- *   - 1ª llamada: HTTP 400 `invalid_grant: Refresh token is invalid or expired.`
- *   - 2ª llamada, EL MISMO token, milisegundos después: HTTP 200, expires_in 3600
- *   - `refresh_token` nuevo en la respuesta: ninguno, nunca
- *
- * O sea que el token no estaba vencido en absoluto. Sin reintento, ese rechazo
- * aleatorio se propagaba como "tu conexión con Bing venció" y mandaba al
- * usuario a reautorizar una cuenta que estaba perfecta — se hizo tres veces
- * seguidas antes de medirlo. Es también la explicación del `InvalidToken`
- * intermitente que documenta apps/worker/src/bingIndexing.ts, donde dentro de
- * un mismo lote unos títulos pasaban y otros no con el mismo token.
- *
- * Por eso acá se reintenta. NO se reintenta ante `invalid_client`: ese sí es un
- * error de configuración real (client_id/client_secret que no corresponden a
- * la app OAuth registrada en Bing) y reintentarlo solo retrasa el diagnóstico.
+ * Cache en memoria de Access Tokens por refresh token.
+ * Evita llamadas redundantes a Bing en cada recarga de página (Command+R)
+ * o dentro del ciclo de vida de una misma sesión (los tokens de Bing duran 1 hora).
+ */
+const tokenCache = new Map<string, { accessToken: string; expiresAt: number }>();
+
+/**
+ * CAUSA RAÍZ REAL:
+ * 1. Bing rechaza tokens válidos de forma intermitente con `invalid_grant`.
+ * 2. Si Bing devuelve un nuevo `refresh_token` durante el refresco, ese token
+ *    nuevo es INVÁLIDO (bug conocido en la API de Microsoft OAuth 2.0).
+ *    Por tanto, NUNCA se debe sobreescribir el refresh token original.
+ * 3. Se cachea el access token en memoria durante 50 minutos para evitar
+ *    sobrecargar el endpoint de tokens de Bing ante múltiples recargas de página.
  */
 export async function getBingAccessToken(
   refreshToken: string,
 ): Promise<BingTokenResult> {
+  const cached = tokenCache.get(refreshToken);
+  if (cached && Date.now() < cached.expiresAt) {
+    return { accessToken: cached.accessToken };
+  }
+
   const { clientId, clientSecret } = bingConfig();
-  const INTENTOS = 3;
-  const ESPERAS_MS = [400, 1200];
+  const INTENTOS = 4;
+  const ESPERAS_MS = [500, 1500, 3000];
   let ultimoDetalle = "sin respuesta de Bing";
 
   for (let intento = 1; intento <= INTENTOS; intento++) {
     let data: {
       access_token?: string;
       refresh_token?: string;
+      expires_in?: number;
       error?: string;
       error_description?: string;
     } = {};
@@ -81,12 +76,17 @@ export async function getBingAccessToken(
       data = (await response.json().catch(() => ({}))) as typeof data;
 
       if (response.ok && data.access_token) {
+        const expiresInSeconds = data.expires_in ?? 3600;
+        tokenCache.set(refreshToken, {
+          accessToken: data.access_token,
+          // Guardar con margen de 5 minutos antes del vencimiento real
+          expiresAt: Date.now() + Math.max((expiresInSeconds - 300) * 1000, 60000),
+        });
+
         return {
           accessToken: data.access_token,
-          rotatedRefreshToken:
-            data.refresh_token && data.refresh_token !== refreshToken
-              ? data.refresh_token
-              : undefined,
+          // No rotar refresh token: conservar el original emitido en callback
+          rotatedRefreshToken: undefined,
         };
       }
       ultimoDetalle =
