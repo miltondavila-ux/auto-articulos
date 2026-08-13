@@ -1,7 +1,13 @@
 name: Migración manual de base de datos
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      seed_product_updates:
+        description: "Reponer entradas históricas de Actualizaciones si faltan"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   migrar:
@@ -28,3 +34,6 @@ jobs:
           MIGRATION_DATABASE_URL="${MIGRATION_DATABASE_URL/?pgbouncer=true/}"
           DATABASE_URL="$MIGRATION_DATABASE_URL" DIRECT_URL="$MIGRATION_DATABASE_URL" \
             npx prisma db push --schema=packages/db/prisma/schema.prisma
+      - name: Reponer Actualizaciones históricas (idempotente)
+        if: ${{ inputs.seed_product_updates }}
+        run: npx tsx scripts/seed-product-updates.ts
