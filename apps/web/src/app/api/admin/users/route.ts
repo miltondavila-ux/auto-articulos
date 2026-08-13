@@ -55,11 +55,16 @@ export async function GET() {
         platformDomain: true,
         contentLanguage: true,
         allowInstagramPublishing: true,
+        allowLinkedInPublishing: true,
+        allowThreadsPublishing: true,
         profilePhotoUrl: true,
         businessLogoUrl: true,
         opportunitiesDisclosureAcceptedAt: true,
         createdAt: true,
         initialPasswordEncrypted: true,
+        isTrialSignup: true,
+        trialStartedAt: true,
+        trialUnlocked: true,
       },
       orderBy: { createdAt: "asc" },
     }),
@@ -121,8 +126,11 @@ export async function PATCH(request: NextRequest) {
     phone,
     role,
     allowInstagramPublishing,
+    allowLinkedInPublishing,
+    allowThreadsPublishing,
     profilePhotoUrl,
     businessLogoUrl,
+    trialUnlocked,
   } = body;
 
   if (typeof userId !== "string" || !userId) {
@@ -143,8 +151,11 @@ export async function PATCH(request: NextRequest) {
     initialPasswordEncrypted?: string;
     role?: "admin" | "user";
     allowInstagramPublishing?: boolean;
+    allowLinkedInPublishing?: boolean;
+    allowThreadsPublishing?: boolean;
     profilePhotoUrl?: string | null;
     businessLogoUrl?: string | null;
+    trialUnlocked?: boolean;
   } = {};
 
   if ("role" in body) {
@@ -241,6 +252,18 @@ export async function PATCH(request: NextRequest) {
     data.allowInstagramPublishing = Boolean(allowInstagramPublishing);
   }
 
+  if ("allowLinkedInPublishing" in body) {
+    data.allowLinkedInPublishing = Boolean(allowLinkedInPublishing);
+  }
+
+  if ("allowThreadsPublishing" in body) {
+    data.allowThreadsPublishing = Boolean(allowThreadsPublishing);
+  }
+
+  if ("trialUnlocked" in body) {
+    data.trialUnlocked = Boolean(trialUnlocked);
+  }
+
   if ("profilePhotoUrl" in body) {
     data.profilePhotoUrl = typeof profilePhotoUrl === "string" ? profilePhotoUrl.trim() || null : null;
   }
@@ -273,25 +296,45 @@ export async function PATCH(request: NextRequest) {
     data.initialPasswordEncrypted = encryptSecret(newPassword);
   }
 
-  const user = await prisma.user.update({
-    where: { id: userId },
-    data,
-    select: {
-      id: true,
-      name: true,
-      firstName: true,
-      lastName: true,
-      phone: true,
-      email: true,
-      role: true,
-      monthlyArticleLimit: true,
-      dailyArticleLimit: true,
-      maxTitlesPerBatch: true,
-      platformDomain: true,
-      contentLanguage: true,
-      createdAt: true,
-    },
-  });
+  let user;
+  try {
+    user = await prisma.user.update({
+      where: { id: userId },
+      data,
+      select: {
+        id: true,
+        name: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        email: true,
+        role: true,
+        monthlyArticleLimit: true,
+        dailyArticleLimit: true,
+        maxTitlesPerBatch: true,
+        platformDomain: true,
+        contentLanguage: true,
+        allowInstagramPublishing: true,
+        allowLinkedInPublishing: true,
+        allowThreadsPublishing: true,
+        createdAt: true,
+        isTrialSignup: true,
+        trialStartedAt: true,
+        trialUnlocked: true,
+      },
+    });
+  } catch (error) {
+    console.error("[admin/users] PATCH falló", error);
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? `No se pudo guardar: ${error.message}`
+            : "No se pudo guardar el usuario.",
+      },
+      { status: 500 },
+    );
+  }
 
   auditLog("user_updated", currentUserId, { targetUserId: userId, changes: Object.keys(data) });
   return NextResponse.json({ user });

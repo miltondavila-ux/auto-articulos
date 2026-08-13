@@ -20,6 +20,7 @@ import {
   statusLabel,
 } from "@/components/dashboard-ui";
 import type { RunStatus, TitleStatus } from "@/types/dashboard";
+import { trialDaysRemaining } from "@/lib/trial";
 
 interface UserRow {
   id: string;
@@ -43,9 +44,20 @@ interface UserRow {
   createdAt: string;
   articlesPublished: number;
   currentPassword: string | null;
+  isTrialSignup: boolean;
+  trialStartedAt: string | null;
+  trialUnlocked: boolean;
 }
 
 const PLATFORM_URL = "https://auto-articulos-web.vercel.app/login";
+const permissionLabelStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  cursor: "pointer",
+  fontSize: 13,
+  color: "#16181d",
+};
 const createFieldStyle: CSSProperties = {
   display: "grid",
   gap: 5,
@@ -1002,10 +1014,47 @@ function UserCard({
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [permInstagram, setPermInstagram] = useState(
+    Boolean(user.allowInstagramPublishing),
+  );
+  const [permLinkedIn, setPermLinkedIn] = useState(
+    Boolean(user.allowLinkedInPublishing),
+  );
+  const [permThreads, setPermThreads] = useState(
+    Boolean(user.allowThreadsPublishing),
+  );
+  // Sistema de prueba gratuita (13/8/2026): "desbloqueo" manual del admin.
+  // Mismo patrón que los permisos de redes sociales de arriba.
+  const [permTrialUnlocked, setPermTrialUnlocked] = useState(
+    Boolean(user.trialUnlocked),
+  );
+  const [savingPermissions, setSavingPermissions] = useState(false);
+  const [permissionsError, setPermissionsError] = useState<string | null>(null);
+  const [permissionsSaved, setPermissionsSaved] = useState(false);
   const [impersonating, setImpersonating] = useState(false);
   const [impersonateError, setImpersonateError] = useState<string | null>(
     null,
   );
+
+  // Los permisos ya no se guardan al hacer clic en cada casilla: se editan en
+  // local y se persisten todos juntos con el botón "Guardar permisos".
+  useEffect(() => {
+    setPermInstagram(Boolean(user.allowInstagramPublishing));
+    setPermLinkedIn(Boolean(user.allowLinkedInPublishing));
+    setPermThreads(Boolean(user.allowThreadsPublishing));
+    setPermTrialUnlocked(Boolean(user.trialUnlocked));
+  }, [
+    user.allowInstagramPublishing,
+    user.allowLinkedInPublishing,
+    user.allowThreadsPublishing,
+    user.trialUnlocked,
+  ]);
+
+  const permissionsDirty =
+    permInstagram !== Boolean(user.allowInstagramPublishing) ||
+    permLinkedIn !== Boolean(user.allowLinkedInPublishing) ||
+    permThreads !== Boolean(user.allowThreadsPublishing) ||
+    permTrialUnlocked !== Boolean(user.trialUnlocked);
 
   async function handleCopyCredentials() {
     const text = `Correo electrónico: ${user.email}\nClave: ${user.currentPassword ?? "(no disponible, resetéala con Editar)"}\nAcceso a la plataforma: ${PLATFORM_URL}`;
@@ -1099,6 +1148,37 @@ function UserCard({
       onUpdated();
     } finally {
       setSavingDomain(false);
+    }
+  }
+
+  async function handleSavePermissions() {
+    setSavingPermissions(true);
+    setPermissionsError(null);
+    setPermissionsSaved(false);
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          allowInstagramPublishing: permInstagram,
+          allowLinkedInPublishing: permLinkedIn,
+          allowThreadsPublishing: permThreads,
+          trialUnlocked: permTrialUnlocked,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setPermissionsError(data.error ?? "No se pudieron guardar los permisos.");
+        return;
+      }
+      setPermissionsSaved(true);
+      setTimeout(() => setPermissionsSaved(false), 2500);
+      onUpdated();
+    } catch {
+      setPermissionsError("No se pudieron guardar los permisos. Revisa tu conexión.");
+    } finally {
+      setSavingPermissions(false);
     }
   }
 
@@ -1199,7 +1279,32 @@ function UserCard({
         }}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <strong style={{ fontSize: 14 }}>{fullName || "(sin nombre)"}</strong>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+            <strong style={{ fontSize: 14 }}>{fullName || "(sin nombre)"}</strong>
+            {user.isTrialSignup && (
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  padding: "2px 7px",
+                  borderRadius: 999,
+                  background: user.trialUnlocked ? "#eafaf0" : "#fff8e6",
+                  color: user.trialUnlocked ? "#1a7f47" : "#8a6d1a",
+                  border: `1px solid ${user.trialUnlocked ? "#a8dfc0" : "#f0deac"}`,
+                }}
+                title={
+                  user.trialUnlocked
+                    ? "Se registró desde Solicitar prueba; ya tiene acceso permanente desbloqueado."
+                    : "Se registró desde Solicitar prueba; sin desbloquear, pierde el acceso al terminar los 7 días."
+                }
+              >
+                🎁 PRUEBA
+                {!user.trialUnlocked && user.trialStartedAt
+                  ? ` · ${trialDaysRemaining(new Date(user.trialStartedAt))}d`
+                  : ""}
+              </span>
+            )}
+          </div>
           <span
             style={{ fontSize: 12, color: "#6b7280", wordBreak: "break-word" }}
           >
@@ -1285,66 +1390,72 @@ function UserCard({
             )}
           </Field>
 
-          <Field label="Acceso Instagram">
-            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: "#e5e7eb" }}>
+          <Field label="Permisos de publicación en redes">
+            <div style={{ display: "grid", gap: 6 }}>
+              <label style={permissionLabelStyle}>
                 <input
                   type="checkbox"
-                  checked={user.allowInstagramPublishing}
-                  onChange={async (e) => {
-                    await fetch("/api/admin/users", {
-                      method: "PATCH",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ userId: user.id, allowInstagramPublishing: e.target.checked }),
-                    });
-                    onUpdated();
-                  }}
+                  checked={permInstagram}
+                  onChange={(e) => setPermInstagram(e.target.checked)}
+                  disabled={savingPermissions}
                   style={{ accentColor: "#8134af", width: 16, height: 16 }}
                 />
                 Publicar en Instagram
               </label>
-            </div>
-          </Field>
-
-          <Field label="Acceso LinkedIn">
-            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: "#e5e7eb" }}>
+              <label style={permissionLabelStyle}>
                 <input
                   type="checkbox"
-                  checked={user.allowLinkedInPublishing}
-                  onChange={async (e) => {
-                    await fetch("/api/admin/users", {
-                      method: "PATCH",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ userId: user.id, allowLinkedInPublishing: e.target.checked }),
-                    });
-                    onUpdated();
-                  }}
+                  checked={permLinkedIn}
+                  onChange={(e) => setPermLinkedIn(e.target.checked)}
+                  disabled={savingPermissions}
                   style={{ accentColor: "#0077b5", width: 16, height: 16 }}
                 />
                 Publicar en LinkedIn
               </label>
-            </div>
-          </Field>
-
-          <Field label="Acceso Threads">
-            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: "#e5e7eb" }}>
+              <label style={permissionLabelStyle}>
                 <input
                   type="checkbox"
-                  checked={user.allowThreadsPublishing}
-                  onChange={async (e) => {
-                    await fetch("/api/admin/users", {
-                      method: "PATCH",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ userId: user.id, allowThreadsPublishing: e.target.checked }),
-                    });
-                    onUpdated();
-                  }}
+                  checked={permThreads}
+                  onChange={(e) => setPermThreads(e.target.checked)}
+                  disabled={savingPermissions}
                   style={{ accentColor: "#000000", width: 16, height: 16 }}
                 />
                 Publicar en Threads
               </label>
+              {user.isTrialSignup && (
+                <label style={permissionLabelStyle}>
+                  <input
+                    type="checkbox"
+                    checked={permTrialUnlocked}
+                    onChange={(e) => setPermTrialUnlocked(e.target.checked)}
+                    disabled={savingPermissions}
+                    style={{ accentColor: "#1a7f47", width: 16, height: 16 }}
+                  />
+                  Desbloqueado (acceso permanente, sin límite de 7 días)
+                </label>
+              )}
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <button
+                  onClick={handleSavePermissions}
+                  disabled={savingPermissions || !permissionsDirty}
+                  style={disabledStyle(
+                    { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
+                    savingPermissions || !permissionsDirty,
+                  )}
+                >
+                  {savingPermissions ? "Guardando..." : "Guardar permisos"}
+                </button>
+                {permissionsSaved && (
+                  <span style={{ fontSize: 11, color: "#1a7f47" }}>
+                    Permisos guardados
+                  </span>
+                )}
+              </div>
+              {permissionsError && (
+                <div style={{ fontSize: 11, color: "#d64545" }}>
+                  {permissionsError}
+                </div>
+              )}
             </div>
           </Field>
 
