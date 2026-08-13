@@ -491,12 +491,13 @@ async function pollMediaContainerStatus(
   maxSeconds: number = 60
 ): Promise<void> {
   let attempts = 0;
-  const maxAttempts = maxSeconds * 2; // cada 2s
+  const POLL_INTERVAL_MS = 5000;
+  const maxAttempts = Math.floor((maxSeconds * 1000) / POLL_INTERVAL_MS);
   let finished = false;
 
   while (attempts < maxAttempts && !finished) {
     attempts++;
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
 
     try {
       const statusRes = await fetch(

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import DashboardNav from "@/components/DashboardNav";
+import FloatingAssistant from "@/components/FloatingAssistant";
 import LogoutButton from "@/components/LogoutButton";
 import ModuleGuard from "@/components/ModuleGuard";
 import StopImpersonationButton from "@/components/StopImpersonationButton";
@@ -177,6 +178,7 @@ export default async function DashboardLayout({
         <>
           <DashboardNav />
           <ModuleGuard>{children}</ModuleGuard>
+          <FloatingAssistant />
         </>
       )}
     </main>

@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:16-alpine
-    restart: unless-stopped
+    restart: "no"
     environment:
       POSTGRES_USER: autoarticulos
       POSTGRES_PASSWORD: autoarticulos
@@ -20,7 +20,7 @@ services:
     build:
       context: .
       dockerfile: docker/web.Dockerfile
-    restart: unless-stopped
+    restart: "no"
     ports:
       - "3000:3000"
     environment:
@@ -35,7 +35,7 @@ services:
     build:
       context: .
       dockerfile: docker/worker.Dockerfile
-    restart: unless-stopped
+    restart: "no"
     environment:
       DATABASE_URL: postgresql://autoarticulos:autoarticulos@postgres:5432/autoarticulos?schema=public
       CREDENTIALS_ENCRYPTION_KEY: ${CREDENTIALS_ENCRYPTION_KEY}

@@ -17,7 +17,9 @@
     "dev:worker": "npm run dev --workspace=apps/worker",
     "db:migrate": "npm run migrate --workspace=packages/db",
     "db:generate": "npm run generate --workspace=packages/db",
-    "db:studio": "npm run studio --workspace=packages/db"
+    "db:studio": "npm run studio --workspace=packages/db",
+    "start": "bash start-auto-shutdown.sh",
+    "stop": "docker-compose down"
   },
   "allowScripts": {
     "@prisma/client@5.22.0": true,

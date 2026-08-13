@@ -20,7 +20,6 @@ export async function POST(request: NextRequest) {
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
         model: MODEL,
-        temperature: 0.2,
         max_tokens: 500,
         messages: [
           { role: "system", content: `${manual}\n\nResponde solo sobre el uso de la plataforma. Usa español sencillo, pasos concretos y rutas confirmadas. No inventes funciones ni enlaces. Si la información no aparece en el manual, dilo claramente y sugiere contactar al administrador.` },

@@ -31,19 +31,6 @@ HANDOFF, solo alimenta ideas hacia él).
 
 ## Pendientes
 
-- **(7/8/2026)** Que Oportunidades use la data de Bing Webmaster Tools
-  además de la de Google Search Console, cuando el usuario tenga las dos
-  conectadas (hoy `POST /api/opportunities` solo usa Google, y de hecho
-  bloquea el análisis si Google no está conectado, aunque haya Bing). Plan
-  ya conversado con Claude ese día: Google deja de ser obligatorio (basta
-  con tener uno de los dos); si hay Bing conectado, se traen sus consultas
-  con más impresiones/clics (`GetQueryStats` de la API de Bing Webmaster
-  Tools) y se le pasan a la IA como evidencia aparte, claramente etiquetada
-  como "Bing" (Bing solo da consulta, no consulta+página como Google); si
-  hay ambos, se combinan. Sin probar contra una cuenta real de Bing todavía.
-  Reconfirmado por el usuario el 8/8/2026 (mismo pedido, sin cambios de
-  diseño); ver detalle técnico completo en `HANDOFF.md`, sección
-  "PENDIENTE: combinar Bing + Google en Oportunidades".
 - **(8/8/2026)** Motor de Distribución Inteligente SEO para Redes Sociales:
   Crear un programador automático que publique un máximo de 2 posts por semana
   por red social activa (X, LinkedIn, Threads, Instagram, Facebook Pages y
@@ -181,18 +168,17 @@ HANDOFF, solo alimenta ideas hacia él).
     - `apps/web/src/components/ModuleGuard.tsx`
     - `apps/web/src/app/dashboard/layout.tsx`
     - `apps/web/src/app/dashboard/usuarios/page.tsx`
-- **(13/8/2026)** Estabilidad e integración completa de Bing Webmaster Tools
-  resuelta y verificada en producción (cuenta de Julio Paso):
-  - Se descubrió que la aplicación OAuth fue registrada de nuevo el 12/8/2026
-    con nuevo Client ID y Secret; credenciales alineadas en Vercel y GitHub secrets.
-  - Se unificó el dominio del API a `www.bing.com` (en lugar de `ssl.bing.com`
-    que producía `ERROR InvalidToken` en `GetUserSites`/envíos).
-  - Se blindó el canje de tokens con reintentos exponenciales automáticos para
-    tolerar fallos intermitentes de Bing, se implementó almacenamiento de
-    `access_token` cifrado en base de datos con caché de 50 min y persistencia
-    segura de refresh tokens.
-  - Se añadió detección y envío automático de sitemaps (`SubmitFeed`), control
-    estricto del cupo diario en MASTER INDEXACION y aviso visual simplificado.
+
+- **(13/8/2026)** Sistema de Prueba Gratuita (Free Trial de 7 días):
+  - **Fase 1**: Botón y formulario "SOLICITAR PRUEBA" en el Login (`/api/auth/trial-signup`) que crea una cuenta pública con 7 días de acceso completo (`trialEndsAt`, `isTrialUser`), login inmediato y banner de bienvenida.
+  - **Fase 2**: Pantalla de bloqueo y expiración al cumplirse los 7 días con mensaje explicativo, invitación a contactar a Milton y redirección segura.
+  - **Fase 3**: Panel de administración para extender o finalizar la prueba de cualquier usuario en un clic, y badge visual de cuenta en prueba en el dashboard.
+  - Commits: `eef51e8`, `b0bc320`, `1588b2f`, `1aef21e`, `6b6c0ce`, `106b8d6`.
+
+- **(13/8/2026)** Integración y alcance completo de Bing Webmaster Tools culminado al 100% y verificado en producción (cuenta de Julio Paso):
+  - Conexión OAuth y estabilidad completas: credenciales actualizadas (app registrada el 12/8/2026), unificación a `www.bing.com`, reintentos exponenciales automáticos, almacenamiento cifrado de `access_token` en BD (con caché de 50 min) y refresh tokens persistidos.
+  - Indexación y envíos: detección y envío automático de sitemaps (`SubmitFeed`), control estricto de cupo diario en MASTER INDEXACION y aviso visual simplificado.
+  - Cierre definitivo de todo el alcance de Bing en el sistema.
   - Commits: `6e53687`, `1503a81`, `ac6fedf`, `c47b5ba`, `f397522`, `b4fc007`,
     `0ee9dd9`, `7c4bad7`, `670e38d`, `940db86`, `52792c5`, `3dc9586`, `c546349`.
 - **(9/8/2026)** Bug del menú en iPad resuelto: se cambió el breakpoint de

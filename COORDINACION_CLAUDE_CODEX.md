@@ -87,6 +87,8 @@ completo.
 autoriza aplicar una base de datos de destino incierto. Esta orden prevalece
 sobre la prisa de cerrar una tarea.
 
+- **Capitán de migración:** Codex — revisará y aplicará el lote completo. Motivo: push y despliegue coordinado de chat de ayuda y cambios funcionales pendientes. Nadie más ejecuta Prisma hasta su liberación.
+
 - **Capitán de migración:** Codex — revisará y aplicará el lote completo. Motivo: reparación idempotente de actualizaciones históricas vacías en producción y verificación. Nadie más ejecuta Prisma hasta su liberación.
 
 **Coordinación solicitada por Milton (13/8/2026):** Codex leyó esta orden y

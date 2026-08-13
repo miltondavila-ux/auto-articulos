@@ -4,14 +4,24 @@ import { processNextCategorySync } from "./categorySync";
 import { processNextSocialPublish } from "./socialPublish";
 
 const POLL_INTERVAL_MS = 3000;
+const IDLE_TIMEOUT_MS = parseInt(process.env.WORKER_IDLE_TIMEOUT_MS || "0", 10);
 let stopping = false;
+let lastWorkTime = Date.now();
 
 async function loop() {
   while (!stopping) {
+    if (IDLE_TIMEOUT_MS > 0 && Date.now() - lastWorkTime > IDLE_TIMEOUT_MS) {
+      console.log(`Worker inactivo por ${IDLE_TIMEOUT_MS / 1000}s. Cerrando automáticamente.`);
+      stopping = true;
+      break;
+    }
     try {
       const didSyncWork = await processNextCategorySync();
       const didRunWork = await processNext();
       const didSocialPublish = await processNextSocialPublish();
+      if (didSyncWork || didRunWork || didSocialPublish) {
+        lastWorkTime = Date.now();
+      }
       await sleep(
         didSyncWork || didRunWork || didSocialPublish
           ? 500
