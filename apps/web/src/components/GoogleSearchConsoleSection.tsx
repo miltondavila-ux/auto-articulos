@@ -159,17 +159,12 @@ export default function GoogleSearchConsoleSection() {
                     : "."}
                 </p>
               )}
-              {data.lastSitemapSyncStatus === "error" && (
-                <p style={{ color: "#d64545", margin: 0 }}>
-                  ✗ El último envío falló
-                  {data.lastSitemapSyncAt
-                    ? ` (${new Date(data.lastSitemapSyncAt).toLocaleString("es-US")})`
-                    : ""}
-                  {data.lastSitemapSyncError
-                    ? `: ${data.lastSitemapSyncError}`
-                    : "."}
-                </p>
-              )}
+              {/*
+                Mismo criterio que en BingWebmasterSection (pedido de Milton,
+                13/8/2026): solo se muestran los envíos exitosos. El aviso de
+                falla no es accionable para el usuario y solo genera llamados a
+                soporte. El error sigue guardado en la base de datos y en logs.
+              */}
               {!data.lastSitemapSyncStatus && (
                 <p style={{ color: "#6b7280", margin: 0 }}>
                   Todavía no se ha enviado el sitemap.

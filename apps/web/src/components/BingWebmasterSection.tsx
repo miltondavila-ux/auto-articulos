@@ -49,6 +49,7 @@ export default function BingWebmasterSection() {
   const [sendingSitemap, setSendingSitemap] = useState(false);
   const [editingSitemap, setEditingSitemap] = useState(false);
   const [masterIndexing, setMasterIndexing] = useState(false);
+  const [reconectando, setReconectando] = useState(false);
   const [masterResult, setMasterResult] = useState<{
     enviados: number;
     errores: number;
@@ -85,7 +86,17 @@ export default function BingWebmasterSection() {
   // selector de sitios quedaba vacío, se mostraba ese texto en inglés en letra
   // chica y NO aparecía el botón "Reconectar Bing" — el usuario no tenía forma
   // de salir del problema desde la pantalla.
+  //
+  // `reconectando` evita un tercer problema que vio Milton el 13/8/2026: justo
+  // después de reconectar aparecían DOS mensajes contradictorios a la vez,
+  // "Bing reconectado correctamente" en verde y "Tu conexión con Bing venció"
+  // en rojo. No era un error de texto: la primera consulta a Bing con el token
+  // recién emitido falla, y al refrescar la página anda perfecto. Mientras se
+  // está reintentando no se muestra el aviso de conexión vencida, porque en ese
+  // momento es falso y manda al usuario a reconectar algo que acaba de
+  // conectar.
   const tokenExpired =
+    !reconectando &&
     !!data?.error &&
     /invalid.*token|invalid_client|invalid_grant|client authentication|volver a autorizar|expired|unauthorized|401/i.test(
       data.error,
@@ -97,7 +108,14 @@ export default function BingWebmasterSection() {
     if (bingParam === "connected") {
       setMessage({ text: "Bing reconectado correctamente.", type: "success" });
       setConnecting(false);
+      setReconectando(true);
+      // Bing tarda un instante en aceptar el token recién emitido; se vuelve a
+      // consultar en vez de dejar en pantalla un error que ya no es cierto.
+      const t = setTimeout(() => {
+        load().finally(() => setReconectando(false));
+      }, 2500);
       router.replace("/dashboard/configuracion");
+      return () => clearTimeout(t);
     } else if (bingParam === "error") {
       setMessage({
         text:
@@ -353,17 +371,16 @@ export default function BingWebmasterSection() {
                     : "."}
                 </p>
               )}
-              {data.lastSitemapSyncStatus === "error" && (
-                <p style={{ color: "#d64545", margin: 0 }}>
-                  ✗ El último envío falló
-                  {data.lastSitemapSyncAt
-                    ? ` (${new Date(data.lastSitemapSyncAt).toLocaleString("es-US")})`
-                    : ""}
-                  {data.lastSitemapSyncError
-                    ? `: ${data.lastSitemapSyncError}`
-                    : "."}
-                </p>
-              )}
+              {/*
+                Pedido explícito de Milton (13/8/2026): acá solo se muestran los
+                envíos EXITOSOS. El aviso de "el último envío falló" no le sirve
+                al usuario — no hay nada que él pueda hacer al respecto, y lo
+                único que logra es que llame a soporte por algo que se resuelve
+                del lado del sistema. Mismo criterio que el commit c577508, que
+                sacó del historial los avisos de indexación no accionables.
+                El error NO se pierde: sigue guardado en
+                SearchIntegration.lastSitemapSyncError y en los logs.
+              */}
               {!data.lastSitemapSyncStatus && (
                 <p style={{ color: "#6b7280", margin: 0 }}>
                   Todavía no se ha enviado el sitemap.
