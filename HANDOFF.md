@@ -1,6 +1,6 @@
 # HANDOFF — Auto Artículos
 
-Última actualización: 2026-08-13, por Antigravity.
+Última actualización: 2026-08-13, por Codex (capitán de migración).
 
 ## Participantes autorizados y coordinación obligatoria
 
@@ -12,6 +12,21 @@ sus modificaciones en este HANDOFF antes de intervenir o desplegar.
 Este documento es la fuente de verdad para retomar el proyecto sin necesitar
 el historial de chat. Mantenlo actualizado después de cada sesión de trabajo
 importante: qué cambió, qué quedó pendiente, qué se rompió.
+
+## Lote coordinado desplegado: MCP/OAuth, módulos, actualizaciones y prevención de idioma (13/8/2026)
+
+- Commit `ed26686` subido a `main`; migración/sincronización de producción
+  exitosa en GitHub Actions `31751051721`; Vercel Production
+  `dpl_2M1EiccVbHseg7j4hS14wNM5cN79` en estado Ready.
+- Incluye servidor MCP remoto, OAuth 2.1/PKCE preparado, control de módulos,
+  Actualizaciones persistentes/manual de ayuda, chat de ayuda aún no montado y
+  validaciones de idioma antes de publicar.
+- Verificado en producción, sin mutar datos: discovery MCP/OAuth responde 200
+  y MCP sin token devuelve 401. Alexa aún requiere crear el add-on y cargar
+  sus tres variables OAuth en Vercel.
+- Cambios locales deliberadamente excluidos del lote: diagnóstico/copia Bing,
+  scripts locales, Docker/worker local e Instagram experimental. No borrar ni
+  publicar sin una tarea explícita.
 
 ## Validación Preventiva de Idioma (`User.contentLanguage`) (13/8/2026, Antigravity)
 

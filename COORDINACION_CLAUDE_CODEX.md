@@ -257,6 +257,37 @@ temporalmente desactivados. No se llama a OpenAI ni se escribe una actualizació
 automática durante este commit; el mecanismo queda disponible y se podrá
 ejecutar de forma explícita y auditada después del despliegue.
 
+**LOTE INTEGRADO Y DESPLEGADO — Capitán Codex (13/8/2026):**
+
+- **Commit y push:** `ed26686` — *Integrar lote coordinado de plataforma y
+  MCP*, subido a `main`. Solo contiene las 49 rutas del inventario aprobado;
+  los diagnósticos, `.bak`, SQL manual, scripts locales, Docker, worker local
+  e Instagram quedaron fuera y siguen sin publicar.
+- **Base de producción:** workflow oficial GitHub Actions
+  [`31751051721`](https://github.com/miltondavila-ux/auto-articulos/actions/runs/31751051721)
+  completó exitosamente en 23 s usando el Session pooler y `prisma db push`
+  sobre `ed26686`. No se ejecutó SQL manual ni `migrate deploy`.
+- **Despliegue:** Vercel Production `dpl_2M1EiccVbHseg7j4hS14wNM5cN79` quedó
+  `Ready`, con alias principal `https://auto-articulos-web.vercel.app`.
+  El build remoto compiló correctamente; el build local de Next sigue
+  limitado por el sandbox de procesos, mientras que typecheck web y worker
+  quedaron limpios.
+- **Smoke test de producción sin efectos:** PRM MCP y metadata OAuth devuelven
+  `200` con URLs HTTPS canónicas; `POST /api/mcp` sin token devuelve `401` sin
+  `WWW-Authenticate`. No se llamó una tool, no se publicó contenido ni se
+  modificó información de usuarios.
+- **Estado real de Alexa:** MCP, OAuth y el schema están en producción, pero
+  Alexa todavía **no está vinculada**: faltan `OAUTH_ALEXA_CLIENT_ID`,
+  `OAUTH_ALEXA_CLIENT_SECRET` y `OAUTH_ALEXA_REDIRECT_URIS`, que solo se
+  cargarán tras crear/configurar el add-on de Alexa. El chat flotante/API fue
+  incluido pero no se montó en el layout: sigue pendiente la decisión de
+  Milton sobre mostrarlo o no con prueba vencida.
+- **Capitán de migración liberó el lote:** Codex. Resultado: lote `ed26686`
+  subido; workflow `31751051721` y deployment
+  `dpl_2M1EiccVbHseg7j4hS14wNM5cN79` exitosos; MCP/OAuth verificado sin
+  efectos. Antes de reclamar un lote futuro, revisar `git status --short`:
+  permanecen fuera de este despliegue los archivos excluidos ya listados.
+
 ## Reglas durante el trabajo
 
 - **Registro obligatorio reforzado por Milton (13/8/2026):** todo agente debe
