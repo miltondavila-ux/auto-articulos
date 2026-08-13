@@ -24,73 +24,94 @@ function bingConfig() {
 export interface BingTokenResult {
   accessToken: string;
   /**
-   * Bing ROTA el refresh token: cada canje devuelve uno nuevo e invalida el
-   * anterior. Si viene, hay que guardarlo — usar de nuevo el viejo falla.
+   * Red de seguridad: la medición del 13/8/2026 mostró que Bing NO rota el
+   * refresh token (nunca devuelve uno nuevo en el refresh). Se conserva por si
+   * algún día empieza a hacerlo, pero hoy siempre viene `undefined`.
    */
   rotatedRefreshToken?: string;
 }
 
+/** Espera con backoff entre reintentos. */
+const dormir = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 /**
- * Bug real encontrado el 13/8/2026 (cuenta de Lorena Álvarez), y la razón de
- * fondo por la que las conexiones de Bing "se vencían solas" desde hacía días:
- * esta función devolvía únicamente el access token y TIRABA el `refresh_token`
- * que Bing manda en la misma respuesta. Como Bing rota el refresh token y
- * anula el anterior, el guardado en base de datos quedaba muerto después del
- * primer uso. El patrón observado calza exacto: reconectar funcionaba, la
- * primera consulta funcionaba (el selector cargaba el sitio real), y la
- * siguiente fallaba con "Refresh token is invalid or expired".
+ * CAUSA RAÍZ REAL, medida el 13/8/2026 contra la cuenta de Lorena Álvarez:
+ * **el endpoint de token de Bing rechaza tokens VÁLIDOS de forma
+ * intermitente.**
  *
- * Nota sobre la documentación: el ejemplo oficial de Microsoft para el refresh
- * muestra una respuesta SIN `refresh_token`, y hay un reporte abierto en
- * Microsoft Q&A ("Bug in Bing Webmaster Tools OAuth 2.0?") que afirma lo
- * contrario de lo que vemos acá — que los tokens rotados no sirven y hay que
- * conservar el original. Se implementa lo que hace el servidor real, no lo que
- * dicen los papeles: si Bing manda uno nuevo, se guarda.
+ * La medición (endpoint /api/bing/diagnostico, tres llamadas seguidas con el
+ * mismo token) devolvió:
+ *   - 1ª llamada: HTTP 400 `invalid_grant: Refresh token is invalid or expired.`
+ *   - 2ª llamada, EL MISMO token, milisegundos después: HTTP 200, expires_in 3600
+ *   - `refresh_token` nuevo en la respuesta: ninguno, nunca
+ *
+ * O sea que el token no estaba vencido en absoluto. Sin reintento, ese rechazo
+ * aleatorio se propagaba como "tu conexión con Bing venció" y mandaba al
+ * usuario a reautorizar una cuenta que estaba perfecta — se hizo tres veces
+ * seguidas antes de medirlo. Es también la explicación del `InvalidToken`
+ * intermitente que documenta apps/worker/src/bingIndexing.ts, donde dentro de
+ * un mismo lote unos títulos pasaban y otros no con el mismo token.
+ *
+ * Por eso acá se reintenta. NO se reintenta ante `invalid_client`: ese sí es un
+ * error de configuración real (client_id/client_secret que no corresponden a
+ * la app OAuth registrada en Bing) y reintentarlo solo retrasa el diagnóstico.
  */
 export async function getBingAccessToken(
   refreshToken: string,
 ): Promise<BingTokenResult> {
   const { clientId, clientSecret } = bingConfig();
-  const response = await fetch(TOKEN_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: refreshToken,
-      grant_type: "refresh_token",
-    }),
-  });
-  const data = (await response.json().catch(() => ({}))) as {
-    access_token?: string;
-    refresh_token?: string;
-    error?: string;
-    error_description?: string;
-  };
-  if (!response.ok || !data.access_token) {
-    // Bug real encontrado el 13/8/2026 (cuenta de Lorena Álvarez): cuando la
-    // conexión guardada deja de servir, Bing responde SIEMPRE
-    // {"error":"invalid_client","error_description":"Client authentication
-    // failed."} — verificado a mano contra el endpoint real: devuelve ese
-    // mismo texto con credenciales de cliente VÁLIDAS y un refresh token
-    // inválido. O sea que "Client authentication failed" no habla del cliente,
-    // habla de la conexión del usuario, y es el mismo caso que el viejo
-    // "Refresh token is invalid or expired": hay que volver a autorizar.
-    // Ese texto crudo en inglés no le decía nada al usuario ni coincidía con
-    // la detección de "token vencido" de la UI, así que la pantalla quedaba
-    // sin el botón "Reconectar Bing" — un callejón sin salida.
-    const detalle = data.error_description ?? data.error ?? `HTTP ${response.status}`;
-    throw new Error(
-      `La conexión con Bing venció o fue revocada: hay que volver a autorizar la cuenta. (Bing respondió: ${detalle})`,
-    );
+  const INTENTOS = 3;
+  const ESPERAS_MS = [400, 1200];
+  let ultimoDetalle = "sin respuesta de Bing";
+
+  for (let intento = 1; intento <= INTENTOS; intento++) {
+    let data: {
+      access_token?: string;
+      refresh_token?: string;
+      error?: string;
+      error_description?: string;
+    } = {};
+    let status = 0;
+
+    try {
+      const response = await fetch(TOKEN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          client_id: clientId,
+          client_secret: clientSecret,
+          refresh_token: refreshToken,
+          grant_type: "refresh_token",
+        }),
+      });
+      status = response.status;
+      data = (await response.json().catch(() => ({}))) as typeof data;
+
+      if (response.ok && data.access_token) {
+        return {
+          accessToken: data.access_token,
+          rotatedRefreshToken:
+            data.refresh_token && data.refresh_token !== refreshToken
+              ? data.refresh_token
+              : undefined,
+        };
+      }
+      ultimoDetalle =
+        data.error_description ?? data.error ?? `HTTP ${status}`;
+    } catch (error) {
+      ultimoDetalle = error instanceof Error ? error.message : String(error);
+    }
+
+    // `invalid_client` no es intermitente: son credenciales que no coinciden
+    // con la app registrada en Bing. Reintentar no lo va a arreglar.
+    if (data.error === "invalid_client") break;
+
+    if (intento < INTENTOS) await dormir(ESPERAS_MS[intento - 1]);
   }
-  return {
-    accessToken: data.access_token,
-    rotatedRefreshToken:
-      data.refresh_token && data.refresh_token !== refreshToken
-        ? data.refresh_token
-        : undefined,
-  };
+
+  throw new Error(
+    `La conexión con Bing venció o fue revocada: hay que volver a autorizar la cuenta. (Bing respondió, tras ${INTENTOS} intentos: ${ultimoDetalle})`,
+  );
 }
 
 export interface BingSite {
