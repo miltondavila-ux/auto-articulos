@@ -33,6 +33,9 @@ export async function getCurrentUser() {
       imagePrompt: true,
       infographicPrompt: true,
       createdAt: true,
+      isTrialSignup: true,
+      trialStartedAt: true,
+      trialUnlocked: true,
     },
   });
 }

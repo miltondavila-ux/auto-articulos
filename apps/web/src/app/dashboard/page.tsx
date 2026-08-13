@@ -5,6 +5,7 @@ import Link from "next/link";
 import { sectionStyle, h2Style } from "@/components/dashboard-ui";
 import type { RunRow } from "@/types/dashboard";
 import PerformanceDashboard from "@/components/PerformanceDashboard";
+import { TRIAL_DAYS } from "@/lib/trial";
 
 interface PublishedNotification {
   id: string;
@@ -19,6 +20,27 @@ export default function InicioPage() {
   );
   const [credentialsConfigured, setCredentialsConfigured] = useState(false);
   const [categoriesCount, setCategoriesCount] = useState(0);
+  // Banner grande de bienvenida a la prueba gratuita (pedido explícito del
+  // usuario, 13/8/2026): /api/auth/trial-signup redirige acá con `?trial=1`
+  // apenas se crea la cuenta. Se lee con window.location en vez de
+  // useSearchParams() para no forzar un límite de Suspense en esta página.
+  // Se borra el parámetro de la URL después de mostrarlo para que no
+  // reaparezca con cada refresh.
+  const [showTrialWelcome, setShowTrialWelcome] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("trial") === "1") {
+      setShowTrialWelcome(true);
+      params.delete("trial");
+      const next = params.toString();
+      window.history.replaceState(
+        {},
+        "",
+        window.location.pathname + (next ? `?${next}` : ""),
+      );
+    }
+  }, []);
 
   const knownTitleStatusRef = useRef<Map<string, string>>(new Map());
   const initializedRef = useRef(false);
@@ -103,6 +125,48 @@ export default function InicioPage() {
 
   return (
     <div>
+      {showTrialWelcome && (
+        <div
+          style={{
+            background: "linear-gradient(135deg, #2f5fdb 0%, #1b3f9e 100%)",
+            color: "#fff",
+            borderRadius: 12,
+            padding: "20px 24px",
+            marginTop: 4,
+            marginBottom: 16,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 16,
+            flexWrap: "wrap",
+            boxShadow: "0 8px 24px rgba(47, 95, 219, 0.35)",
+          }}
+        >
+          <div>
+            <p style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>
+              🎉 ¡Bienvenido! Tienes {TRIAL_DAYS} días de prueba gratuita.
+            </p>
+            <p style={{ margin: "6px 0 0", fontSize: 13, opacity: 0.9 }}>
+              Explora todo el sistema sin restricciones durante este período.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowTrialWelcome(false)}
+            style={{
+              background: "rgba(255,255,255,0.15)",
+              border: "1px solid rgba(255,255,255,0.4)",
+              borderRadius: 8,
+              color: "#fff",
+              padding: "8px 16px",
+              fontWeight: 600,
+              fontSize: 13,
+              cursor: "pointer",
+            }}
+          >
+            Entendido
+          </button>
+        </div>
+      )}
       {notifications.length > 0 && (
         <div
           style={{
