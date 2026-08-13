@@ -293,23 +293,10 @@ de accidente que la próxima vez SÍ puede borrar o corromper trabajo real.
 
 ### Antigravity — corrección de API_BASE de Bing y verificación (cuenta de Lorena Álvarez, 13/8/2026)
 
-- **Estado:** `ARREGLO DE DOMINIO APLICADO (ssl.bing.com -> www.bing.com) — TS LIMPIO (0 ERRORES)` (13/8/2026).
-- **Hallazgo y Arreglo Real:** La llamada `listBingSites()` (GetUserSites) y `listBingSitemaps()` seguían apuntando a `https://ssl.bing.com/webmaster/api.svc/json` (el dominio antiguo que rechaza tokens OAuth Bearer con `ERROR!!! InvalidToken`, como se vio previamente con `SubmitUrl`). Al cargar la página, Bing devolvía `ERROR!!! InvalidToken`, activando de nuevo la pantalla de reconexión. Se unificó `API_BASE` a `https://www.bing.com/webmaster/api.svc/json` en `packages/shared/src/bing-webmaster.ts`.
-- **Verificaciones:** `npx tsc --noEmit` limpio (0 errores) en `packages/shared`, `apps/web` y `apps/worker`.
-- **Reserva de archivos (SOLO PARA SEGUIMIENTO, SIN REESCRITURA DE CÓDIGO EXISTENTE):**
-  - `.github/workflows/daily-sitemaps.yml`
-  - `packages/shared/src/bing-webmaster.ts`
-  - `apps/web/src/components/BingWebmasterSection.tsx`
-  - `apps/web/src/app/api/search-integrations/bing/callback/route.ts`
-  - `apps/web/src/app/api/search-integrations/bing/route.ts`
-  - `apps/web/src/app/api/bing/master-index/route.ts`
-  - `apps/web/src/app/api/bing/diagnostico/route.ts`
-  - `apps/web/src/app/api/sitemap/send-bing/route.ts`
-  - `apps/web/src/lib/bing-token.ts`
-  - `apps/worker/src/bingToken.ts`
-  - `apps/worker/src/bingIndexing.ts`
-  - `apps/worker/src/send-daily-sitemaps.ts`
-  - `apps/web/src/components/GoogleSearchConsoleSection.tsx`
+- **Estado:** `RESUELTO Y VERIFICADO EN PRODUCCIÓN — ÁREA LIBERADA` (13/8/2026).
+- **Prueba final confirmada por Milton:** Conexión activa estable tras reconectar y refrescar; sitemap autodetectado. Ejecución de **MASTER INDEXACION BING** exitosa enviando 100 artículos para indexar con 0 errores (respetando cupo de 100 diarios de Bing y saltando 22 ya indexados).
+- **Limpieza realizada:** Se eliminó el endpoint temporal de diagnóstico `/api/bing/diagnostico/route.ts`.
+- **Estado del área:** LIBERADA (ningún archivo reservado).
 - **Síntoma reportado (captura de la cuenta de prueba, Lorena Álvarez / `segurosdesaludyvida.com`):** en Configuración aparecían DOS errores distintos a la vez — `✗ El último envío falló (13/8/2026, 1:42:22 a.m.): Bing Webmaster Tools OAuth no está configurado.` y, al pulsar MASTER INDEXACION BING, `Client authentication failed.`. El selector de sitios estaba vacío y NO se ofrecía el botón "Reconectar Bing". Ninguno de los dos es el `InvalidToken` de la investigación anterior.
 - **Bug A — RESUELTO, causa cierta (no es hipótesis):** `apps/worker/src/send-daily-sitemaps.ts` procesa integraciones de Google **y de Bing**, pero `.github/workflows/daily-sitemaps.yml` solo exportaba `GOOGLE_SEARCH_CONSOLE_CLIENT_ID/SECRET`. Sin `BING_WEBMASTER_CLIENT_ID/SECRET` en el entorno, `bingConfig()` lanza literalmente "Bing Webmaster Tools OAuth no está configurado.", que se guarda en `lastSitemapSyncError` y se muestra en pantalla como si fuera un problema de la cuenta del usuario. Es decir: **el envío nocturno de sitemap a Bing nunca funcionó para ningún usuario**, desde que existe ese workflow. Se agregaron las dos variables. (`worker.yml` sí las tenía; por eso la indexación por artículo del worker sí llegaba a Bing y esto pasó desapercibido.)
 - **Bug B — diagnosticado con evidencia directa, no por deducción:** `Client authentication failed.` NO habla de las credenciales de nuestra app. Verificado a mano contra `https://www.bing.com/webmasters/oauth/token` con tres combinaciones: (A) client_id+secret reales + refresh token inventado, (B) client_id inventado, (C) secret inventado. **Las tres devuelven exactamente `HTTP 400 {"error":"invalid_client","error_description":"Client authentication failed."}`** — o sea que Bing colapsa cualquier falla en ese mismo mensaje, y el caso A demuestra que es lo que responde cuando el refresh token guardado ya no sirve. Es el mismo caso que el viejo "Refresh token is invalid or expired": hay que volver a autorizar la cuenta. Concuerda con el bug abierto de Microsoft (`learn.microsoft.com/en-in/answers/questions/5659086`, "Bug in Bing Webmaster Tools OAuth 2.0?"): Bing emite refresh tokens nuevos en cada refresh que NO sirven (`invalid_grant`), solo el original funciona, y el original igual muere solo al cabo de ~1 mes. Nuestro código ya descarta el token nuevo, que resulta ser el workaround correcto.
