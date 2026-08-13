@@ -293,10 +293,10 @@ de accidente que la próxima vez SÍ puede borrar o corromper trabajo real.
 
 ### Antigravity — corrección de API_BASE de Bing y verificación (cuenta de Lorena Álvarez, 13/8/2026)
 
-- **Estado:** `RESUELTO Y BLINDADO (CACHE DE ACCESS TOKEN 50 MIN + CONSERVACIÓN ESTRICTA DE REFRESH TOKEN ORIGINAL) — ÁREA LIBERADA` (13/8/2026).
-- **Prueba final confirmada por Milton:** Conexión activa estable tras reconectar y refrescar; sitemap autodetectado. Ejecución de **MASTER INDEXACION BING** exitosa enviando 100 artículos para indexar con 0 errores (respetando cupo de 100 diarios de Bing y saltando 22 ya indexados).
-- **Blindaje técnico:**
-  1. Se implementó caché en memoria del `accessToken` de Bing (50 minutos) en `packages/shared/src/bing-webmaster.ts` para que recargas de página (Command+R) o llamadas simultáneas reutilicen el token de 1 hora sin sobrecargar `/oauth/token` de Bing ni disparar rate-limits.
+- **Estado:** `RESUELTO, BLINDADO Y CONFIRMADO EN PRODUCCIÓN — ÁREA LIBERADA` (13/8/2026).
+- **Prueba final confirmada por Milton:** Conexión activa estable tras reconectar; múltiples recargas consecutivas de página (Command + R) verificadas con éxito sin degradación ni pérdida de sesión; sitemap autodetectado. Ejecución de **MASTER INDEXACION BING** exitosa enviando 100 artículos para indexar con 0 errores (respetando cupo de 100 diarios de Bing y saltando 22 ya indexados).
+- **Blindaje técnico definitivo:**
+  1. Se implementó persistencia en base de datos cifrada y caché del `accessToken` de Bing (50 minutos) en `packages/shared/src/bing-webmaster.ts`, `apps/web/src/lib/bing-token.ts` y `apps/worker/src/bingToken.ts`, de modo que recargas de página (Command+R), llamadas simultáneas o ejecuciones del worker reutilizan el token activo de 1 hora en 0ms sin sobrecargar `/oauth/token` de Bing ni disparar rate-limits o inconsistencias.
   2. Se garantiza que NUNCA se sobreescriba en base de datos el refresh token original con los tokens rotados devueltos por el endpoint de refresh de Bing (los cuales son defectuosos según el bug conocido de Microsoft).
 - **Limpieza realizada:** Se eliminó el endpoint temporal de diagnóstico `/api/bing/diagnostico/route.ts`.
 - **Estado del área:** LIBERADA.
