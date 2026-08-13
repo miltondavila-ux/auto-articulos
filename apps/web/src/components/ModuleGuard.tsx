@@ -34,7 +34,9 @@ export default function ModuleGuard({ children }: { children: ReactNode }) {
     return <>{children}</>;
   }
 
-  const matchingModule = SYSTEM_MODULES.find((m) => pathname.startsWith(m.href));
+  const matchingModule = SYSTEM_MODULES.find((m) =>
+    Boolean(pathname && pathname.startsWith(m.href)),
+  );
   if (matchingModule && disabledModules.includes(matchingModule.id)) {
     return (
       <div

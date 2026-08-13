@@ -181,9 +181,6 @@ function formatBytes(bytes: number): string {
   return `${(mb / 1024).toFixed(2)} GB`;
 }
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 export default function UsuariosPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [currentUserId, setCurrentUserId] = useState("");

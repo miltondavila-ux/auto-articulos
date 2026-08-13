@@ -563,6 +563,19 @@ ejecutar de forma explícita y auditada después del despliegue.
   de producción (por `id`, sin sobrescribir entradas nuevas), verificar el
   conteo y volver a comprobar la pantalla. No realizar esta escritura fuera
   del lote/mandato del capitán.
+- **Restauración ejecutada y verificada (13/8/2026):** como capitán, Codex
+  añadió el commit aislado `037b884` y lo subió a `main`. El workflow de
+  GitHub `31751572529` terminó `success`: ejecutó el `db push` habitual y el
+  paso idempotente “Reponer Actualizaciones históricas”, que inserta por ID
+  únicamente las cinco entradas faltantes y no actualiza registros existentes.
+  Resultado: las entradas históricas volvieron a la base de producción. El
+  hook local informó una falla no bloqueante de OpenAI por `temperature=0.2`
+  incompatible con el modelo actual; no afectó la restauración y queda como
+  corrección separada. No se tocaron las actualizaciones nuevas.
+- **Capitán de migración liberó el lote:** Codex. Resultado: workflow
+  `31751572529` exitoso: entradas históricas de `ProductUpdate` repuestas
+  idempotentemente en producción. Revisar cambios ajenos restantes antes de
+  reclamar otro lote.
 - **Recepción del Capitán (Codex):** solicitud leída y aceptada. La integración
   será posterior a la revisión final del layout compartido y preservará tanto
   `ModuleGuard` como el gate de prueba. Falta una decisión funcional de Milton
