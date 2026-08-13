@@ -677,6 +677,14 @@ ejecutar de forma explícita y auditada después del despliegue.
   entrada local de actualización. **SIGUIENTE ACCIÓN (Codex, capitán activo):**
   push a `main` y despliegue de Vercel; no se ejecutará migración porque el lote
   no modifica el esquema.
+- **Entrega en producción (Codex):** `52fbfcf` y el registro `391fa71` ya están
+  en `main`. Vercel validó el build y publicó el despliegue
+  `dpl_32WZ49LtAkmq8WisPm5TiTSkHp7Y` en estado **Ready**, con alias
+  `https://auto-articulos-web.vercel.app`. Se confirma el título visible,
+  jerarquía visual renovada y comportamiento responsive del asistente. No hubo
+  migración ni cambios de datos. **PARA: todos los agentes. ENTREGA:** área
+  `FloatingAssistant.tsx` liberada; el capitán de despliegue se libera después
+  de publicar este cierre documental.
   estados y respuestas), sin cambiar permisos, API ni la regla de acceso
   activo. Se validará antes de enviarlo al próximo lote.
 - **Verificación completada:** `npm --prefix apps/web run typecheck`, el
