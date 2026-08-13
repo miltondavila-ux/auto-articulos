@@ -134,11 +134,51 @@ export async function submitBingSitemap(
   }
 }
 
+export interface BingUrlQuota {
+  daily: number;
+  monthly: number;
+}
+
+/**
+ * Cupo de envío de URLs que le queda al sitio. La documentación de Microsoft
+ * dice explícitamente que hay que consultarlo ANTES de enviar
+ * ("It is possible to submit only limited number of url. GetUrlSubmissionQuota
+ * should be called to determine how much urls can be submitted"), y su propio
+ * ejemplo devuelve DailyQuota=5 / MonthlyQuota=24. O sea: unidades por día, no
+ * los 10.000 que asumía el comentario de submitBingUrl — esa cifra es el tope
+ * para sitios grandes ya establecidos, no para los de estos clientes.
+ */
+export async function getBingUrlQuota(
+  accessToken: string,
+  siteUrl: string,
+): Promise<BingUrlQuota> {
+  const response = await fetch(
+    `${API_BASE}/GetUrlSubmissionQuota?siteUrl=${encodeURIComponent(siteUrl)}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  const data = (await response.json().catch(() => ({}))) as {
+    d?: { DailyQuota?: number; MonthlyQuota?: number };
+    Message?: string;
+  };
+  if (!response.ok) {
+    throw new Error(
+      data.Message ?? `Bing Webmaster Tools respondió ${response.status}.`,
+    );
+  }
+  return {
+    daily: data.d?.DailyQuota ?? 0,
+    monthly: data.d?.MonthlyQuota ?? 0,
+  };
+}
+
 /**
  * Pide indexación instantánea de UNA url — a diferencia de Google (cuya
  * Indexing API solo aplica a ofertas de empleo/transmisiones en vivo), Bing
- * sí permite esto para cualquier contenido. Cupo real: 10,000 URLs/día por
- * dominio (ver https://www.bing.com/webmasters/url-submission-api).
+ * sí permite esto para cualquier contenido. El cupo NO es de 10.000 URLs/día
+ * como decía este comentario antes: esa es la cifra máxima para sitios grandes
+ * ya establecidos. El cupo real de cada sitio se consulta con getBingUrlQuota()
+ * y para sitios chicos es de pocas unidades por día (el ejemplo de la propia
+ * documentación de Microsoft devuelve 5 diarias / 24 mensuales).
  */
 export async function submitBingUrl(
   accessToken: string,

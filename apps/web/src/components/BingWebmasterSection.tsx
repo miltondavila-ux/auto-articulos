@@ -54,6 +54,8 @@ export default function BingWebmasterSection() {
     errores: number;
     total: number;
     yaIndexados: number;
+    sinCupo?: number;
+    cupoDiario?: number | null;
     ultimoEnvio?: string | null;
     erroresDetalle?: string[];
   } | null>(null);
@@ -155,6 +157,8 @@ export default function BingWebmasterSection() {
           errores: value.errores ?? 0,
           total: value.total ?? 0,
           yaIndexados: value.yaIndexados ?? 0,
+          sinCupo: value.sinCupo ?? 0,
+          cupoDiario: value.cupoDiario ?? null,
           erroresDetalle: value.erroresDetalle,
         });
         if (value.total === 0) {
@@ -406,22 +410,36 @@ export default function BingWebmasterSection() {
                 : "⚡ MASTER INDEXACION BING"}
             </button>
             <p style={{ fontSize: 11, color: "#6b7280", margin: "6px 0 0" }}>
-              Envía TODOS tus artículos publicados a Bing para indexación
-              instantánea de una sola vez.
+              Envía a Bing los artículos publicados que todavía no se enviaron.
+              Bing limita cuántas URLs acepta por día, así que si tenés muchos
+              se envían por tandas: volvé a pulsarlo otro día y sigue desde
+              donde quedó.
             </p>
           </div>
-          {masterResult && (
+          {masterResult && (() => {
+            // Quedó trabajo sin hacer si algo falló o si el cupo diario de Bing
+            // cortó el envío antes de llegar a todos. Con cupo agotado se
+            // enviaban 0 artículos y la tarjeta igual salía verde diciendo
+            // "completada exitosamente", que es justo lo contrario de lo que
+            // pasó y deja al usuario sin saber que tiene que volver mañana.
+            const masterIncompleto =
+              masterResult.errores > 0 || (masterResult.sinCupo ?? 0) > 0;
+            return (
             <div
               style={{
-                background: masterResult.errores > 0 ? "#fef2f2" : "#f0fdf4",
-                border: `1px solid ${masterResult.errores > 0 ? "#fecaca" : "#bbf7d0"}`,
+                background: masterIncompleto ? "#fffbeb" : "#f0fdf4",
+                border: `1px solid ${masterIncompleto ? "#fde68a" : "#bbf7d0"}`,
                 borderRadius: 8,
                 padding: 12,
                 fontSize: 13,
               }}
             >
-              <p style={{ margin: 0, fontWeight: 600, color: masterResult.errores > 0 ? "#991b1b" : "#166534" }}>
-                {masterResult.errores > 0 ? "⚠️ Indexación masiva completada con algunos errores:" : "✓ Indexación masiva completada exitosamente:"}
+              <p style={{ margin: 0, fontWeight: 600, color: masterIncompleto ? "#92400e" : "#166534" }}>
+                {masterResult.errores > 0
+                  ? "⚠️ Indexación masiva completada con algunos errores:"
+                  : masterIncompleto
+                    ? "⏳ Indexación masiva parcial — falta una parte:"
+                    : "✓ Indexación masiva completada exitosamente:"}
               </p>
               <p style={{ margin: "4px 0 0", color: "#1f2937" }}>
                 • <strong>{masterResult.enviados}</strong> artículos enviados a Bing para indexar de un total de <strong>{masterResult.total}</strong> publicados.
@@ -431,6 +449,24 @@ export default function BingWebmasterSection() {
                   </span>
                 )}
               </p>
+              {masterResult.yaIndexados > 0 && (
+                <p style={{ margin: "4px 0 0", color: "#1f2937" }}>
+                  • <strong>{masterResult.yaIndexados}</strong> ya se habían
+                  enviado antes, así que no se reenviaron (habrían gastado cupo
+                  en artículos que Bing ya conoce).
+                </p>
+              )}
+              {!!masterResult.sinCupo && masterResult.sinCupo > 0 && (
+                <p style={{ margin: "4px 0 0", color: "#92400e" }}>
+                  • Quedaron <strong>{masterResult.sinCupo}</strong> esperando:
+                  Bing solo permite{" "}
+                  {masterResult.cupoDiario !== null
+                    ? `${masterResult.cupoDiario} envío(s)`
+                    : "una cantidad limitada de envíos"}{" "}
+                  por día para este sitio. Volvé a pulsar el botón mañana y
+                  siguen desde donde quedaron — no se pierden.
+                </p>
+              )}
               {masterResult.erroresDetalle &&
                 masterResult.erroresDetalle.length > 0 && (
                   <ul
@@ -447,7 +483,8 @@ export default function BingWebmasterSection() {
                   </ul>
                 )}
             </div>
-          )}
+            );
+          })()}
           {data.error && !tokenExpired && (
             <p style={{ color: "#d64545", fontSize: 12 }}>{data.error}</p>
           )}
