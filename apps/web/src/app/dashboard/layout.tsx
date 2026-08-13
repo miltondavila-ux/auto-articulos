@@ -2,7 +2,9 @@ import type { ReactNode } from "react";
 import DashboardNav from "@/components/DashboardNav";
 import LogoutButton from "@/components/LogoutButton";
 import StopImpersonationButton from "@/components/StopImpersonationButton";
+import TrialBlockedScreen from "@/components/TrialBlockedScreen";
 import { displayName, getSessionContext } from "@/lib/current-user";
+import { hasTrialAccess } from "@/lib/trial";
 
 export default async function DashboardLayout({
   children,
@@ -10,6 +12,15 @@ export default async function DashboardLayout({
   children: ReactNode;
 }) {
   const { user, actingAdmin } = await getSessionContext();
+  // Fase 2 del sistema de prueba gratuita (13/8/2026): al vencer los 7 días
+  // sin que el admin haya marcado `trialUnlocked`, la cuenta deja de poder
+  // usar CUALQUIER parte del sistema — se reemplaza todo el contenido del
+  // dashboard (incluida la navegación) por la pantalla de bloqueo. La
+  // validación es server-side (layout.tsx corre en el servidor), así que no
+  // se puede saltar apagando JavaScript. Un admin "actuando como" (ver
+  // StopImpersonationButton) SIEMPRE puede seguir usando la cuenta con
+  // normalidad para dar soporte, sin importar el estado de la prueba.
+  const blocked = !actingAdmin && !hasTrialAccess(user);
 
   return (
     <main
@@ -156,8 +167,14 @@ export default async function DashboardLayout({
         📱 Esta aplicación funciona en el celular, pero se recomienda usarla
         desde una computadora para una mejor experiencia.
       </p>
-      <DashboardNav />
-      {children}
+      {blocked ? (
+        <TrialBlockedScreen />
+      ) : (
+        <>
+          <DashboardNav />
+          {children}
+        </>
+      )}
     </main>
   );
 }
