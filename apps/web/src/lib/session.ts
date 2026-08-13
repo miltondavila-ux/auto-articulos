@@ -6,6 +6,7 @@ const IMPERSONATION_COOKIE = "auto_articulos_impersonation";
 // operando la cuenta de otro usuario), así que conviene que expire sola
 // aunque el admin no la cierre explícitamente.
 const IMPERSONATION_TTL_MS = 1000 * 60 * 60 * 12; // 12 horas
+const MCP_ACCESS_TOKEN_TTL_MS = 1000 * 60 * 60; // 1 hora
 
 function getSecret(): string {
   const secret = process.env.SESSION_SECRET;
@@ -70,6 +71,26 @@ export async function verifySessionToken(token: string | undefined | null): Prom
   return valid ? userId : null;
 }
 
+/** Access token OAuth para el recurso MCP, separado del token de cookie web. */
+export async function createMcpAccessToken(userId: string): Promise<string> {
+  const expires = Date.now() + MCP_ACCESS_TOKEN_TTL_MS;
+  const payload = `mcp.${userId}.${expires}`;
+  const signatureBuf = await crypto.subtle.sign("HMAC", await getKey(), new TextEncoder().encode(payload));
+  return `${payload}.${toBase64Url(signatureBuf)}`;
+}
+
+export async function verifyMcpAccessToken(token: string | undefined | null): Promise<string | null> {
+  if (!token) return null;
+  const parts = token.split(".");
+  if (parts.length !== 4 || parts[0] !== "mcp") return null;
+  const [, userId, expiresStr, signature] = parts;
+  const expires = Number(expiresStr);
+  if (!Number.isFinite(expires) || Date.now() > expires) return null;
+  const payload = `mcp.${userId}.${expiresStr}`;
+  const valid = await crypto.subtle.verify("HMAC", await getKey(), fromBase64Url(signature).buffer as ArrayBuffer, new TextEncoder().encode(payload));
+  return valid ? userId : null;
+}
+
 /**
  * Token de suplantación: permite a un admin operar la cuenta de otro usuario
  * sin cerrar su propia sesión. Va en una cookie separada de SESSION_COOKIE
@@ -111,4 +132,4 @@ export async function verifyImpersonationToken(
   return valid ? { adminUserId, targetUserId } : null;
 }
 
-export { SESSION_COOKIE, SESSION_TTL_MS, IMPERSONATION_COOKIE, IMPERSONATION_TTL_MS };
+export { SESSION_COOKIE, SESSION_TTL_MS, IMPERSONATION_COOKIE, IMPERSONATION_TTL_MS, MCP_ACCESS_TOKEN_TTL_MS };

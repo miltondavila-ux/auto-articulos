@@ -101,10 +101,13 @@ model User {
   // admin — en true por defecto para TODOS los usuarios existentes/creados
   // por admin (nunca se bloquean por esto), pero se crea en false para
   // quienes se inscriben solos, así que su acceso depende del período de
-  // prueba hasta que el admin los desbloquee. Ver lib/trial.ts.
   isTrialSignup                     Boolean   @default(false)
   trialStartedAt                    DateTime?
   trialUnlocked                     Boolean   @default(true)
+  // Control de visibilidad de módulos para el usuario (13/8/2026).
+  // JSON serializado con los IDs de módulos deshabilitados para este usuario
+  // (ej. ["oportunidades-redes", "actualizaciones"]). Null = hereda la visibilidad global.
+  disabledModules                   String?
 
   credentials                Credential[]
   runs                       Run[]
@@ -120,6 +123,65 @@ model User {
   linkedinIntegration        LinkedInIntegration?
   instagramIntegration       InstagramIntegration?
   socialOpportunities        SocialOpportunity[]
+  oauthAuthorizationCodes    OAuthAuthorizationCode[]
+  oauthAccessTokens          OAuthAccessToken[]
+  oauthRefreshTokens         OAuthRefreshToken[]
+}
+
+// Credenciales del authorization server propio para el enlace de cuentas MCP.
+// Los valores secretos nunca se guardan: codeHash/tokenHash son SHA-256 de
+// valores aleatorios que solo se entregan una vez al cliente OAuth.
+model OAuthAuthorizationCode {
+  id            String   @id @default(cuid())
+  codeHash      String   @unique
+  userId        String
+  clientId      String
+  redirectUri   String
+  scopes        String
+  resource      String
+  codeChallenge String
+  expiresAt     DateTime
+  usedAt        DateTime?
+  createdAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model OAuthAccessToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  clientId  String
+  scopes    String
+  resource  String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model OAuthRefreshToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  clientId  String
+  scopes    String
+  resource  String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 // Conexión OAuth de un usuario con Google Business Profile (antes Google My
@@ -498,4 +560,26 @@ model SocialOpportunity {
 
   user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   title Title? @relation(fields: [titleId], references: [id], onDelete: SetNull)
+}
+
+// Registro global y durable de mejoras y arreglos visibles para los usuarios.
+// Es la fuente de verdad de /dashboard/actualizaciones y, posteriormente, del
+// asistente de ayuda. sourceCommit permite que el automatismo no duplique la
+// entrada correspondiente a un mismo cambio de código.
+model ProductUpdate {
+  id           String   @id @default(cuid())
+  date         DateTime
+  title        String
+  category     String
+  summary      String
+  example      String
+  // Ruta interna del módulo al que debe ir el usuario para usar o comprobar
+  // esta novedad. Nunca se aceptan enlaces externos desde el automatismo.
+  modulePath   String?
+  sourceCommit String?  @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([date])
+  @@index([category])
 }

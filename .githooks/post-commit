@@ -1,0 +1,20 @@
+#!/bin/sh
+# No impide commits: el registro automático falla de forma visible para que
+# pueda reintentarse, pero nunca debe bloquear ni modificar el commit creado.
+ROOT=$(git rev-parse --show-toplevel) || exit 0
+
+if [ -f "$ROOT/packages/db/.env" ]; then
+  set -a
+  . "$ROOT/packages/db/.env"
+  set +a
+fi
+if [ -f "$ROOT/apps/web/.env.local" ]; then
+  set -a
+  . "$ROOT/apps/web/.env.local"
+  set +a
+fi
+
+"$ROOT/node_modules/.bin/tsx" "$ROOT/scripts/generate-product-update.ts" "$(git rev-parse HEAD)" || \
+  echo "[actualizaciones] El commit quedó creado; ejecuta el generador de nuevo cuando el entorno esté disponible." >&2
+
+exit 0

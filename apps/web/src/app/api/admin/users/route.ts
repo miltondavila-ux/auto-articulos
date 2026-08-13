@@ -4,6 +4,7 @@ import { prisma } from "@auto-articulos/db";
 import { decryptSecret, encryptSecret } from "@auto-articulos/shared";
 import { auditLog } from "@/lib/audit";
 import { getCurrentUserId, requireAdmin } from "@/lib/current-user";
+import { parseUserDisabledModules } from "@/lib/modules";
 
 interface PublishedCountRow {
   userId: string;
@@ -65,6 +66,7 @@ export async function GET() {
         isTrialSignup: true,
         trialStartedAt: true,
         trialUnlocked: true,
+        disabledModules: true,
       },
       orderBy: { createdAt: "asc" },
     }),
@@ -93,9 +95,10 @@ export async function GET() {
         }
       }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { initialPasswordEncrypted, ...rest } = u;
+      const { initialPasswordEncrypted, disabledModules, ...rest } = u;
       return {
         ...rest,
+        disabledModules: parseUserDisabledModules(disabledModules),
         currentPassword,
         articlesPublished: publishedByUser.get(u.id) ?? 0,
       };
@@ -131,6 +134,7 @@ export async function PATCH(request: NextRequest) {
     profilePhotoUrl,
     businessLogoUrl,
     trialUnlocked,
+    disabledModules,
   } = body;
 
   if (typeof userId !== "string" || !userId) {
@@ -156,6 +160,7 @@ export async function PATCH(request: NextRequest) {
     profilePhotoUrl?: string | null;
     businessLogoUrl?: string | null;
     trialUnlocked?: boolean;
+    disabledModules?: string | null;
   } = {};
 
   if ("role" in body) {
@@ -272,6 +277,15 @@ export async function PATCH(request: NextRequest) {
     data.businessLogoUrl = typeof businessLogoUrl === "string" ? businessLogoUrl.trim() || null : null;
   }
 
+  if ("disabledModules" in body) {
+    if (Array.isArray(disabledModules)) {
+      const clean = disabledModules.filter((id): id is string => typeof id === "string" && id.trim() !== "");
+      data.disabledModules = JSON.stringify(clean);
+    } else if (disabledModules === null) {
+      data.disabledModules = null;
+    }
+  }
+
   if (typeof email === "string" && email.trim()) {
     const existing = await prisma.user.findUnique({
       where: { email: email.trim() },
@@ -321,6 +335,7 @@ export async function PATCH(request: NextRequest) {
         isTrialSignup: true,
         trialStartedAt: true,
         trialUnlocked: true,
+        disabledModules: true,
       },
     });
   } catch (error) {
@@ -337,7 +352,12 @@ export async function PATCH(request: NextRequest) {
   }
 
   auditLog("user_updated", currentUserId, { targetUserId: userId, changes: Object.keys(data) });
-  return NextResponse.json({ user });
+  return NextResponse.json({
+    user: {
+      ...user,
+      disabledModules: parseUserDisabledModules(user.disabledModules),
+    },
+  });
 }
 
 export async function DELETE(request: NextRequest) {

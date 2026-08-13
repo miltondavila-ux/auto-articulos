@@ -197,6 +197,22 @@ async function processRunTitle(
       return true;
     }
 
+    const effectiveLanguage =
+      (run.contentLanguage && run.contentLanguage.trim()) ||
+      (run.user.contentLanguage && run.user.contentLanguage.trim());
+
+    if (!effectiveLanguage) {
+      await markTitleError(
+        nextTitle.id,
+        "No se encontró un idioma de redacción configurado para este lote ni en el perfil del usuario. Configúralo en Configuración antes de reintentar.",
+      );
+      await prisma.run.updateMany({
+        where: { id: run.id, status: { in: ["pending", "running"] } },
+        data: { status: "halted", finishedAt: new Date() },
+      });
+      return true;
+    }
+
     const result = await publishArticle(
       {
         username,
@@ -205,7 +221,7 @@ async function processRunTitle(
         // El idioma elegido para ESTE lote manda; si el lote no trae ninguno
         // (corridas anteriores al campo, o el usuario no lo cambió), se usa el
         // configurado del usuario, que es el comportamiento de siempre.
-        contentLanguage: run.contentLanguage ?? run.user.contentLanguage,
+        contentLanguage: effectiveLanguage,
         articleSignature: run.user.articleSignature,
         userPhone: run.user.phone,
       },

@@ -124,6 +124,13 @@ export default function PublicarPage() {
   const overLimit = titleCount > maxTitlesPerBatch;
 
   async function handleIniciar() {
+    if (!contentLanguage.trim()) {
+      setBanner({
+        type: "error",
+        text: "Debes configurar tu idioma de redacción en Configuración antes de publicar.",
+      });
+      return;
+    }
     setStarting(true);
     setBanner(null);
     try {
@@ -169,6 +176,28 @@ export default function PublicarPage() {
             Configuración
           </Link>
           .
+        </div>
+      )}
+
+      {!contentLanguage && (
+        <div
+          style={{
+            marginTop: 20,
+            padding: "12px 16px",
+            borderRadius: 8,
+            background: "#f5e6c8",
+            color: "#8a6d1a",
+            fontSize: 13,
+          }}
+        >
+          Debes configurar tu idioma de redacción en{" "}
+          <Link
+            href="/dashboard/configuracion?tab=platform"
+            style={{ color: "#2f5fdb" }}
+          >
+            Configuración
+          </Link>{" "}
+          antes de poder publicar.
         </div>
       )}
 
@@ -342,6 +371,7 @@ export default function PublicarPage() {
             hasActiveRun ||
             titlesText.trim().length === 0 ||
             !selectedCategoryId ||
+            !contentLanguage ||
             overLimit
           }
           style={disabledStyle(
@@ -350,6 +380,7 @@ export default function PublicarPage() {
               hasActiveRun ||
               titlesText.trim().length === 0 ||
               !selectedCategoryId ||
+              !contentLanguage ||
               overLimit,
           )}
         >
@@ -362,6 +393,11 @@ export default function PublicarPage() {
         {!selectedCategoryId && !hasActiveRun && (
           <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
             Elige una categoría arriba antes de iniciar.
+          </p>
+        )}
+        {!contentLanguage && !hasActiveRun && (
+          <p style={{ fontSize: 13, color: "#d64545", marginTop: 8 }}>
+            Debes seleccionar o configurar un idioma de redacción antes de iniciar.
           </p>
         )}
       </section>

@@ -5,36 +5,59 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { CSSProperties } from "react";
 
-const BASE_TABS = [
+interface TabItem {
+  id?: string;
+  href: string;
+  label: string;
+}
+
+const BASE_TABS: TabItem[] = [
   { href: "/dashboard", label: "Inicio" },
-  { href: "/dashboard/publicar", label: "Publicar" },
-  { href: "/dashboard/publicaciones-en-curso", label: "Publicaciones en Curso" },
-  { href: "/dashboard/oportunidades", label: "Oportunidades" },
-  { href: "/dashboard/oportunidades-redes", label: "Oportunidades Redes" },
-  { href: "/dashboard/historial", label: "Historial" },
-  { href: "/dashboard/configuracion", label: "Configuración" },
-  { href: "/dashboard/actualizaciones", label: "Actualizaciones" },
+  { id: "publicar", href: "/dashboard/publicar", label: "Publicar" },
+  { id: "publicaciones-en-curso", href: "/dashboard/publicaciones-en-curso", label: "Publicaciones en Curso" },
+  { id: "oportunidades", href: "/dashboard/oportunidades", label: "Oportunidades" },
+  { id: "oportunidades-redes", href: "/dashboard/oportunidades-redes", label: "Oportunidades Redes" },
+  { id: "historial", href: "/dashboard/historial", label: "Historial" },
+  { id: "configuracion", href: "/dashboard/configuracion", label: "Configuración" },
+  { id: "actualizaciones", href: "/dashboard/actualizaciones", label: "Actualizaciones" },
 ];
 
-const ADMIN_TAB = { href: "/dashboard/usuarios", label: "Administración" };
+const ADMIN_TAB: TabItem = { href: "/dashboard/usuarios", label: "Administración" };
 
 export default function DashboardNav() {
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [disabledModules, setDisabledModules] = useState<string[]>([]);
+  const [globalDisabledModules, setGlobalDisabledModules] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/me")
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setIsAdmin(data?.role === "admin"))
-      .catch(() => setIsAdmin(false));
+      .then((data) => {
+        setIsAdmin(data?.role === "admin");
+        if (Array.isArray(data?.disabledModules)) {
+          setDisabledModules(data.disabledModules);
+        }
+        if (Array.isArray(data?.globalDisabledModules)) {
+          setGlobalDisabledModules(data.globalDisabledModules);
+        }
+      })
+      .catch(() => {
+        setIsAdmin(false);
+        setDisabledModules([]);
+        setGlobalDisabledModules([]);
+      });
   }, []);
 
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
 
-  const tabs = isAdmin ? [...BASE_TABS, ADMIN_TAB] : BASE_TABS;
+  const rawTabs = isAdmin ? [...BASE_TABS, ADMIN_TAB] : BASE_TABS;
+  const tabs = isAdmin
+    ? rawTabs
+    : rawTabs.filter((tab) => !tab.id || !disabledModules.includes(tab.id));
   const activeTab = tabs.find((tab) => tab.href === pathname);
 
   const linkStyle = (active: boolean): CSSProperties => ({
@@ -100,13 +123,22 @@ export default function DashboardNav() {
         >
           {tabs.map((tab) => {
             const active = pathname === tab.href;
+            const isGloballyDisabled =
+              isAdmin && Boolean(tab.id && globalDisabledModules.includes(tab.id));
             return (
               <Link
                 key={tab.href}
                 href={tab.href}
                 onClick={() => setOpen(false)}
+                title={
+                  isGloballyDisabled
+                    ? "Módulo en mantenimiento / oculto globalmente para usuarios"
+                    : undefined
+                }
                 style={{
-                  display: "block",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
                   padding: "12px 16px",
                   fontSize: 14,
                   fontWeight: 600,
@@ -116,7 +148,22 @@ export default function DashboardNav() {
                   borderBottom: "1px solid rgba(232, 236, 245, 0.08)",
                 }}
               >
-                {tab.label}
+                <span>{tab.label}</span>
+                {isGloballyDisabled && (
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 700,
+                      padding: "2px 6px",
+                      borderRadius: 4,
+                      background: "rgba(255, 170, 0, 0.2)",
+                      color: "#ffd98a",
+                      border: "1px solid rgba(255, 170, 0, 0.4)",
+                    }}
+                  >
+                    Oculto
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -131,15 +178,44 @@ export default function DashboardNav() {
           borderBottom: "1px solid rgba(232, 236, 245, 0.15)",
         }}
       >
-        {tabs.map((tab) => (
-          <Link
-            key={tab.href}
-            href={tab.href}
-            style={linkStyle(pathname === tab.href)}
-          >
-            {tab.label}
-          </Link>
-        ))}
+        {tabs.map((tab) => {
+          const isGloballyDisabled =
+            isAdmin && Boolean(tab.id && globalDisabledModules.includes(tab.id));
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              title={
+                isGloballyDisabled
+                  ? "Módulo en mantenimiento / oculto globalmente para usuarios"
+                  : undefined
+              }
+              style={{
+                ...linkStyle(pathname === tab.href),
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <span>{tab.label}</span>
+              {isGloballyDisabled && (
+                <span
+                  style={{
+                    fontSize: 9,
+                    fontWeight: 700,
+                    padding: "1px 5px",
+                    borderRadius: 4,
+                    background: "rgba(255, 170, 0, 0.2)",
+                    color: "#ffd98a",
+                    border: "1px solid rgba(255, 170, 0, 0.4)",
+                  }}
+                >
+                  Oculto
+                </span>
+              )}
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );

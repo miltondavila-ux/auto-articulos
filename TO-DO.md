@@ -121,20 +121,6 @@ HANDOFF, solo alimenta ideas hacia él).
   - El objetivo es liberar "oportunidades de descanibalización" y que todos
     los artículos existentes (no solo los nuevos) aporten de verdad a la
     indexación y el posicionamiento, en vez de restarse entre ellos.
-- **(13/8/2026)** Terminar la investigación de Bing que quedó a mitad de
-  camino (cuenta de Julio Paso): verificar en el portal de Bing Webmaster
-  Tools (Configuración → API Access) si el Client ID/Secret ahí coincide con
-  lo guardado en `BING_WEBMASTER_CLIENT_ID`/`BING_WEBMASTER_CLIENT_SECRET` de
-  Vercel — sospecha de que el secret guardado ya no es válido, causando el
-  bucle de "reconectar" → "vuelve a decir que venció" casi inmediato. Ver
-  `COORDINACION_CLAUDE_CODEX.md`, sección "Claude — investigación en curso"
-  para el detalle completo de lo ya descartado.
-- **(13/8/2026)** Validar que el idioma por defecto del usuario
-  (`User.contentLanguage`) esté configurado correctamente ANTES de publicar
-  artículos — relacionado con los bugs reales de idioma vacío/mal
-  sincronizado ya resueltos el 7-11/8/2026 con Gustavo Torres, Svetlana y
-  Mariana Romero (ver `HANDOFF.md`); esto pide una validación preventiva
-  explícita, no solo los parches puntuales que ya se aplicaron caso por caso.
 - **(13/8/2026)** Pre-validación inteligente antes de publicar un artículo o
   correr Oportunidades: revisar que el usuario tenga (a) 10minutesWebsite
   conectado, (b) categorías sincronizadas, (c) Google Search Console
@@ -145,14 +131,6 @@ HANDOFF, solo alimenta ideas hacia él).
   validación se hace una vez de forma visible al entrar, y después en segundo
   plano cada vez que se intenta publicar/analizar — si algo falla en ese
   momento, lleva al usuario a resolver ese punto exacto antes de continuar.
-- **(13/8/2026)** Módulo de control de módulos para el administrador
-  principal: poder ocultar/deshabilitar secciones completas del sistema
-  (ejemplo dado: "Oportunidades de redes") para que un usuario específico no
-  las vea en absoluto en su menú/UI — no solo permisos de acción dentro de un
-  módulo (eso ya existe por red social, ver ítem del 9/8/2026), sino esconder
-  el módulo entero. Debe poder aplicarse por usuario individual Y de forma
-  global (para todos a la vez) — pedido explícito: hoy hay partes en
-  reparación que no deberían verse mientras se arreglan.
 - **(13/8/2026)** Crear un tercer tipo de usuario, "PRUEBAS": acceso a todo
   igual que un usuario normal, pero SIN restricciones de uso (límites
   mensuales/diarios, etc.). Nota para quien lo ejecute: revisar si esto se
@@ -171,6 +149,52 @@ HANDOFF, solo alimenta ideas hacia él).
 
 ## Hecho
 
+- **(13/8/2026)** Validación preventiva de idioma (`User.contentLanguage`) antes de permitir publicar o ejecutar oportunidades:
+  - Verificación estricta en endpoints (`POST /api/runs`, `POST /api/opportunities/execute`, `POST /api/opportunities/execute-all`) rechazando con `400` y mensaje explicativo si `contentLanguage` del lote o del perfil está vacío.
+  - Avisos visuales preventivos en `/dashboard/publicar` y `/dashboard/oportunidades` con enlace directo a Configuración.
+  - Deshabilitación preventiva de botones de publicación y ejecución ("Iniciar", "Publicar todas", "Ejecutar categoría", "Ejecutar título") cuando falta idioma.
+  - Salvaguarda en worker (`apps/worker/src/queue.ts`) deteniendo limpiamente el lote con estado `halted` y mensaje claro si un lote entrara sin idioma configurado.
+  - Ver cambios en:
+    - `apps/web/src/app/api/runs/route.ts`
+    - `apps/web/src/app/api/opportunities/execute/route.ts`
+    - `apps/web/src/app/api/opportunities/execute-all/route.ts`
+    - `apps/web/src/app/dashboard/publicar/page.tsx`
+    - `apps/web/src/app/dashboard/oportunidades/page.tsx`
+    - `apps/worker/src/queue.ts`
+
+- **(13/8/2026)** Control de visibilidad de módulos para el Administrador
+  (global y por usuario) implementado y verificado:
+  - Permite al Administrador ocultar módulos enteros del sistema (ej. *Oportunidades Redes*,
+    *Actualizaciones*, *Publicaciones en Curso*, etc.) tanto de forma **global** (mantenimiento/desarrollo)
+    como de forma **individual por usuario**.
+  - Los administradores siempre conservan acceso para probar y desarrollar, con indicador visual en el menú.
+  - Ocultamiento en navegación (`DashboardNav`) y protección directa contra acceso por URL mediante `ModuleGuard` (pantalla defensiva de mantenimiento).
+  - Pestaña de gestión global en el Centro de Control de Administración (`/dashboard/usuarios`) y sección por usuario en cada `UserCard`.
+  - Ver cambios en:
+    - `packages/db/prisma/schema.prisma` y migración `20260813180000_add_user_disabled_modules`
+    - `apps/web/src/lib/modules.ts`
+    - `apps/web/src/app/api/me/route.ts`
+    - `apps/web/src/app/api/admin/modules/route.ts`
+    - `apps/web/src/app/api/admin/users/route.ts`
+    - `apps/web/src/lib/current-user.ts`
+    - `apps/web/src/components/DashboardNav.tsx`
+    - `apps/web/src/components/ModuleGuard.tsx`
+    - `apps/web/src/app/dashboard/layout.tsx`
+    - `apps/web/src/app/dashboard/usuarios/page.tsx`
+- **(13/8/2026)** Estabilidad e integración completa de Bing Webmaster Tools
+  resuelta y verificada en producción (cuenta de Julio Paso):
+  - Se descubrió que la aplicación OAuth fue registrada de nuevo el 12/8/2026
+    con nuevo Client ID y Secret; credenciales alineadas en Vercel y GitHub secrets.
+  - Se unificó el dominio del API a `www.bing.com` (en lugar de `ssl.bing.com`
+    que producía `ERROR InvalidToken` en `GetUserSites`/envíos).
+  - Se blindó el canje de tokens con reintentos exponenciales automáticos para
+    tolerar fallos intermitentes de Bing, se implementó almacenamiento de
+    `access_token` cifrado en base de datos con caché de 50 min y persistencia
+    segura de refresh tokens.
+  - Se añadió detección y envío automático de sitemaps (`SubmitFeed`), control
+    estricto del cupo diario en MASTER INDEXACION y aviso visual simplificado.
+  - Commits: `6e53687`, `1503a81`, `ac6fedf`, `c47b5ba`, `f397522`, `b4fc007`,
+    `0ee9dd9`, `7c4bad7`, `670e38d`, `940db86`, `52792c5`, `3dc9586`, `c546349`.
 - **(9/8/2026)** Bug del menú en iPad resuelto: se cambió el breakpoint de
   700px a 1024px en DashboardNav.tsx y dashboard/layout.tsx, y se agregó
   `width=device-width, initial-scale=1` al viewport. Ahora iPad portrait

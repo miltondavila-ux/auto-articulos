@@ -1,6 +1,6 @@
 # HANDOFF — Auto Artículos
 
-Última actualización: 2026-08-09, por Codex.
+Última actualización: 2026-08-13, por Antigravity.
 
 ## Participantes autorizados y coordinación obligatoria
 
@@ -12,6 +12,21 @@ sus modificaciones en este HANDOFF antes de intervenir o desplegar.
 Este documento es la fuente de verdad para retomar el proyecto sin necesitar
 el historial de chat. Mantenlo actualizado después de cada sesión de trabajo
 importante: qué cambió, qué quedó pendiente, qué se rompió.
+
+## Validación Preventiva de Idioma (`User.contentLanguage`) (13/8/2026, Antigravity)
+
+- **Objetivo:** Evitar que los usuarios publiquen artículos o ejecuten oportunidades con el campo de idioma vacío, lo que históricamente provocaba fallos por timeout en Playwright o envíos defectuosos en cuentas bilingües.
+- **Validaciones implementadas en Backend:**
+  - `POST /api/runs`: Se consulta `User.contentLanguage` y se valida que `effectiveLanguage` no esté vacío. Si falta, responde con `400` y mensaje `"Debes configurar tu idioma de redacción en Configuración antes de publicar."`.
+  - `POST /api/opportunities/execute`: Se valida que exista idioma configurado en el lote o perfil antes de crear la ejecución.
+  - `POST /api/opportunities/execute-all`: Misma validación defensiva para el lote completo.
+- **Mejoras en Frontend:**
+  - `/dashboard/publicar`: Se añadió un banner de advertencia si `!contentLanguage`, se deshabilitó el botón "Iniciar" y se validó en `handleIniciar()`.
+  - `/dashboard/oportunidades`: Se añadió un banner de advertencia si `!contentLanguage`, se incluyó en los requisitos faltantes de configuración y se deshabilitaron los botones "Publicar todas", "Ejecutar categoría" y "Ejecutar título".
+- **Salvaguarda en Worker (`apps/worker/src/queue.ts`):**
+  - Antes de llamar a `publishArticle`, se verifica que `effectiveLanguage` esté presente. Si estuviera vacío, se detiene el lote limpiamente en estado `halted` y se registra un evento de error explicativo para el usuario.
+- **Coordinación y despliegue:**
+  - Sin nuevas migraciones. Siguiendo la **ORDEN SUPREMA**, los cambios quedan registrados y listos para el despliegue en lote conjunto acordado entre los agentes.
 
 ## Reparación Patricia Coy — preparada y validada (9/8/2026, Codex)
 

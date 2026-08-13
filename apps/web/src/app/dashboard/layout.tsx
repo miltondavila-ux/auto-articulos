@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import DashboardNav from "@/components/DashboardNav";
 import LogoutButton from "@/components/LogoutButton";
+import ModuleGuard from "@/components/ModuleGuard";
 import StopImpersonationButton from "@/components/StopImpersonationButton";
 import TrialBlockedScreen from "@/components/TrialBlockedScreen";
 import { displayName, getSessionContext } from "@/lib/current-user";
@@ -172,7 +173,7 @@ export default async function DashboardLayout({
       ) : (
         <>
           <DashboardNav />
-          {children}
+          <ModuleGuard>{children}</ModuleGuard>
         </>
       )}
     </main>

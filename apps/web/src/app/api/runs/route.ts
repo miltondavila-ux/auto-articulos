@@ -76,8 +76,25 @@ export async function POST(request: NextRequest) {
       maxTitlesPerBatch: true,
       monthlyArticleLimit: true,
       dailyArticleLimit: true,
+      contentLanguage: true,
     },
   });
+
+  const effectiveLanguage =
+    typeof contentLanguage === "string" && contentLanguage.trim()
+      ? contentLanguage.trim()
+      : user.contentLanguage?.trim() || "";
+
+  if (!effectiveLanguage) {
+    return NextResponse.json(
+      {
+        error:
+          "Debes configurar tu idioma de redacción en Configuración antes de publicar.",
+      },
+      { status: 400 },
+    );
+  }
+
   if (titles.length > user.maxTitlesPerBatch) {
     return NextResponse.json(
       {

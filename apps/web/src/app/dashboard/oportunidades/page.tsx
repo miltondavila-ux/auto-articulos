@@ -230,6 +230,13 @@ export default function OportunidadesPage() {
   }
 
   async function executeAll() {
+    if (!contentLanguage.trim()) {
+      setMessage({
+        kind: "error",
+        text: "Debes configurar tu idioma de redacción en Configuración antes de publicar.",
+      });
+      return;
+    }
     setBusyId("__all__");
     setMessage(null);
     const response = await fetch("/api/opportunities/execute-all", {
@@ -252,6 +259,13 @@ export default function OportunidadesPage() {
   }
 
   async function execute(type: "group" | "title", id: string) {
+    if (!contentLanguage.trim()) {
+      setMessage({
+        kind: "error",
+        text: "Debes configurar tu idioma de redacción en Configuración antes de ejecutar.",
+      });
+      return;
+    }
     setBusyId(id);
     setMessage(null);
     const response = await fetch("/api/opportunities/execute", {
@@ -315,6 +329,28 @@ export default function OportunidadesPage() {
 
   return (
     <div>
+      {!contentLanguage && (
+        <div
+          style={{
+            marginBottom: 20,
+            padding: "12px 16px",
+            borderRadius: 8,
+            background: "#f5e6c8",
+            color: "#8a6d1a",
+            fontSize: 13,
+          }}
+        >
+          Debes configurar tu idioma de redacción en{" "}
+          <Link
+            href="/dashboard/configuracion?tab=platform"
+            style={{ color: "#2f5fdb" }}
+          >
+            Configuración
+          </Link>{" "}
+          antes de poder ejecutar oportunidades.
+        </div>
+      )}
+
       <section style={sectionStyle}>
         <h2 style={h2Style}>Oportunidades SEO</h2>
         <p style={{ color: "#6b7280", fontSize: 14, lineHeight: 1.55 }}>
@@ -421,11 +457,16 @@ export default function OportunidadesPage() {
                   key={stage}
                   style={{
                     display: "flex",
-                    gap: 7,
-                    alignItems: "flex-start",
-                    color: index <= currentStage ? "#24458f" : "#8a94a6",
-                    fontSize: 11,
-                    fontWeight: index === currentStage ? 700 : 500,
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: 12,
+                    color:
+                      index < currentStage
+                        ? "#15803d"
+                        : index === currentStage
+                          ? "#24458f"
+                          : "#8a97ab",
+                    fontWeight: index === currentStage ? 600 : 400,
                   }}
                 >
                   <span aria-hidden="true">
@@ -448,7 +489,8 @@ export default function OportunidadesPage() {
         {setupStatus &&
           (!setupStatus.googleConnected ||
             !setupStatus.hasSiteUrl ||
-            !setupStatus.hasCategories) && (
+            !setupStatus.hasCategories ||
+            !contentLanguage) && (
             <p style={{ color: "#6b7280", fontSize: 12 }}>
               Todavía te falta{" "}
               {[
@@ -457,6 +499,7 @@ export default function OportunidadesPage() {
                   !setupStatus.hasSiteUrl &&
                   "elegir una propiedad de Search Console",
                 !setupStatus.hasCategories && "sincronizar tus categorías",
+                !contentLanguage && "configurar tu idioma de redacción",
               ]
                 .filter(Boolean)
                 .join(", ")}{" "}
@@ -528,16 +571,18 @@ export default function OportunidadesPage() {
                 0,
               );
               const overLimit = totalTitles > maxTitlesPerBatch;
-              const disabled = busyId !== null || overLimit;
+              const disabled = busyId !== null || overLimit || !contentLanguage;
               return (
                 <>
                   <button
                     onClick={executeAll}
                     disabled={disabled}
                     title={
-                      overLimit
-                        ? `Tienes ${totalTitles} títulos en ${groups.length} categorías, más de tu máximo de ${maxTitlesPerBatch} por lote.`
-                        : undefined
+                      !contentLanguage
+                        ? "Debes configurar tu idioma de redacción en Configuración antes de publicar."
+                        : overLimit
+                          ? `Tienes ${totalTitles} títulos en ${groups.length} categorías, más de tu máximo de ${maxTitlesPerBatch} por lote.`
+                          : undefined
                     }
                     style={disabledStyle(
                       { ...buttonStyle, marginTop: 0 },
@@ -562,6 +607,17 @@ export default function OportunidadesPage() {
                       categorías, más de tu máximo de {maxTitlesPerBatch} por
                       lote. Publica categoría por categoría, o elimina algunos
                       títulos primero.
+                    </p>
+                  )}
+                  {!contentLanguage && (
+                    <p
+                      style={{
+                        margin: "6px 0 0",
+                        fontSize: 12,
+                        color: "#d64545",
+                      }}
+                    >
+                      Debes seleccionar o configurar un idioma de redacción antes de publicar.
                     </p>
                   )}
                 </>
@@ -648,16 +704,22 @@ export default function OportunidadesPage() {
               <button
                 onClick={() => execute("group", group.id)}
                 disabled={
-                  busyId !== null || group.titles.length > maxTitlesPerBatch
+                  busyId !== null ||
+                  group.titles.length > maxTitlesPerBatch ||
+                  !contentLanguage
                 }
                 title={
-                  group.titles.length > maxTitlesPerBatch
-                    ? `Esta categoría supera tu máximo de ${maxTitlesPerBatch} títulos por lote.`
-                    : undefined
+                  !contentLanguage
+                    ? "Debes configurar tu idioma de redacción en Configuración antes de ejecutar."
+                    : group.titles.length > maxTitlesPerBatch
+                      ? `Esta categoría supera tu máximo de ${maxTitlesPerBatch} títulos por lote.`
+                      : undefined
                 }
                 style={disabledStyle(
                   { ...buttonStyle, marginTop: 0 },
-                  busyId !== null || group.titles.length > maxTitlesPerBatch,
+                  busyId !== null ||
+                    group.titles.length > maxTitlesPerBatch ||
+                    !contentLanguage,
                 )}
               >
                 {group.titles.length > maxTitlesPerBatch
@@ -704,10 +766,15 @@ export default function OportunidadesPage() {
                 <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                   <button
                     onClick={() => execute("title", title.id)}
-                    disabled={busyId !== null}
+                    disabled={busyId !== null || !contentLanguage}
+                    title={
+                      !contentLanguage
+                        ? "Debes configurar tu idioma de redacción en Configuración antes de ejecutar."
+                        : undefined
+                    }
                     style={disabledStyle(
                       { ...secondaryButtonStyle, color: "#2f5fdb" },
-                      busyId !== null,
+                      busyId !== null || !contentLanguage,
                     )}
                   >
                     Ejecutar

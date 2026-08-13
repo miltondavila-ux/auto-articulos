@@ -21,6 +21,7 @@ import {
 } from "@/components/dashboard-ui";
 import type { RunStatus, TitleStatus } from "@/types/dashboard";
 import { trialDaysRemaining } from "@/lib/trial";
+import { SYSTEM_MODULES } from "@/lib/modules";
 
 interface UserRow {
   id: string;
@@ -47,6 +48,7 @@ interface UserRow {
   isTrialSignup: boolean;
   trialStartedAt: string | null;
   trialUnlocked: boolean;
+  disabledModules: string[];
 }
 
 const PLATFORM_URL = "https://auto-articulos-web.vercel.app/login";
@@ -198,7 +200,12 @@ export default function UsuariosPage() {
   const [loadingUsage, setLoadingUsage] = useState(false);
   const [search, setSearch] = useState("");
   const [accessPage, setAccessPage] = useState(1);
-  const [tab, setTab] = useState<"crear" | "uso" | "accesos">("accesos");
+  const [tab, setTab] = useState<"crear" | "uso" | "accesos" | "modulos">("accesos");
+  const [globalDisabledModules, setGlobalDisabledModules] = useState<string[]>([]);
+  const [loadingModules, setLoadingModules] = useState(false);
+  const [savingGlobalModules, setSavingGlobalModules] = useState(false);
+  const [globalModulesSaved, setGlobalModulesSaved] = useState(false);
+  const [globalModulesError, setGlobalModulesError] = useState<string | null>(null);
   const [banner, setBanner] = useState<{
     type: "error" | "info";
     text: string;
@@ -229,9 +236,54 @@ export default function UsuariosPage() {
     }
   }
 
+  async function loadGlobalModules() {
+    setLoadingModules(true);
+    try {
+      const res = await fetch("/api/admin/modules");
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.globalDisabledModules)) {
+          setGlobalDisabledModules(data.globalDisabledModules);
+        }
+      }
+    } catch (err) {
+      console.error("Error loading global modules", err);
+    } finally {
+      setLoadingModules(false);
+    }
+  }
+
+  async function handleSaveGlobalModules() {
+    setSavingGlobalModules(true);
+    setGlobalModulesError(null);
+    setGlobalModulesSaved(false);
+    try {
+      const res = await fetch("/api/admin/modules", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ globalDisabledModules }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setGlobalModulesError(
+          data.error ?? "No se pudo guardar la visibilidad global.",
+        );
+        return;
+      }
+      setGlobalModulesSaved(true);
+      setTimeout(() => setGlobalModulesSaved(false), 3000);
+      loadGlobalModules();
+    } catch {
+      setGlobalModulesError("Error de conexión al guardar los módulos.");
+    } finally {
+      setSavingGlobalModules(false);
+    }
+  }
+
   useEffect(() => {
     loadUsers();
     loadUsage();
+    loadGlobalModules();
   }, []);
 
   const filteredUsers = users.filter((u) => {
@@ -377,6 +429,15 @@ export default function UsuariosPage() {
       eyebrow: usage
         ? `${formatBytes(usage.databaseSizeBytes)} usados`
         : "Métricas",
+    },
+    {
+      id: "modulos",
+      label: "Visibilidad de módulos",
+      description: "Oculta o muestra secciones completas en mantenimiento o desarrollo.",
+      eyebrow:
+        globalDisabledModules.length > 0
+          ? `${globalDisabledModules.length} ocultos`
+          : "Todos visibles",
     },
   ];
 
@@ -955,6 +1016,7 @@ export default function UsuariosPage() {
               <UserCard
                 key={u.id}
                 user={u}
+                globalDisabledModules={globalDisabledModules}
                 isCurrentUser={u.id === currentUserId}
                 onUpdated={loadUsers}
               />
@@ -972,16 +1034,228 @@ export default function UsuariosPage() {
           </div>
         </section>
       )}
+
+      {tab === "modulos" && (
+        <section id="administracion-contenido" style={sectionStyle}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 8,
+            }}
+          >
+            <h2 style={h2Style}>Visibilidad global de módulos</h2>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <button
+                type="button"
+                onClick={loadGlobalModules}
+                disabled={loadingModules}
+                style={disabledStyle(
+                  {
+                    ...secondaryButtonStyle,
+                    padding: "6px 12px",
+                    fontSize: 12,
+                  },
+                  loadingModules,
+                )}
+              >
+                {loadingModules ? "Actualizando..." : "Actualizar"}
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveGlobalModules}
+                disabled={savingGlobalModules}
+                style={disabledStyle(
+                  {
+                    ...buttonStyle,
+                    marginTop: 0,
+                    padding: "6px 14px",
+                    fontSize: 13,
+                  },
+                  savingGlobalModules,
+                )}
+              >
+                {savingGlobalModules
+                  ? "Guardando..."
+                  : "Guardar visibilidad global"}
+              </button>
+            </div>
+          </div>
+          <p style={{ fontSize: 13, color: "#6b7280", marginTop: -4 }}>
+            Controla qué módulos del sistema están visibles para los usuarios
+            regulares. Si un módulo está en desarrollo o reparación, desmárcalo
+            aquí para ocultarlo completamente de su menú y bloquear su acceso
+            temporalmente. Los administradores siempre conservan acceso para
+            probarlo y desarrollarlo.
+          </p>
+
+          {globalModulesSaved && (
+            <div
+              style={{
+                padding: "10px 14px",
+                borderRadius: 8,
+                marginTop: 8,
+                background: "#eafaf0",
+                color: "#1e8a4b",
+                fontSize: 13,
+                fontWeight: 600,
+              }}
+            >
+              ✓ Configuración de visibilidad global guardada correctamente.
+            </div>
+          )}
+
+          {globalModulesError && (
+            <div
+              style={{
+                padding: "10px 14px",
+                borderRadius: 8,
+                marginTop: 8,
+                background: "#fdecec",
+                color: "#d64545",
+                fontSize: 13,
+              }}
+            >
+              {globalModulesError}
+            </div>
+          )}
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: 12,
+              marginTop: 14,
+            }}
+          >
+            {SYSTEM_MODULES.map((mod) => {
+              const isHidden = globalDisabledModules.includes(mod.id);
+              return (
+                <div
+                  key={mod.id}
+                  style={{
+                    padding: 16,
+                    borderRadius: 12,
+                    background: isHidden ? "#fffcf4" : "#ffffff",
+                    border: isHidden
+                      ? "1px solid #f6d289"
+                      : "1px solid #e4e9f1",
+                    boxShadow: "0 2px 8px rgba(0, 9, 35, 0.04)",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    gap: 12,
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <strong style={{ fontSize: 15, color: "#16181d" }}>
+                        {mod.label}
+                      </strong>
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 700,
+                          padding: "2px 8px",
+                          borderRadius: 999,
+                          background: isHidden ? "#fff3d6" : "#e6f8ef",
+                          color: isHidden ? "#a05e03" : "#0d7f44",
+                          border: isHidden
+                            ? "1px solid #fedc97"
+                            : "1px solid #b7ebd0",
+                        }}
+                      >
+                        {isHidden
+                          ? "Oculto para usuarios"
+                          : "Visible para todos"}
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: "#6b7280",
+                        marginTop: 4,
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {mod.description}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "#8a94a6",
+                        marginTop: 6,
+                        fontFamily: "monospace",
+                      }}
+                    >
+                      {mod.href}
+                    </div>
+                  </div>
+
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      cursor: "pointer",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: isHidden ? "#a05e03" : "#16181d",
+                      paddingTop: 10,
+                      borderTop: "1px solid rgba(0,0,0,0.06)",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!isHidden}
+                      onChange={(e) => {
+                        const visible = e.target.checked;
+                        setGlobalDisabledModules((prev) =>
+                          visible
+                            ? prev.filter((id) => id !== mod.id)
+                            : [...prev, mod.id],
+                        );
+                      }}
+                      style={{
+                        width: 18,
+                        height: 18,
+                        accentColor: "#0d7283",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span>
+                      {isHidden
+                        ? "Habilitar (hacer visible para todos)"
+                        : "Visible para usuarios"}
+                    </span>
+                  </label>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
 
 function UserCard({
   user,
+  globalDisabledModules = [],
   isCurrentUser,
   onUpdated,
 }: {
   user: UserRow;
+  globalDisabledModules?: string[];
   isCurrentUser: boolean;
   onUpdated: () => void;
 }) {
@@ -1031,6 +1305,12 @@ function UserCard({
   const [savingPermissions, setSavingPermissions] = useState(false);
   const [permissionsError, setPermissionsError] = useState<string | null>(null);
   const [permissionsSaved, setPermissionsSaved] = useState(false);
+  const [userDisabledModules, setUserDisabledModules] = useState<string[]>(
+    user.disabledModules ?? [],
+  );
+  const [savingUserModules, setSavingUserModules] = useState(false);
+  const [userModulesError, setUserModulesError] = useState<string | null>(null);
+  const [userModulesSaved, setUserModulesSaved] = useState(false);
   const [impersonating, setImpersonating] = useState(false);
   const [impersonateError, setImpersonateError] = useState<string | null>(
     null,
@@ -1043,11 +1323,13 @@ function UserCard({
     setPermLinkedIn(Boolean(user.allowLinkedInPublishing));
     setPermThreads(Boolean(user.allowThreadsPublishing));
     setPermTrialUnlocked(Boolean(user.trialUnlocked));
+    setUserDisabledModules(user.disabledModules ?? []);
   }, [
     user.allowInstagramPublishing,
     user.allowLinkedInPublishing,
     user.allowThreadsPublishing,
     user.trialUnlocked,
+    user.disabledModules,
   ]);
 
   const permissionsDirty =
@@ -1055,6 +1337,40 @@ function UserCard({
     permLinkedIn !== Boolean(user.allowLinkedInPublishing) ||
     permThreads !== Boolean(user.allowThreadsPublishing) ||
     permTrialUnlocked !== Boolean(user.trialUnlocked);
+
+  const userModulesDirty =
+    JSON.stringify((userDisabledModules ?? []).slice().sort()) !==
+    JSON.stringify((user.disabledModules ?? []).slice().sort());
+
+  async function handleSaveUserModules() {
+    setSavingUserModules(true);
+    setUserModulesError(null);
+    setUserModulesSaved(false);
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          disabledModules: userDisabledModules,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setUserModulesError(
+          data.error ?? "No se pudieron guardar los módulos del usuario.",
+        );
+        return;
+      }
+      setUserModulesSaved(true);
+      setTimeout(() => setUserModulesSaved(false), 2500);
+      onUpdated();
+    } catch {
+      setUserModulesError("Error de conexión al guardar los módulos.");
+    } finally {
+      setSavingUserModules(false);
+    }
+  }
 
   async function handleCopyCredentials() {
     const text = `Correo electrónico: ${user.email}\nClave: ${user.currentPassword ?? "(no disponible, resetéala con Editar)"}\nAcceso a la plataforma: ${PLATFORM_URL}`;
@@ -1454,6 +1770,85 @@ function UserCard({
               {permissionsError && (
                 <div style={{ fontSize: 11, color: "#d64545" }}>
                   {permissionsError}
+                </div>
+              )}
+            </div>
+          </Field>
+
+          <Field label="Visibilidad de módulos (esta cuenta)">
+            <div style={{ display: "grid", gap: 6 }}>
+              {SYSTEM_MODULES.map((mod) => {
+                const isAllowed = !userDisabledModules.includes(mod.id);
+                const isGloballyDisabled = globalDisabledModules.includes(
+                  mod.id,
+                );
+                return (
+                  <label key={mod.id} style={permissionLabelStyle}>
+                    <input
+                      type="checkbox"
+                      checked={isAllowed}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setUserDisabledModules((prev) =>
+                          checked
+                            ? prev.filter((id) => id !== mod.id)
+                            : [...prev, mod.id],
+                        );
+                      }}
+                      disabled={savingUserModules}
+                      style={{
+                        accentColor: "#0d7283",
+                        width: 16,
+                        height: 16,
+                      }}
+                    />
+                    <span>{mod.label}</span>
+                    {isGloballyDisabled && (
+                      <span
+                        style={{
+                          fontSize: 9,
+                          fontWeight: 700,
+                          padding: "1px 5px",
+                          borderRadius: 4,
+                          background: "#fff8e6",
+                          color: "#8a6d1a",
+                          border: "1px solid #f0deac",
+                        }}
+                        title="Este módulo ya está oculto globalmente para todos los usuarios"
+                      >
+                        Oculto global
+                      </span>
+                    )}
+                  </label>
+                );
+              })}
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  alignItems: "center",
+                  marginTop: 4,
+                }}
+              >
+                <button
+                  onClick={handleSaveUserModules}
+                  disabled={savingUserModules || !userModulesDirty}
+                  style={disabledStyle(
+                    { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
+                    savingUserModules || !userModulesDirty,
+                  )}
+                >
+                  {savingUserModules ? "Guardando..." : "Guardar módulos"}
+                </button>
+                {userModulesSaved && (
+                  <span style={{ fontSize: 11, color: "#1a7f47" }}>
+                    Módulos guardados
+                  </span>
+                )}
+              </div>
+              {userModulesError && (
+                <div style={{ fontSize: 11, color: "#d64545" }}>
+                  {userModulesError}
                 </div>
               )}
             </div>

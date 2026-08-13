@@ -1,10 +1,19 @@
 "use client";
 
-import { useState, type CSSProperties, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, type CSSProperties, type FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +48,8 @@ export default function LoginPage() {
         setError(data.error ?? "Error al iniciar sesión");
         return;
       }
-      router.push("/dashboard");
+      const returnTo = searchParams.get("returnTo");
+      router.push(returnTo?.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/dashboard");
       router.refresh();
     } finally {
       setLoading(false);

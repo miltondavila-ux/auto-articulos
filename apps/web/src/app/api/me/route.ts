@@ -2,12 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { getCurrentUser, getCurrentUserId } from "@/lib/current-user";
 
+import {
+  getGlobalDisabledModules,
+  getEffectiveDisabledModules,
+  parseUserDisabledModules,
+} from "@/lib/modules";
+
 // Un poco más del doble del texto de ejemplo que dio el usuario (340
 // caracteres) — pedido explícito, 6/8/2026.
 export const MAX_ARTICLE_SIGNATURE_LEN = 700;
 
 export async function GET() {
   const user = await getCurrentUser();
+  const globalDisabledModules = await getGlobalDisabledModules();
+  const disabledModules = getEffectiveDisabledModules(user, globalDisabledModules);
+  const userDisabledModules = parseUserDisabledModules(user.disabledModules);
+
   return NextResponse.json({
     email: user.email,
     role: user.role,
@@ -21,6 +31,9 @@ export async function GET() {
     profilePhotoUrl: user.profilePhotoUrl,
     businessLogoUrl: user.businessLogoUrl,
     allowInstagramPublishing: user.allowInstagramPublishing,
+    disabledModules,
+    userDisabledModules,
+    globalDisabledModules,
   });
 }
 

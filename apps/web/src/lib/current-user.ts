@@ -36,6 +36,7 @@ export async function getCurrentUser() {
       isTrialSignup: true,
       trialStartedAt: true,
       trialUnlocked: true,
+      disabledModules: true,
     },
   });
 }

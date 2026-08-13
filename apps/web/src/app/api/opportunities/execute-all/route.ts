@@ -35,12 +35,25 @@ export async function POST(request: NextRequest) {
     }),
     prisma.user.findUniqueOrThrow({
       where: { id: userId },
-      select: { maxTitlesPerBatch: true },
+      select: { maxTitlesPerBatch: true, contentLanguage: true },
     }),
   ]);
   if (!credential) {
     return NextResponse.json(
       { error: "Primero guarda tus credenciales de 10minutesWebsite." },
+      { status: 400 },
+    );
+  }
+  const effectiveLanguage =
+    typeof contentLanguage === "string" && contentLanguage.trim()
+      ? contentLanguage.trim()
+      : user.contentLanguage?.trim() || "";
+  if (!effectiveLanguage) {
+    return NextResponse.json(
+      {
+        error:
+          "Debes configurar tu idioma de redacción en Configuración antes de ejecutar oportunidades.",
+      },
       { status: 400 },
     );
   }
