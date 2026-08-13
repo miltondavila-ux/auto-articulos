@@ -181,6 +181,9 @@ function formatBytes(bytes: number): string {
   return `${(mb / 1024).toFixed(2)} GB`;
 }
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default function UsuariosPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [currentUserId, setCurrentUserId] = useState("");
@@ -212,7 +215,10 @@ export default function UsuariosPage() {
   } | null>(null);
 
   async function loadUsers() {
-    const res = await fetch("/api/admin/users");
+    const res = await fetch(`/api/admin/users?_t=${Date.now()}`, {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+    });
     if (res.status === 403) {
       setForbidden(true);
       return;
@@ -227,7 +233,10 @@ export default function UsuariosPage() {
   async function loadUsage() {
     setLoadingUsage(true);
     try {
-      const res = await fetch("/api/admin/usage");
+      const res = await fetch(`/api/admin/usage?_t=${Date.now()}`, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+      });
       if (res.ok) {
         setUsage(await res.json());
       }
@@ -239,7 +248,10 @@ export default function UsuariosPage() {
   async function loadGlobalModules() {
     setLoadingModules(true);
     try {
-      const res = await fetch("/api/admin/modules");
+      const res = await fetch(`/api/admin/modules?_t=${Date.now()}`, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+      });
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data.globalDisabledModules)) {

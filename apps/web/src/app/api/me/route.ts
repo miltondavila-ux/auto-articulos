@@ -8,6 +8,9 @@ import {
   parseUserDisabledModules,
 } from "@/lib/modules";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 // Un poco más del doble del texto de ejemplo que dio el usuario (340
 // caracteres) — pedido explícito, 6/8/2026.
 export const MAX_ARTICLE_SIGNATURE_LEN = 700;
@@ -18,23 +21,30 @@ export async function GET() {
   const disabledModules = getEffectiveDisabledModules(user, globalDisabledModules);
   const userDisabledModules = parseUserDisabledModules(user.disabledModules);
 
-  return NextResponse.json({
-    email: user.email,
-    role: user.role,
-    maxTitlesPerBatch: user.maxTitlesPerBatch,
-    contentLanguage: user.contentLanguage,
-    articleSignature: user.articleSignature,
-    opportunitiesDisclosureAcceptedAt: user.opportunitiesDisclosureAcceptedAt,
-    phone: user.phone,
-    imagePrompt: user.imagePrompt,
-    infographicPrompt: user.infographicPrompt,
-    profilePhotoUrl: user.profilePhotoUrl,
-    businessLogoUrl: user.businessLogoUrl,
-    allowInstagramPublishing: user.allowInstagramPublishing,
-    disabledModules,
-    userDisabledModules,
-    globalDisabledModules,
-  });
+  return NextResponse.json(
+    {
+      email: user.email,
+      role: user.role,
+      maxTitlesPerBatch: user.maxTitlesPerBatch,
+      contentLanguage: user.contentLanguage,
+      articleSignature: user.articleSignature,
+      opportunitiesDisclosureAcceptedAt: user.opportunitiesDisclosureAcceptedAt,
+      phone: user.phone,
+      imagePrompt: user.imagePrompt,
+      infographicPrompt: user.infographicPrompt,
+      profilePhotoUrl: user.profilePhotoUrl,
+      businessLogoUrl: user.businessLogoUrl,
+      allowInstagramPublishing: user.allowInstagramPublishing,
+      disabledModules,
+      userDisabledModules,
+      globalDisabledModules,
+    },
+    {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+      },
+    },
+  );
 }
 
 export async function PATCH(request: NextRequest) {

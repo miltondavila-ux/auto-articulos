@@ -7,6 +7,9 @@ import TrialBlockedScreen from "@/components/TrialBlockedScreen";
 import { displayName, getSessionContext } from "@/lib/current-user";
 import { hasTrialAccess } from "@/lib/trial";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function DashboardLayout({
   children,
 }: {

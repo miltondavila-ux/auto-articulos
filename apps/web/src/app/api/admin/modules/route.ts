@@ -7,18 +7,36 @@ import {
   setGlobalDisabledModules,
 } from "@/lib/modules";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   try {
     await requireAdmin();
   } catch {
-    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    return NextResponse.json(
+      { error: "No autorizado" },
+      {
+        status: 403,
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        },
+      },
+    );
   }
 
   const globalDisabledModules = await getGlobalDisabledModules();
-  return NextResponse.json({
-    modules: SYSTEM_MODULES,
-    globalDisabledModules,
-  });
+  return NextResponse.json(
+    {
+      modules: SYSTEM_MODULES,
+      globalDisabledModules,
+    },
+    {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+      },
+    },
+  );
 }
 
 export async function PATCH(request: NextRequest) {

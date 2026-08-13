@@ -32,7 +32,10 @@ export default function DashboardNav() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    fetch("/api/me")
+    fetch(`/api/me?_t=${Date.now()}`, {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+    })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         setIsAdmin(data?.role === "admin");

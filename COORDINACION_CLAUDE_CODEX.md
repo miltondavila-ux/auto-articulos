@@ -87,6 +87,8 @@ completo.
 autoriza aplicar una base de datos de destino incierto. Esta orden prevalece
 sobre la prisa de cerrar una tarea.
 
+- **Capitán de migración:** Codex — revisará y aplicará el lote completo. Motivo: reparación idempotente de actualizaciones históricas vacías en producción y verificación. Nadie más ejecuta Prisma hasta su liberación.
+
 **Coordinación solicitada por Milton (13/8/2026):** Codex leyó esta orden y
 ejecutó `scripts/migration-coordinator.sh status` antes de retomar cualquier
 acción de migración, push o despliegue. Resultado: no hay capitán activo. En
@@ -343,6 +345,8 @@ ejecutar de forma explícita y auditada después del despliegue.
 - **Verificaciones técnicas realizadas:**
   - `npm --prefix packages/db run generate` (Prisma Client regenerado exitosamente).
   - `npm --prefix apps/web run typecheck` (`tsc --noEmit` completó limpio con 0 errores).
+  - `npm --prefix apps/web run build` (`next build` completó limpio con 0 errores).
+  - **Blindaje estricto de NO caché (13/8/2026):** se agregaron `export const dynamic = "force-dynamic"`, `export const revalidate = 0`, encabezados `Cache-Control: "no-store, no-cache, must-revalidate, max-age=0"` en los endpoints de API (`/api/me`, `/api/admin/modules`, `/api/admin/users`) y en el layout de dashboard, junto con parámetros `?_t=${Date.now()}` y opciones `cache: "no-store"` en todos los fetches de cliente (`DashboardNav`, `ModuleGuard`, `usuarios/page.tsx`) para asegurar que el navegador nunca sirva respuestas cacheadas viejas.
   - Sin efectos secundarios en el resto del dashboard ni en integraciones existentes.
 
 
@@ -542,6 +546,23 @@ ejecutar de forma explícita y auditada después del despliegue.
   No montar el componente en esta sesión sin esa revisión, porque
   `apps/web/src/app/dashboard/layout.tsx` permanece reservado por el módulo
   de visibilidad.
+- **Diagnóstico solicitado por Milton — Actualizaciones vacías en producción:**
+  se investigará solo con lecturas por qué las entradas históricas dejaron de
+  verse. Hipótesis inicial: la pantalla ya consulta `ProductUpdate`, mientras
+  que el entorno de producción podría no tener las cinco filas que antes vivían
+  en el arreglo estático. No se insertará, borrará ni desplegará nada hasta
+  confirmar la fuente y la base de datos exactas.
+- **Causa identificada con evidencia:** el lote integrado `ed26686` cambió la
+  pantalla para leer `ProductUpdate`; la base local contiene las cinco filas
+  históricas. El método de producción elegido por el capitán es el workflow
+  `prisma db push`, que sincroniza el esquema pero NO ejecuta los `INSERT` de
+  datos iniciales que viven en una migración SQL. Por eso la tabla de
+  producción puede existir vacía y la pantalla deja de mostrar la lista que
+  antes estaba hardcodeada. **Reparación requerida para el capitán:** ejecutar
+  una única carga idempotente de las cinco entradas históricas contra la base
+  de producción (por `id`, sin sobrescribir entradas nuevas), verificar el
+  conteo y volver a comprobar la pantalla. No realizar esta escritura fuera
+  del lote/mandato del capitán.
 - **Recepción del Capitán (Codex):** solicitud leída y aceptada. La integración
   será posterior a la revisión final del layout compartido y preservará tanto
   `ModuleGuard` como el gate de prueba. Falta una decisión funcional de Milton
