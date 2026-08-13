@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
-import {
-  decryptSecret,
-  getBingAccessToken,
-  listBingSites,
-  listBingSitemaps,
-} from "@auto-articulos/shared";
+import { listBingSites, listBingSitemaps } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
+import { getBingTokenForIntegration } from "@/lib/bing-token";
 
 async function integrationFor(userId: string) {
   return prisma.searchIntegration.findUnique({
@@ -19,9 +15,7 @@ export async function GET() {
   const integration = await integrationFor(userId);
   if (!integration) return NextResponse.json({ connected: false, sites: [] });
   try {
-    const accessToken = await getBingAccessToken(
-      decryptSecret(integration.encryptedRefreshToken),
-    );
+    const accessToken = await getBingTokenForIntegration(integration);
     const sites = await listBingSites(accessToken);
 
     // Pedido explícito del usuario (11/8/2026): Google ya detecta el
@@ -88,9 +82,7 @@ export async function PATCH(request: NextRequest) {
   // JSON, y el frontend caía siempre en el texto genérico "No se pudo
   // guardar", sin mostrar nunca la causa real.
   try {
-    const accessToken = await getBingAccessToken(
-      decryptSecret(integration.encryptedRefreshToken),
-    );
+    const accessToken = await getBingTokenForIntegration(integration);
     const sites = await listBingSites(accessToken);
     const selected = sites.find((site) => site.Url === siteUrl);
     if (!selected)

@@ -21,7 +21,35 @@ function bingConfig() {
   return { clientId, clientSecret };
 }
 
-export async function getBingAccessToken(refreshToken: string) {
+export interface BingTokenResult {
+  accessToken: string;
+  /**
+   * Bing ROTA el refresh token: cada canje devuelve uno nuevo e invalida el
+   * anterior. Si viene, hay que guardarlo — usar de nuevo el viejo falla.
+   */
+  rotatedRefreshToken?: string;
+}
+
+/**
+ * Bug real encontrado el 13/8/2026 (cuenta de Lorena Álvarez), y la razón de
+ * fondo por la que las conexiones de Bing "se vencían solas" desde hacía días:
+ * esta función devolvía únicamente el access token y TIRABA el `refresh_token`
+ * que Bing manda en la misma respuesta. Como Bing rota el refresh token y
+ * anula el anterior, el guardado en base de datos quedaba muerto después del
+ * primer uso. El patrón observado calza exacto: reconectar funcionaba, la
+ * primera consulta funcionaba (el selector cargaba el sitio real), y la
+ * siguiente fallaba con "Refresh token is invalid or expired".
+ *
+ * Nota sobre la documentación: el ejemplo oficial de Microsoft para el refresh
+ * muestra una respuesta SIN `refresh_token`, y hay un reporte abierto en
+ * Microsoft Q&A ("Bug in Bing Webmaster Tools OAuth 2.0?") que afirma lo
+ * contrario de lo que vemos acá — que los tokens rotados no sirven y hay que
+ * conservar el original. Se implementa lo que hace el servidor real, no lo que
+ * dicen los papeles: si Bing manda uno nuevo, se guarda.
+ */
+export async function getBingAccessToken(
+  refreshToken: string,
+): Promise<BingTokenResult> {
   const { clientId, clientSecret } = bingConfig();
   const response = await fetch(TOKEN_URL, {
     method: "POST",
@@ -35,6 +63,7 @@ export async function getBingAccessToken(refreshToken: string) {
   });
   const data = (await response.json().catch(() => ({}))) as {
     access_token?: string;
+    refresh_token?: string;
     error?: string;
     error_description?: string;
   };
@@ -55,7 +84,13 @@ export async function getBingAccessToken(refreshToken: string) {
       `La conexión con Bing venció o fue revocada: hay que volver a autorizar la cuenta. (Bing respondió: ${detalle})`,
     );
   }
-  return data.access_token;
+  return {
+    accessToken: data.access_token,
+    rotatedRefreshToken:
+      data.refresh_token && data.refresh_token !== refreshToken
+        ? data.refresh_token
+        : undefined,
+  };
 }
 
 export interface BingSite {

@@ -4,9 +4,9 @@ import {
   decryptSecret,
   getGoogleAccessToken,
   submitGoogleSitemap,
-  getBingAccessToken,
   submitBingSitemap,
 } from "@auto-articulos/shared";
+import { getBingTokenForIntegration } from "./bingToken";
 
 const CONCURRENCY = 5;
 
@@ -37,7 +37,7 @@ async function submitForUser(integration: {
   try {
     const accessToken =
       integration.provider === "bing"
-        ? await getBingAccessToken(decryptSecret(integration.encryptedRefreshToken))
+        ? await getBingTokenForIntegration(integration)
         : await getGoogleAccessToken(decryptSecret(integration.encryptedRefreshToken));
     if (integration.provider === "bing") {
       await submitBingSitemap(accessToken, integration.siteUrl, integration.sitemapUrl);

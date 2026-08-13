@@ -1,12 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
-import {
-  decryptSecret,
-  getBingAccessToken,
-  getBingUrlQuota,
-  submitBingUrl,
-} from "@auto-articulos/shared";
+import { getBingUrlQuota, submitBingUrl } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
+import { getBingTokenForIntegration } from "@/lib/bing-token";
 
 /**
  * MASTER INDEXACION BING — envía a Bing los artículos publicados del usuario
@@ -92,9 +88,7 @@ export async function POST() {
 
     let accessToken: string;
     try {
-      accessToken = await getBingAccessToken(
-        decryptSecret(integration.encryptedRefreshToken),
-      );
+      accessToken = await getBingTokenForIntegration(integration);
     } catch (error) {
       return NextResponse.json(
         {

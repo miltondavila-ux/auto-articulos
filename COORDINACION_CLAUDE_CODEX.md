@@ -29,6 +29,34 @@ Claude, Codex y Antigravity deben hacer lo siguiente **antes de leer o modificar
 5. Registrar su tarea en "Trabajo activo" antes de editar.
 6. Si existe una reserva que se cruza con la tarea, detenerse y coordinar.
 
+## ORDEN OBLIGATORIA — nadie daña el trabajo de nadie
+
+**Orden directa de Milton (13/8/2026):** ningún agente (Claude, Codex,
+Antigravity) puede dañar, sobrescribir, perder ni absorber sin darse cuenta
+el trabajo de otro agente ni del usuario. Esto no es una sugerencia, es una
+orden.
+
+**Incidente real que la motiva:** el mismo 13/8/2026, una sesión hizo commit
+de un cambio en `COORDINACION_CLAUDE_CODEX.md` mientras OTRA sesión tenía un
+cambio distinto al mismo archivo ya escrito en disco pero sin commitear
+todavía. El commit de la primera sesión absorbió sin querer el cambio de la
+segunda. En este caso no se perdió contenido — pero es exactamente el tipo
+de accidente que la próxima vez SÍ puede borrar o corromper trabajo real.
+
+**Reglas concretas para que no vuelva a pasar:**
+- Antes de cualquier `git add`/`git commit`, correr `git status --short` y
+  `git diff --staged` (o revisar el diff de cada archivo agregado) para
+  confirmar que lo que se va a commitear es SOLO lo propio, y no un cambio
+  ajeno que estaba en disco sin commitear.
+- Nunca usar `git add .` ni `git add -A` — agregar únicamente las rutas
+  exactas que el propio agente modificó (regla ya existente, reforzada acá
+  porque romperla fue la causa directa del incidente).
+- Si al revisar el diff aparece contenido que el agente no escribió, DETENERSE,
+  no commitearlo como propio, y avisar en este tablero o preguntarle a Milton
+  antes de continuar.
+- Ante cualquier duda sobre si un push/commit podría pisar trabajo ajeno,
+  parar y preguntar — nunca asumir que "no pasa nada".
+
 ## Reglas durante el trabajo
 
 - Cada agente modifica únicamente los archivos que declaró en su reserva.
@@ -41,6 +69,148 @@ Claude, Codex y Antigravity deben hacer lo siguiente **antes de leer o modificar
 - Si se descubre trabajo ajeno sin registrar, tratarlo como reservado hasta confirmar con el usuario o con el otro agente.
 
 ## Trabajo activo
+
+### Claude — Asistente flotante de ayuda al usuario (IA) — ANÁLISIS, sin código
+
+- **Estado:** `ANÁLISIS TERMINADO — SIN UNA SOLA LÍNEA DE CÓDIGO ESCRITA —
+  ESPERANDO AUTORIZACIÓN DE MILTON` (13/8/2026).
+- **Pedido de Milton:** una caja de chat flotante con una IA que le responda al
+  usuario final cómo funciona el programa **de cara al usuario** ("dónde hago
+  qué", "cómo hago tal cosa", "tengo este problema, qué hago"). Explícitamente
+  NO sobre cómo está hecho el sistema por dentro.
+- **Área reservada:** NINGUNA todavía. No se tocó ni un archivo de código. Este
+  registro existe para que otro agente sepa que el tema está en evaluación,
+  no para bloquear archivos.
+- **Archivos que se reservarían si Milton autoriza** (declarados por
+  adelantado, todos nuevos salvo el layout):
+  - `apps/web/src/components/FloatingAssistant.tsx` (nuevo)
+  - `apps/web/src/app/api/assistant/chat/route.ts` (nuevo)
+  - `apps/web/src/content/manual-usuario.md` (nuevo — el system prompt)
+  - `apps/web/src/app/dashboard/layout.tsx` (solo montar el componente; ojo:
+    este archivo ya tiene el gate de prueba gratuita, ver sección de abajo)
+
+#### Decisión de proveedor: OpenAI, no Anthropic
+
+- Milton ya paga OpenAI y tiene la llave. **Se usa esa.** No se instala el SDK
+  de Anthropic. Hoy el repo no tiene NINGÚN SDK de IA instalado (verificado en
+  los cuatro `package.json`), así que se parte de cero de todas formas y no hay
+  nada que migrar.
+- **Precios verificados el 13/8/2026 contra la página oficial**
+  (`developers.openai.com/api/docs/pricing`), no de memoria — por 1M de tokens:
+
+  | Modelo | Entrada | Entrada cacheada | Salida |
+  |---|---|---|---|
+  | `gpt-5.6-sol` | $5.00 | $0.50 | $30.00 |
+  | `gpt-5.6-terra` | $2.00 | $0.20 | $12.00 |
+  | `gpt-5.6-luna` | $0.20 | $0.02 | $1.20 |
+  | `gpt-5-mini` | $0.25 | $0.025 | $2.00 |
+  | `gpt-5-nano` | $0.05 | $0.005 | $0.40 |
+
+- **Costo estimado por pregunta** (manual de ~15k tokens cacheado + ~500 de
+  conversación + ~400 de respuesta): `luna` ≈ $0.0009, `gpt-5-mini` ≈ $0.0013,
+  `terra` ≈ $0.009, `sol` ≈ $0.022. O sea **entre $1 y $22 por cada 1.000
+  preguntas** según el modelo. Es una estimación, no una medición: depende del
+  tamaño real del manual, que todavía no existe.
+- **Conclusión de costo: no es un factor de decisión.** Cualquiera de estos
+  modelos cuesta menos que un solo artículo publicado. Elegir por calidad de
+  respuesta, no por precio.
+- **Condición para que el precio cacheado aplique:** el caché de OpenAI es
+  automático pero exige que el prefijo del prompt sea **idéntico byte a byte**.
+  Implicación de diseño, no un detalle: el manual va PRIMERO y fijo, y la
+  pregunta del usuario y sus datos van AL FINAL. Si se mete la fecha, el nombre
+  del usuario o un ID al principio del prompt, el caché no pega nunca y el
+  costo se multiplica por ~10 sin ningún aviso.
+
+#### Hallazgo sobre `/dashboard/actualizaciones` (corrige un supuesto de Milton)
+
+- Milton planteó que el problema de mantener el manual sincronizado ya está
+  resuelto porque existe ese módulo. **Revisado el código real
+  (`apps/web/src/app/dashboard/actualizaciones/page.tsx`): resuelto a medias.**
+- Lo que el módulo ES: un arreglo `ACTUALIZACIONES` **escrito a mano y
+  hardcodeado en la línea 18** del `page.tsx`, con 5 entradas (28/7 al 10/8).
+  No se genera solo, no lee de la base de datos, no lee de los commits. Cada
+  entrada la escribió una persona.
+- **Por qué SÍ es buena noticia (dos razones reales, no cortesía):**
+  1. Está en el repo, en un `.tsx` — que es exactamente donde recomendé que
+     viviera el manual. Un cambio de código y su explicación pueden entrar en
+     el mismo commit. La infraestructura correcta ya existe.
+  2. El texto ya está escrito **en el registro correcto**: lenguaje de usuario
+     final, sin tecnicismos, con un campo `ejemplo` concreto en cada entrada.
+     Ese es justo el tono que necesita el manual del bot, y es la parte que
+     normalmente cuesta.
+- **Por qué NO alcanza solo:** un changelog dice **qué cambió**; un manual dice
+  **cómo funciona algo hoy**. El bot necesita las dos. Si un usuario pregunta
+  "¿cómo conecto Bing?", la respuesta no está en ninguna de las 5 entradas
+  actuales, porque conectar Bing no es un cambio reciente — es una función que
+  existe desde antes. La disciplina de mantenerlo al día sigue siendo humana:
+  el arreglo del cupo de Bing del 13/8 (commit `b4fc007`, documentado más
+  abajo en este mismo tablero) todavía no figura en el módulo.
+- **Propuesta:** el bot lee DOS archivos — el manual nuevo (cómo funciona cada
+  pantalla hoy) y el changelog que ya existe (qué cambió últimamente). Reusar
+  `ACTUALIZACIONES` como fuente, no reemplazarlo.
+
+#### REQUISITO NUEVO DE MILTON (13/8/2026): el changelog debe alimentarse solo
+
+- **Pedido textual:** *"ese módulo está hecho para que cada cambio que haga se
+  vaya depositando allí de inmediato; si eso no hace eso pues hay que arreglarlo
+  para este tema del chat flotante, porque sería muy bien que cada cosa que se
+  vaya creando o reparando ya forme parte del manual de conocimiento."*
+- **Estado real verificado (archivo completo, 234 líneas):** hoy NO se deposita
+  nada solo. Cero `fetch`, cero `useEffect`, cero `/api/`, cero `prisma`, cero
+  `async` en todo el archivo; no existe ruta API ni modelo en `schema.prisma`.
+  Prueba a la vista: el arreglo del cupo de Bing de hoy (`b4fc007`) no figura
+  en la pantalla. La intención de diseño era la correcta; la implementación
+  quedó estática.
+- **Dirección aprobada por Milton:** hay que hacerlo automático. Dos piezas:
+  1. **Regla de proceso (costo cero, aplica desde ya):** ningún agente cierra
+     un cambio visible para el usuario sin agregar su entrada a
+     `ACTUALIZACIONES` **en el mismo commit**. Va a este tablero y a
+     `AGENTS.md`. No requiere infraestructura; los tres agentes ya leen este
+     documento antes de tocar código.
+  2. **Automatismo:** script que lee el diff + mensaje del commit y le pide al
+     modelo de OpenAI que redacte la entrada en lenguaje de usuario final con
+     los campos existentes (`titulo`, `categoria`, `resumen`, `ejemplo`). El
+     paso de traducción técnico → usuario es indispensable: el mensaje de
+     commit real ("Respetar el cupo de Bing en MASTER INDEXACION...") no sirve
+     tal cual para un usuario final. Costo despreciable: son pocos commits por
+     día, no miles de preguntas.
+- **Límite que hay que decir en voz alta:** aun automatizado al 100%, esto es
+  un changelog ("qué cambió"), no un manual ("cómo funciona X hoy"). Ningún
+  changelog responde "¿cómo conecto Bing?", porque conectar Bing no es un
+  cambio reciente. El bot necesita **manual base escrito una vez** + **este
+  changelog automático encima**. Con las dos, el manual no se desactualiza
+  nunca, que es el objetivo real de Milton.
+- **Decisión pendiente:** si el script corre en un hook de pre-commit local, en
+  GitHub Actions al hacer push, o como paso manual que el agente ejecuta. No
+  decidido.
+
+#### Riesgos identificados antes de escribir código
+
+- **Alucinación.** El riesgo número uno es que el bot le prometa al usuario
+  funciones que no existen. Mitigación: instrucción dura de "solo respondes con
+  lo que está en el manual; si no está, lo dices y ofreces contactar a Milton".
+  Se mitiga, no se elimina.
+- **Cruce con el gate de prueba gratuita.** `dashboard/layout.tsx` reemplaza
+  TODO el contenido por `TrialBlockedScreen` cuando la prueba venció. Hay que
+  decidir a propósito si el chat aparece o no en esa pantalla. Argumento para
+  que SÍ aparezca: es justo el momento en que el usuario tiene preguntas. No
+  está decidido; lo decide Milton.
+- **Fuga de datos entre cuentas.** Si se le inyecta contexto del usuario
+  (plan, integraciones conectadas, cuotas), ese contexto tiene que salir de la
+  sesión del servidor, NUNCA de un parámetro que mande el navegador. Mismo
+  criterio de aislamiento multi-tenant que ya rige el resto del sistema.
+- **Costo descontrolado por abuso.** Sin límite por usuario, una sola cuenta
+  puede disparar miles de preguntas. Hace falta un tope por día por usuario.
+
+#### Lo que NO está decidido (lo decide Milton, no el agente)
+
+1. Modelo exacto (`gpt-5-mini` y `gpt-5.6-luna` son los candidatos razonables
+   por relación calidad/precio para este caso).
+2. Si el chat aparece en la pantalla de prueba vencida.
+3. Si se guardan las conversaciones en Postgres. Recomendación: sí, en una
+   fase 2 — ver dónde se atasca la gente vale más que el chat en sí.
+4. Si el bot solo informa o además puede escalar a WhatsApp de Milton
+   (`https://wa.link/qdwyyy`, el mismo que ya usa `TrialBlockedScreen`).
 
 ### Claude — Sistema de prueba gratuita (3 fases completas)
 
@@ -144,7 +314,12 @@ Claude, Codex y Antigravity deben hacer lo siguiente **antes de leer o modificar
   - **Verificado tras el cambio:** la reconexión de Lorena completó, el selector cargó el sitio real (`https://www.segurosdesaludyvida.com/`) desde Bing y el sitemap se autodetectó. Falta todavía la prueba de MASTER INDEXACION BING con la conexión viva.
 - **Bug G — RESUELTO, detectado por Milton:** justo después de reconectar se mostraban DOS mensajes contradictorios a la vez, "Bing reconectado correctamente" en verde y "Tu conexión con Bing venció" en rojo. No era un problema de textos: la PRIMERA consulta a Bing con el token recién emitido falla, y al refrescar la página anda perfecto (confirmado por Milton con F5). Ahora, tras un `?bing=connected`, se reconsulta a los 2,5 segundos y mientras tanto se suprime el aviso de conexión vencida, que en ese instante es falso y mandaba a reconectar algo recién conectado.
 - **Decisión de producto de Milton (13/8/2026):** en Configuración **solo se muestran los envíos de sitemap EXITOSOS**, tanto en Bing como en Google. El aviso "✗ El último envío falló" se retiró de las dos pantallas: no es accionable para el usuario y lo único que provoca es que llame a soporte por algo que se resuelve del lado del sistema. Mismo criterio que el commit `c577508`. El error se sigue guardando en `SearchIntegration.lastSitemapSyncError` y en los logs, así que no se pierde información de diagnóstico.
-- **Commits de esta tanda:** `f397522` (credenciales del sitemap nocturno + reconexión sin salida), `b4fc007` (cupo de Bing en MASTER INDEXACION), `999b03f` (mostrar en pantalla el error real de Bing), `416ca84` (ocultar envíos fallidos + mensajes contradictorios). Todos pusheados a `main` y desplegados en producción, cada uno confirmado `Ready` en Vercel.
+- **Bug H — SEGUNDA CAUSA RAÍZ, la que hacía que las conexiones "se vencieran solas": Bing ROTA el refresh token y nuestro código lo tiraba.** Encontrado el 13/8/2026, después de actualizar las credenciales. Con el `client_id`/`client_secret` ya correctos, el error de Bing cambió de `invalid_client` a `Refresh token is invalid or expired.` — un mensaje distinto, y ahí quedó a la vista el patrón: reconectar funcionaba, la PRIMERA consulta funcionaba (el selector cargaba el sitio real desde Bing), y la SIGUIENTE fallaba. Eso es un refresh token de un solo uso. `getBingAccessToken()` devolvía únicamente el access token y descartaba el `refresh_token` que Bing manda en la misma respuesta, así que en base de datos quedaba siempre el original, ya anulado por Bing.
+  - **Contradice a la documentación, y se implementó lo que hace el servidor real:** el ejemplo oficial de Microsoft para el refresh muestra una respuesta SIN `refresh_token`, y el reporte de Microsoft Q&A ("Bug in Bing Webmaster Tools OAuth 2.0?") afirma justo lo contrario de lo observado — que los tokens rotados no sirven y hay que conservar el original. Se siguió la evidencia, no los papeles. **Si esto vuelve a fallar, la hipótesis alternativa a probar es la del reporte: conservar el original e ignorar el rotado.**
+  - **Implementación:** `getBingAccessToken()` ahora devuelve `{ accessToken, rotatedRefreshToken }`. Para que ningún llamador se olvide de persistirlo se creó un único punto de entrada por app — `apps/web/src/lib/bing-token.ts` y `apps/worker/src/bingToken.ts`, ambos `getBingTokenForIntegration(integration)` — y se migraron los cinco llamadores: `api/search-integrations/bing` (GET y PATCH), `api/bing/master-index`, `api/sitemap/send-bing`, `worker/bingIndexing.ts` y `worker/send-daily-sitemaps.ts`. En `bingIndexing.ts` además se relee la integración en cada reintento, porque el intento anterior pudo haber guardado un token nuevo y usar el de memoria haría fallar el reintento con el mismo error que intenta remediar.
+  - **Limitación conocida, sin resolver:** si dos requests refrescan a la vez (dos pestañas abiertas, por ejemplo), una rotación pisa a la otra y una de las dos queda con un token muerto. Es inherente a la rotación y haría falta un lock para evitarlo; no se implementó porque en el uso normal las llamadas son secuenciales.
+- **Commits de esta tanda:** `f397522` (credenciales del sitemap nocturno + reconexión sin salida), `b4fc007` (cupo de Bing en MASTER INDEXACION), `999b03f` (mostrar en pantalla el error real de Bing), `416ca84` (ocultar envíos fallidos + mensajes contradictorios), `0ee9dd9` (documentación de la causa raíz de las credenciales). Todos pusheados a `main` y desplegados en producción, cada uno confirmado `Ready` en Vercel.
+- **Credenciales ya alineadas en los tres lados (13/8/2026):** Milton actualizó `BING_WEBMASTER_CLIENT_ID` y `BING_WEBMASTER_CLIENT_SECRET` tanto en Vercel (Production, con redistribución) como en los GitHub repo secrets. O sea que la web, el worker y el envío nocturno ya usan la app OAuth correcta.
 - **Encontrado sin arreglar:** quedó un `apps/web/src/app/api/search-integrations/bing/callback/route.ts.bak` sin trackear, basura de una sesión anterior. No lo borré porque no lo creé yo (regla del tablero); ahora además está desactualizado respecto del archivo real. Milton decide si se elimina.
 
 ### Antigravity — reparación de Patricia Coy (lotes reanudables)

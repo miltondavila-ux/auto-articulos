@@ -1,9 +1,6 @@
 import { prisma } from "@auto-articulos/db";
-import {
-  decryptSecret,
-  getBingAccessToken,
-  submitBingUrl,
-} from "@auto-articulos/shared";
+import { submitBingUrl } from "@auto-articulos/shared";
+import { getBingTokenForIntegration } from "./bingToken";
 
 /**
  * Pide a Bing indexación instantánea de la URL recién publicada — a
@@ -41,12 +38,19 @@ export async function notifyBing(titleId: string, userId: string) {
     return;
   }
 
-  const refreshToken = decryptSecret(integration.encryptedRefreshToken);
   const MAX_RETRIES = 2;
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const token = await getBingAccessToken(refreshToken);
+      // Se relee la integración en cada intento porque el refresh token de
+      // Bing rota: el intento anterior pudo haber guardado uno nuevo, y usar
+      // el de memoria haría fallar el reintento con "Refresh token is invalid
+      // or expired" — justo lo que este reintento intenta remediar.
+      const actual = await prisma.searchIntegration.findUnique({
+        where: { userId_provider: { userId, provider: "bing" } },
+      });
+      if (!actual) throw new Error("La conexión con Bing ya no existe.");
+      const token = await getBingTokenForIntegration(actual);
       await submitBingUrl(token, integration.siteUrl, title.articleUrl);
       await prisma.title.update({
         where: { id: titleId },

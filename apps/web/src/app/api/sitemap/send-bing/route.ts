@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
-import {
-  decryptSecret,
-  getBingAccessToken,
-  submitBingSitemap,
-} from "@auto-articulos/shared";
+import { submitBingSitemap } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
+import { getBingTokenForIntegration } from "@/lib/bing-token";
 
 /**
  * Envío manual del sitemap a Bing Webmaster Tools — mismo patrón que
@@ -25,9 +22,7 @@ export async function POST() {
   }
 
   try {
-    const accessToken = await getBingAccessToken(
-      decryptSecret(integration.encryptedRefreshToken),
-    );
+    const accessToken = await getBingTokenForIntegration(integration);
     await submitBingSitemap(
       accessToken,
       integration.siteUrl,
