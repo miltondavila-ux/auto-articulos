@@ -42,6 +42,64 @@ Claude, Codex y Antigravity deben hacer lo siguiente **antes de leer o modificar
 
 ## Trabajo activo
 
+### Claude — Sistema de prueba gratuita (3 fases completas)
+
+- **Estado:** `TERMINADO — ESPERANDO CONFIRMACIÓN DEL USUARIO` (13/8/2026).
+- **Pedido explícito del usuario:** botón "SOLICITAR PRUEBA" en Login → 7 días
+  de acceso completo → al vencer, pantalla de bloqueo (mensaje + botón
+  "Conversar con Milton" + QR a `https://wa.link/qdwyyy`) salvo que el admin
+  marque "desbloqueado" manualmente para esa cuenta.
+- **Archivos nuevos/tocados:**
+  - `packages/db/prisma/schema.prisma` (+ migración): `User.isTrialSignup`,
+    `User.trialStartedAt`, `User.trialUnlocked` (default `true` — nunca
+    bloquea usuarios existentes/creados por admin).
+  - `apps/web/src/lib/trial.ts`: `hasTrialAccess()` / `trialDaysRemaining()`,
+    lógica pura en milisegundos (sin problemas de timezone/DST).
+  - `apps/web/src/app/api/auth/trial-signup/route.ts`: registro público
+    (nombre, apellido, email, teléfono, contraseña), crea el usuario con
+    `isTrialSignup=true`, `trialStartedAt=now()`, `trialUnlocked=false`, y
+    hace login automático (mismo `createSessionToken` que el login normal).
+  - `apps/web/src/middleware.ts`: se agregó `/api/auth/trial-signup` a
+    `PUBLIC_PATHS` — **bug real encontrado al probar**: sin esto, el
+    middleware devolvía "No autenticado" antes de que la petición llegara al
+    handler (que es público a propósito). Ya corregido y confirmado por el
+    usuario (pudo registrarse y entrar).
+  - `apps/web/src/components/TrialBlockedScreen.tsx`: pantalla de bloqueo
+    (mensaje + botón WhatsApp + QR vía `quickchart.io`, mismo servicio
+    externo ya usado en el proyecto para QRs de WhatsApp en artículos).
+  - `apps/web/src/app/dashboard/layout.tsx`: gate server-side —
+    `!actingAdmin && !hasTrialAccess(user)` reemplaza TODO el contenido del
+    dashboard (incluida la navegación) por `TrialBlockedScreen`. Un admin
+    "actuando como" siempre puede seguir dando soporte sin importar el
+    estado de la prueba.
+  - `apps/web/src/app/dashboard/vista-previa-bloqueo/page.tsx`: página
+    admin-only para ver la pantalla de bloqueo sin esperar 7 días reales
+    (renderiza `TrialBlockedScreen` directo).
+  - `apps/web/src/app/api/admin/users/route.ts` + `usuarios/page.tsx`:
+    checkbox "Desbloqueado" en el detalle (solo visible si
+    `isTrialSignup`, mismo patrón de estado local + "Guardar permisos" que
+    ya usan los permisos de redes sociales) + marca visual "🎁 PRUEBA" con
+    días restantes junto al nombre en la lista.
+- **Verificación real hecha por el usuario:** registro completo (formulario →
+  login automático), pantalla de bloqueo revisada en la vista previa admin.
+- **Verificación que FALTA (avisado al usuario, todavía no puede confirmarse
+  porque no ha pasado el tiempo real):** que el corte automático a los 7 días
+  reales funcione end-to-end sin intervención manual — la lógica de
+  `hasTrialAccess()`/el gate en `layout.tsx` fue revisada línea por línea y es
+  matemáticamente sólida (comparación pura de milisegundos desde
+  `trialStartedAt`, sin lógica de fechas de calendario), pero nadie ha llegado
+  todavía al día 7 de forma natural para confirmarlo en producción real.
+- **Verificaciones técnicas:** `tsc --noEmit` y `next build` limpios en cada
+  fase; los tres commits se desplegaron a producción (`READY`) confirmado con
+  `vercel inspect`.
+- **Nota de proceso:** durante esta tarea, otra sesión (Codex/Antigravity)
+  estuvo pusheando a `main` en paralelo (ver commits `f397522` y siguientes
+  en la sección de Bing más abajo) — sin conflictos de archivos con este
+  trabajo, pero un `git push` fue rechazado una vez por historial divergente
+  y se resolvió con `fetch` + verificación antes de reintentar (sin forzar).
+- **Estado del área:** LIBERADA (archivos de esta fase). Bing sigue
+  reservado/activo por otra sesión, ver sección de abajo.
+
 ### Claude — investigación en curso: bucle de reconexión de Bing (cuenta de Julio Paso)
 
 - **Estado:** `EN INVESTIGACIÓN` (11/8/2026).
@@ -80,6 +138,13 @@ Claude, Codex y Antigravity deben hacer lo siguiente **antes de leer o modificar
 - **Pendiente:** commit + despliegue (autorización de Milton), y después Lorena tiene que pulsar "Reconectar Bing" (que recién ahora le va a aparecer) para renovar el refresh token muerto. Recién con la conexión viva se puede saber si MASTER INDEXACION BING sigue fallando o no — el `InvalidToken` de la investigación anterior nunca se pudo confirmar ni descartar porque esta cuenta no tenía conexión válida.
 - **Bug E — RESUELTO (autorizado por Milton, "sigue con el trabajo", 13/8/2026): MASTER INDEXACION reventaba el cupo de Bing.** Confirmado contra la documentación oficial (`GetUrlSubmissionQuota`): el cupo de envío de URLs es **por sitio y chico** — el ejemplo de Microsoft devuelve `DailyQuota: 5, MonthlyQuota: 24`. El comentario de `submitBingUrl` afirmaba 10.000/día, cifra que corresponde a sitios grandes ya establecidos, no a los de estos clientes; ese comentario se corrigió. La ruta mandaba TODOS los artículos publicados cada vez (incluidos los ya enviados), de 10 en 10 en paralelo, sin consultar el cupo. Reescrita: (1) nuevo helper `getBingUrlQuota()` en `packages/shared/src/bing-webmaster.ts`; (2) no reenvía los que ya están en `bingIndexingStatus: "submitted"` — sí reintenta los que quedaron en `error`; (3) corta en el cupo disponible y devuelve `sinCupo` para que el usuario sepa cuántos quedaron esperando y que vuelva otro día; (4) envía **de a uno**, no 10 en paralelo. Esto último es lo que muy probablemente causaba el `InvalidToken` INTERMITENTE que documenta `apps/worker/src/bingIndexing.ts:14` (unos títulos sí y otros no dentro del mismo lote, con el mismo token — patrón de throttling/cupo, no de token inválido). Si la consulta de cupo falla no se aborta nada: se intenta igual, mismo criterio defensivo que el resto de la integración.
 - **Bug F — RESUELTO, de paso:** `BingWebmasterSection.tsx` leía `value.yaIndexados` de la respuesta de master-index, pero esa ruta nunca devolvía ese campo (había quedado de una versión que sí salteaba los ya enviados). Ahora la ruta lo devuelve de verdad y la pantalla muestra los tres números: enviados, ya enviados antes, y los que quedaron esperando cupo. Además la tarjeta de resultado salía verde diciendo "completada exitosamente" aunque se hubieran enviado 0 artículos por cupo agotado; ahora en ese caso sale ámbar con "Indexación masiva parcial". El texto del botón dejó de prometer "TODOS tus artículos" — decía algo que Bing no permite.
+- **CAUSA RAÍZ REAL DE TODO, ENCONTRADA Y RESUELTA (13/8/2026): la app OAuth de Bing fue registrada de nuevo el 12/8/2026 y nadie actualizó las credenciales.** Ni el `InvalidToken`, ni el `Client authentication failed`, ni las conexiones que se morían solas eran bugs de token: el `client_id` guardado en el sistema empezaba con `ef08df8a6f9341...` y el de la app real en Bing Webmaster Tools empieza con `74805d66325d4138...` — **son dos clientes OAuth distintos**. La pantalla de Bing (Settings → API Access → OAuth Client, app "AUTO ARTICULOS") muestra `Creation date: 12 August 2026`, o sea que se registró de cero el día anterior, mientras que las variables en Vercel databan del ~5/8. Eso explica de una sola causa por qué se rompieron a la vez las cuentas de Lorena Álvarez y de Julio Paso, por qué el refresh de un token viejo fallaba y por qué el canje de un código nuevo también.
+  - **Cómo se llegó, para no repetir el método equivocado:** el paso decisivo fue hacer que el callback mostrara en pantalla el error crudo de Bing (`?detalle=`) en vez de mandarlo solo a `console.error` — los logs de Vercel rotan en minutos y en tres sesiones nunca se llegó a leer ninguno, que es exactamente por qué se venía adivinando. Con eso, en un clic apareció `invalid_client: Client authentication failed.` en el canje del código. La deducción que lo cerró: Lorena **llegó a la pantalla de aprobación de Bing y aprobó**; Bing valida `client_id` y `redirect_uri` en ese paso, así que el problema tenía que estar en el `client_secret`, que se valida recién después. Al pedir la pantalla del OAuth Client apareció además el `client_id` distinto y la fecha de creación.
+  - **Acción de Milton:** actualizó `BING_WEBMASTER_CLIENT_ID` y `BING_WEBMASTER_CLIENT_SECRET` en Vercel (Production) y redistribuyó. **PENDIENTE Y NECESARIO:** actualizar esos mismos dos valores en los **GitHub repo secrets**, que todavía tienen los de la app vieja. Hasta que se haga, el worker (`worker.yml`, indexación de Bing por artículo) y el envío nocturno de sitemap (`daily-sitemaps.yml`) siguen usando credenciales muertas, aunque la web ya funcione.
+  - **Verificado tras el cambio:** la reconexión de Lorena completó, el selector cargó el sitio real (`https://www.segurosdesaludyvida.com/`) desde Bing y el sitemap se autodetectó. Falta todavía la prueba de MASTER INDEXACION BING con la conexión viva.
+- **Bug G — RESUELTO, detectado por Milton:** justo después de reconectar se mostraban DOS mensajes contradictorios a la vez, "Bing reconectado correctamente" en verde y "Tu conexión con Bing venció" en rojo. No era un problema de textos: la PRIMERA consulta a Bing con el token recién emitido falla, y al refrescar la página anda perfecto (confirmado por Milton con F5). Ahora, tras un `?bing=connected`, se reconsulta a los 2,5 segundos y mientras tanto se suprime el aviso de conexión vencida, que en ese instante es falso y mandaba a reconectar algo recién conectado.
+- **Decisión de producto de Milton (13/8/2026):** en Configuración **solo se muestran los envíos de sitemap EXITOSOS**, tanto en Bing como en Google. El aviso "✗ El último envío falló" se retiró de las dos pantallas: no es accionable para el usuario y lo único que provoca es que llame a soporte por algo que se resuelve del lado del sistema. Mismo criterio que el commit `c577508`. El error se sigue guardando en `SearchIntegration.lastSitemapSyncError` y en los logs, así que no se pierde información de diagnóstico.
+- **Commits de esta tanda:** `f397522` (credenciales del sitemap nocturno + reconexión sin salida), `b4fc007` (cupo de Bing en MASTER INDEXACION), `999b03f` (mostrar en pantalla el error real de Bing), `416ca84` (ocultar envíos fallidos + mensajes contradictorios). Todos pusheados a `main` y desplegados en producción, cada uno confirmado `Ready` en Vercel.
 - **Encontrado sin arreglar:** quedó un `apps/web/src/app/api/search-integrations/bing/callback/route.ts.bak` sin trackear, basura de una sesión anterior. No lo borré porque no lo creé yo (regla del tablero); ahora además está desactualizado respecto del archivo real. Milton decide si se elimina.
 
 ### Antigravity — reparación de Patricia Coy (lotes reanudables)
