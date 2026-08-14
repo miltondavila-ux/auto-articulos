@@ -9,13 +9,20 @@ const quickQuestions = [
 ];
 
 function renderAnswer(text: string) {
-  return text.split(/(https?:\/\/[^\s]+)/g).map((part, index) => (
-    /^https?:\/\//i.test(part) ? (
-      <a key={`${part}-${index}`} href={part} target="_blank" rel="noreferrer">
-        {part}
+  const parts = text.split(/(\[[^\]]+\]\(https?:\/\/[^\s)]+\)|https?:\/\/[^\s),.]+)/g);
+
+  return parts.map((part, index) => {
+    const markdownLink = part.match(/^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);
+    const url = markdownLink?.[2] ?? (/^https?:\/\//i.test(part) ? part : null);
+    if (!url) return part;
+
+    return (
+      <a key={`${url}-${index}`} className="assistant-module-link" href={url}>
+        {markdownLink?.[1] ?? "Abrir este módulo"}
+        <span aria-hidden="true">→</span>
       </a>
-    ) : part
-  ));
+    );
+  });
 }
 
 export default function FloatingAssistant() {
@@ -158,7 +165,8 @@ export default function FloatingAssistant() {
         .assistant-suggestions button:hover { border-color: #93c5fd; background: #eff6ff; transform: translateY(-1px); }
         .assistant-suggestions span { color: #2563eb; font-size: 15px; }
         .assistant-answer { max-height: 218px; overflow: auto; padding: 12px 13px; border-radius: 13px; color: #1e293b; background: #eaf2ff; white-space: pre-wrap; font-size: 13px; line-height: 1.55; }
-        .assistant-answer :global(a) { color: #1d4ed8; font-weight: 750; text-decoration: underline; text-underline-offset: 2px; }
+        .assistant-answer :global(.assistant-module-link) { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; box-sizing: border-box; margin: 8px 0; padding: 10px 11px; border: 1px solid #93c5fd; border-radius: 10px; color: #1d4ed8; background: #fff; font-weight: 750; text-decoration: none; cursor: pointer; }
+        .assistant-answer :global(.assistant-module-link:hover) { border-color: #2563eb; background: #eff6ff; }
         .assistant-typing { color: #475569; font-weight: 600; }
         .assistant-typing span { display: inline-block; width: 22px; overflow: hidden; vertical-align: bottom; animation: assistant-dots 1.2s steps(4, end) infinite; }
         .assistant-form { display: flex; align-items: flex-end; gap: 8px; padding: 8px 12px; border-top: 1px solid #e2e8f0; background: #fff; }
