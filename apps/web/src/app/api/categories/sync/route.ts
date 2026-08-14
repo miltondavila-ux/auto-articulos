@@ -3,6 +3,7 @@ import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
 import { triggerWorkerNow } from "@/lib/trigger-worker";
 import { hasTrialAccess } from "@/lib/trial";
+import { isStuckSyncJob, STUCK_SYNC_JOB_MESSAGE } from "@/lib/sync-jobs";
 
 export async function POST() {
   const userId = await getCurrentUserId();
@@ -37,11 +38,31 @@ export async function POST() {
     );
   }
 
-  const existingPending = await prisma.categorySyncJob.findFirst({
+  const existingActive = await prisma.categorySyncJob.findFirst({
     where: { userId, status: { in: ["pending", "running"] } },
+    orderBy: { createdAt: "desc" },
   });
-  if (existingPending) {
-    return NextResponse.json({ job: existingPending });
+
+  if (existingActive) {
+    if (!isStuckSyncJob(existingActive.createdAt)) {
+      // Sigue realmente en curso: se reutiliza en vez de encolar un duplicado.
+      // Se vuelve a empujar al worker porque el disparo anterior pudo perderse
+      // (ver triggerWorkerNow: no dispara si ya había una corrida activa, y esa
+      // corrida puede haber terminado su presupuesto sin llegar a este job).
+      await triggerWorkerNow();
+      return NextResponse.json({ job: existingActive });
+    }
+
+    // Job muerto: se descarta para que este clic pueda crear uno nuevo, en vez
+    // de devolver otra vez el que ya nunca va a terminar.
+    await prisma.categorySyncJob.updateMany({
+      where: { userId, status: { in: ["pending", "running"] } },
+      data: {
+        status: "error",
+        errorMessage: STUCK_SYNC_JOB_MESSAGE,
+        finishedAt: new Date(),
+      },
+    });
   }
 
   const job = await prisma.categorySyncJob.create({

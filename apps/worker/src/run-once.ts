@@ -58,65 +58,37 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function runTitleLane(deadline: number): Promise<boolean> {
+/**
+ * Corre una unidad de trabajo en bucle hasta agotar el presupuesto de tiempo.
+ *
+ * El try/catch es la parte importante, y viene de un bug real de producción
+ * (14/8/2026, corrida 31839053190): con 8 lanes por proceso compartiendo un
+ * pool de 5 conexiones de Prisma, una consulta puede fallar con P2024
+ * ("Timed out fetching a new connection from the connection pool"). Antes ese
+ * error subía hasta el `Promise.all` de main(), tumbaba el proceso ENTERO —
+ * los otros 7 lanes incluidos — y, al morir sin ejecutar los `finally`,
+ * dejaba jobs a medias en estado "running" que ya nadie volvía a tocar (ver
+ * recoverStuckSyncJobs en cleanup.ts). Un timeout de pool es transitorio: lo
+ * correcto es registrarlo, esperar y reintentar, no matar el shard.
+ */
+async function runLane(
+  laneName: string,
+  processOne: () => Promise<boolean>,
+  deadline: number,
+): Promise<boolean> {
   let didWork = false;
   while (Date.now() < deadline) {
-    const did = await processNext();
-    if (did) {
-      didWork = true;
-      continue;
-    }
-    await sleep(IDLE_DELAY_MS);
-  }
-  return didWork;
-}
-
-async function runSyncLane(deadline: number): Promise<boolean> {
-  let didWork = false;
-  while (Date.now() < deadline) {
-    const did = await processNextCategorySync();
-    if (did) {
-      didWork = true;
-      continue;
-    }
-    await sleep(IDLE_DELAY_MS);
-  }
-  return didWork;
-}
-
-async function runLanguageSyncLane(deadline: number): Promise<boolean> {
-  let didWork = false;
-  while (Date.now() < deadline) {
-    const did = await processNextLanguageSync();
-    if (did) {
-      didWork = true;
-      continue;
-    }
-    await sleep(IDLE_DELAY_MS);
-  }
-  return didWork;
-}
-
-async function runBusinessProfileLane(deadline: number): Promise<boolean> {
-  let didWork = false;
-  while (Date.now() < deadline) {
-    const did = await processNextBusinessProfilePost();
-    if (did) {
-      didWork = true;
-      continue;
-    }
-    await sleep(IDLE_DELAY_MS);
-  }
-  return didWork;
-}
-
-async function runSocialPublishLane(deadline: number): Promise<boolean> {
-  let didWork = false;
-  while (Date.now() < deadline) {
-    const did = await processNextSocialPublish();
-    if (did) {
-      didWork = true;
-      continue;
+    try {
+      const did = await processOne();
+      if (did) {
+        didWork = true;
+        continue;
+      }
+    } catch (err) {
+      console.error(
+        `Lane "${laneName}" falló en esta vuelta (se reintenta, el shard sigue vivo):`,
+        err,
+      );
     }
     await sleep(IDLE_DELAY_MS);
   }
@@ -146,19 +118,19 @@ async function main() {
 
   const results = await Promise.all([
     ...Array.from({ length: SYNC_LANE_CONCURRENCY }, () =>
-      runSyncLane(deadline),
+      runLane("categorías", processNextCategorySync, deadline),
     ),
     ...Array.from({ length: SYNC_LANE_CONCURRENCY }, () =>
-      runLanguageSyncLane(deadline),
+      runLane("idiomas", processNextLanguageSync, deadline),
     ),
     ...Array.from({ length: SYNC_LANE_CONCURRENCY }, () =>
-      runBusinessProfileLane(deadline),
+      runLane("perfil de negocio", processNextBusinessProfilePost, deadline),
     ),
     ...Array.from({ length: SYNC_LANE_CONCURRENCY }, () =>
-      runSocialPublishLane(deadline),
+      runLane("redes sociales", processNextSocialPublish, deadline),
     ),
     ...Array.from({ length: TITLE_LANE_CONCURRENCY }, () =>
-      runTitleLane(deadline),
+      runLane("títulos", processNext, deadline),
     ),
   ]);
   const didAnyWork = results.some(Boolean);

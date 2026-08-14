@@ -3,6 +3,7 @@ import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
 import { triggerWorkerNow } from "@/lib/trigger-worker";
 import { hasTrialAccess } from "@/lib/trial";
+import { isStuckSyncJob, STUCK_SYNC_JOB_MESSAGE } from "@/lib/sync-jobs";
 
 export async function POST() {
   const userId = await getCurrentUserId();
@@ -37,11 +38,27 @@ export async function POST() {
     );
   }
 
-  const existingPending = await prisma.languageSyncJob.findFirst({
+  const existingActive = await prisma.languageSyncJob.findFirst({
     where: { userId, status: { in: ["pending", "running"] } },
+    orderBy: { createdAt: "desc" },
   });
-  if (existingPending) {
-    return NextResponse.json({ job: existingPending });
+
+  if (existingActive) {
+    if (!isStuckSyncJob(existingActive.createdAt)) {
+      await triggerWorkerNow();
+      return NextResponse.json({ job: existingActive });
+    }
+
+    // Mismo desbloqueo que en /api/categories/sync: un job muerto no debe
+    // impedir que este clic encole un intento nuevo.
+    await prisma.languageSyncJob.updateMany({
+      where: { userId, status: { in: ["pending", "running"] } },
+      data: {
+        status: "error",
+        errorMessage: STUCK_SYNC_JOB_MESSAGE,
+        finishedAt: new Date(),
+      },
+    });
   }
 
   const job = await prisma.languageSyncJob.create({
