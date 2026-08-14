@@ -37,6 +37,7 @@ export async function getCurrentUser() {
       trialStartedAt: true,
       trialUnlocked: true,
       disabledModules: true,
+      hasImageCredits: true,
     },
   });
 }
