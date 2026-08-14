@@ -758,6 +758,34 @@ ejecutar de forma explícita y auditada después del despliegue.
 
 - **Capitán de migración liberó el lote:** Antigravity. Resultado: Lote coordinado desplegado a producción con éxito (`e5f9940`). Todas las migraciones aplicadas y typechecks limpios.
 
+### Claude — País del usuario nuevo y auto-selección del servidor .site/.net (14/8/2026)
+
+- **Agente:** Claude. **Estado:** `EN CURSO — SOLO LOCAL, SIN PUSH NI MIGRACIÓN`.
+- **Pedido de Milton (14/8/2026):** que **solo a los usuarios nuevos** se les
+  pregunte de qué país son; si el país es de **Europa**, el servidor de
+  10minutesWebsite se auto-selecciona a **`.site`**, y para el **resto del
+  mundo** a **`.net`**. Las cuentas existentes no se tocan ni se les pide país.
+- **Coordinación previa:** `scripts/migration-coordinator.sh status` → **no hay
+  capitán activo**. `git status --short` solo mostraba archivos ajenos sin
+  seguimiento (`MCP_ACCIONES_UNIVERSALES.md`, `diagnose-lorena-editor.js`,
+  `migration_add_permissions.sql`), que **no se tocan**. Último lote liberado:
+  Codex (`cd5b23e`, reparación de `hasImageCredits`).
+- **Reserva de archivos:**
+  - `apps/web/src/lib/countries.ts` (nuevo: lista de países + regla Europa→`.site`)
+  - `apps/web/src/app/api/auth/trial-signup/route.ts`
+  - `apps/web/src/app/api/admin/users/route.ts`
+  - `apps/web/src/app/login/page.tsx`
+  - `apps/web/src/app/dashboard/usuarios/page.tsx`
+  - Zona compartida declarada: `packages/db/prisma/schema.prisma` (una sola
+    línea nueva, `country String?`) y
+    `packages/db/prisma/migrations/20260814170000_add_user_country/`
+- **Riesgo declarado (aprendido del incidente del 14/8/2026):** el código nuevo
+  escribe `User.country`. Si se despliega en Vercel **antes** de que la base
+  tenga la columna, la creación de usuarios fallaría con `P2022`. Por eso la
+  migración y el despliegue deben ir en el **mismo lote**, con la base
+  actualizada primero. Claude **no** reclama capitanía, no hace push, no
+  ejecuta `db push` ni dispara `migrate.yml` sin autorización de Milton.
+
 ### Antigravity — Lote Coordinado: Validación Antifraude de Dominios/Trials, Pre-Validación Inteligente, Créditos de Imagen y Apple HIG (14/8/2026)
 
 - **Agente:** Antigravity (Capitán de migración).
