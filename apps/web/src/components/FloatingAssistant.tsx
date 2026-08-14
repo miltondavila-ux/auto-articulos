@@ -131,7 +131,7 @@ export default function FloatingAssistant() {
 
       <style jsx>{`
         .floating-assistant { position: fixed; right: 24px; bottom: 24px; z-index: 50; font-family: inherit; }
-        .assistant-panel { width: min(390px, calc(100vw - 32px)); margin: 0 0 14px; overflow: hidden; border: 1px solid rgba(148, 163, 184, .28); border-radius: 22px; background: #fff; box-shadow: 0 24px 70px rgba(15, 23, 42, .24); animation: assistant-enter .22s ease-out; }
+        .assistant-panel { display: flex; width: min(390px, calc(100vw - 32px)); height: min(570px, calc(100svh - 112px)); min-height: 430px; flex-direction: column; margin: 0 0 14px; overflow: hidden; border: 1px solid rgba(148, 163, 184, .28); border-radius: 22px; background: #fff; box-shadow: 0 24px 70px rgba(15, 23, 42, .24); animation: assistant-enter .22s ease-out; }
         .assistant-header { display: flex; align-items: flex-start; gap: 11px; padding: 18px 18px 17px; color: #fff; background: radial-gradient(circle at 86% 0%, #60a5fa 0, transparent 32%), linear-gradient(135deg, #172554, #1d4ed8); }
         .assistant-avatar, .assistant-launcher-icon { display: grid; flex: 0 0 auto; place-items: center; color: #1d4ed8; background: #fff; box-shadow: 0 4px 14px rgba(15, 23, 42, .18); }
         .assistant-avatar { width: 36px; height: 36px; border-radius: 12px; font-size: 20px; }
@@ -140,7 +140,7 @@ export default function FloatingAssistant() {
         .assistant-heading h2 { margin: 0; color: #fff; font-size: 18px; line-height: 1.2; font-weight: 800; letter-spacing: -.02em; }
         .assistant-heading p { margin: 4px 0 0; color: #dbeafe; font-size: 12px; }
         .assistant-close { width: 30px; height: 30px; padding: 0; border: 1px solid rgba(255,255,255,.25); border-radius: 9px; color: #fff; background: rgba(15, 23, 42, .16); font-size: 24px; line-height: 1; cursor: pointer; }
-        .assistant-content { padding: 17px 18px 12px; background: linear-gradient(180deg, #f8fbff, #fff); }
+        .assistant-content { min-height: 0; flex: 1; overflow-y: auto; padding: 17px 18px 12px; background: linear-gradient(180deg, #f8fbff, #fff); }
         .assistant-welcome { display: grid; gap: 4px; margin-bottom: 13px; color: #475569; font-size: 13px; line-height: 1.45; }
         .assistant-welcome strong { color: #172554; font-size: 14px; }
         .assistant-suggestions { display: grid; gap: 7px; }
@@ -165,7 +165,7 @@ export default function FloatingAssistant() {
         .assistant-launcher-copy strong { color: #fff; font-size: 13px; line-height: 1.2; }
         @keyframes assistant-enter { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes assistant-dots { to { width: 0; } }
-        @media (max-width: 560px) { .floating-assistant { right: 16px; bottom: 16px; } .assistant-panel { margin-bottom: 10px; } .assistant-launcher-copy small { display: none; } }
+        @media (max-width: 560px) { .floating-assistant { right: 16px; bottom: 16px; } .assistant-panel { width: calc(100vw - 32px); height: min(630px, calc(100svh - 88px)); min-height: 0; margin-bottom: 10px; border-radius: 20px; } .assistant-launcher-copy small { display: none; } }
       `}</style>
     </div>
   );
