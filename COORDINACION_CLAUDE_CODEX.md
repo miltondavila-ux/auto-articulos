@@ -485,6 +485,17 @@ ejecutar de forma explícita y auditada después del despliegue.
   errores. Falta cargar en producción el Client ID público y la redirect URI,
   desplegar y volver a ChatGPT con el ID; no existe secreto de ChatGPT que
   guardar porque el flujo usa PKCE y autenticación de token `none`.
+- **Producción configurada y verificada (13/8/2026):** commit
+  `192055f` (*Preparar MCP de ChatGPT con OAuth de solo lectura*) subido a
+  `main`, sin incluir los archivos ajenos sin seguimiento. Vercel tiene
+  `OAUTH_CHATGPT_CLIENT_ID=chatgpt-auto-articulos-v1` y la redirect URI de
+  ChatGPT en producción (variables no sensibles; no hay secreto). El deploy
+  `dpl_8M2NTfvmtdgtWYKeHKfFD8PbhNCD` quedó **Ready** y el alias canónico sigue
+  siendo `https://auto-articulos-web.vercel.app`. Prueba pública sin login ni
+  datos: una autorización PKCE para ese cliente respondió `307` hacia la
+  pantalla de consentimiento, lo que confirma client ID + redirect URI
+  válidos. Siguiente paso de Milton: ingresar únicamente ese Client ID en el
+  formulario de ChatGPT; dejar secreto vacío y método `none`.
 
 ## Reglas durante el trabajo
 
@@ -943,6 +954,14 @@ ejecutar de forma explícita y auditada después del despliegue.
   correcto y Vercel `dpl_x9nXxQF5vyQfocQSsYAVReEaU92f` en estado **Ready** con
   el alias de producción confirmado. **Capitán de migración liberó el lote:**
   Codex. Resultado: botones de enlace presionables desplegados; sin migración.
+- **Capitán de migración:** Codex — revisará y aplicará el lote completo.
+  Motivo: corrección urgente de URLs truncadas del asistente. Nadie más ejecuta
+  Prisma hasta su liberación.
+- **Fallo de URL reportado por Milton:** el patrón de enlaces excluía por error
+  los puntos, por lo que truncaba `auto-articulos-web.vercel.app` como
+  `https://auto-articulos-web/`. Se corrige para conservar puntos dentro del
+  dominio y retirar solo puntuación final de una oración. **SIGUIENTE ACCIÓN:**
+  typecheck y despliegue urgente; sin migración.
   estados y respuestas), sin cambiar permisos, API ni la regla de acceso
   activo. Se validará antes de enviarlo al próximo lote.
 - **Verificación completada:** `npm --prefix apps/web run typecheck`, el

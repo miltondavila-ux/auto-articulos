@@ -10,7 +10,6 @@ import {
 import type { CategoryRow, LanguageRow, RunRow } from "@/types/dashboard";
 
 interface OnboardingWizardProps {
-  /** Si se muestra dentro de la pestaña de Configuración o como tarjeta en Inicio */
   variant?: "standalone" | "embedded";
   onUpdated?: () => void;
 }
@@ -19,7 +18,6 @@ export default function OnboardingWizard({
   variant: _variant = "embedded",
   onUpdated,
 }: OnboardingWizardProps) {
-  // Datos y estados
   const [loading, setLoading] = useState(true);
   const [credentialsConfigured, setCredentialsConfigured] = useState(false);
   const [categories, setCategories] = useState<CategoryRow[]>([]);
@@ -32,8 +30,11 @@ export default function OnboardingWizard({
   } | null>(null);
   const [hasPublishedAny, setHasPublishedAny] = useState(false);
 
-  // Estados interactivos dentro del wizard
+  // Estados de edición manual para pasos completados
   const [editingCreds, setEditingCreds] = useState(false);
+  const [editingLang, setEditingLang] = useState(false);
+  const [editingGoogleSite, setEditingGoogleSite] = useState(false);
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [savingCreds, setSavingCreds] = useState(false);
@@ -46,7 +47,6 @@ export default function OnboardingWizard({
 
   const [message, setMessage] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
 
-  // Carga general de estado
   const loadAll = useCallback(async () => {
     try {
       const [credRes, catRes, langRes, meRes, googleRes, runsRes] =
@@ -156,7 +156,8 @@ export default function OnboardingWizard({
         return;
       }
       setContentLanguage(langId);
-      setMessage({ type: "success", text: "Idioma de redacción guardado con éxito." });
+      setEditingLang(false);
+      setMessage({ type: "success", text: "Idioma de redacción confirmado con éxito." });
       await loadAll();
       onUpdated?.();
     } finally {
@@ -196,7 +197,8 @@ export default function OnboardingWizard({
         setMessage({ type: "error", text: data.error || "Error al guardar el sitio de Google" });
         return;
       }
-      setMessage({ type: "success", text: "Sitio web de Google Search Console guardado con éxito." });
+      setEditingGoogleSite(false);
+      setMessage({ type: "success", text: "Sitio web de Google Search Console confirmado con éxito." });
       await loadAll();
       onUpdated?.();
     } finally {
@@ -204,14 +206,17 @@ export default function OnboardingWizard({
     }
   }
 
-  // Evaluación de pasos
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // EVALUACIÓN SECUENCIAL ESTRICTA
+  // Un paso SOLO está completado si los anteriores también lo están
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const step1Done = credentialsConfigured;
-  const step2Done = categories.length > 0;
-  const step3Done = Boolean(contentLanguage);
-  const step4Done = Boolean(googleData?.connected && googleData?.siteUrl);
-  const step5Done = hasPublishedAny;
+  const step2Done = step1Done && categories.length > 0;
+  const step3Done = step1Done && step2Done && Boolean(contentLanguage);
+  const step4Done = step1Done && step2Done && step3Done && Boolean(googleData?.connected && googleData?.siteUrl);
+  const step5Done = step1Done && step2Done && step3Done && step4Done && hasPublishedAny;
 
-  // Determinar paso activo (el primer paso no completado)
+  // Determinar paso activo exacto (1..5)
   let activeStep = 1;
   if (step1Done && !step2Done) activeStep = 2;
   else if (step1Done && step2Done && !step3Done) activeStep = 3;
@@ -222,6 +227,10 @@ export default function OnboardingWizard({
   const completedCoreSteps = [step1Done, step2Done, step3Done, step4Done].filter(Boolean).length;
   const allCoreDone = completedCoreSteps === totalCoreSteps;
   const progressPercent = Math.round((completedCoreSteps / totalCoreSteps) * 100);
+
+  const activeLangName =
+    languages.find((l) => l.externalId === contentLanguage)?.name ||
+    (contentLanguage === "es" ? "Español" : contentLanguage === "en" ? "Inglés" : contentLanguage);
 
   if (loading) {
     return (
@@ -318,7 +327,7 @@ export default function OnboardingWizard({
                 GUÍA PASO A PASO
               </span>
               <span style={{ fontSize: 13, opacity: 0.9 }}>
-                {completedCoreSteps} de {totalCoreSteps} pasos obligatorios listos ({progressPercent}%)
+                {completedCoreSteps} de {totalCoreSteps} pasos listos ({progressPercent}%)
               </span>
             </div>
             <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0, color: "#ffffff" }}>
@@ -327,11 +336,10 @@ export default function OnboardingWizard({
                 : "🚀 Configuración Inicial: Pon a punto tu cuenta"}
             </h2>
             <p style={{ margin: "6px 0 0", fontSize: 13, color: "#cbd5e1", maxWidth: 620 }}>
-              Sigue estos 4 pasos en orden para conectar tu web, tus categorías, tu idioma y Google Search Console.
+              Completa estos 4 pasos en orden para dejar tu plataforma 100% activa para redactar y posicionar artículos.
             </p>
           </div>
 
-          {/* Barra de progreso circular o mini barra */}
           <div style={{ minWidth: 160, textAlign: "right" }}>
             <div
               style={{
@@ -358,18 +366,19 @@ export default function OnboardingWizard({
           </div>
         </div>
 
-        {/* Lista Vertical de Pasos con Sombreado Dinámico */}
+        {/* Lista Vertical de Pasos */}
         <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
-          {/* ======================================================== */}
-          {/* PASO 1: 10minutesWebsite                                  */}
-          {/* ======================================================== */}
+
+          {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+          {/* PASO 1: 10minutesWebsite                               */}
+          {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
           <StepCard
             stepNumber={1}
             title="Conectar tu cuenta de 10minutesWebsite"
             subtitle="Ingresa el usuario y contraseña con los que entras a tu plataforma de 10minutesWebsite."
             isDone={step1Done}
             isActive={activeStep === 1}
-            badgeText={step1Done ? "Conectado" : "Paso 1 requerido"}
+            badgeText={step1Done ? "Conectado" : "Paso 1 en curso"}
           >
             {step1Done && !editingCreds ? (
               <div
@@ -387,18 +396,14 @@ export default function OnboardingWizard({
                 }}
               >
                 <div style={{ fontSize: 13, color: "#166534" }}>
-                  ✅ Tus credenciales de 10minutesWebsite están guardadas de forma segura y cifrada.
+                  ✅ Credenciales de 10minutesWebsite guardadas y verificadas de forma segura.
                 </div>
                 <button
                   type="button"
                   onClick={() => setEditingCreds(true)}
-                  style={{
-                    ...secondaryButtonStyle,
-                    fontSize: 12,
-                    padding: "6px 12px",
-                  }}
+                  style={{ ...secondaryButtonStyle, fontSize: 12, padding: "6px 12px" }}
                 >
-                  Cambiar credenciales
+                  Modificar
                 </button>
               </div>
             ) : (
@@ -420,7 +425,7 @@ export default function OnboardingWizard({
                     💡 ¿No tienes o no recuerdas tu contraseña de 10minutesWebsite?
                   </p>
                   <p style={{ margin: "0 0 8px 0" }}>
-                    No te preocupes. Puedes recuperarla o crear una nueva en segundos aquí:
+                    Puedes recuperarla o crear una nueva en segundos aquí:
                   </p>
                   <a
                     href="https://10minuteswebsite.net/dashboard/forgot-password.php"
@@ -442,7 +447,7 @@ export default function OnboardingWizard({
                     🔑 Resetear contraseña en 10minutesWebsite ↗
                   </a>
                   <p style={{ margin: "8px 0 0 0", fontSize: 12, color: "#3b82f6" }}>
-                    <strong>Recomendación práctica:</strong> Una vez generada o cambiada tu contraseña en 10minutesWebsite, copia y pega esa misma clave aquí abajo para que ambos sistemas queden sincronizados.
+                    <strong>Recomendación práctica:</strong> Al generar tu contraseña en 10minutesWebsite, copia y pega esa misma clave aquí para que ambos sistemas queden sincronizados.
                   </p>
                 </div>
 
@@ -498,7 +503,7 @@ export default function OnboardingWizard({
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {savingCreds ? "Guardando..." : "Guardar y Validar"}
+                      {savingCreds ? "Guardando..." : "Guardar y Continuar →"}
                     </button>
                     {step1Done && (
                       <button
@@ -515,240 +520,29 @@ export default function OnboardingWizard({
             )}
           </StepCard>
 
-          {/* ======================================================== */}
-          {/* PASO 2: Sincronizar Categorías                            */}
-          {/* ======================================================== */}
+          {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+          {/* PASO 2: Sincronizar Categorías                          */}
+          {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
           <StepCard
             stepNumber={2}
             title="Sincronizar las Categorías de tu Web"
-            subtitle="Auto Artículos debe leer las categorías reales creadas en tu sitio de 10minutesWebsite para saber dónde clasificar cada artículo."
+            subtitle="Auto Artículos descarga las categorías creadas en tu web de 10minutesWebsite para saber dónde clasificar los artículos."
             isDone={step2Done}
             isActive={activeStep === 2}
             badgeText={
               step2Done
-                ? `${categories.length} ${categories.length === 1 ? "categoría" : "categorías"} activas`
-                : "Paso 2 requerido"
+                ? `${categories.length} ${categories.length === 1 ? "categoría" : "categorías"} listas`
+                : activeStep === 2
+                  ? "Paso 2 en curso"
+                  : "Pendiente"
             }
           >
             <div style={{ marginTop: 10 }}>
               {!step1Done ? (
-                <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>
-                  🔒 Completa el Paso 1 (Credenciales de 10minutesWebsite) para desbloquear la sincronización de categorías.
+                <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>
+                  🔒 Este paso se desbloqueará automáticamente al completar el Paso 1.
                 </p>
-              ) : (
-                <div>
-                  {step2Done ? (
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        flexWrap: "wrap",
-                        gap: 12,
-                        padding: "10px 14px",
-                        background: "#f0fdf4",
-                        borderRadius: 8,
-                        border: "1px solid #bbf7d0",
-                        marginBottom: 10,
-                      }}
-                    >
-                      <div style={{ fontSize: 13, color: "#166534" }}>
-                        ✅ Se encontraron <strong>{categories.length} categorías</strong> sincronizadas listas para usar.
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleSyncCategories}
-                        disabled={syncingCategories}
-                        style={{ ...secondaryButtonStyle, fontSize: 12, padding: "6px 12px" }}
-                      >
-                        {syncingCategories ? "Sincronizando..." : "Volver a sincronizar"}
-                      </button>
-                    </div>
-                  ) : (
-                    <div
-                      style={{
-                        background: "#fffbeb",
-                        border: "1px solid #fef3c7",
-                        borderRadius: 8,
-                        padding: "12px 14px",
-                        marginBottom: 12,
-                      }}
-                    >
-                      <p style={{ margin: "0 0 10px 0", fontSize: 13, color: "#92400e" }}>
-                        Haz clic en el botón a continuación para que el sistema consulte tu sitio de 10minutesWebsite y descargue tus categorías automáticamente:
-                      </p>
-                      <button
-                        type="button"
-                        onClick={handleSyncCategories}
-                        disabled={syncingCategories}
-                        style={{
-                          background: "#2f5fdb",
-                          color: "#fff",
-                          border: "none",
-                          borderRadius: 8,
-                          padding: "10px 20px",
-                          fontSize: 13,
-                          fontWeight: 600,
-                          cursor: syncingCategories ? "not-allowed" : "pointer",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 8,
-                        }}
-                      >
-                        {syncingCategories ? "🔄 Conectando y descargando categorías..." : "⚡ Sincronizar mis Categorías Ahora"}
-                      </button>
-                    </div>
-                  )}
-
-                  {categories.length > 0 && (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-                      {categories.map((cat) => (
-                        <span
-                          key={cat.id}
-                          style={{
-                            background: "#e0f2fe",
-                            color: "#0369a1",
-                            fontSize: 12,
-                            padding: "3px 8px",
-                            borderRadius: 6,
-                            fontWeight: 500,
-                          }}
-                        >
-                          🏷️ {cat.name}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </StepCard>
-
-          {/* ======================================================== */}
-          {/* PASO 3: Idioma de Redacción                               */}
-          {/* ======================================================== */}
-          <StepCard
-            stepNumber={3}
-            title="Seleccionar el Idioma de Redacción"
-            subtitle="Indica el idioma en el que la Inteligencia Artificial debe redactar los artículos para tu sitio."
-            isDone={step3Done}
-            isActive={activeStep === 3}
-            badgeText={
-              step3Done
-                ? `Idioma: ${languages.find((l) => l.externalId === contentLanguage)?.name || contentLanguage}`
-                : "Paso 3 requerido"
-            }
-          >
-            <div style={{ marginTop: 10 }}>
-              {!step1Done ? (
-                <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>
-                  🔒 Completa el Paso 1 para desbloquear la configuración de idioma.
-                </p>
-              ) : (
-                <div>
-                  <p style={{ fontSize: 13, color: "#4b5563", margin: "0 0 10px 0" }}>
-                    Selecciona tu idioma principal. Si no ves tu idioma en la lista, puedes actualizar la lista desde tu cuenta de 10minutesWebsite.
-                  </p>
-
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
-                    <select
-                      value={contentLanguage}
-                      onChange={(e) => handleSaveLanguage(e.target.value)}
-                      disabled={savingLanguage}
-                      style={{
-                        ...inputStyle,
-                        maxWidth: 320,
-                        fontWeight: 600,
-                        color: contentLanguage ? "#1e40af" : "#6b7280",
-                        background: "#fff",
-                      }}
-                    >
-                      <option value="">-- Elige un idioma de redacción --</option>
-                      {languages.map((lang) => (
-                        <option key={lang.id} value={lang.externalId}>
-                          {lang.name}
-                        </option>
-                      ))}
-                    </select>
-
-                    <button
-                      type="button"
-                      onClick={handleSyncLanguagesList}
-                      disabled={syncingLanguages}
-                      style={{ ...secondaryButtonStyle, fontSize: 12, padding: "8px 12px" }}
-                      title="Descargar idiomas actualizados desde 10minutesWebsite"
-                    >
-                      {syncingLanguages ? "Sincronizando..." : "🔄 Recargar lista de idiomas"}
-                    </button>
-                  </div>
-
-                  {step3Done && (
-                    <p style={{ margin: "8px 0 0 0", fontSize: 12, color: "#15803d" }}>
-                      ✓ Todos tus artículos se generarán automáticamente en el idioma seleccionado.
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-          </StepCard>
-
-          {/* ======================================================== */}
-          {/* PASO 4: Google Search Console                             */}
-          {/* ======================================================== */}
-          <StepCard
-            stepNumber={4}
-            title="Conectar Google Search Console"
-            subtitle="Permite a Auto Artículos indexar tus artículos inmediatamente y analizar qué búsquedas te traen visitas."
-            isDone={step4Done}
-            isActive={activeStep === 4}
-            badgeText={step4Done ? "GSC Conectado" : "Paso 4"}
-          >
-            <div style={{ marginTop: 10 }}>
-              {/* Instrucción crucial solicitada por Milton */}
-              <div
-                style={{
-                  background: "#f8fafc",
-                  border: "1px solid #cbd5e1",
-                  borderRadius: 8,
-                  padding: "12px 14px",
-                  marginBottom: 12,
-                  fontSize: 13,
-                  color: "#334155",
-                  lineHeight: 1.5,
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700, color: "#0f172a", marginBottom: 4 }}>
-                  <span>🌐 Instrucción de conexión:</span>
-                </div>
-                <p style={{ margin: 0 }}>
-                  Abre tu <a href="https://search.google.com/search-console" target="_blank" rel="noreferrer" style={{ color: "#2563eb", fontWeight: 600 }}>Google Search Console ↗</a> en una pestaña al lado de tu navegador, asegúrate de que funciona y que lo tienes activado con la misma cuenta de Google dueña de tu sitio web, y luego conéctalo aquí:
-                </p>
-              </div>
-
-              {!googleData?.connected ? (
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                  <a
-                    href="/api/search-integrations/google/connect"
-                    style={{
-                      background: "#2f5fdb",
-                      color: "#fff",
-                      textDecoration: "none",
-                      borderRadius: 8,
-                      padding: "10px 20px",
-                      fontSize: 13,
-                      fontWeight: 600,
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 8,
-                    }}
-                  >
-                    🔗 Conectar Google Search Console con Google OAuth
-                  </a>
-                  <span style={{ fontSize: 12, color: "#64748b" }}>
-                    (Te pedirá permiso para verificar la propiedad de tu sitio y sitemaps)
-                  </span>
-                </div>
-              ) : (
+              ) : step2Done ? (
                 <div>
                   <div
                     style={{
@@ -761,64 +555,363 @@ export default function OnboardingWizard({
                       background: "#f0fdf4",
                       borderRadius: 8,
                       border: "1px solid #bbf7d0",
-                      marginBottom: 12,
+                      marginBottom: 8,
                     }}
                   >
                     <div style={{ fontSize: 13, color: "#166534" }}>
-                      ✅ Cuenta de Google vinculada. {googleData.siteUrl ? `Sitio activo: ${googleData.siteUrl}` : "Selecciona tu sitio a continuación:"}
+                      ✅ <strong>{categories.length} categorías</strong> sincronizadas y listas para publicar.
                     </div>
+                    <button
+                      type="button"
+                      onClick={handleSyncCategories}
+                      disabled={syncingCategories}
+                      style={{ ...secondaryButtonStyle, fontSize: 12, padding: "6px 12px" }}
+                    >
+                      {syncingCategories ? "Sincronizando..." : "Volver a sincronizar"}
+                    </button>
                   </div>
 
-                  {googleData.sites && googleData.sites.length > 0 && (
-                    <form onSubmit={handleSaveGoogleSite} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                      <select
-                        value={selectedGoogleSite}
-                        onChange={(e) => setSelectedGoogleSite(e.target.value)}
-                        style={{ ...inputStyle, maxWidth: 360, background: "#fff" }}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {categories.map((cat) => (
+                      <span
+                        key={cat.id}
+                        style={{
+                          background: "#e0f2fe",
+                          color: "#0369a1",
+                          fontSize: 12,
+                          padding: "3px 8px",
+                          borderRadius: 6,
+                          fontWeight: 500,
+                        }}
                       >
-                        <option value="">-- Selecciona la propiedad de tu sitio --</option>
-                        {googleData.sites.map((s) => (
-                          <option key={s.siteUrl} value={s.siteUrl}>
-                            {s.siteUrl}
+                        🏷️ {cat.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    background: "#eff6ff",
+                    border: "1px solid #bfdbfe",
+                    borderRadius: 8,
+                    padding: "14px 16px",
+                  }}
+                >
+                  <p style={{ margin: "0 0 10px 0", fontSize: 13, color: "#1e40af", fontWeight: 500 }}>
+                    Haz clic a continuación para conectar con tu cuenta de 10minutesWebsite y descargar tus categorías:
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleSyncCategories}
+                    disabled={syncingCategories}
+                    style={{
+                      background: "#2f5fdb",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: 8,
+                      padding: "10px 20px",
+                      fontSize: 13,
+                      fontWeight: 700,
+                      cursor: syncingCategories ? "not-allowed" : "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 8,
+                      boxShadow: "0 4px 12px rgba(47, 95, 219, 0.25)",
+                    }}
+                  >
+                    {syncingCategories ? "🔄 Conectando y descargando..." : "⚡ Sincronizar mis Categorías Ahora →"}
+                  </button>
+                </div>
+              )}
+            </div>
+          </StepCard>
+
+          {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+          {/* PASO 3: Idioma de Redacción                             */}
+          {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+          <StepCard
+            stepNumber={3}
+            title="Seleccionar el Idioma de Redacción"
+            subtitle="Indica el idioma en el que la Inteligencia Artificial debe redactar los artículos para tu sitio."
+            isDone={step3Done}
+            isActive={activeStep === 3}
+            badgeText={
+              step3Done
+                ? `Idioma: ${activeLangName}`
+                : activeStep === 3
+                  ? "Paso 3 en curso"
+                  : "Pendiente"
+            }
+          >
+            <div style={{ marginTop: 10 }}>
+              {!step2Done ? (
+                <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>
+                  🔒 Este paso se desbloqueará automáticamente al completar el Paso 2.
+                </p>
+              ) : step3Done && !editingLang ? (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: 12,
+                    padding: "10px 14px",
+                    background: "#f0fdf4",
+                    borderRadius: 8,
+                    border: "1px solid #bbf7d0",
+                  }}
+                >
+                  <div style={{ fontSize: 13, color: "#166534" }}>
+                    ✅ Idioma activo: <strong>{activeLangName}</strong>. Los artículos se generarán en este idioma.
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditingLang(true)}
+                    style={{ ...secondaryButtonStyle, fontSize: 12, padding: "6px 12px" }}
+                  >
+                    Cambiar idioma
+                  </button>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    background: "#eff6ff",
+                    border: "1px solid #bfdbfe",
+                    borderRadius: 8,
+                    padding: "14px 16px",
+                  }}
+                >
+                  <p style={{ fontSize: 13, color: "#1e40af", margin: "0 0 10px 0", fontWeight: 500 }}>
+                    Elige el idioma principal para tus artículos:
+                  </p>
+
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
+                    <select
+                      value={contentLanguage || "es"}
+                      onChange={(e) => handleSaveLanguage(e.target.value)}
+                      disabled={savingLanguage}
+                      style={{
+                        ...inputStyle,
+                        maxWidth: 320,
+                        fontWeight: 600,
+                        color: "#1e40af",
+                        background: "#fff",
+                      }}
+                    >
+                      {languages.length > 0 ? (
+                        languages.map((lang) => (
+                          <option key={lang.id} value={lang.externalId}>
+                            {lang.name}
                           </option>
-                        ))}
-                      </select>
+                        ))
+                      ) : (
+                        <>
+                          <option value="es">Español</option>
+                          <option value="en">Inglés</option>
+                        </>
+                      )}
+                    </select>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSaveLanguage(contentLanguage || "es")}
+                      disabled={savingLanguage}
+                      style={{
+                        background: "#2f5fdb",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 8,
+                        padding: "9px 16px",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        cursor: savingLanguage ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      {savingLanguage ? "Guardando..." : "Confirmar Idioma →"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleSyncLanguagesList}
+                      disabled={syncingLanguages}
+                      style={{ ...secondaryButtonStyle, fontSize: 12, padding: "8px 12px" }}
+                      title="Descargar idiomas actualizados desde 10minutesWebsite"
+                    >
+                      {syncingLanguages ? "Sincronizando..." : "🔄 Recargar lista"}
+                    </button>
+
+                    {step3Done && (
                       <button
-                        type="submit"
-                        disabled={savingGoogleSite || !selectedGoogleSite}
+                        type="button"
+                        onClick={() => setEditingLang(false)}
+                        style={{ ...secondaryButtonStyle, fontSize: 12, padding: "8px 12px" }}
+                      >
+                        Cancelar
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </StepCard>
+
+          {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+          {/* PASO 4: Google Search Console                           */}
+          {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+          <StepCard
+            stepNumber={4}
+            title="Conectar Google Search Console"
+            subtitle="Permite a Auto Artículos indexar tus artículos inmediatamente y analizar las búsquedas que te traen visitas."
+            isDone={step4Done}
+            isActive={activeStep === 4}
+            badgeText={
+              step4Done
+                ? "GSC Conectado"
+                : activeStep === 4
+                  ? "Paso 4 en curso"
+                  : "Pendiente"
+            }
+          >
+            <div style={{ marginTop: 10 }}>
+              {!step3Done ? (
+                <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>
+                  🔒 Este paso se desbloqueará automáticamente al completar el Paso 3.
+                </p>
+              ) : step4Done && !editingGoogleSite ? (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: 12,
+                    padding: "10px 14px",
+                    background: "#f0fdf4",
+                    borderRadius: 8,
+                    border: "1px solid #bbf7d0",
+                  }}
+                >
+                  <div style={{ fontSize: 13, color: "#166534" }}>
+                    ✅ Google Search Console conectado y activo en: <strong>{googleData?.siteUrl}</strong>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditingGoogleSite(true)}
+                    style={{ ...secondaryButtonStyle, fontSize: 12, padding: "6px 12px" }}
+                  >
+                    Cambiar sitio
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  {/* Instrucción explícita requerida por Milton */}
+                  <div
+                    style={{
+                      background: "#eff6ff",
+                      border: "1px solid #bfdbfe",
+                      borderRadius: 8,
+                      padding: "12px 14px",
+                      marginBottom: 12,
+                      fontSize: 13,
+                      color: "#1e40af",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    <p style={{ margin: "0 0 4px 0", fontWeight: 700 }}>
+                      🌐 Instrucción importante antes de conectar:
+                    </p>
+                    <p style={{ margin: 0 }}>
+                      Abre tu <a href="https://search.google.com/search-console" target="_blank" rel="noreferrer" style={{ color: "#2563eb", fontWeight: 700, textDecoration: "underline" }}>Google Search Console ↗</a> en una pestaña al lado de tu navegador, asegúrate de que funciona y que lo tienes activado con la misma cuenta de Google dueña de tu sitio web, y luego haz clic en el botón de abajo:
+                    </p>
+                  </div>
+
+                  {!googleData?.connected ? (
+                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                      <a
+                        href="/api/search-integrations/google/connect"
                         style={{
                           background: "#2f5fdb",
                           color: "#fff",
-                          border: "none",
+                          textDecoration: "none",
                           borderRadius: 8,
-                          padding: "9px 16px",
+                          padding: "10px 20px",
                           fontSize: 13,
-                          fontWeight: 600,
-                          cursor: savingGoogleSite || !selectedGoogleSite ? "not-allowed" : "pointer",
+                          fontWeight: 700,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 8,
+                          boxShadow: "0 4px 12px rgba(47, 95, 219, 0.25)",
                         }}
                       >
-                        {savingGoogleSite ? "Guardando..." : "Confirmar Sitio"}
-                      </button>
-                    </form>
+                        🔗 Conectar Google Search Console con Google OAuth →
+                      </a>
+                    </div>
+                  ) : (
+                    <div>
+                      {googleData.sites && googleData.sites.length > 0 && (
+                        <form onSubmit={handleSaveGoogleSite} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                          <select
+                            value={selectedGoogleSite}
+                            onChange={(e) => setSelectedGoogleSite(e.target.value)}
+                            style={{ ...inputStyle, maxWidth: 360, background: "#fff", color: "#0f172a" }}
+                          >
+                            <option value="">-- Selecciona la propiedad de tu sitio --</option>
+                            {googleData.sites.map((s) => (
+                              <option key={s.siteUrl} value={s.siteUrl}>
+                                {s.siteUrl}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="submit"
+                            disabled={savingGoogleSite || !selectedGoogleSite}
+                            style={{
+                              background: "#2f5fdb",
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: 8,
+                              padding: "9px 16px",
+                              fontSize: 13,
+                              fontWeight: 700,
+                              cursor: savingGoogleSite || !selectedGoogleSite ? "not-allowed" : "pointer",
+                            }}
+                          >
+                            {savingGoogleSite ? "Guardando..." : "Confirmar Sitio →"}
+                          </button>
+                        </form>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
             </div>
           </StepCard>
 
-          {/* ======================================================== */}
-          {/* PASO 5: META FINAL - PUBLICAR PRIMER ARTÍCULO            */}
-          {/* ======================================================== */}
+          {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+          {/* PASO 5: META FINAL - PUBLICAR PRIMER ARTÍCULO          */}
+          {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
           <StepCard
             stepNumber={5}
             title="¡Todo Listo! Publica tu Primer Artículo"
             subtitle="Tu plataforma está 100% calibrada para generar contenido optimizado e indexable."
             isDone={step5Done}
             isActive={activeStep === 5}
-            badgeText={step5Done ? "Artículos Publicados" : allCoreDone ? "¡Listo para empezar!" : "Paso final"}
+            badgeText={
+              step5Done
+                ? "Artículos Publicados"
+                : allCoreDone
+                  ? "¡Listo para empezar!"
+                  : "Pendiente"
+            }
           >
             <div style={{ marginTop: 10 }}>
-              {allCoreDone ? (
+              {!allCoreDone ? (
+                <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>
+                  🔒 Completa los 4 pasos anteriores para comenzar a publicar artículos automatizados.
+                </p>
+              ) : (
                 <div
                   style={{
                     background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
@@ -827,11 +920,11 @@ export default function OnboardingWizard({
                     padding: "16px 18px",
                   }}
                 >
-                  <p style={{ margin: "0 0 10px 0", fontSize: 14, fontWeight: 700, color: "#14532d" }}>
+                  <p style={{ margin: "0 0 8px 0", fontSize: 15, fontWeight: 800, color: "#14532d" }}>
                     🚀 ¡Felicitaciones! Has completado todos los pasos de configuración inicial.
                   </p>
                   <p style={{ margin: "0 0 14px 0", fontSize: 13, color: "#166534" }}>
-                    Ahora puedes ir al área de Publicar para pegar tus títulos, o explorar el módulo de Oportunidades para que la IA sugiera los mejores temas basados en Google Search Console.
+                    Ahora puedes publicar tus primeros títulos o explorar las oportunidades automáticas sugeridas por la IA.
                   </p>
                   <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                     <Link
@@ -867,10 +960,6 @@ export default function OnboardingWizard({
                     </Link>
                   </div>
                 </div>
-              ) : (
-                <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>
-                  🔒 Completa los 4 pasos anteriores para comenzar a publicar artículos de manera automatizada.
-                </p>
               )}
             </div>
           </StepCard>
@@ -880,12 +969,6 @@ export default function OnboardingWizard({
   );
 }
 
-/**
- * Componente Tarjeta de Paso con Sombreado Dinámico:
- * - isDone: fondo verde suave con check
- * - isActive: fondo blanco puro, borde azul, sombra y foco visual
- * - Inactivo/Futuro: atenuado (dessombreado, opacidad 0.6, fondo gris suave)
- */
 function StepCard({
   stepNumber,
   title,
@@ -1014,7 +1097,6 @@ function StepCard({
         )}
       </div>
 
-      {/* Contenido interactivo del paso (solo interactuable si no está pendiente/bloqueado o si ya está listo) */}
       <div style={{ marginTop: 6, paddingLeft: 44 }}>
         {children}
       </div>
