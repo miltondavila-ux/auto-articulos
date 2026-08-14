@@ -4,7 +4,11 @@ import { processNextCategorySync } from "./categorySync";
 import { processNextLanguageSync } from "./languageSync";
 import { processNextBusinessProfilePost } from "./businessProfilePublish";
 import { processNextSocialPublish } from "./socialPublish";
-import { cleanupOldEvents, recoverStuckTitles } from "./cleanup";
+import {
+  cleanupOldEvents,
+  recoverStuckTitles,
+  recoverStuckSyncJobs,
+} from "./cleanup";
 
 // Pensado para correr en un runner efímero (GitHub Actions), no como proceso
 // 24/7 como index.ts. Procesa todo el trabajo pendiente hasta que no quede
@@ -128,6 +132,12 @@ async function main() {
     if (recovered > 0) {
       console.log(
         `Recuperados ${recovered} título(s) atascado(s) en "processing".`,
+      );
+    }
+    const recoveredSyncJobs = await recoverStuckSyncJobs();
+    if (recoveredSyncJobs > 0) {
+      console.log(
+        `Recuperados ${recoveredSyncJobs} job(s) de sincronización atascado(s) en "running".`,
       );
     }
   }

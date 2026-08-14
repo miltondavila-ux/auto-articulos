@@ -77,3 +77,34 @@ export async function recoverStuckTitles(): Promise<number> {
   }
   return recovered;
 }
+
+// Mismo bug de fondo que recoverStuckTitles(), pero para CategorySyncJob y
+// LanguageSyncJob: si el worker muere a mitad de un job (confirmado en
+// producción el 14/8/2026, corrida 31839053190: "Timed out fetching a new
+// connection from the connection pool" cuando varios shards compitieron por
+// el pool de Postgres), el job queda en "running" para siempre — a
+// diferencia de Title, nada lo recupera. Es peor que quedar solo "atascado":
+// POST /api/categories/sync y /api/languages/sync reutilizan cualquier job
+// existente en estado "pending"/"running" en vez de crear uno nuevo, así que
+// un job muerto bloquea TODOS los reintentos futuros del usuario (cada click
+// en "Sincronizar" vuelve a mostrar el mismo job que nunca va a terminar).
+const STUCK_SYNC_JOB_MS = 10 * 60 * 1000; // 10 minutos
+
+export async function recoverStuckSyncJobs(): Promise<number> {
+  const cutoff = new Date(Date.now() - STUCK_SYNC_JOB_MS);
+  const message =
+    "El proceso se interrumpió de forma inesperada (posible caída del worker) y quedó atascado; vuelve a presionar el botón de sincronizar.";
+
+  const [categoryJobs, languageJobs] = await Promise.all([
+    prisma.categorySyncJob.updateMany({
+      where: { status: "running", createdAt: { lt: cutoff } },
+      data: { status: "error", errorMessage: message, finishedAt: new Date() },
+    }),
+    prisma.languageSyncJob.updateMany({
+      where: { status: "running", createdAt: { lt: cutoff } },
+      data: { status: "error", errorMessage: message, finishedAt: new Date() },
+    }),
+  ]);
+
+  return categoryJobs.count + languageJobs.count;
+}
