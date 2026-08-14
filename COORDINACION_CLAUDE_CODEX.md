@@ -579,6 +579,36 @@ ejecutar de forma explícita y auditada después del despliegue.
   `git diff --check` terminaron sin errores. Pendiente: desplegar y pulsar
   Actualizar de nuevo en ChatGPT; no usar ninguna acción hasta verificar los
   nuevos rótulos.
+- **Corrección de metadatos desplegada:** commit `9f99b27` subido a `main` y
+  deployment `dpl_Hjck1KgT6cj53ZjgjACdJdjrEMhQ` quedó **Ready** en producción
+  con el alias canónico. Siguiente paso único de Milton: pulsar
+  **Actualizar** nuevamente en el complemento conectado para recargar las
+  acciones desde el servidor; ninguna tool se ejecuta durante esa operación.
+- **Actualización solicitada por Milton:** Milton pulsó **Actualizar** en el
+  complemento conectado. Sigue pendiente la captura/resultados de las acciones
+  para confirmar que ChatGPT ya aplica las anotaciones de solo lectura; no se
+  debe invocar ninguna tool antes de esa confirmación visual.
+- **Resultado parcial de actualización:** la captura posterior confirma que
+  el complemento sigue conectado por OAuth a la URL canónica tras actualizar.
+  La vista está desplazada a metadatos/información y no muestra las etiquetas
+  de las acciones; Milton debe desplazarse hacia arriba dentro del panel para
+  validar visualmente la clasificación antes de llamar una tool.
+- **Validación visual completada — ChatGPT listo en solo lectura:** la
+  captura muestra `estado_de_publicaciones` con etiqueta **LEER**, sin
+  escritura ni destructivo, y `listar_oportunidades` también con etiqueta
+  **LEER**. Los dos únicos endpoints expuestos al token de ChatGPT están
+  correctamente clasificados y restringidos por `oportunidades:leer`; no hay
+  permiso de crear ni publicar. La integración ChatGPT ↔ Auto Artículos queda
+  operativa para consultas. Próximo paso opcional: prueba funcional no
+  mutante desde un chat nuevo con “Muestra el estado de mis publicaciones”.
+- **Prueba funcional completada (13/8/2026):** Milton ejecutó desde ChatGPT
+  la consulta de estado. ChatGPT confirmó que llamó a la herramienta y devolvió
+  datos reales: no hay publicación en curso; la última ejecución “Miami
+  Nuevos Clientes” terminó `success` con 1 título publicado/procesado. Esta
+  llamada es de solo lectura y no creó, modificó ni publicó contenido. Queda
+  verificada de extremo a extremo la conexión ChatGPT ↔ OAuth ↔ MCP ↔ datos
+  de Auto Artículos. Alexa+ continúa pendiente exclusivamente de la aprobación
+  de Amazon para MCP Toolkit; no se ha mezclado con esta integración.
 
 ## Reglas durante el trabajo
 
@@ -602,6 +632,19 @@ ejecutar de forma explícita y auditada después del despliegue.
   Codex debe quedar registrado aquí, también cuando sea una revisión,
   validación, coordinación o cambio de documentación y no implique código.
   El registro debe indicar qué se hizo, el resultado y cualquier bloqueo.
+- **Regla obligatoria de cierre: Actualizaciones + Manual + Asistente — orden
+  directa de Milton (13/8/2026):** al concluir cualquier función, arreglo o
+  cambio visible para una persona usuaria, el programador debe dejar en este
+  tablero: **qué hace**, **para quién**, **cómo se usa en pasos simples** y
+  **el módulo/ruta afectada**. Antes de declarar la entrega terminada debe
+  verificar que el cambio quedó como entrada en **Actualizaciones** y que el
+  **manual/conocimiento vivo del asistente** puede explicarlo con un enlace
+  completo y presionable al módulo. Para funciones nuevas o cambios de flujo,
+  se amplía además el manual base; para arreglos y novedades puntuales, el
+  registro vivo de Actualizaciones alimenta automáticamente al asistente. Un
+  cambio estrictamente interno se documenta aquí, pero no se publica a usuarios
+  ni se convierte en instrucción del manual. Nadie puede cerrar una tarea visible
+  sin completar esta cadena.
 - Cada agente modifica únicamente los archivos que declaró en su reserva.
 - Una reserva por carpeta incluye todos sus archivos, aunque no estén listados.
 - No usar `git add .` ni `git add -A`; agregar rutas explícitas.
