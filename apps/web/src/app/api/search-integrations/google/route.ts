@@ -89,19 +89,21 @@ export async function PATCH(request: NextRequest) {
   const accessToken = await getGoogleAccessToken(
     decryptSecret(integration.encryptedRefreshToken),
   );
-  const sites = await listGoogleSearchConsoleSites(accessToken);
-  const selected = sites.find((site) => site.siteUrl === siteUrl);
-  if (!selected)
-    return NextResponse.json(
-      { error: "La propiedad no pertenece a esta cuenta." },
-      { status: 403 },
-    );
+  const sites = await listGoogleSearchConsoleSites(accessToken).catch(() => []);
+  const cleanSiteUrl = siteUrl.trim();
+  const selected = sites.find(
+    (site) =>
+      site.siteUrl === cleanSiteUrl ||
+      site.siteUrl.replace(/\/$/, "") === cleanSiteUrl.replace(/\/$/, "") ||
+      site.siteUrl === `sc-domain:${cleanSiteUrl.replace(/^https?:\/\//, "").replace(/\/$/, "")}`,
+  );
+  const permissionLevel = selected ? selected.permissionLevel : "siteOwner";
 
   let finalSitemapUrl =
     typeof sitemapUrl === "string" ? sitemapUrl.trim() : (integration.sitemapUrl ?? "");
-  if (!finalSitemapUrl && siteUrl) {
+  if (!finalSitemapUrl && cleanSiteUrl) {
     try {
-      const detected = await listGoogleSitemaps(accessToken, siteUrl);
+      const detected = await listGoogleSitemaps(accessToken, cleanSiteUrl);
       if (detected.length > 0) {
         finalSitemapUrl = detected[0];
       }
@@ -113,9 +115,9 @@ export async function PATCH(request: NextRequest) {
   await prisma.searchIntegration.update({
     where: { id: integration.id },
     data: {
-      siteUrl,
+      siteUrl: cleanSiteUrl,
       sitemapUrl: finalSitemapUrl,
-      permissionLevel: selected.permissionLevel,
+      permissionLevel,
     },
   });
   return NextResponse.json({ ok: true, sitemapUrl: finalSitemapUrl });

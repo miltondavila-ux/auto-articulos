@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUserId } from "@/lib/current-user";
 import {
   GOOGLE_SCOPE,
@@ -7,11 +7,14 @@ import {
   googleOAuthConfig,
 } from "@/lib/google-oauth";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   await getCurrentUserId();
+  const returnTo = request.nextUrl.searchParams.get("returnTo") || "/dashboard";
+  const selectAccount = request.nextUrl.searchParams.get("prompt") === "select_account";
   try {
     const { clientId, redirectUri } = googleOAuthConfig();
-    const state = randomBytes(24).toString("base64url");
+    const stateObj = { nonce: randomBytes(16).toString("base64url"), returnTo };
+    const state = Buffer.from(JSON.stringify(stateObj)).toString("base64url");
     const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
     url.search = new URLSearchParams({
       client_id: clientId,
@@ -19,7 +22,7 @@ export async function GET() {
       response_type: "code",
       scope: GOOGLE_SCOPE,
       access_type: "offline",
-      prompt: "consent",
+      prompt: selectAccount ? "select_account consent" : "consent",
       include_granted_scopes: "true",
       state,
     }).toString();

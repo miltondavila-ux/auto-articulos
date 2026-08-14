@@ -18,3 +18,37 @@ export async function GET() {
 
   return NextResponse.json({ categories, lastSyncJob });
 }
+
+export async function POST(request: import("next/server").NextRequest) {
+  const userId = await getCurrentUserId();
+  const body = await request.json().catch(() => ({}));
+  const { name, externalId } = body;
+  if (!name || typeof name !== "string") {
+    return NextResponse.json({ error: "name es requerido" }, { status: 400 });
+  }
+  const cleanName = name.trim();
+  const cleanId =
+    typeof externalId === "string" && externalId.trim()
+      ? externalId.trim()
+      : cleanName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+  const category = await prisma.category.upsert({
+    where: {
+      userId_platform_externalId: {
+        userId,
+        platform: "10minutesWebsite",
+        externalId: cleanId,
+      },
+    },
+    create: {
+      userId,
+      platform: "10minutesWebsite",
+      externalId: cleanId,
+      name: cleanName,
+      isSequence: false,
+    },
+    update: { name: cleanName },
+  });
+
+  return NextResponse.json({ ok: true, category });
+}

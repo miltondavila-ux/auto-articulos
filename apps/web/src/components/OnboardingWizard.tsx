@@ -47,6 +47,11 @@ export default function OnboardingWizard({
   const [savingGoogleSite, setSavingGoogleSite] = useState(false);
   const [selectedGoogleSite, setSelectedGoogleSite] = useState("");
 
+  const [showManualCategory, setShowManualCategory] = useState(false);
+  const [manualCategoryName, setManualCategoryName] = useState("");
+  const [savingManualCategory, setSavingManualCategory] = useState(false);
+  const [customGoogleSite, setCustomGoogleSite] = useState(false);
+
   const [message, setMessage] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
 
   const loadAll = useCallback(async () => {
@@ -225,6 +230,33 @@ export default function OnboardingWizard({
       });
     } finally {
       setSyncingCategories(false);
+    }
+  }
+
+  async function handleSaveManualCategory(e: FormEvent) {
+    e.preventDefault();
+    const cleanName = manualCategoryName.trim();
+    if (!cleanName) return;
+    setSavingManualCategory(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: cleanName }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage({ type: "error", text: data.error || "Error al guardar la categoría." });
+        return;
+      }
+      setManualCategoryName("");
+      setShowManualCategory(false);
+      setMessage({ type: "success", text: `✅ Categoría "${cleanName}" agregada con éxito.` });
+      await loadAll();
+      onUpdated?.();
+    } finally {
+      setSavingManualCategory(false);
     }
   }
 
@@ -721,27 +753,87 @@ export default function OnboardingWizard({
                   <p style={{ margin: "0 0 10px 0", fontSize: 13, color: "#1e40af", fontWeight: 500 }}>
                     Haz clic a continuación para conectar con tu cuenta de 10minutesWebsite y descargar tus categorías:
                   </p>
-                  <button
-                    type="button"
-                    onClick={handleSyncCategories}
-                    disabled={syncingCategories}
-                    style={{
-                      background: "#2f5fdb",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: 8,
-                      padding: "10px 20px",
-                      fontSize: 13,
-                      fontWeight: 700,
-                      cursor: syncingCategories ? "not-allowed" : "pointer",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 8,
-                      boxShadow: "0 4px 12px rgba(47, 95, 219, 0.25)",
-                    }}
-                  >
-                    {syncingCategories ? "🔄 Conectando y descargando..." : "⚡ Sincronizar mis Categorías Ahora →"}
-                  </button>
+                  <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                    <button
+                      type="button"
+                      onClick={handleSyncCategories}
+                      disabled={syncingCategories}
+                      style={{
+                        background: "#2f5fdb",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 8,
+                        padding: "10px 20px",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        cursor: syncingCategories ? "not-allowed" : "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 8,
+                        boxShadow: "0 4px 12px rgba(47, 95, 219, 0.25)",
+                      }}
+                    >
+                      {syncingCategories ? "🔄 Conectando y descargando..." : "⚡ Sincronizar mis Categorías Ahora →"}
+                    </button>
+                  </div>
+
+                  <div style={{ marginTop: 12, borderTop: "1px dashed #bfdbfe", paddingTop: 10 }}>
+                    {!showManualCategory ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowManualCategory(true)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#2563eb",
+                          fontSize: 12,
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          textDecoration: "underline",
+                          padding: 0,
+                        }}
+                      >
+                        ➕ ¿Quieres agregar una categoría manualmente? Haz clic aquí
+                      </button>
+                    ) : (
+                      <form
+                        onSubmit={handleSaveManualCategory}
+                        style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}
+                      >
+                        <input
+                          type="text"
+                          placeholder="Ej: Noticias, Blog, Servicios..."
+                          value={manualCategoryName}
+                          onChange={(e) => setManualCategoryName(e.target.value)}
+                          disabled={savingManualCategory}
+                          style={{ ...inputStyle, maxWidth: 260, fontSize: 13, background: "#fff" }}
+                        />
+                        <button
+                          type="submit"
+                          disabled={savingManualCategory || !manualCategoryName.trim()}
+                          style={{
+                            background: "#2f5fdb",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: 8,
+                            padding: "8px 14px",
+                            fontSize: 13,
+                            fontWeight: 700,
+                            cursor: savingManualCategory || !manualCategoryName.trim() ? "not-allowed" : "pointer",
+                          }}
+                        >
+                          {savingManualCategory ? "Guardando..." : "Guardar Categoría"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowManualCategory(false)}
+                          style={{ ...secondaryButtonStyle, padding: "8px 12px", fontSize: 12 }}
+                        >
+                          Cancelar
+                        </button>
+                      </form>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -994,7 +1086,7 @@ export default function OnboardingWizard({
                   {!googleData?.connected ? (
                     <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                       <a
-                        href="/api/search-integrations/google/connect"
+                        href="/api/search-integrations/google/connect?returnTo=/dashboard"
                         style={{
                           background: "#2f5fdb",
                           color: "#fff",
@@ -1014,37 +1106,141 @@ export default function OnboardingWizard({
                     </div>
                   ) : (
                     <div>
-                      {googleData.sites && googleData.sites.length > 0 && (
-                        <form onSubmit={handleSaveGoogleSite} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                          <select
-                            value={selectedGoogleSite}
-                            onChange={(e) => setSelectedGoogleSite(e.target.value)}
-                            style={{ ...inputStyle, maxWidth: 360, background: "#fff", color: "#0f172a" }}
+                      {googleData.sites && googleData.sites.length > 0 && !customGoogleSite ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                          <form
+                            onSubmit={handleSaveGoogleSite}
+                            style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}
                           >
-                            <option value="">-- Selecciona la propiedad de tu sitio --</option>
-                            {googleData.sites.map((s) => (
-                              <option key={s.siteUrl} value={s.siteUrl}>
-                                {s.siteUrl}
-                              </option>
-                            ))}
-                          </select>
-                          <button
-                            type="submit"
-                            disabled={savingGoogleSite || !selectedGoogleSite}
-                            style={{
-                              background: "#2f5fdb",
-                              color: "#fff",
-                              border: "none",
-                              borderRadius: 8,
-                              padding: "9px 16px",
-                              fontSize: 13,
-                              fontWeight: 700,
-                              cursor: savingGoogleSite || !selectedGoogleSite ? "not-allowed" : "pointer",
-                            }}
+                            <select
+                              value={selectedGoogleSite}
+                              onChange={(e) => setSelectedGoogleSite(e.target.value)}
+                              style={{ ...inputStyle, maxWidth: 360, background: "#fff", color: "#0f172a" }}
+                            >
+                              <option value="">-- Selecciona la propiedad de tu sitio --</option>
+                              {googleData.sites.map((s) => (
+                                <option key={s.siteUrl} value={s.siteUrl}>
+                                  {s.siteUrl}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              type="submit"
+                              disabled={savingGoogleSite || !selectedGoogleSite}
+                              style={{
+                                background: "#2f5fdb",
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: 8,
+                                padding: "9px 16px",
+                                fontSize: 13,
+                                fontWeight: 700,
+                                cursor: savingGoogleSite || !selectedGoogleSite ? "not-allowed" : "pointer",
+                              }}
+                            >
+                              {savingGoogleSite ? "Guardando..." : "Confirmar Sitio →"}
+                            </button>
+                          </form>
+
+                          <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                            <button
+                              type="button"
+                              onClick={() => setCustomGoogleSite(true)}
+                              style={{
+                                background: "none",
+                                border: "none",
+                                color: "#2563eb",
+                                fontSize: 12,
+                                fontWeight: 600,
+                                cursor: "pointer",
+                                textDecoration: "underline",
+                                padding: 0,
+                              }}
+                            >
+                              ✏️ ¿No ves tu sitio? Ingresar URL manualmente
+                            </button>
+                            <a
+                              href="/api/search-integrations/google/connect?returnTo=/dashboard&prompt=select_account"
+                              style={{ ...secondaryButtonStyle, textDecoration: "none", fontSize: 12, padding: "6px 12px" }}
+                            >
+                              🔄 Cambiar cuenta de Google
+                            </a>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                          {(!googleData.sites || googleData.sites.length === 0) && (
+                            <div
+                              style={{
+                                background: "#fef3c7",
+                                border: "1px solid #fde047",
+                                borderRadius: 8,
+                                padding: "10px 14px",
+                                fontSize: 13,
+                                color: "#854d0e",
+                              }}
+                            >
+                              ⚠️ Tu cuenta de Google está vinculada, pero no tiene sitios listados en Google Search Console. Puedes ingresar la URL exacta de tu propiedad a continuación:
+                            </div>
+                          )}
+
+                          <form
+                            onSubmit={handleSaveGoogleSite}
+                            style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}
                           >
-                            {savingGoogleSite ? "Guardando..." : "Confirmar Sitio →"}
-                          </button>
-                        </form>
+                            <input
+                              type="text"
+                              placeholder="https://www.tusitio.com/ o sc-domain:tusitio.com"
+                              value={selectedGoogleSite}
+                              onChange={(e) => setSelectedGoogleSite(e.target.value)}
+                              disabled={savingGoogleSite}
+                              style={{ ...inputStyle, maxWidth: 360, background: "#fff", color: "#0f172a" }}
+                            />
+                            <button
+                              type="submit"
+                              disabled={savingGoogleSite || !selectedGoogleSite.trim()}
+                              style={{
+                                background: "#2f5fdb",
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: 8,
+                                padding: "9px 16px",
+                                fontSize: 13,
+                                fontWeight: 700,
+                                cursor: savingGoogleSite || !selectedGoogleSite.trim() ? "not-allowed" : "pointer",
+                              }}
+                            >
+                              {savingGoogleSite ? "Guardando..." : "Confirmar Sitio →"}
+                            </button>
+                          </form>
+
+                          <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                            {googleData.sites && googleData.sites.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => setCustomGoogleSite(false)}
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  color: "#2563eb",
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                  cursor: "pointer",
+                                  textDecoration: "underline",
+                                  padding: 0,
+                                }}
+                              >
+                                📋 Volver a la lista de sitios detectados
+                              </button>
+                            )}
+                            <a
+                              href="/api/search-integrations/google/connect?returnTo=/dashboard&prompt=select_account"
+                              style={{ ...secondaryButtonStyle, textDecoration: "none", fontSize: 12, padding: "6px 12px" }}
+                            >
+                              🔄 Cambiar cuenta de Google
+                            </a>
+                          </div>
+                        </div>
                       )}
                     </div>
                   )}

@@ -44,9 +44,19 @@ export async function GET(request: NextRequest) {
       },
       update: { encryptedRefreshToken: encryptSecret(token.refresh_token) },
     });
-    const response = NextResponse.redirect(
-      new URL("/dashboard/configuracion?google=connected", request.url),
-    );
+    let returnTo = "/dashboard";
+    try {
+      const parsedState = JSON.parse(Buffer.from(state, "base64url").toString("utf8"));
+      if (parsedState.returnTo && typeof parsedState.returnTo === "string") {
+        returnTo = parsedState.returnTo;
+      }
+    } catch {
+      // fallback a /dashboard
+    }
+
+    const redirectTarget = new URL(returnTo, request.url);
+    redirectTarget.searchParams.set("google", "connected");
+    const response = NextResponse.redirect(redirectTarget);
     response.cookies.delete(GOOGLE_STATE_COOKIE);
     return response;
   } catch {
