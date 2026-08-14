@@ -1,5 +1,6 @@
 import { prisma } from "@auto-articulos/db";
 import { BASE_USER_MANUAL } from "@/content/manual-usuario";
+import { SYSTEM_MODULES } from "@/lib/modules";
 
 type ManualUpdate = {
   date: Date;
@@ -43,9 +44,19 @@ export async function getUserManualKnowledge(): Promise<string> {
   return [
     "MANUAL BASE DE USO",
     BASE_USER_MANUAL,
+    getModuleCatalogKnowledge(),
     "REGISTRO VIVO (información más reciente)",
     liveKnowledge,
   ].join("\n\n====================\n\n");
+}
+
+/** Catálogo vigente: evita que el asistente olvide un módulo al cambiar la navegación. */
+function getModuleCatalogKnowledge(): string {
+  return [
+    "CATÁLOGO VIGENTE DE MÓDULOS",
+    "Usa estos nombres, descripciones y rutas confirmadas cuando la persona pregunte dónde realizar una acción.",
+    ...SYSTEM_MODULES.map((module) => `Módulo: ${module.label}\nRuta: ${module.href}\nUso: ${module.description}`),
+  ].join("\n\n");
 }
 
 /** Exportada para pruebas sin requerir una conexión a la base de datos. */

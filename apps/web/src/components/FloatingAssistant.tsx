@@ -148,8 +148,8 @@ export default function FloatingAssistant() {
       </button>
 
       <style jsx>{`
-        .floating-assistant { position: fixed; right: 24px; bottom: 24px; z-index: 50; font-family: inherit; }
-        .assistant-panel { display: flex; width: min(390px, calc(100vw - 32px)); height: min(570px, calc(100svh - 112px)); min-height: 430px; flex-direction: column; margin: 0 0 14px; overflow: hidden; border: 1px solid rgba(148, 163, 184, .28); border-radius: 22px; background: #fff; box-shadow: 0 24px 70px rgba(15, 23, 42, .24); animation: assistant-enter .22s ease-out; }
+        .floating-assistant { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); z-index: 100; font-family: inherit; }
+        .assistant-panel { display: flex; width: min(440px, calc(100vw - 32px)); height: min(680px, calc(100dvh - 112px)); min-height: 460px; flex-direction: column; margin: 0 0 14px; overflow: hidden; border: 1px solid rgba(148, 163, 184, .28); border-radius: 22px; background: #fff; box-shadow: 0 24px 70px rgba(15, 23, 42, .24); animation: assistant-enter .22s ease-out; }
         .assistant-header { display: flex; align-items: flex-start; gap: 11px; padding: 18px 18px 17px; color: #fff; background: radial-gradient(circle at 86% 0%, #60a5fa 0, transparent 32%), linear-gradient(135deg, #172554, #1d4ed8); }
         .assistant-avatar, .assistant-launcher-icon { display: grid; flex: 0 0 auto; place-items: center; color: #1d4ed8; background: #fff; box-shadow: 0 4px 14px rgba(15, 23, 42, .18); }
         .assistant-avatar { width: 36px; height: 36px; border-radius: 12px; font-size: 20px; }
@@ -165,7 +165,7 @@ export default function FloatingAssistant() {
         .assistant-suggestions button { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 10px 11px; border: 1px solid #dbeafe; border-radius: 11px; color: #1e3a8a; background: #fff; text-align: left; font-size: 12px; font-weight: 650; cursor: pointer; transition: .16s ease; }
         .assistant-suggestions button:hover { border-color: #93c5fd; background: #eff6ff; transform: translateY(-1px); }
         .assistant-suggestions span { color: #2563eb; font-size: 15px; }
-        .assistant-answer { max-height: 218px; overflow: auto; padding: 12px 13px; border-radius: 13px; color: #1e293b; background: #eaf2ff; white-space: pre-wrap; font-size: 13px; line-height: 1.55; }
+        .assistant-answer { min-height: 0; overflow: auto; padding: 12px 13px; border-radius: 13px; color: #1e293b; background: #eaf2ff; white-space: pre-wrap; font-size: 13px; line-height: 1.55; }
         .assistant-answer :global(.assistant-module-link) { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; box-sizing: border-box; margin: 8px 0; padding: 10px 11px; border: 1px solid #93c5fd; border-radius: 10px; color: #1d4ed8; background: #fff; font-weight: 750; text-decoration: none; cursor: pointer; }
         .assistant-answer :global(.assistant-module-link:hover) { border-color: #2563eb; background: #eff6ff; }
         .assistant-typing { color: #475569; font-weight: 600; }
@@ -173,7 +173,7 @@ export default function FloatingAssistant() {
         .assistant-form { display: flex; align-items: flex-end; gap: 8px; padding: 8px 12px; border-top: 1px solid #e2e8f0; background: #fff; }
         .assistant-form textarea { min-width: 0; flex: 1; resize: none; border: 0; outline: 0; color: #0f172a; background: transparent; font: inherit; font-size: 13px; line-height: 1.45; }
         .assistant-form textarea::placeholder { color: #94a3b8; }
-        .assistant-form button { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border: 0; border-radius: 10px; color: #fff; background: #2563eb; font-size: 20px; font-weight: 700; cursor: pointer; transition: .16s ease; }
+        .assistant-form button { display: grid; width: 42px; height: 42px; flex: 0 0 auto; place-items: center; border: 0; border-radius: 12px; color: #fff; background: #2563eb; font-size: 20px; font-weight: 700; cursor: pointer; transition: .16s ease; }
         .assistant-form button:disabled { opacity: .42; cursor: not-allowed; }
         .assistant-form button:not(:disabled):hover { background: #1d4ed8; transform: translateY(-1px); }
         .assistant-hint { margin: 0; padding: 0 14px 11px; color: #94a3b8; background: #fff; font-size: 10px; text-align: center; }
@@ -185,7 +185,7 @@ export default function FloatingAssistant() {
         .assistant-launcher-copy strong { color: #fff; font-size: 13px; line-height: 1.2; }
         @keyframes assistant-enter { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes assistant-dots { to { width: 0; } }
-        @media (max-width: 560px) { .floating-assistant { right: 16px; bottom: 16px; } .assistant-panel { width: calc(100vw - 32px); height: min(630px, calc(100svh - 88px)); min-height: 0; margin-bottom: 10px; border-radius: 20px; } .assistant-launcher-copy small { display: none; } }
+        @media (max-width: 560px) { .floating-assistant { right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); left: max(12px, env(safe-area-inset-left)); } .assistant-panel { width: 100%; height: calc(100dvh - 88px); min-height: 0; max-height: 720px; margin-bottom: 10px; border-radius: 20px; } .assistant-header { padding: 16px; } .assistant-content { padding: 15px 16px 10px; } .assistant-suggestions button { min-height: 44px; } .assistant-launcher { margin-left: auto; min-height: 48px; } .assistant-launcher-copy small { display: none; } .assistant-hint { display: none; } }
       `}</style>
     </div>
   );
