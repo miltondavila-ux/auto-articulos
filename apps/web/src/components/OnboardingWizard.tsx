@@ -775,9 +775,51 @@ export default function OnboardingWizard({
             }
           >
             <div style={{ marginTop: 10 }}>
+              {/* Bloque del video tutorial: SIEMPRE VISIBLE */}
+              <div
+                style={{
+                  background: "#eff6ff",
+                  border: "1px solid #bfdbfe",
+                  borderRadius: 8,
+                  padding: "14px 16px",
+                  marginBottom: 14,
+                  fontSize: 13,
+                  color: "#1e40af",
+                  lineHeight: 1.5,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                  <span style={{ fontSize: 16 }}>📺</span>
+                  <strong style={{ fontSize: 14, color: "#0f172a" }}>¿No tienes el Google Search Console?</strong>
+                </div>
+                <p style={{ margin: "0 0 10px 0", fontSize: 13, color: "#334155" }}>
+                  Aprende cómo activarte paso a paso con este video tutorial:
+                </p>
+                <a
+                  href="https://youtu.be/c9aOFmvaHHo?si=0K0XfnbJPE2j8OMt&t=5"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    background: "#dc2626",
+                    color: "#ffffff",
+                    textDecoration: "none",
+                    padding: "8px 14px",
+                    borderRadius: 6,
+                    fontWeight: 700,
+                    fontSize: 13,
+                    boxShadow: "0 2px 6px rgba(220, 38, 38, 0.25)",
+                  }}
+                >
+                  ▶️ Ver video: Cómo activar Google Search Console ↗
+                </a>
+              </div>
+
               {!step3Done ? (
                 <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>
-                  🔒 Este paso se desbloqueará automáticamente al completar el Paso 3.
+                  🔒 El botón de conexión se desbloqueará automáticamente al completar el Paso 3.
                 </p>
               ) : (
                 <div>
@@ -811,59 +853,22 @@ export default function OnboardingWizard({
 
                   <div
                     style={{
-                      background: "#eff6ff",
-                      border: "1px solid #bfdbfe",
+                      background: "#f8fafc",
+                      border: "1px solid #cbd5e1",
                       borderRadius: 8,
                       padding: "12px 14px",
                       marginBottom: 12,
                       fontSize: 13,
-                      color: "#1e40af",
+                      color: "#334155",
                       lineHeight: 1.5,
                     }}
                   >
                     <p style={{ margin: "0 0 4px 0", fontWeight: 700 }}>
-                      🌐 Instrucción importante antes de conectar:
+                      🌐 Instrucción antes de conectar:
                     </p>
-                    <p style={{ margin: "0 0 10px 0" }}>
+                    <p style={{ margin: 0 }}>
                       Abre tu <a href="https://search.google.com/search-console" target="_blank" rel="noreferrer" style={{ color: "#2563eb", fontWeight: 700, textDecoration: "underline" }}>Google Search Console ↗</a> en una pestaña al lado de tu navegador, asegúrate de que funciona y que lo tienes activado con la misma cuenta de Google dueña de tu sitio web, y luego haz clic en el botón de abajo.
                     </p>
-
-                    <div
-                      style={{
-                        background: "#ffffff",
-                        border: "1px solid #dbeafe",
-                        borderRadius: 6,
-                        padding: "10px 12px",
-                        marginTop: 8,
-                      }}
-                    >
-                      <p style={{ margin: "0 0 4px 0", fontWeight: 700, color: "#0f172a", fontSize: 13 }}>
-                        📺 ¿No tienes el Google Search Console?
-                      </p>
-                      <p style={{ margin: "0 0 8px 0", fontSize: 12, color: "#475569" }}>
-                        Aprende cómo activarte paso a paso con este video tutorial:
-                      </p>
-                      <a
-                        href="https://youtu.be/c9aOFmvaHHo?si=0K0XfnbJPE2j8OMt&t=5"
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 6,
-                          background: "#dc2626",
-                          color: "#ffffff",
-                          textDecoration: "none",
-                          padding: "6px 12px",
-                          borderRadius: 6,
-                          fontWeight: 700,
-                          fontSize: 12,
-                          boxShadow: "0 2px 6px rgba(220, 38, 38, 0.2)",
-                        }}
-                      >
-                        ▶️ Ver video: Cómo activar Google Search Console ↗
-                      </a>
-                    </div>
                   </div>
 
                   {!googleData?.connected ? (
