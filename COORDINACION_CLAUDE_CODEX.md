@@ -758,12 +758,12 @@ ejecutar de forma explícita y auditada después del despliegue.
 
 ## Trabajo activo
 
-- **Capitán de migración:** Antigravity — revisará y aplicará el lote completo. Motivo: Validacion antifraude de dominios en trials, pre-validacion inteligente y despliegue a produccion. Nadie más ejecuta Prisma hasta su liberación.
+- **Capitán de migración liberó el lote:** Antigravity. Resultado: Lote coordinado desplegado a producción con éxito (`e5f9940`). Todas las migraciones aplicadas y typechecks limpios.
 
 ### Antigravity — Lote Coordinado: Validación Antifraude de Dominios/Trials, Pre-Validación Inteligente, Créditos de Imagen y Apple HIG (14/8/2026)
 
 - **Agente:** Antigravity (Capitán de migración).
-- **Estado:** `APLICADO Y VERIFICADO LOCALMENTE — LISTO PARA PUSH Y DESPLIEGUE A PRODUCCIÓN` (14/8/2026).
+- **Estado:** `DESPLEGADO Y VERIFICADO EN PRODUCCIÓN` (14/8/2026).
 - **Objetivo:**
   1. Validación antifraude de dominios y cuentas en Trials para evitar que un usuario registre múltiples correos reutilizando la misma cuenta de 10minutesWebsite o dominio web.
   2. Guía activa y checklist en PreValidationGuard para `/dashboard/publicar` y `/dashboard/oportunidades`.
