@@ -26,6 +26,7 @@ export default function OnboardingWizard({
   const [googleData, setGoogleData] = useState<{
     connected: boolean;
     siteUrl?: string | null;
+    sitemapUrl?: string | null;
     sites?: { siteUrl: string; permissionLevel: string }[];
   } | null>(null);
   const [hasPublishedAny, setHasPublishedAny] = useState(false);
@@ -78,7 +79,11 @@ export default function OnboardingWizard({
       if (googleRes.ok) {
         const data = await googleRes.json();
         setGoogleData(data);
-        if (data.siteUrl) setSelectedGoogleSite(data.siteUrl);
+        if (data.siteUrl) {
+          setSelectedGoogleSite(data.siteUrl);
+        } else if (data.sites && data.sites.length > 0) {
+          setSelectedGoogleSite(data.sites[0].siteUrl);
+        }
       }
       if (runsRes.ok) {
         const data = await runsRes.json();
@@ -184,13 +189,21 @@ export default function OnboardingWizard({
 
   async function handleSaveGoogleSite(e: FormEvent) {
     e.preventDefault();
+    const siteToSave = selectedGoogleSite || googleData?.sites?.[0]?.siteUrl;
+    if (!siteToSave) {
+      setMessage({ type: "error", text: "Por favor selecciona un sitio web." });
+      return;
+    }
     setSavingGoogleSite(true);
     setMessage(null);
     try {
       const res = await fetch("/api/search-integrations/google", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ siteUrl: selectedGoogleSite }),
+        body: JSON.stringify({
+          siteUrl: siteToSave,
+          sitemapUrl: googleData?.sitemapUrl || "",
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {

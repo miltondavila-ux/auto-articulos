@@ -77,8 +77,8 @@ export async function GET() {
 export async function PATCH(request: NextRequest) {
   const userId = await getCurrentUserId();
   const { siteUrl, sitemapUrl } = await request.json();
-  if (typeof siteUrl !== "string" || typeof sitemapUrl !== "string") {
-    return NextResponse.json({ error: "Datos inválidos." }, { status: 400 });
+  if (typeof siteUrl !== "string" || !siteUrl.trim()) {
+    return NextResponse.json({ error: "Datos inválidos: siteUrl es requerido." }, { status: 400 });
   }
   const integration = await integrationFor(userId);
   if (!integration)
@@ -96,15 +96,29 @@ export async function PATCH(request: NextRequest) {
       { error: "La propiedad no pertenece a esta cuenta." },
       { status: 403 },
     );
+
+  let finalSitemapUrl =
+    typeof sitemapUrl === "string" ? sitemapUrl.trim() : (integration.sitemapUrl ?? "");
+  if (!finalSitemapUrl && siteUrl) {
+    try {
+      const detected = await listGoogleSitemaps(accessToken, siteUrl);
+      if (detected.length > 0) {
+        finalSitemapUrl = detected[0];
+      }
+    } catch {
+      // no bloquear
+    }
+  }
+
   await prisma.searchIntegration.update({
     where: { id: integration.id },
     data: {
       siteUrl,
-      sitemapUrl: sitemapUrl.trim(),
+      sitemapUrl: finalSitemapUrl,
       permissionLevel: selected.permissionLevel,
     },
   });
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, sitemapUrl: finalSitemapUrl });
 }
 
 export async function DELETE() {

@@ -1215,6 +1215,33 @@ ejecutar de forma explícita y auditada después del despliegue.
   `git diff --check`. Vercel `dpl_6xmXLzboxw7XT2WgLQQgQHbHrPij` está **Ready**
   en producción. **Capitán de migración liberó el lote:** Codex. Resultado:
   manual vivo ampliado y motor de actualizaciones reforzado; sin migración.
+- **Capitán de migración:** Codex — revisará y aplicará el lote completo.
+  Motivo: reparación responsive y actualización de conocimiento del asistente.
+  Nadie más ejecuta Prisma hasta su liberación.
+- **Arreglo urgente solicitado por Milton:** auditoría del componente detectó
+  que las respuestas tenían un límite visual fijo, haciendo que el panel no
+  aprovechara la altura móvil. Se reemplaza por altura dinámica con `dvh`,
+  márgenes seguros, objetivos táctiles de al menos 42 px y respuesta desplazable
+  dentro del alto disponible. El contexto del asistente añade además el catálogo
+  vivo de módulos desde `SYSTEM_MODULES`, junto con el manual base y
+  `ProductUpdate`; así conoce siempre la navegación vigente y las novedades.
+  **ÁREAS RESERVADAS:** `FloatingAssistant.tsx` y `user-manual.ts`.
+  **SIGUIENTE ACCIÓN:** typecheck y despliegue coordinado; sin migración.
+- **Refinamiento responsive pedido por Milton:** el flotante móvil se fija a
+  los bordes seguros con un layout estable, usa `svh` para que la barra del
+  navegador no recalcule su alto mientras se usa, bloquea el rebote del scroll
+  hacia la página de fondo y elimina cualquier desplazamiento horizontal en la
+  apertura. Los objetivos táctiles quedan en 44–48 px y se respeta la
+  preferencia del sistema para reducir animaciones. **ÁREA RESERVADA:**
+  `FloatingAssistant.tsx`. **SIGUIENTE ACCIÓN:** typecheck y despliegue urgente.
+- **Entrega responsive urgente (Codex):** commits `386a5ff` y `a76b028`:
+  typecheck correcto; el chat móvil quedó anclado al viewport seguro, sin
+  movimiento horizontal, con scroll interno contenido y objetivos táctiles
+  amplios. El contexto ahora combina manual base, catálogo vigente de módulos
+  y Actualizaciones. Vercel confirmó producción **Ready** en
+  `dpl_FDDLuHk2dcCQUQ2mJ96hjMHqohGj`. **Capitán de migración liberó el lote:**
+  Codex. Resultado: chat móvil estable y contexto de módulos actualizado; sin
+  migración. Se excluyeron todos los cambios activos de otros agentes.
   estados y respuestas), sin cambiar permisos, API ni la regla de acceso
   activo. Se validará antes de enviarlo al próximo lote.
 - **Verificación completada:** `npm --prefix apps/web run typecheck`, el
