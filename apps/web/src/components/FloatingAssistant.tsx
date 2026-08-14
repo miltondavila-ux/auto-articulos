@@ -149,7 +149,7 @@ export default function FloatingAssistant() {
 
       <style jsx>{`
         .floating-assistant { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); z-index: 100; font-family: inherit; }
-        .assistant-panel { display: flex; width: min(440px, calc(100vw - 32px)); height: min(680px, calc(100dvh - 112px)); min-height: 460px; flex-direction: column; margin: 0 0 14px; overflow: hidden; border: 1px solid rgba(148, 163, 184, .28); border-radius: 22px; background: #fff; box-shadow: 0 24px 70px rgba(15, 23, 42, .24); animation: assistant-enter .22s ease-out; }
+        .assistant-panel { display: flex; width: min(440px, calc(100vw - 32px)); height: min(680px, calc(100svh - 112px)); min-height: 460px; flex-direction: column; box-sizing: border-box; margin: 0 0 14px; overflow: hidden; overscroll-behavior: contain; border: 1px solid rgba(148, 163, 184, .28); border-radius: 22px; background: #fff; box-shadow: 0 24px 70px rgba(15, 23, 42, .24); animation: assistant-enter .18s ease-out; }
         .assistant-header { display: flex; align-items: flex-start; gap: 11px; padding: 18px 18px 17px; color: #fff; background: radial-gradient(circle at 86% 0%, #60a5fa 0, transparent 32%), linear-gradient(135deg, #172554, #1d4ed8); }
         .assistant-avatar, .assistant-launcher-icon { display: grid; flex: 0 0 auto; place-items: center; color: #1d4ed8; background: #fff; box-shadow: 0 4px 14px rgba(15, 23, 42, .18); }
         .assistant-avatar { width: 36px; height: 36px; border-radius: 12px; font-size: 20px; }
@@ -158,7 +158,7 @@ export default function FloatingAssistant() {
         .assistant-heading h2 { margin: 0; color: #fff; font-size: 18px; line-height: 1.2; font-weight: 800; letter-spacing: -.02em; }
         .assistant-heading p { margin: 4px 0 0; color: #dbeafe; font-size: 12px; }
         .assistant-close { width: 30px; height: 30px; padding: 0; border: 1px solid rgba(255,255,255,.25); border-radius: 9px; color: #fff; background: rgba(15, 23, 42, .16); font-size: 24px; line-height: 1; cursor: pointer; }
-        .assistant-content { min-height: 0; flex: 1; overflow-y: auto; padding: 17px 18px 12px; background: linear-gradient(180deg, #f8fbff, #fff); }
+        .assistant-content { min-height: 0; flex: 1; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 17px 18px 12px; background: linear-gradient(180deg, #f8fbff, #fff); }
         .assistant-welcome { display: grid; gap: 4px; margin-bottom: 13px; color: #475569; font-size: 13px; line-height: 1.45; }
         .assistant-welcome strong { color: #172554; font-size: 14px; }
         .assistant-suggestions { display: grid; gap: 7px; }
@@ -177,7 +177,7 @@ export default function FloatingAssistant() {
         .assistant-form button:disabled { opacity: .42; cursor: not-allowed; }
         .assistant-form button:not(:disabled):hover { background: #1d4ed8; transform: translateY(-1px); }
         .assistant-hint { margin: 0; padding: 0 14px 11px; color: #94a3b8; background: #fff; font-size: 10px; text-align: center; }
-        .assistant-launcher { display: flex; align-items: center; gap: 10px; padding: 9px 15px 9px 10px; border: 1px solid rgba(255,255,255,.25); border-radius: 17px; color: #fff; background: linear-gradient(135deg, #1e3a8a, #2563eb); box-shadow: 0 12px 28px rgba(30, 64, 175, .32); text-align: left; cursor: pointer; transition: transform .16s ease, box-shadow .16s ease; }
+        .assistant-launcher { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 9px 15px 9px 10px; border: 1px solid rgba(255,255,255,.25); border-radius: 17px; color: #fff; background: linear-gradient(135deg, #1e3a8a, #2563eb); box-shadow: 0 12px 28px rgba(30, 64, 175, .32); text-align: left; cursor: pointer; touch-action: manipulation; transition: transform .16s ease, box-shadow .16s ease; }
         .assistant-launcher:hover { box-shadow: 0 15px 34px rgba(30, 64, 175, .42); transform: translateY(-2px); }
         .assistant-launcher-icon { width: 34px; height: 34px; border-radius: 11px; font-size: 18px; }
         .assistant-launcher-copy { display: grid; gap: 1px; }
@@ -185,7 +185,9 @@ export default function FloatingAssistant() {
         .assistant-launcher-copy strong { color: #fff; font-size: 13px; line-height: 1.2; }
         @keyframes assistant-enter { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes assistant-dots { to { width: 0; } }
-        @media (max-width: 560px) { .floating-assistant { right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); left: max(12px, env(safe-area-inset-left)); } .assistant-panel { width: 100%; height: calc(100dvh - 88px); min-height: 0; max-height: 720px; margin-bottom: 10px; border-radius: 20px; } .assistant-header { padding: 16px; } .assistant-content { padding: 15px 16px 10px; } .assistant-suggestions button { min-height: 44px; } .assistant-launcher { margin-left: auto; min-height: 48px; } .assistant-launcher-copy small { display: none; } .assistant-hint { display: none; } }
+        @media (max-width: 560px) { .floating-assistant { right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); left: max(12px, env(safe-area-inset-left)); display: flex; flex-direction: column; align-items: stretch; pointer-events: none; } .assistant-panel, .assistant-launcher { pointer-events: auto; } .assistant-panel { width: 100%; height: min(680px, calc(100svh - 92px)); min-height: 0; max-height: none; margin-bottom: 10px; border-radius: 20px; animation: assistant-mobile-enter .16s ease-out; } .assistant-header { padding: 16px; } .assistant-content { padding: 15px 16px 10px; } .assistant-suggestions button { min-height: 44px; touch-action: manipulation; } .assistant-launcher { align-self: flex-end; margin-left: 0; } .assistant-launcher-copy small { display: none; } .assistant-hint { display: none; } }
+        @media (prefers-reduced-motion: reduce) { .assistant-panel, .assistant-typing span { animation: none; } .assistant-launcher, .assistant-suggestions button, .assistant-form button { transition: none; } }
+        @keyframes assistant-mobile-enter { from { opacity: 0; } to { opacity: 1; } }
       `}</style>
     </div>
   );
