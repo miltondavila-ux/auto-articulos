@@ -64,7 +64,16 @@ export default function OnboardingWizard({
 
   const [message, setMessage] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
 
-  const loadAll = useCallback(async () => {
+  // `surfaceLastSyncError` solo se usa en la carga inicial. Sin esto, el error
+  // del último intento de sincronizar únicamente se veía durante los ~50
+  // segundos de sondeo de handleSyncCategories: si el worker tardaba más que
+  // eso (encolar un runner de GitHub Actions ha llegado a tomar 14 minutos) o
+  // si la persona recargaba, el fallo quedaba invisible y el Paso 2 mostraba
+  // otra vez el botón, como si nunca se hubiera intentado nada. Fue justo lo
+  // que ocultó durante horas el caso de Estee Soto (14/8/2026): su cuenta vive
+  // en tagcrush.net, el login a 10minuteswebsite.net fallaba siempre, y el
+  // mensaje que lo decía nunca llegaba a verse.
+  const loadAll = useCallback(async (surfaceLastSyncError = false) => {
     try {
       const [credRes, catRes, langRes, meRes, googleRes, runsRes] =
         await Promise.all([
@@ -82,7 +91,19 @@ export default function OnboardingWizard({
       }
       if (catRes.ok) {
         const data = await catRes.json();
-        setCategories(data.categories || []);
+        const loadedCats: CategoryRow[] = data.categories || [];
+        setCategories(loadedCats);
+        const lastJob = data.lastSyncJob;
+        if (
+          surfaceLastSyncError &&
+          loadedCats.length === 0 &&
+          lastJob?.status === "error"
+        ) {
+          setMessage({
+            type: "error",
+            text: `❌ El último intento de sincronizar falló: ${lastJob.errorMessage || "no se pudo conectar"}`,
+          });
+        }
       }
       if (langRes.ok) {
         const data = await langRes.json();
@@ -119,7 +140,7 @@ export default function OnboardingWizard({
   }, []);
 
   useEffect(() => {
-    loadAll();
+    loadAll(true);
   }, [loadAll]);
 
   // Acciones
