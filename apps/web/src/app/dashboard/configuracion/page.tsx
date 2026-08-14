@@ -19,6 +19,10 @@ import TwitterSection from "@/components/TwitterSection";
 import LinkedInSection from "@/components/LinkedInSection";
 import PhotoLogoUploader from "@/components/PhotoLogoUploader";
 import OnboardingWizard from "@/components/OnboardingWizard";
+import {
+  DEFAULT_PLATFORM_DOMAIN,
+  PLATFORM_SERVERS,
+} from "@auto-articulos/shared";
 
 export default function ConfiguracionPage() {
   const [username, setUsername] = useState("");
@@ -38,6 +42,11 @@ export default function ConfiguracionPage() {
   >(null);
   const [languageSyncing, setLanguageSyncing] = useState(false);
   const [contentLanguage, setContentLanguage] = useState("");
+  // Servidor real de la cuenta, para enlazar al sitio correcto. Ver
+  // PLATFORM_SERVERS: arranca en el default histórico por si /api/me tarda.
+  const [platformBase, setPlatformBase] = useState(
+    PLATFORM_SERVERS[DEFAULT_PLATFORM_DOMAIN].baseUrl,
+  );
   const [savingLanguage, setSavingLanguage] = useState(false);
   const [articleSignature, setArticleSignature] = useState("");
   const [savingSignature, setSavingSignature] = useState(false);
@@ -148,6 +157,9 @@ export default function ConfiguracionPage() {
         setAllowInstagramPublishing(data.allowInstagramPublishing ?? false);
         setAllowLinkedInPublishing(data.allowLinkedInPublishing ?? false);
         setAllowThreadsPublishing(data.allowThreadsPublishing ?? false);
+        if (typeof data.platformBaseUrl === "string" && data.platformBaseUrl) {
+          setPlatformBase(data.platformBaseUrl);
+        }
         if (Array.isArray(data.disabledModules)) {
           setDisabledModules(data.disabledModules);
         }
@@ -1134,9 +1146,9 @@ export default function ConfiguracionPage() {
             )}
             {showCredentialsForm && (
               <p style={{ fontSize: 12, color: "#64748b", marginTop: 10 }}>
-                Ingresa tu usuario y contraseña de 10minutesWebsite (no los de Auto Artículos). Si no recuerdas tu contraseña,{" "}
+                Ingresa tu usuario y contraseña de {platformBase.replace(/^https?:\/\//, "")} (no los de Auto Artículos). Si no recuerdas tu contraseña,{" "}
                 <a
-                  href="https://10minuteswebsite.net/dashboard/forgot-password.php"
+                  href={`${platformBase}/dashboard/forgot-password.php`}
                   target="_blank"
                   rel="noreferrer"
                   style={{ color: "#2563eb", fontWeight: 600 }}

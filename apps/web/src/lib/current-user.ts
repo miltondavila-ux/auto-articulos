@@ -23,6 +23,7 @@ export async function getCurrentUser() {
       lastName: true,
       role: true,
       maxTitlesPerBatch: true,
+      platformDomain: true,
       contentLanguage: true,
       articleSignature: true,
       allowInstagramPublishing: true,

@@ -21,6 +21,12 @@ import {
 } from "@/components/dashboard-ui";
 import type { RunStatus, TitleStatus } from "@/types/dashboard";
 import { COUNTRIES, platformDomainForCountry } from "@/lib/countries";
+import {
+  normalizePlatformDomain,
+  PLATFORM_DOMAIN_VALUES,
+  PLATFORM_SERVERS,
+  type PlatformDomain,
+} from "@auto-articulos/shared";
 import { trialDaysRemaining } from "@/lib/trial";
 import { SYSTEM_MODULES } from "@/lib/modules";
 
@@ -223,7 +229,8 @@ export default function UsuariosPage() {
   const [monthlyArticleLimit, setMonthlyArticleLimit] = useState("300");
   const [dailyArticleLimit, setDailyArticleLimit] = useState("95");
   const [maxTitlesPerBatch, setMaxTitlesPerBatch] = useState("20");
-  const [platformDomain, setPlatformDomain] = useState<"net" | "site">("net");
+  const [platformDomain, setPlatformDomain] =
+    useState<PlatformDomain>("net");
   // País de la cuenta nueva (pedido de Milton, 14/8/2026). Al elegirlo se
   // auto-selecciona el servidor: Europa `.site`, resto del mundo `.net`. El
   // selector de servidor queda visible y editable por si hay que corregirlo a
@@ -876,22 +883,26 @@ export default function UsuariosPage() {
               </select>
             </label>
             <label style={createFieldStyle}>
-              Servidor de 10minutesWebsite
+              Servidor de la plataforma
               <select
                 value={platformDomain}
                 onChange={(e) =>
-                  setPlatformDomain(e.target.value as "net" | "site")
+                  setPlatformDomain(e.target.value as PlatformDomain)
                 }
                 style={inputStyle}
               >
-                <option value="net">10minuteswebsite.net</option>
-                <option value="site">10minuteswebsite.site</option>
+                {PLATFORM_DOMAIN_VALUES.map((value) => (
+                  <option key={value} value={value}>
+                    {PLATFORM_SERVERS[value].label}
+                  </option>
+                ))}
               </select>
               <span style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>
                 Se selecciona solo según el país: Europa usa
                 10minuteswebsite.site y el resto del mundo,
-                10minuteswebsite.net. Cámbialo solo si sabes que esta cuenta es
-                la excepción.
+                10minuteswebsite.net. Cámbialo a mano si esta cuenta vive en
+                otro servidor — por ejemplo tagcrush.net, que no depende del
+                país. Si te equivocas acá, el robot no podrá iniciar sesión.
               </span>
             </label>
             <button
@@ -1448,8 +1459,8 @@ function UserCard({
   const [roleValue, setRoleValue] = useState<"admin" | "user">(user.role);
   const [savingRole, setSavingRole] = useState(false);
   const [roleError, setRoleError] = useState<string | null>(null);
-  const [domainValue, setDomainValue] = useState<"net" | "site">(
-    user.platformDomain === "site" ? "site" : "net",
+  const [domainValue, setDomainValue] = useState<PlatformDomain>(
+    normalizePlatformDomain(user.platformDomain),
   );
   const [savingDomain, setSavingDomain] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -2322,27 +2333,29 @@ function UserCard({
               <select
                 value={domainValue}
                 onChange={(e) =>
-                  setDomainValue(e.target.value as "net" | "site")
+                  setDomainValue(e.target.value as PlatformDomain)
                 }
                 disabled={savingDomain}
                 aria-label={`Servidor de ${user.email}`}
-                style={{ ...inputStyle, width: 96 }}
+                style={{ ...inputStyle, width: 150 }}
               >
-                <option value="net">.net</option>
-                <option value="site">.site</option>
+                {PLATFORM_DOMAIN_VALUES.map((value) => (
+                  <option key={value} value={value}>
+                    {PLATFORM_SERVERS[value].label}
+                  </option>
+                ))}
               </select>
               <button
                 onClick={handleSaveDomain}
                 disabled={
                   savingDomain ||
-                  domainValue ===
-                    (user.platformDomain === "site" ? "site" : "net")
+                  domainValue === normalizePlatformDomain(user.platformDomain)
                 }
                 style={disabledStyle(
                   { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
                   savingDomain ||
                     domainValue ===
-                      (user.platformDomain === "site" ? "site" : "net"),
+                      normalizePlatformDomain(user.platformDomain),
                 )}
               >
                 {savingDomain ? "..." : "Guardar"}

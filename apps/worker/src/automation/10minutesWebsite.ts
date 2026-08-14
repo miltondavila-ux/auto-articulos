@@ -3,6 +3,7 @@ import {
   type Page,
   type Response as PlaywrightResponse,
 } from "playwright";
+import { platformBaseUrl } from "@auto-articulos/shared";
 import { buildImagePrompt, isImageRelevant } from "../imagePrompt";
 import { generateFaqs, type Faq } from "../faqPrompt";
 import { translateText } from "../translateText";
@@ -11,9 +12,9 @@ import { replacePhonePlaceholders } from "../phonePlaceholders";
 export interface TenMinutesWebsiteCredentials {
   username: string;
   password: string;
-  // "net" o "site" — ver User.platformDomain. Cuentas en Europa pueden
-  // vivir en 10minutesWebsite.site en vez de .net; si no se especifica,
-  // se usa .net (comportamiento original, sin cambios para nadie).
+  // Servidor donde vive la cuenta — ver User.platformDomain y el registro
+  // PLATFORM_SERVERS en @auto-articulos/shared ("net", "site", "tagcrush").
+  // Si no se especifica, se usa .net (comportamiento original).
   platformDomain?: string | null;
   // "es" o "en" — ver User.contentLanguage. Idioma en el que la IA debe
   // redactar el artículo, independiente del idioma de la interfaz de la
@@ -62,9 +63,7 @@ export type OnStep = (message: string) => Promise<void>;
 export class DailyLimitReachedError extends Error {}
 
 function resolveBaseUrl(platformDomain?: string | null): string {
-  return platformDomain === "site"
-    ? "https://10minuteswebsite.site"
-    : "https://10minuteswebsite.net";
+  return platformBaseUrl(platformDomain);
 }
 
 const ARTICLE_TYPE_NOTICIAS = "2";
@@ -330,8 +329,12 @@ async function login(
           .join(" | ");
       })
       .catch(() => "");
+    // Se nombra el servidor concreto: desde que hay varios (ver
+    // PLATFORM_SERVERS), un login que falla puede deberse a que la cuenta
+    // vive en otro dominio y no a credenciales mal escritas, y sin este dato
+    // los dos casos se veían idénticos en el mensaje.
     throw new Error(
-      `No se pudo iniciar sesión en 10minutesWebsite. Verifica que el usuario y la contraseña guardados en Configuración sean correctos (los mismos con los que se entra a 10minutesWebsite)${alertText ? `. Mensaje visible en el sitio: "${alertText}"` : "."}`,
+      `No se pudo iniciar sesión en ${baseUrl}. Verifica que el usuario y la contraseña guardados en Configuración sean correctos, y que esa cuenta realmente exista en ${baseUrl} (si vive en otro servidor, un administrador debe corregirlo en Administración → Usuarios)${alertText ? `. Mensaje visible en el sitio: "${alertText}"` : "."}`,
     );
   }
   await onStep("Sesión iniciada correctamente.");
@@ -655,8 +658,11 @@ async function createArticleDraft(
   });
   await onStep(`DIAGNÓSTICO [Usar contenido]: ${JSON.stringify(usearContenidoInfo).slice(0, 2000)}`);
 
-  // Guardar contenido del modal ANTES de hacer clic, para reinyectar después si falla
+  // Guardar contenido y resumen del modal ANTES de hacer clic, para
+  // reinyectar después si "Usar contenido" no logra transferirlos (ver bug
+  // del 11/8/2026 más abajo, que hasta ahora solo cubría el contenido).
   const modalContentBefore = await dialog.locator("textarea").nth(1).inputValue().catch(() => "");
+  const modalSummaryBefore = await dialog.locator("textarea").nth(2).inputValue().catch(() => "");
 
   await dialog.getByRole("button", { name: TEXT_USAR_CONTENIDO }).click();
   await dialog.waitFor({ state: "hidden", timeout: NAV_TIMEOUT_MS });
@@ -725,6 +731,23 @@ async function createArticleDraft(
   } else {
     const excerptField = page.locator(excerptSelector);
     summary = await excerptField.inputValue().catch(() => "");
+
+    // Mismo fallo que el del contenido documentado arriba (11/8/2026): "Usar
+    // contenido" a veces no transfiere el resumen al campo real tampoco, y a
+    // diferencia del contenido esto no tenía ningún repaso. El campo queda
+    // vacío, es obligatorio, y el sitio bloquea "Guardar cambios" en
+    // silencio (mensaje "Este campo es obligatorio" sin abortar el intento
+    // ni decir qué campo es) — visto en producción el 14/8/2026, cuenta de
+    // Lorena Álvarez, 4 intentos seguidos con el contenido y la imagen bien
+    // pero el guardado fallando siempre.
+    if (summary.length === 0 && modalSummaryBefore.length > 0) {
+      summary = modalSummaryBefore.slice(0, 280);
+      await excerptField.fill(summary).catch(() => {});
+      await onStep(
+        "El resumen no llegó al campo del formulario tras 'Usar contenido'. Se completó con el resumen generado por la IA.",
+      );
+    }
+
     if (summary.length >= 300) {
       summary = summary.slice(0, 280);
       await excerptField.fill(summary);
@@ -1597,8 +1620,34 @@ async function saveAndGetUrl(
         .join(" | ");
     })
     .catch(() => "");
+
+  // Si el guardado falla, el mensaje de alerta por sí solo no dice QUÉ campo
+  // quedó vacío (además puede venir mezclado con ruido de accesibilidad del
+  // editor, como su barra de herramientas). Si seguimos en el formulario,
+  // volcamos el largo real de los campos obligatorios conocidos para que el
+  // próximo log ya diga directamente cuál falló, en vez de tener que
+  // adivinarlo de nuevo (ver bug del resumen vacío, 14/8/2026).
+  const requiredFieldsState = stillOnForm
+    ? await page
+        .evaluate(() => {
+          const ids = ["#contentes", "#excerptes", "#excerpt"];
+          return ids
+            .map((id) => {
+              const el = document.querySelector(id) as
+                | HTMLTextAreaElement
+                | HTMLInputElement
+                | null;
+              return el ? `${id}=${el.value?.length ?? 0}chars` : null;
+            })
+            .filter((v): v is string => v !== null)
+            .join(", ");
+        })
+        .catch(() => "")
+    : "";
   await onStep(
-    `Diagnóstico de guardado: sigue en el formulario=${stillOnForm}, botón deshabilitado=${buttonDisabled}, mensajes visibles="${alertText}"`,
+    `Diagnóstico de guardado: sigue en el formulario=${stillOnForm}, botón deshabilitado=${buttonDisabled}, mensajes visibles="${alertText}"${
+      requiredFieldsState ? `, campos obligatorios: ${requiredFieldsState}` : ""
+    }`,
   );
 
   await onStep(

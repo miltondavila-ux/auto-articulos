@@ -1,7 +1,12 @@
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
-import { decryptSecret, encryptSecret } from "@auto-articulos/shared";
+import {
+  decryptSecret,
+  encryptSecret,
+  isPlatformDomain,
+  PLATFORM_DOMAIN_VALUES,
+} from "@auto-articulos/shared";
 import { auditLog } from "@/lib/audit";
 import {
   normalizeCountryCode,
@@ -297,9 +302,11 @@ export async function PATCH(request: NextRequest) {
   }
 
   if ("platformDomain" in body) {
-    if (platformDomain !== "net" && platformDomain !== "site") {
+    if (!isPlatformDomain(platformDomain)) {
       return NextResponse.json(
-        { error: "platformDomain debe ser 'net' o 'site'" },
+        {
+          error: `platformDomain debe ser uno de: ${PLATFORM_DOMAIN_VALUES.join(", ")}`,
+        },
         { status: 400 },
       );
     }
@@ -485,21 +492,22 @@ export async function POST(request: NextRequest) {
   if (
     requestedPlatformDomain !== undefined &&
     requestedPlatformDomain !== null &&
-    requestedPlatformDomain !== "net" &&
-    requestedPlatformDomain !== "site"
+    !isPlatformDomain(requestedPlatformDomain)
   ) {
     return NextResponse.json(
-      { error: "platformDomain debe ser 'net' o 'site'" },
+      {
+        error: `platformDomain debe ser uno de: ${PLATFORM_DOMAIN_VALUES.join(", ")}`,
+      },
       { status: 400 },
     );
   }
 
   // El admin puede sobrescribir el servidor a mano; si no manda nada, se usa
-  // el que corresponde al país.
-  const platformDomain =
-    requestedPlatformDomain === "net" || requestedPlatformDomain === "site"
-      ? requestedPlatformDomain
-      : platformDomainForCountry(normalizedCountry);
+  // el que corresponde al país. Servidores que no dependen de la región (como
+  // tagcrush) solo llegan por esta vía explícita.
+  const platformDomain = isPlatformDomain(requestedPlatformDomain)
+    ? requestedPlatformDomain
+    : platformDomainForCountry(normalizedCountry);
 
   const normalizedEmail = typeof email === "string" ? email.trim() : "";
   const normalizedFirstName =

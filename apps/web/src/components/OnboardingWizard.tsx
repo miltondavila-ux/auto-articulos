@@ -7,6 +7,10 @@ import {
   inputStyle,
   secondaryButtonStyle,
 } from "./dashboard-ui";
+import {
+  DEFAULT_PLATFORM_DOMAIN,
+  PLATFORM_SERVERS,
+} from "@auto-articulos/shared";
 import type { CategoryRow, LanguageRow, RunRow } from "@/types/dashboard";
 
 interface OnboardingWizardProps {
@@ -23,6 +27,12 @@ export default function OnboardingWizard({
   const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [languages, setLanguages] = useState<LanguageRow[]>([]);
   const [contentLanguage, setContentLanguage] = useState("");
+  // Servidor real de la cuenta (net / site / tagcrush). Arranca en el valor
+  // histórico por defecto para que, si /api/me todavía no respondió, el
+  // enlace apunte a donde apuntaba antes en vez de quedar roto.
+  const [platformBase, setPlatformBase] = useState(
+    PLATFORM_SERVERS[DEFAULT_PLATFORM_DOMAIN].baseUrl,
+  );
   const [selectedLang, setSelectedLang] = useState("");
   const [googleData, setGoogleData] = useState<{
     connected: boolean;
@@ -83,6 +93,9 @@ export default function OnboardingWizard({
         const lang = data.contentLanguage || "";
         setContentLanguage(lang);
         setSelectedLang(lang || "es");
+        if (typeof data.platformBaseUrl === "string" && data.platformBaseUrl) {
+          setPlatformBase(data.platformBaseUrl);
+        }
       }
       if (googleRes.ok) {
         const data = await googleRes.json();
@@ -380,6 +393,9 @@ export default function OnboardingWizard({
   const allCoreDone = completedCoreSteps === totalCoreSteps;
   const progressPercent = Math.round((completedCoreSteps / totalCoreSteps) * 100);
 
+  // "https://tagcrush.net" -> "tagcrush.net", para el texto visible.
+  const platformHost = platformBase.replace(/^https?:\/\//, "");
+
   const activeLangName =
     languages.find((l) => l.externalId === contentLanguage)?.name ||
     (contentLanguage === "es" ? "Español" : contentLanguage === "en" ? "Inglés" : contentLanguage);
@@ -574,13 +590,13 @@ export default function OnboardingWizard({
                   }}
                 >
                   <p style={{ margin: "0 0 6px 0", fontWeight: 700 }}>
-                    💡 ¿No tienes o no recuerdas tu contraseña de 10minutesWebsite?
+                    💡 ¿No tienes o no recuerdas tu contraseña de {platformHost}?
                   </p>
                   <p style={{ margin: "0 0 8px 0" }}>
                     Puedes recuperarla o crear una nueva en segundos aquí:
                   </p>
                   <a
-                    href="https://10minuteswebsite.net/dashboard/forgot-password.php"
+                    href={`${platformBase}/dashboard/forgot-password.php`}
                     target="_blank"
                     rel="noreferrer"
                     style={{
@@ -596,7 +612,7 @@ export default function OnboardingWizard({
                       textDecoration: "none",
                     }}
                   >
-                    🔑 Resetear contraseña en 10minutesWebsite ↗
+                    🔑 Resetear contraseña en {platformHost} ↗
                   </a>
                   <p style={{ margin: "8px 0 0 0", fontSize: 12, color: "#3b82f6" }}>
                     <strong>Recomendación práctica:</strong> Al generar tu contraseña en 10minutesWebsite, copia y pega esa misma clave aquí para que ambos sistemas queden sincronizados.

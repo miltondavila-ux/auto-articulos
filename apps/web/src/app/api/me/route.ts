@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
+import { platformBaseUrl } from "@auto-articulos/shared";
 import { getCurrentUser, getCurrentUserId, getActingAdmin, displayName } from "@/lib/current-user";
 
 import {
@@ -31,6 +32,12 @@ export async function GET() {
         ? { id: actingAdmin.id, email: actingAdmin.email, name: displayName(actingAdmin) }
         : null,
       maxTitlesPerBatch: user.maxTitlesPerBatch,
+      // Servidor donde vive su cuenta de la plataforma. La interfaz lo usa
+      // para enlazar al sitio correcto (por ejemplo, recuperar contraseña):
+      // desde que hay más de un servidor, un enlace fijo a
+      // 10minuteswebsite.net mandaba a la persona equivocada a otro sitio.
+      platformDomain: user.platformDomain,
+      platformBaseUrl: platformBaseUrl(user.platformDomain),
       contentLanguage: user.contentLanguage,
       articleSignature: user.articleSignature,
       opportunitiesDisclosureAcceptedAt: user.opportunitiesDisclosureAcceptedAt,

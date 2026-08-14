@@ -8,5 +8,6 @@ export * from "./linkedin-api";
 export * from "./instagram-api";
 export * from "./image-prompt";
 export * from "./social-image";
+export * from "./platform-servers";
 
 export const MAX_ATTEMPTS = 3;

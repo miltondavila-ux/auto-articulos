@@ -7,7 +7,14 @@
 // 10minuteswebsite.net (el valor por defecto histórico). Ver
 // User.platformDomain en packages/db/prisma/schema.prisma.
 
-export type PlatformDomain = "net" | "site";
+// El catálogo de servidores vive en @auto-articulos/shared (PLATFORM_SERVERS),
+// porque el worker necesita el mismo dato para saber a qué dominio conectarse.
+// Acá solo se resuelve el servidor POR PAÍS, que es una regla geográfica y no
+// cubre todos los servidores: tagcrush.net, por ejemplo, no corresponde a
+// ninguna región — se asigna a mano desde Administración.
+import type { PlatformDomain as SharedPlatformDomain } from "@auto-articulos/shared";
+
+export type PlatformDomain = SharedPlatformDomain;
 
 // Códigos ISO 3166-1 alpha-2 de los países considerados "Europa" para efectos
 // del servidor .site. Incluye UE + EEE + Reino Unido, Suiza, Balcanes,
@@ -290,7 +297,12 @@ export function isEuropeanCountry(code: unknown): boolean {
 }
 
 // Europa -> ".site"; resto del mundo (y país desconocido/no indicado) -> ".net".
-export function platformDomainForCountry(code: unknown): PlatformDomain {
+// Es solo el valor SUGERIDO al crear la cuenta: un administrador puede
+// cambiarlo después a cualquier servidor de PLATFORM_SERVERS (por ejemplo
+// tagcrush.net, que no depende del país).
+export function platformDomainForCountry(
+  code: unknown,
+): SharedPlatformDomain {
   return isEuropeanCountry(code) ? "site" : "net";
 }
 
