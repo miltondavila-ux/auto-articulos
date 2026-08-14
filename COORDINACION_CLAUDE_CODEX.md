@@ -496,6 +496,60 @@ ejecutar de forma explícita y auditada después del despliegue.
   pantalla de consentimiento, lo que confirma client ID + redirect URI
   válidos. Siguiente paso de Milton: ingresar únicamente ese Client ID en el
   formulario de ChatGPT; dejar secreto vacío y método `none`.
+- **Client ID introducido por Milton:** Milton confirmó que escribió
+  `chatgpt-auto-articulos-v1` en el formulario, con el secreto vacío y el
+  método de token `none` sin cambios. Esto aún no guarda ni autoriza el
+  complemento. Siguiente paso único: revisar el bloque **Alcances** para
+  configurar solamente `oportunidades:leer` y `offline_access`; nunca
+  `oportunidades:publicar` en esta primera conexión.
+- **Alcances detectados en ChatGPT:** el formulario muestra seleccionados por
+  defecto `oportunidades:leer` y `oportunidades:publicar`, más el campo
+  **Alcances base**. Para cumplir el límite de solo lectura, el siguiente
+  paso único es desmarcar `oportunidades:publicar`; se conserva marcado
+  `oportunidades:leer`. Aún no se guarda ni autoriza el complemento.
+- **Límite de solo lectura confirmado:** Milton desmarcó
+  `oportunidades:publicar` y conservó `oportunidades:leer`. Siguiente paso
+  único: escribir `offline_access` en **Alcances base**. Ese alcance no otorga
+  operaciones de negocio: solo permite que el OAuth renueve la sesión con el
+  refresh token ya soportado por el servidor, evitando reautenticaciones
+  frecuentes.
+- **Alcance de renovación añadido:** Milton confirmó que escribió
+  `offline_access` en **Alcances base**. La solicitud OAuth final queda
+  limitada a `oportunidades:leer offline_access`; no incluye permiso de
+  publicación. Antes de crear el complemento se corregirá la descripción
+  visible, que en una captura anterior decía “Crea y Publica”, por el texto
+  de solo consulta acordado.
+- **Formulario preparado para creación:** Milton confirmó la descripción de
+  solo consulta. Configuración final revisada: servidor HTTPS canónico,
+  `chatgpt-auto-articulos-v1`, secreto vacío, método `none`, redirect URI
+  exacta, `oportunidades:leer` marcado, `oportunidades:publicar` desmarcado y
+  `offline_access` como alcance base. El siguiente clic **Crear** no ejecuta
+  tools ni publica contenido: inicia el flujo OAuth para que Milton autorice
+  su propia cuenta de Auto Artículos y permita a ChatGPT solo consultar.
+- **Creación iniciada por Milton:** Milton pulsó **Crear**. Se espera el
+  resultado visual del flujo OAuth antes de continuar; no se asumirá que el
+  login, consentimiento o escaneo de tools fue exitoso sin la siguiente
+  pantalla/captura. Continúa vigente la restricción de solo lectura.
+- **Pantalla de autorización confirmada:** ChatGPT muestra “Agregar Auto
+  Artículos a ChatGPT”, con la descripción de consulta correcta y el botón
+  **Iniciar sesión con Auto Artículos**. Es el inicio del OAuth esperado; no
+  ha habido aún autorización efectiva ni llamada a tools. Siguiente paso
+  único: Milton abre ese login para identificarse con su propia cuenta de
+  Auto Artículos.
+- **Corrección urgente de texto de consentimiento:** al abrir el login, la
+  URL confirma `client_id=chatgpt-auto-articulos-v1` y los permisos muestran
+  solo `offline_access oportunidades:leer`; por tanto el flujo ES de ChatGPT,
+  no de Alexa. Sin embargo, la pantalla interna muestra erróneamente el
+  título y texto “Alexa”, heredado del flujo original. Milton no debe pulsar
+  **Autorizar** hasta que Codex despliegue una etiqueta neutral/correcta para
+  ChatGPT. No hay autorización, publicación ni cambio de datos realizado.
+- **Corrección implementada y verificada localmente:** la página de
+  consentimiento ahora detecta `chatgpt-auto-articulos-v1`, muestra
+  **Conectar ChatGPT con Auto Artículos** y explica que el acceso es de solo
+  lectura (sin crear oportunidades ni publicar). Alexa conserva mensajes
+  específicos según el scope solicitado. `npm --prefix apps/web run
+  typecheck` y `git diff --check` terminaron sin errores. Pendiente: commit,
+  despliegue y comprobación visual antes de autorizar.
 
 ## Reglas durante el trabajo
 
@@ -532,15 +586,15 @@ ejecutar de forma explícita y auditada después del despliegue.
 
 ### Antigravity — Wizard de Inicio y Configuración Inicial Paso a Paso (13/8/2026)
 
-- **Estado:** `IMPLEMENTADO LOCALMENTE — VERIFICADO Y SIN CONFLICTOS` (13/8/2026).
-- **Objetivo:** Renovar completamente la experiencia de onboarding inicial para que los usuarios nuevos comprendan con total claridad los pasos necesarios para poner en marcha su cuenta de Auto Artículos, implementando una guía visual vertical con sombreado y dessombreado dinámico de pasos (en foco, completados y atenuados), y habilitando una pestaña dedicada dentro de Configuración.
+- **Estado:** `COMPLETADO Y DESPLEGADO EN PRODUCCIÓN — VERIFICADO CON ÉXITO` (13/8/2026, commits `dd997ae` y `6d6c270`).
+- **Objetivo:** Renovar completamente la experiencia de onboarding inicial para que los usuarios nuevos comprendan con total claridad los pasos necesarios para poner en marcha su cuenta de Auto Artículos, implementando una guía visual vertical con **secuencialidad estricta** y sombreado/dessombreado dinámico de pasos (en foco, completados y atenuados), y habilitando una pestaña dedicada dentro de Configuración.
 - **Área reservada y modificada:**
-  - `apps/web/src/components/OnboardingWizard.tsx` (nuevo componente modular autocontenido con los 4 pasos secuenciales + meta final:
+  - `apps/web/src/components/OnboardingWizard.tsx` (nuevo componente modular autocontenido con los 4 pasos secuenciales estrictos + meta final:
     - **Paso 1 (10minutesWebsite)**: Explica las credenciales, incluye enlace directo de reseteo de contraseña (`https://10minuteswebsite.net/dashboard/forgot-password.php`), sugerencia de sincronizar contraseñas, y formulario de guardado/edición rápida.
-    - **Paso 2 (Categorías)**: Explicación y botón para sincronizar/descargar categorías de 10minutesWebsite en vivo con badge de estado y etiquetas.
-    - **Paso 3 (Idioma de redacción)**: Selector de idioma principal con guardado directo y botón de recarga de lista de idiomas.
-    - **Paso 4 (Google Search Console)**: Instrucción explícita de abrir GSC en una pestaña contigua para verificar activación antes de conectar, flujo OAuth y selector de sitio web.
-    - **Paso 5 (Meta final)**: Felicitación y acceso directo a publicar el primer artículo o explorar Oportunidades SEO).
+    - **Paso 2 (Categorías)**: Solo se activa tras el Paso 1; botón para sincronizar/descargar categorías de 10minutesWebsite en vivo con badge de estado y etiquetas.
+    - **Paso 3 (Idioma de redacción)**: Solo se activa tras el Paso 2; selector de idioma principal con guardado directo y botón de recarga de lista de idiomas. Blindado para que el idioma por defecto `"es"` de BD no marque el paso como listo antes de tiempo.
+    - **Paso 4 (Google Search Console)**: Solo se activa tras el Paso 3; instrucción explícita de abrir GSC en una pestaña contigua para verificar activación antes de conectar, flujo OAuth y selector de sitio web.
+    - **Paso 5 (Meta final)**: Solo se activa al completar los 4 anteriores; felicitación y acceso directo a publicar el primer artículo o explorar Oportunidades SEO).
   - `apps/web/src/app/dashboard/page.tsx` (integración del nuevo `OnboardingWizard` en la página principal, y renderizado condicional estricto `{hasPublishedAny && <PerformanceDashboard />}` para que los usuarios nuevos vean exclusivamente el Wizard sin métricas ni gráficas interfiriendo).
   - `apps/web/src/components/PerformanceDashboard.tsx` (se oculta automáticamente cuando `totalPublished === 0` para que el usuario nuevo vea exclusivamente el Wizard de activación al ingresar a Inicio).
   - `apps/web/src/components/DashboardNav.tsx` (se añadió `marginBottom: 28` a la barra de menús para despegar con holgura todos los módulos en desktop y móvil).
@@ -548,7 +602,7 @@ ejecutar de forma explícita y auditada después del despliegue.
   - `TO-DO.md` (ítem movido a la sección *Hecho*).
 - **Coordinación y no-interferencia:**
   - Esta tarea NO introduce migraciones nuevas ni modifica el schema de Prisma.
-  - No invade los archivos reservados por Codex (servidor MCP de Alexa+ y manual de actualizaciones).
+  - No invade los archivos reservados por Codex (servidor MCP de Alexa+/ChatGPT y manual de actualizaciones).
   - Preserva intactos los controles de visibilidad de módulos (`showSocialTab`, `disabledModules`) y no altera ninguna funcionalidad existente.
 
 ### Antigravity — Validación preventiva de idioma (User.contentLanguage) (13/8/2026)
