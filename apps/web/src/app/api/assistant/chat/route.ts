@@ -27,7 +27,10 @@ export async function POST(request: NextRequest) {
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
         model: MODEL,
-        max_output_tokens: 500,
+        // GPT-5-mini usa razonamiento antes de escribir. Para preguntas de ayuda
+        // cortas, el esfuerzo mínimo evita agotar el presupuesto sin respuesta.
+        reasoning: { effort: "minimal" },
+        max_output_tokens: 1_200,
         input: [
           {
             role: "developer",
