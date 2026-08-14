@@ -806,7 +806,6 @@ export default function OnboardingWizard({
                 </div>
               ) : (
                 <div>
-                  {/* Instrucción explícita requerida por Milton */}
                   <div
                     style={{
                       background: "#eff6ff",
@@ -822,9 +821,46 @@ export default function OnboardingWizard({
                     <p style={{ margin: "0 0 4px 0", fontWeight: 700 }}>
                       🌐 Instrucción importante antes de conectar:
                     </p>
-                    <p style={{ margin: 0 }}>
-                      Abre tu <a href="https://search.google.com/search-console" target="_blank" rel="noreferrer" style={{ color: "#2563eb", fontWeight: 700, textDecoration: "underline" }}>Google Search Console ↗</a> en una pestaña al lado de tu navegador, asegúrate de que funciona y que lo tienes activado con la misma cuenta de Google dueña de tu sitio web, y luego haz clic en el botón de abajo:
+                    <p style={{ margin: "0 0 10px 0" }}>
+                      Abre tu <a href="https://search.google.com/search-console" target="_blank" rel="noreferrer" style={{ color: "#2563eb", fontWeight: 700, textDecoration: "underline" }}>Google Search Console ↗</a> en una pestaña al lado de tu navegador, asegúrate de que funciona y que lo tienes activado con la misma cuenta de Google dueña de tu sitio web, y luego haz clic en el botón de abajo.
                     </p>
+
+                    <div
+                      style={{
+                        background: "#ffffff",
+                        border: "1px solid #dbeafe",
+                        borderRadius: 6,
+                        padding: "10px 12px",
+                        marginTop: 8,
+                      }}
+                    >
+                      <p style={{ margin: "0 0 4px 0", fontWeight: 700, color: "#0f172a", fontSize: 13 }}>
+                        📺 ¿No tienes el Google Search Console?
+                      </p>
+                      <p style={{ margin: "0 0 8px 0", fontSize: 12, color: "#475569" }}>
+                        Aprende cómo activarte paso a paso con este video tutorial:
+                      </p>
+                      <a
+                        href="https://youtu.be/c9aOFmvaHHo?si=0K0XfnbJPE2j8OMt&t=5"
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          background: "#dc2626",
+                          color: "#ffffff",
+                          textDecoration: "none",
+                          padding: "6px 12px",
+                          borderRadius: 6,
+                          fontWeight: 700,
+                          fontSize: 12,
+                          boxShadow: "0 2px 6px rgba(220, 38, 38, 0.2)",
+                        }}
+                      >
+                        ▶️ Ver video: Cómo activar Google Search Console ↗
+                      </a>
+                    </div>
                   </div>
 
                   {!googleData?.connected ? (

@@ -86,9 +86,50 @@ export default function GoogleSearchConsoleSection() {
   return (
     <section style={sectionStyle}>
       <h2 style={h2Style}>Google Search Console</h2>
-      <p style={{ fontSize: 13, color: "#6b7280" }}>
+      <p style={{ fontSize: 13, color: "#6b7280", margin: "0 0 12px 0" }}>
         Conecta tu cuenta de Google para que tus artículos aparezcan en los resultados de búsqueda de Google. Auto Artículos enviará tu sitemap automáticamente y te mostrará el estado de indexación de cada artículo.
       </p>
+
+      <div
+        style={{
+          background: "#eff6ff",
+          border: "1px solid #bfdbfe",
+          borderRadius: 8,
+          padding: "12px 14px",
+          marginBottom: 14,
+          fontSize: 13,
+          color: "#1e40af",
+          lineHeight: 1.5,
+        }}
+      >
+        <p style={{ margin: "0 0 4px 0", fontWeight: 700, color: "#0f172a" }}>
+          📺 ¿No tienes el Google Search Console?
+        </p>
+        <p style={{ margin: "0 0 8px 0", fontSize: 12, color: "#475569" }}>
+          Aprende cómo activarte paso a paso con este video tutorial:
+        </p>
+        <a
+          href="https://youtu.be/c9aOFmvaHHo?si=0K0XfnbJPE2j8OMt&t=5"
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            background: "#dc2626",
+            color: "#ffffff",
+            textDecoration: "none",
+            padding: "6px 12px",
+            borderRadius: 6,
+            fontWeight: 700,
+            fontSize: 12,
+            boxShadow: "0 2px 6px rgba(220, 38, 38, 0.2)",
+          }}
+        >
+          ▶️ Ver video: Cómo activar Google Search Console ↗
+        </a>
+      </div>
+
       {!data?.connected ? (
         <a
           href="/api/search-integrations/google/connect"

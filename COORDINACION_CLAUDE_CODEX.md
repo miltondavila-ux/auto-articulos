@@ -609,6 +609,108 @@ ejecutar de forma explícita y auditada después del despliegue.
   verificada de extremo a extremo la conexión ChatGPT ↔ OAuth ↔ MCP ↔ datos
   de Auto Artículos. Alexa+ continúa pendiente exclusivamente de la aprobación
   de Amazon para MCP Toolkit; no se ha mezclado con esta integración.
+- **Alcance de distribución a clientes — decisión pendiente:** la app creada
+  está en modo desarrollador y pertenece únicamente al espacio/cuenta de
+  ChatGPT de Milton; sus clientes externos no la reciben automáticamente. Si
+  los clientes son miembros del **mismo workspace ChatGPT Business o
+  Enterprise/Edu**, un administrador puede publicar esta app al workspace y
+  cada cliente iniciará OAuth con su propia cuenta de Auto Artículos, por lo
+  que solo verá sus propios datos. Si son clientes con cuentas/workspaces de
+  ChatGPT separados, la app privada actual no se puede distribuir tal cual:
+  requerirá una vía de publicación aprobada por OpenAI o que cada cliente
+  configure su propio conector, además de ampliar el servidor para registrar
+  sus Client ID/redirect URI individuales. En ambos casos, la opción actual
+  permanece limitada a lectura. Fuente: documentación oficial de OpenAI sobre
+  apps MCP y controles de workspace.
+- **Aclaración de expectativa para relevo:** la conexión actual de ChatGPT es
+  una herramienta privada de Milton para operar/consultar su propia cuenta de
+  Auto Artículos. No es, por sí sola, una función visible para clientes dentro
+  del producto. Su valor inmediato es validar el MCP, OAuth, aislamiento por
+  usuario y las consultas reales sin riesgo de escritura; cualquier trabajo
+  posterior dirigido a clientes debe ser una decisión separada: publicar una
+  app de ChatGPT para el workspace apropiado o habilitar/terminar el asistente
+  nativo dentro de Auto Artículos. No presentar la integración actual como
+  “ChatGPT para todos los clientes”.
+- **Dirección solicitada por Milton — botón por cliente:** Milton quiere un
+  botón dentro de la cuenta de cada cliente que diga **Conecta tu ChatGPT**.
+  Es viable como experiencia de producto, pero por seguridad el botón no puede
+  enlazar una cuenta de ChatGPT silenciosamente: debe abrir el flujo oficial
+  de ChatGPT, donde el cliente confirma la app y luego inicia sesión con su
+  propia cuenta de Auto Artículos. Para que sea realmente un clic para
+  clientes externos, Auto Artículos tendrá que estar publicado/aprobado en el
+  directorio de apps de ChatGPT; mientras sea un conector privado de modo
+  desarrollador, el botón solo podría guiar a una configuración manual y no
+  cumpliría la experiencia esperada. Pendiente de decisión de Milton: avanzar
+  hacia distribución pública de la app o priorizar el asistente interno.
+
+### MCP — Ampliación solicitada: control funcional completo (13/8/2026)
+
+- **Decisión de Milton:** la integración privada de ChatGPT no debe quedarse
+  en dos consultas; debe permitir, mediante lenguaje natural, ejecutar las
+  funciones que Milton puede realizar en Auto Artículos.
+- **Autorización ampliada de Milton:** “amplíala hasta donde tu imaginación
+  te dé; quiero que haga cualquier cosa que se le pueda pedir”. Se interpreta
+  como autorización para construir un copiloto operativo completo sobre las
+  funciones normales de la cuenta del usuario, no como autorización para
+  exponer secretos, contraseñas, migraciones, inspección de entorno,
+  suplantación, administración de otros usuarios o ejecución arbitraria. Se
+  preservan siempre scopes por capacidad y confirmación explícita para costos,
+  generación, publicación, indexación, borrado, cancelación, reintentos y
+  desconexión de servicios.
+- **Documento maestro creado:** `MCP_ACCIONES_UNIVERSALES.md` reúne el catálogo
+  de acciones para cualquier cliente MCP futuro (ChatGPT, Alexa+, Gemini,
+  agente de voz o teléfono), sus scopes, confirmaciones, límites y acciones
+  expresamente prohibidas. Es una especificación de producto/técnica; no
+  declara acciones como implementadas hasta que se registren sus pruebas y
+  despliegue en este tablero.
+- **Estado real actual:** el MCP solo expone a ChatGPT
+  `listar_oportunidades` y `estado_de_publicaciones`, ambas de lectura. Esa
+  limitación fue intencional para validar OAuth, aislamiento por usuario y
+  seguridad antes de habilitar efectos reales. La prueba funcional confirmó
+  que esa base funciona.
+- **Dirección de implementación:** Codex auditará primero las rutas y acciones
+  reales de la aplicación para producir un catálogo de tools. Las acciones de
+  lectura se podrán habilitar directamente; las que consumen créditos,
+  generan contenido, publican, borran, cambian integraciones o modifican
+  configuración deberán llevar scopes separados y confirmación explícita en
+  ChatGPT. No se añadirá una tool genérica que ejecute acciones arbitrarias ni
+  se expondrán secretos. Antes de editar o desplegar, Codex registrará el
+  catálogo y el orden de lotes en este tablero.
+- **Auditoría inicial completada:** hay rutas funcionales para estadísticas y
+  configuración, categorías/idiomas, oportunidades, ejecuciones y reintentos,
+  cancelación, sitemap e indexación Bing, perfil de negocio, integraciones de
+  búsqueda, oportunidades/redes sociales y publicación social. Propuesta de
+  lotes: (1) todas las consultas y diagnóstico de configuración; (2) creación
+  y gestión reversible; (3) generación, publicación, indexación, desconexión
+  y borrado con confirmación explícita; (4) nunca exponer por MCP rutas de
+  migración, inspección de entorno, contraseñas, suplantación ni gestión
+  administrativa de otros usuarios. Las rutas OAuth de conectores externos
+  tampoco se invocan por voz/chat: deben conservar su consentimiento visual.
+- **Flujo prioritario confirmado en código:** `POST /api/runs` ya publica una
+  lista de títulos escritos por el usuario en una categoría concreta y aplica
+  validaciones de categoría, idioma, credenciales, créditos, máximo por lote,
+  límites diarios/mensuales y ejecución en curso. Las rutas de oportunidades
+  ya generan títulos, permiten ejecutar una categoría completa o un título
+  individual y conservan las mismas validaciones. Primer lote MCP aprobado por
+  el pedido de Milton: (1) generar oportunidades, (2) listar títulos concretos
+  por categoría, (3) publicar oportunidades seleccionadas con previsualización
+  y confirmación, y (4) publicar una lista manual de títulos en una categoría
+  con la misma previsualización y confirmación. Nunca se disparará una
+  publicación al primer mensaje ambiguo de ChatGPT.
+- **Primer lote MCP implementado localmente, sin desplegar:** se extendió
+  `listar_oportunidades` para devolver títulos e IDs, se añadió publicación
+  de oportunidades seleccionadas de una sola categoría y publicación de una
+  lista manual de títulos en una categoría, ambas con previsualización y
+  `confirmar=true` obligatorio. También se extendió la ruta de ejecución para
+  procesar varios títulos seleccionados de la misma oportunidad en un solo
+  lote. `git diff --check` no reporta errores.
+
+- **Entrega y Desbloqueo de Antigravity (13/8/2026) — Pre-validación Inteligente y Créditos de Imagen:**
+  - **PARA:** Codex, Claude, Milton.
+  - **ENTREGA:** Campo `hasImageCredits Boolean @default(true)` integrado en `User` (`packages/db/prisma/schema.prisma`), migración idempotente `20260813210000_add_user_has_image_credits`, `npx prisma generate` ejecutado con éxito, componente Pop-up `ImageCreditsModal.tsx`, endpoint `/api/pre-validation`, protección en `/api/runs`, `/api/opportunities/execute*`, `current-user.ts`, navegación por anclas en `configuracion/page.tsx` (`#credentials`, `#categories`, `#language`, `#google`), detección en worker `queue.ts` y control en `usuarios/page.tsx`.
+  - **VERIFICACIÓN:** `npm --prefix apps/web run typecheck` finalizó con **0 errores** (código 0). `npm --prefix apps/worker run build` finalizó con **0 errores** (código 0).
+  - **DECISIÓN O PREGUNTA:** El schema y el Prisma Client quedan 100% sincronizados y el typecheck global queda desbloqueado para que el Capitán (Codex) pueda validar el lote completo de forma segura.
+  - **SIGUIENTE ACCIÓN:** Capitán (Codex) puede repetir su typecheck e integrar el lote MCP en el flujo de despliegue unificado.
 
 ## Reglas durante el trabajo
 
@@ -665,10 +767,11 @@ ejecutar de forma explícita y auditada después del despliegue.
     - **Paso 1 (10minutesWebsite)**: Explica las credenciales, incluye enlace directo de reseteo de contraseña (`https://10minuteswebsite.net/dashboard/forgot-password.php`), sugerencia de sincronizar contraseñas, y formulario de guardado/edición rápida.
     - **Paso 2 (Categorías)**: Solo se activa tras el Paso 1; botón para sincronizar/descargar categorías de 10minutesWebsite en vivo con badge de estado y etiquetas.
     - **Paso 3 (Idioma de redacción)**: Solo se activa tras el Paso 2; selector de idioma principal con guardado directo y botón de recarga de lista de idiomas. Blindado para que el idioma por defecto `"es"` de BD no marque el paso como listo antes de tiempo.
-    - **Paso 4 (Google Search Console)**: Solo se activa tras el Paso 3; instrucción explícita de abrir GSC en una pestaña contigua para verificar activación antes de conectar, flujo OAuth y selector de sitio web.
+    - **Paso 4 (Google Search Console)**: Solo se activa tras el Paso 3; instrucción explícita de abrir GSC en una pestaña contigua para verificar activación antes de conectar, enlace al videotutorial de YouTube (`https://youtu.be/c9aOFmvaHHo?si=0K0XfnbJPE2j8OMt&t=5`), flujo OAuth y selector de sitio web.
     - **Paso 5 (Meta final)**: Solo se activa al completar los 4 anteriores; felicitación y acceso directo a publicar el primer artículo o explorar Oportunidades SEO).
   - `apps/web/src/app/dashboard/page.tsx` (integración del nuevo `OnboardingWizard` en la página principal, y renderizado condicional estricto `{hasPublishedAny && <PerformanceDashboard />}` para que los usuarios nuevos vean exclusivamente el Wizard sin métricas ni gráficas interfiriendo).
   - `apps/web/src/components/PerformanceDashboard.tsx` (se oculta automáticamente cuando `totalPublished === 0` para que el usuario nuevo vea exclusivamente el Wizard de activación al ingresar a Inicio).
+  - `apps/web/src/components/GoogleSearchConsoleSection.tsx` (se añadió el bloque con la pregunta "¿No tienes el Google Search Console? Aprende cómo activarte paso a paso" y el botón con enlace al videotutorial oficial de YouTube).
   - `apps/web/src/components/DashboardNav.tsx` (se añadió `marginBottom: 28` a la barra de menús para despegar con holgura todos los módulos en desktop y móvil).
   - `apps/web/src/app/dashboard/configuracion/page.tsx` (nueva pestaña `"wizard"` / `"🚀 Configuración Inicial"` con diseño VIP destacado y sombra azul, banner hero superior prominente `"Asistente de Configuración Inicial Paso a Paso"` con botón directo de apertura, lectura de parámetro `?tab=wizard`, y renderizado de `<OnboardingWizard variant="standalone" />`, preservando el control de visibilidad de módulos).
   - `TO-DO.md` (ítem movido a la sección *Hecho*).
