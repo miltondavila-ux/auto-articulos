@@ -8,18 +8,26 @@ export const BASE_USER_MANUAL = `
 
 Este manual explica cómo usar la plataforma desde la perspectiva de una persona usuaria. No describe contraseñas internas, programación ni configuración técnica del sistema.
 
-## Antes de empezar
+## Antes de empezar (Asistente de Configuración Inicial)
 
-1. Entra a Configuración y guarda las credenciales de tu cuenta de 10minutesWebsite. Son distintas de las credenciales de Auto Artículos.
-2. Sincroniza las categorías y los idiomas de tu sitio. Sin categorías no puedes elegir dónde publicar; sin idioma no puedes iniciar un lote.
-3. Conecta Google Search Console si quieres usar Oportunidades SEO. Después elige la propiedad o sitio correcto.
-4. Conecta solo las redes sociales que quieras usar. Cada conexión se configura desde Configuración.
+Cuando ingresas a tu cuenta por primera vez o aún no tienes artículos publicados, Inicio te muestra el **Asistente de Configuración Inicial Paso a Paso**. Este asistente te guía de forma secuencial por los 4 pasos esenciales:
+
+1. **Paso 1 (Cuenta de 10minutesWebsite):** Guarda tu usuario y contraseña de 10minutesWebsite. Si no recuerdas esa clave, puedes restablecerla o crear una nueva en segundos desde el enlace directo de recuperación de 10minutesWebsite incluido en el asistente.
+2. **Paso 2 (Sincronizar categorías):** Descarga en vivo las categorías reales de tu web para clasificar tus artículos.
+3. **Paso 3 (Idioma de redacción):** Confirma el idioma principal en el que la Inteligencia Artificial redactará tus contenidos.
+4. **Paso 4 (Google Search Console):** Abre Search Console en una pestaña contigua de tu navegador para comprobar que esté activo con la cuenta de Google dueña de tu web, y luego conéctalo mediante Google OAuth seleccionando tu sitio.
+5. **Meta final:** Al completar los 4 pasos, se desbloquea el acceso para publicar tu primer artículo o explorar Oportunidades SEO.
+
+También puedes volver a abrir el Asistente en cualquier momento desde **Configuración** (/dashboard/configuracion?tab=wizard).
 
 ## Inicio
 
 Ruta: /dashboard
 
-Inicio te muestra el acceso principal a las herramientas. Desde el menú puedes ir a Publicar, Publicaciones en Curso, Oportunidades, Oportunidades Redes, Historial, Configuración y Actualizaciones. Algunas opciones pueden estar ocultas temporalmente por el administrador.
+Inicio es tu centro de operaciones:
+- **Para cuentas nuevas (sin artículos aún):** Muestra de forma prioritaria el Asistente de Configuración Inicial para que completes tu puesta a punto sin distracciones.
+- **Para cuentas con artículos publicados:** Muestra el panel de métricas de rendimiento (artículos publicados hoy, en el mes, límites y gráfico de actividad).
+- Desde el menú superior tienes acceso a: Publicar, Publicaciones en Curso, Oportunidades, Oportunidades Redes, Historial, Configuración y Actualizaciones.
 
 ## Configuración
 
@@ -27,9 +35,13 @@ Ruta: /dashboard/configuracion
 
 Aquí preparas tu cuenta y personalizas el contenido.
 
+### 🚀 Configuración Inicial (Asistente Paso a Paso)
+
+Pestaña destacada en Configuración que te permite repasar o completar el asistente de 4 pasos en cualquier momento. Cuenta con un banner superior para abrirlo directamente.
+
 ### Cuenta de 10minutesWebsite
 
-Guarda el usuario y contraseña de tu cuenta de 10minutesWebsite. La plataforma los usa para publicar artículos en tu sitio. Si no recuerdas esa contraseña, usa la recuperación de contraseña de 10minutesWebsite; no uses aquí la contraseña de Auto Artículos.
+Guarda el usuario y contraseña de tu cuenta de 10minutesWebsite. La plataforma los usa para publicar artículos en tu sitio. Si no recuerdas esa contraseña, usa el enlace de recuperación de 10minutesWebsite; no uses aquí la contraseña de Auto Artículos.
 
 ### Categorías e idiomas
 
