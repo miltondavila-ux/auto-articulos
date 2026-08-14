@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
 import { triggerWorkerNow } from "@/lib/trigger-worker";
+import { hasTrialAccess } from "@/lib/trial";
 
 // Bug de consumo de datos encontrado el 30/7/2026: este endpoint se
 // consulta con polling frecuente (Inicio) y en cada visita al Historial, y
@@ -73,12 +74,39 @@ export async function POST(request: NextRequest) {
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
     select: {
+      role: true,
+      isTrialSignup: true,
+      trialStartedAt: true,
+      trialUnlocked: true,
       maxTitlesPerBatch: true,
       monthlyArticleLimit: true,
       dailyArticleLimit: true,
       contentLanguage: true,
+      hasImageCredits: true,
     },
   });
+
+  if (!hasTrialAccess(user)) {
+    return NextResponse.json(
+      {
+        error:
+          "Tu período de prueba gratuita ha finalizado. Contacta al administrador para desbloquear tu cuenta.",
+        code: "TRIAL_EXPIRED",
+      },
+      { status: 403 },
+    );
+  }
+
+  if (!user.hasImageCredits) {
+    return NextResponse.json(
+      {
+        error:
+          "Tu cuenta de 10minutesWebsite no tiene créditos de imagen disponibles. Solicita más créditos gratuitos en https://www.10minuteswebsite.com/ayuda",
+        code: "NO_IMAGE_CREDITS",
+      },
+      { status: 400 },
+    );
+  }
 
   const effectiveLanguage =
     typeof contentLanguage === "string" && contentLanguage.trim()

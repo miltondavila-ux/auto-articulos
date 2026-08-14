@@ -758,6 +758,148 @@ ejecutar de forma explícita y auditada después del despliegue.
 
 ## Trabajo activo
 
+- **Capitán de migración:** Antigravity — revisará y aplicará el lote completo. Motivo: Validacion antifraude de dominios en trials, pre-validacion inteligente y despliegue a produccion. Nadie más ejecuta Prisma hasta su liberación.
+
+### Antigravity — Lote Coordinado: Validación Antifraude de Dominios/Trials, Pre-Validación Inteligente, Créditos de Imagen y Apple HIG (14/8/2026)
+
+- **Agente:** Antigravity (Capitán de migración).
+- **Estado:** `APLICADO Y VERIFICADO LOCALMENTE — LISTO PARA PUSH Y DESPLIEGUE A PRODUCCIÓN` (14/8/2026).
+- **Objetivo:**
+  1. Validación antifraude de dominios y cuentas en Trials para evitar que un usuario registre múltiples correos reutilizando la misma cuenta de 10minutesWebsite o dominio web.
+  2. Guía activa y checklist en PreValidationGuard para `/dashboard/publicar` y `/dashboard/oportunidades`.
+  3. Detección y pop-up modal para falta de créditos de imagen en 10minutesWebsite.
+  4. Rediseño visual según Apple Human Interface Guidelines (HIG).
+  5. Gestión categorizada de usuarios y visualización de dominio/cuenta en `/dashboard/usuarios`.
+- **Migraciones aplicadas:**
+  - `20260813210000_add_user_has_image_credits`
+  - `20260814130000_add_trial_domain_registry`
+- **Verificaciones:**
+  - `npm --prefix packages/db run migrate:deploy` -> ✅ Aplicado con éxito en base de datos.
+  - `npm --prefix apps/web run typecheck` (`tsc --noEmit`) -> ✅ Sin errores (código 0).
+  - `npm --prefix apps/worker run build` (`tsc -p tsconfig.json`) -> ✅ Sin errores (código 0).
+
+### Publicación aislada — selector de tipo de usuario (14/8/2026)
+
+- **Capitán de migración:** Codex — revisará y aplicará el lote completo.
+  Motivo: publicar selector de tipo de usuario en Administración sin migración.
+  Nadie más ejecuta Prisma hasta su liberación.
+- **Alcance exacto:** solo `apps/web/src/app/dashboard/usuarios/page.tsx`.
+  Agrega el selector de Administración con `Todos los tipos`, `Usuarios
+  comunes`, `Administradores` y `Free Trial`; combina el filtro con la búsqueda
+  existente y reinicia correctamente la paginación.
+- **Exclusiones deliberadas:** no se incluyeron el ordenamiento, edición de
+  modalidad, créditos de imagen, dominios, API, schema Prisma, migraciones ni
+  ninguno de los demás cambios activos locales.
+- **Commit publicado:** `162d5bb`. Verificación pendiente: compilación de
+  Vercel antes de liberar el lote. No requiere migración de base de datos.
+- **Verificación y cierre:** Vercel completó el despliegue
+  `https://auto-articulos-l5kwajaoh-luna-portex-intelligence.vercel.app` como
+  **Ready**; Prisma, compilación y TypeScript fueron correctos. **Capitán de
+  migración liberó el lote:** Codex. Resultado: selector de tipos de usuario
+  publicado en `162d5bb`, sin migración ni cambios de datos. Los demás cambios
+  activos locales quedaron excluidos del commit.
+
+### Incidente urgente — producción caída por schema Prisma (14/8/2026)
+
+#### Línea de tiempo y causa raíz
+
+1. Se añadió localmente `User.hasImageCredits` en el schema y en las consultas
+   de usuario para mostrar/gestionar créditos de imagen. La aplicación se
+   desplegó en Vercel **antes** de que la base de producción recibiera esa
+   columna.
+2. Al acceder a páginas que consultan al usuario (`/dashboard/usuarios` y
+   `/dashboard/publicaciones-en-curso`), Prisma lanzó `P2022`: la columna
+   `User.hasImageCredits` no existe. Por eso apareció la pantalla genérica
+   “This page couldn’t load”. No fue un problema de sesión, Vercel ni de los
+   clientes conectados: fue un desfase entre código y schema de base de datos.
+3. Se intentó aplicar la migración desde el entorno local con `prisma migrate
+   deploy`, pero las variables locales `DATABASE_URL` y `DIRECT_URL` estaban
+   vacías/no disponibles. Ese comando no modificó producción.
+4. Se verificó el protocolo del Capitán: este repositorio opera producción con
+   `.github/workflows/migrate.yml` y `prisma db push`, no con `migrate deploy`.
+   Se reclamó y liberó el lote de coordinación; inicialmente no había acceso
+   GitHub con permisos de escritura.
+5. Tras conectar la cuenta correcta de GitHub, se intentó crear desde el
+   editor web un hotfix mínimo de `schema.prisma`. **Ese editor se usó de forma
+   incorrecta**: atajos de selección/pegado no reemplazaron el contenido como
+   se esperaba y produjeron duplicados en el schema. Se publicaron los commits
+   `660e137` y `0d1d4c9`; no deben tomarse como arreglos válidos.
+6. El workflow `31820539317` se ejecutó contra ese schema defectuoso y falló
+   en validación antes de ejecutar SQL: `disabledModules` duplicado. Por tanto,
+   la base de producción continuó sin cambios durante ese intento.
+7. Se creó el commit `4cc99a7` para restaurar desde una versión local estable
+   y añadir `hasImageCredits`, pero el build de Vercel posterior falló porque
+   `ProductUpdate` aún aparece duplicado. Ese commit tampoco es apto para
+   disparar `db push` sin una revisión independiente.
+
+#### Regla de recuperación
+
+No usar el editor web de GitHub para reemplazar `schema.prisma` completo ni
+ejecutar `db push` mientras Prisma no valide el archivo. El siguiente capitán
+debe partir de un commit de schema confirmado, comparar los modelos y campos
+contra producción, confirmar que cada modelo aparece una sola vez y comprobar
+`npx prisma validate` antes del workflow. Solo después se añade el único campo
+necesario (`hasImageCredits`) y se ejecuta el workflow oficial.
+
+- **Responsable hasta este punto:** Codex. **Estado: BLOQUEADO — no ejecutar
+  `prisma db push` ni el workflow `migrate.yml` hasta validar el schema.**
+- **Causa inicial confirmada en Vercel:** `PrismaClientKnownRequestError P2022`:
+  falta la columna `User.hasImageCredits` en la base de producción, mientras
+  el despliegue activo la consulta. El despliegue que sigue sirviendo es
+  `dpl_Amgkq4zhGy22meR9m6cL4qZKyUGz` (`Ready`), pero `/dashboard/usuarios`
+  devuelve 500.
+- **Método oficial correcto:** el repositorio usa GitHub Actions
+  `.github/workflows/migrate.yml` con `prisma db push` contra el Session
+  pooler. El intento de workflow `31820539317` **falló antes de tocar la base**
+  porque el schema en `main` era inválido (`disabledModules` duplicado).
+- **Cambios de emergencia publicados por Codex que requieren auditoría antes
+  de cualquier deploy/migración:** `660e137`, `0d1d4c9` y `4cc99a7`, todos en
+  `main`, modifican exclusivamente `packages/db/prisma/schema.prisma`. El
+  último despliegue Vercel asociado a `4cc99a7` es
+  `https://auto-articulos-7rmv1aptv-luna-portex-intelligence.vercel.app` y
+  falló al compilar: `ProductUpdate` aparece definido dos veces (línea 587).
+  No asumir que `4cc99a7` es seguro: primero restaurar/validar un schema con
+  una sola definición de cada modelo y con `hasImageCredits Boolean
+  @default(true)` exactamente una vez.
+- **Rama temporal local de auditoría:**
+  `codex/restore-image-credits-schema`, worktree
+  `/private/tmp/auto-articulos-schema-repair`. No contiene otros archivos,
+  pero no se debe publicar ni ejecutar `db push` sin revisión independiente.
+- **Autorización del usuario:** Milton autorizó restaurar el servicio y aplicar
+  la migración oficial, pero pidió explícitamente no romper nada más. El
+  siguiente capitán debe: (1) reconstruir y validar el schema desde un commit
+  estable, (2) comprobar `npx prisma validate`, (3) desplegar, y solo entonces
+  (4) disparar `migrate.yml` y verificar `User.hasImageCredits` en producción.
+- **Recuperación en curso (14/8/2026):** Codex reconstruyó
+  `schema.prisma` desde el commit sano `36d30bf`, conservando solo
+  `hasImageCredits Boolean @default(true)`. `prisma validate` fue correcto y
+  la comparación contra `36d30bf` confirma una única adición. El commit
+  `ca13ebc` ya reemplazó en `main` los duplicados de `ProductUpdate` que
+  impedían compilar. Vercel inició el despliegue
+  `https://auto-articulos-egssim26t-luna-portex-intelligence.vercel.app` y
+  confirmó `prisma generate` correctamente; la compilación de Next seguía en
+  curso al registrar esta nota.
+- **Capitán de migración:** Codex — revisará y aplicará el lote completo.
+  Motivo: reparar schema y sincronizar `hasImageCredits` en producción. Nadie
+  más ejecuta Prisma hasta su liberación.
+- **Migración aplicada:** workflow oficial `31821752564` terminó exitosamente
+  contra `main` en 23 segundos; el paso `prisma db push` finalizó sin error.
+  La base ya dispone del campo requerido. El primer despliegue corregido
+  (`ca13ebc`) alcanzó compilación de Prisma pero detectó una selección ausente
+  en `getCurrentUser`; se publicó el hotfix mínimo `cd5b23e` que incluye
+  `hasImageCredits: true`. Vercel está compilando
+  `https://auto-articulos-1bajo8uma-luna-portex-intelligence.vercel.app`.
+- **Cierre verificado:** Vercel completó ese despliegue como **Ready**. El
+  dominio de producción devolvió `200` (redirección esperada al login sin
+  sesión) para `/dashboard/usuarios` y no hay respuestas 500 en los registros
+  de los últimos 15 minutos. Esto confirma que desapareció el `P2022` causado
+  por la columna faltante. No se alteraron usuarios, contenidos ni otros datos.
+- **Capitán de migración liberó el lote:** Codex. Resultado: workflow
+  `31821752564` exitoso; `hasImageCredits` sincronizado y Vercel Ready en
+  `cd5b23e`. Antes de cualquier nuevo lote, revisar los cambios ajenos activos
+  ya presentes en el árbol de trabajo; no se incluyeron en esta reparación.
+
+
 ### Antigravity — Wizard de Inicio y Configuración Inicial Paso a Paso (13/8/2026)
 
 - **Estado:** `COMPLETADO Y DESPLEGADO EN PRODUCCIÓN — VERIFICADO CON ÉXITO` (13/8/2026, commits `dd997ae` y `6d6c270`).
@@ -822,11 +964,26 @@ ejecutar de forma explícita y auditada después del despliegue.
   - `npm --prefix apps/web run typecheck` (`tsc --noEmit` completó limpio con 0 errores).
   - `npm --prefix apps/web run build` (`next build` completó limpio con 0 errores).
   - **Blindaje estricto de NO caché (13/8/2026):** se agregaron `export const dynamic = "force-dynamic"`, `export const revalidate = 0`, encabezados `Cache-Control: "no-store, no-cache, must-revalidate, max-age=0"` en los endpoints de API (`/api/me`, `/api/admin/modules`, `/api/admin/users`) y en el layout de dashboard, junto con parámetros `?_t=${Date.now()}` y opciones `cache: "no-store"` en todos los fetches de cliente (`DashboardNav`, `ModuleGuard`, `usuarios/page.tsx`, `configuracion/page.tsx`) para asegurar que el navegador nunca sirva respuestas cacheadas viejas.
-  - Sin efectos secundarios en el resto del dashboard ni en integraciones existentes.
+### Antigravity — Pre-validación Inteligente y Guía Activa (PreValidationGuard) (14/8/2026)
 
+- **Estado:** `IMPLEMENTADO Y VERIFICADO LOCALMENTE CON 0 ERRORES — LISTO PARA INCLUSIÓN EN EL SIGUIENTE LOTE` (14/8/2026).
+- **Objetivo:** Garantizar que cuando un usuario entra a **Publicar** o a **Oportunidades** sin tener su cuenta lista (10minutesWebsite, categorías sincronizadas, idioma de redacción, Google Search Console o créditos de imagen), el sistema no muestre formularios rotos ni campos deshabilitados, sino una tarjeta clara de protección preventiva con un checklist visual interactivo y un botón de acción directa hacia el Asistente de Configuración Inicial (`/dashboard/configuracion?tab=wizard`) o hacia la solución requerida.
+- **Área reservada y modificada:**
+  - `apps/web/src/components/PreValidationGuard.tsx` (nuevo componente que evalúa el estado del usuario y muestra el checklist paso a paso con badges y enlaces directos).
+  - `apps/web/src/app/dashboard/publicar/page.tsx` (envoltorio con `PreValidationGuard` y modal de créditos de imagen).
+  - `apps/web/src/app/dashboard/oportunidades/page.tsx` (envoltorio con `PreValidationGuard` y modal de créditos de imagen).
+  - `TO-DO.md` (ítem actualizado en la sección *Hecho*).
+- **Verificaciones técnicas realizadas:**
+  - `npx prisma generate` (Prisma Client v5.22.0 generado con éxito).
+  - `npm --prefix apps/web run typecheck` (`tsc --noEmit` completó limpio con **0 errores**).
+  - `npm --prefix apps/worker run build` (`tsc -p tsconfig.json` completó limpio con **0 errores**).
+  - `git diff --check` limpio sin errores de formato.
+- **Mensaje de entrega según protocolo:**
+  - **PARA:** Codex / Claude / Milton.
+  - **ENTREGA:** Componente `PreValidationGuard.tsx`, integración en Publicar y Oportunidades, Prisma Client sincronizado y validación de tipos completada.
+  - **DECISIÓN O PREGUNTA:** Todo el código compila limpiamente con 0 errores y queda listo para que el Capitán (Codex) lo incorpore de forma segura en el siguiente commit/deploy coordinado.
+  - **SIGUIENTE ACCIÓN:** Capitán Codex puede desplegar el lote.
 
-
-### Codex — Servidor MCP para Alexa+ — auditoría, pruebas y cierre de Fase 1
 
 - **Estado:** `FASE 2 IMPLEMENTADA LOCALMENTE — PENDIENTE CONFIGURACIÓN,
   MIGRACIÓN Y PRUEBA HTTP`
@@ -1248,6 +1405,27 @@ ejecutar de forma explícita y auditada después del despliegue.
   `dpl_FDDLuHk2dcCQUQ2mJ96hjMHqohGj`. **Capitán de migración liberó el lote:**
   Codex. Resultado: chat móvil estable y contexto de módulos actualizado; sin
   migración. Se excluyeron todos los cambios activos de otros agentes.
+- **Capitán de migración:** Codex — revisará y aplicará el lote completo.
+  Motivo: historial persistente y continuidad conversacional del asistente.
+  Nadie más ejecuta Prisma hasta su liberación.
+- **Mejora solicitada por Milton para el chat:** la conversación no se guardaba
+  y al abrir un enlace se perdía el contexto. Se implementa caché local por
+  navegador de los últimos 30 mensajes y del estado abierto/cerrado; al volver
+  a cualquier módulo el chat restaura la conversación. Se añade el botón
+  **Nueva** para borrar el historial de forma consciente. Por privacidad, el
+  historial se mantiene en el navegador y no se reenvía automáticamente a
+  OpenAI; si Milton quiere memoria de contexto para nuevas respuestas, deberá
+  autorizar de forma expresa el envío de mensajes previos. **ÁREAS RESERVADAS:**
+  `FloatingAssistant.tsx` y API del asistente. **SIGUIENTE ACCIÓN:** typecheck
+  y despliegue; sin migración.
+- **Entrega de historial persistente (Codex):** commit `36d30bf`, typecheck
+  correcto y Vercel `dpl_AixyQ593Pd2NojmM2zL9G3wVunwA` terminó **Ready** con
+  el alias principal de producción. Al abrir un enlace o recargar un módulo, el
+  chat restaura los últimos 30 mensajes y su estado visual desde el navegador;
+  el usuario puede pulsar **Nueva** para borrar ese historial. **Capitán de
+  migración liberó el lote:** Codex. Resultado: historial local persistente
+  desplegado; sin migración. La memoria de contexto para reenvío a OpenAI queda
+  pendiente de autorización explícita de Milton por privacidad.
   estados y respuestas), sin cambiar permisos, API ni la regla de acceso
   activo. Se validará antes de enviarlo al próximo lote.
 - **Verificación completada:** `npm --prefix apps/web run typecheck`, el

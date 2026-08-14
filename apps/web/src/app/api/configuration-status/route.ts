@@ -46,6 +46,7 @@ export async function GET() {
         articleSignature: true,
         phone: true,
         imagePrompt: true,
+        hasImageCredits: true,
       },
     }),
     // 4. Google Search Console
@@ -89,7 +90,7 @@ export async function GET() {
       required: true,
       section: "platform",
       description: "Tu usuario y contraseña de 10minutesWebsite para publicar artículos automáticamente.",
-      actionUrl: "/dashboard/configuracion?tab=platform",
+      actionUrl: "/dashboard/configuracion?tab=platform#credentials",
       actionLabel: "Configurar credenciales",
     },
     {
@@ -99,7 +100,7 @@ export async function GET() {
       required: true,
       section: "platform",
       description: "Al menos una categoría sincronizada desde 10minutesWebsite para clasificar tus artículos.",
-      actionUrl: "/dashboard/configuracion?tab=platform",
+      actionUrl: "/dashboard/configuracion?tab=platform#categories",
       actionLabel: "Sincronizar categorías",
     },
     {
@@ -109,8 +110,18 @@ export async function GET() {
       required: true,
       section: "platform",
       description: "El idioma en que la IA redactará tus artículos (español, inglés, etc.).",
-      actionUrl: "/dashboard/configuracion?tab=platform",
+      actionUrl: "/dashboard/configuracion?tab=platform#language",
       actionLabel: "Seleccionar idioma",
+    },
+    {
+      id: "image-credits",
+      label: "Créditos de imagen",
+      configured: Boolean(user?.hasImageCredits ?? true),
+      required: true,
+      section: "platform",
+      description: "Disponibilidad de créditos de generación de imágenes con IA en 10minutesWebsite.",
+      actionUrl: "https://www.10minuteswebsite.com/ayuda",
+      actionLabel: "Solicitar créditos de imagen",
     },
 
     // ━━━ SEO ━━━
@@ -121,7 +132,7 @@ export async function GET() {
       required: false,
       section: "seo",
       description: "Conecta tu sitio a Google Search Console para indexar artículos y enviar sitemaps automáticamente.",
-      actionUrl: "/dashboard/configuracion?tab=integrations",
+      actionUrl: "/dashboard/configuracion?tab=integrations#google",
       actionLabel: "Conectar Google",
     },
     {
@@ -131,7 +142,7 @@ export async function GET() {
       required: false,
       section: "seo",
       description: "Conecta tu sitio a Bing Webmaster Tools para indexar artículos en Bing automáticamente.",
-      actionUrl: "/dashboard/configuracion?tab=integrations",
+      actionUrl: "/dashboard/configuracion?tab=integrations#bing",
       actionLabel: "Conectar Bing",
     },
 

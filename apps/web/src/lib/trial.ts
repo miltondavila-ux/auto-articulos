@@ -11,10 +11,12 @@ export const TRIAL_WHATSAPP_LINK = "https://wa.link/qdwyyy";
  * desbloquee.
  */
 export function hasTrialAccess(user: {
+  role?: string;
   isTrialSignup: boolean;
   trialStartedAt: Date | null;
   trialUnlocked: boolean;
 }): boolean {
+  if (user.role === "admin") return true;
   if (user.trialUnlocked) return true;
   if (!user.isTrialSignup || !user.trialStartedAt) return true;
   return Date.now() - user.trialStartedAt.getTime() < TRIAL_MS;

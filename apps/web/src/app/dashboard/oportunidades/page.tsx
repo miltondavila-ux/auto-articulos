@@ -11,6 +11,8 @@ import {
   secondaryButtonStyle,
   sectionStyle,
 } from "@/components/dashboard-ui";
+import ImageCreditsModal from "@/components/ImageCreditsModal";
+import PreValidationGuard from "@/components/PreValidationGuard";
 
 interface OpportunityTitle {
   id: string;
@@ -71,6 +73,8 @@ export default function OportunidadesPage() {
   // nuevo, se ofrece la opción de forzar un análisis nuevo bajo el propio
   // criterio del usuario, en vez de dejarlo bloqueado sin poder intentar.
   const [canForce, setCanForce] = useState(false);
+  const [hasImageCredits, setHasImageCredits] = useState(true);
+  const [showImageCreditsModal, setShowImageCreditsModal] = useState(false);
   // Pedido explícito del usuario (11/8/2026, cuenta de Lorena Álvarez, ya
   // conectada): el aviso "Necesitas tener Google conectado..." se mostraba
   // SIEMPRE, sin revisar nada — ni siquiera esta página consultaba el
@@ -112,6 +116,9 @@ export default function OportunidadesPage() {
       setDisclosureAcceptedAt(me.opportunitiesDisclosureAcceptedAt ?? null);
       if (typeof me.contentLanguage === "string") {
         setContentLanguage(me.contentLanguage);
+      }
+      if (typeof me.hasImageCredits === "boolean") {
+        setHasImageCredits(me.hasImageCredits);
       }
     }
     if (languagesResponse.ok) {
@@ -230,6 +237,10 @@ export default function OportunidadesPage() {
   }
 
   async function executeAll() {
+    if (!hasImageCredits) {
+      setShowImageCreditsModal(true);
+      return;
+    }
     if (!contentLanguage.trim()) {
       setMessage({
         kind: "error",
@@ -246,6 +257,9 @@ export default function OportunidadesPage() {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
+      if (data.code === "NO_IMAGE_CREDITS") {
+        setShowImageCreditsModal(true);
+      }
       setMessage({
         kind: "error",
         text: data.error ?? "No se pudo publicar todas las categorías.",
@@ -259,6 +273,10 @@ export default function OportunidadesPage() {
   }
 
   async function execute(type: "group" | "title", id: string) {
+    if (!hasImageCredits) {
+      setShowImageCreditsModal(true);
+      return;
+    }
     if (!contentLanguage.trim()) {
       setMessage({
         kind: "error",
@@ -275,6 +293,9 @@ export default function OportunidadesPage() {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
+      if (data.code === "NO_IMAGE_CREDITS") {
+        setShowImageCreditsModal(true);
+      }
       setMessage({ kind: "error", text: data.error ?? "No se pudo ejecutar." });
       // Si el servidor dice que ya no existe, la lista en pantalla está
       // desactualizada (p. ej. otra pestaña ya la ejecutó/eliminó) —
@@ -327,31 +348,24 @@ export default function OportunidadesPage() {
     );
   }
 
+  const activeLangName =
+    languages.find((l) => l.externalId === contentLanguage)?.name ||
+    (contentLanguage === "es" ? "Español" : contentLanguage === "en" ? "Inglés" : contentLanguage);
+
   return (
     <div>
-      {!contentLanguage && (
-        <div
-          style={{
-            marginBottom: 20,
-            padding: "12px 16px",
-            borderRadius: 8,
-            background: "#f5e6c8",
-            color: "#8a6d1a",
-            fontSize: 13,
-          }}
-        >
-          Debes configurar tu idioma de redacción en{" "}
-          <Link
-            href="/dashboard/configuracion?tab=platform"
-            style={{ color: "#2f5fdb" }}
-          >
-            Configuración
-          </Link>{" "}
-          antes de poder ejecutar oportunidades.
-        </div>
-      )}
-
-      <section style={sectionStyle}>
+      <PreValidationGuard
+        type="oportunidades"
+        credentialsConfigured={true}
+        hasCategories={Boolean(setupStatus?.hasCategories)}
+        hasLanguage={Boolean(contentLanguage && contentLanguage.trim().length > 0)}
+        languageName={activeLangName}
+        hasImageCredits={hasImageCredits}
+        googleConnected={Boolean(setupStatus?.googleConnected)}
+        hasGoogleSiteUrl={Boolean(setupStatus?.hasSiteUrl)}
+        onOpenImageCreditsModal={() => setShowImageCreditsModal(true)}
+      >
+        <section style={sectionStyle}>
         <h2 style={h2Style}>Oportunidades SEO</h2>
         <p style={{ color: "#6b7280", fontSize: 14, lineHeight: 1.55 }}>
           Analiza impresiones, tendencias, posiciones, consultas y páginas de tu
@@ -491,25 +505,94 @@ export default function OportunidadesPage() {
             !setupStatus.hasSiteUrl ||
             !setupStatus.hasCategories ||
             !contentLanguage) && (
-            <p style={{ color: "#6b7280", fontSize: 12 }}>
-              Todavía te falta{" "}
-              {[
-                !setupStatus.googleConnected && "conectar Google",
-                setupStatus.googleConnected &&
-                  !setupStatus.hasSiteUrl &&
-                  "elegir una propiedad de Search Console",
-                !setupStatus.hasCategories && "sincronizar tus categorías",
-                !contentLanguage && "configurar tu idioma de redacción",
-              ]
-                .filter(Boolean)
-                .join(", ")}{" "}
-              en{" "}
-              <Link href="/dashboard/configuracion" style={{ color: "#2f5fdb" }}>
-                Configuración
-              </Link>
-              .
-            </p>
+            <div
+              style={{
+                marginTop: 12,
+                padding: "10px 14px",
+                borderRadius: 8,
+                background: "#fef3c7",
+                color: "#92400e",
+                fontSize: 13,
+                display: "flex",
+                flexDirection: "column",
+                gap: 4,
+              }}
+            >
+              <strong>Faltan configuraciones para aprovechar Oportunidades:</strong>
+              <ul style={{ margin: "4px 0 0 18px", padding: 0 }}>
+                {(!setupStatus.googleConnected || !setupStatus.hasSiteUrl) && (
+                  <li>
+                    <Link
+                      href="/dashboard/configuracion?tab=integrations#google"
+                      style={{ color: "#2563eb", fontWeight: 600 }}
+                    >
+                      {!setupStatus.googleConnected
+                        ? "Conectar Google Search Console"
+                        : "Elegir propiedad de Search Console"}
+                    </Link>
+                  </li>
+                )}
+                {!setupStatus.hasCategories && (
+                  <li>
+                    <Link
+                      href="/dashboard/configuracion?tab=platform#categories"
+                      style={{ color: "#2563eb", fontWeight: 600 }}
+                    >
+                      Sincronizar tus categorías
+                    </Link>
+                  </li>
+                )}
+                {!contentLanguage && (
+                  <li>
+                    <Link
+                      href="/dashboard/configuracion?tab=platform#language"
+                      style={{ color: "#2563eb", fontWeight: 600 }}
+                    >
+                      Configurar tu idioma de redacción
+                    </Link>
+                  </li>
+                )}
+              </ul>
+            </div>
           )}
+
+        {!hasImageCredits && (
+          <div
+            style={{
+              marginTop: 12,
+              padding: "10px 14px",
+              borderRadius: 8,
+              background: "#fef3c7",
+              color: "#92400e",
+              fontSize: 13,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 8,
+            }}
+          >
+            <span>
+              ⚠️ Tu cuenta de 10minutesWebsite no tiene créditos de imagen disponibles.
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowImageCreditsModal(true)}
+              style={{
+                background: "#d97706",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: 6,
+                padding: "6px 12px",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              Solicitar créditos gratuitos
+            </button>
+          </div>
+        )}
         <p style={{ color: "#6b7280", fontSize: 12 }}>
           Tu máximo permitido es de {maxTitlesPerBatch} títulos por lote.
         </p>
@@ -795,6 +878,12 @@ export default function OportunidadesPage() {
           </div>
         </section>
       ))}
+      </PreValidationGuard>
+
+      <ImageCreditsModal
+        isOpen={showImageCreditsModal}
+        onClose={() => setShowImageCreditsModal(false)}
+      />
     </div>
   );
 }

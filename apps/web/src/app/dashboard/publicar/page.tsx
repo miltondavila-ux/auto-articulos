@@ -11,6 +11,8 @@ import {
   readySectionStyle,
   disabledStyle,
 } from "@/components/dashboard-ui";
+import ImageCreditsModal from "@/components/ImageCreditsModal";
+import PreValidationGuard from "@/components/PreValidationGuard";
 import type { CategoryRow } from "@/types/dashboard";
 
 const DEFAULT_MAX_TITLES_PER_BATCH = 20;
@@ -19,6 +21,8 @@ export default function PublicarPage() {
   const router = useRouter();
   const [titlesText, setTitlesText] = useState("");
   const [credentialsConfigured, setCredentialsConfigured] = useState(false);
+  const [hasImageCredits, setHasImageCredits] = useState(true);
+  const [showImageCreditsModal, setShowImageCreditsModal] = useState(false);
   const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [useSequenceCategory, setUseSequenceCategory] = useState(false);
@@ -52,6 +56,9 @@ export default function PublicarPage() {
       }
       if (typeof data.contentLanguage === "string") {
         setContentLanguage(data.contentLanguage);
+      }
+      if (typeof data.hasImageCredits === "boolean") {
+        setHasImageCredits(data.hasImageCredits);
       }
     }
   }, []);
@@ -124,6 +131,10 @@ export default function PublicarPage() {
   const overLimit = titleCount > maxTitlesPerBatch;
 
   async function handleIniciar() {
+    if (!hasImageCredits) {
+      setShowImageCreditsModal(true);
+      return;
+    }
     if (!contentLanguage.trim()) {
       setBanner({
         type: "error",
@@ -146,6 +157,9 @@ export default function PublicarPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        if (data.code === "NO_IMAGE_CREDITS") {
+          setShowImageCreditsModal(true);
+        }
         setBanner({
           type: "error",
           text: data.error ?? "Error al iniciar la ejecución",
@@ -158,78 +172,165 @@ export default function PublicarPage() {
     }
   }
 
+  const activeLangName =
+    languages.find((l) => l.externalId === contentLanguage)?.name ||
+    (contentLanguage === "es" ? "Español" : contentLanguage === "en" ? "Inglés" : contentLanguage);
+
   return (
     <div>
-      {!credentialsConfigured && (
-        <div
-          style={{
-            marginTop: 20,
-            padding: "12px 16px",
-            borderRadius: 8,
-            background: "#f5e6c8",
-            color: "#8a6d1a",
-            fontSize: 13,
-          }}
-        >
-          Primero conecta tu cuenta de 10minutesWebsite en{" "}
-          <Link href="/dashboard/configuracion" style={{ color: "#2f5fdb" }}>
-            Configuración
-          </Link>
-          .
-        </div>
-      )}
-
-      {!contentLanguage && (
-        <div
-          style={{
-            marginTop: 20,
-            padding: "12px 16px",
-            borderRadius: 8,
-            background: "#f5e6c8",
-            color: "#8a6d1a",
-            fontSize: 13,
-          }}
-        >
-          Debes configurar tu idioma de redacción en{" "}
-          <Link
-            href="/dashboard/configuracion?tab=platform"
-            style={{ color: "#2f5fdb" }}
+      <PreValidationGuard
+        type="publicar"
+        credentialsConfigured={credentialsConfigured}
+        hasCategories={categories.length > 0}
+        categoriesCount={categories.length}
+        hasLanguage={Boolean(contentLanguage && contentLanguage.trim().length > 0)}
+        languageName={activeLangName}
+        hasImageCredits={hasImageCredits}
+        onOpenImageCreditsModal={() => setShowImageCreditsModal(true)}
+      >
+        {hasActiveRun && (
+          <div
+            style={{
+              marginTop: 20,
+              padding: "12px 16px",
+              borderRadius: 8,
+              background: "#eafaf0",
+              color: "#1e8a4b",
+              fontSize: 13,
+            }}
           >
-            Configuración
-          </Link>{" "}
-          antes de poder publicar.
-        </div>
-      )}
+            Ya hay una ejecución en curso.{" "}
+            <Link
+              href="/dashboard/publicaciones-en-curso"
+              style={{ color: "#2f5fdb" }}
+            >
+              Ver progreso en Publicaciones en Curso
+            </Link>
+            .
+          </div>
+        )}
 
-      {hasActiveRun && (
-        <div
-          style={{
-            marginTop: 20,
-            padding: "12px 16px",
-            borderRadius: 8,
-            background: "#eafaf0",
-            color: "#1e8a4b",
-            fontSize: 13,
-          }}
-        >
-          Ya hay una ejecución en curso.{" "}
-          <Link
-            href="/dashboard/publicaciones-en-curso"
-            style={{ color: "#2f5fdb" }}
+        <section style={readySectionStyle(Boolean(selectedCategoryId))}>
+          <h2 style={h2Style}>Categoría</h2>
+          <p style={{ fontSize: 13, color: "#6b7280" }}>
+            Elige primero la categoría bajo la que se publicarán los artículos de
+            esta ejecución.
+          </p>
+          {sequenceCategories.length > 0 && (
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                fontSize: 13,
+                color: "#6b7280",
+                margin: "8px 0",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={useSequenceCategory}
+                disabled={hasActiveRun}
+                onChange={(e) => {
+                  setUseSequenceCategory(e.target.checked);
+                  setSelectedCategoryId("");
+                }}
+              />
+              Usar una categoría de secuencia en vez de una regular
+            </label>
+          )}
+          <select
+            value={selectedCategoryId}
+            onChange={(e) => setSelectedCategoryId(e.target.value)}
+            disabled={hasActiveRun || visibleCategories.length === 0}
+            style={{ ...inputStyle, width: "100%" }}
           >
-            Ver progreso en Publicaciones en Curso
-          </Link>
-          .
-        </div>
-      )}
+            <option value="">
+              {visibleCategories.length === 0
+                ? "Sin categorías sincronizadas"
+                : "Elige una categoría"}
+            </option>
+            {visibleCategories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          {categories.length === 0 && (
+            <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
+              Sincroniza tus categorías desde{" "}
+              <Link href="/dashboard/configuracion?tab=platform#categories" style={{ color: "#2f5fdb", fontWeight: 600 }}>
+                Configuración &gt; Categorías
+              </Link>
+              .
+            </p>
+          )}
 
-      <section style={readySectionStyle(Boolean(selectedCategoryId))}>
-        <h2 style={h2Style}>Categoría</h2>
-        <p style={{ fontSize: 13, color: "#6b7280" }}>
-          Elige primero la categoría bajo la que se publicarán los artículos de
-          esta ejecución.
-        </p>
-        {sequenceCategories.length > 0 && (
+          <h2 style={{ ...h2Style, marginTop: 24 }}>Idioma de este lote</h2>
+          <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 8 }}>
+            En este idioma se escribirán los artículos de este lote. Puedes dar
+            los títulos en español aunque elijas otro idioma. Solo aplica a este
+            lote; no cambia tu configuración.
+          </p>
+          <select
+            value={contentLanguage}
+            onChange={(e) => setContentLanguage(e.target.value)}
+            disabled={hasActiveRun || languages.length === 0}
+            style={{ ...inputStyle, width: "100%" }}
+          >
+            {languages.length === 0 ? (
+              <option value="">Sin idiomas sincronizados</option>
+            ) : (
+              languages.map((l) => (
+                <option key={l.id} value={l.externalId}>
+                  {l.name}
+                </option>
+              ))
+            )}
+          </select>
+        </section>
+
+        <section style={readySectionStyle(titleCount > 0 && !overLimit)}>
+          <h2 style={h2Style}>Títulos</h2>
+          <p style={{ fontSize: 13, color: "#6b7280" }}>
+            Pega un título por línea. Puedes publicar como máximo{" "}
+            <strong>{maxTitlesPerBatch}</strong> por lote (si tienes más,
+            divídelos en varios lotes).
+          </p>
+          <textarea
+            value={titlesText}
+            onChange={(e) => setTitlesText(e.target.value)}
+            placeholder={"Título del primer artículo\nTítulo del segundo artículo"}
+            rows={8}
+            disabled={hasActiveRun}
+            style={{ ...inputStyle, width: "100%", fontFamily: "monospace" }}
+          />
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: 12,
+              marginTop: 4,
+              color: overLimit ? "#d64545" : "#6b7280",
+            }}
+          >
+            <span>
+              {titleCount} de {maxTitlesPerBatch} títulos
+            </span>
+            {overLimit && (
+              <span>
+                Supera el máximo permitido ({titleCount}/{maxTitlesPerBatch})
+              </span>
+            )}
+          </div>
+        </section>
+
+        <section style={sectionStyle}>
+          <h2 style={h2Style}>Publicar</h2>
+          <p style={{ fontSize: 13, color: "#6b7280" }}>
+            Al iniciar, se creará una nueva ejecución en segundo plano que
+            procesará los artículos uno a uno.
+          </p>
           <label
             style={{
               display: "flex",
@@ -237,185 +338,76 @@ export default function PublicarPage() {
               gap: 8,
               fontSize: 13,
               color: "#6b7280",
-              margin: "8px 0",
+              margin: "10px 0",
             }}
           >
             <input
               type="checkbox"
-              checked={useSequenceCategory}
+              checked={disableIndexing}
               disabled={hasActiveRun}
-              onChange={(e) => {
-                setUseSequenceCategory(e.target.checked);
-                setSelectedCategoryId("");
-              }}
+              onChange={(e) => setDisableIndexing(e.target.checked)}
             />
-            Usar una categoría de secuencia en vez de una regular
+            Desactivar indexación en buscadores para este lote (por defecto queda
+            activada, como en 10minutesWebsite)
           </label>
-        )}
-        <select
-          value={selectedCategoryId}
-          onChange={(e) => setSelectedCategoryId(e.target.value)}
-          disabled={hasActiveRun || visibleCategories.length === 0}
-          style={{ ...inputStyle, width: "100%" }}
-        >
-          <option value="">
-            {visibleCategories.length === 0
-              ? "Sin categorías sincronizadas"
-              : "Elige una categoría"}
-          </option>
-          {visibleCategories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        {categories.length === 0 && (
-          <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
-            Sincroniza tus categorías desde{" "}
-            <Link href="/dashboard/configuracion" style={{ color: "#2f5fdb" }}>
-              Configuración
-            </Link>
-            .
-          </p>
-        )}
-
-        <h2 style={{ ...h2Style, marginTop: 24 }}>Idioma de este lote</h2>
-        <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 8 }}>
-          En este idioma se escribirán los artículos de este lote. Puedes dar
-          los títulos en español aunque elijas otro idioma. Solo aplica a este
-          lote; no cambia tu configuración.
-        </p>
-        <select
-          value={contentLanguage}
-          onChange={(e) => setContentLanguage(e.target.value)}
-          disabled={hasActiveRun || languages.length === 0}
-          style={{ ...inputStyle, width: "100%" }}
-        >
-          {languages.length === 0 ? (
-            <option value="">Sin idiomas sincronizados</option>
-          ) : (
-            languages.map((l) => (
-              <option key={l.id} value={l.externalId}>
-                {l.name}
-              </option>
-            ))
-          )}
-        </select>
-        {languages.length === 0 && (
-          <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
-            Sincroniza tus idiomas desde{" "}
-            <Link href="/dashboard/configuracion" style={{ color: "#2f5fdb" }}>
-              Configuración
-            </Link>
-            . Mientras tanto se usará el idioma que tengas configurado allí.
-          </p>
-        )}
-      </section>
-
-      <section style={sectionStyle}>
-        <h2 style={h2Style}>Títulos a publicar</h2>
-        <p style={{ fontSize: 13, color: "#6b7280" }}>
-          Un título por línea. Máximo {maxTitlesPerBatch} por lote — si tienes
-          más, divídelos en varios lotes.
-        </p>
-        <textarea
-          value={titlesText}
-          onChange={(e) => setTitlesText(e.target.value)}
-          placeholder={
-            "Un título por línea\nEj:\n5 consejos para vender tu casa rápido\nCómo elegir el mejor vecindario"
-          }
-          rows={8}
-          disabled={hasActiveRun}
-          style={{
-            ...inputStyle,
-            width: "100%",
-            resize: "vertical",
-            fontFamily: "inherit",
-          }}
-        />
-        <p
-          style={{
-            fontSize: 12,
-            marginTop: 6,
-            color: overLimit ? "#d64545" : "#6b7280",
-            fontWeight: overLimit ? 600 : 400,
-          }}
-        >
-          {titleCount} / {maxTitlesPerBatch} títulos
-          {overLimit &&
-            ` — quita ${titleCount - maxTitlesPerBatch} para poder iniciar`}
-        </p>
-        <label
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            fontSize: 13,
-            color: "#6b7280",
-            margin: "10px 0",
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={disableIndexing}
-            disabled={hasActiveRun}
-            onChange={(e) => setDisableIndexing(e.target.checked)}
-          />
-          Desactivar indexación en buscadores para este lote (por defecto queda
-          activada, como en 10minutesWebsite)
-        </label>
-        <button
-          onClick={handleIniciar}
-          disabled={
-            starting ||
-            hasActiveRun ||
-            titlesText.trim().length === 0 ||
-            !selectedCategoryId ||
-            !contentLanguage ||
-            overLimit
-          }
-          style={disabledStyle(
-            buttonStyle,
-            starting ||
+          <button
+            onClick={handleIniciar}
+            disabled={
+              starting ||
               hasActiveRun ||
               titlesText.trim().length === 0 ||
               !selectedCategoryId ||
               !contentLanguage ||
-              overLimit,
+              overLimit
+            }
+            style={disabledStyle(
+              buttonStyle,
+              starting ||
+                hasActiveRun ||
+                titlesText.trim().length === 0 ||
+                !selectedCategoryId ||
+                !contentLanguage ||
+                overLimit,
+            )}
+          >
+            {hasActiveRun
+              ? "Ejecución en curso..."
+              : starting
+                ? "Iniciando..."
+                : "Iniciar"}
+          </button>
+          {!selectedCategoryId && !hasActiveRun && (
+            <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
+              Elige una categoría arriba antes de iniciar.
+            </p>
           )}
-        >
-          {hasActiveRun
-            ? "Ejecución en curso..."
-            : starting
-              ? "Iniciando..."
-              : "Iniciar"}
-        </button>
-        {!selectedCategoryId && !hasActiveRun && (
-          <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
-            Elige una categoría arriba antes de iniciar.
-          </p>
-        )}
-        {!contentLanguage && !hasActiveRun && (
-          <p style={{ fontSize: 13, color: "#d64545", marginTop: 8 }}>
-            Debes seleccionar o configurar un idioma de redacción antes de iniciar.
-          </p>
-        )}
-      </section>
+          {!contentLanguage && !hasActiveRun && (
+            <p style={{ fontSize: 13, color: "#d64545", marginTop: 8 }}>
+              Debes seleccionar o configurar un idioma de redacción antes de iniciar.
+            </p>
+          )}
+        </section>
 
-      {banner && (
-        <div
-          style={{
-            padding: 12,
-            borderRadius: 8,
-            marginTop: 8,
-            background: banner.type === "error" ? "#fdecec" : "#eafaf0",
-            color: banner.type === "error" ? "#d64545" : "#1e8a4b",
-            fontSize: 14,
-          }}
-        >
-          {banner.text}
-        </div>
-      )}
+        {banner && (
+          <div
+            style={{
+              padding: 12,
+              borderRadius: 8,
+              marginTop: 8,
+              background: banner.type === "error" ? "#fdecec" : "#eafaf0",
+              color: banner.type === "error" ? "#d64545" : "#1e8a4b",
+              fontSize: 14,
+            }}
+          >
+            {banner.text}
+          </div>
+        )}
+      </PreValidationGuard>
+
+      <ImageCreditsModal
+        isOpen={showImageCreditsModal}
+        onClose={() => setShowImageCreditsModal(false)}
+      />
     </div>
   );
 }

@@ -108,6 +108,9 @@ model User {
   // JSON serializado con los IDs de módulos deshabilitados para este usuario
   // (ej. ["oportunidades-redes", "actualizaciones"]). Null = hereda la visibilidad global.
   disabledModules                   String?
+  // Disponibilidad de créditos de imagen en 10minutesWebsite (13/8/2026).
+  // Si está en false, la cuenta no tiene créditos y se muestra un pop-up con
+  // enlace a https://www.10minuteswebsite.com/ayuda para solicitar más créditos.
   hasImageCredits                   Boolean   @default(true)
 
   credentials                Credential[]
@@ -127,6 +130,7 @@ model User {
   oauthAuthorizationCodes    OAuthAuthorizationCode[]
   oauthAccessTokens          OAuthAccessToken[]
   oauthRefreshTokens         OAuthRefreshToken[]
+  trialDomainRegistries      TrialDomainRegistry[]
 }
 
 // Credenciales del authorization server propio para el enlace de cuentas MCP.
@@ -583,4 +587,22 @@ model ProductUpdate {
 
   @@index([date])
   @@index([category])
+}
+
+// Registro histórico de dominios y cuentas de 10minutesWebsite vinculados a
+// pruebas gratuitas (Trials). Impide que un mismo cliente cree múltiples
+// cuentas de prueba con correos distintos para evadir la expiración de su trial.
+model TrialDomainRegistry {
+  id               String   @id @default(cuid())
+  userId           String
+  normalizedDomain String?  // Dominio raíz limpio (ej. "mimarcareal.com")
+  accountUsername  String?  // Username de 10minutesWebsite (en minúsculas y limpio)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([normalizedDomain])
+  @@index([accountUsername])
 }

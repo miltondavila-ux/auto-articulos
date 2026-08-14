@@ -108,16 +108,6 @@ HANDOFF, solo alimenta ideas hacia él).
   - El objetivo es liberar "oportunidades de descanibalización" y que todos
     los artículos existentes (no solo los nuevos) aporten de verdad a la
     indexación y el posicionamiento, en vez de restarse entre ellos.
-- **(13/8/2026)** Pre-validación inteligente antes de publicar un artículo o
-  correr Oportunidades: revisar que el usuario tenga (a) 10minutesWebsite
-  conectado, (b) categorías sincronizadas, (c) Google Search Console
-  conectado, (d) créditos de imagen disponibles en su cuenta de
-  10minutesWebsite. Si algo falla, llevar al usuario DIRECTO al lugar exacto
-  donde debe resolverlo (con ancla/link directo a esa sección específica, no
-  solo a Configuración en general), con un mensaje claro de qué falta. La
-  validación se hace una vez de forma visible al entrar, y después en segundo
-  plano cada vez que se intenta publicar/analizar — si algo falla en ese
-  momento, lleva al usuario a resolver ese punto exacto antes de continuar.
 - **(13/8/2026)** Crear un tercer tipo de usuario, "PRUEBAS": acceso a todo
   igual que un usuario normal, pero SIN restricciones de uso (límites
   mensuales/diarios, etc.). Nota para quien lo ejecute: revisar si esto se
@@ -127,6 +117,39 @@ HANDOFF, solo alimenta ideas hacia él).
   (cuentas internas de prueba de Milton vs. registros públicos de clientes
   potenciales); confirmar con él antes de asumir cuál es.
 ## Hecho
+
+- **(14/8/2026)** Guía y Redirección Activa a Configuración Requerida (`PreValidationGuard`):
+  - Se eliminaron los avisos pasivos y pantallas bloqueadas a medias en `/dashboard/publicar` y `/dashboard/oportunidades`.
+  - Se implementó el componente de protección y guía activa `PreValidationGuard.tsx`, el cual oculta el formulario inoperable si faltan pasos de configuración y muestra un checklist visual estructurado con badges de estado (10minutesWebsite, Categorías, Idioma, Google Search Console, Créditos de Imagen).
+  - Incluye botón CTA prominente y directo: **"🚀 Ir al Asistente de Configuración (Paso X: [Paso pendiente])"** que lleva al usuario al Wizard (`/dashboard/configuracion?tab=wizard`) o a la acción requerida, y desbloquea el formulario de forma 100% limpia tan pronto todo está listo.
+  - Ver cambios en: `apps/web/src/components/PreValidationGuard.tsx`, `apps/web/src/app/dashboard/publicar/page.tsx`, `apps/web/src/app/dashboard/oportunidades/page.tsx`.
+
+- **(13/8/2026)** Pre-validación inteligente y Modal Pop-up de Créditos de Imagen:
+  - Verificación unificada en segundo plano antes de publicar (`/dashboard/publicar`) y ejecutar oportunidades SEO (`/dashboard/oportunidades`), revisando:
+    1. **10minutesWebsite conectado**: Validación de credenciales con enlace directo a la pestaña y ancla `/dashboard/configuracion?tab=platform#credentials`.
+    2. **Categorías sincronizadas**: Detección de categorías con enlace directo a `/dashboard/configuracion?tab=platform#categories`.
+    3. **Idioma de redacción**: Verificación de idioma configurado con enlace directo a `/dashboard/configuracion?tab=platform#language`.
+    4. **Google Search Console**: Verificación de conexión y sitio web seleccionado con enlace directo a `/dashboard/configuracion?tab=integrations#google`.
+    5. **Créditos de imagen disponibles**: Nuevo campo `hasImageCredits` en `User` y comprobación preventiva. Si los créditos están agotados, se muestra el Pop-Up interactivo (`ImageCreditsModal.tsx`) bloqueando la acción y ofreciendo un botón directo a `https://www.10minuteswebsite.com/ayuda` para solicitar créditos gratuitos.
+  - Endpoint dedicado `GET /api/pre-validation` que centraliza la evaluación de los 4 pilares operativos.
+  - Salvaguardas en backend (`POST /api/runs`, `POST /api/opportunities/execute`, `POST /api/opportunities/execute-all`) rechazando con código `NO_IMAGE_CREDITS` si no hay saldo.
+  - Detección en worker (`apps/worker/src/queue.ts`) marcando automáticamente `hasImageCredits: false` cuando 10minutesWebsite reporta agotamiento de tokens/créditos de imagen.
+  - Panel de Administración (`/dashboard/usuarios`): control y toggle de `hasImageCredits` por usuario en `UserCard` y badge visual de advertencia `⚠️ SIN CRÉDITOS IMAGEN`.
+  - Ver cambios en:
+    - `packages/db/prisma/schema.prisma` y migración `20260813210000_add_user_has_image_credits`
+    - `apps/web/src/components/ImageCreditsModal.tsx`
+    - `apps/web/src/app/api/pre-validation/route.ts`
+    - `apps/web/src/app/api/runs/route.ts`
+    - `apps/web/src/app/api/opportunities/execute/route.ts`
+    - `apps/web/src/app/api/opportunities/execute-all/route.ts`
+    - `apps/web/src/app/api/me/route.ts`
+    - `apps/web/src/app/api/admin/users/route.ts`
+    - `apps/web/src/app/api/configuration-status/route.ts`
+    - `apps/web/src/app/dashboard/configuracion/page.tsx`
+    - `apps/web/src/app/dashboard/publicar/page.tsx`
+    - `apps/web/src/app/dashboard/oportunidades/page.tsx`
+    - `apps/web/src/app/dashboard/usuarios/page.tsx`
+    - `apps/worker/src/queue.ts`
 
 - **(13/8/2026)** Wizard de Inicio y Configuración Inicial interactivo paso a paso:
   - Flujo vertical estructurado en 4 pasos obligatorios secuenciales + paso final con sombreado/dessombreado dinámico (paso activo iluminado con foco azul y sombra; pasos completados en verde con check; pasos futuros atenuados/muted).

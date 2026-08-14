@@ -274,6 +274,14 @@ async function processRunTitle(
       // Un lote administrativo nunca se reintenta automáticamente: cada orden
       // puede modificar como máximo 20 artículos. El siguiente lote requiere
       // una nueva orden y retomará los pendientes de forma idempotente.
+    } else if (
+      message.includes("acabado los tokens/créditos") ||
+      message.includes("créditos de la cuenta")
+    ) {
+      await prisma.user.update({
+        where: { id: run.userId },
+        data: { hasImageCredits: false },
+      });
       await markTitleError(nextTitle.id, message);
       await prisma.run.updateMany({
         where: { id: run.id, status: { in: ["pending", "running"] } },

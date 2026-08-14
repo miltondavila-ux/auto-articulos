@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
 import { triggerWorkerNow } from "@/lib/trigger-worker";
+import { hasTrialAccess } from "@/lib/trial";
 
 // Publica TODAS las categorías de Oportunidades de una sola vez — pedido
 // explícito del usuario (8/8/2026). Cada categoría se convierte en un Run
@@ -35,12 +36,40 @@ export async function POST(request: NextRequest) {
     }),
     prisma.user.findUniqueOrThrow({
       where: { id: userId },
-      select: { maxTitlesPerBatch: true, contentLanguage: true },
+      select: {
+        role: true,
+        isTrialSignup: true,
+        trialStartedAt: true,
+        trialUnlocked: true,
+        maxTitlesPerBatch: true,
+        contentLanguage: true,
+        hasImageCredits: true,
+      },
     }),
   ]);
+  if (!hasTrialAccess(user)) {
+    return NextResponse.json(
+      {
+        error:
+          "Tu período de prueba gratuita ha finalizado. Contacta al administrador para desbloquear tu cuenta.",
+        code: "TRIAL_EXPIRED",
+      },
+      { status: 403 },
+    );
+  }
   if (!credential) {
     return NextResponse.json(
       { error: "Primero guarda tus credenciales de 10minutesWebsite." },
+      { status: 400 },
+    );
+  }
+  if (!user.hasImageCredits) {
+    return NextResponse.json(
+      {
+        error:
+          "Tu cuenta de 10minutesWebsite no tiene créditos de imagen disponibles. Solicita más créditos gratuitos en https://www.10minuteswebsite.com/ayuda",
+        code: "NO_IMAGE_CREDITS",
+      },
       { status: 400 },
     );
   }

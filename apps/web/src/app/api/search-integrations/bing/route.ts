@@ -3,6 +3,7 @@ import { prisma } from "@auto-articulos/db";
 import { listBingSites, listBingSitemaps } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
 import { getBingTokenForIntegration } from "@/lib/bing-token";
+import { validateAndRegisterTrialDomain } from "@/lib/domain-validation";
 
 async function integrationFor(userId: string) {
   return prisma.searchIntegration.findUnique({
@@ -69,6 +70,13 @@ export async function PATCH(request: NextRequest) {
   if (typeof siteUrl !== "string" || typeof sitemapUrl !== "string") {
     return NextResponse.json({ error: "Datos inválidos." }, { status: 400 });
   }
+
+  // Validación antifraude de trials: impide que cuentas de prueba reutilicen dominios previos
+  const domainValidation = await validateAndRegisterTrialDomain(userId, siteUrl);
+  if (!domainValidation.ok) {
+    return NextResponse.json({ error: domainValidation.error }, { status: 400 });
+  }
+
   const integration = await integrationFor(userId);
   if (!integration)
     return NextResponse.json(

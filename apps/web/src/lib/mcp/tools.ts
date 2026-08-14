@@ -22,6 +22,7 @@ import { toolText } from "./protocol";
  */
 import { GET as listarOportunidadesRoute, POST as analizarOportunidadesRoute } from "@/app/api/opportunities/route";
 import { POST as ejecutarOportunidadRoute } from "@/app/api/opportunities/execute/route";
+import { POST as publicarTitulosRoute } from "@/app/api/runs/route";
 
 type ToolHandler = (args: Record<string, unknown>) => Promise<ReturnType<typeof toolText>>;
 
@@ -61,16 +62,24 @@ export const TOOLS: ToolDef[] = [
     title: "Listar oportunidades",
     description:
       "Devuelve las oportunidades SEO guardadas, agrupadas por categoría, con la cantidad de títulos y las impresiones de cada una. Solo lectura: no publica ni modifica nada. Úsala antes de publicar para saber qué hay pendiente.",
-    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    inputSchema: {
+      type: "object",
+      properties: {
+        categoria: { type: "string", description: "Opcional. Filtra por el nombre de una categoría." },
+      },
+      additionalProperties: false,
+    },
     requiredScope: "oportunidades:leer",
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-    handler: async () => {
+    handler: async (args) => {
       const { data } = await readRoute(await listarOportunidadesRoute());
-      const groups = (data.groups ?? []) as Array<{
+      let groups = (data.groups ?? []) as Array<{
         category?: { name?: string } | null;
         impressions?: number;
-        titles?: unknown[];
+        titles?: Array<{ id?: string; text?: string }>;
       }>;
+      const filtro = typeof args.categoria === "string" ? args.categoria.trim().toLocaleLowerCase() : "";
+      if (filtro) groups = groups.filter((group) => group.category?.name?.toLocaleLowerCase().includes(filtro));
       if (groups.length === 0) {
         return toolText(
           "No hay oportunidades guardadas. Puedes generarlas con la herramienta crear_oportunidades.",
@@ -79,7 +88,8 @@ export const TOOLS: ToolDef[] = [
       const lineas = groups.map((g) => {
         const nombre = g.category?.name ?? "Sin categoría";
         const cantidad = g.titles?.length ?? 0;
-        return `${nombre}: ${cantidad} ${cantidad === 1 ? "título" : "títulos"}, ${g.impressions ?? 0} impresiones`;
+        const titles = (g.titles ?? []).map((title) => `  - ${title.text ?? "Sin título"} [${title.id ?? "sin-id"}]`).join("\n");
+        return `${nombre}: ${cantidad} ${cantidad === 1 ? "título" : "títulos"}, ${g.impressions ?? 0} impresiones\n${titles}`;
       });
       return toolText(
         `Hay ${groups.length} ${groups.length === 1 ? "categoría" : "categorías"} con oportunidades:\n${lineas.join("\n")}`,
@@ -116,6 +126,84 @@ export const TOOLS: ToolDef[] = [
       return toolText(
         `Listo. Se generaron oportunidades en ${groups.length} ${groups.length === 1 ? "categoría" : "categorías"}. No se publicó nada todavía.`,
       );
+    },
+  },
+
+  {
+    name: "publicar_oportunidades_seleccionadas",
+    title: "Publicar oportunidades seleccionadas",
+    description:
+      "Publica títulos concretos de una sola categoría. Primero llama con confirmar=false para mostrar la vista previa. Solo usa confirmar=true después de que el usuario confirme expresamente la lista exacta; esta acción genera y publica artículos reales.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        ids_titulos: { type: "array", items: { type: "string" }, minItems: 1, description: "IDs de los títulos devueltos por listar_oportunidades." },
+        confirmar: { type: "boolean", description: "false para previsualizar; true únicamente tras confirmación explícita." },
+        desactivar_indexacion: { type: "boolean", description: "Si true, no solicita indexación automática." },
+      },
+      required: ["ids_titulos"],
+      additionalProperties: false,
+    },
+    requiredScope: "oportunidades:publicar",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+    handler: async (args) => {
+      const ids = Array.isArray(args.ids_titulos) ? args.ids_titulos.filter((id): id is string => typeof id === "string" && id.length > 0) : [];
+      if (ids.length === 0) return toolText("Debes indicar al menos un título.", true);
+      const userId = await getCurrentUserId();
+      const groups = await prisma.opportunityGroup.findMany({
+        where: { userId, titles: { some: { id: { in: ids } } } },
+        include: { category: true, titles: { orderBy: { createdAt: "asc" } } },
+      });
+      const matching = groups.flatMap((group) => group.titles.filter((title) => ids.includes(title.id)).map((title) => ({ group, title })));
+      if (matching.length !== new Set(ids).size || groups.length !== 1) {
+        return toolText("Los títulos deben existir y pertenecer todos a una sola categoría. Usa listar_oportunidades para obtener los IDs correctos.", true);
+      }
+      const category = groups[0].category?.name ?? "sin categoría";
+      const titles = matching.map(({ title }) => title.text);
+      if (args.confirmar !== true) {
+        return toolText(`Sin publicar todavía. Se crearán ${titles.length} artículo(s) en "${category}":\n${titles.map((title) => `- ${title}`).join("\n")}\n\nPide confirmación explícita y vuelve a llamar con confirmar=true.`, false);
+      }
+      const { ok, data } = await readRoute(await ejecutarOportunidadRoute(jsonRequest("/api/opportunities/execute", {
+        type: "titles", ids, disableIndexing: Boolean(args.desactivar_indexacion),
+      })));
+      return ok
+        ? toolText(`Publicación iniciada para ${titles.length} título(s) de "${category}". Puedes consultar el avance con estado_de_publicaciones.`)
+        : toolText(String(data.error ?? "No se pudo iniciar la publicación."), true);
+    },
+  },
+
+  {
+    name: "publicar_titulos_en_categoria",
+    title: "Publicar títulos en una categoría",
+    description:
+      "Crea y publica una lista de títulos indicada por el usuario dentro de una categoría existente. Primero previsualiza con confirmar=false; solo publica con confirmar=true tras confirmación explícita.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        categoria: { type: "string", description: "Nombre de la categoría existente." },
+        titulos: { type: "array", items: { type: "string" }, minItems: 1, description: "Títulos a crear y publicar." },
+        confirmar: { type: "boolean", description: "false para previsualizar; true únicamente tras confirmación explícita." },
+        desactivar_indexacion: { type: "boolean", description: "Si true, no solicita indexación automática." },
+      },
+      required: ["categoria", "titulos"],
+      additionalProperties: false,
+    },
+    requiredScope: "oportunidades:publicar",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+    handler: async (args) => {
+      const categoryName = String(args.categoria ?? "").trim();
+      const titles = Array.isArray(args.titulos) ? args.titulos.filter((title): title is string => typeof title === "string" && title.trim().length > 0).map((title) => title.trim()) : [];
+      if (!categoryName || titles.length === 0) return toolText("Indica una categoría y al menos un título.", true);
+      const userId = await getCurrentUserId();
+      const categories = await prisma.category.findMany({ where: { userId, platform: "10minutesWebsite", name: { equals: categoryName, mode: "insensitive" } }, select: { id: true, name: true } });
+      if (categories.length !== 1) return toolText(`No encontré una categoría exacta llamada "${categoryName}". Usa las categorías existentes antes de publicar.`, true);
+      if (args.confirmar !== true) return toolText(`Sin publicar todavía. Se crearán ${titles.length} artículo(s) en "${categories[0].name}":\n${titles.map((title) => `- ${title}`).join("\n")}\n\nPide confirmación explícita y vuelve a llamar con confirmar=true.`, false);
+      const { ok, data } = await readRoute(await publicarTitulosRoute(jsonRequest("/api/runs", {
+        titlesText: titles.join("\n"), categoryId: categories[0].id, disableIndexing: Boolean(args.desactivar_indexacion),
+      })));
+      return ok
+        ? toolText(`Publicación iniciada para ${titles.length} título(s) en "${categories[0].name}". Puedes consultar el avance con estado_de_publicaciones.`)
+        : toolText(String(data.error ?? "No se pudo iniciar la publicación."), true);
     },
   },
 

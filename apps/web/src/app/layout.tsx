@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#031537",
+  themeColor: "#070d1a",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -35,9 +35,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body
         style={{
           margin: 0,
-          fontFamily: "system-ui, -apple-system, sans-serif",
-          background: "#031537",
-          color: "#e8ecf5",
+          fontFamily:
+            "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'SF Pro', system-ui, sans-serif",
+          background: "var(--apple-bg, #070d1a)",
+          color: "var(--apple-text-primary, #f5f5f7)",
           minHeight: "100vh",
         }}
       >

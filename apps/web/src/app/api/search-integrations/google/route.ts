@@ -7,6 +7,7 @@ import {
   listGoogleSitemaps,
 } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
+import { validateAndRegisterTrialDomain } from "@/lib/domain-validation";
 
 async function integrationFor(userId: string) {
   return prisma.searchIntegration.findUnique({
@@ -80,6 +81,15 @@ export async function PATCH(request: NextRequest) {
   if (typeof siteUrl !== "string" || !siteUrl.trim()) {
     return NextResponse.json({ error: "Datos inválidos: siteUrl es requerido." }, { status: 400 });
   }
+
+  const cleanSiteUrl = siteUrl.trim();
+
+  // Validación antifraude de trials: impide que cuentas de prueba reutilicen dominios previos
+  const domainValidation = await validateAndRegisterTrialDomain(userId, cleanSiteUrl);
+  if (!domainValidation.ok) {
+    return NextResponse.json({ error: domainValidation.error }, { status: 400 });
+  }
+
   const integration = await integrationFor(userId);
   if (!integration)
     return NextResponse.json(
@@ -90,7 +100,6 @@ export async function PATCH(request: NextRequest) {
     decryptSecret(integration.encryptedRefreshToken),
   );
   const sites = await listGoogleSearchConsoleSites(accessToken).catch(() => []);
-  const cleanSiteUrl = siteUrl.trim();
   const selected = sites.find(
     (site) =>
       site.siteUrl === cleanSiteUrl ||

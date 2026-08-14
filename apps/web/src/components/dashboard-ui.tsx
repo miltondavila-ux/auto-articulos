@@ -2,64 +2,89 @@ import type { CSSProperties } from "react";
 import type { RunStatus, TitleStatus } from "@/types/dashboard";
 
 export const sectionStyle: CSSProperties = {
-  background: "#ffffff",
-  // El fondo general de la app ahora es navy con texto claro (#e8ecf5) —
-  // sin este color explícito, cualquier texto de la tarjeta que no fije su
-  // propio color heredaba ese claro y se volvía casi invisible sobre
-  // blanco (ej. el título "Publicando" en Inicio).
-  color: "#16181d",
-  border: "1px solid #e5e8ec",
-  borderRadius: 12,
+  background: "rgba(13, 26, 51, 0.65)",
+  backdropFilter: "blur(20px) saturate(180%)",
+  WebkitBackdropFilter: "blur(20px) saturate(180%)",
+  color: "#f5f5f7",
+  border: "1px solid rgba(255, 255, 255, 0.1)",
+  borderRadius: 16,
   padding: 20,
   marginTop: 20,
-  boxShadow: "0 1px 2px rgba(16, 24, 40, 0.04)",
+  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.25)",
+  boxSizing: "border-box",
+  width: "100%",
 };
 
-export const h2Style: CSSProperties = { fontSize: 16, marginTop: 0 };
+export const h2Style: CSSProperties = {
+  fontSize: 16,
+  fontWeight: 600,
+  letterSpacing: "-0.01em",
+  color: "#f5f5f7",
+  marginTop: 0,
+  marginBottom: 12,
+};
 
 export const inputStyle: CSSProperties = {
-  padding: "10px 12px",
-  borderRadius: 8,
-  border: "1px solid #dfe3e8",
-  background: "#f7f8fa",
-  color: "#16181d",
+  padding: "10px 14px",
+  borderRadius: 10,
+  border: "1px solid rgba(255, 255, 255, 0.15)",
+  background: "rgba(5, 12, 28, 0.6)",
+  color: "#f5f5f7",
   fontSize: 14,
-  // Sin esto, cualquier width/minWidth fijo (usados en varios lugares) le
-  // suma el padding/borde encima y desborda en pantallas angostas.
   boxSizing: "border-box",
   maxWidth: "100%",
+  transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
 };
 
 export const buttonStyle: CSSProperties = {
   marginTop: 12,
-  padding: "10px 16px",
-  borderRadius: 8,
+  padding: "10px 18px",
+  borderRadius: 10,
   border: "none",
-  background: "#2f5fdb",
-  color: "white",
+  background: "#0071e3",
+  color: "#ffffff",
   fontWeight: 600,
+  fontSize: 14,
   cursor: "pointer",
+  boxShadow: "0 2px 8px rgba(0, 113, 227, 0.35)",
+  transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
 };
 
 export const secondaryButtonStyle: CSSProperties = {
   padding: "10px 16px",
-  borderRadius: 8,
-  border: "1px solid #dfe3e8",
-  background: "#f7f8fa",
-  color: "#16181d",
-  fontWeight: 600,
+  borderRadius: 10,
+  border: "1px solid rgba(255, 255, 255, 0.15)",
+  background: "rgba(255, 255, 255, 0.08)",
+  color: "#f5f5f7",
+  fontWeight: 500,
+  fontSize: 14,
   cursor: "pointer",
+  transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
 };
 
-export const thStyle: CSSProperties = { padding: "6px 8px", fontWeight: 500 };
-export const tdStyle: CSSProperties = { padding: "6px 8px" };
+export const thStyle: CSSProperties = {
+  padding: "10px 12px",
+  fontWeight: 600,
+  fontSize: 12,
+  letterSpacing: "0.03em",
+  color: "#98a2b3",
+};
+
+export const tdStyle: CSSProperties = {
+  padding: "10px 12px",
+  fontSize: 13,
+  color: "#f5f5f7",
+};
 
 export function readySectionStyle(ready: boolean): CSSProperties {
   if (!ready) return sectionStyle;
   return {
     ...sectionStyle,
-    background: "#f3fbf6",
-    border: "1px solid #a8dfc0",
+    background: "rgba(48, 209, 88, 0.08)",
+    border: "1px solid rgba(48, 209, 88, 0.25)",
   };
 }
 
@@ -68,7 +93,7 @@ export function disabledStyle(
   disabled: boolean,
 ): CSSProperties {
   if (!disabled) return style;
-  return { ...style, opacity: 0.4, cursor: "not-allowed" };
+  return { ...style, opacity: 0.45, cursor: "not-allowed" };
 }
 
 export function ReadyBadge() {
@@ -77,12 +102,16 @@ export function ReadyBadge() {
       style={{
         fontSize: 11,
         fontWeight: 600,
-        color: "#1e8a4b",
-        background: "#dff5e6",
+        color: "#30d158",
+        background: "rgba(48, 209, 88, 0.15)",
+        border: "1px solid rgba(48, 209, 88, 0.3)",
         padding: "2px 8px",
-        borderRadius: 999,
+        borderRadius: 9999,
         marginLeft: 8,
         verticalAlign: "middle",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 4,
       }}
     >
       ✓ Listo

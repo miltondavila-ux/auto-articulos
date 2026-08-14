@@ -64,18 +64,21 @@ export default function DashboardNav() {
   const activeTab = tabs.find((tab) => tab.href === pathname);
 
   const linkStyle = (active: boolean): CSSProperties => ({
-    padding: "10px 16px",
-    fontSize: 14,
-    fontWeight: 600,
+    padding: "8px 14px",
+    fontSize: 13,
+    fontWeight: active ? 600 : 500,
     textDecoration: "none",
-    color: active ? "#e8ecf5" : "#a8b3c7",
-    borderBottom: active ? "2px solid #4dd8e8" : "2px solid transparent",
+    color: active ? "#ffffff" : "var(--apple-text-secondary, #98a2b3)",
+    background: active ? "rgba(255, 255, 255, 0.12)" : "transparent",
+    borderRadius: 10,
+    boxShadow: active ? "0 2px 8px rgba(0, 0, 0, 0.25)" : "none",
     whiteSpace: "nowrap",
     flexShrink: 0,
+    transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
   });
 
   return (
-    <nav style={{ position: "relative", marginTop: 20, marginBottom: 28 }}>
+    <nav style={{ position: "relative", marginTop: 18, marginBottom: 28 }}>
       <style>{`
         @media (min-width: 1024px) {
           .nav-mobile-toggle { display: none !important; }
@@ -94,18 +97,25 @@ export default function DashboardNav() {
           width: "100%",
           justifyContent: "space-between",
           alignItems: "center",
-          padding: "10px 14px",
+          padding: "12px 16px",
           fontSize: 14,
           fontWeight: 600,
-          color: "#e8ecf5",
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(232, 236, 245, 0.15)",
-          borderRadius: 8,
+          color: "#f5f5f7",
+          background: "rgba(13, 26, 51, 0.75)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          border: "1px solid rgba(255, 255, 255, 0.12)",
+          borderRadius: 12,
           cursor: "pointer",
+          boxShadow: "0 4px 16px rgba(0, 0, 0, 0.2)",
+          transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
         }}
       >
-        <span>{activeTab?.label ?? "Menú"}</span>
-        <span aria-hidden="true">{open ? "▲" : "▼"}</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--apple-accent, #0071e3)" }} />
+          {activeTab?.label ?? "Menú de Módulos"}
+        </span>
+        <span style={{ fontSize: 11, opacity: 0.7 }} aria-hidden="true">{open ? "▲" : "▼"}</span>
       </button>
 
       {open && (
@@ -113,15 +123,18 @@ export default function DashboardNav() {
           className="nav-mobile-menu"
           style={{
             position: "absolute",
-            top: "calc(100% + 4px)",
+            top: "calc(100% + 6px)",
             left: 0,
             right: 0,
-            zIndex: 20,
-            background: "#0b1a3a",
-            border: "1px solid rgba(232, 236, 245, 0.15)",
-            borderRadius: 8,
+            zIndex: 30,
+            background: "rgba(11, 22, 44, 0.95)",
+            backdropFilter: "blur(24px) saturate(180%)",
+            WebkitBackdropFilter: "blur(24px) saturate(180%)",
+            border: "1px solid rgba(255, 255, 255, 0.14)",
+            borderRadius: 14,
             overflow: "hidden",
-            boxShadow: "0 12px 28px rgba(0, 9, 35, 0.35)",
+            boxShadow: "0 16px 40px rgba(0, 0, 0, 0.5)",
+            padding: 4,
           }}
         >
           {tabs.map((tab) => {
@@ -142,13 +155,14 @@ export default function DashboardNav() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  padding: "12px 16px",
+                  padding: "12px 14px",
                   fontSize: 14,
-                  fontWeight: 600,
+                  fontWeight: active ? 600 : 500,
                   textDecoration: "none",
-                  color: active ? "#4dd8e8" : "#e8ecf5",
-                  background: active ? "rgba(77, 216, 232, 0.1)" : "transparent",
-                  borderBottom: "1px solid rgba(232, 236, 245, 0.08)",
+                  color: active ? "#ffffff" : "#c4cddb",
+                  background: active ? "rgba(0, 113, 227, 0.25)" : "transparent",
+                  borderRadius: 10,
+                  transition: "all 0.15s ease",
                 }}
               >
                 <span>{tab.label}</span>
@@ -157,11 +171,11 @@ export default function DashboardNav() {
                     style={{
                       fontSize: 10,
                       fontWeight: 700,
-                      padding: "2px 6px",
-                      borderRadius: 4,
-                      background: "rgba(255, 170, 0, 0.2)",
-                      color: "#ffd98a",
-                      border: "1px solid rgba(255, 170, 0, 0.4)",
+                      padding: "2px 8px",
+                      borderRadius: 9999,
+                      background: "rgba(255, 159, 10, 0.18)",
+                      color: "#ff9f0a",
+                      border: "1px solid rgba(255, 159, 10, 0.35)",
                     }}
                   >
                     Oculto
@@ -178,10 +192,18 @@ export default function DashboardNav() {
         style={{
           display: "none",
           gap: 4,
-          borderBottom: "1px solid rgba(232, 236, 245, 0.15)",
+          background: "rgba(13, 26, 51, 0.6)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          borderRadius: 14,
+          padding: 4,
+          overflowX: "auto",
+          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.18)",
         }}
       >
         {tabs.map((tab) => {
+          const active = pathname === tab.href;
           const isGloballyDisabled =
             isAdmin && Boolean(tab.id && globalDisabledModules.includes(tab.id));
           return (
@@ -194,7 +216,7 @@ export default function DashboardNav() {
                   : undefined
               }
               style={{
-                ...linkStyle(pathname === tab.href),
+                ...linkStyle(active),
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 6,
@@ -206,11 +228,11 @@ export default function DashboardNav() {
                   style={{
                     fontSize: 9,
                     fontWeight: 700,
-                    padding: "1px 5px",
-                    borderRadius: 4,
-                    background: "rgba(255, 170, 0, 0.2)",
-                    color: "#ffd98a",
-                    border: "1px solid rgba(255, 170, 0, 0.4)",
+                    padding: "1px 6px",
+                    borderRadius: 9999,
+                    background: "rgba(255, 159, 10, 0.18)",
+                    color: "#ff9f0a",
+                    border: "1px solid rgba(255, 159, 10, 0.35)",
                   }}
                 >
                   Oculto

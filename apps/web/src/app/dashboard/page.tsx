@@ -137,9 +137,11 @@ export default function InicioPage() {
       {showTrialWelcome && (
         <div
           style={{
-            background: "linear-gradient(135deg, #2f5fdb 0%, #1b3f9e 100%)",
+            background: "linear-gradient(135deg, rgba(0, 113, 227, 0.9) 0%, rgba(0, 75, 153, 0.9) 100%)",
+            backdropFilter: "blur(20px) saturate(180%)",
+            WebkitBackdropFilter: "blur(20px) saturate(180%)",
             color: "#fff",
-            borderRadius: 12,
+            borderRadius: 16,
             padding: "20px 24px",
             marginTop: 4,
             marginBottom: 16,
@@ -148,11 +150,12 @@ export default function InicioPage() {
             alignItems: "center",
             gap: 16,
             flexWrap: "wrap",
-            boxShadow: "0 8px 24px rgba(47, 95, 219, 0.35)",
+            boxShadow: "0 12px 32px rgba(0, 113, 227, 0.35)",
+            border: "1px solid rgba(255, 255, 255, 0.2)",
           }}
         >
           <div>
-            <p style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>
+            <p style={{ margin: 0, fontSize: 17, fontWeight: 700, letterSpacing: "-0.01em" }}>
               🎉 ¡Bienvenido! Tienes {TRIAL_DAYS} días de prueba gratuita.
             </p>
             <p style={{ margin: "6px 0 0", fontSize: 13, opacity: 0.9 }}>
@@ -162,14 +165,15 @@ export default function InicioPage() {
           <button
             onClick={() => setShowTrialWelcome(false)}
             style={{
-              background: "rgba(255,255,255,0.15)",
-              border: "1px solid rgba(255,255,255,0.4)",
-              borderRadius: 8,
+              background: "rgba(255, 255, 255, 0.18)",
+              border: "1px solid rgba(255, 255, 255, 0.35)",
+              borderRadius: 10,
               color: "#fff",
-              padding: "8px 16px",
+              padding: "8px 18px",
               fontWeight: 600,
               fontSize: 13,
               cursor: "pointer",
+              transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
             }}
           >
             Entendido
@@ -193,15 +197,16 @@ export default function InicioPage() {
                 justifyContent: "space-between",
                 alignItems: "center",
                 gap: 12,
-                padding: "10px 14px",
-                borderRadius: 8,
-                background: "#eafaf0",
-                border: "1px solid #a8dfc0",
+                padding: "12px 16px",
+                borderRadius: 12,
+                background: "rgba(48, 209, 88, 0.12)",
+                backdropFilter: "blur(16px)",
+                border: "1px solid rgba(48, 209, 88, 0.25)",
                 fontSize: 13,
               }}
             >
-              <span style={{ color: "#1e8a4b" }}>
-                ✓ Artículo publicado: <strong>{n.text}</strong>
+              <span style={{ color: "#30d158" }}>
+                ✓ Artículo publicado: <strong style={{ color: "#f5f5f7" }}>{n.text}</strong>
                 {n.url && (
                   <>
                     {" — "}
@@ -209,7 +214,7 @@ export default function InicioPage() {
                       href={n.url}
                       target="_blank"
                       rel="noreferrer"
-                      style={{ color: "#2f5fdb" }}
+                      style={{ color: "#0071e3", textDecoration: "underline" }}
                     >
                       Ver artículo
                     </a>
@@ -221,8 +226,9 @@ export default function InicioPage() {
                 style={{
                   background: "none",
                   border: "none",
-                  color: "#6b7280",
+                  color: "#98a2b3",
                   cursor: "pointer",
+                  fontSize: 14,
                 }}
               >
                 ✕
@@ -242,17 +248,19 @@ export default function InicioPage() {
         <div
           style={{
             marginTop: 20,
-            padding: "12px 16px",
-            borderRadius: 8,
-            background: "#eafaf0",
-            color: "#1e8a4b",
+            padding: "14px 18px",
+            borderRadius: 12,
+            background: "rgba(48, 209, 88, 0.12)",
+            backdropFilter: "blur(16px)",
+            border: "1px solid rgba(48, 209, 88, 0.25)",
+            color: "#30d158",
             fontSize: 13,
           }}
         >
           Hay una publicación en curso.{" "}
           <Link
             href="/dashboard/publicaciones-en-curso"
-            style={{ color: "#2f5fdb" }}
+            style={{ color: "#0071e3", fontWeight: 600, textDecoration: "underline" }}
           >
             Ver progreso en Publicaciones en Curso
           </Link>

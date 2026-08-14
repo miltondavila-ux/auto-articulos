@@ -1,6 +1,6 @@
 # HANDOFF — Auto Artículos
 
-Última actualización: 2026-08-13, por Codex (capitán de migración).
+Última actualización: 2026-08-14, por Antigravity (capitán de migración).
 
 ## Participantes autorizados y coordinación obligatoria
 
@@ -12,6 +12,21 @@ sus modificaciones en este HANDOFF antes de intervenir o desplegar.
 Este documento es la fuente de verdad para retomar el proyecto sin necesitar
 el historial de chat. Mantenlo actualizado después de cada sesión de trabajo
 importante: qué cambió, qué quedó pendiente, qué se rompió.
+
+## Lote coordinado: Validación Antifraude de Dominios/Trials, Pre-Validación Inteligente y Créditos de Imagen (14/8/2026, Antigravity)
+
+- **Validación Antifraude de Dominios y Cuentas en Trials**:
+  - Nuevo modelo y tabla `TrialDomainRegistry` (migración `20260814130000_add_trial_domain_registry`).
+  - Helper `domain-validation.ts`: `normalizeDomain()`, `validateAndRegisterTrialCredentials()` y `validateAndRegisterTrialDomain()`.
+  - Impide que un usuario cree múltiples cuentas de prueba gratuitas con correos distintos para usar el mismo dominio web o la misma cuenta de 10minutesWebsite.
+  - Bloqueo preventivo en `POST /api/credentials`, `PATCH /api/search-integrations/google` y `PATCH /api/search-integrations/bing`.
+  - Bloqueo en ejecución (`POST /api/runs`, `POST /api/opportunities/execute`, etc.) cuando el período de 7 días expira (`hasTrialAccess`).
+  - Visibilidad en `/dashboard/usuarios` del dominio y cuenta de 10minutesWebsite de cada usuario, con botón para que el Administrador desbloquee el acceso permanente (`trialUnlocked: true`) en un clic.
+- **Pre-Validación Inteligente y Modal de Créditos de Imagen**:
+  - `PreValidationGuard.tsx`: Guía activa al asistente de configuración en Publicar y Oportunidades.
+  - `ImageCreditsModal.tsx`: Pop-up interactivo que bloquea publicaciones si la cuenta no tiene créditos de imagen y ofrece botón directo a soporte.
+  - Campo `hasImageCredits` en `User` y toggle en administración de usuarios.
+- **Refinamiento Visual Apple Design**: Tipografía SF Pro, bordes redondeados pulidos, micro-sombras y jerarquía limpia.
 
 ## Lote coordinado desplegado: MCP/OAuth, módulos, actualizaciones y prevención de idioma (13/8/2026)
 

@@ -12,13 +12,14 @@ export default function StopImpersonationButton() {
       style={{
         padding: "6px 12px",
         borderRadius: 8,
-        border: "1px solid #f0deac",
-        background: "#fff8e6",
-        color: "#8a6d1a",
+        border: "1px solid rgba(255, 159, 10, 0.35)",
+        background: "rgba(255, 159, 10, 0.15)",
+        color: "#ff9f0a",
         fontWeight: 600,
         fontSize: 12,
         cursor: "pointer",
         whiteSpace: "nowrap",
+        transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
       }}
     >
       Volver a mi cuenta

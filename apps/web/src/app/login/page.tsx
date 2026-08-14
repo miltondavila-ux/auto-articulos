@@ -89,15 +89,14 @@ function LoginContent() {
       style={{
         position: "relative",
         minHeight: "100vh",
-        background: "#031537",
+        background: "var(--apple-bg, #070d1a)",
         overflow: "hidden",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        padding: "24px 16px",
       }}
     >
-      {/* Una sola imagen de fondo a pantalla completa, sin división entre
-          zonas: se desvanece hacia el azul sólido con un único degradado. */}
       <img
         src="/login-hero.jpg"
         alt=""
@@ -108,7 +107,7 @@ function LoginContent() {
           height: "100%",
           objectFit: "cover",
           objectPosition: "20% 15%",
-          opacity: 0.55,
+          opacity: 0.35,
         }}
       />
       <div
@@ -116,7 +115,7 @@ function LoginContent() {
           position: "absolute",
           inset: 0,
           background:
-            "radial-gradient(circle at 25% 30%, rgba(3,21,55,0.15) 0%, rgba(3,21,55,0.55) 45%, rgba(3,21,55,0.97) 78%), linear-gradient(to bottom, rgba(3,21,55,0.5) 0%, rgba(3,21,55,0.2) 20%, rgba(3,21,55,0.85) 100%)",
+            "radial-gradient(circle at 30% 30%, rgba(7, 13, 26, 0.2) 0%, rgba(7, 13, 26, 0.7) 50%, rgba(7, 13, 26, 0.98) 100%), linear-gradient(to bottom, rgba(7, 13, 26, 0.5) 0%, rgba(7, 13, 26, 0.85) 100%)",
         }}
       />
 
@@ -124,8 +123,7 @@ function LoginContent() {
         style={{
           position: "relative",
           width: "100%",
-          maxWidth: 1080,
-          padding: 24,
+          maxWidth: 1040,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -133,35 +131,40 @@ function LoginContent() {
           flexWrap: "wrap",
         }}
       >
-        <div style={{ maxWidth: 420, minWidth: 260 }}>
-          <p
+        <div style={{ flex: "1 1 300px", maxWidth: 440 }}>
+          <span
             style={{
-              fontSize: 13,
-              letterSpacing: 2,
+              fontSize: 12,
+              letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: "#4dd8e8",
+              color: "var(--apple-cyan, #00c7be)",
               fontWeight: 700,
-              margin: 0,
+              display: "inline-block",
+              background: "rgba(0, 199, 190, 0.12)",
+              padding: "4px 10px",
+              borderRadius: 9999,
+              border: "1px solid rgba(0, 199, 190, 0.25)",
             }}
           >
             Automatización con IA
-          </p>
+          </span>
           <h2
             style={{
-              fontSize: 32,
-              lineHeight: 1.2,
-              color: "#f2f5fb",
-              margin: "10px 0 0",
+              fontSize: 34,
+              lineHeight: 1.15,
+              color: "#f5f5f7",
+              margin: "14px 0 0",
               fontWeight: 700,
+              letterSpacing: "-0.02em",
             }}
           >
             Creador de artículos en secuencia
           </h2>
           <p
             style={{
-              fontSize: 14,
-              color: "#a8b3c7",
-              marginTop: 12,
+              fontSize: 15,
+              color: "#98a2b3",
+              marginTop: 14,
               lineHeight: 1.5,
             }}
           >
@@ -174,34 +177,56 @@ function LoginContent() {
           <form
             onSubmit={handleSubmit}
             style={{
-              background: "rgba(13, 33, 74, 0.45)",
-              backdropFilter: "blur(16px)",
-              border: "1px solid rgba(77, 216, 232, 0.2)",
-              padding: 36,
-              borderRadius: 16,
-              width: 340,
+              flex: "1 1 320px",
+              maxWidth: 380,
+              background: "rgba(13, 26, 51, 0.7)",
+              backdropFilter: "blur(24px) saturate(180%)",
+              WebkitBackdropFilter: "blur(24px) saturate(180%)",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              padding: 32,
+              borderRadius: 20,
               display: "flex",
               flexDirection: "column",
               gap: 14,
+              boxShadow: "0 24px 48px rgba(0, 0, 0, 0.4)",
+              boxSizing: "border-box",
             }}
           >
-            <h1
-              style={{
-                fontSize: 22,
-                margin: 0,
-                marginBottom: 4,
-                color: "#f2f5fb",
-                fontWeight: 700,
-              }}
-            >
-              Auto Artículos
-            </h1>
-            <p style={{ fontSize: 13, color: "#a8b3c7", margin: "0 0 8px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 2 }}>
+              <div
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 7,
+                  background: "linear-gradient(135deg, #0071e3 0%, #004b99 100%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#ffffff",
+                  fontSize: 14,
+                  fontWeight: 700,
+                }}
+              >
+                A
+              </div>
+              <h1
+                style={{
+                  fontSize: 20,
+                  margin: 0,
+                  color: "#f5f5f7",
+                  fontWeight: 700,
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                Auto Artículos
+              </h1>
+            </div>
+            <p style={{ fontSize: 13, color: "#98a2b3", margin: "0 0 6px" }}>
               Ingresa con tu usuario para continuar.
             </p>
             <input
               type="email"
-              placeholder="Correo"
+              placeholder="Correo electrónico"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -216,7 +241,17 @@ function LoginContent() {
               style={inputStyle}
             />
             {error && (
-              <p style={{ color: "#ff8a8a", margin: 0, fontSize: 13 }}>
+              <p
+                style={{
+                  color: "#ff453a",
+                  background: "rgba(255, 69, 58, 0.12)",
+                  border: "1px solid rgba(255, 69, 58, 0.25)",
+                  padding: "8px 12px",
+                  borderRadius: 8,
+                  margin: 0,
+                  fontSize: 13,
+                }}
+              >
                 {error}
               </p>
             )}
@@ -228,35 +263,40 @@ function LoginContent() {
               onClick={() => setMode("trial")}
               style={trialButtonStyle}
             >
-              SOLICITAR PRUEBA
+              Solicitar prueba gratuita
             </button>
           </form>
         ) : (
           <form
             onSubmit={handleTrialSubmit}
             style={{
-              background: "rgba(13, 33, 74, 0.45)",
-              backdropFilter: "blur(16px)",
-              border: "1px solid rgba(77, 216, 232, 0.2)",
-              padding: 36,
-              borderRadius: 16,
-              width: 340,
+              flex: "1 1 320px",
+              maxWidth: 380,
+              background: "rgba(13, 26, 51, 0.7)",
+              backdropFilter: "blur(24px) saturate(180%)",
+              WebkitBackdropFilter: "blur(24px) saturate(180%)",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              padding: 32,
+              borderRadius: 20,
               display: "flex",
               flexDirection: "column",
               gap: 12,
+              boxShadow: "0 24px 48px rgba(0, 0, 0, 0.4)",
+              boxSizing: "border-box",
             }}
           >
             <h1
               style={{
                 fontSize: 20,
                 margin: 0,
-                color: "#f2f5fb",
+                color: "#f5f5f7",
                 fontWeight: 700,
+                letterSpacing: "-0.01em",
               }}
             >
               Solicitar prueba gratuita
             </h1>
-            <p style={{ fontSize: 13, color: "#a8b3c7", margin: "0 0 4px" }}>
+            <p style={{ fontSize: 13, color: "#98a2b3", margin: "0 0 4px" }}>
               7 días de acceso completo. Deja tus datos para empezar.
             </p>
             <input
@@ -277,7 +317,7 @@ function LoginContent() {
             />
             <input
               type="email"
-              placeholder="Correo"
+              placeholder="Correo electrónico"
               value={trialEmail}
               onChange={(e) => setTrialEmail(e.target.value)}
               required
@@ -301,7 +341,17 @@ function LoginContent() {
               style={inputStyle}
             />
             {trialError && (
-              <p style={{ color: "#ff8a8a", margin: 0, fontSize: 13 }}>
+              <p
+                style={{
+                  color: "#ff453a",
+                  background: "rgba(255, 69, 58, 0.12)",
+                  border: "1px solid rgba(255, 69, 58, 0.25)",
+                  padding: "8px 12px",
+                  borderRadius: 8,
+                  margin: 0,
+                  fontSize: 13,
+                }}
+              >
                 {trialError}
               </p>
             )}
@@ -325,34 +375,40 @@ function LoginContent() {
 const inputStyle: CSSProperties = {
   padding: "12px 14px",
   borderRadius: 10,
-  border: "1px solid rgba(232, 236, 245, 0.18)",
-  background: "rgba(3, 21, 55, 0.5)",
-  color: "#f2f5fb",
+  border: "1px solid rgba(255, 255, 255, 0.14)",
+  background: "rgba(5, 12, 28, 0.65)",
+  color: "#f5f5f7",
   fontSize: 14,
   outline: "none",
+  boxSizing: "border-box",
+  width: "100%",
+  transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
 };
 
 const buttonStyle: CSSProperties = {
   marginTop: 6,
-  padding: "12px 14px",
+  padding: "12px 16px",
   borderRadius: 10,
   border: "none",
-  background: "linear-gradient(135deg, #2f5fdb 0%, #1b3f9e 100%)",
-  color: "white",
-  fontWeight: 700,
+  background: "#0071e3",
+  color: "#ffffff",
+  fontWeight: 600,
   fontSize: 14,
   cursor: "pointer",
-  boxShadow: "0 8px 20px rgba(47, 95, 219, 0.35)",
+  boxShadow: "0 4px 14px rgba(0, 113, 227, 0.35)",
+  transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
+  minHeight: 44,
 };
 
 const trialButtonStyle: CSSProperties = {
-  padding: "12px 14px",
+  padding: "10px 14px",
   borderRadius: 10,
-  border: "1px solid rgba(77, 216, 232, 0.4)",
-  background: "transparent",
-  color: "#4dd8e8",
-  fontWeight: 700,
+  border: "1px solid rgba(255, 255, 255, 0.16)",
+  background: "rgba(255, 255, 255, 0.06)",
+  color: "#f5f5f7",
+  fontWeight: 500,
   fontSize: 13,
-  letterSpacing: 0.5,
   cursor: "pointer",
+  transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
+  minHeight: 40,
 };

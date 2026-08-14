@@ -78,6 +78,18 @@ export async function GET() {
         trialStartedAt: true,
         trialUnlocked: true,
         disabledModules: true,
+        hasImageCredits: true,
+        credentials: {
+          where: { platform: "10minutesWebsite" },
+          select: { encryptedUsername: true },
+        },
+        searchIntegrations: {
+          select: { provider: true, siteUrl: true },
+        },
+        trialDomainRegistries: {
+          select: { normalizedDomain: true, accountUsername: true },
+          take: 1,
+        },
       },
       orderBy: { createdAt: "asc" },
     }),
@@ -105,12 +117,31 @@ export async function GET() {
           currentPassword = null;
         }
       }
+
+      let tenMinutesUsername: string | null = null;
+      if (u.credentials?.[0]?.encryptedUsername) {
+        try {
+          tenMinutesUsername = decryptSecret(u.credentials[0].encryptedUsername);
+        } catch {
+          tenMinutesUsername = null;
+        }
+      } else if (u.trialDomainRegistries?.[0]?.accountUsername) {
+        tenMinutesUsername = u.trialDomainRegistries[0].accountUsername;
+      }
+
+      const gscDomain = u.searchIntegrations.find((s) => s.provider === "google")?.siteUrl;
+      const bingDomain = u.searchIntegrations.find((s) => s.provider === "bing")?.siteUrl;
+      const registeredDomain = u.trialDomainRegistries?.[0]?.normalizedDomain;
+      const connectedDomain = registeredDomain || gscDomain || bingDomain || null;
+
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { initialPasswordEncrypted, disabledModules, ...rest } = u;
+      const { initialPasswordEncrypted, disabledModules, credentials, searchIntegrations, trialDomainRegistries, ...rest } = u;
       return {
         ...rest,
         disabledModules: parseUserDisabledModules(disabledModules),
         currentPassword,
+        tenMinutesUsername,
+        connectedDomain,
         articlesPublished: publishedByUser.get(u.id) ?? 0,
       };
     }),
@@ -144,6 +175,7 @@ export async function PATCH(request: NextRequest) {
     allowThreadsPublishing,
     profilePhotoUrl,
     businessLogoUrl,
+    isTrialSignup,
     trialUnlocked,
     disabledModules,
   } = body;
@@ -170,8 +202,10 @@ export async function PATCH(request: NextRequest) {
     allowThreadsPublishing?: boolean;
     profilePhotoUrl?: string | null;
     businessLogoUrl?: string | null;
+    isTrialSignup?: boolean;
     trialUnlocked?: boolean;
     disabledModules?: string | null;
+    hasImageCredits?: boolean;
   } = {};
 
   if ("role" in body) {
@@ -191,6 +225,10 @@ export async function PATCH(request: NextRequest) {
       );
     }
     data.role = role;
+    if (role === "admin") {
+      // Un administrador nunca debe tener restricciones de prueba de 7 días
+      data.trialUnlocked = true;
+    }
   }
 
   if (typeof name === "string") {
@@ -276,8 +314,19 @@ export async function PATCH(request: NextRequest) {
     data.allowThreadsPublishing = Boolean(allowThreadsPublishing);
   }
 
+  if ("isTrialSignup" in body) {
+    data.isTrialSignup = Boolean(isTrialSignup);
+    if (!data.isTrialSignup) {
+      data.trialUnlocked = true;
+    }
+  }
+
   if ("trialUnlocked" in body) {
     data.trialUnlocked = Boolean(trialUnlocked);
+  }
+
+  if ("hasImageCredits" in body) {
+    data.hasImageCredits = Boolean(body.hasImageCredits);
   }
 
   if ("profilePhotoUrl" in body) {

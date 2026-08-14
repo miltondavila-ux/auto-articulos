@@ -484,6 +484,21 @@ export default function ConfiguracionPage() {
     ) {
       setActiveTab(tabParam);
     }
+
+    const hash = window.location.hash;
+    if (hash === "#credentials" || hash === "#categories" || hash === "#language") {
+      setActiveTab("platform");
+      setTimeout(() => {
+        const el = document.getElementById(hash.replace("#", ""));
+        el?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 150);
+    } else if (hash === "#google" || hash === "#bing") {
+      setActiveTab("integrations");
+      setTimeout(() => {
+        const el = document.getElementById(hash.replace("#", ""));
+        el?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 150);
+    }
   }, []);
 
   const showCredentialsForm = editingCredentials || !credentialsConfigured;
@@ -980,8 +995,12 @@ export default function ConfiguracionPage() {
         <div
           style={{ display: "flex", flexDirection: "column", gap: 16 }}
         >
-          <GoogleSearchConsoleSection />
-          <BingWebmasterSection />
+          <div id="google">
+            <GoogleSearchConsoleSection />
+          </div>
+          <div id="bing">
+            <BingWebmasterSection />
+          </div>
         </div>
       )}
 
@@ -1003,7 +1022,7 @@ export default function ConfiguracionPage() {
       {activeTab === "platform" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {/* Credenciales Card */}
-          <section style={readySectionStyle(credentialsConfigured)}>
+          <section id="credentials" style={readySectionStyle(credentialsConfigured)}>
             <div
               style={{
                 display: "flex",
@@ -1139,7 +1158,7 @@ export default function ConfiguracionPage() {
           </section>
 
           {/* Categorías Card con Tag Cloud View */}
-          <section style={sectionStyle}>
+          <section id="categories" style={sectionStyle}>
             <div
               style={{
                 display: "flex",
@@ -1340,7 +1359,7 @@ export default function ConfiguracionPage() {
           </section>
 
           {/* Idioma Predeterminado de Redacción */}
-          <section style={sectionStyle}>
+          <section id="language" style={sectionStyle}>
             <div
               style={{
                 display: "flex",

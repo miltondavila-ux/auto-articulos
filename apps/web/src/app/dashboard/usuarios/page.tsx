@@ -49,11 +49,12 @@ interface UserRow {
   trialStartedAt: string | null;
   trialUnlocked: boolean;
   disabledModules: string[];
+  hasImageCredits: boolean;
+  tenMinutesUsername?: string | null;
+  connectedDomain?: string | null;
 }
 
 const PLATFORM_URL = "https://auto-articulos-web.vercel.app/login";
-
-type UserCategoryFilter = "all" | "user" | "admin" | "trial";
 
 const permissionLabelStyle: CSSProperties = {
   display: "flex",
@@ -144,7 +145,7 @@ function Pagination({
       <span style={{ fontSize: 12, color: "#6b7280" }}>
         {totalCount.toLocaleString("es-US")} usuarios en total
         {filteredCount !== totalCount &&
-          ` · ${filteredCount.toLocaleString("es-US")} coinciden con la búsqueda`}
+          ` · ${filteredCount.toLocaleString("es-US")} coinciden con el filtro`}
       </span>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <button
@@ -184,6 +185,30 @@ function formatBytes(bytes: number): string {
   return `${(mb / 1024).toFixed(2)} GB`;
 }
 
+function getUserDisplayName(u: UserRow): string {
+  const full = [u.firstName, u.lastName].filter(Boolean).join(" ").trim();
+  if (full) return full;
+  if (u.name && u.name.trim()) return u.name.trim();
+  return u.email.trim();
+}
+
+type UserCategoryFilter =
+  | "all"
+  | "user"
+  | "admin"
+  | "trial"
+  | "trial_active"
+  | "trial_unlocked"
+  | "standard"
+  | "no_image_credits";
+
+type UserSortOrder =
+  | "alpha_asc"
+  | "alpha_desc"
+  | "newest"
+  | "oldest"
+  | "articles_desc";
+
 export default function UsuariosPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [currentUserId, setCurrentUserId] = useState("");
@@ -203,6 +228,7 @@ export default function UsuariosPage() {
   const [loadingUsage, setLoadingUsage] = useState(false);
   const [search, setSearch] = useState("");
   const [userCategory, setUserCategory] = useState<UserCategoryFilter>("all");
+  const [sortOrder, setSortOrder] = useState<UserSortOrder>("alpha_asc");
   const [accessPage, setAccessPage] = useState(1);
   const [tab, setTab] = useState<"crear" | "uso" | "accesos" | "modulos">("accesos");
   const [globalDisabledModules, setGlobalDisabledModules] = useState<string[]>([]);
@@ -299,20 +325,68 @@ export default function UsuariosPage() {
     loadGlobalModules();
   }, []);
 
-  const filteredUsers = users.filter((u) => {
-    if (userCategory === "admin" && u.role !== "admin") return false;
-    if (userCategory === "user" && u.role !== "user") return false;
-    if (userCategory === "trial" && !u.isTrialSignup) return false;
+  const filteredUsers = users
+    .filter((u) => {
+      // Category / Type filter
+      if (userCategory === "admin" && u.role !== "admin") return false;
+      if (userCategory === "user" && u.role !== "user") return false;
+      if (userCategory === "trial" && !u.isTrialSignup) return false;
+      if (
+        userCategory === "trial_active" &&
+        (!u.isTrialSignup || u.trialUnlocked)
+      )
+        return false;
+      if (
+        userCategory === "trial_unlocked" &&
+        (!u.isTrialSignup || !u.trialUnlocked)
+      )
+        return false;
+      if (userCategory === "standard" && u.isTrialSignup) return false;
+      if (userCategory === "no_image_credits" && u.hasImageCredits !== false)
+        return false;
 
-    const q = search.trim().toLowerCase();
-    if (!q) return true;
-    return (
-      u.email.toLowerCase().includes(q) ||
-      (u.firstName ?? "").toLowerCase().includes(q) ||
-      (u.lastName ?? "").toLowerCase().includes(q) ||
-      (u.name ?? "").toLowerCase().includes(q)
-    );
-  });
+      // Search query
+      const q = search.trim().toLowerCase();
+      if (!q) return true;
+      return (
+        u.email.toLowerCase().includes(q) ||
+        (u.firstName ?? "").toLowerCase().includes(q) ||
+        (u.lastName ?? "").toLowerCase().includes(q) ||
+        (u.name ?? "").toLowerCase().includes(q) ||
+        (u.phone ?? "").toLowerCase().includes(q)
+      );
+    })
+    .sort((a, b) => {
+      if (sortOrder === "alpha_asc") {
+        return getUserDisplayName(a).localeCompare(
+          getUserDisplayName(b),
+          "es",
+          { sensitivity: "base", numeric: true },
+        );
+      }
+      if (sortOrder === "alpha_desc") {
+        return getUserDisplayName(b).localeCompare(
+          getUserDisplayName(a),
+          "es",
+          { sensitivity: "base", numeric: true },
+        );
+      }
+      if (sortOrder === "newest") {
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      }
+      if (sortOrder === "oldest") {
+        return (
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      }
+      if (sortOrder === "articles_desc") {
+        return (b.articlesPublished ?? 0) - (a.articlesPublished ?? 0);
+      }
+      return 0;
+    });
+
   const totalAccessPages = Math.max(
     1,
     Math.ceil(filteredUsers.length / PAGE_SIZE),
@@ -324,7 +398,7 @@ export default function UsuariosPage() {
 
   useEffect(() => {
     setAccessPage(1);
-  }, [search, userCategory]);
+  }, [search, userCategory, sortOrder]);
 
   useEffect(() => {
     setAccessPage((p) => Math.min(p, totalAccessPages));
@@ -988,10 +1062,10 @@ export default function UsuariosPage() {
               justifyContent: "space-between",
               alignItems: "center",
               flexWrap: "wrap",
-              gap: 8,
+              gap: 12,
             }}
           >
-            <h2 style={h2Style}>Usuarios con acceso</h2>
+            <h2 style={{ ...h2Style, margin: 0 }}>Usuarios con acceso</h2>
             <div
               style={{
                 display: "flex",
@@ -1002,13 +1076,13 @@ export default function UsuariosPage() {
             >
               <input
                 type="text"
-                placeholder="Buscar por correo, nombre o apellido..."
+                placeholder="Buscar por nombre, correo, teléfono..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                style={{ ...inputStyle, width: 280 }}
+                style={{ ...inputStyle, width: 220, margin: 0 }}
               />
               <select
-                aria-label="Filtrar por tipo de usuario"
+                aria-label="Filtrar por categoría o tipo de usuario"
                 value={userCategory}
                 onChange={(e) =>
                   setUserCategory(e.target.value as UserCategoryFilter)
@@ -1017,20 +1091,41 @@ export default function UsuariosPage() {
                   ...inputStyle,
                   width: "auto",
                   minWidth: 175,
+                  margin: 0,
                   cursor: "pointer",
                 }}
               >
                 <option value="all">Todos los tipos</option>
-                <option value="user">Usuarios comunes</option>
+                <option value="user">Usuarios regulares</option>
                 <option value="admin">Administradores</option>
-                <option value="trial">Free Trial</option>
+                <option value="trial">Prueba gratuita (Trial)</option>
+                <option value="trial_active">Pruebas en curso (7 días)</option>
+                <option value="trial_unlocked">Pruebas desbloqueadas</option>
+                <option value="standard">Cuentas estándar (sin prueba)</option>
+                <option value="no_image_credits">Sin créditos de imagen</option>
+              </select>
+              <select
+                aria-label="Ordenar lista de usuarios"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as UserSortOrder)}
+                style={{
+                  ...inputStyle,
+                  width: "auto",
+                  minWidth: 165,
+                  margin: 0,
+                  cursor: "pointer",
+                }}
+              >
+                <option value="alpha_asc">Nombre (A → Z)</option>
+                <option value="alpha_desc">Nombre (Z → A)</option>
+                <option value="newest">Más recientes</option>
+                <option value="oldest">Más antiguos</option>
+                <option value="articles_desc">Más artículos</option>
               </select>
             </div>
           </div>
-          <p style={{ fontSize: 12, color: "#6b7280", marginTop: -4 }}>
-            Cambia el rol a <strong>Administrador</strong> para que esa cuenta
-            vea y gestione las mismas secciones administrativas que tú. Haz
-            clic en una cuenta para ver el detalle.
+          <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
+            Listado ordenado alfabéticamente por defecto. Puedes filtrar por categoría o buscar por nombre/correo. Haz clic en una cuenta para ver o editar sus accesos y configuración.
           </p>
 
           <div style={{ marginTop: 10 }}>
@@ -1341,10 +1436,15 @@ function UserCard({
   const [permThreads, setPermThreads] = useState(
     Boolean(user.allowThreadsPublishing),
   );
-  // Sistema de prueba gratuita (13/8/2026): "desbloqueo" manual del admin.
-  // Mismo patrón que los permisos de redes sociales de arriba.
+  // Sistema de prueba gratuita (13/8/2026): estado de prueba y desbloqueo manual.
+  const [permIsTrialSignup, setPermIsTrialSignup] = useState(
+    Boolean(user.isTrialSignup),
+  );
   const [permTrialUnlocked, setPermTrialUnlocked] = useState(
     Boolean(user.trialUnlocked),
+  );
+  const [permImageCredits, setPermImageCredits] = useState(
+    user.hasImageCredits !== false,
   );
   const [savingPermissions, setSavingPermissions] = useState(false);
   const [permissionsError, setPermissionsError] = useState<string | null>(null);
@@ -1366,21 +1466,19 @@ function UserCard({
     setPermInstagram(Boolean(user.allowInstagramPublishing));
     setPermLinkedIn(Boolean(user.allowLinkedInPublishing));
     setPermThreads(Boolean(user.allowThreadsPublishing));
+    setPermIsTrialSignup(Boolean(user.isTrialSignup));
     setPermTrialUnlocked(Boolean(user.trialUnlocked));
+    setPermImageCredits(user.hasImageCredits !== false);
     setUserDisabledModules(user.disabledModules ?? []);
-  }, [
-    user.allowInstagramPublishing,
-    user.allowLinkedInPublishing,
-    user.allowThreadsPublishing,
-    user.trialUnlocked,
-    user.disabledModules,
-  ]);
+  }, [user]);
 
   const permissionsDirty =
     permInstagram !== Boolean(user.allowInstagramPublishing) ||
     permLinkedIn !== Boolean(user.allowLinkedInPublishing) ||
     permThreads !== Boolean(user.allowThreadsPublishing) ||
-    permTrialUnlocked !== Boolean(user.trialUnlocked);
+    permIsTrialSignup !== Boolean(user.isTrialSignup) ||
+    permTrialUnlocked !== Boolean(user.trialUnlocked) ||
+    permImageCredits !== (user.hasImageCredits !== false);
 
   const userModulesDirty =
     JSON.stringify((userDisabledModules ?? []).slice().sort()) !==
@@ -1481,10 +1579,20 @@ function UserCard({
     setSavingRole(true);
     setRoleError(null);
     try {
+      const bodyPayload: Record<string, unknown> = {
+        userId: user.id,
+        role: roleValue,
+      };
+      if (roleValue === "admin") {
+        bodyPayload.trialUnlocked = true;
+        if (user.isTrialSignup) {
+          bodyPayload.isTrialSignup = false;
+        }
+      }
       const response = await fetch("/api/admin/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id, role: roleValue }),
+        body: JSON.stringify(bodyPayload),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
@@ -1494,6 +1602,38 @@ function UserCard({
       onUpdated();
     } finally {
       setSavingRole(false);
+    }
+  }
+
+  async function handleConvertToStandard() {
+    setSavingPermissions(true);
+    setPermissionsError(null);
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          isTrialSignup: false,
+          trialUnlocked: true,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setPermissionsError(
+          data.error ?? "No se pudo convertir a cuenta estándar.",
+        );
+        return;
+      }
+      setPermIsTrialSignup(false);
+      setPermTrialUnlocked(true);
+      setPermissionsSaved(true);
+      setTimeout(() => setPermissionsSaved(false), 2500);
+      onUpdated();
+    } catch {
+      setPermissionsError("Error de conexión al convertir la cuenta.");
+    } finally {
+      setSavingPermissions(false);
     }
   }
 
@@ -1524,7 +1664,9 @@ function UserCard({
           allowInstagramPublishing: permInstagram,
           allowLinkedInPublishing: permLinkedIn,
           allowThreadsPublishing: permThreads,
+          isTrialSignup: permIsTrialSignup,
           trialUnlocked: permTrialUnlocked,
+          hasImageCredits: permImageCredits,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -1641,7 +1783,7 @@ function UserCard({
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
             <strong style={{ fontSize: 14 }}>{fullName || "(sin nombre)"}</strong>
-            {user.isTrialSignup && (
+            {user.isTrialSignup && user.role !== "admin" && (
               <span
                 style={{
                   fontSize: 10,
@@ -1662,6 +1804,38 @@ function UserCard({
                 {!user.trialUnlocked && user.trialStartedAt
                   ? ` · ${trialDaysRemaining(new Date(user.trialStartedAt))}d`
                   : ""}
+              </span>
+            )}
+            {user.connectedDomain && (
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  padding: "2px 7px",
+                  borderRadius: 999,
+                  background: "#eff6ff",
+                  color: "#1d4ed8",
+                  border: "1px solid #bfdbfe",
+                }}
+                title={`Dominio vinculado: ${user.connectedDomain}`}
+              >
+                🌐 {user.connectedDomain}
+              </span>
+            )}
+            {user.hasImageCredits === false && (
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  padding: "2px 7px",
+                  borderRadius: 999,
+                  background: "#fef2f2",
+                  color: "#991b1b",
+                  border: "1px solid #fecaca",
+                }}
+                title="Esta cuenta se quedó sin créditos de imagen en 10minutesWebsite."
+              >
+                ⚠️ SIN CRÉDITOS IMAGEN
               </span>
             )}
           </div>
@@ -1716,6 +1890,18 @@ function UserCard({
         >
           <Field label="Teléfono">{user.phone ?? "—"}</Field>
 
+          <Field label="Dominio Web Vinculado">
+            <span style={{ fontSize: 13, color: user.connectedDomain ? "#1e293b" : "#94a3b8", wordBreak: "break-all" }}>
+              {user.connectedDomain ? `🌐 ${user.connectedDomain}` : "Sin dominio vinculado"}
+            </span>
+          </Field>
+
+          <Field label="Cuenta 10minutesWebsite">
+            <span style={{ fontSize: 13, color: user.tenMinutesUsername ? "#1e293b" : "#94a3b8", wordBreak: "break-all" }}>
+              {user.tenMinutesUsername ? `👤 ${user.tenMinutesUsername}` : "Sin credenciales guardadas"}
+            </span>
+          </Field>
+
           <Field label="Rol">
             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
               <select
@@ -1750,7 +1936,7 @@ function UserCard({
             )}
           </Field>
 
-          <Field label="Permisos de publicación en redes">
+          <Field label="Permisos y estado de cuenta">
             <div style={{ display: "grid", gap: 6 }}>
               <label style={permissionLabelStyle}>
                 <input
@@ -1782,19 +1968,97 @@ function UserCard({
                 />
                 Publicar en Threads
               </label>
-              {user.isTrialSignup && (
+              <label style={permissionLabelStyle}>
+                <input
+                  type="checkbox"
+                  checked={permImageCredits}
+                  onChange={(e) => setPermImageCredits(e.target.checked)}
+                  disabled={savingPermissions}
+                  style={{ accentColor: "#d97706", width: 16, height: 16 }}
+                />
+                Créditos de imagen disponibles (10minutesWebsite)
+              </label>
+
+              <div
+                style={{
+                  marginTop: 6,
+                  padding: "8px 10px",
+                  borderRadius: 8,
+                  background: permIsTrialSignup ? "#fffcf0" : "#f8fafc",
+                  border: `1px solid ${permIsTrialSignup ? "#f6d289" : "#e2e8f0"}`,
+                  display: "grid",
+                  gap: 6,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: permIsTrialSignup ? "#8a6d1a" : "#475569",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
+                  }}
+                >
+                  Modalidad de acceso
+                </div>
                 <label style={permissionLabelStyle}>
                   <input
                     type="checkbox"
-                    checked={permTrialUnlocked}
-                    onChange={(e) => setPermTrialUnlocked(e.target.checked)}
+                    checked={permIsTrialSignup}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setPermIsTrialSignup(checked);
+                      if (!checked) {
+                        setPermTrialUnlocked(true);
+                      }
+                    }}
                     disabled={savingPermissions}
-                    style={{ accentColor: "#1a7f47", width: 16, height: 16 }}
+                    style={{ accentColor: "#d97706", width: 16, height: 16 }}
                   />
-                  Desbloqueado (acceso permanente, sin límite de 7 días)
+                  Cuenta en prueba gratuita (Free Trial)
                 </label>
-              )}
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+
+                {permIsTrialSignup ? (
+                  <>
+                    <label style={{ ...permissionLabelStyle, paddingLeft: 12 }}>
+                      <input
+                        type="checkbox"
+                        checked={permTrialUnlocked}
+                        onChange={(e) => setPermTrialUnlocked(e.target.checked)}
+                        disabled={savingPermissions}
+                        style={{ accentColor: "#1a7f47", width: 16, height: 16 }}
+                      />
+                      Desbloqueado permanente (sin límite de 7 días)
+                    </label>
+                    <div style={{ marginTop: 2 }}>
+                      <button
+                        type="button"
+                        onClick={handleConvertToStandard}
+                        disabled={savingPermissions}
+                        style={disabledStyle(
+                          {
+                            ...secondaryButtonStyle,
+                            padding: "4px 8px",
+                            fontSize: 11,
+                            background: "#eef6ff",
+                            color: "#1d4ed8",
+                            borderColor: "#bfdbfe",
+                          },
+                          savingPermissions,
+                        )}
+                      >
+                        Convertir a cuenta estándar (quitar prueba)
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <span style={{ fontSize: 11, color: "#16a34a", fontWeight: 600 }}>
+                    ✓ Cuenta estándar (acceso regular permanente)
+                  </span>
+                )}
+              </div>
+
+              <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 4 }}>
                 <button
                   onClick={handleSavePermissions}
                   disabled={savingPermissions || !permissionsDirty}

@@ -25,7 +25,7 @@ export default async function DashboardLayout({
   // se puede saltar apagando JavaScript. Un admin "actuando como" (ver
   // StopImpersonationButton) SIEMPRE puede seguir usando la cuenta con
   // normalidad para dar soporte, sin importar el estado de la prueba.
-  const blocked = !actingAdmin && !hasTrialAccess(user);
+  const blocked = !actingAdmin && user.role !== "admin" && !hasTrialAccess(user);
 
   return (
     <main
@@ -46,11 +46,7 @@ export default async function DashboardLayout({
           .dashboard-main { padding: 32px 40px !important; }
         }
         /*
-         * Tablas anchas (Accesos a usuarios, Uso de la base de datos,
-         * Historial): en vez de scroll horizontal, cada fila se apila como
-         * una tarjeta y cada celda muestra su encabezado como etiqueta
-         * (truco clásico de "tabla responsive" solo con CSS, sin duplicar
-         * la lógica/estado de cada fila).
+         * Tablas anchas: vista apilada en tarjetas estilo Apple en pantallas pequeñas
          */
         @media (max-width: 1023px) {
           table.responsive-table {
@@ -67,23 +63,25 @@ export default async function DashboardLayout({
           }
           table.responsive-table tr {
             border-top: none !important;
-            border: 1px solid #dfe3e8;
-            border-radius: 8px;
-            padding: 8px 10px;
-            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
             box-sizing: border-box;
           }
           table.responsive-table td {
-            padding: 6px 2px;
+            padding: 6px 0;
+            border: none !important;
           }
           table.responsive-table td[data-label]::before {
             content: attr(data-label);
             display: block;
             font-size: 11px;
             font-weight: 700;
-            color: #8a94a6;
+            color: #98a2b3;
             text-transform: uppercase;
-            letter-spacing: 0.03em;
+            letter-spacing: 0.04em;
             margin-bottom: 3px;
           }
         }
@@ -95,12 +93,40 @@ export default async function DashboardLayout({
           flexWrap: "wrap",
           justifyContent: "space-between",
           alignItems: "center",
-          gap: 10,
+          gap: 12,
+          paddingBottom: 8,
         }}
       >
-        <h1 style={{ fontSize: 20, margin: 0, color: "#e8ecf5" }}>
-          Auto Artículos
-        </h1>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              background: "linear-gradient(135deg, #0071e3 0%, #004b99 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 2px 8px rgba(0, 113, 227, 0.4)",
+              color: "#ffffff",
+              fontSize: 16,
+              fontWeight: 700,
+            }}
+          >
+            A
+          </div>
+          <h1
+            style={{
+              fontSize: 20,
+              fontWeight: 700,
+              letterSpacing: "-0.02em",
+              margin: 0,
+              color: "#f5f5f7",
+            }}
+          >
+            Auto Artículos
+          </h1>
+        </div>
         <div
           style={{
             display: "flex",
@@ -123,7 +149,7 @@ export default async function DashboardLayout({
               <span
                 style={{
                   fontSize: 11,
-                  color: "#a8b3c7",
+                  color: "#98a2b3",
                   wordBreak: "break-word",
                   textAlign: "right",
                 }}
@@ -133,8 +159,8 @@ export default async function DashboardLayout({
               <span
                 style={{
                   fontSize: 12,
-                  fontWeight: 700,
-                  color: "#ffd98a",
+                  fontWeight: 600,
+                  color: "#ff9f0a",
                   wordBreak: "break-word",
                   textAlign: "right",
                 }}
@@ -145,8 +171,9 @@ export default async function DashboardLayout({
           ) : (
             <span
               style={{
-                fontSize: 12,
-                color: "#a8b3c7",
+                fontSize: 13,
+                color: "#98a2b3",
+                fontWeight: 500,
                 wordBreak: "break-word",
               }}
             >
@@ -161,12 +188,13 @@ export default async function DashboardLayout({
         className="mobile-notice"
         style={{
           fontSize: 12,
-          color: "#8a6d1a",
-          background: "#fff8e6",
-          border: "1px solid #f0deac",
-          borderRadius: 8,
-          padding: "8px 12px",
-          marginTop: 12,
+          color: "#ff9f0a",
+          background: "rgba(255, 159, 10, 0.12)",
+          border: "1px solid rgba(255, 159, 10, 0.25)",
+          borderRadius: 10,
+          padding: "10px 14px",
+          marginTop: 14,
+          lineHeight: 1.4,
         }}
       >
         📱 Esta aplicación funciona en el celular, pero se recomienda usarla

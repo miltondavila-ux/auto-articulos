@@ -3,14 +3,113 @@
 @tailwind utilities;
 
 /*
- * Preflight está apagado en tailwind.config.js para no tocar el resto de
- * la app (estilos inline). Pero los componentes de Tremor sí asumen el
- * box-sizing:border-box que Preflight normalmente pone — sin esto, el
- * padding de las tarjetas se suma por fuera del ancho y desborda en
- * mobile. Se repone solo esta regla puntual, no el resto de los resets.
+ * Apple Human Interface Guidelines - Tokens & Responsive Baseline
  */
+:root {
+  /* Tipografía San Francisco / Apple System */
+  --apple-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --apple-font-mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+
+  /* Colores de Sistema - Apple High Contrast & Clarity */
+  --apple-bg: #070d1a;
+  --apple-bg-subtle: #0c162c;
+  --apple-surface: rgba(13, 26, 51, 0.65);
+  --apple-surface-hover: rgba(22, 42, 82, 0.75);
+  --apple-surface-card: rgba(255, 255, 255, 0.05);
+  --apple-surface-solid: #0d1a33;
+  --apple-border: rgba(255, 255, 255, 0.1);
+  --apple-border-subtle: rgba(255, 255, 255, 0.06);
+
+  /* Texto */
+  --apple-text-primary: #f5f5f7;
+  --apple-text-secondary: #98a2b3;
+  --apple-text-tertiary: #667085;
+
+  /* Acentos de Sistema Apple */
+  --apple-accent: #0071e3;
+  --apple-accent-hover: #0077ed;
+  --apple-accent-active: #0062c4;
+  --apple-accent-tint: rgba(0, 113, 227, 0.15);
+  --apple-cyan: #00c7be;
+  --apple-success: #30d158;
+  --apple-success-bg: rgba(48, 209, 88, 0.12);
+  --apple-warning: #ff9f0a;
+  --apple-warning-bg: rgba(255, 159, 10, 0.12);
+  --apple-danger: #ff453a;
+  --apple-danger-bg: rgba(255, 69, 58, 0.12);
+
+  /* Radios Squircle */
+  --apple-radius-sm: 8px;
+  --apple-radius-md: 12px;
+  --apple-radius-lg: 18px;
+  --apple-radius-xl: 24px;
+  --apple-radius-pill: 9999px;
+
+  /* Sombras y Filtros */
+  --apple-blur: blur(20px) saturate(180%);
+  --apple-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --apple-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --apple-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.45);
+
+  /* Curvas de Transición Apple */
+  --apple-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --apple-transition: all 0.2s var(--apple-ease);
+}
+
+/* Box-sizing universal para evitar desbordes responsivos */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
+
+html {
+  font-family: var(--apple-font);
+  background: var(--apple-bg);
+  color: var(--apple-text-primary);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: var(--apple-bg);
+  color: var(--apple-text-primary);
+  overflow-x: hidden;
+}
+
+/* Scrollbar refinado estilo macOS */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Inputs / Enfoque Accesible */
+input:focus, select:focus, textarea:focus, button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.4) !important;
+}
+
+/* Responsive Touch Optimizations */
+button, a, input, select {
+  touch-action: manipulation;
+}
+
