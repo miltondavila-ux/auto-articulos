@@ -8,6 +8,16 @@ const quickQuestions = [
   "¿Dónde veo oportunidades SEO?",
 ];
 
+function renderAnswer(text: string) {
+  return text.split(/(https?:\/\/[^\s]+)/g).map((part, index) => (
+    /^https?:\/\//i.test(part) ? (
+      <a key={`${part}-${index}`} href={part} target="_blank" rel="noreferrer">
+        {part}
+      </a>
+    ) : part
+  ));
+}
+
 export default function FloatingAssistant() {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
@@ -92,7 +102,7 @@ export default function FloatingAssistant() {
                 {loading ? (
                   <span className="assistant-typing">Buscando una respuesta<span>•••</span></span>
                 ) : (
-                  answer
+                  renderAnswer(answer)
                 )}
               </div>
             )}
@@ -148,6 +158,7 @@ export default function FloatingAssistant() {
         .assistant-suggestions button:hover { border-color: #93c5fd; background: #eff6ff; transform: translateY(-1px); }
         .assistant-suggestions span { color: #2563eb; font-size: 15px; }
         .assistant-answer { max-height: 218px; overflow: auto; padding: 12px 13px; border-radius: 13px; color: #1e293b; background: #eaf2ff; white-space: pre-wrap; font-size: 13px; line-height: 1.55; }
+        .assistant-answer :global(a) { color: #1d4ed8; font-weight: 750; text-decoration: underline; text-underline-offset: 2px; }
         .assistant-typing { color: #475569; font-weight: 600; }
         .assistant-typing span { display: inline-block; width: 22px; overflow: hidden; vertical-align: bottom; animation: assistant-dots 1.2s steps(4, end) infinite; }
         .assistant-form { display: flex; align-items: flex-end; gap: 8px; padding: 8px 12px; border-top: 1px solid #e2e8f0; background: #fff; }

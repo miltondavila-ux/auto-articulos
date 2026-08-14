@@ -4,6 +4,7 @@ import { getUserManualKnowledge } from "@/lib/user-manual";
 
 const OPENAI_URL = "https://api.openai.com/v1/responses";
 const MODEL = process.env.ASSISTANT_MODEL ?? "gpt-5-mini";
+const APP_URL = "https://auto-articulos-web.vercel.app";
 
 type OpenAiResponse = {
   output_text?: string;
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
         input: [
           {
             role: "developer",
-            content: `${manual}\n\nResponde solo sobre el uso de la plataforma. Usa español sencillo, pasos concretos y rutas confirmadas. No inventes funciones ni enlaces. Si la información no aparece en el manual, dilo claramente y sugiere contactar al administrador.`,
+            content: `${manual}\n\nResponde solo sobre el uso de la plataforma. Usa español sencillo y pasos concretos. Cuando el manual indique una ruta que comienza por /dashboard, incluye siempre el enlace completo y exacto usando ${APP_URL} seguido de esa ruta; por ejemplo, ${APP_URL}/dashboard/configuracion. No inventes funciones ni enlaces. Si la información no aparece en el manual, dilo claramente y sugiere contactar al administrador.`,
           },
           { role: "user", content: body.message.trim() },
         ],
