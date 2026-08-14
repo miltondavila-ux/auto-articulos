@@ -9,11 +9,12 @@ const quickQuestions = [
 ];
 
 function renderAnswer(text: string) {
-  const parts = text.split(/(\[[^\]]+\]\(https?:\/\/[^\s)]+\)|https?:\/\/[^\s),.]+)/g);
+  const parts = text.split(/(\[[^\]]+\]\(https?:\/\/[^\s)]+\)|https?:\/\/[^\s),]+)/g);
 
   return parts.map((part, index) => {
     const markdownLink = part.match(/^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);
-    const url = markdownLink?.[2] ?? (/^https?:\/\//i.test(part) ? part : null);
+    const url = (markdownLink?.[2] ?? (/^https?:\/\//i.test(part) ? part : null))
+      ?.replace(/[.,!?;:]+$/, "");
     if (!url) return part;
 
     return (
