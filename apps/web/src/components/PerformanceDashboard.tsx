@@ -93,9 +93,7 @@ export default function PerformanceDashboard() {
       .catch(() => {});
   }, []);
 
-  // Para usuarios nuevos que aún no han publicado ningún artículo, no mostrar el dashboard de métricas/gráficas
-  // vacías para que el Asistente de Configuración Inicial (Wizard) sea el protagonista absoluto.
-  if (!stats || stats.totalPublished === 0) return null;
+  if (!stats) return null;
 
   const monthlyPercent = stats.monthlyArticleLimit
     ? Math.min(

@@ -101,9 +101,36 @@ export default function InicioPage() {
     return () => clearInterval(interval);
   }, [activeRun, loadRuns]);
 
-  const hasPublishedAny = runs.some((r) =>
-    r.titles.some((t) => t.status === "success"),
-  );
+  const [wizardComplete, setWizardComplete] = useState<boolean | null>(null);
+
+  const checkWizardStatus = useCallback(async () => {
+    try {
+      const [credRes, catRes, meRes, googleRes] = await Promise.all([
+        fetch("/api/credentials", { cache: "no-store" }),
+        fetch("/api/categories", { cache: "no-store" }),
+        fetch("/api/me", { cache: "no-store" }),
+        fetch("/api/search-integrations/google", { cache: "no-store" }),
+      ]);
+
+      const credData = credRes.ok ? await credRes.json() : {};
+      const catData = catRes.ok ? await catRes.json() : {};
+      const meData = meRes.ok ? await meRes.json() : {};
+      const googleData = googleRes.ok ? await googleRes.json() : {};
+
+      const step1 = Boolean(credData.configured);
+      const step2 = Array.isArray(catData.categories) && catData.categories.length > 0;
+      const step3 = typeof meData.contentLanguage === "string" && meData.contentLanguage.trim().length > 0;
+      const step4 = Boolean(googleData.connected && googleData.siteUrl);
+
+      setWizardComplete(step1 && step2 && step3 && step4);
+    } catch {
+      setWizardComplete(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkWizardStatus();
+  }, [checkWizardStatus]);
 
   return (
     <div>
@@ -205,9 +232,11 @@ export default function InicioPage() {
         </div>
       )}
 
-      <OnboardingWizard />
-
-      {hasPublishedAny && <PerformanceDashboard />}
+      {wizardComplete === false ? (
+        <OnboardingWizard onUpdated={checkWizardStatus} />
+      ) : wizardComplete === true ? (
+        <PerformanceDashboard />
+      ) : null}
 
       {activeRun && (
         <div
