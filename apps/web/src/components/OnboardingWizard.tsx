@@ -23,6 +23,7 @@ export default function OnboardingWizard({
   const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [languages, setLanguages] = useState<LanguageRow[]>([]);
   const [contentLanguage, setContentLanguage] = useState("");
+  const [selectedLang, setSelectedLang] = useState("");
   const [googleData, setGoogleData] = useState<{
     connected: boolean;
     siteUrl?: string | null;
@@ -74,7 +75,9 @@ export default function OnboardingWizard({
       }
       if (meRes.ok) {
         const data = await meRes.json();
-        setContentLanguage(data.contentLanguage || "");
+        const lang = data.contentLanguage || "";
+        setContentLanguage(lang);
+        setSelectedLang(lang || "es");
       }
       if (googleRes.ok) {
         const data = await googleRes.json();
@@ -132,13 +135,16 @@ export default function OnboardingWizard({
     setSyncingCategories(true);
     setMessage(null);
     try {
-      const res = await fetch("/api/categories/sync", { method: "POST" });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
+      const [catRes] = await Promise.all([
+        fetch("/api/categories/sync", { method: "POST" }),
+        fetch("/api/languages/sync", { method: "POST" }).catch(() => null),
+      ]);
+      const data = await catRes.json().catch(() => ({}));
+      if (!catRes.ok) {
         setMessage({ type: "error", text: data.error || "Error al sincronizar categorías" });
         return;
       }
-      setMessage({ type: "success", text: "Categorías sincronizadas correctamente." });
+      setMessage({ type: "success", text: "Categorías e idiomas sincronizados correctamente desde 10minutesWebsite." });
       await loadAll();
       onUpdated?.();
     } finally {
@@ -147,22 +153,47 @@ export default function OnboardingWizard({
   }
 
   async function handleSaveLanguage(langId: string) {
+    const cleanLang = (langId || selectedLang || "es").trim();
+    if (!cleanLang) {
+      setMessage({ type: "error", text: "Por favor selecciona un idioma válido." });
+      return;
+    }
     setSavingLanguage(true);
     setMessage(null);
     try {
+      // 1. Guardar idioma en el backend
       const res = await fetch("/api/me", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contentLanguage: langId }),
+        body: JSON.stringify({ contentLanguage: cleanLang }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setMessage({ type: "error", text: data.error || "Error al guardar idioma" });
         return;
       }
-      setContentLanguage(langId);
+
+      // 2. DOBLE VALIDACIÓN: Comprobar activamente contra la BD que quedó persistido
+      const verifyRes = await fetch(`/api/me?_t=${Date.now()}`, { cache: "no-store" });
+      const verifyData = await verifyRes.json().catch(() => ({}));
+      if (verifyData.contentLanguage !== cleanLang) {
+        setMessage({
+          type: "error",
+          text: "Fallo de doble validación: el idioma no se confirmó en la base de datos. Inténtalo nuevamente.",
+        });
+        return;
+      }
+
+      setContentLanguage(cleanLang);
+      setSelectedLang(cleanLang);
       setEditingLang(false);
-      setMessage({ type: "success", text: "Idioma de redacción confirmado con éxito." });
+      const name =
+        languages.find((l) => l.externalId === cleanLang)?.name ||
+        (cleanLang === "es" ? "Español" : cleanLang === "en" ? "Inglés" : cleanLang);
+      setMessage({
+        type: "success",
+        text: `✅ Doble validación exitosa: Idioma ${name} confirmado y verificado en la base de datos.`,
+      });
       await loadAll();
       onUpdated?.();
     } finally {
@@ -702,8 +733,8 @@ export default function OnboardingWizard({
 
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
                     <select
-                      value={contentLanguage || "es"}
-                      onChange={(e) => handleSaveLanguage(e.target.value)}
+                      value={selectedLang || contentLanguage || "es"}
+                      onChange={(e) => setSelectedLang(e.target.value)}
                       disabled={savingLanguage}
                       style={{
                         ...inputStyle,
@@ -729,7 +760,7 @@ export default function OnboardingWizard({
 
                     <button
                       type="button"
-                      onClick={() => handleSaveLanguage(contentLanguage || "es")}
+                      onClick={() => handleSaveLanguage(selectedLang || contentLanguage || "es")}
                       disabled={savingLanguage}
                       style={{
                         background: "#2f5fdb",
@@ -742,7 +773,7 @@ export default function OnboardingWizard({
                         cursor: savingLanguage ? "not-allowed" : "pointer",
                       }}
                     >
-                      {savingLanguage ? "Guardando..." : "Confirmar Idioma →"}
+                      {savingLanguage ? "Validando en BD..." : "Confirmar y Validar Idioma →"}
                     </button>
 
                     <button

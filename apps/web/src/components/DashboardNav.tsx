@@ -38,7 +38,7 @@ export default function DashboardNav() {
     })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        setIsAdmin(data?.role === "admin");
+        setIsAdmin(data?.role === "admin" || Boolean(data?.isActingAdmin));
         if (Array.isArray(data?.disabledModules)) {
           setDisabledModules(data.disabledModules);
         }

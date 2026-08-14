@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
-import { getCurrentUser, getCurrentUserId } from "@/lib/current-user";
+import { getCurrentUser, getCurrentUserId, getActingAdmin, displayName } from "@/lib/current-user";
 
 import {
   getGlobalDisabledModules,
@@ -17,6 +17,7 @@ export const MAX_ARTICLE_SIGNATURE_LEN = 700;
 
 export async function GET() {
   const user = await getCurrentUser();
+  const actingAdmin = await getActingAdmin();
   const globalDisabledModules = await getGlobalDisabledModules();
   const disabledModules = getEffectiveDisabledModules(user, globalDisabledModules);
   const userDisabledModules = parseUserDisabledModules(user.disabledModules);
@@ -25,6 +26,10 @@ export async function GET() {
     {
       email: user.email,
       role: user.role,
+      isActingAdmin: Boolean(actingAdmin),
+      actingAdmin: actingAdmin
+        ? { id: actingAdmin.id, email: actingAdmin.email, name: displayName(actingAdmin) }
+        : null,
       maxTitlesPerBatch: user.maxTitlesPerBatch,
       contentLanguage: user.contentLanguage,
       articleSignature: user.articleSignature,
@@ -35,6 +40,7 @@ export async function GET() {
       profilePhotoUrl: user.profilePhotoUrl,
       businessLogoUrl: user.businessLogoUrl,
       allowInstagramPublishing: user.allowInstagramPublishing,
+      hasImageCredits: user.hasImageCredits,
       disabledModules,
       userDisabledModules,
       globalDisabledModules,
@@ -66,20 +72,24 @@ export async function PATCH(request: NextRequest) {
         { status: 400 },
       );
     }
-    // Debe coincidir con un idioma ya sincronizado desde 10minutesWebsite
-    // (ver /api/languages/sync) — no se acepta cualquier texto, para no
-    // guardar un valor que después no coincida con ninguna opción real del
-    // selector en el sitio.
-    const language = await prisma.language.findFirst({
-      where: { userId, platform: "10minutesWebsite", externalId: contentLanguage },
+    const cleanLang = contentLanguage.trim();
+    // Debe coincidir con un idioma ya sincronizado desde 10minutesWebsite o crearlo automáticamente si es estándar
+    let language = await prisma.language.findFirst({
+      where: { userId, platform: "10minutesWebsite", externalId: cleanLang },
     });
     if (!language) {
-      return NextResponse.json(
-        { error: "Ese idioma no está sincronizado. Sincroniza los idiomas primero." },
-        { status: 400 },
-      );
+      const standardName =
+        cleanLang === "es" ? "Español" : cleanLang === "en" ? "Inglés" : cleanLang.toUpperCase();
+      language = await prisma.language.create({
+        data: {
+          userId,
+          platform: "10minutesWebsite",
+          externalId: cleanLang,
+          name: standardName,
+        },
+      });
     }
-    data.contentLanguage = contentLanguage;
+    data.contentLanguage = cleanLang;
   }
 
   if ("articleSignature" in body) {
