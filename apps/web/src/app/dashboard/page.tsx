@@ -101,6 +101,10 @@ export default function InicioPage() {
     return () => clearInterval(interval);
   }, [activeRun, loadRuns]);
 
+  const hasPublishedAny = runs.some((r) =>
+    r.titles.some((t) => t.status === "success"),
+  );
+
   return (
     <div>
       {showTrialWelcome && (
@@ -201,9 +205,9 @@ export default function InicioPage() {
         </div>
       )}
 
-      <PerformanceDashboard />
-
       <OnboardingWizard />
+
+      {hasPublishedAny && <PerformanceDashboard />}
 
       {activeRun && (
         <div

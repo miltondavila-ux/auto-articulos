@@ -315,6 +315,83 @@ ejecutar de forma explícita y auditada después del despliegue.
   se crea el add-on con URL canónica
   `https://auto-articulos-web.vercel.app/api/mcp`. Al finalizar se anotará el
   Add-on ID (no secreto) y se pasará al account linking.
+- **Resultado del Paso 1:** Milton confirmó acceso a la consola de desarrollo
+  de Alexa. Siguiente comprobación: localizar dentro de esa consola la sección
+  **Alexa+ Add-ons / MCP Toolkit**; el acceso a la consola general no garantiza
+  todavía que Amazon haya habilitado el programa MCP Toolkit para la cuenta.
+- **Evidencia recibida:** captura del 13/8/2026 muestra identidad verificada
+  correctamente y el acceso “Consola para desarrolladores de Alexa+” bajo el
+  bloque Alexa+. Esto confirma acceso al portal adecuado; el siguiente clic es
+  exclusivamente esa consola, no “Kit de habilidades de Alexa” ni “Servicio
+  de voz de Alexa”, que pertenecen al sistema clásico y no al MCP Toolkit.
+- **Bloqueo confirmado en Paso 2:** al abrir la consola correcta
+  `developer.amazon.com/alexa/console/ask/addons/`, la cuenta muestra solamente
+  “Muy pronto”. Esto confirma que la cuenta puede entrar al portal general,
+  pero Amazon aún NO la habilitó como socio de Alexa+ Add-ons/MCP Toolkit. No
+  existe botón de creación, Add-on ID ni credenciales que Codex pueda obtener
+  desde aquí. El MCP de Auto Artículos permanece desplegado y listo; la fase de
+  vínculo real queda bloqueada exclusivamente por la habilitación de Amazon.
+  Siguiente acción de Milton: solicitar acceso al programa mediante el canal
+  de soporte/onboarding Alexa+ de Amazon, indicando que ya tiene un servidor
+  MCP remoto con OAuth 2.1/PKCE listo para pruebas. No se deben usar Skills
+  clásicas como sustituto: no soportan este flujo MCP.
+- **Respuesta recibida de Amazon (13/8/2026):** Amazon confirma expresamente
+  que MCP Toolkit está en **Private Preview**, disponible solo en Estados
+  Unidos y sujeto a aprobación. La respuesta NO concede aún acceso ni entrega
+  credenciales: es una guía para usar después de ser aprobado. Confirma que
+  nuestra arquitectura sigue el camino correcto (servidor remoto Streamable
+  HTTP, documento PRM, OAuth 2.1/PKCE S256 y refresh tokens), pero el próximo
+  paso real sigue siendo conseguir la aprobación/credenciales del programa.
+  Una vez aprobados: instalar/configurar CLI → `alexa-ai new mcp` con
+  `https://auto-articulos-web.vercel.app/api/mcp` → obtener Add-on ID y las
+  redirect URIs → registrar de forma segura las tres variables OAuth →
+  `configure-account-linking` y deploy de desarrollo. Nunca se pegará el
+  client secret en este documento ni en Git.
+
+### ChatGPT — Conexión temporal al MCP mientras Alexa+ está en espera (13/8/2026)
+
+- **Decisión de Milton:** mientras Amazon aprueba el acceso a MCP Toolkit,
+  conectar el servidor MCP remoto ya desplegado a ChatGPT. Esta conexión no
+  reemplaza Alexa+: será un segundo cliente del mismo servidor y permitirá
+  validar el caso de uso real antes de que Amazon habilite su add-on.
+- **Endpoint canónico:** `https://auto-articulos-web.vercel.app/api/mcp`.
+  ChatGPT solo admite servidores MCP remotos para esta ruta; no se expondrá
+  ningún servidor local ni se alterará el endpoint de producción.
+- **Permiso inicial (obligatorio):** solo herramientas de consulta:
+  `listar_oportunidades` y `estado_de_publicaciones`. Quedan fuera de la
+  primera prueba `crear_oportunidades` y `publicar_categoria`; no se crean ni
+  publican artículos desde ChatGPT hasta que Milton valide explícitamente los
+  resultados de solo lectura.
+- **Compatibilidad de plan:** el modo desarrollador y las apps MCP completas
+  están disponibles en ChatGPT web para Business y Enterprise/Edu. Pro puede
+  conectar herramientas de lectura; las acciones de escritura requieren
+  Business o Enterprise/Edu y los permisos correspondientes. La disponibilidad
+  exacta depende del plan, región y de que Milton sea administrador/propietario
+  del espacio de trabajo. Fuente: documentación oficial de OpenAI,
+  “Developer mode and MCP apps in ChatGPT”.
+- **Trabajo técnico pendiente antes de registrar la app:** no reutilizar
+  `OAUTH_ALEXA_*`. Se añadirá una configuración OAuth propia para ChatGPT y
+  se anunciará `offline_access` en `scopes_supported`, manteniendo la emisión
+  de refresh tokens. OpenAI advierte que sin ello ChatGPT puede perder la
+  conexión al vencer el access token. Este cambio no requiere migración de BD,
+  pero no se implementará ni desplegará hasta identificar el plan y recibir de
+  ChatGPT el Client ID, secret y redirect URI(s); los secretos nunca se anotan
+  en este tablero ni se incluyen en Git.
+- **Paso ChatGPT 1 en curso:** Milton abre `https://chatgpt.com` en el navegador
+  web, entra a **Configuración → Apps** (o, si es un workspace, a
+  **Configuración del espacio de trabajo → Apps**) y confirma mediante captura
+  si aparece **Crear/Create** o **Modo desarrollador**. Con esa evidencia se
+  determina el flujo exacto y se sigue un solo paso a la vez.
+- **Evidencia del Paso ChatGPT 1 (13/8/2026):** la captura de Milton muestra
+  la pantalla **Configuración → Complementos** y la opción **Modo de
+  desarrollador**. Por tanto, la cuenta tiene el punto de entrada necesario
+  para configurar el MCP como app privada. Siguiente paso único: abrir esa
+  opción y revisar sus controles; todavía no se activa, crea ni conecta nada.
+- **Ubicación confirmada:** al abrir la opción, ChatGPT muestra la sección
+  **Configuración → Seguridad e inicio de sesión**; el bloque **Modo de
+  desarrollador** está más abajo en esa misma pantalla. Se pidió a Milton
+  desplazarse solo hasta que se vean el interruptor y su texto, sin cambiar
+  todavía ningún ajuste.
 
 ## Reglas durante el trabajo
 
@@ -360,8 +437,10 @@ ejecutar de forma explícita y auditada después del despliegue.
     - **Paso 3 (Idioma de redacción)**: Selector de idioma principal con guardado directo y botón de recarga de lista de idiomas.
     - **Paso 4 (Google Search Console)**: Instrucción explícita de abrir GSC en una pestaña contigua para verificar activación antes de conectar, flujo OAuth y selector de sitio web.
     - **Paso 5 (Meta final)**: Felicitación y acceso directo a publicar el primer artículo o explorar Oportunidades SEO).
-  - `apps/web/src/app/dashboard/page.tsx` (integración del nuevo `OnboardingWizard` en la página principal).
-  - `apps/web/src/app/dashboard/configuracion/page.tsx` (nueva pestaña `"wizard"` / `"🚀 Configuración Inicial"` agregada a `tabs`, lectura de parámetro `?tab=wizard`, y renderizado de `<OnboardingWizard variant="standalone" />`, preservando el control de visibilidad de módulos).
+  - `apps/web/src/app/dashboard/page.tsx` (integración del nuevo `OnboardingWizard` en la página principal, y renderizado condicional estricto `{hasPublishedAny && <PerformanceDashboard />}` para que los usuarios nuevos vean exclusivamente el Wizard sin métricas ni gráficas interfiriendo).
+  - `apps/web/src/components/PerformanceDashboard.tsx` (se oculta automáticamente cuando `totalPublished === 0` para que el usuario nuevo vea exclusivamente el Wizard de activación al ingresar a Inicio).
+  - `apps/web/src/components/DashboardNav.tsx` (se añadió `marginBottom: 28` a la barra de menús para despegar con holgura todos los módulos en desktop y móvil).
+  - `apps/web/src/app/dashboard/configuracion/page.tsx` (nueva pestaña `"wizard"` / `"🚀 Configuración Inicial"` con diseño VIP destacado y sombra azul, banner hero superior prominente `"Asistente de Configuración Inicial Paso a Paso"` con botón directo de apertura, lectura de parámetro `?tab=wizard`, y renderizado de `<OnboardingWizard variant="standalone" />`, preservando el control de visibilidad de módulos).
   - `TO-DO.md` (ítem movido a la sección *Hecho*).
 - **Coordinación y no-interferencia:**
   - Esta tarea NO introduce migraciones nuevas ni modifica el schema de Prisma.
@@ -689,6 +768,59 @@ ejecutar de forma explícita y auditada después del despliegue.
   asistente flotante confirmado Ready en Vercel; sin migración. Los archivos
   de diagnóstico ajenos sin seguimiento siguen fuera del lote y deberán
   revisarse antes de que alguien reclame una tarea nueva.
+- **Capitán de migración:** Codex — revisará y aplicará el lote completo.
+  Motivo: reparación urgente de respuestas del asistente flotante y despliegue.
+  Nadie más ejecuta Prisma hasta su liberación.
+- **Diagnóstico de respuestas del asistente (Codex):** los logs de producción
+  confirman solicitudes autenticadas a `POST /api/assistant/chat`, pero OpenAI
+  devolvía `502`; `OPENAI_API_KEY` sí existe en Producción y no se expuso ningún
+  secreto. La causa probable es la ruta heredada `chat/completions` con
+  `max_tokens` para `gpt-5-mini`. Se migra a `/v1/responses` con
+  `max_output_tokens`, el formato recomendado por la documentación oficial de
+  OpenAI, y se añade un log seguro de código/ID de solicitud para diagnósticos
+  futuros. **ÁREA RESERVADA:** `apps/web/src/app/api/assistant/chat/route.ts`.
+  **SIGUIENTE ACCIÓN:** typecheck, despliegue coordinado y prueba real en
+  producción; sin migración de base de datos.
+- **Entrega urgente en producción (Codex):** la ruta se publicó en el commit
+  `930baa1` y Vercel confirmó el despliegue
+  `dpl_HVNjpaNPSq6X9ppBMsBymLb76tQV` como **Ready**, con alias
+  `https://auto-articulos-web.vercel.app`. `npm --prefix apps/web run
+  typecheck` también fue correcto. **Capitán de migración liberó el lote:**
+  Codex. Resultado: API del asistente migrada a Responses y despliegue Ready;
+  sin migración. Se preservan sin incluir los cambios activos ajenos de
+  Coordinación y Configuración, además de los diagnósticos no rastreados.
+- **Capitán de migración:** Codex — revisará y aplicará el lote completo.
+  Motivo: ajuste final de presupuesto de respuesta del asistente y despliegue.
+  Nadie más ejecuta Prisma hasta su liberación.
+- **Seguimiento del fallo reportado por Milton:** tras la primera corrección,
+  la pregunta real sobre configurar Google Search Console aún devolvió `502`.
+  El endpoint ya está en Responses y la clave existe; se ajusta el modelo a
+  razonamiento `minimal` y `max_output_tokens: 1200`. GPT-5 consume el mismo
+  presupuesto para razonamiento y texto, por lo que el límite anterior de 500
+  podía terminar sin contenido visible. La documentación oficial de OpenAI
+  confirma que `max_output_tokens` cubre ambos y que reducir el esfuerzo usa
+  menos tokens. **SIGUIENTE ACCIÓN:** typecheck y despliegue; sin migración.
+- **Despliegue del ajuste de capacidad (Codex):** commit `64a08b9`, typecheck
+  correcto y Vercel `dpl_9Kk3oR6BKfThxJJVe41mEHBVNfdB` en estado **Ready** con
+  el alias de producción. **Capitán de migración liberó el lote:** Codex.
+  Resultado: razonamiento mínimo y presupuesto de 1200 tokens desplegados; sin
+  migración. Los cambios activos ajenos en Coordinación y Configuración no se
+  incluyeron en el commit de este arreglo.
+- **Capitán de migración:** Codex — revisará y aplicará el lote completo.
+  Motivo: mejora responsive y altura vertical del asistente flotante. Nadie más
+  ejecuta Prisma hasta su liberación.
+- **Ajuste visual pedido por Milton:** al desplegarse, el asistente ahora usa
+  primero el ancho seguro y responsive de cada pantalla y después aprovecha la
+  altura vertical disponible: hasta 570 px en escritorio y hasta 630 px en
+  móvil, sin superar el alto visible. El contenido interno podrá desplazarse,
+  mientras el cuadro para escribir permanece siempre accesible. **ÁREA
+  RESERVADA:** `FloatingAssistant.tsx`. **SIGUIENTE ACCIÓN:** typecheck y
+  despliegue; no requiere migración.
+- **Entrega responsive en producción (Codex):** commit `c62e777`, typecheck
+  correcto y Vercel `dpl_AwEYWfxtFMWrzsdFHbgoYSftAdYk` en estado **Ready** con
+  el alias principal. **Capitán de migración liberó el lote:** Codex. Resultado:
+  panel responsive y más alto desplegado; sin migración. Se mantuvieron fuera
+  los cambios activos ajenos de Coordinación y Configuración.
   estados y respuestas), sin cambiar permisos, API ni la regla de acceso
   activo. Se validará antes de enviarlo al próximo lote.
 - **Verificación completada:** `npm --prefix apps/web run typecheck`, el

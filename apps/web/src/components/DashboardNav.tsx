@@ -75,7 +75,7 @@ export default function DashboardNav() {
   });
 
   return (
-    <nav style={{ position: "relative", marginTop: 20 }}>
+    <nav style={{ position: "relative", marginTop: 20, marginBottom: 28 }}>
       <style>{`
         @media (min-width: 1024px) {
           .nav-mobile-toggle { display: none !important; }

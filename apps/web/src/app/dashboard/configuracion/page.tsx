@@ -717,6 +717,94 @@ export default function ConfiguracionPage() {
         </div>
       </div>
 
+      {/* Banner Prominente de Configuración Inicial (si no está en la pestaña wizard) */}
+      {activeTab !== "wizard" && (
+        <div
+          onClick={() => setActiveTab("wizard")}
+          style={{
+            background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)",
+            color: "#ffffff",
+            borderRadius: 14,
+            padding: "16px 20px",
+            marginBottom: 20,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 14,
+            cursor: "pointer",
+            boxShadow: "0 8px 24px rgba(37, 99, 235, 0.25)",
+            border: "1px solid rgba(255, 255, 255, 0.2)",
+            transition: "transform 0.2s ease, box-shadow 0.2s ease",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                background: "rgba(255, 255, 255, 0.15)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 22,
+                flexShrink: 0,
+              }}
+            >
+              🚀
+            </div>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span
+                  style={{
+                    background: "#fbbf24",
+                    color: "#78350f",
+                    fontSize: 10,
+                    fontWeight: 800,
+                    padding: "2px 8px",
+                    borderRadius: 6,
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  GUÍA RECOMENDADA
+                </span>
+                <span style={{ fontSize: 15, fontWeight: 800, color: "#ffffff" }}>
+                  Asistente de Configuración Inicial Paso a Paso
+                </span>
+              </div>
+              <p style={{ margin: "4px 0 0 0", fontSize: 13, color: "#bfdbfe" }}>
+                Conecta tu cuenta en 4 sencillos pasos ordenados: 10minutesWebsite ➔ Categorías ➔ Idioma ➔ Google Search Console.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveTab("wizard");
+            }}
+            style={{
+              background: "#ffffff",
+              color: "#1e3a8a",
+              border: "none",
+              borderRadius: 8,
+              padding: "10px 18px",
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: "pointer",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              whiteSpace: "nowrap",
+            }}
+          >
+            Abrir Asistente Paso a Paso →
+          </button>
+        </div>
+      )}
+
       {/* Pro Selector de Pestañas (Glassmorphism & Interactive Cards) */}
       <div
         style={{
@@ -728,6 +816,8 @@ export default function ConfiguracionPage() {
       >
         {tabs.map((t) => {
           const isActive = activeTab === t.id;
+          const isWizard = t.id === "wizard";
+
           return (
             <button
               key={t.id}
@@ -743,17 +833,29 @@ export default function ConfiguracionPage() {
                 fontFamily: "inherit",
                 cursor: "pointer",
                 borderRadius: 14,
-                border: isActive
-                  ? "2px solid #2563eb"
-                  : "1px solid rgba(226, 232, 240, 0.8)",
-                background: isActive
-                  ? "linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%)"
-                  : "#ffffff",
-                color: "#0f172a",
-                boxShadow: isActive
-                  ? "0 10px 24px rgba(37, 99, 235, 0.15)"
-                  : "0 2px 8px rgba(15, 23, 42, 0.04)",
-                transform: isActive ? "translateY(-2px)" : "translateY(0)",
+                border: isWizard
+                  ? isActive
+                    ? "2px solid #1d4ed8"
+                    : "2px solid #3b82f6"
+                  : isActive
+                    ? "2px solid #2563eb"
+                    : "1px solid rgba(226, 232, 240, 0.8)",
+                background: isWizard
+                  ? isActive
+                    ? "linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)"
+                    : "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)"
+                  : isActive
+                    ? "linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%)"
+                    : "#ffffff",
+                color: isWizard && isActive ? "#ffffff" : "#0f172a",
+                boxShadow: isWizard
+                  ? isActive
+                    ? "0 12px 28px rgba(37, 99, 235, 0.3)"
+                    : "0 6px 18px rgba(37, 99, 235, 0.15)"
+                  : isActive
+                    ? "0 10px 24px rgba(37, 99, 235, 0.15)"
+                    : "0 2px 8px rgba(15, 23, 42, 0.04)",
+                transform: isActive || isWizard ? "translateY(-2px)" : "translateY(0)",
                 transition: "all 0.2s ease-in-out",
               }}
             >
@@ -765,9 +867,10 @@ export default function ConfiguracionPage() {
                     top: 0,
                     left: 0,
                     right: 0,
-                    height: 3,
-                    background:
-                      "linear-gradient(90deg, #2563eb 0%, #60a5fa 100%)",
+                    height: 4,
+                    background: isWizard
+                      ? "#60a5fa"
+                      : "linear-gradient(90deg, #2563eb 0%, #60a5fa 100%)",
                   }}
                 />
               )}
@@ -784,23 +887,35 @@ export default function ConfiguracionPage() {
                     display: "inline-flex",
                     padding: "3px 8px",
                     borderRadius: 999,
-                    background: isActive ? "#dbeafe" : "#f1f5f9",
-                    color: isActive ? "#1d4ed8" : "#64748b",
+                    background: isWizard
+                      ? isActive
+                        ? "rgba(255, 255, 255, 0.2)"
+                        : "#bfdbfe"
+                      : isActive
+                        ? "#dbeafe"
+                        : "#f1f5f9",
+                    color: isWizard
+                      ? isActive
+                        ? "#ffffff"
+                        : "#1e3a8a"
+                      : isActive
+                        ? "#1d4ed8"
+                        : "#64748b",
                     fontSize: 10,
                     fontWeight: 800,
                     letterSpacing: "0.06em",
                     textTransform: "uppercase",
                   }}
                 >
-                  {t.eyebrow}
+                  {isWizard ? "⭐ " + t.eyebrow : t.eyebrow}
                 </span>
                 {t.badge && (
                   <span
                     style={{
                       fontSize: 11,
                       fontWeight: 700,
-                      color: "#15803d",
-                      background: "#dcfce7",
+                      color: isWizard && isActive ? "#22c55e" : "#15803d",
+                      background: isWizard && isActive ? "rgba(255, 255, 255, 0.9)" : "#dcfce7",
                       padding: "2px 8px",
                       borderRadius: 999,
                     }}
@@ -815,7 +930,13 @@ export default function ConfiguracionPage() {
                   marginTop: 10,
                   fontSize: 16,
                   fontWeight: 800,
-                  color: isActive ? "#1e40af" : "#0f172a",
+                  color: isWizard
+                    ? isActive
+                      ? "#ffffff"
+                      : "#1e3a8a"
+                    : isActive
+                      ? "#1e40af"
+                      : "#0f172a",
                 }}
               >
                 {t.label}
@@ -824,7 +945,11 @@ export default function ConfiguracionPage() {
                 style={{
                   display: "block",
                   marginTop: 4,
-                  color: "#64748b",
+                  color: isWizard
+                    ? isActive
+                      ? "#dbeafe"
+                      : "#334155"
+                    : "#64748b",
                   fontSize: 12,
                   lineHeight: 1.4,
                 }}
