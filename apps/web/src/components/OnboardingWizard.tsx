@@ -750,90 +750,128 @@ export default function OnboardingWizard({
                     padding: "14px 16px",
                   }}
                 >
-                  <p style={{ margin: "0 0 10px 0", fontSize: 13, color: "#1e40af", fontWeight: 500 }}>
-                    Haz clic a continuación para conectar con tu cuenta de 10minutesWebsite y descargar tus categorías:
-                  </p>
-                  <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                    <button
-                      type="button"
-                      onClick={handleSyncCategories}
-                      disabled={syncingCategories}
+                  {syncingCategories ? (
+                    <div
                       style={{
-                        background: "#2f5fdb",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: 8,
-                        padding: "10px 20px",
-                        fontSize: 13,
-                        fontWeight: 700,
-                        cursor: syncingCategories ? "not-allowed" : "pointer",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 8,
-                        boxShadow: "0 4px 12px rgba(47, 95, 219, 0.25)",
+                        background: "#ffffff",
+                        border: "2px solid #3b82f6",
+                        borderRadius: 10,
+                        padding: "18px 20px",
+                        textAlign: "center",
+                        boxShadow: "0 4px 14px rgba(59, 130, 246, 0.15)",
                       }}
                     >
-                      {syncingCategories ? "🔄 Conectando y descargando..." : "⚡ Sincronizar mis Categorías Ahora →"}
-                    </button>
-                  </div>
-
-                  <div style={{ marginTop: 12, borderTop: "1px dashed #bfdbfe", paddingTop: 10 }}>
-                    {!showManualCategory ? (
-                      <button
-                        type="button"
-                        onClick={() => setShowManualCategory(true)}
+                      <div style={{ fontSize: 36, marginBottom: 8 }}>⏳</div>
+                      <h4 style={{ margin: "0 0 6px 0", fontSize: 16, color: "#1e40af", fontWeight: 800 }}>
+                        Conectando con tu sitio web de 10minutesWebsite...
+                      </h4>
+                      <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#334155", lineHeight: 1.5, maxWidth: 500, marginLeft: "auto", marginRight: "auto" }}>
+                        Por favor espera <strong>entre 10 y 25 segundos</strong>. Nuestro robot está ingresando a tu cuenta para descargar automáticamente todas las categorías de tu web.
+                      </p>
+                      <div
                         style={{
-                          background: "none",
-                          border: "none",
-                          color: "#2563eb",
-                          fontSize: 12,
-                          fontWeight: 600,
-                          cursor: "pointer",
-                          textDecoration: "underline",
-                          padding: 0,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 8,
+                          background: "#dbeafe",
+                          color: "#1e40af",
+                          padding: "8px 16px",
+                          borderRadius: 20,
+                          fontSize: 13,
+                          fontWeight: 700,
                         }}
                       >
-                        ➕ ¿Quieres agregar una categoría manualmente? Haz clic aquí
-                      </button>
-                    ) : (
-                      <form
-                        onSubmit={handleSaveManualCategory}
-                        style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}
-                      >
-                        <input
-                          type="text"
-                          placeholder="Ej: Noticias, Blog, Servicios..."
-                          value={manualCategoryName}
-                          onChange={(e) => setManualCategoryName(e.target.value)}
-                          disabled={savingManualCategory}
-                          style={{ ...inputStyle, maxWidth: 260, fontSize: 13, background: "#fff" }}
-                        />
+                        <span>🔄 Sincronización en curso... por favor no recargues la página</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <p style={{ margin: "0 0 10px 0", fontSize: 13, color: "#1e40af", fontWeight: 500 }}>
+                        Haz clic a continuación para conectar con tu cuenta de 10minutesWebsite y descargar tus categorías:
+                      </p>
+                      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
                         <button
-                          type="submit"
-                          disabled={savingManualCategory || !manualCategoryName.trim()}
+                          type="button"
+                          onClick={handleSyncCategories}
+                          disabled={syncingCategories}
                           style={{
                             background: "#2f5fdb",
                             color: "#fff",
                             border: "none",
                             borderRadius: 8,
-                            padding: "8px 14px",
+                            padding: "10px 20px",
                             fontSize: 13,
                             fontWeight: 700,
-                            cursor: savingManualCategory || !manualCategoryName.trim() ? "not-allowed" : "pointer",
+                            cursor: syncingCategories ? "not-allowed" : "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 8,
+                            boxShadow: "0 4px 12px rgba(47, 95, 219, 0.25)",
                           }}
                         >
-                          {savingManualCategory ? "Guardando..." : "Guardar Categoría"}
+                          ⚡ Sincronizar mis Categorías Ahora →
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => setShowManualCategory(false)}
-                          style={{ ...secondaryButtonStyle, padding: "8px 12px", fontSize: 12 }}
-                        >
-                          Cancelar
-                        </button>
-                      </form>
-                    )}
-                  </div>
+                      </div>
+
+                      <div style={{ marginTop: 12, borderTop: "1px dashed #bfdbfe", paddingTop: 10 }}>
+                        {!showManualCategory ? (
+                          <button
+                            type="button"
+                            onClick={() => setShowManualCategory(true)}
+                            style={{
+                              background: "none",
+                              border: "none",
+                              color: "#2563eb",
+                              fontSize: 12,
+                              fontWeight: 600,
+                              cursor: "pointer",
+                              textDecoration: "underline",
+                              padding: 0,
+                            }}
+                          >
+                            ➕ ¿Quieres agregar una categoría manualmente? Haz clic aquí
+                          </button>
+                        ) : (
+                          <form
+                            onSubmit={handleSaveManualCategory}
+                            style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}
+                          >
+                            <input
+                              type="text"
+                              placeholder="Ej: Noticias, Blog, Servicios..."
+                              value={manualCategoryName}
+                              onChange={(e) => setManualCategoryName(e.target.value)}
+                              disabled={savingManualCategory}
+                              style={{ ...inputStyle, maxWidth: 260, fontSize: 13, background: "#fff" }}
+                            />
+                            <button
+                              type="submit"
+                              disabled={savingManualCategory || !manualCategoryName.trim()}
+                              style={{
+                                background: "#2f5fdb",
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: 8,
+                                padding: "8px 14px",
+                                fontSize: 13,
+                                fontWeight: 700,
+                                cursor: savingManualCategory || !manualCategoryName.trim() ? "not-allowed" : "pointer",
+                              }}
+                            >
+                              {savingManualCategory ? "Guardando..." : "Guardar Categoría"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setShowManualCategory(false)}
+                              style={{ ...secondaryButtonStyle, padding: "8px 12px", fontSize: 12 }}
+                            >
+                              Cancelar
+                            </button>
+                          </form>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -1250,17 +1288,17 @@ export default function OnboardingWizard({
           </StepCard>
 
           {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-          {/* PASO 5: META FINAL - PUBLICAR PRIMER ARTÍCULO          */}
+          {/* PASO 5: META FINAL - CREAR Y EXPLORAR OPORTUNIDADES SEO */}
           {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
           <StepCard
             stepNumber={5}
-            title="¡Todo Listo! Publica tu Primer Artículo"
-            subtitle="Tu plataforma está 100% calibrada para generar contenido optimizado e indexable."
+            title="Crear y Explorar Oportunidades SEO"
+            subtitle="Tu plataforma está lista. Ahora dirígete al módulo de Oportunidades para que la IA analice las búsquedas de tu audiencia en Google y te sugiera los mejores temas listos para publicar."
             isDone={step5Done}
             isActive={activeStep === 5}
             badgeText={
               step5Done
-                ? "Artículos Publicados"
+                ? "Oportunidades en marcha"
                 : allCoreDone
                   ? "¡Listo para empezar!"
                   : "Pendiente"
@@ -1269,54 +1307,57 @@ export default function OnboardingWizard({
             <div style={{ marginTop: 10 }}>
               {!allCoreDone ? (
                 <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>
-                  🔒 Completa los 4 pasos anteriores para comenzar a publicar artículos automatizados.
+                  🔒 Completa los 4 pasos anteriores para comenzar a generar oportunidades de posicionamiento SEO.
                 </p>
               ) : (
                 <div
                   style={{
-                    background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
-                    border: "1px solid #86efac",
+                    background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
+                    border: "1px solid #93c5fd",
                     borderRadius: 10,
-                    padding: "16px 18px",
+                    padding: "18px 20px",
                   }}
                 >
-                  <p style={{ margin: "0 0 8px 0", fontSize: 15, fontWeight: 800, color: "#14532d" }}>
-                    🚀 ¡Felicitaciones! Has completado todos los pasos de configuración inicial.
+                  <p style={{ margin: "0 0 8px 0", fontSize: 16, fontWeight: 800, color: "#1e3a8a" }}>
+                    🎯 ¡Felicitaciones! Has completado todos los pasos de configuración inicial.
                   </p>
-                  <p style={{ margin: "0 0 14px 0", fontSize: 13, color: "#166534" }}>
-                    Ahora puedes publicar tus primeros títulos o explorar las oportunidades automáticas sugeridas por la IA.
+                  <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "#1e40af", lineHeight: 1.5 }}>
+                    El siguiente paso es ingresar al módulo de <strong>Oportunidades</strong>. La Inteligencia Artificial analizará las consultas de tus clientes potenciales en Google y creará ideas de contenido listas para publicar con 1 solo clic.
                   </p>
-                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                    <Link
-                      href="/dashboard/publicar"
-                      style={{
-                        background: "#15803d",
-                        color: "#fff",
-                        textDecoration: "none",
-                        padding: "10px 18px",
-                        borderRadius: 8,
-                        fontSize: 13,
-                        fontWeight: 700,
-                        display: "inline-block",
-                      }}
-                    >
-                      ✍️ Publicar Artículo Ahora →
-                    </Link>
+                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
                     <Link
                       href="/dashboard/oportunidades"
                       style={{
-                        background: "#ffffff",
-                        color: "#15803d",
-                        border: "1px solid #86efac",
+                        background: "#2563eb",
+                        color: "#fff",
                         textDecoration: "none",
-                        padding: "10px 18px",
+                        padding: "11px 20px",
+                        borderRadius: 8,
+                        fontSize: 14,
+                        fontWeight: 700,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 8,
+                        boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)",
+                      }}
+                    >
+                      🎯 Ir a Crear Oportunidades SEO →
+                    </Link>
+                    <Link
+                      href="/dashboard/publicar"
+                      style={{
+                        background: "#ffffff",
+                        color: "#1e40af",
+                        border: "1px solid #93c5fd",
+                        textDecoration: "none",
+                        padding: "10px 16px",
                         borderRadius: 8,
                         fontSize: 13,
-                        fontWeight: 700,
+                        fontWeight: 600,
                         display: "inline-block",
                       }}
                     >
-                      🔍 Explorar Oportunidades SEO
+                      ✍️ O redactar un artículo directamente
                     </Link>
                   </div>
                 </div>
