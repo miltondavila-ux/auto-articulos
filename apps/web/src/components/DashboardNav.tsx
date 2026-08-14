@@ -68,10 +68,10 @@ export default function DashboardNav() {
     fontSize: 13,
     fontWeight: active ? 600 : 500,
     textDecoration: "none",
-    color: active ? "#ffffff" : "var(--apple-text-secondary, #98a2b3)",
-    background: active ? "rgba(255, 255, 255, 0.12)" : "transparent",
+    color: active ? "#1d1d1f" : "#6e6e73",
+    background: active ? "#ffffff" : "transparent",
     borderRadius: 10,
-    boxShadow: active ? "0 2px 8px rgba(0, 0, 0, 0.25)" : "none",
+    boxShadow: active ? "0 2px 8px rgba(0, 0, 0, 0.08)" : "none",
     whiteSpace: "nowrap",
     flexShrink: 0,
     transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
@@ -100,19 +100,19 @@ export default function DashboardNav() {
           padding: "12px 16px",
           fontSize: 14,
           fontWeight: 600,
-          color: "#f5f5f7",
-          background: "rgba(13, 26, 51, 0.75)",
+          color: "#1d1d1f",
+          background: "#ffffff",
           backdropFilter: "blur(20px) saturate(180%)",
           WebkitBackdropFilter: "blur(20px) saturate(180%)",
-          border: "1px solid rgba(255, 255, 255, 0.12)",
+          border: "1px solid rgba(0, 0, 0, 0.08)",
           borderRadius: 12,
           cursor: "pointer",
-          boxShadow: "0 4px 16px rgba(0, 0, 0, 0.2)",
+          boxShadow: "0 2px 10px rgba(0, 0, 0, 0.04)",
           transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
         }}
       >
         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--apple-accent, #0071e3)" }} />
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#0071e3" }} />
           {activeTab?.label ?? "Menú de Módulos"}
         </span>
         <span style={{ fontSize: 11, opacity: 0.7 }} aria-hidden="true">{open ? "▲" : "▼"}</span>
@@ -127,13 +127,13 @@ export default function DashboardNav() {
             left: 0,
             right: 0,
             zIndex: 30,
-            background: "rgba(11, 22, 44, 0.95)",
+            background: "rgba(255, 255, 255, 0.98)",
             backdropFilter: "blur(24px) saturate(180%)",
             WebkitBackdropFilter: "blur(24px) saturate(180%)",
-            border: "1px solid rgba(255, 255, 255, 0.14)",
+            border: "1px solid rgba(0, 0, 0, 0.08)",
             borderRadius: 14,
             overflow: "hidden",
-            boxShadow: "0 16px 40px rgba(0, 0, 0, 0.5)",
+            boxShadow: "0 16px 40px rgba(0, 0, 0, 0.12)",
             padding: 4,
           }}
         >
@@ -159,8 +159,8 @@ export default function DashboardNav() {
                   fontSize: 14,
                   fontWeight: active ? 600 : 500,
                   textDecoration: "none",
-                  color: active ? "#ffffff" : "#c4cddb",
-                  background: active ? "rgba(0, 113, 227, 0.25)" : "transparent",
+                  color: active ? "#0071e3" : "#1d1d1f",
+                  background: active ? "rgba(0, 113, 227, 0.08)" : "transparent",
                   borderRadius: 10,
                   transition: "all 0.15s ease",
                 }}
@@ -173,9 +173,9 @@ export default function DashboardNav() {
                       fontWeight: 700,
                       padding: "2px 8px",
                       borderRadius: 9999,
-                      background: "rgba(255, 159, 10, 0.18)",
-                      color: "#ff9f0a",
-                      border: "1px solid rgba(255, 159, 10, 0.35)",
+                      background: "rgba(255, 149, 0, 0.12)",
+                      color: "#ff9500",
+                      border: "1px solid rgba(255, 149, 0, 0.25)",
                     }}
                   >
                     Oculto
@@ -192,14 +192,14 @@ export default function DashboardNav() {
         style={{
           display: "none",
           gap: 4,
-          background: "rgba(13, 26, 51, 0.6)",
+          background: "rgba(0, 0, 0, 0.04)",
           backdropFilter: "blur(20px) saturate(180%)",
           WebkitBackdropFilter: "blur(20px) saturate(180%)",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
+          border: "1px solid rgba(0, 0, 0, 0.06)",
           borderRadius: 14,
           padding: 4,
           overflowX: "auto",
-          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.18)",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.02)",
         }}
       >
         {tabs.map((tab) => {
@@ -230,9 +230,9 @@ export default function DashboardNav() {
                     fontWeight: 700,
                     padding: "1px 6px",
                     borderRadius: 9999,
-                    background: "rgba(255, 159, 10, 0.18)",
-                    color: "#ff9f0a",
-                    border: "1px solid rgba(255, 159, 10, 0.35)",
+                    background: "rgba(255, 149, 0, 0.12)",
+                    color: "#ff9500",
+                    border: "1px solid rgba(255, 149, 0, 0.25)",
                   }}
                 >
                   Oculto

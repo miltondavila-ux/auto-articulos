@@ -2,6 +2,7 @@
 
 import { Suspense, useState, type CSSProperties, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { COUNTRIES } from "@/lib/countries";
 
 export default function LoginPage() {
   return (
@@ -29,6 +30,10 @@ function LoginContent() {
   const [lastName, setLastName] = useState("");
   const [trialEmail, setTrialEmail] = useState("");
   const [phone, setPhone] = useState("");
+  // País de la cuenta nueva (pedido de Milton, 14/8/2026): define solo el
+  // servidor de 10minutesWebsite — Europa `.site`, resto del mundo `.net` —
+  // y se decide en el servidor, no acá. Ver apps/web/src/lib/countries.ts.
+  const [country, setCountry] = useState("");
   const [trialPassword, setTrialPassword] = useState("");
   const [trialError, setTrialError] = useState<string | null>(null);
   const [trialLoading, setTrialLoading] = useState(false);
@@ -69,6 +74,7 @@ function LoginContent() {
           lastName,
           email: trialEmail,
           phone,
+          country,
           password: trialPassword,
         }),
       });
@@ -89,7 +95,7 @@ function LoginContent() {
       style={{
         position: "relative",
         minHeight: "100vh",
-        background: "var(--apple-bg, #070d1a)",
+        background: "var(--apple-bg, #f5f5f7)",
         overflow: "hidden",
         display: "flex",
         alignItems: "center",
@@ -107,7 +113,7 @@ function LoginContent() {
           height: "100%",
           objectFit: "cover",
           objectPosition: "20% 15%",
-          opacity: 0.35,
+          opacity: 0.1,
         }}
       />
       <div
@@ -115,7 +121,7 @@ function LoginContent() {
           position: "absolute",
           inset: 0,
           background:
-            "radial-gradient(circle at 30% 30%, rgba(7, 13, 26, 0.2) 0%, rgba(7, 13, 26, 0.7) 50%, rgba(7, 13, 26, 0.98) 100%), linear-gradient(to bottom, rgba(7, 13, 26, 0.5) 0%, rgba(7, 13, 26, 0.85) 100%)",
+            "radial-gradient(circle at 30% 30%, rgba(245, 245, 247, 0.6) 0%, rgba(245, 245, 247, 0.95) 70%, #f5f5f7 100%)",
         }}
       />
 
@@ -137,13 +143,13 @@ function LoginContent() {
               fontSize: 12,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: "var(--apple-cyan, #00c7be)",
+              color: "#0071e3",
               fontWeight: 700,
               display: "inline-block",
-              background: "rgba(0, 199, 190, 0.12)",
+              background: "rgba(0, 113, 227, 0.08)",
               padding: "4px 10px",
               borderRadius: 9999,
-              border: "1px solid rgba(0, 199, 190, 0.25)",
+              border: "1px solid rgba(0, 113, 227, 0.2)",
             }}
           >
             Automatización con IA
@@ -152,7 +158,7 @@ function LoginContent() {
             style={{
               fontSize: 34,
               lineHeight: 1.15,
-              color: "#f5f5f7",
+              color: "#1d1d1f",
               margin: "14px 0 0",
               fontWeight: 700,
               letterSpacing: "-0.02em",
@@ -163,7 +169,7 @@ function LoginContent() {
           <p
             style={{
               fontSize: 15,
-              color: "#98a2b3",
+              color: "#86868b",
               marginTop: 14,
               lineHeight: 1.5,
             }}
@@ -179,16 +185,14 @@ function LoginContent() {
             style={{
               flex: "1 1 320px",
               maxWidth: 380,
-              background: "rgba(13, 26, 51, 0.7)",
-              backdropFilter: "blur(24px) saturate(180%)",
-              WebkitBackdropFilter: "blur(24px) saturate(180%)",
-              border: "1px solid rgba(255, 255, 255, 0.12)",
+              background: "#ffffff",
+              border: "1px solid rgba(0, 0, 0, 0.08)",
               padding: 32,
               borderRadius: 20,
               display: "flex",
               flexDirection: "column",
               gap: 14,
-              boxShadow: "0 24px 48px rgba(0, 0, 0, 0.4)",
+              boxShadow: "0 12px 36px rgba(0, 0, 0, 0.06)",
               boxSizing: "border-box",
             }}
           >
@@ -198,13 +202,14 @@ function LoginContent() {
                   width: 28,
                   height: 28,
                   borderRadius: 7,
-                  background: "linear-gradient(135deg, #0071e3 0%, #004b99 100%)",
+                  background: "#0071e3",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   color: "#ffffff",
                   fontSize: 14,
                   fontWeight: 700,
+                  boxShadow: "0 2px 8px rgba(0, 113, 227, 0.3)",
                 }}
               >
                 A
@@ -213,7 +218,7 @@ function LoginContent() {
                 style={{
                   fontSize: 20,
                   margin: 0,
-                  color: "#f5f5f7",
+                  color: "#1d1d1f",
                   fontWeight: 700,
                   letterSpacing: "-0.01em",
                 }}
@@ -221,7 +226,7 @@ function LoginContent() {
                 Auto Artículos
               </h1>
             </div>
-            <p style={{ fontSize: 13, color: "#98a2b3", margin: "0 0 6px" }}>
+            <p style={{ fontSize: 13, color: "#86868b", margin: "0 0 6px" }}>
               Ingresa con tu usuario para continuar.
             </p>
             <input
@@ -243,9 +248,9 @@ function LoginContent() {
             {error && (
               <p
                 style={{
-                  color: "#ff453a",
-                  background: "rgba(255, 69, 58, 0.12)",
-                  border: "1px solid rgba(255, 69, 58, 0.25)",
+                  color: "#ff3b30",
+                  background: "rgba(255, 59, 48, 0.08)",
+                  border: "1px solid rgba(255, 59, 48, 0.2)",
                   padding: "8px 12px",
                   borderRadius: 8,
                   margin: 0,
@@ -272,16 +277,14 @@ function LoginContent() {
             style={{
               flex: "1 1 320px",
               maxWidth: 380,
-              background: "rgba(13, 26, 51, 0.7)",
-              backdropFilter: "blur(24px) saturate(180%)",
-              WebkitBackdropFilter: "blur(24px) saturate(180%)",
-              border: "1px solid rgba(255, 255, 255, 0.12)",
+              background: "#ffffff",
+              border: "1px solid rgba(0, 0, 0, 0.08)",
               padding: 32,
               borderRadius: 20,
               display: "flex",
               flexDirection: "column",
               gap: 12,
-              boxShadow: "0 24px 48px rgba(0, 0, 0, 0.4)",
+              boxShadow: "0 12px 36px rgba(0, 0, 0, 0.06)",
               boxSizing: "border-box",
             }}
           >
@@ -289,14 +292,14 @@ function LoginContent() {
               style={{
                 fontSize: 20,
                 margin: 0,
-                color: "#f5f5f7",
+                color: "#1d1d1f",
                 fontWeight: 700,
                 letterSpacing: "-0.01em",
               }}
             >
               Solicitar prueba gratuita
             </h1>
-            <p style={{ fontSize: 13, color: "#98a2b3", margin: "0 0 4px" }}>
+            <p style={{ fontSize: 13, color: "#86868b", margin: "0 0 4px" }}>
               7 días de acceso completo. Deja tus datos para empezar.
             </p>
             <input
@@ -331,6 +334,30 @@ function LoginContent() {
               required
               style={inputStyle}
             />
+            <select
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              required
+              style={{
+                ...inputStyle,
+                color: country ? "#1d1d1f" : "#86868b",
+                appearance: "none",
+                cursor: "pointer",
+              }}
+            >
+              <option value="" disabled>
+                ¿Desde qué país usarás la plataforma?
+              </option>
+              {COUNTRIES.map((option) => (
+                <option
+                  key={option.code}
+                  value={option.code}
+                  style={{ color: "#1d1d1f" }}
+                >
+                  {option.name}
+                </option>
+              ))}
+            </select>
             <input
               type="password"
               placeholder="Crea una contraseña"
@@ -343,9 +370,9 @@ function LoginContent() {
             {trialError && (
               <p
                 style={{
-                  color: "#ff453a",
-                  background: "rgba(255, 69, 58, 0.12)",
-                  border: "1px solid rgba(255, 69, 58, 0.25)",
+                  color: "#ff3b30",
+                  background: "rgba(255, 59, 48, 0.08)",
+                  border: "1px solid rgba(255, 59, 48, 0.2)",
                   padding: "8px 12px",
                   borderRadius: 8,
                   margin: 0,
@@ -375,9 +402,9 @@ function LoginContent() {
 const inputStyle: CSSProperties = {
   padding: "12px 14px",
   borderRadius: 10,
-  border: "1px solid rgba(255, 255, 255, 0.14)",
-  background: "rgba(5, 12, 28, 0.65)",
-  color: "#f5f5f7",
+  border: "1px solid #d2d2d7",
+  background: "#ffffff",
+  color: "#1d1d1f",
   fontSize: 14,
   outline: "none",
   boxSizing: "border-box",
@@ -395,7 +422,7 @@ const buttonStyle: CSSProperties = {
   fontWeight: 600,
   fontSize: 14,
   cursor: "pointer",
-  boxShadow: "0 4px 14px rgba(0, 113, 227, 0.35)",
+  boxShadow: "0 2px 8px rgba(0, 113, 227, 0.25)",
   transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
   minHeight: 44,
 };
@@ -403,9 +430,9 @@ const buttonStyle: CSSProperties = {
 const trialButtonStyle: CSSProperties = {
   padding: "10px 14px",
   borderRadius: 10,
-  border: "1px solid rgba(255, 255, 255, 0.16)",
-  background: "rgba(255, 255, 255, 0.06)",
-  color: "#f5f5f7",
+  border: "1px solid #d2d2d7",
+  background: "#f5f5f7",
+  color: "#1d1d1f",
   fontWeight: 500,
   fontSize: 13,
   cursor: "pointer",

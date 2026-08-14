@@ -63,12 +63,13 @@ export default async function DashboardLayout({
           }
           table.responsive-table tr {
             border-top: none !important;
-            border: 1px solid rgba(255, 255, 255, 0.12) !important;
-            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(0, 0, 0, 0.08) !important;
+            background: #ffffff;
             border-radius: 12px;
             padding: 12px 14px;
             margin-bottom: 12px;
             box-sizing: border-box;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
           }
           table.responsive-table td {
             padding: 6px 0;
@@ -79,7 +80,7 @@ export default async function DashboardLayout({
             display: block;
             font-size: 11px;
             font-weight: 700;
-            color: #98a2b3;
+            color: #86868b;
             text-transform: uppercase;
             letter-spacing: 0.04em;
             margin-bottom: 3px;
@@ -103,11 +104,11 @@ export default async function DashboardLayout({
               width: 32,
               height: 32,
               borderRadius: 8,
-              background: "linear-gradient(135deg, #0071e3 0%, #004b99 100%)",
+              background: "#0071e3",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: "0 2px 8px rgba(0, 113, 227, 0.4)",
+              boxShadow: "0 2px 8px rgba(0, 113, 227, 0.3)",
               color: "#ffffff",
               fontSize: 16,
               fontWeight: 700,
@@ -121,7 +122,7 @@ export default async function DashboardLayout({
               fontWeight: 700,
               letterSpacing: "-0.02em",
               margin: 0,
-              color: "#f5f5f7",
+              color: "#1d1d1f",
             }}
           >
             Auto Artículos
@@ -149,7 +150,7 @@ export default async function DashboardLayout({
               <span
                 style={{
                   fontSize: 11,
-                  color: "#98a2b3",
+                  color: "#86868b",
                   wordBreak: "break-word",
                   textAlign: "right",
                 }}
@@ -160,7 +161,7 @@ export default async function DashboardLayout({
                 style={{
                   fontSize: 12,
                   fontWeight: 600,
-                  color: "#ff9f0a",
+                  color: "#b25e00",
                   wordBreak: "break-word",
                   textAlign: "right",
                 }}
@@ -172,7 +173,7 @@ export default async function DashboardLayout({
             <span
               style={{
                 fontSize: 13,
-                color: "#98a2b3",
+                color: "#86868b",
                 fontWeight: 500,
                 wordBreak: "break-word",
               }}
@@ -188,9 +189,9 @@ export default async function DashboardLayout({
         className="mobile-notice"
         style={{
           fontSize: 12,
-          color: "#ff9f0a",
-          background: "rgba(255, 159, 10, 0.12)",
-          border: "1px solid rgba(255, 159, 10, 0.25)",
+          color: "#b25e00",
+          background: "#fff9eb",
+          border: "1px solid rgba(255, 149, 0, 0.25)",
           borderRadius: 10,
           padding: "10px 14px",
           marginTop: 14,

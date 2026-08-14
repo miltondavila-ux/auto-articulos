@@ -183,17 +183,37 @@ Ruta: /dashboard/oportunidades-redes
 
 Este módulo propone textos para publicar en las redes que tengas conectadas. Puede usar datos de Google Search Console cuando está conectado; si no, trabaja con artículos recientes. Revisa cada propuesta, edítala si quieres, guarda los cambios y luego apruébala o descártala explicando el motivo. Antes de publicar, puedes revisar una vista previa cuando esté disponible.
 
+## Interfaz y Diseño Estilo Apple
+
+La plataforma cuenta con un diseño minimalista y limpio en blanco impecable, siguiendo los estándares de Apple Human Interface Guidelines (HIG):
+- **Tipografía y Legibilidad:** Textos de alto contraste con tipografía nativa San Francisco para una lectura cómoda.
+- **Navegación Fluida:** Menú superior tipo cápsula *Segmented Control* en computadoras y selector táctil optimizado en celulares y tabletas.
+- **Full Responsivo:** Todas las tablas, formularios y tarjetas se adaptan automáticamente a cualquier tamaño de pantalla sin desbordes.
+
+## Pre-Validación Inteligente antes de Publicar
+
+Tanto en **Publicar** (/dashboard/publicar) como en **Oportunidades SEO** (/dashboard/oportunidades), el sistema cuenta con un panel de protección preventiva (**PreValidationGuard**):
+- Si falta algún requisito previo (credenciales de 10minutesWebsite, categorías sincronizadas, idioma de redacción o Search Console), la plataforma te muestra una tarjeta clara con un checklist interactivo indicando exactamente qué falta y un botón directo para resolverlo.
+- **Créditos de imagen:** Si tu cuenta de 10minutesWebsite no cuenta con créditos para generar imágenes de portada e infografías, la plataforma te avisa de inmediato mediante un aviso informativo para que puedas recargarlos.
+
 ## Administración
 
 Ruta: /dashboard/usuarios
 
-Solo los administradores ven Administración. Desde allí pueden gestionar usuarios, permisos y la visibilidad de módulos. Si una persona no ve una opción del menú, puede estar deshabilitada para su cuenta o temporalmente para todos; debe consultar al administrador.
+Solo los administradores tienen acceso a este módulo:
+- **Orden alfabético A-Z:** La lista de usuarios se organiza de forma clara y ordenada alfabéticamente por nombre.
+- **Filtros por Tipo de Cuenta:** Permite filtrar instantáneamente entre *Todos los tipos*, *Usuarios comunes*, *Administradores* y usuarios en periodo de *Free Trial (Prueba Gratuita)*, combinándose con la barra de búsqueda en tiempo real.
+- **Visibilidad de Módulos:** Permite ocultar o activar módulos específicos de forma individual por usuario o de manera global para mantenimiento.
 
 ## Problemas frecuentes
 
 ### No puedo publicar
 
-Comprueba que tienes categorías sincronizadas, un idioma elegido y que no hay otra ejecución en curso. Revisa también que no superes el máximo de títulos por lote.
+Comprueba que tienes categorías sincronizadas, un idioma elegido y que no hay otra ejecución en curso. Revisa también que no superes el máximo de títulos por lote. El panel de pre-validación te indicará qué requisito falta.
+
+### Aviso de falta de créditos de imagen
+
+Si aparece el aviso de créditos de imagen, significa que tu cuenta de 10minutesWebsite necesita saldo para ilustrar artículos. Puedes adquirir créditos en 10minutesWebsite o consultar a soporte.
 
 ### No veo Oportunidades SEO
 

@@ -199,14 +199,14 @@ export default function InicioPage() {
                 gap: 12,
                 padding: "12px 16px",
                 borderRadius: 12,
-                background: "rgba(48, 209, 88, 0.12)",
-                backdropFilter: "blur(16px)",
-                border: "1px solid rgba(48, 209, 88, 0.25)",
+                background: "#f2faf4",
+                border: "1px solid rgba(52, 199, 89, 0.3)",
                 fontSize: 13,
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.02)",
               }}
             >
-              <span style={{ color: "#30d158" }}>
-                ✓ Artículo publicado: <strong style={{ color: "#f5f5f7" }}>{n.text}</strong>
+              <span style={{ color: "#1e8a4b" }}>
+                ✓ Artículo publicado: <strong style={{ color: "#1d1d1f" }}>{n.text}</strong>
                 {n.url && (
                   <>
                     {" — "}
@@ -226,7 +226,7 @@ export default function InicioPage() {
                 style={{
                   background: "none",
                   border: "none",
-                  color: "#98a2b3",
+                  color: "#86868b",
                   cursor: "pointer",
                   fontSize: 14,
                 }}
@@ -250,11 +250,11 @@ export default function InicioPage() {
             marginTop: 20,
             padding: "14px 18px",
             borderRadius: 12,
-            background: "rgba(48, 209, 88, 0.12)",
-            backdropFilter: "blur(16px)",
-            border: "1px solid rgba(48, 209, 88, 0.25)",
-            color: "#30d158",
+            background: "#f2faf4",
+            border: "1px solid rgba(52, 199, 89, 0.3)",
+            color: "#1e8a4b",
             fontSize: 13,
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.02)",
           }}
         >
           Hay una publicación en curso.{" "}
