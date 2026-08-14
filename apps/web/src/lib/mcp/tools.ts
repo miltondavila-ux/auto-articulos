@@ -31,6 +31,12 @@ type ToolDef = {
   description: string;
   inputSchema: Record<string, unknown>;
   requiredScope: "oportunidades:leer" | "oportunidades:publicar";
+  annotations: {
+    readOnlyHint: boolean;
+    destructiveHint: boolean;
+    idempotentHint: boolean;
+    openWorldHint: boolean;
+  };
   handler: ToolHandler;
 };
 
@@ -57,6 +63,7 @@ export const TOOLS: ToolDef[] = [
       "Devuelve las oportunidades SEO guardadas, agrupadas por categoría, con la cantidad de títulos y las impresiones de cada una. Solo lectura: no publica ni modifica nada. Úsala antes de publicar para saber qué hay pendiente.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
     requiredScope: "oportunidades:leer",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     handler: async () => {
       const { data } = await readRoute(await listarOportunidadesRoute());
       const groups = (data.groups ?? []) as Array<{
@@ -97,6 +104,7 @@ export const TOOLS: ToolDef[] = [
       additionalProperties: false,
     },
     requiredScope: "oportunidades:publicar",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     handler: async (args) => {
       const { ok, data } = await readRoute(
         await analizarOportunidadesRoute(jsonRequest("/api/opportunities", { force: Boolean(args.forzar) })),
@@ -133,6 +141,7 @@ export const TOOLS: ToolDef[] = [
       additionalProperties: false,
     },
     requiredScope: "oportunidades:publicar",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     handler: async (args) => {
       const categoria = String(args.categoria ?? "").trim();
       if (!categoria) return toolText("Falta el nombre de la categoría.", true);
@@ -200,6 +209,7 @@ export const TOOLS: ToolDef[] = [
       "Informa si hay una publicación en curso y cómo salieron las últimas. Solo lectura.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
     requiredScope: "oportunidades:leer",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     handler: async () => {
       const userId = await getCurrentUserId();
       const runs = await prisma.run.findMany({
@@ -230,10 +240,11 @@ export function findTool(name: string, scopes: string[]) {
 
 /** Forma que espera `tools/list` (sin el handler, que es interno). */
 export function listToolsPayload(scopes: string[]) {
-  return TOOLS.filter((tool) => scopes.includes(tool.requiredScope)).map(({ name, title, description, inputSchema }) => ({
+  return TOOLS.filter((tool) => scopes.includes(tool.requiredScope)).map(({ name, title, description, inputSchema, annotations }) => ({
     name,
     title,
     description,
     inputSchema,
+    annotations,
   }));
 }

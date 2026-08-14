@@ -550,6 +550,35 @@ ejecutar de forma explícita y auditada después del despliegue.
   específicos según el scope solicitado. `npm --prefix apps/web run
   typecheck` y `git diff --check` terminaron sin errores. Pendiente: commit,
   despliegue y comprobación visual antes de autorizar.
+- **Corrección desplegada (13/8/2026):** el cambio de consentimiento quedó
+  integrado como `dd4b615` y el deployment de producción
+  `dpl_3eeaViGogawaGb74r8fUk2DULCza` está **Ready** con el alias
+  `https://auto-articulos-web.vercel.app`. No se modificaron permisos,
+  tokens ni datos: cambia únicamente el texto visible para reflejar el
+  cliente y alcance reales. Milton debe recargar la página de consentimiento
+  abierta y confirmar visualmente “Conectar ChatGPT con Auto Artículos” antes
+  de autorizar.
+- **OAuth completado por Milton — conexión activa:** la captura posterior
+  confirma que **Auto Artículos** aparece conectado en ChatGPT, con URL
+  `https://auto-articulos-web.vercel.app/api/mcp`, autorización admitida y
+  usada mediante OAuth, en modo desarrollador. No se muestran todavía
+  acciones disponibles: es normal hasta ejecutar el escaneo/actualización de
+  herramientas. Siguiente paso único: pulsar **Actualizar** para que
+  ChatGPT consulte el MCP y detecte únicamente las dos tools de lectura
+  permitidas.
+- **Clasificación de acciones corregida antes de uso:** tras Actualizar,
+  ChatGPT mostró erróneamente `estado_de_publicaciones` como escritura pública
+  y destructiva. No se ejecutó la acción. Causa: el servidor no enviaba
+  `annotations` MCP, cuyos valores predeterminados son conservadores. Se
+  añadieron las anotaciones oficiales `readOnlyHint: true`,
+  `destructiveHint: false`, `idempotentHint: true` y `openWorldHint: false`
+  para `listar_oportunidades` y `estado_de_publicaciones`; las tools de
+  creación/publicación quedan correctamente declaradas como no solo lectura.
+  La restricción real por scope sigue activa, por lo que las anotaciones no
+  son la única barrera. `npm --prefix apps/web run typecheck` y
+  `git diff --check` terminaron sin errores. Pendiente: desplegar y pulsar
+  Actualizar de nuevo en ChatGPT; no usar ninguna acción hasta verificar los
+  nuevos rótulos.
 
 ## Reglas durante el trabajo
 
@@ -1016,6 +1045,30 @@ ejecutar de forma explícita y auditada después del despliegue.
   `https://auto-articulos-web/`. Se corrige para conservar puntos dentro del
   dominio y retirar solo puntuación final de una oración. **SIGUIENTE ACCIÓN:**
   typecheck y despliegue urgente; sin migración.
+- **Capitán de migración:** Codex — revisará y aplicará el lote completo.
+  Motivo: auditoría integral y ampliación del manual vivo del asistente. Nadie
+  más ejecuta Prisma hasta su liberación.
+- **Auditoría inicial de conocimiento (Codex):** se compararon rutas del
+  dashboard, pantallas de Configuración, progreso, historial, integraciones y
+  oportunidades de redes contra el manual. Brechas detectadas: pasos completos
+  de Google/Bing, requisitos y permisos de redes, pestañas de Configuración,
+  estado de preparación, cancelación/reintento, historial y flujo de propuestas
+  sociales. Se ampliará el manual con esos hechos confirmados y el motor de
+  actualizaciones será más estricto: todo cambio visible deberá crear una
+  entrada que el asistente consume automáticamente. **ÁREAS RESERVADAS:**
+  manual base y generador de actualizaciones. **SIGUIENTE ACCIÓN:** typecheck,
+  revisión del diff y despliegue coordinado; sin migración.
+- **Entrega de auditoría y manual vivo (Codex):** el commit `eecea2f` amplió
+  el conocimiento estable del asistente con Google Search Console, Bing,
+  redes, permisos, pestañas de Configuración, estado de preparación,
+  cancelación/reintentos, historial y Oportunidades de redes. También reforzó
+  el generador: cualquier cambio visible de pantalla, flujo, permiso,
+  integración o comportamiento debe crear una entrada explicada en lenguaje
+  claro para Actualizaciones, fuente que el asistente consulta en tiempo real.
+  Verificaciones correctas: typecheck web, typecheck estático del generador y
+  `git diff --check`. Vercel `dpl_6xmXLzboxw7XT2WgLQQgQHbHrPij` está **Ready**
+  en producción. **Capitán de migración liberó el lote:** Codex. Resultado:
+  manual vivo ampliado y motor de actualizaciones reforzado; sin migración.
   estados y respuestas), sin cambiar permisos, API ni la regla de acceso
   activo. Se validará antes de enviarlo al próximo lote.
 - **Verificación completada:** `npm --prefix apps/web run typecheck`, el
