@@ -760,7 +760,7 @@ ejecutar de forma explícita y auditada después del despliegue.
 
 ### Claude — País del usuario nuevo y auto-selección del servidor .site/.net (14/8/2026)
 
-- **Agente:** Claude. **Estado:** `EN CURSO — SOLO LOCAL, SIN PUSH NI MIGRACIÓN`.
+- **Agente:** Claude. **Estado:** `RESUELTO Y DESPLEGADO — ver incidente y cierre más abajo (14/8/2026, tarde)`.
 - **Pedido de Milton (14/8/2026):** que **solo a los usuarios nuevos** se les
   pregunte de qué país son; si el país es de **Europa**, el servidor de
   10minutesWebsite se auto-selecciona a **`.site`**, y para el **resto del
@@ -785,6 +785,134 @@ ejecutar de forma explícita y auditada después del despliegue.
   migración y el despliegue deben ir en el **mismo lote**, con la base
   actualizada primero. Claude **no** reclama capitanía, no hace push, no
   ejecuta `db push` ni dispara `migrate.yml` sin autorización de Milton.
+  Mitigación aplicada para acotar el daño si la migración llegara tarde:
+  `country` **no** se agrega a ningún `select` de lectura (ni en `GET
+  /api/admin/users` ni en `PATCH`), así que la lista de usuarios y el resto del
+  dashboard seguirían funcionando; solo fallaría el alta de una cuenta nueva.
+
+#### Qué hace, para quién y cómo se usa
+
+- **Qué hace:** al crear una cuenta nueva se pide el país. Si es de Europa, el
+  servidor de 10minutesWebsite queda en `10minuteswebsite.site`; para el resto
+  del mundo, en `10minuteswebsite.net`. Nadie con cuenta ya creada ve este
+  cambio ni cambia de servidor.
+- **Para quién:** personas que solicitan la prueba gratuita (módulo Login) y
+  administradores que dan de alta usuarios (módulo Administración).
+- **Cómo se usa (prueba gratuita):** 1) abrir `/login`; 2) pulsar
+  “Solicitar prueba gratuita”; 3) completar nombre, apellido, correo y
+  teléfono; 4) elegir el país en “¿Desde qué país usarás la plataforma?”;
+  5) crear la contraseña y pulsar “Empezar prueba de 7 días”. El servidor se
+  asigna solo, sin que la persona tenga que saber qué es `.site` o `.net`.
+- **Cómo se usa (Administración):** 1) entrar a `/dashboard/usuarios`;
+  2) pestaña “Crear”; 3) completar los datos; 4) elegir “País del usuario”; el
+  campo “Servidor de 10minutesWebsite” se ajusta solo y queda editable por si
+  esa cuenta es una excepción; 5) “Crear usuario”.
+- **Módulos/rutas afectadas:** `/login` y `/dashboard/usuarios`.
+- **Pendiente de la cadena de cierre:** falta la entrada en **Actualizaciones**
+  y la ampliación del manual, que Milton pidió hacer al publicar. Hoy el cambio
+  está solo local: sin commit, sin migración aplicada y sin despliegue.
+
+#### Reglas de negocio de la lista de países
+
+- La regla vive en un único lugar: `apps/web/src/lib/countries.ts`
+  (`EUROPEAN_COUNTRY_CODES` + `platformDomainForCountry`). Cambiar ahí un país
+  de grupo lo cambia en los dos formularios y en las dos APIs a la vez.
+- “Europa” incluye UE + EEE + Reino Unido, Suiza, Balcanes, Ucrania,
+  Bielorrusia, Moldavia y Rusia. **Quedan fuera** (van a `.net`) Turquía,
+  Armenia, Georgia y Azerbaiyán. Si el criterio real de 10minutesWebsite es
+  otro, se corrige esa lista y nada más.
+
+#### Verificaciones realizadas (14/8/2026)
+
+- `npx prisma validate` → schema válido (una sola definición de cada modelo;
+  la única adición es `country String?`). `prisma generate` correcto.
+- `npm --prefix apps/web run typecheck` (`tsc --noEmit`) → sin errores.
+- `git diff --check` → limpio.
+- Prueba real en el servidor de desarrollo local: `POST /api/auth/trial-signup`
+  sin país devuelve `400 "Selecciona el país desde el que usarás la
+  plataforma."` y con país inválido (`ZZ`) el mismo `400`, **antes** de tocar
+  la base. No se creó ninguna cuenta de prueba.
+- Mapeo comprobado ejecutando la función real: ES/FR/DE/IT/GB/PT/PL → `site`;
+  MX/US/AR/CO/BR/TR/MA/AU → `net`; sin país → `net`. 202 países, sin códigos
+  duplicados.
+- Comprobación visual del formulario de prueba en `/login`: el selector de país
+  aparece entre teléfono y contraseña, con el estilo claro actual, y la consola
+  del navegador no muestra errores. El formulario de Administración **no** se
+  verificó visualmente porque requiere sesión de administrador y base real; se
+  cubrió con typecheck.
+
+#### Aviso al resto de agentes
+
+- **PARA:** Codex y Antigravity. **ENTREGA:** los archivos reservados arriba,
+  solo en disco (sin commit). **DECISIÓN O PREGUNTA:** quien reclame la próxima
+  capitanía debe incluir `20260814170000_add_user_country` en el lote y aplicar
+  la base **antes** de que el despliegue de Vercel quede activo.
+  **SIGUIENTE ACCIÓN:** Milton decide cuándo se publica; Claude no hace push,
+  migración ni despliegue hasta esa autorización.
+- **Trabajo ajeno detectado en el árbol y NO tocado:** `globals.css`,
+  `layout.tsx`, `dashboard/layout.tsx`, `dashboard/page.tsx`,
+  `components/DashboardNav.tsx`, `components/dashboard-ui.tsx`,
+  `content/manual-usuario.ts` y el rediseño claro de `login/page.tsx`, más los
+  archivos sin seguimiento `MCP_ACCIONES_UNIVERSALES.md`,
+  `diagnose-lorena-editor.js` y `migration_add_permissions.sql`. Ninguno entra
+  en esta entrega.
+- **Nota de incidente menor:** el commit `a0ab9d4` (de otro agente) absorbió
+  esta anotación del tablero mientras se escribía. No se perdió contenido, pero
+  vuelve a ocurrir lo advertido en la ORDEN OBLIGATORIA sobre commitear este
+  archivo con cambios ajenos sin commitear en disco.
+
+#### Incidente urgente — login caído en producción por despliegue no coordinado de esta misma tarea (14/8/2026, tarde)
+
+- **Reporte de Milton:** "ERROR INTERNO AL INTENTAR ACCEDER A LA PLATAFORMA",
+  con captura de `/login` mostrando "Error interno" al intentar entrar.
+- **Diagnóstico:** `POST /api/auth/login` en producción devolvía `500` con
+  `"The column User.country does not exist in the current database."` Se
+  confirmó con una prueba directa contra el endpoint real (no en el
+  navegador). Afectaba a **todos** los intentos de login, no solo a la cuenta
+  de pruebas.
+- **Causa raíz:** pese a que este apartado decía `EN CURSO — SOLO LOCAL, SIN
+  PUSH NI MIGRACIÓN`, el build activo de Vercel (desplegado ~10 min antes del
+  reporte) ya generaba su cliente Prisma con el campo `country`, sin que
+  existiera commit alguno en `main` ni la migración aplicada en la base. Todo
+  indica que se ejecutó un despliegue directo (`vercel --prod` u equivalente)
+  desde un checkout local que sí tenía este cambio sin commitear, saltándose
+  git y el protocolo de la ORDEN SUPREMA. Se revisó todo el historial de
+  `schema.prisma` en todas las ramas (`git log --all -p -S"country"`) y no
+  hay ningún commit que agregue el campo — confirma que el desfase vino de un
+  despliegue, no de un push.
+- **Decisión (con autorización explícita de Milton, pregunta directa):** en
+  vez de revertir el despliegue con `vercel rollback`, Milton eligió aplicar
+  la migración pendiente para alcanzar al código ya desplegado.
+- **Acciones ejecutadas por Claude como capitán de migración:**
+  1. `scripts/migration-coordinator.sh claim "Claude" ...` (sin capitán
+     activo antes de reclamar).
+  2. `npx prisma validate` (con `DATABASE_URL`/`DIRECT_URL` dummy solo para
+     validar sintaxis, sin conectar) → esquema válido.
+  3. `npm --prefix apps/web run typecheck` → sin errores.
+  4. Commit `b63629e` en `main`: exactamente los archivos de esta reserva
+     (`schema.prisma`, la migración `20260814170000_add_user_country`,
+     `apps/web/src/lib/countries.ts`, `trial-signup/route.ts`,
+     `admin/users/route.ts`, `dashboard/usuarios/page.tsx`) — el código que ya
+     estaba corriendo en producción, para que git y la base vuelvan a
+     coincidir con lo desplegado. No se tocó ningún archivo ajeno ni sin
+     seguimiento (`MCP_ACCIONES_UNIVERSALES.md`, `diagnose-lorena-editor.js`,
+     `migration_add_permissions.sql` siguen intactos).
+  5. `gh workflow run migrate.yml --ref main` → run `31825404672`,
+     `prisma db push` contra el Session pooler → **completado con éxito**.
+  6. Verificación final: `POST /api/auth/login` en producción pasó de `500`
+     (columna faltante) a `401 Correo o contraseña incorrectos` — el
+     comportamiento normal para credenciales inexistentes. Login restaurado.
+  7. `scripts/migration-coordinator.sh release "Claude" ...` — lote liberado.
+- **Estado tras el cierre:** login funcionando, `country` sincronizado entre
+  código y base, feature de país publicada en `main` (commit `b63629e`).
+  **Pendiente:** la entrada en Actualizaciones/manual de esta función (la
+  cadena de cierre normal) y confirmar visualmente con Milton que su propio
+  login vuelve a funcionar.
+- **Lección para el resto de agentes:** un despliegue de Vercel (aunque no
+  sea `migrate deploy`/`db push`/SQL) también puede romper producción si el
+  build incluye cambios de schema no migrados. La ORDEN SUPREMA debe leerse
+  como "ningún cambio de schema sin migrar sale de la máquina local", y eso
+  incluye despliegues manuales vía CLI, no solo comandos de Prisma.
 
 ### Antigravity — Lote Coordinado: Validación Antifraude de Dominios/Trials, Pre-Validación Inteligente, Créditos de Imagen y Apple HIG (14/8/2026)
 
