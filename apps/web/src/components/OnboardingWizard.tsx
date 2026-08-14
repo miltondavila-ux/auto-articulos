@@ -779,33 +779,36 @@ export default function OnboardingWizard({
                 <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>
                   🔒 Este paso se desbloqueará automáticamente al completar el Paso 3.
                 </p>
-              ) : step4Done && !editingGoogleSite ? (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    flexWrap: "wrap",
-                    gap: 12,
-                    padding: "10px 14px",
-                    background: "#f0fdf4",
-                    borderRadius: 8,
-                    border: "1px solid #bbf7d0",
-                  }}
-                >
-                  <div style={{ fontSize: 13, color: "#166534" }}>
-                    ✅ Google Search Console conectado y activo en: <strong>{googleData?.siteUrl}</strong>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setEditingGoogleSite(true)}
-                    style={{ ...secondaryButtonStyle, fontSize: 12, padding: "6px 12px" }}
-                  >
-                    Cambiar sitio
-                  </button>
-                </div>
               ) : (
                 <div>
+                  {step4Done && !editingGoogleSite ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        flexWrap: "wrap",
+                        gap: 12,
+                        padding: "10px 14px",
+                        background: "#f0fdf4",
+                        borderRadius: 8,
+                        border: "1px solid #bbf7d0",
+                        marginBottom: 10,
+                      }}
+                    >
+                      <div style={{ fontSize: 13, color: "#166534" }}>
+                        ✅ Google Search Console conectado y activo en: <strong>{googleData?.siteUrl}</strong>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditingGoogleSite(true)}
+                        style={{ ...secondaryButtonStyle, fontSize: 12, padding: "6px 12px" }}
+                      >
+                        Cambiar sitio
+                      </button>
+                    </div>
+                  ) : null}
+
                   <div
                     style={{
                       background: "#eff6ff",
