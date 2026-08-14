@@ -2,6 +2,10 @@ import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { encryptSecret } from "@auto-articulos/shared";
+import {
+  normalizeCountryCode,
+  platformDomainForCountry,
+} from "@/lib/countries";
 import { createSessionToken, SESSION_COOKIE } from "@/lib/session";
 import { TRIAL_DAYS } from "@/lib/trial";
 
@@ -16,7 +20,7 @@ import { TRIAL_DAYS } from "@/lib/trial";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: NextRequest) {
-  const { firstName, lastName, email, phone, password } =
+  const { firstName, lastName, email, phone, password, country } =
     await request.json();
 
   const normalizedFirstName =
@@ -58,6 +62,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // El país se pide solo aquí y en el alta de Administración (cuentas nuevas);
+  // de él se deduce el servidor de 10minutesWebsite, así que no se acepta un
+  // valor libre ni vacío.
+  const normalizedCountry = normalizeCountryCode(country);
+  if (!normalizedCountry) {
+    return NextResponse.json(
+      { error: "Selecciona el país desde el que usarás la plataforma." },
+      { status: 400 },
+    );
+  }
+  // Europa -> 10minuteswebsite.site; resto del mundo -> 10minuteswebsite.net.
+  const platformDomain = platformDomainForCountry(normalizedCountry);
+
   const existing = await prisma.user.findUnique({
     where: { email: normalizedEmail },
   });
@@ -82,6 +99,8 @@ export async function POST(request: NextRequest) {
       phone: normalizedPhone,
       passwordHash,
       initialPasswordEncrypted,
+      country: normalizedCountry,
+      platformDomain,
       isTrialSignup: true,
       trialStartedAt: new Date(),
       trialUnlocked: false,

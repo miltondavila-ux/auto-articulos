@@ -3,6 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { decryptSecret, encryptSecret } from "@auto-articulos/shared";
 import { auditLog } from "@/lib/audit";
+import {
+  normalizeCountryCode,
+  platformDomainForCountry,
+} from "@/lib/countries";
 import { getCurrentUserId, requireAdmin } from "@/lib/current-user";
 import { parseUserDisabledModules } from "@/lib/modules";
 
@@ -464,15 +468,38 @@ export async function POST(request: NextRequest) {
     monthlyArticleLimit = 300,
     dailyArticleLimit = 20,
     maxTitlesPerBatch = 20,
-    platformDomain = "net",
+    platformDomain: requestedPlatformDomain,
+    country,
   } = await request.json();
 
-  if (platformDomain !== "net" && platformDomain !== "site") {
+  // País obligatorio en toda cuenta nueva (pedido de Milton, 14/8/2026): de él
+  // sale el servidor por defecto — Europa `.site`, resto del mundo `.net`.
+  const normalizedCountry = normalizeCountryCode(country);
+  if (!normalizedCountry) {
+    return NextResponse.json(
+      { error: "Selecciona el país del usuario" },
+      { status: 400 },
+    );
+  }
+
+  if (
+    requestedPlatformDomain !== undefined &&
+    requestedPlatformDomain !== null &&
+    requestedPlatformDomain !== "net" &&
+    requestedPlatformDomain !== "site"
+  ) {
     return NextResponse.json(
       { error: "platformDomain debe ser 'net' o 'site'" },
       { status: 400 },
     );
   }
+
+  // El admin puede sobrescribir el servidor a mano; si no manda nada, se usa
+  // el que corresponde al país.
+  const platformDomain =
+    requestedPlatformDomain === "net" || requestedPlatformDomain === "site"
+      ? requestedPlatformDomain
+      : platformDomainForCountry(normalizedCountry);
 
   const normalizedEmail = typeof email === "string" ? email.trim() : "";
   const normalizedFirstName =
@@ -576,6 +603,7 @@ export async function POST(request: NextRequest) {
       dailyArticleLimit,
       maxTitlesPerBatch,
       platformDomain,
+      country: normalizedCountry,
     },
     select: {
       id: true,

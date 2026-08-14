@@ -20,6 +20,7 @@ import {
   statusLabel,
 } from "@/components/dashboard-ui";
 import type { RunStatus, TitleStatus } from "@/types/dashboard";
+import { COUNTRIES, platformDomainForCountry } from "@/lib/countries";
 import { trialDaysRemaining } from "@/lib/trial";
 import { SYSTEM_MODULES } from "@/lib/modules";
 
@@ -223,6 +224,11 @@ export default function UsuariosPage() {
   const [dailyArticleLimit, setDailyArticleLimit] = useState("95");
   const [maxTitlesPerBatch, setMaxTitlesPerBatch] = useState("20");
   const [platformDomain, setPlatformDomain] = useState<"net" | "site">("net");
+  // País de la cuenta nueva (pedido de Milton, 14/8/2026). Al elegirlo se
+  // auto-selecciona el servidor: Europa `.site`, resto del mundo `.net`. El
+  // selector de servidor queda visible y editable por si hay que corregirlo a
+  // mano; el servidor vuelve a validarlo en POST /api/admin/users.
+  const [country, setCountry] = useState("");
   const [creating, setCreating] = useState(false);
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [loadingUsage, setLoadingUsage] = useState(false);
@@ -423,6 +429,7 @@ export default function UsuariosPage() {
           dailyArticleLimit: Number(dailyArticleLimit),
           maxTitlesPerBatch: Number(maxTitlesPerBatch),
           platformDomain,
+          country,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -443,6 +450,7 @@ export default function UsuariosPage() {
       setDailyArticleLimit("95");
       setMaxTitlesPerBatch("20");
       setPlatformDomain("net");
+      setCountry("");
       setBanner({ type: "info", text: `Usuario ${data.user.email} creado.` });
       loadUsers();
     } finally {
@@ -845,6 +853,29 @@ export default function UsuariosPage() {
               />
             </label>
             <label style={createFieldStyle}>
+              País del usuario
+              <select
+                value={country}
+                required
+                onChange={(e) => {
+                  const selected = e.target.value;
+                  setCountry(selected);
+                  // Europa -> .site; resto del mundo -> .net.
+                  setPlatformDomain(platformDomainForCountry(selected));
+                }}
+                style={inputStyle}
+              >
+                <option value="" disabled>
+                  Selecciona un país
+                </option>
+                {COUNTRIES.map((option) => (
+                  <option key={option.code} value={option.code}>
+                    {option.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label style={createFieldStyle}>
               Servidor de 10minutesWebsite
               <select
                 value={platformDomain}
@@ -856,6 +887,12 @@ export default function UsuariosPage() {
                 <option value="net">10minuteswebsite.net</option>
                 <option value="site">10minuteswebsite.site</option>
               </select>
+              <span style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>
+                Se selecciona solo según el país: Europa usa
+                10minuteswebsite.site y el resto del mundo,
+                10minuteswebsite.net. Cámbialo solo si sabes que esta cuenta es
+                la excepción.
+              </span>
             </label>
             <button
               type="submit"
