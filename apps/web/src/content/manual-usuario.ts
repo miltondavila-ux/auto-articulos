@@ -118,6 +118,71 @@ Actualizaciones muestra las nuevas herramientas y correcciones explicadas sin te
 
 Esta sección se actualiza con los cambios visibles para usuarios y es parte del conocimiento que usa el asistente de ayuda.
 
+## Guía detallada de Configuración
+
+Ruta: /dashboard/configuracion
+
+Configuración está organizada por pestañas. Si una opción no aparece, puede estar deshabilitada para tu cuenta por el administrador.
+
+### Configuración inicial
+
+Ruta: /dashboard/configuracion?tab=wizard
+
+Puedes repetir el asistente de cuatro pasos cuando quieras: cuenta de 10minutesWebsite, categorías, idioma y Google Search Console. Es la forma más rápida de preparar una cuenta nueva.
+
+### Google Search Console
+
+Ruta: /dashboard/configuracion?tab=integrations
+
+1. Pulsa **Conectar Google Search Console** e inicia sesión con la cuenta de Google que tiene acceso a tu sitio.
+2. Cuando vuelvas a la plataforma, elige la propiedad verificada correcta en la lista y pulsa **Guardar propiedad**.
+3. El sitemap se detecta automáticamente cuando es posible. Si no se encuentra, escribe su URL y guarda la configuración.
+4. Puedes pulsar **Enviar sitemap ahora** para un envío inmediato. Después, Auto Artículos lo envía automáticamente cada noche.
+
+Google Search Console permite usar Oportunidades SEO, consultar el estado de indexación y enviar el sitemap. Si no ves tu sitio en la lista, revisa que la misma cuenta de Google sea propietaria o usuaria autorizada de esa propiedad.
+
+### Bing Webmaster Tools
+
+Ruta: /dashboard/configuracion?tab=integrations
+
+Abre Bing Webmaster Tools con tu sesión iniciada, vuelve a Auto Artículos y pulsa **Conectar Bing Webmaster Tools**. Acepta los permisos y elige o guarda el sitio correcto. Si la conexión venció, usa **Reconectar Bing** una sola vez y espera la redirección. Desde esta sección también puedes enviar el sitemap y enviar a Bing los artículos publicados que todavía estén pendientes de indexación.
+
+### Redes sociales
+
+Ruta: /dashboard/configuracion?tab=social
+
+Aquí conectas Google Business Profile, Threads, Instagram, X y LinkedIn. Las redes son opcionales: solo conéctalas si quieres publicar allí. Instagram necesita una cuenta profesional vinculada a una página de Facebook. Algunas redes requieren que el administrador active tu permiso; si ves un aviso de que no está disponible, pide acceso al administrador. Puedes desconectar una red desde el mismo lugar.
+
+### Cuenta y contenido
+
+Ruta: /dashboard/configuracion?tab=platform
+
+Guarda las credenciales de 10minutesWebsite, sincroniza categorías e idiomas y elige el idioma habitual. También puedes definir la firma de los artículos, teléfono de contacto, foto de perfil, logo y las instrucciones de estilo para imágenes e infografías. Estos últimos campos son opcionales y se aplican a los contenidos nuevos; no modifican artículos ya publicados.
+
+### Estado de configuración
+
+Inicio muestra una lista de progreso con lo obligatorio y opcional. Para publicar necesitas credenciales de 10minutesWebsite, categorías sincronizadas e idioma. Google, Bing y redes sociales amplían lo que puedes hacer, pero no impiden publicar artículos.
+
+## Publicaciones, progreso e historial
+
+### Mientras se publica
+
+Ruta: /dashboard/publicaciones-en-curso
+
+Aquí ves cada lote activo y el estado de cada título. Puedes cancelar el lote completo si ya no deseas continuarlo. Cuando un título muestra un error, usa **Reintentar** solo después de leer el mensaje y corregir la causa, por ejemplo una conexión vencida o una configuración incompleta.
+
+### Historial
+
+Ruta: /dashboard/historial
+
+Historial agrupa las ejecuciones por categoría y conserva los resultados de publicación, errores, reintentos, indexación y redes cuando están disponibles. Puedes borrar el historial terminado si ya no lo necesitas; esa acción no se puede deshacer y no cancela un lote que esté en curso.
+
+## Oportunidades de redes sociales
+
+Ruta: /dashboard/oportunidades-redes
+
+Este módulo propone textos para publicar en las redes que tengas conectadas. Puede usar datos de Google Search Console cuando está conectado; si no, trabaja con artículos recientes. Revisa cada propuesta, edítala si quieres, guarda los cambios y luego apruébala o descártala explicando el motivo. Antes de publicar, puedes revisar una vista previa cuando esté disponible.
+
 ## Administración
 
 Ruta: /dashboard/usuarios
@@ -144,5 +209,5 @@ El administrador puede ocultar módulos por cuenta o temporalmente para toda la 
 
 ## Cómo debe ayudarte el asistente
 
-El asistente debe explicar los pasos de forma breve y clara, enlazar al módulo cuando tenga una ruta confirmada y no prometer funciones que no figuren en este manual ni en el registro vivo de Actualizaciones. Si no tiene información suficiente, debe decirlo y sugerir contactar al administrador.
+El asistente debe explicar los pasos de forma breve y clara, enlazar al módulo cuando tenga una ruta confirmada y no prometer funciones que no figuren en este manual ni en el registro vivo de Actualizaciones. Debe priorizar el registro vivo cuando una novedad cambie una instrucción del manual base. Si no tiene información suficiente, debe decirlo y sugerir contactar al administrador.
 `.trim();
