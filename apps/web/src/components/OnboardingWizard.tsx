@@ -133,7 +133,7 @@ export default function OnboardingWizard({
 
   async function handleSyncCategories() {
     setSyncingCategories(true);
-    setMessage(null);
+    setMessage({ type: "info", text: "🔄 Conectando con 10minutesWebsite para descargar tus categorías..." });
     try {
       const [catRes] = await Promise.all([
         fetch("/api/categories/sync", { method: "POST" }),
@@ -141,12 +141,88 @@ export default function OnboardingWizard({
       ]);
       const data = await catRes.json().catch(() => ({}));
       if (!catRes.ok) {
-        setMessage({ type: "error", text: data.error || "Error al sincronizar categorías" });
+        setMessage({ type: "error", text: data.error || "Error al solicitar sincronización de categorías" });
+        setSyncingCategories(false);
         return;
       }
-      setMessage({ type: "success", text: "Categorías e idiomas sincronizados correctamente desde 10minutesWebsite." });
+
+      // Polling activo esperando que el worker de fondo procese el job
+      let attempts = 0;
+      const maxAttempts = 25; // 25 intentos * 2s = 50 segundos máx
+      const pollInterval = 2000;
+
+      while (attempts < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, pollInterval));
+        attempts++;
+
+        try {
+          const checkRes = await fetch(`/api/categories?_t=${Date.now()}`, { cache: "no-store" });
+          if (checkRes.ok) {
+            const checkData = await checkRes.json();
+            const job = checkData.lastSyncJob;
+            const fetchedCats: CategoryRow[] = checkData.categories || [];
+
+            if (job) {
+              if (job.status === "success") {
+                setCategories(fetchedCats);
+                if (fetchedCats.length > 0) {
+                  setMessage({
+                    type: "success",
+                    text: `✅ ¡Sincronización completada con éxito! Se descargaron ${fetchedCats.length} categorías de tu sitio web.`,
+                  });
+                } else {
+                  setMessage({
+                    type: "info",
+                    text: "⚠️ La conexión con 10minutesWebsite fue exitosa, pero no se encontraron categorías creadas en tu sitio web. Crea tus categorías en 10minutesWebsite y vuelve a sincronizar.",
+                  });
+                }
+                await loadAll();
+                onUpdated?.();
+                setSyncingCategories(false);
+                return;
+              } else if (job.status === "error") {
+                setMessage({
+                  type: "error",
+                  text: `❌ Error al conectar con 10minutesWebsite: ${job.errorMessage || "No se pudo conectar"}. Por favor verifica tu usuario y contraseña en el Paso 1.`,
+                });
+                await loadAll();
+                setSyncingCategories(false);
+                return;
+              } else if (job.status === "running") {
+                setMessage({
+                  type: "info",
+                  text: `🔄 Conectando con 10minutesWebsite y extrayendo categorías (intento ${attempts})...`,
+                });
+              }
+            }
+
+            if (fetchedCats.length > 0) {
+              setCategories(fetchedCats);
+              setMessage({
+                type: "success",
+                text: `✅ Se detectaron ${fetchedCats.length} categorías en tu sitio.`,
+              });
+              await loadAll();
+              onUpdated?.();
+              setSyncingCategories(false);
+              return;
+            }
+          }
+        } catch {
+          // continuar polling
+        }
+      }
+
+      setMessage({
+        type: "info",
+        text: "⏳ La sincronización continúa en segundo plano. Si no aparecen tus categorías en unos instantes, vuelve a presionar el botón.",
+      });
       await loadAll();
-      onUpdated?.();
+    } catch {
+      setMessage({
+        type: "error",
+        text: "Error de red al sincronizar categorías. Inténtalo de nuevo.",
+      });
     } finally {
       setSyncingCategories(false);
     }
