@@ -52,6 +52,9 @@ interface UserRow {
 }
 
 const PLATFORM_URL = "https://auto-articulos-web.vercel.app/login";
+
+type UserCategoryFilter = "all" | "user" | "admin" | "trial";
+
 const permissionLabelStyle: CSSProperties = {
   display: "flex",
   alignItems: "center",
@@ -199,6 +202,7 @@ export default function UsuariosPage() {
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [loadingUsage, setLoadingUsage] = useState(false);
   const [search, setSearch] = useState("");
+  const [userCategory, setUserCategory] = useState<UserCategoryFilter>("all");
   const [accessPage, setAccessPage] = useState(1);
   const [tab, setTab] = useState<"crear" | "uso" | "accesos" | "modulos">("accesos");
   const [globalDisabledModules, setGlobalDisabledModules] = useState<string[]>([]);
@@ -296,6 +300,10 @@ export default function UsuariosPage() {
   }, []);
 
   const filteredUsers = users.filter((u) => {
+    if (userCategory === "admin" && u.role !== "admin") return false;
+    if (userCategory === "user" && u.role !== "user") return false;
+    if (userCategory === "trial" && !u.isTrialSignup) return false;
+
     const q = search.trim().toLowerCase();
     if (!q) return true;
     return (
@@ -316,7 +324,7 @@ export default function UsuariosPage() {
 
   useEffect(() => {
     setAccessPage(1);
-  }, [search]);
+  }, [search, userCategory]);
 
   useEffect(() => {
     setAccessPage((p) => Math.min(p, totalAccessPages));
@@ -984,13 +992,40 @@ export default function UsuariosPage() {
             }}
           >
             <h2 style={h2Style}>Usuarios con acceso</h2>
-            <input
-              type="text"
-              placeholder="Buscar por correo, nombre o apellido..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ ...inputStyle, width: 280 }}
-            />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 8,
+              }}
+            >
+              <input
+                type="text"
+                placeholder="Buscar por correo, nombre o apellido..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{ ...inputStyle, width: 280 }}
+              />
+              <select
+                aria-label="Filtrar por tipo de usuario"
+                value={userCategory}
+                onChange={(e) =>
+                  setUserCategory(e.target.value as UserCategoryFilter)
+                }
+                style={{
+                  ...inputStyle,
+                  width: "auto",
+                  minWidth: 175,
+                  cursor: "pointer",
+                }}
+              >
+                <option value="all">Todos los tipos</option>
+                <option value="user">Usuarios comunes</option>
+                <option value="admin">Administradores</option>
+                <option value="trial">Free Trial</option>
+              </select>
+            </div>
           </div>
           <p style={{ fontSize: 12, color: "#6b7280", marginTop: -4 }}>
             Cambia el rol a <strong>Administrador</strong> para que esa cuenta
