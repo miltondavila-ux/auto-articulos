@@ -108,7 +108,6 @@ model User {
   // JSON serializado con los IDs de módulos deshabilitados para este usuario
   // (ej. ["oportunidades-redes", "actualizaciones"]). Null = hereda la visibilidad global.
   disabledModules                   String?
-  // Disponibilidad de créditos de imagen en 10minutesWebsite.
   hasImageCredits                   Boolean   @default(true)
 
   credentials                Credential[]
@@ -562,22 +561,6 @@ model SocialOpportunity {
 
   user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   title Title? @relation(fields: [titleId], references: [id], onDelete: SetNull)
-}
-
-model ProductUpdate {
-  id           String   @id @default(cuid())
-  date         DateTime
-  title        String
-  category     String
-  summary      String
-  example      String
-  modulePath   String?
-  sourceCommit String?  @unique
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@index([date])
-  @@index([category])
 }
 
 // Registro global y durable de mejoras y arreglos visibles para los usuarios.
