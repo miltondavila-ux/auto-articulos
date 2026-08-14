@@ -52,6 +52,14 @@ export default function OnboardingWizard({
   const [savingCreds, setSavingCreds] = useState(false);
 
   const [syncingCategories, setSyncingCategories] = useState(false);
+  // Estado del último job de sincronización, tal como lo hace la pantalla de
+  // Configuración (Cuenta & Contenido). Es lo que permite seguir esperando
+  // mientras el worker trabaja, en vez de rendirse a los 50 segundos.
+  const [lastSyncStatus, setLastSyncStatus] = useState<string | null>(null);
+  const [lastSyncError, setLastSyncError] = useState<string | null>(null);
+  // true solo si la persona pulsó sincronizar en esta visita: evita saludarla
+  // con un "✅ sincronizado" cada vez que abre el asistente.
+  const [syncRequested, setSyncRequested] = useState(false);
   const [syncingLanguages, setSyncingLanguages] = useState(false);
   const [savingLanguage, setSavingLanguage] = useState(false);
   const [savingGoogleSite, setSavingGoogleSite] = useState(false);
@@ -94,6 +102,8 @@ export default function OnboardingWizard({
         const loadedCats: CategoryRow[] = data.categories || [];
         setCategories(loadedCats);
         const lastJob = data.lastSyncJob;
+        setLastSyncStatus(lastJob?.status ?? null);
+        setLastSyncError(lastJob?.errorMessage ?? null);
         if (
           surfaceLastSyncError &&
           loadedCats.length === 0 &&
@@ -143,6 +153,58 @@ export default function OnboardingWizard({
     loadAll(true);
   }, [loadAll]);
 
+  // Un job encolado o corriendo significa que el worker todavía no terminó.
+  const categorySyncInProgress =
+    lastSyncStatus === "pending" || lastSyncStatus === "running";
+
+  // La espera, copiada de Configuración: se consulta cada 3 segundos mientras
+  // el job siga vivo, sin límite de intentos. El worker corre en GitHub
+  // Actions y puede tardar varios minutos; cualquier tope fijo se queda corto
+  // justo cuando más importa.
+  useEffect(() => {
+    if (!categorySyncInProgress) return;
+    const interval = setInterval(() => {
+      loadAll();
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [categorySyncInProgress, loadAll]);
+
+  // Resultado del intento, una vez que el job dejó de estar en curso. Los
+  // errores se muestran siempre (son la única pista de qué falló); el éxito,
+  // solo si la persona pidió sincronizar en esta visita, para no saludarla con
+  // un "✅ sincronizado" cada vez que abre el asistente.
+  useEffect(() => {
+    if (categorySyncInProgress) return;
+    if (lastSyncStatus === "error") {
+      setMessage({
+        type: "error",
+        text: `❌ No se pudieron descargar las categorías: ${lastSyncError || "no se pudo conectar"}`,
+      });
+      return;
+    }
+    if (!syncRequested || lastSyncStatus !== "success") return;
+    if (categories.length > 0) {
+      setMessage({
+        type: "success",
+        text: `✅ ¡Listo! Se descargaron ${categories.length} categorías de tu sitio web.`,
+      });
+      onUpdated?.();
+    } else {
+      setMessage({
+        type: "info",
+        text: "⚠️ La conexión funcionó, pero tu sitio no tiene categorías creadas todavía. Créalas en tu plataforma y vuelve a sincronizar.",
+      });
+    }
+    setSyncRequested(false);
+  }, [
+    categorySyncInProgress,
+    lastSyncStatus,
+    lastSyncError,
+    syncRequested,
+    categories.length,
+    onUpdated,
+  ]);
+
   // Acciones
   async function handleSaveCredentials(e: FormEvent) {
     e.preventDefault();
@@ -170,9 +232,23 @@ export default function OnboardingWizard({
     }
   }
 
+  // Mismo algoritmo que la pantalla de Configuración (Cuenta & Contenido),
+  // que sí funciona: encolar el trabajo y salir. La espera la lleva el
+  // useEffect de abajo, consultando cada 3 segundos MIENTRAS el job siga vivo.
+  //
+  // Antes esta función traía su propio bucle de 25 intentos × 2 s = 50
+  // segundos y luego se rendía con un "continúa en segundo plano" que ya no
+  // volvía a mirar nunca más. Como el worker corre en GitHub Actions y casi
+  // siempre tarda más que eso, la persona se quedaba mirando el botón sin
+  // saber si algo estaba pasando — el rollo del Paso 2 durante todo el
+  // 14/8/2026.
   async function handleSyncCategories() {
     setSyncingCategories(true);
-    setMessage({ type: "info", text: "🔄 Conectando con 10minutesWebsite para descargar tus categorías..." });
+    setSyncRequested(true);
+    setMessage({
+      type: "info",
+      text: "🔄 Conectando con tu sitio para descargar tus categorías...",
+    });
     try {
       const [catRes] = await Promise.all([
         fetch("/api/categories/sync", { method: "POST" }),
@@ -180,82 +256,12 @@ export default function OnboardingWizard({
       ]);
       const data = await catRes.json().catch(() => ({}));
       if (!catRes.ok) {
-        setMessage({ type: "error", text: data.error || "Error al solicitar sincronización de categorías" });
-        setSyncingCategories(false);
+        setMessage({
+          type: "error",
+          text: data.error || "Error al solicitar sincronización de categorías",
+        });
         return;
       }
-
-      // Polling activo esperando que el worker de fondo procese el job
-      let attempts = 0;
-      const maxAttempts = 25; // 25 intentos * 2s = 50 segundos máx
-      const pollInterval = 2000;
-
-      while (attempts < maxAttempts) {
-        await new Promise((resolve) => setTimeout(resolve, pollInterval));
-        attempts++;
-
-        try {
-          const checkRes = await fetch(`/api/categories?_t=${Date.now()}`, { cache: "no-store" });
-          if (checkRes.ok) {
-            const checkData = await checkRes.json();
-            const job = checkData.lastSyncJob;
-            const fetchedCats: CategoryRow[] = checkData.categories || [];
-
-            if (job) {
-              if (job.status === "success") {
-                setCategories(fetchedCats);
-                if (fetchedCats.length > 0) {
-                  setMessage({
-                    type: "success",
-                    text: `✅ ¡Sincronización completada con éxito! Se descargaron ${fetchedCats.length} categorías de tu sitio web.`,
-                  });
-                } else {
-                  setMessage({
-                    type: "info",
-                    text: "⚠️ La conexión con 10minutesWebsite fue exitosa, pero no se encontraron categorías creadas en tu sitio web. Crea tus categorías en 10minutesWebsite y vuelve a sincronizar.",
-                  });
-                }
-                await loadAll();
-                onUpdated?.();
-                setSyncingCategories(false);
-                return;
-              } else if (job.status === "error") {
-                setMessage({
-                  type: "error",
-                  text: `❌ Error al conectar con 10minutesWebsite: ${job.errorMessage || "No se pudo conectar"}. Por favor verifica tu usuario y contraseña en el Paso 1.`,
-                });
-                await loadAll();
-                setSyncingCategories(false);
-                return;
-              } else if (job.status === "running") {
-                setMessage({
-                  type: "info",
-                  text: `🔄 Conectando con 10minutesWebsite y extrayendo categorías (intento ${attempts})...`,
-                });
-              }
-            }
-
-            if (fetchedCats.length > 0) {
-              setCategories(fetchedCats);
-              setMessage({
-                type: "success",
-                text: `✅ Se detectaron ${fetchedCats.length} categorías en tu sitio.`,
-              });
-              await loadAll();
-              onUpdated?.();
-              setSyncingCategories(false);
-              return;
-            }
-          }
-        } catch {
-          // continuar polling
-        }
-      }
-
-      setMessage({
-        type: "info",
-        text: "⏳ La sincronización continúa en segundo plano. Si no aparecen tus categorías en unos instantes, vuelve a presionar el botón.",
-      });
       await loadAll();
     } catch {
       setMessage({
@@ -787,7 +793,7 @@ export default function OnboardingWizard({
                     padding: "14px 16px",
                   }}
                 >
-                  {syncingCategories ? (
+                  {syncingCategories || categorySyncInProgress ? (
                     <div
                       style={{
                         background: "#ffffff",
@@ -803,7 +809,7 @@ export default function OnboardingWizard({
                         Conectando con tu sitio web de 10minutesWebsite...
                       </h4>
                       <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#334155", lineHeight: 1.5, maxWidth: 500, marginLeft: "auto", marginRight: "auto" }}>
-                        Por favor espera <strong>entre 10 y 25 segundos</strong>. Nuestro robot está ingresando a tu cuenta para descargar automáticamente todas las categorías de tu web.
+                        Nuestro robot está ingresando a tu cuenta para descargar automáticamente todas las categorías de tu web. Puede tardar <strong>unos minutos</strong> según la cola de trabajo; esta pantalla se actualiza sola cuando termine, no hace falta que hagas nada.
                       </p>
                       <div
                         style={{
