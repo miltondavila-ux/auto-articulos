@@ -17,8 +17,10 @@ export async function POST(request: NextRequest) {
   try {
     const body = new URLSearchParams(await request.text());
     const credentials = clientCredentials(request, body);
-    const client = oauthClient();
-    if (credentials.clientId !== client.clientId || credentials.clientSecret !== client.clientSecret) {
+    const client = oauthClient(credentials.clientId);
+    // ChatGPT es cliente público con PKCE: no usa secreto. Alexa conserva su
+    // validación confidencial mediante client_secret_basic o client_secret_post.
+    if (!client || (client.clientSecret ? credentials.clientSecret !== client.clientSecret : Boolean(credentials.clientSecret))) {
       return NextResponse.json({ error: "invalid_client" }, { status: 401, headers: { "Cache-Control": "no-store" } });
     }
     const grantType = body.get("grant_type");

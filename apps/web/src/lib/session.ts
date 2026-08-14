@@ -72,23 +72,32 @@ export async function verifySessionToken(token: string | undefined | null): Prom
 }
 
 /** Access token OAuth para el recurso MCP, separado del token de cookie web. */
-export async function createMcpAccessToken(userId: string): Promise<string> {
+export async function createMcpAccessToken(userId: string, scopes: string[]): Promise<string> {
   const expires = Date.now() + MCP_ACCESS_TOKEN_TTL_MS;
-  const payload = `mcp.${userId}.${expires}`;
+  // Los scopes viajan firmados para que el middleware pueda aplicar el mínimo
+  // privilegio en Edge, sin una consulta extra a la base por cada tool call.
+  const encodedScopes = toBase64Url(new TextEncoder().encode(scopes.join(" ")).buffer);
+  const payload = `mcp.${userId}.${expires}.${encodedScopes}`;
   const signatureBuf = await crypto.subtle.sign("HMAC", await getKey(), new TextEncoder().encode(payload));
   return `${payload}.${toBase64Url(signatureBuf)}`;
 }
 
-export async function verifyMcpAccessToken(token: string | undefined | null): Promise<string | null> {
+export async function verifyMcpAccessToken(token: string | undefined | null): Promise<{ userId: string; scopes: string[] } | null> {
   if (!token) return null;
   const parts = token.split(".");
-  if (parts.length !== 4 || parts[0] !== "mcp") return null;
-  const [, userId, expiresStr, signature] = parts;
+  if (parts.length !== 5 || parts[0] !== "mcp") return null;
+  const [, userId, expiresStr, encodedScopes, signature] = parts;
   const expires = Number(expiresStr);
   if (!Number.isFinite(expires) || Date.now() > expires) return null;
-  const payload = `mcp.${userId}.${expiresStr}`;
+  const payload = `mcp.${userId}.${expiresStr}.${encodedScopes}`;
   const valid = await crypto.subtle.verify("HMAC", await getKey(), fromBase64Url(signature).buffer as ArrayBuffer, new TextEncoder().encode(payload));
-  return valid ? userId : null;
+  if (!valid) return null;
+  try {
+    const scopes = new TextDecoder().decode(fromBase64Url(encodedScopes)).split(" ").filter(Boolean);
+    return { userId, scopes };
+  } catch {
+    return null;
+  }
 }
 
 /**

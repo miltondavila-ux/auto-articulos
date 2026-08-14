@@ -392,6 +392,99 @@ ejecutar de forma explícita y auditada después del despliegue.
   desarrollador** está más abajo en esa misma pantalla. Se pidió a Milton
   desplazarse solo hasta que se vean el interruptor y su texto, sin cambiar
   todavía ningún ajuste.
+- **Aviso revisado antes de activar (13/8/2026):** ChatGPT etiqueta el modo
+  desarrollador como **RIESGO ELEVADO** porque los conectores no verificados
+  pueden modificar o borrar datos de forma permanente. El riesgo queda
+  acotado para la prueba: se conectará exclusivamente el MCP propio de Auto
+  Artículos, por HTTPS, y solo se habilitarán las dos tools de lectura ya
+  declaradas. Las tools que crean o publican contenido quedan deshabilitadas
+  hasta una validación posterior y explícita de Milton.
+- **Ritmo acordado:** Milton pidió avanzar despacio, un paso por vez. Codex no
+  creará conectores, no introducirá URLs, no autorizará OAuth ni cambiará
+  permisos hasta que Milton confirme visualmente cada pantalla y dé su visto
+  bueno para el siguiente clic.
+- **Paso ChatGPT 2 completado por Milton (13/8/2026):** Milton activó el
+  interruptor **Modo de desarrollador** en su propia cuenta de ChatGPT. Esto
+  no creó ningún conector, no expuso datos y no otorgó acceso al MCP; solo
+  habilitó la capacidad de configurarlo. Siguiente paso único: volver a
+  **Configuración → Complementos** para localizar la opción de crear el
+  conector privado.
+- **Paso ChatGPT 3 — pantalla confirmada:** Milton volvió a
+  **Configuración → Complementos**. Allí se ve la fila **Modo de
+  desarrollador** (distinta del interruptor de seguridad ya activado). No hay
+  aún ningún conector de Auto Artículos creado ni ningún dato compartido.
+- **Verificación posterior:** la nueva captura confirma el interruptor azul
+  de **Modo de desarrollador**. La fila de Complementos lleva a este control
+  de seguridad y no es todavía el formulario de creación. No se cambió CSP,
+  no se conectó ningún servidor y no se introdujo URL ni credencial alguna.
+  Próximo paso: salir de Configuración y abrir el catálogo de Complementos
+  para localizar el botón de crear una app/conector personalizado.
+- **Navegación siguiente acordada:** desde la pantalla principal de ChatGPT,
+  Milton vuelve a **Configuración → Complementos** y abre únicamente
+  **Explorar complementos**. El objetivo es identificar el botón de creación;
+  no se seleccionará, instalará ni conectará ningún complemento en este paso.
+- **Paso ChatGPT 4 — catálogo confirmado:** Milton abrió **Explorar
+  complementos** y se ve el catálogo de ChatGPT. El botón circular **+** junto
+  a la búsqueda es el punto de entrada para crear un complemento privado. Aún
+  no se creó, instaló ni conectó Auto Artículos; siguiente paso único: abrir
+  ese formulario mediante el botón `+` y revisar la pantalla resultante.
+- **Paso ChatGPT 5 — formulario confirmado:** el formulario **Nuevo
+  complemento** permite definir nombre, descripción, URL de servidor y OAuth.
+  OAuth aparece seleccionado por defecto y se conserva. Este formulario aún
+  está vacío: no se ingresó la URL del MCP, no se guardó el complemento y no
+  hubo autorización. Para mantener el avance controlado, el siguiente paso se
+  limita a escribir el nombre visible `Auto Artículos`.
+- **Paso ChatGPT 5a:** Milton avanzó tras introducir el nombre. Siguiente
+  campo, exclusivamente descriptivo y opcional: se usará el texto
+  `Consulta oportunidades y estado de publicaciones de Auto Artículos.`. No
+  se modifica la conexión ni OAuth en este paso.
+- **Paso ChatGPT 5b completado:** Milton confirmó la descripción. Siguiente
+  paso único: introducir la URL HTTPS pública del servidor MCP,
+  `https://auto-articulos-web.vercel.app/api/mcp`, en **URL del servidor**.
+  Solo escribirla no autentica, no concede acceso ni ejecuta herramientas;
+  OAuth se realizará únicamente en el siguiente paso visible.
+- **Paso ChatGPT 5c completado:** Milton confirmó que ingresó la URL canónica
+  del MCP. Aún no guardó ni autorizó el complemento. Siguiente paso único:
+  abrir **Configuración avanzada de OAuth** para revisar la detección de
+  metadatos/credenciales antes de que ChatGPT escanee herramientas.
+- **Bloqueo técnico detectado en configuración OAuth (13/8/2026):** ChatGPT
+  muestra que usará un **cliente OAuth definido por el usuario**; no hay DCR
+  ni CIMD anunciados por el servidor. La revisión del código confirma que el
+  proveedor OAuth actual solo lee `OAUTH_ALEXA_CLIENT_ID`,
+  `OAUTH_ALEXA_CLIENT_SECRET` y `OAUTH_ALEXA_REDIRECT_URIS`, por lo que no se
+  debe reutilizar ese cliente ni guardar aún el complemento. Se requiere una
+  ampliación segura para un cliente ChatGPT independiente y el registro de la
+  redirect URI exacta que muestre ChatGPT. Siguiente acción de Milton: solo
+  desplazarse dentro del panel derecho de OAuth hasta que se vea dicha URI y
+  enviarla en captura; no escribir secretos ni pulsar Crear.
+- **Corrección preventiva de texto:** la captura muestra una descripción que
+  menciona “Crea y Publica”. Antes de guardar se cambiará a
+  `Consulta oportunidades y estado de publicaciones de Auto Artículos.` para
+  reflejar que la primera autorización será de solo lectura.
+- **Datos OAuth visibles, aún no aplicados:** el panel muestra una **URL de
+  devolución de llamada** de `https://chatgpt.com/connector/oauth/...`, más
+  campos para **ID de cliente de OAuth**, secreto opcional y método de
+  autenticación del token actualmente `none`. La URL queda parcialmente
+  recortada en la captura; no es un secreto, pero se necesita su valor exacto
+  antes de configurar el cliente ChatGPT en el servidor. No se pulsó Crear ni
+  se introdujo ningún ID o secreto.
+- **Redirect URI de ChatGPT recibida (13/8/2026):**
+  `https://chatgpt.com/connector/oauth/fO0_PMppW_ra`. Es una URI de retorno,
+  no un secreto. Se registrará exclusivamente como redirect URI permitido del
+  nuevo cliente OAuth de ChatGPT. Milton debe mantener el formulario abierto
+  pero no escribir aún ID/secret ni pulsar Crear mientras Codex prepara la
+  configuración independiente y verificable.
+- **Implementación segura preparada localmente:** Codex añadió soporte para
+  clientes OAuth separados (Alexa confidencial y ChatGPT público con PKCE),
+  añadió `offline_access` a los metadatos de OAuth y reforzó los access tokens
+  con scopes firmados. El MCP ahora oculta y rechaza las tools de escritura
+  cuando el token solo contiene `oportunidades:leer`; por tanto ChatGPT verá
+  únicamente `listar_oportunidades` y `estado_de_publicaciones` en esta fase.
+  Las acciones de crear/publicar continúan exigiendo `oportunidades:publicar`.
+  `npm --prefix apps/web run typecheck` y `git diff --check` terminaron sin
+  errores. Falta cargar en producción el Client ID público y la redirect URI,
+  desplegar y volver a ChatGPT con el ID; no existe secreto de ChatGPT que
+  guardar porque el flujo usa PKCE y autenticación de token `none`.
 
 ## Reglas durante el trabajo
 
@@ -821,6 +914,35 @@ ejecutar de forma explícita y auditada después del despliegue.
   el alias principal. **Capitán de migración liberó el lote:** Codex. Resultado:
   panel responsive y más alto desplegado; sin migración. Se mantuvieron fuera
   los cambios activos ajenos de Coordinación y Configuración.
+- **Capitán de migración:** Codex — revisará y aplicará el lote completo.
+  Motivo: enlaces completos y clicables en respuestas del asistente. Nadie más
+  ejecuta Prisma hasta su liberación.
+- **Corrección solicitada por Milton para rutas del manual:** una ruta relativa
+  como `/dashboard/configuracion` no es útil dentro del chat. Desde ahora la
+  instrucción del asistente exige la URL pública completa
+  `https://auto-articulos-web.vercel.app/dashboard/configuracion` para cada
+  ruta confirmada, y el panel convierte automáticamente esas URLs en enlaces
+  clicables que abren el módulo en otra pestaña. **ÁREAS RESERVADAS:** ruta API
+  del asistente y `FloatingAssistant.tsx`. **SIGUIENTE ACCIÓN:** typecheck y
+  despliegue; sin migración.
+- **Entrega de enlaces en producción (Codex):** commit `93b0f5b`, typecheck
+  correcto y Vercel `dpl_2Qb6YwVnsbX3FJ1kaRmwiy3USi13` en estado **Ready**.
+  **Capitán de migración liberó el lote:** Codex. Resultado: enlaces completos
+  y clicables del asistente desplegados; sin migración. Los diagnósticos ajenos
+  sin seguimiento se conservaron fuera del lote.
+- **Capitán de migración:** Codex — revisará y aplicará el lote completo.
+  Motivo: reparación de enlaces presionables en respuestas del asistente. Nadie
+  más ejecuta Prisma hasta su liberación.
+- **Corrección de enlaces solicitada por Milton:** se detectó que el render
+  previo solo reconocía URLs de texto plano y podía fallar cuando la IA las
+  devolvía como Markdown. El panel ahora interpreta ambos formatos y los
+  convierte en botones visibles `Abrir este módulo` que navegan directamente a
+  la pantalla correspondiente al pulsarlos. **SIGUIENTE ACCIÓN:** typecheck y
+  despliegue; sin migración.
+- **Entrega de botones presionables (Codex):** commit `e4b7d0b`, typecheck
+  correcto y Vercel `dpl_x9nXxQF5vyQfocQSsYAVReEaU92f` en estado **Ready** con
+  el alias de producción confirmado. **Capitán de migración liberó el lote:**
+  Codex. Resultado: botones de enlace presionables desplegados; sin migración.
   estados y respuestas), sin cambiar permisos, API ni la regla de acceso
   activo. Se validará antes de enviarlo al próximo lote.
 - **Verificación completada:** `npm --prefix apps/web run typecheck`, el

@@ -125,7 +125,9 @@ export async function middleware(request: NextRequest) {
 async function handleMcpAuth(request: NextRequest) {
   const authorization = request.headers.get("authorization");
   const bearer = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
-  const userId = (await verifyMcpAccessToken(bearer)) ?? (await verifySessionToken(bearer));
+  const oauth = await verifyMcpAccessToken(bearer);
+  const sessionUserId = oauth ? null : await verifySessionToken(bearer);
+  const userId = oauth?.userId ?? sessionUserId;
 
   if (!userId) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
@@ -133,6 +135,10 @@ async function handleMcpAuth(request: NextRequest) {
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-user-id", userId);
+  // Los Bearer de sesión solo se mantienen para la prueba manual heredada;
+  // conservan el comportamiento previo. Los OAuth quedan limitados a los
+  // scopes firmados durante el account linking.
+  requestHeaders.set("x-mcp-scopes", (oauth?.scopes ?? ["oportunidades:leer", "oportunidades:publicar"]).join(" "));
   // Deliberadamente NO se propaga la suplantación de admin: un token de
   // máquina no debería poder operar la cuenta de otro usuario por voz.
   return NextResponse.next({ request: { headers: requestHeaders } });

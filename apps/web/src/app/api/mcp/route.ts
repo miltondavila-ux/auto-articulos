@@ -40,9 +40,10 @@ export async function POST(request: NextRequest) {
   // La spec permite lotes. Se responde solo a los mensajes que traen `id`;
   // las notificaciones (sin `id`) no llevan respuesta.
   const mensajes = Array.isArray(body) ? body : [body];
+  const scopes = request.headers.get("x-mcp-scopes")?.split(" ").filter(Boolean) ?? [];
   const respuestas = [];
   for (const mensaje of mensajes) {
-    const respuesta = await manejar(mensaje);
+    const respuesta = await manejar(mensaje, scopes);
     if (respuesta) respuestas.push(respuesta);
   }
 
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json(Array.isArray(body) ? respuestas : respuestas[0]);
 }
 
-async function manejar(mensaje: JsonRpcRequest) {
+async function manejar(mensaje: JsonRpcRequest, scopes: string[]) {
   const id = mensaje?.id ?? null;
   const esNotificacion = mensaje?.id === undefined;
 
@@ -79,14 +80,14 @@ async function manejar(mensaje: JsonRpcRequest) {
       return rpcResult(id, {});
 
     case "tools/list":
-      return rpcResult(id, { tools: listToolsPayload() });
+      return rpcResult(id, { tools: listToolsPayload(scopes) });
 
     case "tools/call": {
       const nombre = mensaje.params?.name;
       if (typeof nombre !== "string") {
         return rpcError(id, RPC_INVALID_PARAMS, "Falta el nombre de la herramienta.");
       }
-      const tool = findTool(nombre);
+      const tool = findTool(nombre, scopes);
       if (!tool) {
         return rpcError(id, RPC_METHOD_NOT_FOUND, `No existe la herramienta "${nombre}".`);
       }

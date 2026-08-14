@@ -30,6 +30,7 @@ type ToolDef = {
   title: string;
   description: string;
   inputSchema: Record<string, unknown>;
+  requiredScope: "oportunidades:leer" | "oportunidades:publicar";
   handler: ToolHandler;
 };
 
@@ -55,6 +56,7 @@ export const TOOLS: ToolDef[] = [
     description:
       "Devuelve las oportunidades SEO guardadas, agrupadas por categoría, con la cantidad de títulos y las impresiones de cada una. Solo lectura: no publica ni modifica nada. Úsala antes de publicar para saber qué hay pendiente.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    requiredScope: "oportunidades:leer",
     handler: async () => {
       const { data } = await readRoute(await listarOportunidadesRoute());
       const groups = (data.groups ?? []) as Array<{
@@ -94,6 +96,7 @@ export const TOOLS: ToolDef[] = [
       },
       additionalProperties: false,
     },
+    requiredScope: "oportunidades:publicar",
     handler: async (args) => {
       const { ok, data } = await readRoute(
         await analizarOportunidadesRoute(jsonRequest("/api/opportunities", { force: Boolean(args.forzar) })),
@@ -129,6 +132,7 @@ export const TOOLS: ToolDef[] = [
       required: ["categoria"],
       additionalProperties: false,
     },
+    requiredScope: "oportunidades:publicar",
     handler: async (args) => {
       const categoria = String(args.categoria ?? "").trim();
       if (!categoria) return toolText("Falta el nombre de la categoría.", true);
@@ -195,6 +199,7 @@ export const TOOLS: ToolDef[] = [
     description:
       "Informa si hay una publicación en curso y cómo salieron las últimas. Solo lectura.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    requiredScope: "oportunidades:leer",
     handler: async () => {
       const userId = await getCurrentUserId();
       const runs = await prisma.run.findMany({
@@ -219,13 +224,13 @@ export const TOOLS: ToolDef[] = [
   },
 ];
 
-export function findTool(name: string) {
-  return TOOLS.find((t) => t.name === name);
+export function findTool(name: string, scopes: string[]) {
+  return TOOLS.find((tool) => tool.name === name && scopes.includes(tool.requiredScope));
 }
 
 /** Forma que espera `tools/list` (sin el handler, que es interno). */
-export function listToolsPayload() {
-  return TOOLS.map(({ name, title, description, inputSchema }) => ({
+export function listToolsPayload(scopes: string[]) {
+  return TOOLS.filter((tool) => scopes.includes(tool.requiredScope)).map(({ name, title, description, inputSchema }) => ({
     name,
     title,
     description,
