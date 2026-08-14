@@ -16,7 +16,9 @@ enum UserRole {
 model User {
   id                                String    @id @default(cuid())
   name                              String?
-  firstName                         String?
+disabledModules                   String?
+firstName                         String?
+  hasImageCredits                   Boolean   @default(true)
   lastName                          String?
   phone                             String?
   email                             String    @unique
