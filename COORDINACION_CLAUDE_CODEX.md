@@ -2603,16 +2603,42 @@ Se descubrió al implementar; documentado en el propio schema.
   revirtió (`7ec94aa`) y se restauró el WIP intacto en el árbol de trabajo,
   sin commitear. **Ese WIP sigue sin commit al cerrar esta entrada** — no es
   de Claude, no tocar sin que Milton lo pida.
-- **Pendiente de verificación en vivo:** Estee Soto probó sincronizar después
-  del deploy de detección de paneles (commit `c2955f8`) y reportó "no trajo
-  las categorías"; el botón ya refleja correctamente la espera (confirmado
-  por Milton: "dice Sincronizando, puede tardar unos minutos"), pero como el
-  job real se resuelve dentro de la ventana de 15-25 min del worker sin que
-  el job de GitHub Actions termine antes, no fue posible leer el log real
-  todavía sin cancelar una corrida en curso (riesgo de cortar publicaciones
-  de otros usuarios reales) — queda pendiente confirmar con el próximo log
-  completo si el problema es un cuarto servidor no contemplado, credenciales,
-  o algo del panel específico de su cuenta.
+- **Verificación en vivo de Estee Soto, tres intentos reales — causa
+  encontrada, no del código de sincronización:** al intentar confirmar en
+  vivo por qué "no trajo las categorías", se descubrió que
+  `processNextCategorySync` (`apps/worker/src/categorySync.ts`) **no dejaba
+  ningún rastro en el log** salvo el caso especial de corrección de
+  servidor — un sync exitoso, con 0 categorías, o con error, quedaban
+  completamente mudos. Se revisaron tres corridas completas de producción
+  (`31884969127`, `31885733866`) sin encontrar ni un solo inicio de sesión
+  contra 10minutesWebsite/tagcrush en ninguna, a pesar de que Milton
+  confirmó haber pulsado "Sincronizar" repetidamente — imposible saber si el
+  job nunca se creó o si se resolvió en silencio. Corregido en `6e2371e`:
+  cada intento ahora imprime éxito (con cantidad de categorías y paneles) o
+  el error real.
+- **Segundo hallazgo, de infraestructura — no específico de Estee:** cada
+  lane del worker corría el presupuesto de 15 minutos completo aunque no
+  hubiera ningún trabajo pendiente en ningún lado (decisión de diseño del
+  31/7/2026, ver comentario en `run-once.ts`), y `worker.yml` serializa las
+  corridas con `concurrency.group` — combinado, cualquier deploy nuevo podía
+  quedar esperando **hasta 30 minutos reales** detrás de una corrida vacía
+  antes de que su código llegara a ejecutarse una sola vez, medido en vivo
+  esta misma sesión. Pregunta directa de Milton: "¿te parece lógico que un
+  shard dure tanto?" — no lo era. Corregido en `abfc28c`: cada lane se apaga
+  tras 3 min ocioso en vez de agotar siempre el presupuesto completo; el
+  BUDGET_MS de 15 min queda como techo duro solo para quien sí tiene trabajo
+  real. Efecto lateral: menos minutos de GitHub Actions consumidos.
+- **Pendiente de verificación en vivo, ahora con herramientas reales:** con
+  ambos arreglos desplegados, se disparó una corrida limpia (`31886539028`)
+  y se pidió a Milton un intento más de sincronización — todavía en curso al
+  cerrar esta entrada. El próximo agente que retome esto debe revisar
+  primero el log de esa corrida (o la más reciente si ya cerró) buscando
+  líneas `CategorySyncJob ... (usuario ...)`: ahí va a decir directamente si
+  el problema es un cuarto servidor no contemplado, credenciales, algo del
+  panel específico de su cuenta, o si en realidad ya está funcionando.
+- **Commits adicionales de este cierre:** `d5d3fd2` (mismo hueco de mensaje
+  silencioso que `2e04f0f`, pero para el resultado "éxito sin categorías"),
+  `abfc28c`, `6e2371e`.
 - **Estado del área:** LIBERADA. `apps/worker/**`,
   `packages/db/prisma/schema.prisma` y `.github/workflows/migrate.yml`
   quedan libres para el siguiente agente — salvo el WIP ajeno ya señalado.
