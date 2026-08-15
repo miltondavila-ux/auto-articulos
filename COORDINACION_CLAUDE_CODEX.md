@@ -2509,6 +2509,114 @@ necesario (`hasImageCredits`) y se ejecuta el workflow oficial.
   recibió luz verde para crear/probar un artículo; Codex no disparó el worker
   ni creó una publicación de prueba.
 
+### Claude — Categorías atascadas, tercer servidor (tagcrush.net) y soporte de paneles (14–15/8/2026)
+
+- **Agente:** Claude. **Estado:** `TERMINADO — ÁREA LIBERADA`.
+- **Disparador:** reporte de Milton — "el sistema no trae las categorías de un
+  usuario nuevo, Estee Soto". La investigación destapó tres problemas
+  encadenados y distintos, no uno solo.
+
+**Problema 1 — jobs de sincronización atascados para siempre.** Si el worker
+moría a mitad de un `CategorySyncJob` (confirmado en producción: P2024,
+"Timed out fetching a new connection from the connection pool", corrida
+31839053190), el job quedaba en `"running"` para siempre — nada lo recuperaba,
+y `/api/categories/sync` reutilizaba ese job muerto en cada clic, bloqueando
+todos los reintentos futuros del usuario.
+- Recuperación automática de jobs atascados (`recoverStuckSyncJobs` en
+  `apps/worker/src/cleanup.ts`, corre al inicio de cada corrida).
+- `runLane()` en `apps/worker/src/run-once.ts` unifica los cinco lanes y
+  captura errores por vuelta: un timeout de pool ya no tumba el shard entero.
+- Las rutas de sync (`categories/sync`, `languages/sync`) descartan un job
+  activo de más de 10 min y encolan uno nuevo al instante, sin esperar al
+  worker (`apps/web/src/lib/sync-jobs.ts`).
+- El wizard (`OnboardingWizard.tsx`) dejó de rendirse a los 50 segundos:
+  ahora sondea cada 3 s mientras el job siga vivo, igual que la pantalla de
+  Configuración (que sí funcionaba) — pedido explícito de Milton: "usa el
+  mismo algoritmo que del otro lado". Se encontró y corrigió un segundo bug
+  del mismo tipo: el botón "Volver a sincronizar" (cuando ya hay categorías)
+  no estaba conectado a esa misma espera y parpadeaba "Sincronizando..." un
+  segundo sin dar señal real de progreso.
+
+**Problema 2 — un tercer servidor que el sistema no sabía representar.** La
+cuenta real de Estee Soto vive en `tagcrush.net` (marca blanca de la misma
+plataforma, verificado en vivo: mismo software, mismo login "Using your
+Email + Password"), no en `10minuteswebsite.net`/`.site`. El sistema solo
+conocía esos dos, clavados en un ternario.
+- Registro único `PLATFORM_SERVERS` en
+  `packages/shared/src/platform-servers.ts`: agregar un servidor nuevo es
+  ahora una línea, no una cacería por el código.
+- El worker **detecta solo** en qué servidor vive la cuenta al sincronizar
+  (prueba el configurado primero, después los demás) y lo guarda —
+  reemplaza la necesidad de que un administrador lo adivine a mano.
+- Selector de servidor en Administración → Usuarios (creación y edición)
+  ahora lee de ese registro, ya no está clavado a `net`/`site`.
+- **Pendiente explícito, guardado para más adelante por pedido de Milton:**
+  ocultar toda mención a "10minutesWebsite" para cuentas de tagcrush (marca
+  blanca real); y reemplazar la pregunta de país por continente/servidor en
+  el alta de cuentas (el país solo determinaba Europa→`.site` vs resto→`.net`,
+  quedó como pregunta innecesaria). Ver `TO-DO.md`/memoria de Claude si se
+  retoma — Milton fue explícito: no ejecutar sin que lo pida de nuevo.
+
+**Problema 3 — categorías que se acumulan y se mezclan para siempre.**
+`processNextCategorySync` solo hacía `upsert`, nunca borraba: cualquier
+categoría guardada alguna vez (credenciales corregidas después, servidor
+equivocado, intento fallido) quedaba mezclada con las reales sin forma de
+distinguirlas — reportado por Milton con Estee Soto y también con Antonio
+Aguirre (cuenta con panel English/Español).
+- `Category.source` (`"sync"` / `"manual"`): cada sincronización exitosa
+  reemplaza el conjunto `"sync"` completo, deja intactas las agregadas a
+  mano.
+- Se descubrió en el camino que **tagcrush ofrece, tras un solo login, un
+  selector de "paneles"** (recuadros English/Español, la URL NO cambia al
+  elegir uno — el servidor lo guarda en la sesión). `Category.panel` (string,
+  `""` = sin esta función) + `fetchCategories()`/`publishArticle()` ya
+  recorren y seleccionan panel explícitamente. Es la explicación más probable
+  de por qué Antonio Aguirre también veía categorías ajenas: sin esto, todo
+  operaba sobre "el panel que haya quedado activo" sin que nadie lo supiera.
+- Oportunidades SEO ahora pregunta para cuál panel generar (selector visible
+  solo si la cuenta tiene más de uno) y ya no borra las oportunidades de un
+  panel al regenerar las del otro.
+
+**Nota de diseño (Prisma):** `panel` es `String @default("")`, NO nullable —
+Prisma no admite `null` de forma confiable dentro de una `@@unique` compuesta.
+Se descubrió al implementar; documentado en el propio schema.
+
+- **Commits (orden real):** `9bb8d4e`, `b77569a`, `8fa93d8`, `2e04f0f`,
+  `7ec94aa` (revert de un WIP ajeno absorbido por accidente — ver más abajo),
+  `e1d2994`, `06a4f59`, `77c1f9b`, `75c3ab6`, `c48eca0`, `5e18221`, `c2955f8`,
+  `7c64b24`, `54b29bf`.
+- **Migraciones aplicadas en producción vía `migrate.yml`:** `Category.source`
+  y `Category.panel` (esta última requirió `--accept-data-loss` explícito —
+  falsa alarma razonada y confirmada: la constraint vieja ya garantizaba cero
+  duplicados; se agregó como input opt-in del workflow, no como default).
+- **Verificaciones:** `tsc --noEmit` limpio en cada paso, `npm run build`
+  completo sin errores antes de cada push, smoke test HTTP de producción
+  (200/401/307 esperados) después de cada deploy, prueba de equivalencia de
+  comportamiento (`platformBaseUrl` vs. el ternario viejo, 7/8 casos
+  idénticos, el único que cambia es el valor nuevo "tagcrush" que antes no
+  existía).
+- **Incidente propio durante la sesión — absorción accidental de un WIP
+  ajeno:** `apps/worker/src/automation/10minutesWebsite.ts` tenía cambios de
+  Milton sin commitear desde ANTES de esta sesión (arreglo del resumen vacío
+  al guardar, cuenta de Lorena Álvarez). Se mezcló sin querer en un commit;
+  Milton pidió explícitamente desplegar solo lo propio de la sesión. Se
+  revirtió (`7ec94aa`) y se restauró el WIP intacto en el árbol de trabajo,
+  sin commitear. **Ese WIP sigue sin commit al cerrar esta entrada** — no es
+  de Claude, no tocar sin que Milton lo pida.
+- **Pendiente de verificación en vivo:** Estee Soto probó sincronizar después
+  del deploy de detección de paneles (commit `c2955f8`) y reportó "no trajo
+  las categorías"; el botón ya refleja correctamente la espera (confirmado
+  por Milton: "dice Sincronizando, puede tardar unos minutos"), pero como el
+  job real se resuelve dentro de la ventana de 15-25 min del worker sin que
+  el job de GitHub Actions termine antes, no fue posible leer el log real
+  todavía sin cancelar una corrida en curso (riesgo de cortar publicaciones
+  de otros usuarios reales) — queda pendiente confirmar con el próximo log
+  completo si el problema es un cuarto servidor no contemplado, credenciales,
+  o algo del panel específico de su cuenta.
+- **Estado del área:** LIBERADA. `apps/worker/**`,
+  `packages/db/prisma/schema.prisma` y `.github/workflows/migrate.yml`
+  quedan libres para el siguiente agente — salvo el WIP ajeno ya señalado.
+
 ## Zona compartida: requiere coordinación explícita
 
 Estos archivos pueden ser necesarios para ambos y nadie debe asumir control
