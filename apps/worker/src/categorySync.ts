@@ -182,6 +182,28 @@ export async function processNextCategorySync(): Promise<boolean> {
         ),
       ],
     );
+
+    // Limpieza de transición: si ESTE sync sí detectó paneles, cualquier
+    // categoría "sync" vieja marcada panel="" es basura de un intento
+    // anterior de ANTES de que la detección de paneles funcionara para esta
+    // cuenta (bug real de producción, 15/8/2026 — visto con Antonio Aguirre:
+    // categorías sin etiqueta mezcladas con las recién sincronizadas). La
+    // reconciliación de arriba nunca la toca porque solo limpia DENTRO de
+    // cada panel detectado, nunca cruza a "sin panel". Una cuenta con
+    // paneles no debería tener nunca categorías "sync" sin panel.
+    if (byPanel.size > 0 && !byPanel.has("")) {
+      operations.push(
+        prisma.category.deleteMany({
+          where: {
+            userId: job.userId,
+            platform: "10minutesWebsite",
+            source: "sync",
+            panel: "",
+          },
+        }),
+      );
+    }
+
     await prisma.$transaction(operations);
 
     await prisma.categorySyncJob.update({
