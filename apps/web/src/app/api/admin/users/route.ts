@@ -4,14 +4,11 @@ import { prisma } from "@auto-articulos/db";
 import {
   decryptSecret,
   encryptSecret,
+  DEFAULT_PLATFORM_DOMAIN,
   isPlatformDomain,
   PLATFORM_DOMAIN_VALUES,
 } from "@auto-articulos/shared";
 import { auditLog } from "@/lib/audit";
-import {
-  normalizeCountryCode,
-  platformDomainForCountry,
-} from "@/lib/countries";
 import { getCurrentUserId, requireAdmin } from "@/lib/current-user";
 import { parseUserDisabledModules } from "@/lib/modules";
 
@@ -476,19 +473,12 @@ export async function POST(request: NextRequest) {
     dailyArticleLimit = 20,
     maxTitlesPerBatch = 20,
     platformDomain: requestedPlatformDomain,
-    country,
   } = await request.json();
 
-  // País obligatorio en toda cuenta nueva (pedido de Milton, 14/8/2026): de él
-  // sale el servidor por defecto — Europa `.site`, resto del mundo `.net`.
-  const normalizedCountry = normalizeCountryCode(country);
-  if (!normalizedCountry) {
-    return NextResponse.json(
-      { error: "Selecciona el país del usuario" },
-      { status: 400 },
-    );
-  }
-
+  // Servidor de la cuenta nueva. Antes era obligatorio pasar por "país" para
+  // derivarlo (Europa -> .site, resto del mundo -> .net); pedido de Milton
+  // (15/8/2026): el país nunca importó por sí mismo, era un paso intermedio
+  // innecesario. Administración elige el servidor directamente ahora.
   if (
     requestedPlatformDomain !== undefined &&
     requestedPlatformDomain !== null &&
@@ -502,12 +492,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // El admin puede sobrescribir el servidor a mano; si no manda nada, se usa
-  // el que corresponde al país. Servidores que no dependen de la región (como
-  // tagcrush) solo llegan por esta vía explícita.
   const platformDomain = isPlatformDomain(requestedPlatformDomain)
     ? requestedPlatformDomain
-    : platformDomainForCountry(normalizedCountry);
+    : DEFAULT_PLATFORM_DOMAIN;
 
   const normalizedEmail = typeof email === "string" ? email.trim() : "";
   const normalizedFirstName =
@@ -611,7 +598,6 @@ export async function POST(request: NextRequest) {
       dailyArticleLimit,
       maxTitlesPerBatch,
       platformDomain,
-      country: normalizedCountry,
     },
     select: {
       id: true,

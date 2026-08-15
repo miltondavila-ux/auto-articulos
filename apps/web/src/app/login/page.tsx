@@ -2,7 +2,6 @@
 
 import { Suspense, useState, type CSSProperties, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { COUNTRIES } from "@/lib/countries";
 
 export default function LoginPage() {
   return (
@@ -30,10 +29,11 @@ function LoginContent() {
   const [lastName, setLastName] = useState("");
   const [trialEmail, setTrialEmail] = useState("");
   const [phone, setPhone] = useState("");
-  // País de la cuenta nueva (pedido de Milton, 14/8/2026): define solo el
-  // servidor de 10minutesWebsite — Europa `.site`, resto del mundo `.net` —
-  // y se decide en el servidor, no acá. Ver apps/web/src/lib/countries.ts.
-  const [country, setCountry] = useState("");
+  // Región de la cuenta nueva (pedido de Milton, 15/8/2026: preguntar
+  // directamente por la región en vez de un selector de ~50 países — lo
+  // único que el país determinaba era el servidor: Europa -> .site, resto
+  // del mundo -> .net). Decide solo el servidor, no acá.
+  const [region, setRegion] = useState<"" | "europe" | "other">("");
   const [trialPassword, setTrialPassword] = useState("");
   const [trialError, setTrialError] = useState<string | null>(null);
   const [trialLoading, setTrialLoading] = useState(false);
@@ -74,7 +74,7 @@ function LoginContent() {
           lastName,
           email: trialEmail,
           phone,
-          country,
+          region,
           password: trialPassword,
         }),
       });
@@ -335,28 +335,25 @@ function LoginContent() {
               style={inputStyle}
             />
             <select
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
+              value={region}
+              onChange={(e) => setRegion(e.target.value as "europe" | "other")}
               required
               style={{
                 ...inputStyle,
-                color: country ? "#1d1d1f" : "#86868b",
+                color: region ? "#1d1d1f" : "#86868b",
                 appearance: "none",
                 cursor: "pointer",
               }}
             >
               <option value="" disabled>
-                ¿Desde qué país usarás la plataforma?
+                ¿Desde qué región usarás la plataforma?
               </option>
-              {COUNTRIES.map((option) => (
-                <option
-                  key={option.code}
-                  value={option.code}
-                  style={{ color: "#1d1d1f" }}
-                >
-                  {option.name}
-                </option>
-              ))}
+              <option value="europe" style={{ color: "#1d1d1f" }}>
+                Europa
+              </option>
+              <option value="other" style={{ color: "#1d1d1f" }}>
+                Resto del mundo
+              </option>
             </select>
             <input
               type="password"

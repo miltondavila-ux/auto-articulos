@@ -20,7 +20,6 @@ import {
   statusLabel,
 } from "@/components/dashboard-ui";
 import type { RunStatus, TitleStatus } from "@/types/dashboard";
-import { COUNTRIES, platformDomainForCountry } from "@/lib/countries";
 import {
   normalizePlatformDomain,
   PLATFORM_DOMAIN_VALUES,
@@ -229,13 +228,15 @@ export default function UsuariosPage() {
   const [monthlyArticleLimit, setMonthlyArticleLimit] = useState("300");
   const [dailyArticleLimit, setDailyArticleLimit] = useState("95");
   const [maxTitlesPerBatch, setMaxTitlesPerBatch] = useState("20");
+  // Servidor de la cuenta nueva. Antes se pedía el país y de él se derivaba
+  // el servidor (Europa -> .site, resto del mundo -> .net); pedido de
+  // Milton (15/8/2026): "no hemos debido preguntar por país sino por
+  // continente" — el país nunca importó por sí mismo. Como Administración ya
+  // elige el servidor directamente (incluye tagcrush, que no depende de
+  // geografía), el país era un paso intermedio innecesario. El servidor
+  // vuelve a validarse en POST /api/admin/users.
   const [platformDomain, setPlatformDomain] =
     useState<PlatformDomain>("net");
-  // País de la cuenta nueva (pedido de Milton, 14/8/2026). Al elegirlo se
-  // auto-selecciona el servidor: Europa `.site`, resto del mundo `.net`. El
-  // selector de servidor queda visible y editable por si hay que corregirlo a
-  // mano; el servidor vuelve a validarlo en POST /api/admin/users.
-  const [country, setCountry] = useState("");
   const [creating, setCreating] = useState(false);
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [loadingUsage, setLoadingUsage] = useState(false);
@@ -436,7 +437,6 @@ export default function UsuariosPage() {
           dailyArticleLimit: Number(dailyArticleLimit),
           maxTitlesPerBatch: Number(maxTitlesPerBatch),
           platformDomain,
-          country,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -457,7 +457,6 @@ export default function UsuariosPage() {
       setDailyArticleLimit("95");
       setMaxTitlesPerBatch("20");
       setPlatformDomain("net");
-      setCountry("");
       setBanner({ type: "info", text: `Usuario ${data.user.email} creado.` });
       loadUsers();
     } finally {
@@ -860,29 +859,6 @@ export default function UsuariosPage() {
               />
             </label>
             <label style={createFieldStyle}>
-              País del usuario
-              <select
-                value={country}
-                required
-                onChange={(e) => {
-                  const selected = e.target.value;
-                  setCountry(selected);
-                  // Europa -> .site; resto del mundo -> .net.
-                  setPlatformDomain(platformDomainForCountry(selected));
-                }}
-                style={inputStyle}
-              >
-                <option value="" disabled>
-                  Selecciona un país
-                </option>
-                {COUNTRIES.map((option) => (
-                  <option key={option.code} value={option.code}>
-                    {option.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label style={createFieldStyle}>
               Servidor de la plataforma
               <select
                 value={platformDomain}
@@ -898,11 +874,10 @@ export default function UsuariosPage() {
                 ))}
               </select>
               <span style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>
-                Se selecciona solo según el país: Europa usa
-                10minuteswebsite.site y el resto del mundo,
-                10minuteswebsite.net. Cámbialo a mano si esta cuenta vive en
-                otro servidor — por ejemplo tagcrush.net, que no depende del
-                país. Si te equivocas acá, el robot no podrá iniciar sesión.
+                Europa usa 10minuteswebsite.site, el resto del mundo
+                10minuteswebsite.net, y tagcrush.net es aparte (no depende de
+                geografía). Si te equivocas acá, el robot no podrá iniciar
+                sesión con esta cuenta.
               </span>
             </label>
             <button
