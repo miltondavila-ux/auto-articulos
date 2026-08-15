@@ -22,8 +22,8 @@ export default function PrivacyPage() {
         Guardamos los datos necesarios para operar la cuenta: correo de acceso,
         nombre, configuración, títulos, estado y URL de los artículos, además
         del historial técnico imprescindible para diagnosticar publicaciones.
-        Las credenciales de 10minutesWebsite y los tokens de autorización de
-        servicios externos se guardan cifrados.
+        Las credenciales de tu plataforma de gestión de sitios web y los
+        tokens de autorización de servicios externos se guardan cifrados.
       </p>
 
       <h2 style={publicHeadingStyle}>Datos de Google</h2>

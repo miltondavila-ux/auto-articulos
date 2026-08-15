@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Auto Artículos",
     short_name: "Auto Artículos",
     description:
-      "Crea artículos en secuencia. Herramienta exclusiva para el programa de posicionamiento de 10minutesWebsite.",
+      "Crea artículos en secuencia. Herramienta de posicionamiento web para creación de contenido en secuencia.",
     start_url: "/",
     display: "standalone",
     background_color: "#031537",

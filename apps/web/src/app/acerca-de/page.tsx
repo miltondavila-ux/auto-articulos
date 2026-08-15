@@ -16,13 +16,14 @@ export default function AboutPage() {
     <PublicInfoPage
       eyebrow="Información oficial"
       title="Auto Artículos"
-      intro="Una herramienta privada para crear y administrar secuencias de artículos dentro del programa de posicionamiento de 10minutesWebsite."
+      intro="Una herramienta privada para crear y administrar secuencias de artículos dentro de programas de posicionamiento web."
     >
       <h2 style={publicHeadingStyle}>Qué hace la aplicación</h2>
       <p>
         Auto Artículos ayuda a sus usuarios autorizados a preparar lotes de
         títulos, generar contenido y publicar artículos en sus propias cuentas
-        de 10minutesWebsite. Cada cuenta y su historial permanecen separados.
+        de su plataforma de gestión de sitios web. Cada cuenta y su historial
+        permanecen separados.
       </p>
 
       <h2 style={publicHeadingStyle}>Integración con Google Search Console</h2>

@@ -28,10 +28,11 @@ export default function TermsPage() {
 
       <h2 style={publicHeadingStyle}>Cuentas y sitios conectados</h2>
       <p>
-        Solo puedes conectar cuentas de 10minutesWebsite, Google Search Console
-        o Bing Webmaster que te pertenezcan o para las cuales tengas
-        autorización suficiente. Debes conservar la propiedad verificada de los
-        sitios y respetar las políticas de cada plataforma y buscador.
+        Solo puedes conectar cuentas de tu plataforma de gestión de sitios web,
+        Google Search Console o Bing Webmaster que te pertenezcan o para las
+        cuales tengas autorización suficiente. Debes conservar la propiedad
+        verificada de los sitios y respetar las políticas de cada plataforma y
+        buscador.
       </p>
 
       <h2 style={publicHeadingStyle}>Publicación e indexación</h2>

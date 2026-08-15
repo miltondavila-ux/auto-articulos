@@ -174,8 +174,8 @@ function LoginContent() {
               lineHeight: 1.5,
             }}
           >
-            Herramienta exclusiva para el programa de posicionamiento de
-            10minutesWebsite.
+            Herramienta de posicionamiento web para creación de contenido en
+            secuencia.
           </p>
         </div>
 
