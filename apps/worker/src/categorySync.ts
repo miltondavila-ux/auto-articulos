@@ -136,36 +136,53 @@ export async function processNextCategorySync(): Promise<boolean> {
     // Se reemplaza el conjunto "sync" completo en una transacción (todo o
     // nada: si algo falla, no queda a medio borrar) y se dejan intactas las
     // "manual", que la persona escribió a mano y no vienen del sitio.
-    await prisma.$transaction([
-      prisma.category.deleteMany({
-        where: {
-          userId: job.userId,
-          platform: "10minutesWebsite",
-          source: "sync",
-          externalId: { notIn: remoteCategories.map((c) => c.externalId) },
-        },
-      }),
-      ...remoteCategories.map((cat) =>
-        prisma.category.upsert({
+    // Agrupadas por panel (null = cuenta sin la función de paneles, ver
+    // Category.panel): la reconciliación borra solo lo viejo DEL MISMO panel,
+    // nunca cruza paneles entre sí — si no, sincronizar "English" borraría
+    // las categorías de "Español" que ese mismo intento ni siquiera tocó.
+    const byPanel = new Map<string, RemoteCategory[]>();
+    for (const cat of remoteCategories) {
+      const list = byPanel.get(cat.panel) ?? [];
+      list.push(cat);
+      byPanel.set(cat.panel, list);
+    }
+
+    const operations = Array.from(byPanel.entries()).flatMap(
+      ([panel, cats]) => [
+        prisma.category.deleteMany({
           where: {
-            userId_platform_externalId: {
-              userId: job.userId,
-              platform: "10minutesWebsite",
-              externalId: cat.externalId,
-            },
-          },
-          create: {
             userId: job.userId,
             platform: "10minutesWebsite",
-            externalId: cat.externalId,
-            name: cat.name,
-            isSequence: cat.isSequence,
             source: "sync",
+            panel,
+            externalId: { notIn: cats.map((c) => c.externalId) },
           },
-          update: { name: cat.name, isSequence: cat.isSequence, source: "sync" },
         }),
-      ),
-    ]);
+        ...cats.map((cat) =>
+          prisma.category.upsert({
+            where: {
+              userId_platform_panel_externalId: {
+                userId: job.userId,
+                platform: "10minutesWebsite",
+                panel,
+                externalId: cat.externalId,
+              },
+            },
+            create: {
+              userId: job.userId,
+              platform: "10minutesWebsite",
+              panel,
+              externalId: cat.externalId,
+              name: cat.name,
+              isSequence: cat.isSequence,
+              source: "sync",
+            },
+            update: { name: cat.name, isSequence: cat.isSequence, source: "sync" },
+          }),
+        ),
+      ],
+    );
+    await prisma.$transaction(operations);
 
     await prisma.categorySyncJob.update({
       where: { id: job.id },

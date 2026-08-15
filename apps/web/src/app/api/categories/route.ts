@@ -34,9 +34,12 @@ export async function POST(request: import("next/server").NextRequest) {
 
   const category = await prisma.category.upsert({
     where: {
-      userId_platform_externalId: {
+      userId_platform_panel_externalId: {
         userId,
         platform: "10minutesWebsite",
+        // Sin selector de panel en este formulario todavía: las manuales
+        // quedan en el panel "" (cuentas de un solo panel, el caso común).
+        panel: "",
         externalId: cleanId,
       },
     },

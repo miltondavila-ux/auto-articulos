@@ -229,6 +229,7 @@ async function processRunTitle(
       run.category.externalId,
       run.disableIndexing,
       onStep,
+      run.category.panel,
     );
 
     // Si no se pudo confirmar el enlace real, no lo reportamos como éxito:

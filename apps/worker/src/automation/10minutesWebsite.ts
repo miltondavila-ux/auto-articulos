@@ -47,6 +47,43 @@ export interface RemoteCategory {
   externalId: string;
   name: string;
   isSequence: boolean;
+  // Nombre visible del panel ("English", "Español") si la cuenta usa el
+  // selector de start-main-control-panel.php; "" en cuentas sin esta función
+  // (la mayoría) — ver Category.panel en el schema.
+  panel: string;
+}
+
+/**
+ * Si la cuenta tiene la función de "paneles" activada (no todas la tienen,
+ * confirmado por Milton el 15/8/2026), después de iniciar sesión el sitio
+ * ofrece un selector — dos recuadros grandes con ícono de casa y texto
+ * ("English" / "Español") — antes de dejar entrar al panel de artículos. La
+ * URL NO cambia al elegir uno: el sitio guarda cuál está activo en la
+ * sesión del servidor, así que hay que volver a este selector para cada
+ * panel, uno por uno.
+ */
+const PANEL_CHOOSER_PATH = "/dashboard/start-main-control-panel.php";
+
+async function listPanelLabels(page: Page): Promise<string[]> {
+  if (!page.url().includes("start-main-control-panel")) return [];
+  return page.$$eval("a, button", (els) =>
+    els
+      .map((el) => (el.textContent ?? "").replace(/\s+/g, " ").trim())
+      .filter((t) => t.length > 0 && t.length < 40),
+  );
+}
+
+async function selectPanel(
+  page: Page,
+  baseUrl: string,
+  label: string,
+): Promise<void> {
+  await page.goto(`${baseUrl}${PANEL_CHOOSER_PATH}`, {
+    waitUntil: "domcontentloaded",
+    timeout: NAV_TIMEOUT_MS,
+  });
+  await page.getByText(label, { exact: true }).click();
+  await page.waitForLoadState("domcontentloaded");
 }
 
 export type OnStep = (message: string) => Promise<void>;
@@ -126,6 +163,11 @@ export async function publishArticle(
   categoryExternalId: string,
   disableIndexing: boolean,
   onStep: OnStep,
+  // Panel de origen de la categoría (ver Category.panel) en cuentas con esa
+  // función. Como el sitio guarda cuál panel está activo en la sesión, no en
+  // la URL, hay que volver a elegirlo explícitamente en CADA publicación —
+  // nunca se puede asumir que el panel activo es el correcto.
+  categoryPanel: string = "",
 ): Promise<PublishResult> {
   const baseUrl = resolveBaseUrl(credentials.platformDomain);
   const browser = await chromium.launch({ headless: true });
@@ -133,6 +175,10 @@ export async function publishArticle(
     const page = await browser.newPage();
 
     await login(page, baseUrl, credentials, onStep);
+    if (categoryPanel) {
+      await selectPanel(page, baseUrl, categoryPanel);
+      await onStep(`Panel "${categoryPanel}" seleccionado.`);
+    }
 
     const { summary, contentHtml, finalTitle } = await createArticleDraft(
       page,
@@ -160,6 +206,32 @@ export async function publishArticle(
  * para que el dashboard de Auto Artículos las ofrezca en un selector antes de
  * pegar títulos. Son específicas de cada cuenta de 10minutesWebsite.
  */
+async function readCategoriesFromCurrentPanel(
+  page: Page,
+): Promise<Omit<RemoteCategory, "panel">[]> {
+  // `data-content` trae el HTML que usa el widget visual del sitio para
+  // mostrar un ícono junto al nombre (ej. "<i class='fa-solid ...'></i>
+  // Finanza"). Se limpia con el propio parser HTML del navegador
+  // (más confiable que un regex) para quedarnos solo con el texto real.
+  // `data-sequence` ("0"/"1", verificado en vivo el 5/8/2026) distingue
+  // categorías regulares de categorías "de secuencia" del sitio.
+  return page.$$eval("#user_label_list_article option", (options) =>
+    options
+      .map((o) => {
+        const opt = o as HTMLOptionElement;
+        const tmp = document.createElement("div");
+        tmp.innerHTML = opt.dataset.content ?? "";
+        const name = (tmp.textContent ?? "").replace(/\s+/g, " ").trim();
+        return {
+          externalId: opt.value,
+          name,
+          isSequence: opt.dataset.sequence === "1",
+        };
+      })
+      .filter((c) => c.externalId && c.name),
+  );
+}
+
 export async function fetchCategories(
   credentials: TenMinutesWebsiteCredentials,
 ): Promise<RemoteCategory[]> {
@@ -174,27 +246,23 @@ export async function fetchCategories(
       timeout: NAV_TIMEOUT_MS,
     });
 
-    // `data-content` trae el HTML que usa el widget visual del sitio para
-    // mostrar un ícono junto al nombre (ej. "<i class='fa-solid ...'></i>
-    // Finanza"). Se limpia con el propio parser HTML del navegador
-    // (más confiable que un regex) para quedarnos solo con el texto real.
-    // `data-sequence` ("0"/"1", verificado en vivo el 5/8/2026) distingue
-    // categorías regulares de categorías "de secuencia" del sitio.
-    return await page.$$eval("#user_label_list_article option", (options) =>
-      options
-        .map((o) => {
-          const opt = o as HTMLOptionElement;
-          const tmp = document.createElement("div");
-          tmp.innerHTML = opt.dataset.content ?? "";
-          const name = (tmp.textContent ?? "").replace(/\s+/g, " ").trim();
-          return {
-            externalId: opt.value,
-            name,
-            isSequence: opt.dataset.sequence === "1",
-          };
-        })
-        .filter((c) => c.externalId && c.name),
-    );
+    const panels = await listPanelLabels(page);
+    if (panels.length === 0) {
+      const cats = await readCategoriesFromCurrentPanel(page);
+      return cats.map((c) => ({ ...c, panel: "" }));
+    }
+
+    const result: RemoteCategory[] = [];
+    for (const label of panels) {
+      await selectPanel(page, baseUrl, label);
+      await page.goto(`${baseUrl}/dashboard/direct-articles`, {
+        waitUntil: "domcontentloaded",
+        timeout: NAV_TIMEOUT_MS,
+      });
+      const cats = await readCategoriesFromCurrentPanel(page);
+      result.push(...cats.map((c) => ({ ...c, panel: label })));
+    }
+    return result;
   } finally {
     await browser.close();
   }
@@ -1600,6 +1668,7 @@ async function saveAndGetUrl(
         .join(" | ");
     })
     .catch(() => "");
+
   await onStep(
     `Diagnóstico de guardado: sigue en el formulario=${stillOnForm}, botón deshabilitado=${buttonDisabled}, mensajes visibles="${alertText}"`,
   );

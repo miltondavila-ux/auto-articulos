@@ -55,6 +55,9 @@ export interface CategoryRow {
   name: string;
   externalId: string;
   isSequence: boolean;
+  // Panel de origen ("English", "Español") en cuentas con esa función; ""
+  // en el resto — ver Category.panel en el schema.
+  panel: string;
 }
 
 export interface LanguageRow {

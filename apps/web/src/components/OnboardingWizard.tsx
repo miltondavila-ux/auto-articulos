@@ -780,6 +780,7 @@ export default function OnboardingWizard({
                         }}
                       >
                         🏷️ {cat.name}
+                        {cat.panel ? ` (${cat.panel})` : ""}
                       </span>
                     ))}
                   </div>

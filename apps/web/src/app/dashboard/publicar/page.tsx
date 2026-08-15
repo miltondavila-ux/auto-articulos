@@ -253,6 +253,7 @@ export default function PublicarPage() {
             {visibleCategories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
+                {c.panel ? ` (${c.panel})` : ""}
               </option>
             ))}
           </select>
