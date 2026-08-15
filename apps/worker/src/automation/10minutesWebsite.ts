@@ -1773,7 +1773,15 @@ async function findArticleByTitle(
     ).jQuery;
     jq?.("table").DataTable().search(searchText).draw();
   }, title);
-  await page.waitForTimeout(800);
+
+  // Confirmado en vivo (15/8/2026, cuenta de Lorena Álvarez): el guardado
+  // funciona y el artículo SÍ existe en la tabla (con el link real de
+  // `a.consultar` correcto) mientras nuestra propia búsqueda seguía
+  // reportando "no aparece". Esta tabla hace búsqueda por servidor
+  // (DataTables server-side processing, no filtrado en el navegador), así
+  // que `.search().draw()` dispara una llamada AJAX real; 800ms no siempre
+  // alcanza para que vuelva antes de leer las filas. Se sube a 2000ms.
+  await page.waitForTimeout(2000);
 
   const row = await getNewestRow(page);
   return row?.href ?? null;
