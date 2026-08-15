@@ -2694,6 +2694,64 @@ mientras el worker corría en paralelo, y comparando los números exactos
 worker reportaba. La coincidencia exacta de números fue la prueba, no una
 suposición.
 
+#### Cierre final de la sesión (15/8/2026, noche)
+
+**Caso de Estee Soto: CONFIRMADO RESUELTO.** Confirmación visual directa de
+Milton tras varios intentos reales: "sí se ven en Inglés y Español". La
+causa raíz completa terminó siendo la estructura real del sitio —
+`<a class="redirect-page-lang">` envolviendo un `<form method="post">` con
+token dinámico — que Milton compartió como código fuente real de la cuenta
+(`codigo fuente estee.html`) después de que tres intentos de adivinar la
+estructura (heurístico de texto corto, heurístico de ícono) fallaran cada
+uno de forma distinta. Lección para el próximo agente que toque
+`selectPanel()`/`listPanelLabels()` en `automation/10minutesWebsite.ts`: si
+hace falta cambiar cómo se detecta o selecciona un panel, **pedir el código
+fuente real de una cuenta con el problema antes de tocar el selector** —
+adivinar contra un sitio en producción cuesta horas por intento fallido.
+
+**Caso de Antonio Aguirre: RESUELTO**, con dos hallazgos adicionales del
+mismo bug general (mismos síntomas que Estee, aunque su cuenta es `.net`
+normal, no tagcrush):
+1. Credenciales guardadas estaban mal — Milton las corrigió a mano en
+   Configuración, sin relación con el código.
+2. Una vez sincronizando bien, categorías con y sin etiqueta de panel
+   mezcladas en la misma lista — categorías "sync" residuales de ANTES de
+   que la detección de paneles funcionara para su cuenta, que la
+   reconciliación por panel nunca tocaba a propósito (no cruza paneles).
+   Arreglado en `1887250`: si un sync detecta paneles, limpia también
+   cualquier categoría "sync" vieja marcada panel="".
+
+**Objetivo 1 (marca blanca de tagcrush): HECHO**, alcance acotado a la
+interfaz de la aplicación — ver commit `d703bd8`. Términos, Privacidad,
+"Acerca de" y login público quedaron fuera a propósito (contienen el correo
+real `10minuteswebsite@gmail.com` y lenguaje tipo legal; reescribirlos sin
+que Milton confirme el texto es un riesgo real, no una decisión técnica).
+
+**Commits de este tramo final:** `dbc4d25` (envío directo del formulario
+real, arregla el caso de Estee), `286b86e` (etiqueta de panel faltaba en
+Configuración), `1887250` (limpieza de categorías "sin panel" residuales),
+`d703bd8` (marca blanca).
+
+**Pendientes reales que quedan, ninguno bloqueante, todos explícitamente
+pospuestos por Milton — no ejecutar sin que lo pida de nuevo:**
+1. Objetivo 3: que Oportunidades pregunte para cuál panel generar — YA
+   IMPLEMENTADO en realidad (commit `7c64b24`, selector visible solo si la
+   cuenta tiene más de un panel). Verificar con Milton si esto cierra el
+   pedido o si esperaba algo más al decir "mucho más oscuro".
+2. Objetivo 2 original (pausado por falta de info, puede que ya no
+   aplique): ver categorías de English y Español desde un solo login — el
+   soporte de paneles de hoy ya lo resuelve de fondo (una sola cuenta
+   Auto Artículos, ambos paneles sincronizados y visibles). Confirmar con
+   Milton si sigue pendiente algo específico ahí.
+3. Continente en vez de país al crear cuentas — ver
+   [[pendiente-preguntar-continente-no-pais]] en la memoria de Claude.
+   Mismo cuidado que toda esta sesión: migración aplicada y confirmada
+   primero, código después, nunca junto (son los mismos formularios del
+   incidente de `User.country`).
+4. Marca blanca de tagcrush en Términos/Privacidad/Acerca de/login público
+   — pendiente de que Milton confirme el texto real (no hay un URL/correo
+   de soporte de tagcrush conocido para completarlo sin adivinar).
+
 - **Estado del área:** LIBERADA. `apps/worker/**`,
   `packages/db/prisma/schema.prisma` y `.github/workflows/migrate.yml`
   quedan libres para el siguiente agente — salvo el WIP ajeno ya señalado.
