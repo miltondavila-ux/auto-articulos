@@ -343,6 +343,16 @@ model Category {
   // mayoría de las categorías vienen del sitio, y así el próximo sync ya
   // limpia la basura acumulada en vez de perpetuarla.
   source     String   @default("sync")
+  // Algunas cuentas (ej. tagcrush, tras un solo login) ofrecen varios
+  // "paneles" — sitios distintos con sus propias categorías, elegidos por un
+  // selector que NO cambia la URL (el servidor lo guarda en la sesión, visto
+  // en vivo el 15/8/2026, cuenta de Estee Soto: paneles "English"/"Español").
+  // Se guarda el nombre visible del panel tal cual lo muestra el sitio; ""
+  // = cuenta sin esta función (la enorme mayoría, comportamiento sin
+  // cambios). No es nullable a propósito: Prisma no admite `null` en una
+  // clave única compuesta (@@unique) de forma confiable, ni Postgres lo
+  // trata como "igual" entre filas — visto al implementar esto, 15/8/2026.
+  panel      String   @default("")
   updatedAt  DateTime @updatedAt
   createdAt  DateTime @default(now())
 
@@ -350,7 +360,7 @@ model Category {
   runs              Run[]
   opportunityGroups OpportunityGroup[]
 
-  @@unique([userId, platform, externalId])
+  @@unique([userId, platform, panel, externalId])
 }
 
 // Idiomas reales que ofrece el selector "Lucy habla diferentes idiomas..."
