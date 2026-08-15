@@ -1739,6 +1739,30 @@ async function findArticleByTitle(
   page: Page,
   title: string,
 ): Promise<string | null> {
+  // Bug real de producción (15/8/2026, cuenta de Lorena Álvarez): esta
+  // tabla se carga por AJAX del lado del servidor (DataTables server-side
+  // processing), así que justo después de `page.goto()` suele seguir
+  // mostrando "Loading..." en vez de filas reales. Llamar a `.search().draw()`
+  // en ese momento corre la búsqueda contra una tabla que todavía no
+  // terminó de cargar la primera vez — confirmado en vivo: 3 segundos
+  // después de entrar a la página, la primera fila seguía en "Loading..."
+  // y una búsqueda en ese estado devolvía "No se encontraron resultados"
+  // aunque el artículo sí existiera. Como cada vuelta del bucle de arriba
+  // hace un `page.goto()` nuevo, esta carrera se repetía en cada intento
+  // durante los 90s completos. Se espera a que la tabla termine de cargar
+  // de verdad antes de buscar.
+  await page
+    .waitForFunction(
+      () => {
+        const firstCell = document.querySelector("table tbody tr td");
+        const text = (firstCell?.textContent ?? "").trim();
+        return text.length > 0 && !/loading/i.test(text);
+      },
+      undefined,
+      { timeout: 15_000 },
+    )
+    .catch(() => {});
+
   await page.evaluate((searchText) => {
     const jq = (
       window as unknown as {
