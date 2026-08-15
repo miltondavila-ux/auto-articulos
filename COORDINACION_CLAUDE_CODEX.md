@@ -2901,6 +2901,37 @@ título, cuenta de Lorena):**
   completa) antes de seguir buscando otro campo.
 - **Estado del área:** LIBERADA.
 
+#### Causa raíz completa encontrada: #save_art nunca se re-habilitaba (15/8/2026, tarde-noche)
+
+- **Agente:** Claude.
+- El fix de `#titlees` (commit `0e34a6d`) y el diagnóstico de `errorList`
+  real (commit `45641bf`) eran correctos pero no eran la causa completa: un
+  intento real posterior a ambos (Intento 7, 4:13-4:16pm) seguía bloqueado
+  con "Este campo es obligatorio" y **ambos diagnósticos salieron vacíos**
+  — ni campos requeridos vacíos, ni errores en el validador de jQuery.
+- **Causa real, confirmada leyendo `user_buyer_seller_articles.js` directo
+  (archivo estático, sin necesidad de sesión):** el botón real de guardar,
+  `#save_art`, arranca deshabilitado y solo se re-habilita dentro de
+  `$('#type').on('change', ...)`, y únicamente si
+  `$('#form_buyer_seller_articles').valid()` es verdadero EN ESE INSTANTE.
+  El automatismo dispara ese `change` de `#type` una sola vez, al
+  principio del flujo, cuando el formulario todavía no tiene
+  contenido/resumen/título — así que el botón queda deshabilitado para
+  siempre sin importar que después se llenen todos los campos bien. Ningún
+  otro evento del sitio lo vuelve a habilitar.
+- **Arreglo (commit `0321e4e`):** en `saveAndGetUrl()`, justo antes de
+  hacer clic en "Guardar cambios", se dispara `change` en `#type` de nuevo
+  — ahora con el formulario ya completo — para que el sitio re-evalúe y
+  habilite el botón real.
+- **Verificaciones:** `tsc --noEmit` limpio en `apps/worker`.
+- **Push/deploy:** `main`; sin migración de base de datos.
+- **Sin confirmar todavía en producción:** hace falta un lote real después
+  de este deploy. Si algún título vuelve a fallar con "Este campo es
+  obligatorio", ahora los tres arreglos/diagnósticos (contenido, resumen,
+  título, errorList real, y este) ya están activos — sería evidencia de
+  una causa distinta a las cinco ya investigadas.
+- **Estado del área:** LIBERADA.
+
 ## Zona compartida: requiere coordinación explícita
 
 Estos archivos pueden ser necesarios para ambos y nadie debe asumir control
