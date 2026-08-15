@@ -261,9 +261,14 @@ export async function publishArticle(
     );
     await generateImage(page, finalTitle, summary, onStep);
     await fillFaqWidget(page, finalTitle, summary, contentHtml, onStep);
-    const articleUrl = await saveAndGetUrl(page, baseUrl, finalTitle, onStep);
+    const { url: articleUrl, titleUsed } = await saveAndGetUrl(
+      page,
+      baseUrl,
+      finalTitle,
+      onStep,
+    );
 
-    return { articleUrl, finalTitle, summary };
+    return { articleUrl, finalTitle: titleUsed, summary };
   } finally {
     await browser.close();
   }
@@ -1755,140 +1760,151 @@ async function saveAndGetUrl(
   baseUrl: string,
   expectedTitle: string,
   onStep: OnStep,
-): Promise<string | null> {
-  await onStep("Guardando y publicando el artículo...");
-
-  // Causa raíz real encontrada leyendo el JS del sitio (15/8/2026, cuenta de
+): Promise<{ url: string | null; titleUsed: string }> {
+  // Causa raíz encontrada leyendo el JS del sitio (15/8/2026, cuenta de
   // Lorena Álvarez): el botón real de guardar, #save_art, arranca
   // deshabilitado y SOLO se re-habilita dentro del handler de
   // `$('#type').on('change', ...)`, y únicamente si el formulario ya pasa
   // `$('#form_buyer_seller_articles').valid()` EN ESE INSTANTE. Nuestro
   // automatismo dispara ese `change` de #type una sola vez, al principio del
-  // flujo, cuando el formulario todavía no tiene contenido/resumen/título
-  // (por eso `valid()` da falso) — así que #save_art queda deshabilitado
-  // para siempre, sin importar que después sí se llenen todos los campos
-  // correctamente. No hay ningún otro evento en el sitio que lo vuelva a
-  // habilitar. Por eso el guardado bloqueaba con "Este campo es
-  // obligatorio" sin que el escaneo de campos vacíos NI el errorList real
-  // del validador mostraran nada: el formulario YA era válido, el botón
-  // simplemente nunca se había re-habilitado. Se dispara `change` en #type
-  // de nuevo, ahora que el formulario sí está completo, para que el sitio
-  // re-evalúe y habilite el botón real antes de intentar el click.
-  await page.dispatchEvent("#type", "change").catch(() => {});
-  await page.waitForTimeout(300);
-
-  const saveBtn = page.getByRole("button", { name: TEXT_GUARDAR_CAMBIOS }).first();
-  await saveBtn.click();
-  await page
-    .waitForLoadState("networkidle", { timeout: NAV_TIMEOUT_MS })
-    .catch(() => {});
-
-  const stillOnForm = await page
-    .getByRole("button", { name: TEXT_GUARDAR_CAMBIOS })
-    .first()
-    .isVisible()
-    .catch(() => false);
-  const buttonDisabled = await saveBtn.isDisabled().catch(() => null);
-  const alertText = await page
-    .evaluate(() => {
-      const candidates = Array.from(
-        document.querySelectorAll(
-          '[class*="alert" i], [class*="error" i], [class*="toast" i], [role="alert"]',
-        ),
-      ).filter((el) => (el as HTMLElement).offsetParent !== null);
-      return candidates
-        .map((el) => (el.textContent ?? "").trim())
-        .filter((t) => t.length > 0)
-        .slice(0, 5)
-        .join(" | ");
-    })
-    .catch(() => "");
-
-  // Si el guardado falla, el mensaje de alerta por sí solo no dice QUÉ campo
-  // quedó vacío (además puede venir mezclado con ruido de accesibilidad del
-  // editor, como su barra de herramientas). Si seguimos en el formulario,
-  // volcamos el largo real de los campos obligatorios conocidos para que el
-  // próximo log ya diga directamente cuál falló, en vez de tener que
-  // adivinarlo de nuevo (ver bug del resumen vacío, 14/8/2026).
+  // flujo, cuando el formulario todavía no tiene contenido/resumen/título —
+  // así que #save_art queda deshabilitado para siempre sin importar que
+  // después sí se llenen todos los campos. Se dispara `change` de nuevo,
+  // ahora con el formulario completo, para que el sitio re-evalúe y
+  // habilite el botón real.
   //
-  // Bug real de producción (15/8/2026, cuenta de Lorena Álvarez): la lista
-  // original de 3 IDs conocidos (#contentes, #excerptes, #excerpt) no
-  // cubría el campo real que estaba bloqueando el guardado — el diagnóstico
-  // mostraba esos 3 con contenido real y aun así "Este campo es
-  // obligatorio" seguía apareciendo, sin decir cuál. Se cambia a buscar
-  // CUALQUIER campo `required` visible y vacío en la página, en vez de una
-  // lista fija adivinada — así el próximo log dice el campo real sin
-  // importar cuál sea.
-  const requiredFieldsState = stillOnForm
-    ? await page
-        .evaluate(() => {
-          const els = Array.from(
-            document.querySelectorAll<
-              HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-            >("input[required], textarea[required], select[required], [aria-required='true']"),
-          );
-          return els
-            .filter((el) => (el as HTMLElement).offsetParent !== null)
-            .filter((el) => !el.value || el.value.trim().length === 0)
-            .map((el) => {
-              const label = el.id
-                ? `#${el.id}`
-                : el.getAttribute("name")
-                  ? `[name="${el.getAttribute("name")}"]`
-                  : el.tagName.toLowerCase();
-              return `${label} (vacío)`;
-            })
-            .join(", ");
-        })
-        .catch(() => "")
-    : "";
+  // Segunda causa, encontrada DESPUÉS de arreglar la anterior (15/8/2026,
+  // mismo caso): con el botón ya re-habilitado, el validador SÍ corre, y
+  // reveló el bloqueo real en varios intentos: `#titlees` tiene una regla
+  // `remote` contra el sitio que chequea título duplicado
+  // (`check_duplicate_title_article`) — Lorena venía reintentando la misma
+  // categoría con títulos casi idénticos generados por la IA, y alguno
+  // coincidía exacto con un artículo ya guardado. El mensaje real es "Ya
+  // existe un artículo con este título", NO "Este campo es obligatorio"
+  // (ese texto solo aparecía mezclado en el ruido de accesibilidad del
+  // editor). Si el validador señala justo esto, se le agrega una variación
+  // al título y se reintenta el guardado (sin regenerar contenido de nuevo)
+  // antes de darse por vencido.
+  let titleInUse = expectedTitle;
+  const MAX_SAVE_ATTEMPTS = 3;
 
-  // Fuente de verdad real, en vez de heurísticas adivinadas: el sitio usa
-  // jQuery Validate sobre #form_buyer_seller_articles (confirmado leyendo
-  // su JS real, 15/8/2026 — user_buyer_seller_articles.js). jQuery Validate
-  // guarda la instancia del validador en `$(form).data('validator')`, y su
-  // `errorList` trae el campo y mensaje EXACTOS que están fallando ahora
-  // mismo — cubre también reglas puramente de JavaScript sin atributo
-  // `required` en el HTML (como la validación `remote` de título duplicado
-  // contra `check_duplicate_title_article`, que el escaneo de campos
-  // `required` de arriba no puede ver).
-  const validatorErrors = stillOnForm
-    ? await page
-        .evaluate(() => {
-          const jq = (
-            window as unknown as {
-              jQuery?: (s: string) => {
-                data: (k: string) => {
-                  errorList?: { element: HTMLElement; message: string }[];
-                } | undefined;
-              };
-            }
-          ).jQuery;
-          const validator = jq?.("#form_buyer_seller_articles").data("validator");
-          if (!validator?.errorList) return "";
-          return validator.errorList
-            .map((e) => {
-              const el = e.element;
-              const label = el.id
-                ? `#${el.id}`
-                : el.getAttribute("name")
-                  ? `[name="${el.getAttribute("name")}"]`
-                  : el.tagName.toLowerCase();
-              return `${label}: ${e.message}`;
-            })
-            .join(" | ");
-        })
-        .catch(() => "")
-    : "";
+  for (let saveAttempt = 1; saveAttempt <= MAX_SAVE_ATTEMPTS; saveAttempt++) {
+    await onStep("Guardando y publicando el artículo...");
+    await page.dispatchEvent("#type", "change").catch(() => {});
+    await page.waitForTimeout(300);
+
+    const saveBtn = page.getByRole("button", { name: TEXT_GUARDAR_CAMBIOS }).first();
+    await saveBtn.click();
+    await page
+      .waitForLoadState("networkidle", { timeout: NAV_TIMEOUT_MS })
+      .catch(() => {});
+
+    const stillOnForm = await page
+      .getByRole("button", { name: TEXT_GUARDAR_CAMBIOS })
+      .first()
+      .isVisible()
+      .catch(() => false);
+    const buttonDisabled = await saveBtn.isDisabled().catch(() => null);
+    const alertText = await page
+      .evaluate(() => {
+        const candidates = Array.from(
+          document.querySelectorAll(
+            '[class*="alert" i], [class*="error" i], [class*="toast" i], [role="alert"]',
+          ),
+        ).filter((el) => (el as HTMLElement).offsetParent !== null);
+        return candidates
+          .map((el) => (el.textContent ?? "").trim())
+          .filter((t) => t.length > 0)
+          .slice(0, 5)
+          .join(" | ");
+      })
+      .catch(() => "");
+
+    const requiredFieldsState = stillOnForm
+      ? await page
+          .evaluate(() => {
+            const els = Array.from(
+              document.querySelectorAll<
+                HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+              >("input[required], textarea[required], select[required], [aria-required='true']"),
+            );
+            return els
+              .filter((el) => (el as HTMLElement).offsetParent !== null)
+              .filter((el) => !el.value || el.value.trim().length === 0)
+              .map((el) => {
+                const label = el.id
+                  ? `#${el.id}`
+                  : el.getAttribute("name")
+                    ? `[name="${el.getAttribute("name")}"]`
+                    : el.tagName.toLowerCase();
+                return `${label} (vacío)`;
+              })
+              .join(", ");
+          })
+          .catch(() => "")
+      : "";
+
+    // Fuente de verdad real, en vez de heurísticas adivinadas: el sitio usa
+    // jQuery Validate sobre #form_buyer_seller_articles. Su `errorList`
+    // trae el campo y mensaje EXACTOS que están fallando ahora mismo —
+    // cubre también reglas sin atributo `required` en el HTML, como la
+    // `remote` de título duplicado.
+    const validatorErrors = stillOnForm
+      ? await page
+          .evaluate(() => {
+            const jq = (
+              window as unknown as {
+                jQuery?: (s: string) => {
+                  data: (k: string) => {
+                    errorList?: { element: HTMLElement; message: string }[];
+                  } | undefined;
+                };
+              }
+            ).jQuery;
+            const validator = jq?.("#form_buyer_seller_articles").data("validator");
+            if (!validator?.errorList) return "";
+            return validator.errorList
+              .map((e) => {
+                const el = e.element;
+                const label = el.id
+                  ? `#${el.id}`
+                  : el.getAttribute("name")
+                    ? `[name="${el.getAttribute("name")}"]`
+                    : el.tagName.toLowerCase();
+                return `${label}: ${e.message}`;
+              })
+              .join(" | ");
+          })
+          .catch(() => "")
+      : "";
+
+    await onStep(
+      `Diagnóstico de guardado: sigue en el formulario=${stillOnForm}, botón deshabilitado=${buttonDisabled}, mensajes visibles="${alertText}"${
+        requiredFieldsState ? `, campos obligatorios: ${requiredFieldsState}` : ""
+      }${validatorErrors ? `, errores reales del validador: ${validatorErrors}` : ""}`,
+    );
+
+    if (!stillOnForm) break;
+
+    const isDuplicateTitle =
+      /titlees/i.test(validatorErrors) && /existe/i.test(validatorErrors);
+
+    if (isDuplicateTitle && saveAttempt < MAX_SAVE_ATTEMPTS) {
+      const mutatedTitle = `${expectedTitle} (${saveAttempt + 1})`.slice(0, 200);
+      const titleField = page.locator("#titlees");
+      await titleField.fill(mutatedTitle).catch(() => {});
+      titleInUse = mutatedTitle;
+      await onStep(
+        `El título "${expectedTitle}" ya existe en la cuenta. Reintentando guardar con "${mutatedTitle}".`,
+      );
+      continue;
+    }
+
+    break;
+  }
 
   await onStep(
-    `Diagnóstico de guardado: sigue en el formulario=${stillOnForm}, botón deshabilitado=${buttonDisabled}, mensajes visibles="${alertText}"${
-      requiredFieldsState ? `, campos obligatorios: ${requiredFieldsState}` : ""
-    }${validatorErrors ? `, errores reales del validador: ${validatorErrors}` : ""}`,
-  );
-
-  await onStep(
-    `Buscando el artículo publicado por su título: "${expectedTitle}"...`,
+    `Buscando el artículo publicado por su título: "${titleInUse}"...`,
   );
   const deadline = Date.now() + SAVE_VERIFICATION_TIMEOUT_MS;
   while (Date.now() < deadline) {
@@ -1897,8 +1913,8 @@ async function saveAndGetUrl(
         waitUntil: "domcontentloaded",
         timeout: NAV_TIMEOUT_MS,
       });
-      const href = await findArticleByTitle(page, expectedTitle);
-      if (href) return href;
+      const href = await findArticleByTitle(page, titleInUse);
+      if (href) return { url: href, titleUsed: titleInUse };
     } catch (err) {
       // Bug real de producción (15/8/2026, cuenta de Lorena Álvarez):
       // net::ERR_ABORTED en este goto no se atrapaba, así que un solo fallo
@@ -1915,7 +1931,7 @@ async function saveAndGetUrl(
     await page.waitForTimeout(1500);
   }
 
-  return null;
+  return { url: null, titleUsed: titleInUse };
 }
 
 
