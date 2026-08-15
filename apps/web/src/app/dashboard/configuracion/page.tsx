@@ -1320,6 +1320,7 @@ export default function ConfiguracionPage() {
                         }}
                       >
                         📂 {c.name}
+                        {c.panel ? ` (${c.panel})` : ""}
                       </span>
                     ))}
                 </div>
@@ -1361,6 +1362,7 @@ export default function ConfiguracionPage() {
                             }}
                           >
                             ⚡ {c.name}
+                            {c.panel ? ` (${c.panel})` : ""}
                           </span>
                         ))}
                     </div>
