@@ -16,6 +16,25 @@ async function main() {
   }
   console.log("User:", JSON.stringify(user, null, 2));
 
+  const activeTitles = await prisma.title.findMany({
+    where: { run: { userId: user.id }, status: { in: ["pending", "processing"] } },
+    select: {
+      id: true,
+      text: true,
+      status: true,
+      attempts: true,
+      runId: true,
+      run: { select: { status: true, createdAt: true } },
+    },
+  });
+  console.log("Títulos pending/processing AHORA:", JSON.stringify(activeTitles, null, 2));
+
+  const activeRuns = await prisma.run.findMany({
+    where: { userId: user.id, status: { in: ["pending", "running"] } },
+    select: { id: true, status: true, createdAt: true, finishedAt: true },
+  });
+  console.log("Runs pending/running AHORA:", JSON.stringify(activeRuns, null, 2));
+
   const runs = await prisma.run.findMany({
     where: { userId: user.id },
     orderBy: { createdAt: "desc" },
