@@ -2752,6 +2752,35 @@ pospuestos por Milton — no ejecutar sin que lo pida de nuevo:**
    — pendiente de que Milton confirme el texto real (no hay un URL/correo
    de soporte de tagcrush conocido para completarlo sin adivinar).
 
+#### Pendiente #3 resuelto también: país → región/servidor (15/8/2026, noche)
+
+Commit `686e374`. Pedido de Milton, textual: "no hemos debido preguntar por
+país sino por continente... Europa (.site) todo lo demás .NET y tagcrush es
+tagcrush." Antes de tocar nada se verificó (grep completo) que
+`User.country` no se lee en ningún otro punto del sistema — solo servía
+para derivar `platformDomain` en estas dos rutas. Por eso **no hizo falta
+ninguna migración**, a diferencia de todo lo demás en esta sesión: es
+puramente simplificar el formulario.
+
+- `/login` (registro público "Solicitar prueba"): el `<select>` de ~50
+  países se reemplazó por dos opciones directas — Europa / Resto del mundo
+  — que fijan `platformDomain` sin derivación intermedia.
+- Alta desde Administración (`/dashboard/usuarios`): ya tenía un selector de
+  servidor directo (con tagcrush) superpuesto sobre el país como paso
+  redundante; se quitó el país por completo, el servidor es ahora el único
+  campo.
+- `User.country` sigue en el esquema (nullable, no se tocó), simplemente ya
+  no se escribe desde estas dos rutas. `apps/web/src/lib/countries.ts` quedó
+  sin ninguna referencia en el código (verificado con grep) pero no se borró
+  — cero riesgo de dejarlo, cero beneficio funcional de borrarlo ahora
+  mismo; limpiarlo es un pedido aparte si se quiere.
+
+**Con esto, los cuatro objetivos que Milton fue pidiendo durante la sesión
+quedan: 1) categorías/paneles — resuelto y confirmado en vivo, 2) marca
+blanca de la interfaz — resuelto, 3) país→región — resuelto. Solo queda el
+punto 4 de la lista de arriba (legal/marketing de marca blanca), pospuesto
+a propósito por falta de información real de tagcrush, no por olvido.**
+
 - **Estado del área:** LIBERADA. `apps/worker/**`,
   `packages/db/prisma/schema.prisma` y `.github/workflows/migrate.yml`
   quedan libres para el siguiente agente — salvo el WIP ajeno ya señalado.
