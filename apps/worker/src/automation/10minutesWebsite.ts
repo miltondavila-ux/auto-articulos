@@ -84,11 +84,24 @@ async function listPanelLabels(page: Page, baseUrl: string): Promise<string[]> {
   // Cuentas sin esta función: el sitio redirige lejos de esta URL (a
   // direct-articles o donde sea su panel único). Nada que enumerar.
   if (!page.url().includes("start-main-control-panel")) return [];
-  return page.$$eval("a, button", (els) =>
+  // Bug real de producción (15/8/2026): tomar CUALQUIER <a>/<button> corto de
+  // la página capturaba texto ajeno a los paneles (enlaces de navegación,
+  // el selector de idioma "en/it/pt" de la pantalla de login, etc.), y
+  // después selectPanel() se quedaba 30s buscando un clic que no
+  // correspondía a nada real. Los dos recuadros de panel confirmados en
+  // capturas de pantalla reales tienen un ícono de casa dentro — se filtra
+  // por esa estructura en vez de aceptar cualquier texto corto.
+  const labels = await page.$$eval("a, button", (els) =>
     els
+      .filter((el) => el.querySelector("i, svg"))
       .map((el) => (el.textContent ?? "").replace(/\s+/g, " ").trim())
       .filter((t) => t.length > 0 && t.length < 40),
   );
+  // Red de seguridad: si el filtro igual capturó de más (página con
+  // estructura distinta a la esperada), es más seguro tratarlo como cuenta
+  // sin paneles que perseguir clics que no van a aparecer nunca.
+  if (labels.length === 0 || labels.length > 4) return [];
+  return labels;
 }
 
 async function selectPanel(
