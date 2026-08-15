@@ -759,10 +759,12 @@ export default function OnboardingWizard({
                     <button
                       type="button"
                       onClick={handleSyncCategories}
-                      disabled={syncingCategories}
+                      disabled={syncingCategories || categorySyncInProgress}
                       style={{ ...secondaryButtonStyle, fontSize: 12, padding: "6px 12px" }}
                     >
-                      {syncingCategories ? "Sincronizando..." : "Volver a sincronizar"}
+                      {syncingCategories || categorySyncInProgress
+                        ? "Sincronizando... (puede tardar varios minutos)"
+                        : "Volver a sincronizar"}
                     </button>
                   </div>
 
