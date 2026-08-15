@@ -188,12 +188,24 @@ export async function processNextCategorySync(): Promise<boolean> {
       where: { id: job.id },
       data: { status: "success", finishedAt: new Date() },
     });
+    // Único rastro visible en el log de esta corrida hasta ahora era la
+    // corrección de servidor (arriba), que solo dispara cuando el servidor
+    // guardado estaba mal. Un sync normal —exitoso o con 0 categorías—
+    // quedaba completamente mudo, imposible de diagnosticar desde los logs
+    // de GitHub Actions sin acceso a la base. Costó horas reales el
+    // 15/8/2026 (caso de Estee Soto) buscar un rastro que nunca se escribió.
+    console.log(
+      `CategorySyncJob ${job.id} (usuario ${job.userId}): éxito, ${remoteCategories.length} categoría(s) en ${byPanel.size} panel(es) [${Array.from(byPanel.keys()).map((p) => p || "sin panel").join(", ")}].`,
+    );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     await prisma.categorySyncJob.update({
       where: { id: job.id },
       data: { status: "error", errorMessage: message, finishedAt: new Date() },
     });
+    console.log(
+      `CategorySyncJob ${job.id} (usuario ${job.userId}): error — ${message}`,
+    );
   } finally {
     await releaseUser(job.userId);
   }
