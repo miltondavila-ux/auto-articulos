@@ -98,6 +98,19 @@ async function main() {
   console.log('\n=== Filas al buscar "Seguro de Salud Prenatal" ===');
   console.log(JSON.stringify(filtered, null, 2));
 
+  const firstRowLinks = await page.evaluate(() => {
+    const row = document.querySelector("table tbody tr");
+    if (!row) return null;
+    const links = Array.from(row.querySelectorAll("a")).map((a) => ({
+      class: a.className,
+      href: a.getAttribute("href"),
+      text: (a.textContent || "").trim().slice(0, 40),
+    }));
+    return { rowHTML: row.innerHTML.slice(0, 3000), links };
+  });
+  console.log("\n=== Links y HTML de la primera fila ===");
+  console.log(JSON.stringify(firstRowLinks, null, 2));
+
   await browser.close();
 }
 
