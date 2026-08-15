@@ -2781,6 +2781,43 @@ blanca de la interfaz — resuelto, 3) país→región — resuelto. Solo queda 
 punto 4 de la lista de arriba (legal/marketing de marca blanca), pospuesto
 a propósito por falta de información real de tagcrush, no por olvido.**
 
+**Objetivo 4 (marca blanca en Términos/Privacidad/Acerca de/login) también
+CERRADO** en el mismo tramo — commit `eead3cd`. Milton confirmó que tagcrush
+no tiene página/correo de soporte propio, así que no había nada que
+inventar: la solución fue neutralizar el texto para TODOS (estas páginas son
+públicas y estáticas, sin sesión — no hay forma de detectar tagcrush ahí) en
+vez de condicionar por plataforma. El correo de contacto real
+(`10minuteswebsite@gmail.com`) se dejó intacto a propósito: es el correo de
+soporte de Auto Artículos como herramienta, no de una plataforma de
+contenido específica.
+
+#### Incidente propio: WIP ajeno absorbido una SEGUNDA vez (15/8/2026, noche)
+
+Ya había pasado una vez en esta misma sesión (ver más arriba, revertido en
+`7ec94aa`) y volvió a pasar: el arreglo del resumen vacío que Milton tenía
+sin commitear a propósito (para revisarlo él antes de publicarlo) se coló a
+producción en el commit `a531554` — no se repitió la verificación de
+separar su WIP antes de ese commit específico. Quedó en producción varios
+despliegues sin que Milton diera su visto bueno explícito. Se le avisó
+directamente en cuanto se detectó, sin minimizarlo. El código en sí no
+estaba roto (es el arreglo real que Milton había escrito), pero el
+PROCESO falló: la verificación de "¿qué estoy comiteando de verdad?" debe
+hacerse en CADA commit que toque un archivo con WIP ajeno conocido, no
+solo la primera vez que se detecta el problema. Para el próximo agente:
+si `apps/worker/src/automation/10minutesWebsite.ts` vuelve a tener cambios
+sin commitear al empezar una tarea, es un archivo de alto riesgo — revisar
+el diff completo ANTES de cada `git add`, sin excepción, cada vez.
+
+**Arreglo adicional del mismo tramo — commit `c4ea778`:** dos errores
+reales reportados en vivo por Milton (cuenta de Lorena Álvarez):
+`net::ERR_ABORTED` en `user_buyer_seller_articles.php` y "El artículo no
+aparece en el listado tras guardar". Ambos vienen de `saveAndGetUrl()`: un
+bucle diseñado para reintentar hasta 90s buscando el artículo guardado
+tenía su `page.goto()` interno SIN try/catch, así que un solo fallo de
+navegación transitorio tumbaba toda la verificación de inmediato en vez de
+reintentar en la siguiente vuelta. Mismo patrón de carrera de navegación
+que el del selector de paneles, en un lugar distinto del código.
+
 - **Estado del área:** LIBERADA. `apps/worker/**`,
   `packages/db/prisma/schema.prisma` y `.github/workflows/migrate.yml`
   quedan libres para el siguiente agente — salvo el WIP ajeno ya señalado.
