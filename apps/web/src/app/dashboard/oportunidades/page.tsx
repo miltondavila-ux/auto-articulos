@@ -25,7 +25,7 @@ interface OpportunityGroup {
   rationale: string | null;
   impressions: number;
   clicks: number;
-  category: { id: string; name: string };
+  category: { id: string; name: string; panel: string };
   titles: OpportunityTitle[];
 }
 
@@ -85,6 +85,11 @@ export default function OportunidadesPage() {
     hasSiteUrl: boolean;
     hasCategories: boolean;
   } | null>(null);
+  // Paneles reales de la cuenta (ver Category.panel), derivados de sus
+  // categorías. [] en cuentas sin esta función — la enorme mayoría — y ahí
+  // no se muestra ningún selector, comportamiento idéntico al de siempre.
+  const [availablePanels, setAvailablePanels] = useState<string[]>([]);
+  const [selectedPanel, setSelectedPanel] = useState("");
 
   const load = useCallback(async () => {
     const [
@@ -127,13 +132,21 @@ export default function OportunidadesPage() {
     }
     const google = await googleResponse.json().catch(() => ({}));
     const categoriesData = await categoriesResponse.json().catch(() => ({}));
+    const allCategories: { panel?: string }[] = Array.isArray(
+      categoriesData.categories,
+    )
+      ? categoriesData.categories
+      : [];
     setSetupStatus({
       googleConnected: Boolean(google.connected),
       hasSiteUrl: Boolean(google.siteUrl),
-      hasCategories: Array.isArray(categoriesData.categories)
-        ? categoriesData.categories.length > 0
-        : false,
+      hasCategories: allCategories.length > 0,
     });
+    const panels = Array.from(
+      new Set(allCategories.map((c) => c.panel).filter((p): p is string => Boolean(p))),
+    );
+    setAvailablePanels(panels);
+    setSelectedPanel((prev) => (prev && panels.includes(prev) ? prev : panels[0] ?? ""));
     setLoading(false);
   }, []);
 
@@ -189,7 +202,7 @@ export default function OportunidadesPage() {
       const response = await fetch("/api/opportunities", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ force }),
+        body: JSON.stringify({ force, panel: selectedPanel }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok)
@@ -373,6 +386,24 @@ export default function OportunidadesPage() {
           categorías y crea 9 oportunidades long tail únicas para cada una,
           evitando duplicados y canibalización.
         </p>
+        {availablePanels.length > 1 && (
+          <div style={{ marginTop: 12 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>
+              ¿Para cuál sitio generar oportunidades?
+              <select
+                value={selectedPanel}
+                onChange={(e) => setSelectedPanel(e.target.value)}
+                style={{ ...inputStyle, marginTop: 4, maxWidth: 260 }}
+              >
+                {availablePanels.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        )}
         <div
           style={{
             display: "flex",
@@ -773,6 +804,7 @@ export default function OportunidadesPage() {
             <div>
               <h2 style={{ ...h2Style, marginBottom: 6 }}>
                 {group.category.name}
+                {group.category.panel ? ` (${group.category.panel})` : ""}
               </h2>
               <p style={{ margin: 0, color: "#6b7280", fontSize: 13 }}>
                 {group.rationale}

@@ -44,7 +44,14 @@ export async function POST(request: Request) {
   // decide forzar un análisis nuevo antes de que pasen los 3 días (bajo su
   // propio criterio, ver botón "Analizar de todas formas" en el frontend),
   // se le permite.
-  const { force } = await request.json().catch(() => ({ force: false }));
+  // `panel`: en cuentas con varios paneles (ver Category.panel), a cuál se le
+  // generan oportunidades. "" = cuenta sin esta función (comportamiento sin
+  // cambios) o panel único explícito. Pedido de Milton, 15/8/2026: sin esto,
+  // el análisis mezclaba categorías de English y Español en un solo lote sin
+  // que la IA tuviera forma de distinguirlas.
+  const { force, panel = "" } = await request
+    .json()
+    .catch(() => ({ force: false, panel: "" }));
   const integration = await prisma.searchIntegration.findUnique({
     where: { userId_provider: { userId, provider: "google" } },
   });
@@ -55,7 +62,7 @@ export async function POST(request: Request) {
     );
   }
   const categories = await prisma.category.findMany({
-    where: { userId },
+    where: { userId, panel },
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   });
@@ -178,7 +185,11 @@ export async function POST(request: Request) {
     }
 
     await prisma.$transaction(async (tx) => {
-      await tx.opportunityGroup.deleteMany({ where: { userId } });
+      // Solo las de ESTE panel: un análisis para "English" no debe borrar
+      // oportunidades ya generadas para "Español".
+      await tx.opportunityGroup.deleteMany({
+        where: { userId, category: { panel } },
+      });
       for (const group of analysis.groups) {
         await tx.opportunityGroup.create({
           data: {
