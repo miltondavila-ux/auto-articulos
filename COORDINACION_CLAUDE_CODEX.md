@@ -2639,6 +2639,61 @@ Se descubrió al implementar; documentado en el propio schema.
 - **Commits adicionales de este cierre:** `d5d3fd2` (mismo hueco de mensaje
   silencioso que `2e04f0f`, pero para el resultado "éxito sin categorías"),
   `abfc28c`, `6e2371e`.
+
+#### Cierre real, con evidencia — el bug de los paneles de Estee Soto (15/8/2026, tarde)
+
+Con el logging de `6e2371e` puesto, tres corridas reales seguidas dieron la
+secuencia completa del diagnóstico. **Para quien retome esto: no hace falta
+repetir estas pruebas, el resultado ya está confirmado con evidencia real.**
+
+1. **Corrida `31886539028`** — primer resultado real, log:
+   `CategorySyncJob ... éxito, 2 categoría(s) en 1 panel(es) [sin panel]`.
+   Milton pasó capturas de pantalla reales de la cuenta: el panel **Español**
+   (número de cuenta interno `[3768]`) tiene **7 categorías** (Florida,
+   Arrendatarios, Nuevas Construcciones, Inversionistas, Propiedades,
+   Préstamo, Oportunidades); el panel **English** (número de cuenta interno
+   `[...1715]`, un ID DISTINTO al de Español — el selector de paneles cambia
+   de cuenta interna, no solo de idioma) tiene exactamente **2**
+   (Vacation/Snowbirds, 2nd Homes/Investments). Coincidencia exacta: el
+   worker había leído solo el panel English por defecto, sin pasar nunca por
+   el selector.
+   - **Causa real:** `listPanelLabels()` solo revisaba si YA estábamos en el
+     selector después de navegar a `/dashboard/direct-articles` — pero el
+     sitio no obliga a pasar por ahí, deja entrar directo al panel que haya
+     quedado activo (English, en este caso) cuando se navega directo a esa
+     URL. El selector nunca se detectaba.
+   - **Arreglo:** commit `a531554` — `listPanelLabels()` ahora navega al
+     selector A PROPÓSITO, justo después del login, antes de ir a ningún
+     otro lado.
+2. **Corrida `31887387870`** (con el arreglo de arriba ya desplegado) — nuevo
+   error real, log: `CategorySyncJob ... error — page.goto: net::ERR_ABORTED
+   at https://tagcrush.net/dashboard/direct-articles`. El clic en el botón
+   del panel dispara su propia navegación (con alguna redirección encadenada
+   del lado del sitio); esperar solo `"domcontentloaded"` dejaba esa cadena
+   a medio resolver, y el `page.goto()` siguiente chocaba con ella.
+   - **Arreglo:** commit `6180da5` — `selectPanel()` espera `"networkidle"`
+     en vez de `"domcontentloaded"` tras el clic, y se agregó
+     `gotoWithRetry()` (un solo reintento, sin ocultar un fallo real) en el
+     punto exacto donde ya se confirmó la carrera.
+3. **Corrida `31887706004`** — disparada con el arreglo de la carrera de
+   navegación recién desplegado; Milton pulsó sincronizar de nuevo. **Resultado
+   pendiente de confirmar al cerrar esta entrada** — el próximo agente debe
+   revisar el log de esta corrida (o la más reciente) buscando líneas
+   `CategorySyncJob ... (usuario cmstgp0t00000exed9pc72pzf)`. Si ya dice algo
+   como `9 categoría(s) en 2 panel(es) [English, Español]`, el caso está
+   resuelto — 7 (Español) + 2 (English) = 9, coincide con las capturas
+   reales. Si vuelve a fallar, el mensaje de error ya va a decir la causa
+   real (no queda ningún caso silencioso).
+
+**Método usado para diagnosticar, para quien no tenga las capturas a mano:**
+como ningún agente puede iniciar sesión en ninguna cuenta (regla dura, sin
+excepción — ver "Executing actions with care" del sistema), la verificación
+en vivo se hizo pidiéndole a Milton capturas de pantalla reales de la cuenta
+mientras el worker corría en paralelo, y comparando los números exactos
+(cantidad de categorías, IDs de cuenta interna) contra lo que el log del
+worker reportaba. La coincidencia exacta de números fue la prueba, no una
+suposición.
+
 - **Estado del área:** LIBERADA. `apps/worker/**`,
   `packages/db/prisma/schema.prisma` y `.github/workflows/migrate.yml`
   quedan libres para el siguiente agente — salvo el WIP ajeno ya señalado.
