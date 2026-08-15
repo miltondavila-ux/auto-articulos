@@ -1815,10 +1815,32 @@ async function saveAndGetUrl(
   for (let saveAttempt = 1; saveAttempt <= MAX_SAVE_ATTEMPTS; saveAttempt++) {
     await onStep("Guardando y publicando el artículo...");
     await page.dispatchEvent("#type", "change").catch(() => {});
-    await page.waitForTimeout(300);
 
+    // Bug real encontrado en producción (15/8/2026, cuenta de Lorena
+    // Álvarez, en el reintento por título duplicado): 300ms alcanza cuando
+    // `validator.valid()` ya tiene cacheado el resultado del chequeo
+    // `remote` de título duplicado para el valor actual, pero para un
+    // título RECIÉN mutado (nunca antes chequeado) ese chequeo es una
+    // llamada AJAX nueva — `.valid()` la dispara y devuelve `false` de
+    // forma optimista/pesimista mientras está en vuelo, así que a los
+    // 300ms el botón seguía deshabilitado y el `.click()` de Playwright se
+    // quedaba 30s esperando un elemento que nunca se habilitaba. Se
+    // sondea el estado real del botón hasta 8s en vez de una espera fija.
     const saveBtn = page.getByRole("button", { name: TEXT_GUARDAR_CAMBIOS }).first();
-    await saveBtn.click();
+    const enableDeadline = Date.now() + 8000;
+    let saveBtnEnabled = false;
+    while (Date.now() < enableDeadline) {
+      saveBtnEnabled = !(await saveBtn.isDisabled().catch(() => true));
+      if (saveBtnEnabled) break;
+      await page.waitForTimeout(250);
+    }
+    if (!saveBtnEnabled) {
+      await onStep(
+        "El botón de guardar no se habilitó a tiempo (probable chequeo de título duplicado todavía en curso).",
+      );
+    }
+
+    await saveBtn.click({ timeout: 5000 }).catch(() => {});
     await page
       .waitForLoadState("networkidle", { timeout: NAV_TIMEOUT_MS })
       .catch(() => {});
