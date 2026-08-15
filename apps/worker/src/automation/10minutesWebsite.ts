@@ -823,6 +823,33 @@ async function createArticleDraft(
     await injectContentIntoEditor(page, modalContentBefore, onStep);
   }
 
+  // Bug real encontrado el 15/8/2026 (cuenta de Lorena Álvarez, confirmado
+  // con volcado directo del HTML/JS real del sitio, no adivinado): el
+  // formulario real tiene un campo de título propio, `#titlees`
+  // (`<input required maxlength="200">`, con `aria-describedby="titlees-error"`
+  // igual que `#excerptes`), que es DISTINTO del título que la IA escribe
+  // dentro del modal. "Usar contenido" debería transferirlo también, pero
+  // nunca se verificaba — a diferencia del contenido y (más abajo) el
+  // resumen, este campo no tenía ningún repaso. Si falla en transferirse
+  // (mismo tipo de falla intermitente que ya afecta a los otros dos campos),
+  // el sitio bloquea "Guardar cambios" con "Este campo es obligatorio" sin
+  // que el contenido ni el resumen tengan ningún problema — que es
+  // exactamente el patrón visto en producción (ambos con texto real, el
+  // guardado igual bloqueado, y nadie identificaba cuál era el campo real).
+  const titleSelector = await page
+    .evaluate(() => (document.querySelector("#titlees") ? "#titlees" : null))
+    .catch(() => null);
+  if (titleSelector) {
+    const titleField = page.locator(titleSelector);
+    const currentTitle = await titleField.inputValue().catch(() => "");
+    if (currentTitle.length === 0 && finalTitle.length > 0) {
+      await titleField.fill(finalTitle.slice(0, 200)).catch(() => {});
+      await onStep(
+        "El título no llegó al campo del formulario tras 'Usar contenido'. Se completó con el título generado por la IA.",
+      );
+    }
+  }
+
   // Bug real encontrado el 29/7/2026: la IA a veces escribe el resumen por
   // encima del límite de 300 caracteres del campo #excerptes. La plataforma
   // no lanza ningún error visible para Playwright: solo deshabilita
