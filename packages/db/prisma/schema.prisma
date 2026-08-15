@@ -329,6 +329,20 @@ model Category {
   // formulario, visto en vivo el 5/8/2026). Por defecto solo se debe
   // escribir en las regulares; las de secuencia se listan aparte.
   isSequence Boolean  @default(false)
+  // "sync" = la trajo el worker leyendo el sitio real; "manual" = la escribió
+  // la persona a mano (fallback del wizard cuando la sincronización
+  // automática no funciona, ver POST /api/categories). La distinción existe
+  // para poder RECONCILIAR sin borrar de más: bug real de producción
+  // (15/8/2026, cuentas de Estee Soto y Antonio Aguirre) — como el sync solo
+  // hacía upsert y nunca borraba, cualquier categoría guardada alguna vez
+  // (de credenciales que después se corrigieron, de un intento fallido, etc.)
+  // se quedaba mezclada para siempre con las correctas. Ahora cada
+  // sincronización exitosa reemplaza el conjunto "sync" completo y deja las
+  // "manual" intactas. Las filas que ya existían al agregar esta columna
+  // quedan en "sync" por default: es el default correcto porque la enorme
+  // mayoría de las categorías vienen del sitio, y así el próximo sync ya
+  // limpia la basura acumulada en vez de perpetuarla.
+  source     String   @default("sync")
   updatedAt  DateTime @updatedAt
   createdAt  DateTime @default(now())
 
