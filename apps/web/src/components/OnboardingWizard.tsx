@@ -104,15 +104,23 @@ export default function OnboardingWizard({
         const lastJob = data.lastSyncJob;
         setLastSyncStatus(lastJob?.status ?? null);
         setLastSyncError(lastJob?.errorMessage ?? null);
-        if (
-          surfaceLastSyncError &&
-          loadedCats.length === 0 &&
-          lastJob?.status === "error"
-        ) {
-          setMessage({
-            type: "error",
-            text: `❌ El último intento de sincronizar falló: ${lastJob.errorMessage || "no se pudo conectar"}`,
-          });
+        // Mismo hueco que el del error (ver comentario arriba): si la última
+        // sincronización SÍ terminó pero sin encontrar categorías reales en
+        // el sitio, eso tampoco se veía al recargar — solo durante el
+        // sondeo en vivo. Silencio total, indistinguible de "nunca se
+        // intentó nada".
+        if (surfaceLastSyncError && loadedCats.length === 0 && lastJob) {
+          if (lastJob.status === "error") {
+            setMessage({
+              type: "error",
+              text: `❌ El último intento de sincronizar falló: ${lastJob.errorMessage || "no se pudo conectar"}`,
+            });
+          } else if (lastJob.status === "success") {
+            setMessage({
+              type: "info",
+              text: "⚠️ La última conexión con tu sitio funcionó, pero no se encontraron categorías creadas. Créalas en tu plataforma y vuelve a sincronizar.",
+            });
+          }
         }
       }
       if (langRes.ok) {
