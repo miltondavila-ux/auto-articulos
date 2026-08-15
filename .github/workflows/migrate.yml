@@ -8,6 +8,11 @@ on:
         required: false
         default: false
         type: boolean
+      accept_data_loss:
+        description: "Aceptar advertencia de posible pérdida de datos (revisar el motivo ANTES de marcar esto)"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   migrar:
@@ -33,7 +38,8 @@ jobs:
           MIGRATION_DATABASE_URL="${DATABASE_URL/:6543/:5432}"
           MIGRATION_DATABASE_URL="${MIGRATION_DATABASE_URL/?pgbouncer=true/}"
           DATABASE_URL="$MIGRATION_DATABASE_URL" DIRECT_URL="$MIGRATION_DATABASE_URL" \
-            npx prisma db push --schema=packages/db/prisma/schema.prisma
+            npx prisma db push --schema=packages/db/prisma/schema.prisma \
+            ${{ inputs.accept_data_loss && '--accept-data-loss' || '' }}
       - name: Reponer Actualizaciones históricas (idempotente)
         if: ${{ inputs.seed_product_updates }}
         run: npx tsx scripts/seed-product-updates.ts
