@@ -64,7 +64,25 @@ export interface RemoteCategory {
  */
 const PANEL_CHOOSER_PATH = "/dashboard/start-main-control-panel.php";
 
-async function listPanelLabels(page: Page): Promise<string[]> {
+/**
+ * Detecta si la cuenta tiene la función de paneles NAVEGANDO al selector a
+ * propósito, en vez de esperar a toparse con él por casualidad.
+ *
+ * Bug real encontrado en vivo el 15/8/2026 (cuenta de Estee Soto, 2 de sus
+ * categorías vinieron marcadas "sin panel" en vez de separadas por
+ * English/Español): la primera versión solo revisaba si YA estábamos en el
+ * selector después de navegar a /dashboard/direct-articles — pero el sitio
+ * no obliga a pasar por ahí, deja entrar directo a "el panel que haya
+ * quedado activo" cuando se navega directo a esa URL. El selector nunca se
+ * detectaba, y solo se leían las categorías de un panel (el que fuera).
+ */
+async function listPanelLabels(page: Page, baseUrl: string): Promise<string[]> {
+  await page.goto(`${baseUrl}${PANEL_CHOOSER_PATH}`, {
+    waitUntil: "domcontentloaded",
+    timeout: NAV_TIMEOUT_MS,
+  });
+  // Cuentas sin esta función: el sitio redirige lejos de esta URL (a
+  // direct-articles o donde sea su panel único). Nada que enumerar.
   if (!page.url().includes("start-main-control-panel")) return [];
   return page.$$eval("a, button", (els) =>
     els
@@ -241,13 +259,16 @@ export async function fetchCategories(
     const page = await browser.newPage();
     await login(page, baseUrl, credentials, async () => {});
 
-    await page.goto(`${baseUrl}/dashboard/direct-articles`, {
-      waitUntil: "domcontentloaded",
-      timeout: NAV_TIMEOUT_MS,
-    });
-
-    const panels = await listPanelLabels(page);
+    // Se revisa el selector de paneles ANTES de ir a ningún otro lado — ver
+    // el comentario de listPanelLabels(). Navegar directo a direct-articles
+    // primero (como se hacía antes) deja entrar al panel que haya quedado
+    // activo sin pasar por el selector, y nunca lo detecta.
+    const panels = await listPanelLabels(page, baseUrl);
     if (panels.length === 0) {
+      await page.goto(`${baseUrl}/dashboard/direct-articles`, {
+        waitUntil: "domcontentloaded",
+        timeout: NAV_TIMEOUT_MS,
+      });
       const cats = await readCategoriesFromCurrentPanel(page);
       return cats.map((c) => ({ ...c, panel: "" }));
     }
@@ -726,8 +747,11 @@ async function createArticleDraft(
   });
   await onStep(`DIAGNÓSTICO [Usar contenido]: ${JSON.stringify(usearContenidoInfo).slice(0, 2000)}`);
 
-  // Guardar contenido del modal ANTES de hacer clic, para reinyectar después si falla
+  // Guardar contenido y resumen del modal ANTES de hacer clic, para
+  // reinyectar después si "Usar contenido" no logra transferirlos (ver bug
+  // del 11/8/2026 más abajo, que hasta ahora solo cubría el contenido).
   const modalContentBefore = await dialog.locator("textarea").nth(1).inputValue().catch(() => "");
+  const modalSummaryBefore = await dialog.locator("textarea").nth(2).inputValue().catch(() => "");
 
   await dialog.getByRole("button", { name: TEXT_USAR_CONTENIDO }).click();
   await dialog.waitFor({ state: "hidden", timeout: NAV_TIMEOUT_MS });
@@ -796,6 +820,23 @@ async function createArticleDraft(
   } else {
     const excerptField = page.locator(excerptSelector);
     summary = await excerptField.inputValue().catch(() => "");
+
+    // Mismo fallo que el del contenido documentado arriba (11/8/2026): "Usar
+    // contenido" a veces no transfiere el resumen al campo real tampoco, y a
+    // diferencia del contenido esto no tenía ningún repaso. El campo queda
+    // vacío, es obligatorio, y el sitio bloquea "Guardar cambios" en
+    // silencio (mensaje "Este campo es obligatorio" sin abortar el intento
+    // ni decir qué campo es) — visto en producción el 14/8/2026, cuenta de
+    // Lorena Álvarez, 4 intentos seguidos con el contenido y la imagen bien
+    // pero el guardado fallando siempre.
+    if (summary.length === 0 && modalSummaryBefore.length > 0) {
+      summary = modalSummaryBefore.slice(0, 280);
+      await excerptField.fill(summary).catch(() => {});
+      await onStep(
+        "El resumen no llegó al campo del formulario tras 'Usar contenido'. Se completó con el resumen generado por la IA.",
+      );
+    }
+
     if (summary.length >= 300) {
       summary = summary.slice(0, 280);
       await excerptField.fill(summary);
@@ -1669,8 +1710,33 @@ async function saveAndGetUrl(
     })
     .catch(() => "");
 
+  // Si el guardado falla, el mensaje de alerta por sí solo no dice QUÉ campo
+  // quedó vacío (además puede venir mezclado con ruido de accesibilidad del
+  // editor, como su barra de herramientas). Si seguimos en el formulario,
+  // volcamos el largo real de los campos obligatorios conocidos para que el
+  // próximo log ya diga directamente cuál falló, en vez de tener que
+  // adivinarlo de nuevo (ver bug del resumen vacío, 14/8/2026).
+  const requiredFieldsState = stillOnForm
+    ? await page
+        .evaluate(() => {
+          const ids = ["#contentes", "#excerptes", "#excerpt"];
+          return ids
+            .map((id) => {
+              const el = document.querySelector(id) as
+                | HTMLTextAreaElement
+                | HTMLInputElement
+                | null;
+              return el ? `${id}=${el.value?.length ?? 0}chars` : null;
+            })
+            .filter((v): v is string => v !== null)
+            .join(", ");
+        })
+        .catch(() => "")
+    : "";
   await onStep(
-    `Diagnóstico de guardado: sigue en el formulario=${stillOnForm}, botón deshabilitado=${buttonDisabled}, mensajes visibles="${alertText}"`,
+    `Diagnóstico de guardado: sigue en el formulario=${stillOnForm}, botón deshabilitado=${buttonDisabled}, mensajes visibles="${alertText}"${
+      requiredFieldsState ? `, campos obligatorios: ${requiredFieldsState}` : ""
+    }`,
   );
 
   await onStep(
