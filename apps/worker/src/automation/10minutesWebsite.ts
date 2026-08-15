@@ -1791,12 +1791,26 @@ async function saveAndGetUrl(
   );
   const deadline = Date.now() + SAVE_VERIFICATION_TIMEOUT_MS;
   while (Date.now() < deadline) {
-    await page.goto(`${baseUrl}/dashboard/user_buyer_seller_articles.php`, {
-      waitUntil: "domcontentloaded",
-      timeout: NAV_TIMEOUT_MS,
-    });
-    const href = await findArticleByTitle(page, expectedTitle);
-    if (href) return href;
+    try {
+      await page.goto(`${baseUrl}/dashboard/user_buyer_seller_articles.php`, {
+        waitUntil: "domcontentloaded",
+        timeout: NAV_TIMEOUT_MS,
+      });
+      const href = await findArticleByTitle(page, expectedTitle);
+      if (href) return href;
+    } catch (err) {
+      // Bug real de producción (15/8/2026, cuenta de Lorena Álvarez):
+      // net::ERR_ABORTED en este goto no se atrapaba, así que un solo fallo
+      // transitorio de navegación tumbaba TODA la verificación de una vez,
+      // antes de agotar los 90s que el bucle está diseñado para reintentar.
+      // El resultado visible era justo lo que este bucle existe para evitar:
+      // "El artículo no aparece en el listado tras guardar" incluso cuando
+      // el artículo sí se había guardado, solo que la próxima vuelta nunca
+      // llegó a intentarse.
+      await onStep(
+        `Fallo de navegación al revisar el listado (se reintenta): ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
     await page.waitForTimeout(1500);
   }
 
