@@ -126,25 +126,46 @@ export async function processNextCategorySync(): Promise<boolean> {
       );
     }
 
-    for (const cat of remoteCategories) {
-      await prisma.category.upsert({
+    // RECONCILIAR, no solo sumar. Bug real de producción (15/8/2026, cuentas
+    // de Estee Soto y Antonio Aguirre): antes esto solo hacía upsert y nunca
+    // borraba, así que cualquier categoría guardada alguna vez (de
+    // credenciales que después se corrigieron, de un intento fallido, de un
+    // servidor equivocado) quedaba mezclada para siempre con las correctas —
+    // sin ninguna forma de saber cuáles eran reales.
+    //
+    // Se reemplaza el conjunto "sync" completo en una transacción (todo o
+    // nada: si algo falla, no queda a medio borrar) y se dejan intactas las
+    // "manual", que la persona escribió a mano y no vienen del sitio.
+    await prisma.$transaction([
+      prisma.category.deleteMany({
         where: {
-          userId_platform_externalId: {
+          userId: job.userId,
+          platform: "10minutesWebsite",
+          source: "sync",
+          externalId: { notIn: remoteCategories.map((c) => c.externalId) },
+        },
+      }),
+      ...remoteCategories.map((cat) =>
+        prisma.category.upsert({
+          where: {
+            userId_platform_externalId: {
+              userId: job.userId,
+              platform: "10minutesWebsite",
+              externalId: cat.externalId,
+            },
+          },
+          create: {
             userId: job.userId,
             platform: "10minutesWebsite",
             externalId: cat.externalId,
+            name: cat.name,
+            isSequence: cat.isSequence,
+            source: "sync",
           },
-        },
-        create: {
-          userId: job.userId,
-          platform: "10minutesWebsite",
-          externalId: cat.externalId,
-          name: cat.name,
-          isSequence: cat.isSequence,
-        },
-        update: { name: cat.name, isSequence: cat.isSequence },
-      });
-    }
+          update: { name: cat.name, isSequence: cat.isSequence, source: "sync" },
+        }),
+      ),
+    ]);
 
     await prisma.categorySyncJob.update({
       where: { id: job.id },

@@ -46,6 +46,11 @@ export async function POST(request: import("next/server").NextRequest) {
       externalId: cleanId,
       name: cleanName,
       isSequence: false,
+      // "manual": la escribió la persona a mano, no viene del sitio. La
+      // reconciliación de processNextCategorySync() (ver categorySync.ts en
+      // el worker) solo reemplaza las de source "sync" — sin esta marca, el
+      // próximo sync exitoso la borraría por no coincidir con el sitio real.
+      source: "manual",
     },
     update: { name: cleanName },
   });
