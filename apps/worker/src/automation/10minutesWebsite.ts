@@ -1757,6 +1757,26 @@ async function saveAndGetUrl(
   onStep: OnStep,
 ): Promise<string | null> {
   await onStep("Guardando y publicando el artículo...");
+
+  // Causa raíz real encontrada leyendo el JS del sitio (15/8/2026, cuenta de
+  // Lorena Álvarez): el botón real de guardar, #save_art, arranca
+  // deshabilitado y SOLO se re-habilita dentro del handler de
+  // `$('#type').on('change', ...)`, y únicamente si el formulario ya pasa
+  // `$('#form_buyer_seller_articles').valid()` EN ESE INSTANTE. Nuestro
+  // automatismo dispara ese `change` de #type una sola vez, al principio del
+  // flujo, cuando el formulario todavía no tiene contenido/resumen/título
+  // (por eso `valid()` da falso) — así que #save_art queda deshabilitado
+  // para siempre, sin importar que después sí se llenen todos los campos
+  // correctamente. No hay ningún otro evento en el sitio que lo vuelva a
+  // habilitar. Por eso el guardado bloqueaba con "Este campo es
+  // obligatorio" sin que el escaneo de campos vacíos NI el errorList real
+  // del validador mostraran nada: el formulario YA era válido, el botón
+  // simplemente nunca se había re-habilitado. Se dispara `change` en #type
+  // de nuevo, ahora que el formulario sí está completo, para que el sitio
+  // re-evalúe y habilite el botón real antes de intentar el click.
+  await page.dispatchEvent("#type", "change").catch(() => {});
+  await page.waitForTimeout(300);
+
   const saveBtn = page.getByRole("button", { name: TEXT_GUARDAR_CAMBIOS }).first();
   await saveBtn.click();
   await page
