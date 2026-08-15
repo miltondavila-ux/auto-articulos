@@ -1822,10 +1822,49 @@ async function saveAndGetUrl(
         })
         .catch(() => "")
     : "";
+
+  // Fuente de verdad real, en vez de heurísticas adivinadas: el sitio usa
+  // jQuery Validate sobre #form_buyer_seller_articles (confirmado leyendo
+  // su JS real, 15/8/2026 — user_buyer_seller_articles.js). jQuery Validate
+  // guarda la instancia del validador en `$(form).data('validator')`, y su
+  // `errorList` trae el campo y mensaje EXACTOS que están fallando ahora
+  // mismo — cubre también reglas puramente de JavaScript sin atributo
+  // `required` en el HTML (como la validación `remote` de título duplicado
+  // contra `check_duplicate_title_article`, que el escaneo de campos
+  // `required` de arriba no puede ver).
+  const validatorErrors = stillOnForm
+    ? await page
+        .evaluate(() => {
+          const jq = (
+            window as unknown as {
+              jQuery?: (s: string) => {
+                data: (k: string) => {
+                  errorList?: { element: HTMLElement; message: string }[];
+                } | undefined;
+              };
+            }
+          ).jQuery;
+          const validator = jq?.("#form_buyer_seller_articles").data("validator");
+          if (!validator?.errorList) return "";
+          return validator.errorList
+            .map((e) => {
+              const el = e.element;
+              const label = el.id
+                ? `#${el.id}`
+                : el.getAttribute("name")
+                  ? `[name="${el.getAttribute("name")}"]`
+                  : el.tagName.toLowerCase();
+              return `${label}: ${e.message}`;
+            })
+            .join(" | ");
+        })
+        .catch(() => "")
+    : "";
+
   await onStep(
     `Diagnóstico de guardado: sigue en el formulario=${stillOnForm}, botón deshabilitado=${buttonDisabled}, mensajes visibles="${alertText}"${
       requiredFieldsState ? `, campos obligatorios: ${requiredFieldsState}` : ""
-    }`,
+    }${validatorErrors ? `, errores reales del validador: ${validatorErrors}` : ""}`,
   );
 
   await onStep(
