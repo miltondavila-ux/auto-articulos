@@ -48,11 +48,19 @@ const TITLE_LANE_CONCURRENCY = 4;
 // que sincronizar categorías no haga esperar tanto.
 const SYNC_LANE_CONCURRENCY = 1;
 
-// Los lanes permanecen disponibles durante toda la ventana. Antes se apagaban
-// tras solo 1.5 segundos sin trabajo; como triggerWorkerNow() no dispara otra
-// corrida mientras una siga activa, los usuarios que llegaban después perdían
-// esa capacidad y quedaban haciendo cola hasta el próximo workflow.
+// Antes se apagaban tras solo 1.5 segundos sin trabajo; como
+// triggerWorkerNow() no dispara otra corrida mientras una siga activa, los
+// usuarios que llegaban después perdían esa capacidad y quedaban haciendo
+// cola hasta el próximo workflow. Se subió a 15 min completos (siempre
+// vivos) para resolver eso — pero el extremo opuesto tiene un costo real:
+// una corrida sin nada pendiente ocupa el único turno del concurrency
+// group durante 15 minutos completos, y cualquier código nuevo recién
+// desplegado queda esperando detrás de ella (medido en vivo el 15/8/2026:
+// media hora de espera real para ver un log). Este punto medio deja cada
+// lane vivo unos minutos por si llega algo cerca, sin bloquear el turno
+// entero cuando de verdad no hay nada.
 const IDLE_DELAY_MS = 5_000;
+const IDLE_EXIT_MS = 3 * 60 * 1000;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -77,11 +85,13 @@ async function runLane(
   deadline: number,
 ): Promise<boolean> {
   let didWork = false;
+  let idleSince = Date.now();
   while (Date.now() < deadline) {
     try {
       const did = await processOne();
       if (did) {
         didWork = true;
+        idleSince = Date.now();
         continue;
       }
     } catch (err) {
@@ -90,6 +100,7 @@ async function runLane(
         err,
       );
     }
+    if (Date.now() - idleSince >= IDLE_EXIT_MS) break;
     await sleep(IDLE_DELAY_MS);
   }
   return didWork;
