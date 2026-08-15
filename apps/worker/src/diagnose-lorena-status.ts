@@ -16,6 +16,24 @@ async function main() {
   }
   console.log("User:", JSON.stringify(user, null, 2));
 
+  const allPendingRuns = await prisma.run.findMany({
+    where: { status: { in: ["pending", "running"] } },
+    select: {
+      id: true,
+      userId: true,
+      status: true,
+      createdAt: true,
+      user: { select: { email: true, name: true } },
+      titles: { select: { text: true, status: true }, take: 5 },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 10,
+  });
+  console.log(
+    "TODOS los runs pending/running en todo el sistema:",
+    JSON.stringify(allPendingRuns, null, 2),
+  );
+
   const activeTitles = await prisma.title.findMany({
     where: { run: { userId: user.id }, status: { in: ["pending", "processing"] } },
     select: {
