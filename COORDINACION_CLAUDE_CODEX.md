@@ -2818,6 +2818,44 @@ navegación transitorio tumbaba toda la verificación de inmediato en vez de
 reintentar en la siguiente vuelta. Mismo patrón de carrera de navegación
 que el del selector de paneles, en un lugar distinto del código.
 
+#### HANDOFF a otra conversación: "campo obligatorio" sin identificar sigue bloqueando guardado (Lorena Álvarez, 15/8/2026 noche)
+
+Milton está retomando esto en OTRA conversación/sesión — esta entrada es
+para que esa sesión no repita el diagnóstico ya hecho acá.
+
+**Confirmado con evidencia real (log completo "Ver todos los pasos" de un
+título, cuenta de Lorena):**
+- El arreglo de `net::ERR_ABORTED` (commit `c4ea778`) **funciona**: un
+  intento que antes moría de inmediato ahora corre el bucle completo de 90s
+  sin caerse. Ese problema específico está cerrado.
+- Pero eso destapó el problema real, que es OTRO y sigue sin resolverse: el
+  sitio nunca guarda el artículo. El log muestra
+  `sigue en el formulario=true, botón deshabilitado=true, mensajes
+  visibles="...Este campo es obligatorio..."` — y el diagnóstico original
+  (WIP de Milton del 14/8, commit `a531554`) solo revisaba 3 IDs fijos
+  (`#contentes`, `#excerptes`, `#excerpt`), y en los intentos que fallaron
+  **los tres tenían contenido real** (ej. `#contentes=6591chars,
+  #excerptes=264chars`) — el campo vacío real NO es ninguno de esos tres.
+- **Patrón intermitente, no sistemático:** del mismo lote de 8 títulos, 3
+  se publicaron bien (con URL real) y el resto falló con este mismo
+  mensaje. Descarta que sea una regresión de código que afecte a todos por
+  igual — es algo específico de ciertos títulos/intentos.
+- **Arreglo desplegado, SIN CONFIRMAR todavía:** commit `a034361` — el
+  diagnóstico ya no se limita a 3 IDs fijos, ahora busca CUALQUIER campo
+  `required`/`aria-required` visible y vacío en la página
+  (`saveAndGetUrl`/`createArticleDraft`, buscar `requiredFieldsState` en
+  `apps/worker/src/automation/10minutesWebsite.ts`). Falta que alguien
+  pulse "Reintentar" en un título que falle con este mensaje y lea el
+  próximo log — ahí debería decir el campo real, en vez de nada.
+- **Riesgo real a tener en cuenta:** si el campo bloqueante no tiene el
+  atributo HTML `required` ni `aria-required="true"` (validación puramente
+  por JavaScript del sitio, sin marcarlo en el DOM), este diagnóstico
+  ampliado tampoco lo va a encontrar — en ese caso el siguiente paso sería
+  pedirle a Milton el código fuente real de esa pantalla (mismo método que
+  destrabó el bug de los paneles de tagcrush hoy: adivinar contra el sitio
+  en producción cuesta horas, el código fuente real lo resuelve en un
+  intento).
+
 - **Estado del área:** LIBERADA. `apps/worker/**`,
   `packages/db/prisma/schema.prisma` y `.github/workflows/migrate.yml`
   quedan libres para el siguiente agente — salvo el WIP ajeno ya señalado.
