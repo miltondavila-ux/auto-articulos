@@ -100,8 +100,36 @@ async function selectPanel(
     waitUntil: "domcontentloaded",
     timeout: NAV_TIMEOUT_MS,
   });
-  await page.getByText(label, { exact: true }).click();
-  await page.waitForLoadState("domcontentloaded");
+  // Bug real de producción (15/8/2026, cuenta de Estee Soto): el clic en el
+  // panel dispara su propia navegación, aparentemente con alguna redirección
+  // encadenada del lado del sitio. Esperar solo "domcontentloaded" deja esa
+  // cadena a medio resolver; el siguiente page.goto() (a direct-articles)
+  // choca con ella y Playwright lo aborta con net::ERR_ABORTED. "networkidle"
+  // espera a que esa cadena termine de asentarse antes de seguir.
+  await Promise.all([
+    page.waitForLoadState("networkidle", { timeout: NAV_TIMEOUT_MS }),
+    page.getByText(label, { exact: true }).click(),
+  ]);
+}
+
+/**
+ * Navega con un reintento: cubre el mismo net::ERR_ABORTED de arriba en
+ * cualquier otro punto donde el sitio dispare una redirección encadenada
+ * justo después de seleccionar panel — un solo reintento resuelve la
+ * carrera sin ocultar un fallo real (si el segundo intento también falla,
+ * el error real sigue subiendo tal cual).
+ */
+async function gotoWithRetry(
+  page: Page,
+  url: string,
+  onFail?: () => Promise<void>,
+): Promise<void> {
+  try {
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT_MS });
+  } catch (err) {
+    if (onFail) await onFail();
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT_MS });
+  }
 }
 
 export type OnStep = (message: string) => Promise<void>;
@@ -276,10 +304,7 @@ export async function fetchCategories(
     const result: RemoteCategory[] = [];
     for (const label of panels) {
       await selectPanel(page, baseUrl, label);
-      await page.goto(`${baseUrl}/dashboard/direct-articles`, {
-        waitUntil: "domcontentloaded",
-        timeout: NAV_TIMEOUT_MS,
-      });
+      await gotoWithRetry(page, `${baseUrl}/dashboard/direct-articles`);
       const cats = await readCategoriesFromCurrentPanel(page);
       result.push(...cats.map((c) => ({ ...c, panel: label })));
     }
