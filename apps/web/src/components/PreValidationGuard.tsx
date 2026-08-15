@@ -6,6 +6,7 @@ import {
   sectionStyle,
   buttonStyle,
 } from "./dashboard-ui";
+import { platformProductName } from "@auto-articulos/shared";
 
 interface PreValidationGuardProps {
   type: "publicar" | "oportunidades";
@@ -17,6 +18,10 @@ interface PreValidationGuardProps {
   hasImageCredits: boolean;
   googleConnected?: boolean;
   hasGoogleSiteUrl?: boolean;
+  // Servidor de la cuenta (ver platform-servers.ts): determina si se
+  // muestra la marca "10minutesWebsite" o un término genérico (tagcrush,
+  // marca blanca). Default "net" = comportamiento histórico sin cambios.
+  platformDomain?: string;
   onOpenImageCreditsModal?: () => void;
   children: React.ReactNode;
 }
@@ -31,9 +36,11 @@ export default function PreValidationGuard({
   hasImageCredits,
   googleConnected = false,
   hasGoogleSiteUrl = false,
+  platformDomain = "net",
   onOpenImageCreditsModal,
   children,
 }: PreValidationGuardProps) {
+  const productName = platformProductName(platformDomain);
   const isGoogleReady = googleConnected && hasGoogleSiteUrl;
 
   const isReady =
@@ -52,12 +59,12 @@ export default function PreValidationGuard({
 
   // Si falta algo, identificamos el primer paso pendiente para dirigir al usuario
   let firstMissingStep = 1;
-  let firstMissingName = "Conectar 10minutesWebsite";
+  let firstMissingName = `Conectar ${productName}`;
   let firstMissingUrl = "/dashboard/configuracion?tab=wizard";
 
   if (!credentialsConfigured) {
     firstMissingStep = 1;
-    firstMissingName = "Paso 1: Conectar 10minutesWebsite";
+    firstMissingName = `Paso 1: Conectar ${productName}`;
     firstMissingUrl = "/dashboard/configuracion?tab=wizard";
   } else if (!hasCategories) {
     firstMissingStep = 2;
@@ -80,7 +87,7 @@ export default function PreValidationGuard({
   const steps = [
     {
       num: 1,
-      title: "Cuenta de 10minutesWebsite",
+      title: `Cuenta de ${productName}`,
       desc: "Tus credenciales para publicar artículos en tu sitio web.",
       ready: credentialsConfigured,
       readyText: "Conectada",
@@ -126,7 +133,7 @@ export default function PreValidationGuard({
       : []),
     {
       num: type === "oportunidades" ? 5 : 4,
-      title: "Créditos de imagen (10minutesWebsite)",
+      title: `Créditos de imagen (${productName})`,
       desc: "Disponibilidad de créditos de generación de imágenes con IA.",
       ready: hasImageCredits,
       readyText: "Créditos disponibles",

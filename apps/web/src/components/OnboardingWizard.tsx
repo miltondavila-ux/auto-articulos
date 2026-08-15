@@ -10,6 +10,7 @@ import {
 import {
   DEFAULT_PLATFORM_DOMAIN,
   PLATFORM_SERVERS,
+  platformProductName,
 } from "@auto-articulos/shared";
 import type { CategoryRow, LanguageRow, RunRow } from "@/types/dashboard";
 
@@ -32,6 +33,11 @@ export default function OnboardingWizard({
   // enlace apunte a donde apuntaba antes en vez de quedar roto.
   const [platformBase, setPlatformBase] = useState(
     PLATFORM_SERVERS[DEFAULT_PLATFORM_DOMAIN].baseUrl,
+  );
+  // Para marca blanca (tagcrush): decide si el texto dice "10minutesWebsite"
+  // o un término genérico. Ver platform-servers.ts.
+  const [platformDomain, setPlatformDomain] = useState<string>(
+    DEFAULT_PLATFORM_DOMAIN,
   );
   const [selectedLang, setSelectedLang] = useState("");
   const [googleData, setGoogleData] = useState<{
@@ -135,6 +141,9 @@ export default function OnboardingWizard({
         if (typeof data.platformBaseUrl === "string" && data.platformBaseUrl) {
           setPlatformBase(data.platformBaseUrl);
         }
+        if (typeof data.platformDomain === "string") {
+          setPlatformDomain(data.platformDomain);
+        }
       }
       if (googleRes.ok) {
         const data = await googleRes.json();
@@ -232,7 +241,7 @@ export default function OnboardingWizard({
       setUsername("");
       setPassword("");
       setEditingCreds(false);
-      setMessage({ type: "success", text: "Credenciales de 10minutesWebsite guardadas con éxito." });
+      setMessage({ type: "success", text: `Credenciales de ${productName} guardadas con éxito.` });
       await loadAll();
       onUpdated?.();
     } finally {
@@ -368,7 +377,7 @@ export default function OnboardingWizard({
         return;
       }
       await loadAll();
-      setMessage({ type: "success", text: "Lista de idiomas actualizada desde 10minutesWebsite." });
+      setMessage({ type: "success", text: `Lista de idiomas actualizada desde ${productName}.` });
     } finally {
       setSyncingLanguages(false);
     }
@@ -430,6 +439,9 @@ export default function OnboardingWizard({
 
   // "https://tagcrush.net" -> "tagcrush.net", para el texto visible.
   const platformHost = platformBase.replace(/^https?:\/\//, "");
+  // Nombre de marca a mostrar: "10minutesWebsite" para cuentas normales, un
+  // término genérico para marca blanca (tagcrush) — ver platform-servers.ts.
+  const productName = platformProductName(platformDomain);
 
   const activeLangName =
     languages.find((l) => l.externalId === contentLanguage)?.name ||
@@ -577,8 +589,8 @@ export default function OnboardingWizard({
           {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
           <StepCard
             stepNumber={1}
-            title="Conectar tu cuenta de 10minutesWebsite"
-            subtitle="Ingresa el usuario y contraseña con los que entras a tu plataforma de 10minutesWebsite."
+            title={`Conectar tu cuenta de ${productName}`}
+            subtitle={`Ingresa el usuario y contraseña con los que entras a tu plataforma de ${productName}.`}
             isDone={step1Done}
             isActive={activeStep === 1}
             badgeText={step1Done ? "Conectado" : "Paso 1 en curso"}
@@ -599,7 +611,7 @@ export default function OnboardingWizard({
                 }}
               >
                 <div style={{ fontSize: 13, color: "#166534" }}>
-                  ✅ Credenciales de 10minutesWebsite guardadas y verificadas de forma segura.
+                  ✅ Credenciales de {productName} guardadas y verificadas de forma segura.
                 </div>
                 <button
                   type="button"
@@ -650,7 +662,7 @@ export default function OnboardingWizard({
                     🔑 Resetear contraseña en {platformHost} ↗
                   </a>
                   <p style={{ margin: "8px 0 0 0", fontSize: 12, color: "#3b82f6" }}>
-                    <strong>Recomendación práctica:</strong> Al generar tu contraseña en 10minutesWebsite, copia y pega esa misma clave aquí para que ambos sistemas queden sincronizados.
+                    <strong>Recomendación práctica:</strong> Al generar tu contraseña en {platformHost}, copia y pega esa misma clave aquí para que ambos sistemas queden sincronizados.
                   </p>
                 </div>
 
@@ -665,7 +677,7 @@ export default function OnboardingWizard({
                 >
                   <div>
                     <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4 }}>
-                      Usuario o Email de 10minutesWebsite:
+                      Usuario o Email de {productName}:
                     </label>
                     <input
                       type="text"
@@ -678,7 +690,7 @@ export default function OnboardingWizard({
                   </div>
                   <div>
                     <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4 }}>
-                      Contraseña de 10minutesWebsite:
+                      Contraseña de {productName}:
                     </label>
                     <input
                       type="password"
@@ -729,7 +741,7 @@ export default function OnboardingWizard({
           <StepCard
             stepNumber={2}
             title="Sincronizar las Categorías de tu Web"
-            subtitle="Auto Artículos descarga las categorías creadas en tu web de 10minutesWebsite para saber dónde clasificar los artículos."
+            subtitle={`Auto Artículos descarga las categorías creadas en tu web de ${productName} para saber dónde clasificar los artículos.`}
             isDone={step2Done}
             isActive={activeStep === 2}
             badgeText={
@@ -817,7 +829,7 @@ export default function OnboardingWizard({
                     >
                       <div style={{ fontSize: 36, marginBottom: 8 }}>⏳</div>
                       <h4 style={{ margin: "0 0 6px 0", fontSize: 16, color: "#1e40af", fontWeight: 800 }}>
-                        Conectando con tu sitio web de 10minutesWebsite...
+                        Conectando con tu sitio web de {productName}...
                       </h4>
                       <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#334155", lineHeight: 1.5, maxWidth: 500, marginLeft: "auto", marginRight: "auto" }}>
                         Nuestro robot está ingresando a tu cuenta para descargar automáticamente todas las categorías de tu web. Puede tardar <strong>unos minutos</strong> según la cola de trabajo; esta pantalla se actualiza sola cuando termine, no hace falta que hagas nada.
@@ -841,7 +853,7 @@ export default function OnboardingWizard({
                   ) : (
                     <>
                       <p style={{ margin: "0 0 10px 0", fontSize: 13, color: "#1e40af", fontWeight: 500 }}>
-                        Haz clic a continuación para conectar con tu cuenta de 10minutesWebsite y descargar tus categorías:
+                        Haz clic a continuación para conectar con tu cuenta de {productName} y descargar tus categorías:
                       </p>
                       <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
                         <button
@@ -1041,7 +1053,7 @@ export default function OnboardingWizard({
                       onClick={handleSyncLanguagesList}
                       disabled={syncingLanguages}
                       style={{ ...secondaryButtonStyle, fontSize: 12, padding: "8px 12px" }}
-                      title="Descargar idiomas actualizados desde 10minutesWebsite"
+                      title={`Descargar idiomas actualizados desde ${productName}`}
                     >
                       {syncingLanguages ? "Sincronizando..." : "🔄 Recargar lista"}
                     </button>

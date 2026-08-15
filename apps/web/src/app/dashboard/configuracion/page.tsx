@@ -22,6 +22,8 @@ import OnboardingWizard from "@/components/OnboardingWizard";
 import {
   DEFAULT_PLATFORM_DOMAIN,
   PLATFORM_SERVERS,
+  platformHelpUrl,
+  platformProductName,
 } from "@auto-articulos/shared";
 
 export default function ConfiguracionPage() {
@@ -47,6 +49,15 @@ export default function ConfiguracionPage() {
   const [platformBase, setPlatformBase] = useState(
     PLATFORM_SERVERS[DEFAULT_PLATFORM_DOMAIN].baseUrl,
   );
+  // Para marca blanca (tagcrush): decide si el texto dice "10minutesWebsite"
+  // o un término genérico. Ver platform-servers.ts.
+  const [platformDomain, setPlatformDomain] = useState<string>(
+    DEFAULT_PLATFORM_DOMAIN,
+  );
+  // Nombre de marca a mostrar y enlace de ayuda: genéricos en cuentas de
+  // marca blanca (tagcrush) — ver platform-servers.ts.
+  const productName = platformProductName(platformDomain);
+  const helpUrl = platformHelpUrl(platformDomain);
   const [savingLanguage, setSavingLanguage] = useState(false);
   const [articleSignature, setArticleSignature] = useState("");
   const [savingSignature, setSavingSignature] = useState(false);
@@ -159,6 +170,9 @@ export default function ConfiguracionPage() {
         setAllowThreadsPublishing(data.allowThreadsPublishing ?? false);
         if (typeof data.platformBaseUrl === "string" && data.platformBaseUrl) {
           setPlatformBase(data.platformBaseUrl);
+        }
+        if (typeof data.platformDomain === "string") {
+          setPlatformDomain(data.platformDomain);
         }
         if (Array.isArray(data.disabledModules)) {
           setDisabledModules(data.disabledModules);
@@ -571,7 +585,7 @@ export default function ConfiguracionPage() {
       : []),
     {
       id: "platform",
-      eyebrow: "10minutesWebsite",
+      eyebrow: productName,
       label: "🔐 Cuenta & Contenido",
       description:
         "Credenciales, categorías, idioma de redacción, firma y teléfono de contacto.",
@@ -670,7 +684,7 @@ export default function ConfiguracionPage() {
               }}
             >
               Conecta tus buscadores y redes sociales, configura tu cuenta de
-               10minutesWebsite, personaliza el contenido de tus artículos y accede desde tu celular.
+               {productName}, personaliza el contenido de tus artículos y accede desde tu celular.
             </p>
           </div>
 
@@ -708,7 +722,7 @@ export default function ConfiguracionPage() {
                 }}
               />
               <span style={{ color: "#e2e8f0", fontWeight: 600 }}>
-                10minutesWebsite:
+                {productName}:
               </span>
               <span
                 style={{
@@ -801,7 +815,7 @@ export default function ConfiguracionPage() {
                 </span>
               </div>
               <p style={{ margin: "4px 0 0 0", fontSize: 13, color: "#bfdbfe" }}>
-                Conecta tu cuenta en 4 sencillos pasos ordenados: 10minutesWebsite ➔ Categorías ➔ Idioma ➔ Google Search Console.
+                Conecta tu cuenta en 4 sencillos pasos ordenados: {productName} ➔ Categorías ➔ Idioma ➔ Google Search Console.
               </p>
             </div>
           </div>
@@ -1046,7 +1060,7 @@ export default function ConfiguracionPage() {
               }}
             >
               <h2 style={{ ...h2Style, margin: 0 }}>
-                Credenciales de 10minutesWebsite{" "}
+                Credenciales de {productName}{" "}
                 {credentialsConfigured && <ReadyBadge />}
               </h2>
               <span
@@ -1096,7 +1110,7 @@ export default function ConfiguracionPage() {
                       margin: "2px 0 0 0",
                     }}
                   >
-                    Tus credenciales se usan solo para que el sistema publique artículos automáticamente en tu cuenta de 10minutesWebsite. Nadie puede verlas.
+                    Tus credenciales se usan solo para que el sistema publique artículos automáticamente en tu cuenta de {productName}. Nadie puede verlas.
                   </p>
                 </div>
                 <button
@@ -1114,7 +1128,7 @@ export default function ConfiguracionPage() {
                 style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}
               >
                 <input
-                  placeholder="Usuario de 10minutesWebsite"
+                  placeholder={`Usuario de ${productName}`}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   style={{ ...inputStyle, minWidth: 240 }}
@@ -1155,16 +1169,20 @@ export default function ConfiguracionPage() {
                 >
                   recupérala con tu correo aquí
                 </a>
-                . Si aun así no logras entrar, escribe al{" "}
-                <a
-                  href="https://www.10minuteswebsite.com/ayuda"
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ color: "#2563eb", fontWeight: 600 }}
-                >
-                  servicio al cliente de 10minutesWebsite
-                </a>
-                .
+                {helpUrl && (
+                  <>
+                    . Si aun así no logras entrar, escribe al{" "}
+                    <a
+                      href={helpUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ color: "#2563eb", fontWeight: 600 }}
+                    >
+                      servicio al cliente de {productName}
+                    </a>
+                    .
+                  </>
+                )}
               </p>
             )}
           </section>
@@ -1197,7 +1215,7 @@ export default function ConfiguracionPage() {
             </div>
 
             <p style={{ fontSize: 13, color: "#64748b", marginBottom: 14 }}>
-              Las categorías definen en qué secciones se publicarán tus artículos. Sincronízalas desde tu cuenta de 10minutesWebsite para mantenerlas actualizadas.
+              Las categorías definen en qué secciones se publicarán tus artículos. Sincronízalas desde tu cuenta de {productName} para mantenerlas actualizadas.
             </p>
 
             <button
@@ -1252,7 +1270,7 @@ export default function ConfiguracionPage() {
                   }}
                 />
                 {lastSyncStatus === "running"
-                  ? "Conectando con 10minutesWebsite..."
+                  ? `Conectando con ${productName}...`
                   : "En cola de sincronización. Esta pantalla se actualizará automáticamente."}
               </p>
             )}
@@ -1400,7 +1418,7 @@ export default function ConfiguracionPage() {
             </div>
 
             <p style={{ fontSize: 13, color: "#64748b", marginBottom: 14 }}>
-              Tus artículos se redactarán en este idioma. Sincroniza los idiomas disponibles desde tu cuenta de 10minutesWebsite y elige el que prefieras.
+              Tus artículos se redactarán en este idioma. Sincroniza los idiomas disponibles desde tu cuenta de {productName} y elige el que prefieras.
             </p>
 
             <div
@@ -1466,7 +1484,7 @@ export default function ConfiguracionPage() {
 
             {languageSyncInProgress && (
               <p style={{ fontSize: 13, color: "#b45309", marginTop: 10 }}>
-                Conectando con 10minutesWebsite para sincronizar idiomas...
+                Conectando con {productName} para sincronizar idiomas...
               </p>
             )}
 
@@ -1702,7 +1720,7 @@ export default function ConfiguracionPage() {
                 Prompt para Imágenes de Artículos y Redes
               </label>
               <p style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>
-                Este prompt se usa como base para generar imágenes de artículos (10minutesWebsite) y publicaciones de Threads, Instagram Reels y Carruseles. El sistema agregará automáticamente el resumen del artículo al final.
+                Este prompt se usa como base para generar imágenes de artículos ({productName}) y publicaciones de Threads, Instagram Reels y Carruseles. El sistema agregará automáticamente el resumen del artículo al final.
               </p>
               <textarea
                 value={imagePrompt}

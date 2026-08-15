@@ -24,20 +24,28 @@ export interface PlatformServer {
   baseUrl: string;
   /** Cómo se muestra en el panel de Administración. */
   label: string;
+  // true = cuenta de marca blanca (confirmado por Milton, 15/8/2026:
+  // "Tagcrush USA nuestra plataforma pero son una marca Blanca"). Sus
+  // usuarios no deben ver ninguna mención a "10minutesWebsite" en la
+  // interfaz — ver platformProductName().
+  whiteLabel?: boolean;
 }
 
 export const PLATFORM_SERVERS = {
   net: {
     baseUrl: "https://10minuteswebsite.net",
     label: "10minuteswebsite.net",
+    whiteLabel: false,
   },
   site: {
     baseUrl: "https://10minuteswebsite.site",
     label: "10minuteswebsite.site",
+    whiteLabel: false,
   },
   tagcrush: {
     baseUrl: "https://tagcrush.net",
     label: "tagcrush.net (Panel de agentes)",
+    whiteLabel: true,
   },
 } as const satisfies Record<string, PlatformServer>;
 
@@ -79,4 +87,31 @@ export function platformLabel(value: unknown): string {
 /** Pantalla de recuperación de contraseña del servidor correspondiente. */
 export function platformForgotPasswordUrl(value: unknown): string {
   return `${platformBaseUrl(value)}/dashboard/forgot-password.php`;
+}
+
+export function isWhiteLabelPlatform(value: unknown): boolean {
+  return Boolean(PLATFORM_SERVERS[normalizePlatformDomain(value)].whiteLabel);
+}
+
+/**
+ * Nombre de marca a mostrar en texto visible para la persona usuaria.
+ * Cuentas de marca blanca (tagcrush) nunca deben ver "10minutesWebsite" —
+ * se usa un término genérico en su lugar. El resto ve el nombre real, que
+ * es correcto para ellos.
+ */
+export function platformProductName(value: unknown): string {
+  return isWhiteLabelPlatform(value) ? "tu plataforma" : "10minutesWebsite";
+}
+
+/**
+ * Enlace de ayuda/soporte de la plataforma. null en cuentas de marca
+ * blanca: no hay un URL real de soporte de tagcrush conocido, y mostrar el
+ * de 10minutesWebsite rompería la marca blanca y mandaría a la persona a
+ * soporte equivocado. Quien renderiza debe ocultar el enlace si es null,
+ * no inventar uno.
+ */
+export function platformHelpUrl(value: unknown): string | null {
+  return isWhiteLabelPlatform(value)
+    ? null
+    : "https://www.10minuteswebsite.com/ayuda";
 }

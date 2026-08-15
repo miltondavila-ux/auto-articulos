@@ -43,6 +43,10 @@ export default function PublicarPage() {
     { id: string; externalId: string; name: string }[]
   >([]);
   const [contentLanguage, setContentLanguage] = useState("");
+  // Para marca blanca (tagcrush): PreValidationGuard necesita saber el
+  // servidor de la cuenta para no mostrar "10minutesWebsite" ni enlaces de
+  // ayuda equivocados. Ver packages/shared/src/platform-servers.ts.
+  const [platformDomain, setPlatformDomain] = useState<string>("net");
 
   const loadUserLimits = useCallback(async () => {
     const res = await fetch("/api/me");
@@ -59,6 +63,9 @@ export default function PublicarPage() {
       }
       if (typeof data.hasImageCredits === "boolean") {
         setHasImageCredits(data.hasImageCredits);
+      }
+      if (typeof data.platformDomain === "string") {
+        setPlatformDomain(data.platformDomain);
       }
     }
   }, []);
@@ -186,6 +193,7 @@ export default function PublicarPage() {
         hasLanguage={Boolean(contentLanguage && contentLanguage.trim().length > 0)}
         languageName={activeLangName}
         hasImageCredits={hasImageCredits}
+        platformDomain={platformDomain}
         onOpenImageCreditsModal={() => setShowImageCreditsModal(true)}
       >
         {hasActiveRun && (
@@ -408,6 +416,7 @@ export default function PublicarPage() {
       <ImageCreditsModal
         isOpen={showImageCreditsModal}
         onClose={() => setShowImageCreditsModal(false)}
+        platformDomain={platformDomain}
       />
     </div>
   );

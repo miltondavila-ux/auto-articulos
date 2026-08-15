@@ -9,6 +9,21 @@ import LiveProgress from "@/components/LiveRunProgress";
 export default function PublicacionesEnCursoPage() {
   const [runs, setRuns] = useState<RunRow[]>([]);
   const [loading, setLoading] = useState(true);
+  // Para marca blanca (tagcrush): LiveProgress necesita el servidor de la
+  // cuenta para no mostrar "10minutesWebsite" en los mensajes de créditos
+  // agotados. Ver platform-servers.ts.
+  const [platformDomain, setPlatformDomain] = useState("net");
+
+  useEffect(() => {
+    fetch("/api/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && typeof data.platformDomain === "string") {
+          setPlatformDomain(data.platformDomain);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // "Publicar todas las categorías" en Oportunidades puede crear varios Run a
   // la vez (uno por categoría, ver /api/opportunities/execute-all) — se
@@ -44,7 +59,12 @@ export default function PublicacionesEnCursoPage() {
       {activeRuns.length > 0 ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {activeRuns.map((run) => (
-            <LiveProgress key={run.id} run={run} onCancelled={loadRuns} />
+            <LiveProgress
+              key={run.id}
+              run={run}
+              onCancelled={loadRuns}
+              platformDomain={platformDomain}
+            />
           ))}
         </div>
       ) : (

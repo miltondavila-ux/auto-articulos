@@ -2,16 +2,22 @@
 
 import { useEffect } from "react";
 import { buttonStyle, secondaryButtonStyle } from "./dashboard-ui";
+import { platformHelpUrl, platformProductName } from "@auto-articulos/shared";
 
 interface ImageCreditsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  // Ver platform-servers.ts. Default "net" = comportamiento histórico.
+  platformDomain?: string;
 }
 
 export default function ImageCreditsModal({
   isOpen,
   onClose,
+  platformDomain = "net",
 }: ImageCreditsModalProps) {
+  const productName = platformProductName(platformDomain);
+  const helpUrl = platformHelpUrl(platformDomain);
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape" && isOpen) {
@@ -91,12 +97,21 @@ export default function ImageCreditsModal({
             marginBottom: 20,
           }}
         >
-          Tu cuenta de <strong>10minutesWebsite</strong> no tiene créditos
+          Tu cuenta de <strong>{productName}</strong> no tiene créditos
           disponibles para generar las imágenes automáticas de tus artículos.
           <br />
           <br />
-          Puedes solicitar una recarga de <strong>créditos de imagen gratuitos</strong>{" "}
-          en la página de ayuda de 10minutesWebsite.
+          {helpUrl ? (
+            <>
+              Puedes solicitar una recarga de <strong>créditos de imagen gratuitos</strong>{" "}
+              en la página de ayuda de {productName}.
+            </>
+          ) : (
+            <>
+              Solicita una recarga de <strong>créditos de imagen gratuitos</strong>{" "}
+              contactando al soporte de {productName}.
+            </>
+          )}
         </p>
 
         <div
@@ -106,28 +121,30 @@ export default function ImageCreditsModal({
             gap: 10,
           }}
         >
-          <a
-            href="https://www.10minuteswebsite.com/ayuda"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              ...buttonStyle,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              textDecoration: "none",
-              padding: "12px 18px",
-              fontSize: 14,
-              fontWeight: 600,
-              background: "#2563eb",
-              color: "#ffffff",
-              borderRadius: 8,
-            }}
-          >
-            <span>👉 Solicitar créditos de imagen gratuitos</span>
-            <span style={{ fontSize: 16 }}>↗</span>
-          </a>
+          {helpUrl && (
+            <a
+              href={helpUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                ...buttonStyle,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                textDecoration: "none",
+                padding: "12px 18px",
+                fontSize: 14,
+                fontWeight: 600,
+                background: "#2563eb",
+                color: "#ffffff",
+                borderRadius: 8,
+              }}
+            >
+              <span>👉 Solicitar créditos de imagen gratuitos</span>
+              <span style={{ fontSize: 16 }}>↗</span>
+            </a>
+          )}
 
           <button
             type="button"
@@ -155,7 +172,7 @@ export default function ImageCreditsModal({
             marginBottom: 0,
           }}
         >
-          Una vez que el soporte de 10minutesWebsite te asigne más créditos, podrás continuar publicando con normalidad.
+          Una vez que el soporte de {productName} te asigne más créditos, podrás continuar publicando con normalidad.
         </p>
       </div>
     </div>

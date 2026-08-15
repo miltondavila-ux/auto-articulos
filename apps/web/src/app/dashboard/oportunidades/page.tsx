@@ -90,6 +90,9 @@ export default function OportunidadesPage() {
   // no se muestra ningún selector, comportamiento idéntico al de siempre.
   const [availablePanels, setAvailablePanels] = useState<string[]>([]);
   const [selectedPanel, setSelectedPanel] = useState("");
+  // Para marca blanca (tagcrush): PreValidationGuard necesita el servidor
+  // de la cuenta para no mostrar "10minutesWebsite" ni enlaces equivocados.
+  const [platformDomain, setPlatformDomain] = useState<string>("net");
 
   const load = useCallback(async () => {
     const [
@@ -124,6 +127,9 @@ export default function OportunidadesPage() {
       }
       if (typeof me.hasImageCredits === "boolean") {
         setHasImageCredits(me.hasImageCredits);
+      }
+      if (typeof me.platformDomain === "string") {
+        setPlatformDomain(me.platformDomain);
       }
     }
     if (languagesResponse.ok) {
@@ -376,6 +382,7 @@ export default function OportunidadesPage() {
         hasImageCredits={hasImageCredits}
         googleConnected={Boolean(setupStatus?.googleConnected)}
         hasGoogleSiteUrl={Boolean(setupStatus?.hasSiteUrl)}
+        platformDomain={platformDomain}
         onOpenImageCreditsModal={() => setShowImageCreditsModal(true)}
       >
         <section style={sectionStyle}>
@@ -915,6 +922,7 @@ export default function OportunidadesPage() {
       <ImageCreditsModal
         isOpen={showImageCreditsModal}
         onClose={() => setShowImageCreditsModal(false)}
+        platformDomain={platformDomain}
       />
     </div>
   );

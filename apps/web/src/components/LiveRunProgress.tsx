@@ -4,6 +4,7 @@ import { useState } from "react";
 import { readySectionStyle, h2Style } from "@/components/dashboard-ui";
 import type { RunRow, TitleEventRow, TitleRow } from "@/types/dashboard";
 import GoogleIndexingStatus from "@/components/GoogleIndexingStatus";
+import { platformHelpUrl, platformProductName } from "@auto-articulos/shared";
 
 // Pasos reales que va reportando la automatización (ver onStep(...) en
 // apps/worker/src/automation/10minutesWebsite.ts), en orden, con un % estimado
@@ -51,10 +52,14 @@ function estimateTitleProgress(title: TitleRow): number {
 function TitleProgressRow({
   index,
   title,
+  platformDomain = "net",
 }: {
   index: number;
   title: TitleRow;
+  platformDomain?: string;
 }) {
+  const productName = platformProductName(platformDomain);
+  const helpUrl = platformHelpUrl(platformDomain);
   const icon =
     title.status === "success"
       ? "✅"
@@ -240,29 +245,31 @@ function TitleProgressRow({
                 }}
               >
                 ⚠️ Se agotaron los créditos de generación de imágenes de tu
-                cuenta en 10minutesWebsite
+                cuenta en {productName}
               </p>
               <p style={{ fontSize: 13, color: "#9a3412", margin: "6px 0 0" }}>
-                Esto no es un error del sistema — la cuenta de 10minutesWebsite
-                usada para publicar ya no tiene créditos para crear imágenes
+                Esto no es un error del sistema — la cuenta de {productName}
+                {" "}usada para publicar ya no tiene créditos para crear imágenes
                 con IA. Solicita más créditos directamente con ellos y luego
                 reintenta este artículo.
               </p>
-              <a
-                href="https://www.10minuteswebsite.com/ayuda"
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  display: "inline-block",
-                  marginTop: 8,
-                  color: "#9a3412",
-                  fontWeight: 700,
-                  textDecoration: "underline",
-                }}
-              >
-                Solicitar más créditos al servicio al cliente de
-                10minutesWebsite →
-              </a>
+              {helpUrl && (
+                <a
+                  href={helpUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    display: "inline-block",
+                    marginTop: 8,
+                    color: "#9a3412",
+                    fontWeight: 700,
+                    textDecoration: "underline",
+                  }}
+                >
+                  Solicitar más créditos al servicio al cliente de
+                  {" "}{productName} →
+                </a>
+              )}
             </div>
           ) : (
             <p style={{ fontSize: 13, color: "#d64545", margin: 0 }}>
@@ -363,9 +370,11 @@ function TitleProgressRow({
 export default function LiveProgress({
   run,
   onCancelled,
+  platformDomain = "net",
 }: {
   run: RunRow;
   onCancelled: () => void;
+  platformDomain?: string;
 }) {
   const total = run.titles.length;
   const doneCount = run.titles.filter(
@@ -537,7 +546,12 @@ export default function LiveProgress({
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {run.titles.map((title, index) => (
-          <TitleProgressRow key={title.id} index={index} title={title} />
+          <TitleProgressRow
+            key={title.id}
+            index={index}
+            title={title}
+            platformDomain={platformDomain}
+          />
         ))}
       </div>
     </section>
