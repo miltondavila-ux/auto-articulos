@@ -1763,19 +1763,34 @@ async function saveAndGetUrl(
   // volcamos el largo real de los campos obligatorios conocidos para que el
   // próximo log ya diga directamente cuál falló, en vez de tener que
   // adivinarlo de nuevo (ver bug del resumen vacío, 14/8/2026).
+  //
+  // Bug real de producción (15/8/2026, cuenta de Lorena Álvarez): la lista
+  // original de 3 IDs conocidos (#contentes, #excerptes, #excerpt) no
+  // cubría el campo real que estaba bloqueando el guardado — el diagnóstico
+  // mostraba esos 3 con contenido real y aun así "Este campo es
+  // obligatorio" seguía apareciendo, sin decir cuál. Se cambia a buscar
+  // CUALQUIER campo `required` visible y vacío en la página, en vez de una
+  // lista fija adivinada — así el próximo log dice el campo real sin
+  // importar cuál sea.
   const requiredFieldsState = stillOnForm
     ? await page
         .evaluate(() => {
-          const ids = ["#contentes", "#excerptes", "#excerpt"];
-          return ids
-            .map((id) => {
-              const el = document.querySelector(id) as
-                | HTMLTextAreaElement
-                | HTMLInputElement
-                | null;
-              return el ? `${id}=${el.value?.length ?? 0}chars` : null;
+          const els = Array.from(
+            document.querySelectorAll<
+              HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+            >("input[required], textarea[required], select[required], [aria-required='true']"),
+          );
+          return els
+            .filter((el) => (el as HTMLElement).offsetParent !== null)
+            .filter((el) => !el.value || el.value.trim().length === 0)
+            .map((el) => {
+              const label = el.id
+                ? `#${el.id}`
+                : el.getAttribute("name")
+                  ? `[name="${el.getAttribute("name")}"]`
+                  : el.tagName.toLowerCase();
+              return `${label} (vacío)`;
             })
-            .filter((v): v is string => v !== null)
             .join(", ");
         })
         .catch(() => "")
