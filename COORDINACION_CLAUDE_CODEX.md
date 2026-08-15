@@ -2860,6 +2860,47 @@ título, cuenta de Lorena):**
   `packages/db/prisma/schema.prisma` y `.github/workflows/migrate.yml`
   quedan libres para el siguiente agente — salvo el WIP ajeno ya señalado.
 
+#### Cierre del handoff: campo obligatorio identificado — es `#titlees` (15/8/2026, tarde)
+
+- **Agente:** Claude (la "otra conversación" a la que se hizo el handoff).
+- **Método:** en vez de seguir adivinando desde logs de producción, se
+  desplegó un workflow temporal de solo lectura (`workflow_dispatch`, mismo
+  patrón que `fix-patricia.yml`) que entra a la cuenta real de Lorena
+  Álvarez y vuelca 1) cualquier mención de "obligatorio"/"required" en el
+  JS real del sitio y 2) todos los campos del formulario con sus atributos
+  reales. Ejecutado una sola vez contra la cuenta real; no publica nada.
+  Workflow y script borrados después de usarlos (ya cumplieron su función).
+- **Hallazgo real:** el formulario tiene un campo de título propio,
+  `#titlees` (`<input required maxlength="200">`, con
+  `aria-describedby="titlees-error"`, exactamente el mismo patrón de
+  validación de `#excerptes`), **completamente distinto** del título que la
+  IA escribe dentro del modal (`dialog.locator("textarea").nth(3)`). Nunca
+  había código que lo llenara ni lo verificara — a diferencia de contenido
+  y resumen, que sí tenían repaso. Esto explica el patrón exacto reportado:
+  `#contentes` y `#excerptes` con contenido real, guardado igual bloqueado
+  por "Este campo es obligatorio", y el diagnóstico ampliado (`a034361`) sin
+  poder decir cuál era porque nadie había mirado este campo en particular.
+  Nota aparte: `#contentes` tampoco tiene el atributo HTML `required` (su
+  validación es propia de CKEditor, no de jQuery Validate), así que el
+  escaneo genérico de `a034361` tampoco lo habría detectado si alguna vez
+  quedara vacío — hoy no es un problema porque siempre se repara antes.
+- **Arreglo aplicado:** mismo patrón que ya usan contenido y resumen — si
+  `#titlees` queda vacío después de "Usar contenido", se completa con el
+  `finalTitle` que ya se leía del modal (antes solo se usaba para logging y
+  para buscar el artículo publicado después, nunca para llenar el
+  formulario real).
+- **Verificaciones:** `tsc --noEmit` limpio en `apps/worker`.
+- **Commit:** `0e34a6d` (fix); `a8062c4` (script/workflow de diagnóstico,
+  ya borrado en el mismo commit del fix).
+- **Push/deploy/migración:** `main`; sin migración de base de datos.
+- **Sin confirmar todavía en producción:** hace falta que corra un lote
+  real después de este deploy y que un título que antes fallaba con "Este
+  campo es obligatorio" ahora se publique. Si algún título vuelve a fallar
+  con el mismo mensaje, revisar primero si `#titlees` sí se llenó (el
+  próximo log ya no debería mostrar ese síntoma si esta es la causa
+  completa) antes de seguir buscando otro campo.
+- **Estado del área:** LIBERADA.
+
 ## Zona compartida: requiere coordinación explícita
 
 Estos archivos pueden ser necesarios para ambos y nadie debe asumir control
