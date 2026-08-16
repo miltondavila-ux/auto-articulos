@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { readySectionStyle, h2Style } from "@/components/dashboard-ui";
 import type { RunRow, TitleEventRow, TitleRow } from "@/types/dashboard";
 import GoogleIndexingStatus from "@/components/GoogleIndexingStatus";
@@ -248,9 +248,9 @@ function TitleProgressRow({
                 cuenta en {productName}
               </p>
               <p style={{ fontSize: 13, color: "#9a3412", margin: "6px 0 0" }}>
-                Esto no es un error del sistema — la cuenta de {productName}
-                {" "}usada para publicar ya no tiene créditos para crear imágenes
-                con IA. Solicita más créditos directamente con ellos y luego
+                Esto no es un error del sistema — la cuenta de {productName}{" "}
+                usada para publicar ya no tiene créditos para crear imágenes con
+                IA. Solicita más créditos directamente con ellos y luego
                 reintenta este artículo.
               </p>
               {helpUrl && (
@@ -266,8 +266,8 @@ function TitleProgressRow({
                     textDecoration: "underline",
                   }}
                 >
-                  Solicitar más créditos al servicio al cliente de
-                  {" "}{productName} →
+                  Solicitar más créditos al servicio al cliente de {productName}{" "}
+                  →
                 </a>
               )}
             </div>
@@ -388,6 +388,22 @@ export default function LiveProgress({
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
+
+  // Pedido explícito del usuario (16/8/2026): mientras el worker todavía no
+  // arrancó, la única señal de vida era un spinner de 14px fácil de pasar
+  // por alto — a simple vista, la pantalla se veía igual de "colgada" con o
+  // sin animación. Un contador de segundos que avanza solo es una prueba
+  // mucho más clara de que la página sigue viva y actualizándose, no
+  // trabada, mientras se espera a que el worker tome el lote.
+  const [waitingSeconds, setWaitingSeconds] = useState(0);
+  useEffect(() => {
+    if (!nothingStartedYet) return;
+    const startedAt = Date.now();
+    const interval = setInterval(() => {
+      setWaitingSeconds(Math.floor((Date.now() - startedAt) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [nothingStartedYet]);
 
   async function handleCancel() {
     setCancelling(true);
@@ -513,17 +529,20 @@ export default function LiveProgress({
             aria-hidden
             style={{
               display: "inline-block",
-              width: 14,
-              height: 14,
-              border: "2px solid #f5e6c8",
+              width: 18,
+              height: 18,
+              border: "3px solid #f5e6c8",
               borderTopColor: "#8a6d1a",
               borderRadius: "50%",
               animation: "auto-articulos-spin 0.8s linear infinite",
               flexShrink: 0,
             }}
           />
-          En cola para procesarse. El worker está arrancando — esta pantalla se
-          actualiza sola cuando comience.
+          <span>
+            En cola para procesarse. El worker está arrancando — esta pantalla
+            se actualiza sola cuando comience.{" "}
+            <strong>Esperando hace {waitingSeconds}s.</strong>
+          </span>
         </p>
       )}
       <div

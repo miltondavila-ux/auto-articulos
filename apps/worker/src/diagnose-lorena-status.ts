@@ -34,6 +34,30 @@ async function main() {
     JSON.stringify(allPendingRuns, null, 2),
   );
 
+  const emergenciasRuns = await prisma.run.findMany({
+    where: {
+      userId: user.id,
+      category: { name: { contains: "Emergencias", mode: "insensitive" } },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 3,
+    select: {
+      id: true,
+      status: true,
+      createdAt: true,
+      finishedAt: true,
+      category: { select: { name: true } },
+      titles: {
+        select: { id: true, text: true, status: true, errorMessage: true, attempts: true },
+        orderBy: { order: "asc" },
+      },
+    },
+  });
+  console.log(
+    'Runs de la categoría "Emergencias y Seguros de Salud en la Florida":',
+    JSON.stringify(emergenciasRuns, null, 2),
+  );
+
   const activeTitles = await prisma.title.findMany({
     where: { run: { userId: user.id }, status: { in: ["pending", "processing"] } },
     select: {
