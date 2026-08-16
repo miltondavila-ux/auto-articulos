@@ -51,16 +51,6 @@ HANDOFF, solo alimenta ideas hacia él).
   un espacio nuevo donde el usuario suba: (1) su logo, y (2) una foto suya —
   ambos para que el generador sepa qué logo y qué imagen de la persona usar
   al armar cada infografía.
-- **(9/8/2026)** Bug reportado: Antonio Aguirre tiene DOS cuentas separadas
-  de Auto Artículos (dos logins/emails distintos, cada una con sus propias
-  credenciales guardadas de 10minutesWebsite) — una para su contenido en
-  español y otra para su contenido en inglés. El sistema debería sincronizar
-  categorías y publicar de forma independiente en cada cuenta según cuál esté
-  en uso, pero en la práctica solo revisa/sincroniza las categorías de la
-  cuenta en español y termina publicando ahí, ignorando la cuenta en inglés.
-  Causa raíz sin diagnosticar todavía — investigar con evidencia real (logs
-  de sincronización de categorías y de publicación de ambas cuentas) antes de
-  asumir dónde está el problema.
 - **(9/8/2026)** Agregar dos botones de llamada a la acción en la pantalla de
   Login, dirigidos a quienes todavía no tienen acceso al Programa de
   Posicionamiento. Deben verse claramente dentro del Login y mantener el
@@ -71,12 +61,6 @@ HANDOFF, solo alimenta ideas hacia él).
     enlace asignado; el botón debe mostrarse igual desde ya (sin link activo
     o deshabilitado, a definir al ejecutar). Cuando el enlace esté listo,
     solo hay que reemplazar la URL, sin tocar diseño ni funcionalidad.
-- **(9/8/2026)** Bug reportado: las estadísticas de artículos parecen
-  contabilizarse desde el momento en que se solicitan/comienzan a generarse,
-  en vez de contarse solo cuando terminan bien. Corregir para que un
-  artículo sume a las estadísticas ÚNICAMENTE después de que el sistema
-  confirme que quedó guardado con éxito en la plataforma — los que fallen,
-  queden incompletos, se cancelen o nunca lleguen a guardarse no deben sumar.
 - **(9/8/2026)** Redes sociales a conectar para envío automático, hasta 3
   veces por semana cada una (relacionado con el ítem del 8/8/2026 "Motor de
   Distribución Inteligente SEO para Redes Sociales", que hablaba de 2 veces
@@ -116,7 +100,37 @@ HANDOFF, solo alimenta ideas hacia él).
   formalizado como rol, o puede que Milton quiera dos cosas distintas
   (cuentas internas de prueba de Milton vs. registros públicos de clientes
   potenciales); confirmar con él antes de asumir cuál es.
+- **(16/8/2026)** Bug en responsive/teléfono: las pantallas no se mantienen
+  estáticas — al moverlas con el dedo (scroll/touch) cambian de tamaño y de
+  comportamiento en vez de quedarse fijas.
+- **(16/8/2026)** En el listado de "Usuarios activos" (Administración), el
+  orden debe mostrar primero los usuarios que están activos ahora mismo, y
+  luego los que han estado activos más recientemente.
+- **(16/8/2026)** Queja: la transformación de todas las pantallas al estilo
+  Apple quedó a medias, se ve mal y feo. Falta terminarla bien en todas las
+  pantallas.
+- **(16/8/2026)** Hacer un análisis de ingeniería inversa de cómo se crean los
+  artículos actualmente (el flujo de 10minutesWebsite), para poder ofrecer en
+  Auto Artículos la opción de elegir entre dos máquinas de creación:
+  1) la máquina actual de 10minutesWebsite (como hoy), o
+  2) una máquina secundaria más abierta, con su propio prompt dentro de la
+     misma Auto Artículos. Ese prompt escribiría/copiaría directamente sobre
+     el artículo y NO usaría el botón de generación de ChatGPT. Lo único que
+     seguiría usando del flujo actual es el botón de imágenes; todo lo demás
+     quedaría igual.
+  Adición del mismo día: ese prompt tiene que ser más inteligente y mostrar
+  gráficas y números; el resultado debe ser fácil de leer para personas, no
+  solo para máquinas.
+
 ## Hecho
+
+- **(16/8/2026)** Asistente Flotante Arrastrable (Drag-and-Drop) en `FloatingAssistant`:
+  - Se agregó la funcionalidad de arrastrar (drag-and-drop) con soporte completo para ratón y gestos táctiles (touch) en móviles.
+  - La posición del asistente flotante se calcula mediante offsets con respecto a los bordes derecho e inferior (`right` y `bottom`), lo cual garantiza que al abrir o cerrar el panel, el botón lanzador permanezca en su lugar y el panel crezca hacia arriba de manera limpia.
+  - En responsive móvil (ancho <= 560px), el arrastre horizontal se inhabilita para respetar los márgenes del layout, permitiendo el arrastre vertical de forma fluida para evitar tapar otros elementos.
+  - Se implementó un umbral de movimiento de 5 píxeles para evitar que los clics normales para abrir o cerrar el asistente se malinterpreten como arrastres.
+  - La posición se guarda y persiste en `localStorage` mediante `STORAGE_KEY`, y se adapta en vivo ante redimensionamientos de ventana (`resize`).
+  - Ver cambios en: [`FloatingAssistant.tsx`](file:///Users/miltondavila/Creador%20de%20articulos/apps/web/src/components/FloatingAssistant.tsx).
 
 - **(14/8/2026)** Guía y Redirección Activa a Configuración Requerida (`PreValidationGuard`):
   - Se eliminaron los avisos pasivos y pantallas bloqueadas a medias en `/dashboard/publicar` y `/dashboard/oportunidades`.

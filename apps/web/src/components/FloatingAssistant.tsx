@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, KeyboardEvent, useEffect, useState } from "react";
+import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 
 const STORAGE_KEY = "auto-articulos:floating-assistant:v1";
 const MAX_STORED_MESSAGES = 30;
@@ -45,11 +45,32 @@ export default function FloatingAssistant() {
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Estados para posicionamiento de arrastre
+  const [position, setPosition] = useState<{ right: number; bottom: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const dragInfoRef = useRef<{
+    startX: number;
+    startY: number;
+    startRight: number;
+    startBottom: number;
+    isPressed: boolean;
+    hasMoved: boolean;
+  }>({
+    startX: 0,
+    startY: 0,
+    startRight: 0,
+    startBottom: 0,
+    isPressed: false,
+    hasMoved: false,
+  });
+
   useEffect(() => {
     try {
       const stored = window.localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        const value = JSON.parse(stored) as { open?: unknown; messages?: unknown };
+        const value = JSON.parse(stored) as { open?: unknown; messages?: unknown; position?: unknown };
         if (typeof value.open === "boolean") setOpen(value.open);
         if (Array.isArray(value.messages)) {
           setMessages(value.messages.filter((item): item is ConversationMessage =>
@@ -57,6 +78,12 @@ export default function FloatingAssistant() {
             (item.role === "user" || item.role === "assistant") &&
             typeof item.content === "string" && item.content.length > 0,
           ).slice(-MAX_STORED_MESSAGES));
+        }
+        if (value.position && typeof value.position === "object") {
+          const pos = value.position as { right?: unknown; bottom?: unknown };
+          if (typeof pos.right === "number" && typeof pos.bottom === "number") {
+            setPosition({ right: pos.right, bottom: pos.bottom });
+          }
         }
       }
     } catch {
@@ -68,8 +95,168 @@ export default function FloatingAssistant() {
 
   useEffect(() => {
     if (!ready) return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ open, messages: messages.slice(-MAX_STORED_MESSAGES) }));
-  }, [messages, open, ready]);
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        open,
+        messages: messages.slice(-MAX_STORED_MESSAGES),
+        position,
+      })
+    );
+  }, [messages, open, position, ready]);
+
+  // Manejadores globales de movimiento para el arrastre
+  useEffect(() => {
+    const handleMove = (clientX: number, clientY: number) => {
+      const drag = dragInfoRef.current;
+      if (!drag.isPressed || !containerRef.current) return;
+
+      const deltaX = clientX - drag.startX;
+      const deltaY = clientY - drag.startY;
+
+      // Usar umbral de 5 píxeles para iniciar el arrastre y evitar confundirlo con clics
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      if (!drag.hasMoved && distance > 5) {
+        drag.hasMoved = true;
+        setIsDragging(true);
+      }
+
+      if (drag.hasMoved) {
+        let newRight = drag.startRight - deltaX;
+        let newBottom = drag.startBottom - deltaY;
+
+        const rect = containerRef.current.getBoundingClientRect();
+        const width = rect.width;
+        const height = rect.height;
+
+        const isMobile = window.innerWidth <= 560;
+
+        if (!isMobile) {
+          // Clamp horizontal en escritorio
+          newRight = Math.max(0, Math.min(newRight, window.innerWidth - width));
+        } else {
+          // En móvil, dejamos que el ancho completo sea controlado por el CSS flex layout
+          newRight = 0;
+        }
+
+        // Clamp vertical
+        newBottom = Math.max(0, Math.min(newBottom, window.innerHeight - height));
+
+        setPosition({
+          right: isMobile ? 0 : newRight,
+          bottom: newBottom,
+        });
+      }
+    };
+
+    const handleEnd = () => {
+      const drag = dragInfoRef.current;
+      if (!drag.isPressed) return;
+
+      drag.isPressed = false;
+      if (drag.hasMoved) {
+        // timeout mínimo para asegurar que los eventos onClick no se disparen inmediatamente tras soltar el arrastre
+        setTimeout(() => {
+          setIsDragging(false);
+        }, 50);
+      }
+    };
+
+    const onMouseMove = (e: MouseEvent) => handleMove(e.clientX, e.clientY);
+    const onTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (touch) {
+        handleMove(touch.clientX, touch.clientY);
+      }
+    };
+
+    const onMouseUp = () => handleEnd();
+    const onTouchEnd = () => handleEnd();
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd);
+
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [position]);
+
+  // Listener para ajustar el widget dentro de los bordes si se cambia el tamaño de pantalla
+  useEffect(() => {
+    const handleResize = () => {
+      if (!position || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const isMobile = window.innerWidth <= 560;
+
+      let newRight = position.right;
+      let newBottom = position.bottom;
+
+      if (!isMobile) {
+        newRight = Math.max(0, Math.min(newRight, window.innerWidth - rect.width));
+      } else {
+        newRight = 0;
+      }
+      newBottom = Math.max(0, Math.min(newBottom, window.innerHeight - rect.height));
+
+      if (newRight !== position.right || newBottom !== position.bottom) {
+        setPosition({ right: newRight, bottom: newBottom });
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [position]);
+
+  const handleStart = (clientX: number, clientY: number, target: EventTarget) => {
+    // Si el usuario presiona un botón, enlace, input o textarea, no arrastrar
+    if (
+      target instanceof HTMLElement &&
+      (target.closest("button") || target.closest("textarea") || target.closest("a") || target.closest("input"))
+    ) {
+      return;
+    }
+
+    if (!containerRef.current) return;
+
+    const rect = containerRef.current.getBoundingClientRect();
+    const currentRight = position ? position.right : (window.innerWidth - rect.right);
+    const currentBottom = position ? position.bottom : (window.innerHeight - rect.bottom);
+
+    dragInfoRef.current = {
+      startX: clientX,
+      startY: clientY,
+      startRight: currentRight,
+      startBottom: currentBottom,
+      isPressed: true,
+      hasMoved: false,
+    };
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return; // Solo botón izquierdo
+    handleStart(e.clientX, e.clientY, e.target);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    if (touch) {
+      handleStart(touch.clientX, touch.clientY, e.target);
+    }
+  };
+
+  const handleLauncherClick = (e: React.MouseEvent) => {
+    if (dragInfoRef.current.hasMoved) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    setOpen((current) => !current);
+  };
 
   async function ask(question = message) {
     const cleanQuestion = question.trim();
@@ -112,11 +299,20 @@ export default function FloatingAssistant() {
     }
   }
 
+  const isMobile = typeof window !== "undefined" && window.innerWidth <= 560;
+  const inlineStyle: React.CSSProperties = position
+    ? {
+        right: isMobile ? "max(12px, env(safe-area-inset-right))" : `${position.right}px`,
+        left: isMobile ? "max(12px, env(safe-area-inset-left))" : "auto",
+        bottom: `${position.bottom}px`,
+      }
+    : {};
+
   return (
-    <div className="floating-assistant" aria-live="polite">
+    <div ref={containerRef} className={`floating-assistant ${isDragging ? "dragging" : ""}`} style={inlineStyle} aria-live="polite">
       {open && (
         <section id="floating-help-panel" className="assistant-panel" aria-label="Asistente de ayuda">
-          <header className="assistant-header">
+          <header className="assistant-header" onMouseDown={handleMouseDown} onTouchStart={handleTouchStart}>
             <div className="assistant-avatar" aria-hidden="true">✦</div>
             <div className="assistant-heading">
               <span className="assistant-eyebrow">ASISTENTE DE AYUDA</span>
@@ -162,15 +358,17 @@ export default function FloatingAssistant() {
         </section>
       )}
 
-      <button className="assistant-launcher" type="button" onClick={() => setOpen((current) => !current)} aria-expanded={open} aria-controls="floating-help-panel">
+      <button className="assistant-launcher" type="button" onMouseDown={handleMouseDown} onTouchStart={handleTouchStart} onClick={handleLauncherClick} aria-expanded={open} aria-controls="floating-help-panel">
         <span className="assistant-launcher-icon" aria-hidden="true">✦</span>
         <span className="assistant-launcher-copy"><small>AYUDA IA</small><strong>{open ? "Cerrar ayuda" : "¿Necesitas ayuda?"}</strong></span>
       </button>
 
       <style jsx>{`
         .floating-assistant { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); z-index: 100; font-family: inherit; }
+        .floating-assistant.dragging, .floating-assistant.dragging * { cursor: grabbing !important; user-select: none; }
         .assistant-panel { display: flex; width: min(440px, calc(100vw - 32px)); height: min(680px, calc(100svh - 112px)); min-height: 460px; flex-direction: column; box-sizing: border-box; margin: 0 0 14px; overflow: hidden; overscroll-behavior: contain; border: 1px solid rgba(148, 163, 184, .28); border-radius: 22px; background: #fff; box-shadow: 0 24px 70px rgba(15, 23, 42, .24); animation: assistant-enter .18s ease-out; }
-        .assistant-header { display: flex; align-items: flex-start; gap: 11px; padding: 18px; color: #fff; background: radial-gradient(circle at 86% 0%, #60a5fa 0, transparent 32%), linear-gradient(135deg, #172554, #1d4ed8); }
+        .assistant-header { display: flex; align-items: flex-start; gap: 11px; padding: 18px; color: #fff; background: radial-gradient(circle at 86% 0%, #60a5fa 0, transparent 32%), linear-gradient(135deg, #172554, #1d4ed8); cursor: grab; }
+        .assistant-header:active { cursor: grabbing; }
         .assistant-avatar, .assistant-launcher-icon { display: grid; flex: 0 0 auto; place-items: center; color: #1d4ed8; background: #fff; box-shadow: 0 4px 14px rgba(15, 23, 42, .18); }
         .assistant-avatar { width: 36px; height: 36px; border-radius: 12px; font-size: 20px; }
         .assistant-heading { min-width: 0; flex: 1; }.assistant-eyebrow { display: block; margin-bottom: 3px; color: #bfdbfe; font-size: 9px; font-weight: 800; letter-spacing: .13em; }.assistant-heading h2 { margin: 0; color: #fff; font-size: 18px; line-height: 1.2; font-weight: 800; letter-spacing: -.02em; }.assistant-heading p { margin: 4px 0 0; color: #dbeafe; font-size: 12px; }
@@ -179,9 +377,20 @@ export default function FloatingAssistant() {
         .assistant-suggestions { display: grid; gap: 7px; }.assistant-suggestions button { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 44px; padding: 10px 11px; border: 1px solid #dbeafe; border-radius: 11px; color: #1e3a8a; background: #fff; text-align: left; font-size: 12px; font-weight: 650; cursor: pointer; touch-action: manipulation; }.assistant-suggestions span { color: #2563eb; font-size: 15px; }
         .assistant-messages { display: grid; gap: 10px; }.assistant-message { max-width: 92%; padding: 11px 12px; border-radius: 14px; white-space: pre-wrap; font-size: 13px; line-height: 1.55; }.assistant-message-user { justify-self: end; color: #fff; background: #2563eb; border-bottom-right-radius: 4px; }.assistant-message-assistant { justify-self: start; color: #1e293b; background: #eaf2ff; border-bottom-left-radius: 4px; }.assistant-message :global(.assistant-module-link) { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; box-sizing: border-box; margin: 8px 0; padding: 10px 11px; border: 1px solid #93c5fd; border-radius: 10px; color: #1d4ed8; background: #fff; font-weight: 750; text-decoration: none; cursor: pointer; }.assistant-typing { color: #475569; font-weight: 600; }.assistant-typing span { display: inline-block; width: 22px; overflow: hidden; vertical-align: bottom; animation: assistant-dots 1.2s steps(4, end) infinite; }
         .assistant-form { display: flex; align-items: flex-end; gap: 8px; padding: 8px 12px; border-top: 1px solid #e2e8f0; background: #fff; }.assistant-form textarea { min-width: 0; flex: 1; resize: none; border: 0; outline: 0; color: #0f172a; background: transparent; font: inherit; font-size: 13px; line-height: 1.45; }.assistant-form textarea::placeholder { color: #94a3b8; }.assistant-form button { display: grid; width: 42px; height: 42px; flex: 0 0 auto; place-items: center; border: 0; border-radius: 12px; color: #fff; background: #2563eb; font-size: 20px; font-weight: 700; cursor: pointer; touch-action: manipulation; }.assistant-form button:disabled { opacity: .42; cursor: not-allowed; }
-        .assistant-hint { margin: 0; padding: 0 14px 11px; color: #94a3b8; background: #fff; font-size: 10px; text-align: center; }.assistant-launcher { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 9px 15px 9px 10px; border: 1px solid rgba(255,255,255,.25); border-radius: 17px; color: #fff; background: linear-gradient(135deg, #1e3a8a, #2563eb); box-shadow: 0 12px 28px rgba(30, 64, 175, .32); text-align: left; cursor: pointer; touch-action: manipulation; }.assistant-launcher-icon { width: 34px; height: 34px; border-radius: 11px; font-size: 18px; }.assistant-launcher-copy { display: grid; gap: 1px; }.assistant-launcher-copy small { color: #bfdbfe; font-size: 9px; font-weight: 800; letter-spacing: .1em; }.assistant-launcher-copy strong { color: #fff; font-size: 13px; line-height: 1.2; }
+        .assistant-hint { margin: 0; padding: 0 14px 11px; color: #94a3b8; background: #fff; font-size: 10px; text-align: center; }
+        .assistant-launcher { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 9px 15px 9px 10px; border: 1px solid rgba(255,255,255,.25); border-radius: 17px; color: #fff; background: linear-gradient(135deg, #1e3a8a, #2563eb); box-shadow: 0 12px 28px rgba(30, 64, 175, .32); text-align: left; cursor: grab; touch-action: none; }
+        .assistant-launcher:active { cursor: grabbing; }
+        .assistant-launcher-icon { width: 34px; height: 34px; border-radius: 11px; font-size: 18px; }.assistant-launcher-copy { display: grid; gap: 1px; }.assistant-launcher-copy small { color: #bfdbfe; font-size: 9px; font-weight: 800; letter-spacing: .1em; }.assistant-launcher-copy strong { color: #fff; font-size: 13px; line-height: 1.2; }
         @keyframes assistant-enter { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } } @keyframes assistant-dots { to { width: 0; } }
-        @media (max-width: 560px) { .floating-assistant { right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); left: max(12px, env(safe-area-inset-left)); display: flex; flex-direction: column; align-items: stretch; pointer-events: none; }.assistant-panel, .assistant-launcher { pointer-events: auto; }.assistant-panel { width: 100%; height: min(680px, calc(100svh - 92px)); min-height: 0; max-height: none; margin-bottom: 10px; border-radius: 20px; animation: assistant-mobile-enter .16s ease-out; }.assistant-header { padding: 16px; }.assistant-content { padding: 15px 16px 10px; }.assistant-launcher { align-self: flex-end; }.assistant-launcher-copy small, .assistant-hint { display: none; }}
+        @media (max-width: 560px) {
+          .floating-assistant { right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); left: max(12px, env(safe-area-inset-left)); display: flex; flex-direction: column; align-items: stretch; pointer-events: none; }
+          .assistant-panel, .assistant-launcher { pointer-events: auto; }
+          .assistant-panel { width: 100%; height: min(680px, calc(100svh - 92px)); min-height: 0; max-height: none; margin-bottom: 10px; border-radius: 20px; animation: assistant-mobile-enter .16s ease-out; }
+          .assistant-header { padding: 16px; }
+          .assistant-content { padding: 15px 16px 10px; }
+          .assistant-launcher { align-self: flex-end; }
+          .assistant-launcher-copy small, .assistant-hint { display: none; }
+        }
         @media (prefers-reduced-motion: reduce) { .assistant-panel, .assistant-typing span { animation: none; } } @keyframes assistant-mobile-enter { from { opacity: 0; } to { opacity: 1; } }
       `}</style>
     </div>

@@ -756,6 +756,136 @@ ejecutar de forma explícita y auditada después del despliegue.
 
 ## Trabajo activo
 
+### 🛑 STOP — Sesión de Claude en pausa, retomar con otro programador (16/8/2026)
+
+- Milton detiene esta sesión de Claude en este punto. La retomará otro
+  programador/IA. No hay ninguna reserva de archivos activa de Claude en
+  este momento; el árbol solo tiene sin commitear los mismos tres archivos
+  ajenos de siempre (`MCP_ACCIONES_UNIVERSALES.md`,
+  `diagnose-lorena-editor.js`, `migration_add_permissions.sql`) más los
+  cambios ya commiteados manualmente en `TO-DO.md` y en este mismo documento
+  durante esta sesión (ver entradas de arriba).
+- **Orden de Milton para quien continúe, de nuevo y en mayúsculas porque ya
+  causó incidentes cuando no se respetó:** SIEMPRE que programes algo, antes
+  de darlo por terminado, debés dejar el detalle completo en este documento
+  (`COORDINACION_CLAUDE_CODEX.md`): qué archivos reservaste, qué hiciste, el
+  resultado, las verificaciones que corriste, y si quedó pendiente algo de
+  Actualizaciones/manual/migración/despliegue. No alcanza con decírselo a
+  Milton en el chat — si no queda escrito acá, para el resto de los agentes
+  (y para Milton en la próxima sesión) es como si no hubiera pasado.
+- La tarea inmediata disponible para tomar es la siguiente entrada de esta
+  misma sección ("Chat de ayuda flotante movible"). Antes de tocarla, seguir
+  la Regla obligatoria antes de iniciar cualquier tarea (leer esta sección,
+  `git status --short`, `git log -5 --oneline`, y anotar la reserva acá
+  antes de editar).
+
+### Tarea lista para tomar por cualquier agente — Chat de ayuda flotante movible (16/8/2026)
+
+- **Origen:** ítem de `TO-DO.md` (Pendientes, 16/8/2026): "El chat de ayuda
+  flotante debe poder moverse (arrastrarse) por la pantalla, para que en
+  vista responsive no tape ni interfiera con otros botones." Milton pidió
+  dejar el encargo aquí, ya desarrollado, para que cualquier IA/sesión lo
+  pueda tomar y ejecutar sin tener que volver a pedir contexto.
+- **Estado:** `COMPLETADO Y ENTREGADO` (16/8/2026).
+  - **Agente:** Antigravity (Google).
+  - **Archivos reservados y modificados:** `apps/web/src/components/FloatingAssistant.tsx`
+  - **Detalle de implementación:**
+    - Agregada funcionalidad de arrastre (drag-and-drop) con soporte de eventos mouse (`onMouseDown`, `onMouseMove`, `onMouseUp`) y touch (`onTouchStart`, `onTouchMove`, `onTouchEnd`) para desktop y móvil.
+    - El posicionamiento usa offsets en `right` y `bottom` en relación al borde inferior derecho del viewport. Esto permite que el botón lanzador permanezca en su lugar y el panel crezca hacia arriba sin dar saltos cuando se abre o cierra.
+    - En móvil (breakpoint <= 560px), el arrastre horizontal se desactiva para conservar los márgenes predeterminados del layout de móvil, permitiendo un movimiento exclusivamente vertical fluido.
+    - Se incorporó un umbral/tolerancia de 5 píxeles en los eventos de arrastre para diferenciar de forma robusta los clics rápidos de los arrastres continuos.
+    - La posición final se persiste de manera automática en `localStorage` bajo `STORAGE_KEY` y se adapta de forma segura ante cambios de tamaño de la ventana (`resize`).
+    - Eliminada una etiqueta duplicada `</style>` en el JSX que causaba advertencias en la compilación.
+    - Verificado localmente con `npm --prefix apps/web run typecheck` (tsc libre de errores) y `git diff --check` (formateo correcto).
+  - **Entrega:** Mover el ítem de `TO-DO.md` a "Hecho" completado. Listo para commit y push. Reserva liberada.
+- **Contexto técnico:** el asistente flotante vive en
+  `apps/web/src/components/FloatingAssistant.tsx`. Hoy tiene posición fija
+  (`position: fixed`, esquina inferior derecha) tanto el botón lanzador
+  (`.assistant-launcher`) como el panel abierto (`.assistant-panel`) — reglas
+  CSS en las líneas 171 y 184 (bloque `@media (max-width: 560px)` para
+  móvil). No hay ninguna lógica de arrastre; la posición está fija por CSS.
+- **Qué hacer:**
+  1. Agregar arrastre (drag) al botón lanzador — y opcionalmente al panel
+     abierto — con soporte de mouse **y** touch (el caso reportado es en
+     celular).
+  2. Guardar la posición elegida por el usuario (por ejemplo en
+     `localStorage`, reutilizando el patrón que ya usa el componente con
+     `STORAGE_KEY` para persistir `open`/`messages`, líneas 5 y 48-72).
+  3. Si el usuario nunca arrastró nada, mantener la posición actual por
+     defecto (esquina inferior derecha) — no romper el comportamiento
+     existente para quien no lo toque.
+  4. Clampear el arrastre para que el botón/panel nunca quede fuera de la
+     pantalla ni detrás de otro elemento fijo.
+  5. Verificar especialmente el breakpoint móvil (`max-width: 560px`, línea
+     184), que hoy usa `flex-direction: column` con `align-self: flex-end` —
+     el arrastre debe convivir con eso sin romper el
+     `env(safe-area-inset-*)` ya aplicado.
+- **Alcance:** solo UI/estado de cliente. **No** requiere migración de base
+  de datos ni cambios de schema; no toca ningún endpoint.
+- **Verificación mínima antes de cerrar:** `npm --prefix apps/web run
+  typecheck` sin errores, y prueba visual real en escritorio y en móvil
+  (arrastrar y confirmar que la posición se recuerda al recargar).
+- **Cierre obligatorio (Regla de Actualizaciones + Manual):** antes de dar la
+  tarea por terminada, dejar la entrada correspondiente en el módulo
+  **Actualizaciones** (`ProductUpdate` / `/dashboard/actualizaciones`) y
+  asegurarse de que el manual del asistente pueda explicarlo. Documentar en
+  esta misma sección qué se hizo, para quién, cómo se usa y el módulo
+  afectado, y mover el ítem de `TO-DO.md` de "Pendientes" a "Hecho" con el
+  commit correspondiente.
+- **Criterio de aceptación:** en escritorio y en celular se puede arrastrar
+  el botón/panel del asistente a otra posición de la pantalla sin que tape
+  botones importantes; la posición se recuerda; nada más del comportamiento
+  existente (guardado de conversación, apertura/cierre, envío de preguntas)
+  se rompe.
+
+### Claude — Baja de ítem de `TO-DO.md`: cuentas dobles de Antonio Aguirre (16/8/2026)
+
+- **Agente:** Claude. **Estado:** `CERRADO SIN CAMBIOS DE CÓDIGO EN ESTA
+  SESIÓN — MILTON CONFIRMÓ QUE YA ESTÁ RESUELTO`.
+- **Contexto:** Milton indicó que el bug reportado (9/8/2026) sobre las dos
+  cuentas de Antonio Aguirre (español/inglés) que no sincronizaban/publicaban
+  de forma independiente ya se solucionó y pidió eliminarlo de `TO-DO.md`.
+- **Nota:** esta sesión no diagnosticó ni corrigió el bug; se retira el ítem
+  por indicación directa de Milton, sin commit ni evidencia técnica propia
+  que respalde la resolución. Si el bug reaparece, no hay registro en este
+  tablero de qué cambio lo arregló ni cuándo — consultar con Milton o con el
+  agente que lo haya resuelto si hace falta retomarlo.
+- **Estado del área:** no reservada; no bloquea a otros agentes.
+
+### Claude — Investigación del bug reportado de estadísticas de artículos (16/8/2026)
+
+- **Agente:** Claude. **Estado:** `CERRADO SIN CAMBIOS — MILTON CONFIRMÓ QUE
+  NO SE NECESITA` (16/8/2026).
+- **Pedido de Milton:** revisar el ítem de `TO-DO.md` (9/8/2026): "las
+  estadísticas de artículos parecen contabilizarse desde el momento en que se
+  solicitan/comienzan a generarse, en vez de contarse solo cuando terminan
+  bien".
+- **Investigación realizada (solo lectura, sin tocar código ni producción):**
+  se revisaron `apps/web/src/app/api/dashboard-stats/route.ts`,
+  `apps/web/src/components/PerformanceDashboard.tsx`,
+  `apps/web/src/app/api/runs/route.ts`,
+  `apps/web/src/app/api/admin/users/route.ts`, los enums `RunStatus`/
+  `TitleStatus` en `packages/db/prisma/schema.prisma` y
+  `apps/worker/src/queue.ts`.
+- **Hallazgo:** prácticamente todos los conteos de "publicado" (dashboard,
+  cupo diario/mensual, Administración, historial) ya filtran correctamente
+  por `status: "success"`, y el worker solo marca `success` tras confirmar
+  un `articleUrl` real devuelto por 10minutesWebsite. La única cifra que
+  cuenta desde el momento de la solicitud es `totalAttempted` en
+  `dashboard-stats/route.ts` (usada para mostrar "X% de éxito sobre Y
+  intentos" bajo "Total publicado" en `PerformanceDashboard.tsx`) — está
+  etiquetada como intentos, no como publicados, así que podría ser solo una
+  lectura confusa de esa línea y no el bug real.
+- **Siguiente acción:** se le pidió a Milton un ejemplo concreto (captura,
+  cuenta o fecha) antes de tocar código, porque la lógica de conteo
+  principal parece correcta y no conviene perseguir un bug que no está
+  confirmado en el código.
+- **Archivos tocados:** ninguno. **Commit/push/migración:** ninguno.
+- **Cierre:** Milton pidió eliminar el ítem de `TO-DO.md` (9/8/2026) sobre
+  este bug — confirma que ya no se necesita. Se quitó de "Pendientes"; no se
+  movió a "Hecho" porque no hubo entrega, solo se descartó.
+- **Estado del área:** no reservada; no bloquea a otros agentes.
+
 - **Capitán de migración liberó el lote:** Antigravity. Resultado: Lote coordinado desplegado a producción con éxito (`e5f9940`). Todas las migraciones aplicadas y typechecks limpios.
 
 ### Claude — País del usuario nuevo y auto-selección del servidor .site/.net (14/8/2026)
