@@ -213,12 +213,21 @@ export default function FloatingAssistant() {
   }, [position]);
 
   const handleStart = (clientX: number, clientY: number, target: EventTarget) => {
-    // Si el usuario presiona un botón, enlace, input o textarea, no arrastrar
-    if (
-      target instanceof HTMLElement &&
-      (target.closest("button") || target.closest("textarea") || target.closest("a") || target.closest("input"))
-    ) {
-      return;
+    if (target instanceof HTMLElement) {
+      // El botón lanzador es un <button>, pero sí debe permitir el arrastre
+      const isLauncher = target.closest(".assistant-launcher");
+
+      // Si no es el lanzador, evitamos arrastrar si se presiona un botón del panel, input, etc.
+      if (!isLauncher) {
+        if (
+          target.closest("button") ||
+          target.closest("textarea") ||
+          target.closest("a") ||
+          target.closest("input")
+        ) {
+          return;
+        }
+      }
     }
 
     if (!containerRef.current) return;
