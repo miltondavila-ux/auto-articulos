@@ -8,6 +8,7 @@ import {
   tdStyle,
   statusLabel,
   runStatusLabel,
+  secondaryButtonStyle,
 } from "@/components/dashboard-ui";
 import type {
   RunRow,
@@ -19,7 +20,7 @@ import GoogleIndexingStatus from "@/components/GoogleIndexingStatus";
 
 export default function HistorialPage() {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <HistorialEjecuciones />
       <HistorialRedes />
     </div>
@@ -75,7 +76,7 @@ function HistorialEjecuciones() {
   }, [runs]);
 
   return (
-    <details open={false} style={sectionStyle}>
+    <details open={true} className="panel" style={sectionStyle}>
       <summary
         style={{
           cursor: "pointer",
@@ -87,38 +88,38 @@ function HistorialEjecuciones() {
           userSelect: "none",
         }}
       >
-        <h2 style={{ ...h2Style, margin: 0 }}>Historial de ejecuciones</h2>
-        <span style={{ fontSize: 12, color: "#6b7280" }}>
+        <div>
+          <p className="eyebrow" style={{ margin: "0 0 2px" }}>Registro</p>
+          <h2 style={{ ...h2Style, margin: 0 }}>Historial de Ejecuciones</h2>
+        </div>
+        <span className="muted" style={{ fontSize: 13 }}>
           {runs.length} ejecución{runs.length !== 1 ? "es" : ""}
         </span>
       </summary>
-      <div style={{ marginTop: 12 }}>
+      <div style={{ marginTop: 14 }}>
         <div
           style={{
             display: "flex",
             justifyContent: "flex-end",
             gap: 8,
-            marginBottom: 10,
+            marginBottom: 12,
           }}
         >
           {hasDeletableRuns &&
             (confirmingDelete ? (
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 12, color: "#8a6d1a" }}>
-                  ¿Borrar todo? No se puede deshacer.
+                <span style={{ fontSize: 12, color: "#8a4b08" }}>
+                  ¿Borrar historial? No se puede deshacer.
                 </span>
                 <button
                   onClick={handleDeleteHistory}
                   disabled={deleting}
+                  className="secondary"
                   style={{
-                    background: "#fde8e8",
-                    color: "#d64545",
-                    border: "1px solid #e8b4b4",
-                    borderRadius: 6,
+                    ...secondaryButtonStyle,
+                    color: "#ff3b30",
                     padding: "4px 10px",
                     fontSize: 12,
-                    fontWeight: 600,
-                    cursor: deleting ? "default" : "pointer",
                   }}
                 >
                   {deleting ? "Borrando..." : "Sí, borrar"}
@@ -126,14 +127,11 @@ function HistorialEjecuciones() {
                 <button
                   onClick={() => setConfirmingDelete(false)}
                   disabled={deleting}
+                  className="secondary"
                   style={{
-                    background: "none",
-                    color: "#6b7280",
-                    border: "1px solid #dfe3e8",
-                    borderRadius: 6,
+                    ...secondaryButtonStyle,
                     padding: "4px 10px",
                     fontSize: 12,
-                    cursor: deleting ? "default" : "pointer",
                   }}
                 >
                   No
@@ -142,39 +140,37 @@ function HistorialEjecuciones() {
             ) : (
               <button
                 onClick={() => setConfirmingDelete(true)}
+                className="secondary"
                 style={{
-                  background: "none",
-                  color: "#d64545",
-                  border: "1px solid #fde8e8",
-                  borderRadius: 6,
+                  ...secondaryButtonStyle,
+                  color: "#ff3b30",
                   padding: "4px 10px",
                   fontSize: 12,
-                  fontWeight: 600,
-                  cursor: "pointer",
                 }}
               >
-                🗑 Borrar historial
+                Borrar historial
               </button>
             ))}
         </div>
         {deleteError && (
-          <p style={{ fontSize: 12, color: "#d64545", marginTop: 6 }}>
+          <p style={{ fontSize: 12, color: "#ff3b30", marginTop: 6 }}>
             {deleteError}
           </p>
         )}
-        {runs.length === 0 && (
-          <p style={{ fontSize: 13, color: "#6b7280" }}>
-            Todavía no hay ejecuciones.
+        {runs.length === 0 ? (
+          <p className="muted" style={{ fontSize: 13 }}>
+            Aún no hay ejecuciones en el historial.
           </p>
+        ) : (
+          runsByCategory.map(([categoryName, categoryRuns]) => (
+            <CategoryGroup
+              key={categoryName}
+              categoryName={categoryName}
+              runs={categoryRuns}
+              onRetried={loadRuns}
+            />
+          ))
         )}
-        {runsByCategory.map(([categoryName, categoryRuns]) => (
-          <CategoryGroup
-            key={categoryName}
-            categoryName={categoryName}
-            runs={categoryRuns}
-            onRetried={loadRuns}
-          />
-        ))}
       </div>
     </details>
   );
@@ -194,16 +190,16 @@ function CategoryGroup({
     0,
   );
   const totalTitles = runs.reduce((acc, r) => acc + r.titles.length, 0);
-  const hasErrors = runs.some((r) => r.status === "halted");
 
   return (
     <details
-      open={false}
+      open={true}
+      className="row"
       style={{
-        marginBottom: 8,
-        background: hasErrors ? "#fff8e6" : "#f7f8fa",
-        border: hasErrors ? "1px solid #f0deac" : "1px solid #dfe3e8",
-        borderRadius: 8,
+        marginBottom: 10,
+        background: "#ffffff",
+        border: "1px solid #e5e5ea",
+        borderRadius: 12,
         overflow: "hidden",
       }}
     >
@@ -211,26 +207,22 @@ function CategoryGroup({
         style={{
           cursor: "pointer",
           fontSize: 14,
-          fontWeight: 700,
-          color: "#16181d",
+          fontWeight: 600,
+          color: "#1d1d1f",
           listStyle: "none",
           display: "flex",
           alignItems: "center",
           gap: 10,
-          padding: "10px 14px",
+          padding: "12px 16px",
           userSelect: "none",
         }}
       >
-        <span style={{ fontSize: 11, color: "#6b7280" }}>▶</span>
         <span>{categoryName}</span>
-        <span style={{ fontSize: 12, fontWeight: 500, color: "#6b7280" }}>
-          — {runs.length} ejecución{runs.length !== 1 ? "es" : ""}
-        </span>
-        <span style={{ fontSize: 12, fontWeight: 500, color: "#6b7280" }}>
-          — {totalSuccess}/{totalTitles} publicados
+        <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+          — {runs.length} ejecución{runs.length !== 1 ? "es" : ""} ({totalSuccess}/{totalTitles} publicados)
         </span>
       </summary>
-      <div style={{ padding: "0 14px 14px 14px" }}>
+      <div style={{ padding: "0 16px 16px 16px" }}>
         {runs.map((run) => (
           <HistoryEntry key={run.id} run={run} onRetried={onRetried} />
         ))}
@@ -317,7 +309,7 @@ function HistorialRedes() {
   }
 
   return (
-    <details open={false} style={sectionStyle}>
+    <details open={false} className="panel" style={sectionStyle}>
       <summary
         style={{
           cursor: "pointer",
@@ -329,16 +321,19 @@ function HistorialRedes() {
           userSelect: "none",
         }}
       >
-        <h2 style={{ ...h2Style, margin: 0 }}>Historial de Publicaciones en Redes</h2>
+        <div>
+          <p className="eyebrow" style={{ margin: "0 0 2px" }}>Redes Sociales</p>
+          <h2 style={{ ...h2Style, margin: 0 }}>Historial de Publicaciones en Redes</h2>
+        </div>
         {!loading && (
-          <span style={{ fontSize: 12, color: "#6b7280" }}>
+          <span className="muted" style={{ fontSize: 13 }}>
             {opportunities.length} publicación{opportunities.length !== 1 ? "es" : ""}
           </span>
         )}
       </summary>
-      <div style={{ marginTop: 12 }}>
+      <div style={{ marginTop: 14 }}>
         {loading ? (
-          <p style={{ fontSize: 13, color: "#6b7280" }}>Cargando...</p>
+          <p className="muted" style={{ fontSize: 13 }}>Cargando...</p>
         ) : (
           <>
             <div
@@ -346,27 +341,24 @@ function HistorialRedes() {
                 display: "flex",
                 justifyContent: "flex-end",
                 gap: 8,
-                marginBottom: 10,
+                marginBottom: 12,
               }}
             >
               {opportunities.length > 0 &&
                 (confirmingDelete ? (
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 12, color: "#d64545" }}>
+                    <span style={{ fontSize: 12, color: "#8a4b08" }}>
                       ¿Borrar todo? No se puede deshacer.
                     </span>
                     <button
                       onClick={handleDeleteHistory}
                       disabled={deletingHistory}
+                      className="secondary"
                       style={{
-                        background: "#fde8e8",
-                        color: "#d64545",
-                        border: "1px solid #e8b4b4",
-                        borderRadius: 6,
+                        ...secondaryButtonStyle,
+                        color: "#ff3b30",
                         padding: "4px 10px",
                         fontSize: 12,
-                        fontWeight: 600,
-                        cursor: deletingHistory ? "default" : "pointer",
                       }}
                     >
                       {deletingHistory ? "Borrando..." : "Sí, borrar"}
@@ -374,14 +366,11 @@ function HistorialRedes() {
                     <button
                       onClick={() => setConfirmingDelete(false)}
                       disabled={deletingHistory}
+                      className="secondary"
                       style={{
-                        background: "none",
-                        color: "#6b7280",
-                        border: "1px solid #dfe3e8",
-                        borderRadius: 6,
+                        ...secondaryButtonStyle,
                         padding: "4px 10px",
                         fontSize: 12,
-                        cursor: deletingHistory ? "default" : "pointer",
                       }}
                     >
                       No
@@ -390,26 +379,23 @@ function HistorialRedes() {
                 ) : (
                   <button
                     onClick={() => setConfirmingDelete(true)}
+                    className="secondary"
                     style={{
-                      background: "none",
-                      color: "#d64545",
-                      border: "1px solid #fde8e8",
-                      borderRadius: 6,
+                      ...secondaryButtonStyle,
+                      color: "#ff3b30",
                       padding: "4px 10px",
                       fontSize: 12,
-                      fontWeight: 600,
-                      cursor: "pointer",
                     }}
                   >
-                    🗑 Borrar historial
+                    Borrar historial
                   </button>
                 ))}
             </div>
             {error && (
-              <p style={{ fontSize: 12, color: "#d64545", marginTop: 6 }}>{error}</p>
+              <p style={{ fontSize: 12, color: "#ff3b30", marginTop: 6 }}>{error}</p>
             )}
             {opportunities.length === 0 ? (
-              <p style={{ fontSize: 13, color: "#6b7280" }}>
+              <p className="muted" style={{ fontSize: 13 }}>
                 Aún no hay publicaciones en el historial.
               </p>
             ) : (
@@ -418,11 +404,12 @@ function HistorialRedes() {
                   <details
                     key={opp.id}
                     open={false}
+                    className="row"
                     style={{
-                      background: opp.status === "error" ? "#fff8f8" : "#f7f8fa",
-                      border: opp.status === "error" ? "1px solid #fecaca" : "1px solid #dfe3e8",
-                      borderRadius: 8,
-                      padding: "10px 14px",
+                      background: "#ffffff",
+                      border: "1px solid #e5e5ea",
+                      borderRadius: 12,
+                      padding: "12px 16px",
                     }}
                   >
                     <summary
@@ -438,7 +425,7 @@ function HistorialRedes() {
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                        <span style={{ color: "#16181d", fontWeight: 600 }}>
+                        <span style={{ color: "#1d1d1f", fontWeight: 600 }}>
                           {new Date(opp.publishedAt || opp.createdAt).toLocaleString("es-US", {
                             day: "2-digit",
                             month: "2-digit",
@@ -446,28 +433,28 @@ function HistorialRedes() {
                             minute: "2-digit",
                           })}
                         </span>
-                        <span style={{ color: "#6b7280" }}>—</span>
-                        <span style={{ fontWeight: 700, color: opp.platform === "threads" ? "#0f1419" : opp.platform === "x" ? "#1da1f2" : opp.platform === "linkedin" ? "#0077b5" : "#6b7280" }}>
-                          {opp.platform === "threads" ? "🌀 Threads" : opp.platform === "x" ? "🐦 X (Twitter)" : opp.platform === "linkedin" ? "💼 LinkedIn" : opp.platform.toUpperCase()}
+                        <span className="muted">—</span>
+                        <span style={{ fontWeight: 600, color: "#0071e3", textTransform: "uppercase", fontSize: 11 }}>
+                          {opp.platform}
                         </span>
-                        <span style={{ color: "#6b7280" }}>—</span>
-                        <span style={{ color: "#16181d", fontWeight: 500 }}>
+                        <span className="muted">—</span>
+                        <span style={{ color: "#1d1d1f", fontWeight: 500 }}>
                           {opp.articleTitle}
                         </span>
                       </div>
                       <div>
                         {opp.status === "published" ? (
-                          <span style={{ color: "#16a34a", fontWeight: 600 }}>✓ Publicado</span>
+                          <span style={{ color: "#16803c", fontWeight: 600, fontSize: 12 }}>✓ Publicado</span>
                         ) : (
-                          <span style={{ color: "#dc2626", fontWeight: 600 }}>✗ Error</span>
+                          <span style={{ color: "#ff3b30", fontWeight: 600, fontSize: 12 }}>✕ Error</span>
                         )}
                       </div>
                     </summary>
-                    <div style={{ marginTop: 12, paddingLeft: 10, borderLeft: "3px solid #dfe3e8" }}>
-                      <p style={{ margin: "0 0 6px 0", color: "#16181d", fontSize: 13, fontWeight: 600 }}>
+                    <div style={{ marginTop: 12, paddingLeft: 12, borderLeft: "2px solid #e5e5ea" }}>
+                      <p style={{ margin: "0 0 6px 0", color: "#1d1d1f", fontSize: 13, fontWeight: 500 }}>
                         Copy publicado:
                       </p>
-                      <blockquote style={{ margin: "0 0 12px 0", fontStyle: "italic", color: "#4b5563", fontSize: 13, lineHeight: "1.5" }}>
+                      <blockquote style={{ margin: "0 0 12px 0", color: "#6e6e73", fontSize: 13, lineHeight: "1.5" }}>
                         &ldquo;{opp.suggestedText}&rdquo;
                       </blockquote>
                       <div style={{ display: "flex", gap: 15, fontSize: 12, flexWrap: "wrap", marginTop: 10 }}>
@@ -475,18 +462,19 @@ function HistorialRedes() {
                           href={opp.articleUrl}
                           target="_blank"
                           rel="noreferrer"
-                          style={{ color: "#3b82f6", textDecoration: "none", fontWeight: 600 }}
+                          className="link-button"
                         >
-                          Ver artículo original ↗
+                          Ver artículo original &rarr;
                         </a>
                         {opp.status === "published" && opp.postId && (
                           <a
                             href={opp.postId.startsWith("http") ? opp.postId : (opp.platform === "threads" ? `https://www.threads.net/t/${opp.postId}` : opp.platform === "x" ? `https://x.com/i/status/${opp.postId}` : opp.platform === "linkedin" ? `https://www.linkedin.com/feed/update/${opp.postId}` : "#")}
                             target="_blank"
                             rel="noreferrer"
-                            style={{ color: "#16a34a", textDecoration: "none", fontWeight: 600 }}
+                            className="link-button"
+                            style={{ color: "#16803c" }}
                           >
-                            Ver en la Red Social ↗
+                            Ver en la red social &rarr;
                           </a>
                         )}
                       </div>
@@ -495,14 +483,14 @@ function HistorialRedes() {
                           style={{
                             marginTop: 12,
                             padding: 10,
-                            background: "#fee2e2",
-                            color: "#991b1b",
-                            borderRadius: 6,
+                            background: "#fff2f1",
+                            color: "#ff3b30",
+                            borderRadius: 8,
                             fontSize: 12,
-                            border: "1px solid #fecaca",
+                            border: "1px solid rgba(255, 59, 48, 0.2)",
                           }}
                         >
-                          <strong>Log de error:</strong> {opp.errorLog}
+                          <strong>Error:</strong> {opp.errorLog}
                         </div>
                       )}
                       {opp.titleId && (
@@ -512,14 +500,14 @@ function HistorialRedes() {
                             if ((e.target as HTMLDetailsElement).open) loadSocialEvents(opp.titleId!);
                           }}
                         >
-                          <summary style={{ cursor: "pointer", color: "#6b7280", fontSize: 12, fontWeight: 600 }}>
+                          <summary style={{ cursor: "pointer", color: "#6e6e73", fontSize: 12 }}>
                             Ver log del proceso
                           </summary>
                           {loadingSocialEvent === opp.titleId && !socialEvents[opp.titleId] && (
-                            <p style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>Cargando...</p>
+                            <p className="muted" style={{ fontSize: 12, marginTop: 6 }}>Cargando...</p>
                           )}
                           {socialEvents[opp.titleId] && (
-                            <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: "#6b7280", fontSize: 11 }}>
+                            <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: "#6e6e73", fontSize: 12 }}>
                               {socialEvents[opp.titleId].map((e) => (
                                 <li key={e.id} style={{ marginBottom: 3 }}>
                                   <span>{new Date(e.createdAt).toLocaleTimeString()}</span> — {e.message}
@@ -569,9 +557,9 @@ function HistoryEntry({
       open={false}
       style={{
         marginBottom: 8,
-        background: hasErrors ? "#fffdf5" : "#ffffff",
-        border: hasErrors ? "1px solid #f0deac" : "1px solid #e8ecf1",
-        borderRadius: 6,
+        background: "#ffffff",
+        border: "1px solid #e5e5ea",
+        borderRadius: 8,
         overflow: "hidden",
       }}
     >
@@ -584,34 +572,29 @@ function HistoryEntry({
           gap: 8,
           alignItems: "center",
           flexWrap: "wrap",
-          padding: "8px 12px",
+          padding: "10px 14px",
           userSelect: "none",
         }}
       >
-        <span style={{ fontSize: 10, color: "#6b7280" }}>▶</span>
-        <span style={{ color: "#16181d", fontWeight: 600 }}>
+        <span style={{ color: "#1d1d1f", fontWeight: 600 }}>
           {new Date(run.createdAt).toLocaleString()}
         </span>
-        <span style={{ color: "#6b7280" }}>
+        <span className="muted">
           — {successCount}/{run.titles.length} publicados
         </span>
-        <span style={{ color: "#6b7280" }}>
-          — duración: {formatDuration(run.createdAt, run.finishedAt)}
+        <span className="muted">
+          — {formatDuration(run.createdAt, run.finishedAt)}
         </span>
         {hasErrors && (
           <button
             onClick={handleRetryRun}
             disabled={retrying}
+            className="secondary"
             style={{
-              background: "#8a6d1a",
-              color: "#fff8e6",
-              border: "none",
-              borderRadius: 6,
-              padding: "3px 10px",
+              ...secondaryButtonStyle,
+              color: "#ff3b30",
+              padding: "2px 8px",
               fontSize: 11,
-              fontWeight: 700,
-              textTransform: "uppercase",
-              cursor: retrying ? "default" : "pointer",
             }}
           >
             {retrying ? "Reintentando..." : "Reintentar"}
@@ -619,7 +602,7 @@ function HistoryEntry({
         )}
         <RunStatusBadge status={run.status} />
       </summary>
-      <div style={{ padding: "0 12px 12px 12px" }}>
+      <div style={{ padding: "0 14px 14px 14px" }}>
         <RunTable titles={run.titles} />
       </div>
     </details>
@@ -644,28 +627,19 @@ function formatDuration(startIso: string, endIso: string | null): string {
 }
 
 function RunStatusBadge({ status }: { status: RunStatus }) {
-  const color =
-    status === "halted"
-      ? "#8a6d1a"
-      : status === "cancelled"
-        ? "#6b7280"
-        : "#1e8a4b";
-  const background =
-    status === "halted"
-      ? "#fff8e6"
-      : status === "cancelled"
-        ? "#dfe3e8"
-        : "#dff5e6";
+  const isOk = status === "success";
+  const isErr = status === "halted";
+
   return (
     <span
       style={{
         marginLeft: "auto",
         fontSize: 11,
-        fontWeight: 600,
+        fontWeight: 500,
         padding: "2px 8px",
         borderRadius: 999,
-        color,
-        background,
+        color: isOk ? "#16803c" : isErr ? "#ff3b30" : "#6e6e73",
+        background: isOk ? "rgba(52, 199, 89, 0.1)" : isErr ? "#fff2f1" : "#f5f5f7",
       }}
     >
       {runStatusLabel(status)}
@@ -686,7 +660,7 @@ function RunTable({ titles }: { titles: TitleRow[] }) {
         }}
       >
         <thead>
-          <tr style={{ textAlign: "left", color: "#6b7280" }}>
+          <tr style={{ textAlign: "left", color: "#6e6e73" }}>
             <th style={thStyle}>Título</th>
             <th style={thStyle}>Estado</th>
             <th style={thStyle}>Intentos</th>
@@ -715,7 +689,7 @@ function renderMessageWithLinks(message: string) {
           href={part}
           target="_blank"
           rel="noreferrer"
-          style={{ color: "#3b82f6", textDecoration: "underline", fontWeight: 600 }}
+          className="link-button"
         >
           {part}
         </a>
@@ -743,11 +717,11 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
   }
 
   return (
-    <tr style={{ borderTop: "1px solid #dfe3e8" }}>
+    <tr style={{ borderTop: "1px solid #e5e5ea" }}>
       <td style={tdStyle} data-label="Título">
-        {title.text}
+        <span style={{ fontWeight: 500 }}>{title.text}</span>
         {title.finalTitle && title.finalTitle !== title.text && (
-          <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>
+          <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>
             Publicado como: {title.finalTitle}
           </div>
         )}
@@ -765,57 +739,34 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
               href={title.articleUrl}
               target="_blank"
               rel="noreferrer"
-              style={{
-                color: "#031537",
-                fontWeight: 600,
-                textDecoration: "none",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 4,
-              }}
+              className="link-button"
             >
-              🔗 Ver artículo publicado
+              Ver artículo &rarr;
             </a>
             <GoogleIndexingStatus title={title} />
             {title.threadsPublishStatus && (
               <div
                 style={{
                   fontSize: 11,
-                  color: "#6b7280",
-                  marginTop: 6,
+                  color: "#6e6e73",
+                  marginTop: 4,
                   display: "flex",
                   alignItems: "center",
                   gap: 4,
                 }}
               >
                 {title.threadsPublishStatus === "success" ? (
-                  <>
-                    <span>🌀</span>
-                    <a
-                      href={title.threadsPostId ? (title.threadsPostId.startsWith("http") ? title.threadsPostId : `https://www.threads.net/t/${title.threadsPostId}`) : "#"}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        color: "#0f1419",
-                        fontWeight: 600,
-                        textDecoration: "none",
-                      }}
-                    >
-                      Ver post en Threads
-                    </a>
-                  </>
-                ) : title.threadsPublishStatus === "error" ? (
-                  <span style={{ color: "#d64545" }} title={title.threadsPublishError ?? undefined}>
-                    🌀 Error en Threads
-                  </span>
-                ) : title.threadsPublishStatus === "not_configured" ? (
-                  <span style={{ color: "#9ca3af" }}>
-                    🌀 Threads no configurado
-                  </span>
+                  <a
+                    href={title.threadsPostId ? (title.threadsPostId.startsWith("http") ? title.threadsPostId : `https://www.threads.net/t/${title.threadsPostId}`) : "#"}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="link-button"
+                    style={{ color: "#16803c" }}
+                  >
+                    Post en Threads &rarr;
+                  </a>
                 ) : (
-                  <span style={{ color: "#b45309" }}>
-                    🌀 Threads: {title.threadsPublishStatus}
-                  </span>
+                  <span style={{ color: "#ff3b30" }}>Threads: {title.threadsPublishStatus}</span>
                 )}
               </div>
             )}
@@ -823,41 +774,25 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
               <div
                 style={{
                   fontSize: 11,
-                  color: "#6b7280",
-                  marginTop: 6,
+                  color: "#6e6e73",
+                  marginTop: 4,
                   display: "flex",
                   alignItems: "center",
                   gap: 4,
                 }}
               >
                 {title.twitterPublishStatus === "success" ? (
-                  <>
-                    <span>🐦</span>
-                    <a
-                      href={title.twitterPostId ? (title.twitterPostId.startsWith("http") ? title.twitterPostId : `https://x.com/i/status/${title.twitterPostId}`) : "#"}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        color: "#1da1f2",
-                        fontWeight: 600,
-                        textDecoration: "none",
-                      }}
-                    >
-                      Ver post en X
-                    </a>
-                  </>
-                ) : title.twitterPublishStatus === "error" ? (
-                  <span style={{ color: "#d64545" }} title={title.twitterPublishError ?? undefined}>
-                    🐦 Error en X
-                  </span>
-                ) : title.twitterPublishStatus === "not_configured" ? (
-                  <span style={{ color: "#9ca3af" }}>
-                    🐦 X no configurado
-                  </span>
+                  <a
+                    href={title.twitterPostId ? (title.twitterPostId.startsWith("http") ? title.twitterPostId : `https://x.com/i/status/${title.twitterPostId}`) : "#"}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="link-button"
+                    style={{ color: "#16803c" }}
+                  >
+                    Post en X &rarr;
+                  </a>
                 ) : (
-                  <span style={{ color: "#b45309" }}>
-                    🐦 X: {title.twitterPublishStatus}
-                  </span>
+                  <span style={{ color: "#ff3b30" }}>X: {title.twitterPublishStatus}</span>
                 )}
               </div>
             )}
@@ -865,47 +800,33 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
               <div
                 style={{
                   fontSize: 11,
-                  color: "#6b7280",
-                  marginTop: 6,
+                  color: "#6e6e73",
+                  marginTop: 4,
                   display: "flex",
                   alignItems: "center",
                   gap: 4,
                 }}
               >
                 {title.linkedinPublishStatus === "success" ? (
-                  <>
-                    <span>💼</span>
-                    <a
-                      href={title.linkedinPostId ? (title.linkedinPostId.startsWith("http") ? title.linkedinPostId : `https://www.linkedin.com/feed/update/${title.linkedinPostId}`) : "#"}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        color: "#0077b5",
-                        fontWeight: 600,
-                        textDecoration: "none",
-                      }}
-                    >
-                      Ver post en LinkedIn
-                    </a>
-                  </>
-                ) : title.linkedinPublishStatus === "error" ? (
-                  <span style={{ color: "#d64545" }} title={title.linkedinPublishError ?? undefined}>
-                    💼 Error en LinkedIn
-                  </span>
-                ) : title.linkedinPublishStatus === "not_configured" ? (
-                  <span style={{ color: "#9ca3af" }}>
-                    💼 LinkedIn no configurado
-                  </span>
+                  <a
+                    href={title.linkedinPostId ? (title.linkedinPostId.startsWith("http") ? title.linkedinPostId : `https://www.linkedin.com/feed/update/${title.linkedinPostId}`) : "#"}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="link-button"
+                    style={{ color: "#16803c" }}
+                  >
+                    Post en LinkedIn &rarr;
+                  </a>
                 ) : (
-                  <span style={{ color: "#b45309" }}>
-                    💼 LinkedIn: {title.linkedinPublishStatus}
-                  </span>
+                  <span style={{ color: "#ff3b30" }}>LinkedIn: {title.linkedinPublishStatus}</span>
                 )}
               </div>
             )}
           </div>
         ) : (
-          (title.errorMessage ?? "—")
+          <span style={{ color: title.errorMessage ? "#ff3b30" : "inherit" }}>
+            {title.errorMessage ?? "—"}
+          </span>
         )}
       </td>
       <td style={tdStyle} data-label="Log">
@@ -917,11 +838,11 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
               }
             }}
           >
-            <summary style={{ cursor: "pointer", color: "#6b7280" }}>
+            <summary style={{ cursor: "pointer", color: "#6e6e73" }}>
               Ver log
             </summary>
             {loadingEvents && !fullEvents && (
-              <p style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>
+              <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>
                 Cargando...
               </p>
             )}
@@ -929,8 +850,8 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
               <ul
                 style={{
                   margin: "8px 0 0",
-                  paddingLeft: 18,
-                  color: "#6b7280",
+                  paddingLeft: 16,
+                  color: "#6e6e73",
                   fontSize: 12,
                 }}
               >
@@ -940,7 +861,7 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
                   );
                   return (
                     <li key={e.id} style={{ marginBottom: 4 }}>
-                      <span style={{ color: "#6b7280" }}>
+                      <span style={{ color: "#86868b" }}>
                         {new Date(e.createdAt).toLocaleTimeString()}
                       </span>{" "}
                       {imageMatch ? (
@@ -954,7 +875,7 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
                               maxWidth: "100%",
                               marginTop: 6,
                               borderRadius: 6,
-                              border: "1px solid #dfe3e8",
+                              border: "1px solid #e5e5ea",
                             }}
                           />
                         </>

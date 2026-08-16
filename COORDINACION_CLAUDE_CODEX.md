@@ -88,6 +88,11 @@ autoriza aplicar una base de datos de destino incierto. Esta orden prevalece
 sobre la prisa de cerrar una tarea.
 
 - **Capitán de migración liberó el lote:** Antigravity. Resultado: Orden alfabetico y filtro por categoria desplegado.
+- **Transformación de Diseño Apple Minimalista (Antigravity — 16/8/2026):** A pedido explícito de Milton, se completó la refactorización integral del Look & Feel de toda la aplicación web (`apps/web`) adoptando la arquitectura de diseño Apple HIG minimalista inspirada en `agente-enrutador`:
+  - Paleta unificada: fondo `#f5f5f7`, tarjetas y paneles `#ffffff` con borde `1px solid rgba(0, 0, 0, 0.07)` o `#e5e5ea`, radio `22px` / `14px`, texto `#1d1d1f`, subtítulos y metadatos `#6e6e73`, acento único azul `#0071e3`.
+  - Eliminación total de gradientes oscuros, contrastes saturados e iconos coloridos estridentes.
+  - Vistas y componentes transformados: `globals.css`, `dashboard-ui.tsx`, `PreValidationGuard.tsx`, `ImageCreditsModal.tsx`, `PerformanceDashboard.tsx`, `OnboardingWizard.tsx`, `Oportunidades` (SEO), `Oportunidades Redes`, `Publicaciones en curso` (`LiveRunProgress.tsx`), `Historial`, `Configuracion` (Google Search Console, Bing, Business Profile, Redes, Photo/Logo), `Actualizaciones`, `ConfigurationStatus.tsx`, `Usuarios` (Admin), y `Login`.
+  - Verificación técnica: `npm --prefix apps/web run typecheck` (0 errores) y `npm --prefix apps/web run build` (las 72 rutas compilaron exitosamente). Sin cambios destructivos ni modificaciones en contratos de API ni lógica de negocio.
 
 **Coordinación solicitada por Milton (13/8/2026):** Codex leyó esta orden y
 ejecutó `scripts/migration-coordinator.sh status` antes de retomar cualquier

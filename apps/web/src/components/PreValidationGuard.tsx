@@ -18,9 +18,6 @@ interface PreValidationGuardProps {
   hasImageCredits: boolean;
   googleConnected?: boolean;
   hasGoogleSiteUrl?: boolean;
-  // Servidor de la cuenta (ver platform-servers.ts): determina si se
-  // muestra la marca "10minutesWebsite" o un término genérico (tagcrush,
-  // marca blanca). Default "net" = comportamiento histórico sin cambios.
   platformDomain?: string;
   onOpenImageCreditsModal?: () => void;
   children: React.ReactNode;
@@ -52,34 +49,26 @@ export default function PreValidationGuard({
         isGoogleReady &&
         hasImageCredits;
 
-  // Si todo está configurado, renderizamos el contenido normal sin alterar nada
   if (isReady) {
     return <>{children}</>;
   }
 
-  // Si falta algo, identificamos el primer paso pendiente para dirigir al usuario
-  let firstMissingStep = 1;
-  let firstMissingName = `Conectar ${productName}`;
+  let firstMissingName = `Paso 1: Conectar ${productName}`;
   let firstMissingUrl = "/dashboard/configuracion?tab=wizard";
 
   if (!credentialsConfigured) {
-    firstMissingStep = 1;
     firstMissingName = `Paso 1: Conectar ${productName}`;
     firstMissingUrl = "/dashboard/configuracion?tab=wizard";
   } else if (!hasCategories) {
-    firstMissingStep = 2;
     firstMissingName = "Paso 2: Sincronizar Categorías";
     firstMissingUrl = "/dashboard/configuracion?tab=wizard";
   } else if (!hasLanguage) {
-    firstMissingStep = 3;
     firstMissingName = "Paso 3: Idioma de Redacción";
     firstMissingUrl = "/dashboard/configuracion?tab=wizard";
   } else if (type === "oportunidades" && !isGoogleReady) {
-    firstMissingStep = 4;
     firstMissingName = "Paso 4: Google Search Console";
     firstMissingUrl = "/dashboard/configuracion?tab=wizard";
   } else if (!hasImageCredits) {
-    firstMissingStep = 5;
     firstMissingName = "Solicitar créditos de imagen";
     firstMissingUrl = "https://www.10minuteswebsite.com/ayuda";
   }
@@ -93,25 +82,25 @@ export default function PreValidationGuard({
       readyText: "Conectada",
       missingText: "Falta conectar",
       actionUrl: "/dashboard/configuracion?tab=wizard",
-      actionLabel: "Conectar cuenta",
+      actionLabel: "Conectar",
     },
     {
       num: 2,
       title: "Categorías de artículos",
       desc: "Las categorías sincronizadas donde se clasificarán tus artículos.",
       ready: hasCategories,
-      readyText: `${categoriesCount} categorías sincronizadas`,
-      missingText: "Falta sincronizar categorías",
+      readyText: `${categoriesCount} categorías`,
+      missingText: "Falta sincronizar",
       actionUrl: "/dashboard/configuracion?tab=wizard",
-      actionLabel: "Sincronizar ahora",
+      actionLabel: "Sincronizar",
     },
     {
       num: 3,
       title: "Idioma de redacción",
       desc: "El idioma predeterminado en el que la IA escribirá tus artículos.",
       ready: hasLanguage,
-      readyText: languageName ? `Configurado (${languageName})` : "Configurado",
-      missingText: "Falta seleccionar idioma",
+      readyText: languageName ? `${languageName}` : "Configurado",
+      missingText: "Falta seleccionar",
       actionUrl: "/dashboard/configuracion?tab=wizard",
       actionLabel: "Elegir idioma",
     },
@@ -120,14 +109,14 @@ export default function PreValidationGuard({
           {
             num: 4,
             title: "Google Search Console",
-            desc: "Tu propiedad de Google conectada para detectar oportunidades de tráfico real.",
+            desc: "Tu propiedad conectada para detectar oportunidades de tráfico real.",
             ready: isGoogleReady,
-            readyText: "Conectado y verificado",
+            readyText: "Conectado",
             missingText: !googleConnected
-              ? "Falta conectar Google"
+              ? "Falta conectar"
               : "Falta seleccionar propiedad",
             actionUrl: "/dashboard/configuracion?tab=wizard",
-            actionLabel: "Conectar Google Search Console",
+            actionLabel: "Conectar GSC",
           },
         ]
       : []),
@@ -136,73 +125,39 @@ export default function PreValidationGuard({
       title: `Créditos de imagen (${productName})`,
       desc: "Disponibilidad de créditos de generación de imágenes con IA.",
       ready: hasImageCredits,
-      readyText: "Créditos disponibles",
-      missingText: "Créditos agotados",
+      readyText: "Disponibles",
+      missingText: "Agotados",
       isImageCredit: true,
       actionUrl: "https://www.10minuteswebsite.com/ayuda",
-      actionLabel: "Solicitar créditos gratuitos",
+      actionLabel: "Solicitar créditos",
     },
   ];
 
   return (
     <div style={{ maxWidth: 840, margin: "0 auto", padding: "10px 0 30px" }}>
-      <section
-        style={{
-          ...sectionStyle,
-          padding: "28px 24px",
-          borderRadius: 16,
-          border: "1px solid #fed7aa",
-          background: "linear-gradient(180deg, #fffaf5 0%, #ffffff 100%)",
-          boxShadow: "0 10px 25px -5px rgba(234, 88, 12, 0.08)",
-        }}
-      >
-        {/* Encabezado destacado */}
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 20 }}>
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 12,
-              background: "#ffedd5",
-              color: "#c2410c",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 24,
-              flexShrink: 0,
-            }}
-          >
-            🛡️
-          </div>
-          <div>
-            <h2
-              style={{
-                fontSize: 20,
-                fontWeight: 700,
-                color: "#9a3412",
-                margin: "0 0 4px 0",
-              }}
-            >
-              Configuración inicial requerida para {type === "publicar" ? "publicar artículos" : "explorar oportunidades"}
-            </h2>
-            <p style={{ fontSize: 14, color: "#7c2d12", margin: 0, lineHeight: 1.5 }}>
-              Para asegurar que tus artículos se publiquen e indexen correctamente sin errores, el sistema valida que tengas listos estos pasos antes de continuar:
-            </p>
-          </div>
-        </div>
-
-        {/* Lista de pasos con checklist */}
-        <div
+      <section className="panel" style={{ ...sectionStyle, padding: 28 }}>
+        <p className="eyebrow" style={{ margin: "0 0 6px" }}>Validación Previa</p>
+        <h2
           style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 12,
-            marginBottom: 24,
+            fontSize: 22,
+            fontWeight: 600,
+            letterSpacing: "-0.03em",
+            color: "#1d1d1f",
+            margin: "0 0 8px 0",
           }}
         >
+          Requisitos previos para {type === "publicar" ? "publicar artículos" : "explorar oportunidades"}
+        </h2>
+        <p className="lead-copy" style={{ margin: "0 0 20px" }}>
+          Para asegurar que tus artículos se procesen sin inconvenientes, completa estos pasos antes de continuar:
+        </p>
+
+        {/* Lista de pasos tipo fila Apple */}
+        <div style={{ display: "grid", gap: 10, marginBottom: 24 }}>
           {steps.map((step) => (
             <div
               key={step.num}
+              className="row"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -210,34 +165,31 @@ export default function PreValidationGuard({
                 flexWrap: "wrap",
                 gap: 12,
                 padding: "14px 16px",
-                borderRadius: 10,
-                background: step.ready ? "#f0fdf4" : "#fff7ed",
-                border: `1px solid ${step.ready ? "#bbf7d0" : "#fed7aa"}`,
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 260 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 240 }}>
                 <span
                   style={{
-                    width: 28,
-                    height: 28,
+                    width: 24,
+                    height: 24,
                     borderRadius: "50%",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontWeight: 700,
-                    fontSize: 13,
-                    background: step.ready ? "#22c55e" : "#f97316",
-                    color: "#ffffff",
+                    fontWeight: 600,
+                    fontSize: 12,
+                    background: step.ready ? "#e8f2ff" : "#f5f5f7",
+                    color: step.ready ? "#0071e3" : "#6e6e73",
                     flexShrink: 0,
                   }}
                 >
                   {step.ready ? "✓" : step.num}
                 </span>
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 14, color: "#1e293b" }}>
+                  <div style={{ fontWeight: 500, fontSize: 14, color: "#1d1d1f" }}>
                     {step.title}
                   </div>
-                  <div style={{ fontSize: 12, color: "#64748b" }}>
+                  <div style={{ fontSize: 12, color: "#6e6e73", marginTop: 2 }}>
                     {step.desc}
                   </div>
                 </div>
@@ -246,18 +198,15 @@ export default function PreValidationGuard({
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span
                   style={{
-                    fontSize: 12,
-                    fontWeight: 600,
+                    fontSize: 11,
+                    fontWeight: 500,
                     padding: "4px 10px",
                     borderRadius: 999,
-                    background: step.ready ? "#dcfce7" : "#ffedd5",
-                    color: step.ready ? "#15803d" : "#c2410c",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 4,
+                    background: step.ready ? "rgba(52, 199, 89, 0.1)" : "#fff4e5",
+                    color: step.ready ? "#16803c" : "#8a4b08",
                   }}
                 >
-                  {step.ready ? `✓ ${step.readyText}` : `⏳ ${step.missingText}`}
+                  {step.ready ? `✓ ${step.readyText}` : `Pendiente: ${step.missingText}`}
                 </span>
 
                 {!step.ready && (
@@ -265,15 +214,11 @@ export default function PreValidationGuard({
                     <button
                       type="button"
                       onClick={onOpenImageCreditsModal}
+                      className="secondary"
                       style={{
                         padding: "6px 12px",
                         fontSize: 12,
-                        fontWeight: 600,
-                        borderRadius: 6,
-                        background: "#ea580c",
-                        color: "#ffffff",
-                        border: "none",
-                        cursor: "pointer",
+                        borderRadius: 8,
                       }}
                     >
                       {step.actionLabel}
@@ -281,15 +226,10 @@ export default function PreValidationGuard({
                   ) : (
                     <Link
                       href={step.actionUrl}
+                      className="link-button"
                       style={{
-                        padding: "6px 12px",
                         fontSize: 12,
-                        fontWeight: 600,
-                        borderRadius: 6,
-                        background: "#2563eb",
-                        color: "#ffffff",
-                        textDecoration: "none",
-                        display: "inline-block",
+                        fontWeight: 500,
                       }}
                     >
                       {step.actionLabel} &rarr;
@@ -301,72 +241,49 @@ export default function PreValidationGuard({
           ))}
         </div>
 
-        {/* Botón de llamada a la acción principal */}
+        {/* CTA Principal */}
         <div
           style={{
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             gap: 12,
-            padding: "16px 0 0",
-            borderTop: "1px solid #fed7aa",
+            paddingTop: 16,
+            borderTop: "1px solid #e5e5ea",
           }}
         >
-          {firstMissingStep === 5 ? (
+          {firstMissingName.includes("créditos") ? (
             <button
               type="button"
               onClick={onOpenImageCreditsModal}
               style={{
                 ...buttonStyle,
-                background: "#ea580c",
-                color: "#ffffff",
-                padding: "14px 28px",
-                fontSize: 15,
-                fontWeight: 700,
-                borderRadius: 10,
-                boxShadow: "0 4px 12px rgba(234, 88, 12, 0.25)",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                cursor: "pointer",
-                border: "none",
+                padding: "12px 24px",
+                fontSize: 14,
               }}
             >
-              <span>🖼️ Solicitar créditos de imagen gratuitos</span>
-              <span style={{ fontSize: 16 }}>&rarr;</span>
+              Solicitar créditos de imagen
             </button>
           ) : (
             <Link
               href={firstMissingUrl}
               style={{
                 ...buttonStyle,
-                background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
-                color: "#ffffff",
                 textDecoration: "none",
-                padding: "14px 28px",
-                fontSize: 15,
-                fontWeight: 700,
-                borderRadius: 10,
-                boxShadow: "0 4px 14px rgba(37, 99, 235, 0.3)",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
+                padding: "12px 24px",
+                fontSize: 14,
               }}
             >
-              <span>🚀 Ir al Asistente de Configuración ({firstMissingName})</span>
-              <span style={{ fontSize: 16 }}>&rarr;</span>
+              Ir a Configuración ({firstMissingName}) &rarr;
             </Link>
           )}
 
           <Link
             href="/dashboard/configuracion"
-            style={{
-              fontSize: 13,
-              color: "#64748b",
-              textDecoration: "underline",
-            }}
+            className="link-button"
+            style={{ fontSize: 13 }}
           >
-            O abrir el módulo de Configuración general
+            Abrir Configuración general
           </Link>
         </div>
       </section>

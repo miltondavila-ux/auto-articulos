@@ -2,65 +2,65 @@ import type { CSSProperties } from "react";
 import type { RunStatus, TitleStatus } from "@/types/dashboard";
 
 export const sectionStyle: CSSProperties = {
-  background: "#ffffff",
+  background: "rgba(255, 255, 255, 0.88)",
   color: "#1d1d1f",
-  border: "1px solid rgba(0, 0, 0, 0.08)",
-  borderRadius: 16,
-  padding: 20,
+  border: "1px solid rgba(0, 0, 0, 0.07)",
+  borderRadius: 22,
+  padding: 24,
   marginTop: 20,
-  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.04)",
+  boxShadow: "0 12px 38px rgba(0, 0, 0, 0.06)",
   boxSizing: "border-box",
   width: "100%",
 };
 
 export const h2Style: CSSProperties = {
-  fontSize: 16,
+  fontSize: 20,
   fontWeight: 600,
-  letterSpacing: "-0.01em",
+  letterSpacing: "-0.025em",
   color: "#1d1d1f",
   marginTop: 0,
-  marginBottom: 12,
+  marginBottom: 14,
 };
 
 export const inputStyle: CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: 10,
+  padding: "11px 12px",
+  borderRadius: 11,
   border: "1px solid #d2d2d7",
   background: "#ffffff",
   color: "#1d1d1f",
   fontSize: 14,
   boxSizing: "border-box",
   maxWidth: "100%",
-  transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
+  transition: "border-color 0.15s ease, box-shadow 0.15s ease",
 };
 
 export const buttonStyle: CSSProperties = {
   marginTop: 12,
-  padding: "10px 18px",
+  padding: "11px 16px",
   borderRadius: 10,
   border: "none",
   background: "#0071e3",
   color: "#ffffff",
-  fontWeight: 600,
+  fontWeight: 500,
   fontSize: 14,
   cursor: "pointer",
-  boxShadow: "0 2px 8px rgba(0, 113, 227, 0.25)",
-  transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
+  boxShadow: "none",
+  transition: "transform 0.15s ease, background 0.15s ease",
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
 };
 
 export const secondaryButtonStyle: CSSProperties = {
-  padding: "10px 16px",
+  padding: "11px 16px",
   borderRadius: 10,
   border: "1px solid #d2d2d7",
-  background: "#f5f5f7",
-  color: "#1d1d1f",
+  background: "#ffffff",
+  color: "#0071e3",
   fontWeight: 500,
   fontSize: 14,
   cursor: "pointer",
-  transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
+  transition: "transform 0.15s ease, background 0.15s ease",
 };
 
 export const thStyle: CSSProperties = {
@@ -68,22 +68,17 @@ export const thStyle: CSSProperties = {
   fontWeight: 600,
   fontSize: 12,
   letterSpacing: "0.03em",
-  color: "#86868b",
+  color: "#6e6e73",
 };
 
 export const tdStyle: CSSProperties = {
-  padding: "10px 12px",
-  fontSize: 13,
+  padding: "12px",
+  fontSize: 14,
   color: "#1d1d1f",
 };
 
-export function readySectionStyle(ready: boolean): CSSProperties {
-  if (!ready) return sectionStyle;
-  return {
-    ...sectionStyle,
-    background: "#f2faf4",
-    border: "1px solid rgba(52, 199, 89, 0.3)",
-  };
+export function readySectionStyle(_ready: boolean): CSSProperties {
+  return sectionStyle;
 }
 
 export function disabledStyle(
@@ -100,9 +95,8 @@ export function ReadyBadge() {
       style={{
         fontSize: 11,
         fontWeight: 600,
-        color: "#34c759",
-        background: "rgba(52, 199, 89, 0.12)",
-        border: "1px solid rgba(52, 199, 89, 0.25)",
+        color: "#16803c",
+        background: "rgba(52, 199, 89, 0.1)",
         padding: "2px 8px",
         borderRadius: 9999,
         marginLeft: 8,

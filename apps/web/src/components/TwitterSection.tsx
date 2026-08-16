@@ -118,34 +118,33 @@ export default function TwitterSection() {
   return (
     <section style={sectionStyle}>
       <h2 style={{ ...h2Style, margin: 0 }}>X (Twitter) API</h2>
-      <p style={{ color: "#64748b", fontSize: 12, margin: "4px 0 0" }}>
+      <p className="lead-copy" style={{ fontSize: 13, margin: "4px 0 0" }}>
         Publica tweets automáticamente cuando se publiquen artículos.
       </p>
 
       {loading ? (
-        <p style={{ color: "#64748b", fontSize: 13 }}>Cargando configuración...</p>
+        <p className="muted" style={{ fontSize: 13, marginTop: 12 }}>Cargando configuración...</p>
       ) : (
         <>
-          {/* Bloque de credenciales */}
-          <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 16, paddingTop: 16 }}>
+          <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 16, paddingTop: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
               <div>
-                <strong style={{ color: "#1e293b", fontSize: 14 }}>Credenciales de la App</strong>
-                <p style={{ color: "#64748b", fontSize: 12, margin: "3px 0 0" }}>
-                  Client ID y Client Secret de tu app en el Developer Portal de X.
+                <strong style={{ color: "#1d1d1f", fontSize: 14 }}>Credenciales de la App</strong>
+                <p className="lead-copy" style={{ fontSize: 12, margin: "2px 0 0" }}>
+                  Client ID y Client Secret del Developer Portal de X.
                 </p>
               </div>
-              <span style={{ color: settings?.configured ? "#16a34a" : "#92400e", fontSize: 12, fontWeight: 700 }}>
-                {settings?.configured ? "Configurada" : "Sin configurar"}
+              <span style={{ color: settings?.configured ? "#16803c" : "#8a4b08", fontSize: 12, fontWeight: 600 }}>
+                {settings?.configured ? "✓ Configurada" : "Sin configurar"}
               </span>
             </div>
 
             {settings?.isAdmin && !editing && (
               <div style={{ marginTop: 12 }}>
                 {settings.configured && (
-                  <p style={{ color: "#475569", fontSize: 13 }}>Client ID guardado: {settings.clientId}</p>
+                  <p className="muted" style={{ fontSize: 13, marginBottom: 8 }}>Client ID: {settings.clientId}</p>
                 )}
-                <button onClick={startEditing} style={secondaryButtonStyle}>
+                <button onClick={startEditing} className="secondary" style={secondaryButtonStyle}>
                   {settings.configured ? "Editar credenciales" : "Configurar credenciales"}
                 </button>
               </div>
@@ -153,11 +152,11 @@ export default function TwitterSection() {
 
             {settings?.isAdmin && editing && (
               <div style={{ display: "grid", gap: 12, marginTop: 14 }}>
-                <label style={{ color: "#475569", fontSize: 12, fontWeight: 600 }}>
+                <label style={{ color: "#1d1d1f", fontSize: 12, fontWeight: 500 }}>
                   Client ID
                   <input value={clientId} onChange={(event) => setClientId(event.target.value)} style={inputStyle} />
                 </label>
-                <label style={{ color: "#475569", fontSize: 12, fontWeight: 600 }}>
+                <label style={{ color: "#1d1d1f", fontSize: 12, fontWeight: 500 }}>
                   Client Secret
                   <input type="password" value={clientSecret} onChange={(event) => setClientSecret(event.target.value)} style={inputStyle} />
                 </label>
@@ -165,43 +164,33 @@ export default function TwitterSection() {
                   <button
                     onClick={saveSettings}
                     disabled={saving}
-                    style={disabledStyle(
-                      { ...secondaryButtonStyle, background: "#0f172a", color: "#fff" },
-                      saving,
-                    )}
+                    style={{
+                      ...secondaryButtonStyle,
+                      background: "#0071e3",
+                      color: "#ffffff",
+                      border: "none",
+                    }}
                   >
                     {saving ? "Guardando..." : "Guardar credenciales"}
                   </button>
-                  <button onClick={() => setEditing(false)} style={secondaryButtonStyle}>Cancelar</button>
+                  <button onClick={() => setEditing(false)} className="secondary" style={secondaryButtonStyle}>Cancelar</button>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Bloque de conexión */}
-          <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 18, paddingTop: 16 }}>
-            <strong style={{ color: "#1e293b", fontSize: 14 }}>Conectar cuenta</strong>
-            <p style={{ color: "#64748b", fontSize: 12, margin: "3px 0 12px" }}>
-              Auto Artículos no guarda contraseñas. La autorización se realiza directamente en X.
+          <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 18, paddingTop: 16 }}>
+            <strong style={{ color: "#1d1d1f", fontSize: 14 }}>Conectar cuenta</strong>
+            <p className="lead-copy" style={{ fontSize: 13, margin: "3px 0 12px" }}>
+              La autorización se realiza directamente en X.
             </p>
-
-            <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12, marginBottom: 14, fontSize: 12, color: "#475569", lineHeight: 1.5 }}>
-              <strong style={{ color: "#1e293b" }}>Requisitos para conectar X (Twitter):</strong>
-              <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
-                <li>Tener una cuenta de <strong>Developer en X</strong> (<a href="https://developer.x.com" target="_blank" rel="noopener noreferrer" style={{ color: "#6366f1" }}>developer.x.com</a>)</li>
-                <li>Crear un <strong>Proyecto y App</strong> en el Developer Portal</li>
-                <li>Configurar <strong>User authentication settings</strong> con permisos de lectura y escritura</li>
-                <li>Generar el <strong>Client ID</strong> y <strong>Client Secret</strong> en la sección Keys and Tokens</li>
-                <li>Establecer el <strong>Callback URL</strong>: <code>http://localhost:3000/api/search-integrations/twitter/callback</code></li>
-                <li>Establecer el <strong>Website URL</strong>: la URL de tu sitio en producción</li>
-              </ul>
-            </div>
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               {connection?.connected ? (
                 <button
                   onClick={disconnect}
                   disabled={disconnecting}
+                  className="secondary"
                   style={disabledStyle(secondaryButtonStyle, disconnecting)}
                 >
                   {disconnecting ? "Desconectando..." : `Desconectar X${connection.twitterUsername ? ` (@${connection.twitterUsername})` : ""}`}
@@ -209,7 +198,8 @@ export default function TwitterSection() {
               ) : (
                 <a
                   href="/api/search-integrations/twitter/connect"
-                  style={{ ...secondaryButtonStyle, display: "inline-flex", background: "#000", color: "#fff", border: "none", textDecoration: "none", fontWeight: 700 }}
+                  className="secondary"
+                  style={{ ...secondaryButtonStyle, textDecoration: "none", display: "inline-flex" }}
                 >
                   Conectar X (Twitter)
                 </a>
@@ -219,7 +209,7 @@ export default function TwitterSection() {
         </>
       )}
 
-      {message && <p style={{ color: "#16a34a", fontSize: 13 }}>{message}</p>}
+      {message && <p style={{ color: "#16803c", fontSize: 13, marginTop: 10 }}>{message}</p>}
     </section>
   );
 }

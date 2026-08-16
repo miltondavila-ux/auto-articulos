@@ -607,34 +607,18 @@ export default function ConfiguracionPage() {
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto" }}>
       {/* Hero Control Center Header */}
+      {/* Cabecera Apple Minimalista */}
       <div
+        className="panel"
         style={{
-          background: "linear-gradient(135deg, #071330 0%, #0f2766 100%)",
-          color: "#ffffff",
-          borderRadius: 16,
+          background: "rgba(255, 255, 255, 0.88)",
+          borderRadius: 22,
+          border: "1px solid rgba(0, 0, 0, 0.07)",
           padding: "24px 28px",
           marginBottom: 20,
-          boxShadow: "0 14px 36px rgba(7, 19, 48, 0.25)",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          position: "relative",
-          overflow: "hidden",
+          boxShadow: "0 12px 38px rgba(0, 0, 0, 0.06)",
         }}
       >
-        {/* Glow accent */}
-        <div
-          style={{
-            position: "absolute",
-            top: -40,
-            right: -40,
-            width: 180,
-            height: 180,
-            borderRadius: "50%",
-            background:
-              "radial-gradient(circle, rgba(59,130,246,0.3) 0%, rgba(0,0,0,0) 70%)",
-            pointerEvents: "none",
-          }}
-        />
-
         <div
           style={{
             display: "flex",
@@ -645,42 +629,25 @@ export default function ConfiguracionPage() {
           }}
         >
           <div>
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "4px 10px",
-                borderRadius: 999,
-                background: "rgba(59, 130, 246, 0.2)",
-                border: "1px solid rgba(59, 130, 246, 0.4)",
-                color: "#93c5fd",
-                fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: "0.05em",
-                marginBottom: 10,
-              }}
-            >
-              🎛️ CENTRO DE CONTROL PRO
-            </span>
+            <p className="eyebrow" style={{ margin: "0 0 6px" }}>
+              Preferencias del Sistema
+            </p>
             <h1
               style={{
-                fontSize: 24,
-                fontWeight: 800,
+                fontSize: 26,
+                fontWeight: 600,
                 margin: "0 0 6px 0",
-                color: "#ffffff",
-                letterSpacing: "-0.02em",
+                color: "#1d1d1f",
+                letterSpacing: "-0.03em",
               }}
             >
-              Configuración del Sistema
+              Configuración
             </h1>
             <p
+              className="lead-copy"
               style={{
-                fontSize: 13,
-                color: "#cbd5e1",
                 margin: 0,
                 maxWidth: 650,
-                lineHeight: 1.45,
               }}
             >
               Conecta tus buscadores y redes sociales, configura tu cuenta de
@@ -699,11 +666,10 @@ export default function ConfiguracionPage() {
           >
             <div
               style={{
-                background: "rgba(255, 255, 255, 0.08)",
-                backdropFilter: "blur(8px)",
+                background: "#ffffff",
                 padding: "8px 14px",
                 borderRadius: 10,
-                border: "1px solid rgba(255, 255, 255, 0.12)",
+                border: "1px solid #e5e5ea",
                 fontSize: 12,
                 display: "flex",
                 alignItems: "center",
@@ -712,45 +678,41 @@ export default function ConfiguracionPage() {
             >
               <span
                 style={{
-                  width: 8,
-                  height: 8,
+                  width: 7,
+                  height: 7,
                   borderRadius: "50%",
-                  background: credentialsConfigured ? "#22c55e" : "#f59e0b",
-                  boxShadow: credentialsConfigured
-                    ? "0 0 8px #22c55e"
-                    : "0 0 8px #f59e0b",
+                  background: credentialsConfigured ? "#34c759" : "#ff9500",
                 }}
               />
-              <span style={{ color: "#e2e8f0", fontWeight: 600 }}>
+              <span style={{ color: "#6e6e73", fontWeight: 500 }}>
                 {productName}:
               </span>
               <span
                 style={{
-                  color: credentialsConfigured ? "#4ade80" : "#fbbf24",
-                  fontWeight: 700,
+                  color: credentialsConfigured ? "#16803c" : "#8a4b08",
+                  fontWeight: 600,
                 }}
               >
-                {credentialsConfigured ? "Cifrado & Activo" : "Pendiente"}
+                {credentialsConfigured ? "Conectado" : "Pendiente"}
               </span>
             </div>
 
             <div
               style={{
-                background: "rgba(255, 255, 255, 0.08)",
-                backdropFilter: "blur(8px)",
+                background: "#ffffff",
                 padding: "8px 14px",
                 borderRadius: 10,
-                border: "1px solid rgba(255, 255, 255, 0.12)",
+                border: "1px solid #e5e5ea",
                 fontSize: 12,
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
               }}
             >
-              <span style={{ color: "#e2e8f0", fontWeight: 600 }}>
+              <span style={{ color: "#6e6e73", fontWeight: 500 }}>
                 Categorías:
               </span>
-              <span style={{ color: "#60a5fa", fontWeight: 700 }}>
+              <span style={{ color: "#0071e3", fontWeight: 600 }}>
                 {categories.length} sincronizadas
               </span>
             </div>
@@ -758,13 +720,12 @@ export default function ConfiguracionPage() {
         </div>
       </div>
 
-      {/* Banner Prominente de Configuración Inicial (si no está en la pestaña wizard) */}
+      {/* Banner de Configuración Inicial (si no está en la pestaña wizard) */}
       {activeTab !== "wizard" && (
         <div
           onClick={() => setActiveTab("wizard")}
+          className="row"
           style={{
-            background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)",
-            color: "#ffffff",
             borderRadius: 14,
             padding: "16px 20px",
             marginBottom: 20,
@@ -774,47 +735,21 @@ export default function ConfiguracionPage() {
             flexWrap: "wrap",
             gap: 14,
             cursor: "pointer",
-            boxShadow: "0 8px 24px rgba(37, 99, 235, 0.25)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-            transition: "transform 0.2s ease, box-shadow 0.2s ease",
+            background: "#ffffff",
+            border: "1px solid #0071e3",
+            boxShadow: "0 4px 16px rgba(0, 113, 227, 0.08)",
+            transition: "transform 0.15s ease",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 12,
-                background: "rgba(255, 255, 255, 0.15)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 22,
-                flexShrink: 0,
-              }}
-            >
-              🚀
-            </div>
+            <span className="step-badge" style={{ marginBottom: 0 }}>
+              RECOMENDADO
+            </span>
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span
-                  style={{
-                    background: "#fbbf24",
-                    color: "#78350f",
-                    fontSize: 10,
-                    fontWeight: 800,
-                    padding: "2px 8px",
-                    borderRadius: 6,
-                    letterSpacing: "0.05em",
-                  }}
-                >
-                  GUÍA RECOMENDADA
-                </span>
-                <span style={{ fontSize: 15, fontWeight: 800, color: "#ffffff" }}>
-                  Asistente de Configuración Inicial Paso a Paso
-                </span>
+              <div style={{ fontSize: 15, fontWeight: 600, color: "#1d1d1f" }}>
+                Asistente de Configuración Inicial Paso a Paso
               </div>
-              <p style={{ margin: "4px 0 0 0", fontSize: 13, color: "#bfdbfe" }}>
+              <p style={{ margin: "3px 0 0 0", fontSize: 13, color: "#6e6e73" }}>
                 Conecta tu cuenta en 4 sencillos pasos ordenados: {productName} ➔ Categorías ➔ Idioma ➔ Google Search Console.
               </p>
             </div>
@@ -826,38 +761,28 @@ export default function ConfiguracionPage() {
               setActiveTab("wizard");
             }}
             style={{
-              background: "#ffffff",
-              color: "#1e3a8a",
-              border: "none",
-              borderRadius: 8,
-              padding: "10px 18px",
+              padding: "9px 16px",
               fontSize: 13,
-              fontWeight: 700,
-              cursor: "pointer",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
+              fontWeight: 500,
               whiteSpace: "nowrap",
             }}
           >
-            Abrir Asistente Paso a Paso →
+            Abrir Asistente &rarr;
           </button>
         </div>
       )}
 
-      {/* Pro Selector de Pestañas (Glassmorphism & Interactive Cards) */}
+      {/* Selector de Pestañas Apple Minimalista */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
           gap: 12,
           marginBottom: 24,
         }}
       >
         {tabs.map((t) => {
           const isActive = activeTab === t.id;
-          const isWizard = t.id === "wizard";
 
           return (
             <button
@@ -866,137 +791,83 @@ export default function ConfiguracionPage() {
               onClick={() => setActiveTab(t.id)}
               aria-pressed={isActive}
               style={{
-                position: "relative",
-                minHeight: 115,
-                padding: "18px 20px",
-                overflow: "hidden",
+                minHeight: 105,
+                padding: "16px 18px",
                 textAlign: "left",
                 fontFamily: "inherit",
                 cursor: "pointer",
                 borderRadius: 14,
-                border: isWizard
-                  ? isActive
-                    ? "2px solid #1d4ed8"
-                    : "2px solid #3b82f6"
-                  : isActive
-                    ? "2px solid #2563eb"
-                    : "1px solid rgba(226, 232, 240, 0.8)",
-                background: isWizard
-                  ? isActive
-                    ? "linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)"
-                    : "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)"
-                  : isActive
-                    ? "linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%)"
-                    : "#ffffff",
-                color: isWizard && isActive ? "#ffffff" : "#0f172a",
-                boxShadow: isWizard
-                  ? isActive
-                    ? "0 12px 28px rgba(37, 99, 235, 0.3)"
-                    : "0 6px 18px rgba(37, 99, 235, 0.15)"
-                  : isActive
-                    ? "0 10px 24px rgba(37, 99, 235, 0.15)"
-                    : "0 2px 8px rgba(15, 23, 42, 0.04)",
-                transform: isActive || isWizard ? "translateY(-2px)" : "translateY(0)",
-                transition: "all 0.2s ease-in-out",
+                border: isActive
+                  ? "1px solid #0071e3"
+                  : "1px solid #e5e5ea",
+                background: "#ffffff",
+                color: "#1d1d1f",
+                boxShadow: isActive
+                  ? "0 4px 16px rgba(0, 113, 227, 0.08)"
+                  : "none",
+                transition: "all 0.15s ease",
               }}
             >
-              {/* Active Indicator Bar */}
-              {isActive && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: 4,
-                    background: isWizard
-                      ? "#60a5fa"
-                      : "linear-gradient(90deg, #2563eb 0%, #60a5fa 100%)",
-                  }}
-                />
-              )}
-
               <div
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
+                  marginBottom: 6,
                 }}
               >
                 <span
                   style={{
                     display: "inline-flex",
-                    padding: "3px 8px",
+                    padding: "2px 8px",
                     borderRadius: 999,
-                    background: isWizard
-                      ? isActive
-                        ? "rgba(255, 255, 255, 0.2)"
-                        : "#bfdbfe"
-                      : isActive
-                        ? "#dbeafe"
-                        : "#f1f5f9",
-                    color: isWizard
-                      ? isActive
-                        ? "#ffffff"
-                        : "#1e3a8a"
-                      : isActive
-                        ? "#1d4ed8"
-                        : "#64748b",
-                    fontSize: 10,
-                    fontWeight: 800,
-                    letterSpacing: "0.06em",
+                    background: isActive ? "#e8f2ff" : "#f5f5f7",
+                    color: isActive ? "#0071e3" : "#6e6e73",
+                    fontSize: 11,
+                    fontWeight: 600,
                     textTransform: "uppercase",
+                    letterSpacing: "0.06em",
                   }}
                 >
-                  {isWizard ? "⭐ " + t.eyebrow : t.eyebrow}
+                  {t.eyebrow}
                 </span>
+
                 {t.badge && (
                   <span
                     style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: isWizard && isActive ? "#22c55e" : "#15803d",
-                      background: isWizard && isActive ? "rgba(255, 255, 255, 0.9)" : "#dcfce7",
-                      padding: "2px 8px",
+                      fontSize: 10,
+                      fontWeight: 600,
+                      padding: "2px 6px",
                       borderRadius: 999,
+                      background: "rgba(52, 199, 89, 0.1)",
+                      color: "#16803c",
                     }}
                   >
                     {t.badge}
                   </span>
                 )}
               </div>
-              <span
+
+              <div
                 style={{
-                  display: "block",
-                  marginTop: 10,
-                  fontSize: 16,
-                  fontWeight: 800,
-                  color: isWizard
-                    ? isActive
-                      ? "#ffffff"
-                      : "#1e3a8a"
-                    : isActive
-                      ? "#1e40af"
-                      : "#0f172a",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: isActive ? "#0071e3" : "#1d1d1f",
+                  margin: "4px 0 4px",
                 }}
               >
                 {t.label}
-              </span>
-              <span
+              </div>
+
+              <div
                 style={{
-                  display: "block",
-                  marginTop: 4,
-                  color: isWizard
-                    ? isActive
-                      ? "#dbeafe"
-                      : "#334155"
-                    : "#64748b",
                   fontSize: 12,
+                  color: "#6e6e73",
                   lineHeight: 1.4,
                 }}
               >
                 {t.description}
-              </span>
+              </div>
             </button>
           );
         })}

@@ -17,23 +17,15 @@ export default async function DashboardLayout({
   children: ReactNode;
 }) {
   const { user, actingAdmin } = await getSessionContext();
-  // Fase 2 del sistema de prueba gratuita (13/8/2026): al vencer los 7 días
-  // sin que el admin haya marcado `trialUnlocked`, la cuenta deja de poder
-  // usar CUALQUIER parte del sistema — se reemplaza todo el contenido del
-  // dashboard (incluida la navegación) por la pantalla de bloqueo. La
-  // validación es server-side (layout.tsx corre en el servidor), así que no
-  // se puede saltar apagando JavaScript. Un admin "actuando como" (ver
-  // StopImpersonationButton) SIEMPRE puede seguir usando la cuenta con
-  // normalidad para dar soporte, sin importar el estado de la prueba.
   const blocked = !actingAdmin && user.role !== "admin" && !hasTrialAccess(user);
 
   return (
     <main
-      className="dashboard-main"
+      className="dashboard-main shell"
       style={{
-        maxWidth: 1400,
+        maxWidth: 1120,
         margin: "0 auto",
-        padding: "24px 16px",
+        padding: "28px 22px 64px",
         boxSizing: "border-box",
       }}
     >
@@ -43,7 +35,6 @@ export default async function DashboardLayout({
         }
         @media (min-width: 1024px) {
           .mobile-notice { display: none; }
-          .dashboard-main { padding: 32px 40px !important; }
         }
         /*
          * Tablas anchas: vista apilada en tarjetas estilo Apple en pantallas pequeñas
@@ -79,8 +70,8 @@ export default async function DashboardLayout({
             content: attr(data-label);
             display: block;
             font-size: 11px;
-            font-weight: 700;
-            color: #86868b;
+            font-weight: 600;
+            color: #6e6e73;
             text-transform: uppercase;
             letter-spacing: 0.04em;
             margin-bottom: 3px;
@@ -88,47 +79,34 @@ export default async function DashboardLayout({
         }
       `}</style>
       <div
-        className="dashboard-header"
+        className="topbar"
         style={{
           display: "flex",
           flexWrap: "wrap",
           justifyContent: "space-between",
           alignItems: "center",
           gap: 12,
-          paddingBottom: 8,
+          marginBottom: 18,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: "#0071e3",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "0 2px 8px rgba(0, 113, 227, 0.3)",
-              color: "#ffffff",
-              fontSize: 16,
-              fontWeight: 700,
-            }}
-          >
-            A
-          </div>
+        <div>
           <h1
             style={{
-              fontSize: 20,
-              fontWeight: 700,
-              letterSpacing: "-0.02em",
+              fontSize: 26,
+              fontWeight: 600,
+              letterSpacing: "-0.03em",
               margin: 0,
               color: "#1d1d1f",
             }}
           >
             Auto Artículos
           </h1>
+          <p className="eyebrow" style={{ margin: "4px 0 0" }}>
+            Generación y Posicionamiento SEO
+          </p>
         </div>
         <div
+          className="session-actions"
           style={{
             display: "flex",
             alignItems: "center",
@@ -149,8 +127,8 @@ export default async function DashboardLayout({
             >
               <span
                 style={{
-                  fontSize: 11,
-                  color: "#86868b",
+                  fontSize: 12,
+                  color: "#6e6e73",
                   wordBreak: "break-word",
                   textAlign: "right",
                 }}
@@ -161,7 +139,7 @@ export default async function DashboardLayout({
                 style={{
                   fontSize: 12,
                   fontWeight: 600,
-                  color: "#b25e00",
+                  color: "#8a4b08",
                   wordBreak: "break-word",
                   textAlign: "right",
                 }}
@@ -173,7 +151,7 @@ export default async function DashboardLayout({
             <span
               style={{
                 fontSize: 13,
-                color: "#86868b",
+                color: "#6e6e73",
                 fontWeight: 500,
                 wordBreak: "break-word",
               }}
@@ -186,16 +164,9 @@ export default async function DashboardLayout({
         </div>
       </div>
       <p
-        className="mobile-notice"
+        className="mobile-notice notice"
         style={{
-          fontSize: 12,
-          color: "#b25e00",
-          background: "#fff9eb",
-          border: "1px solid rgba(255, 149, 0, 0.25)",
-          borderRadius: 10,
-          padding: "10px 14px",
-          marginTop: 14,
-          lineHeight: 1.4,
+          margin: "0 0 16px",
         }}
       >
         📱 Esta aplicación funciona en el celular, pero se recomienda usarla

@@ -7,7 +7,6 @@ import { platformHelpUrl, platformProductName } from "@auto-articulos/shared";
 interface ImageCreditsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // Ver platform-servers.ts. Default "net" = comportamiento histórico.
   platformDomain?: string;
 }
 
@@ -18,6 +17,7 @@ export default function ImageCreditsModal({
 }: ImageCreditsModalProps) {
   const productName = platformProductName(platformDomain);
   const helpUrl = platformHelpUrl(platformDomain);
+
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape" && isOpen) {
@@ -35,8 +35,9 @@ export default function ImageCreditsModal({
       style={{
         position: "fixed",
         inset: 0,
-        backgroundColor: "rgba(15, 23, 42, 0.65)",
-        backdropFilter: "blur(4px)",
+        backgroundColor: "rgba(0, 0, 0, 0.2)",
+        backdropFilter: "blur(5px)",
+        WebkitBackdropFilter: "blur(5px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -47,69 +48,50 @@ export default function ImageCreditsModal({
     >
       <div
         style={{
-          background: "#ffffff",
-          borderRadius: 16,
-          maxWidth: 480,
+          background: "rgba(255, 255, 255, 0.96)",
+          borderRadius: 22,
+          maxWidth: 440,
           width: "100%",
-          padding: "28px 24px",
-          boxShadow:
-            "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-          border: "1px solid #e2e8f0",
+          padding: "30px 24px",
+          boxShadow: "0 24px 80px rgba(0, 0, 0, 0.15)",
+          border: "1px solid rgba(0, 0, 0, 0.08)",
           textAlign: "center",
-          animation: "fadeIn 0.2s ease-out",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Ícono llamativo */}
-        <div
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: "50%",
-            background: "#fef3c7",
-            color: "#d97706",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 28,
-            margin: "0 auto 16px auto",
-          }}
-        >
-          🖼️
-        </div>
-
+        <p className="eyebrow" style={{ margin: "0 0 6px" }}>Atención</p>
         <h3
           style={{
             fontSize: 20,
-            fontWeight: 700,
-            color: "#0f172a",
-            marginBottom: 8,
+            fontWeight: 600,
+            color: "#1d1d1f",
+            margin: "0 0 10px 0",
+            letterSpacing: "-0.025em",
           }}
         >
           Créditos de imagen agotados
         </h3>
 
         <p
+          className="lead-copy"
           style={{
             fontSize: 14,
-            color: "#475569",
+            color: "#6e6e73",
             lineHeight: 1.5,
-            marginBottom: 20,
+            margin: "0 0 22px 0",
           }}
         >
           Tu cuenta de <strong>{productName}</strong> no tiene créditos
-          disponibles para generar las imágenes automáticas de tus artículos.
+          disponibles para generar imágenes automáticas.
           <br />
           <br />
           {helpUrl ? (
             <>
-              Puedes solicitar una recarga de <strong>créditos de imagen gratuitos</strong>{" "}
-              en la página de ayuda de {productName}.
+              Puedes solicitar una recarga de créditos gratuitos en la página de ayuda de {productName}.
             </>
           ) : (
             <>
-              Solicita una recarga de <strong>créditos de imagen gratuitos</strong>{" "}
-              contactando al soporte de {productName}.
+              Solicita una recarga de créditos gratuitos contactando al soporte de {productName}.
             </>
           )}
         </p>
@@ -128,52 +110,28 @@ export default function ImageCreditsModal({
               rel="noopener noreferrer"
               style={{
                 ...buttonStyle,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
                 textDecoration: "none",
                 padding: "12px 18px",
                 fontSize: 14,
-                fontWeight: 600,
-                background: "#2563eb",
-                color: "#ffffff",
-                borderRadius: 8,
               }}
             >
-              <span>👉 Solicitar créditos de imagen gratuitos</span>
-              <span style={{ fontSize: 16 }}>↗</span>
+              Solicitar créditos gratuitos &rarr;
             </a>
           )}
 
           <button
             type="button"
             onClick={onClose}
+            className="secondary"
             style={{
               ...secondaryButtonStyle,
               padding: "10px 16px",
               fontSize: 13,
-              borderRadius: 8,
-              border: "1px solid #cbd5e1",
-              background: "#f8fafc",
-              color: "#475569",
-              cursor: "pointer",
             }}
           >
-            Entendido, ya lo reviso
+            Cerrar
           </button>
         </div>
-
-        <p
-          style={{
-            fontSize: 12,
-            color: "#94a3b8",
-            marginTop: 16,
-            marginBottom: 0,
-          }}
-        >
-          Una vez que el soporte de {productName} te asigne más créditos, podrás continuar publicando con normalidad.
-        </p>
       </div>
     </div>
   );

@@ -139,55 +139,55 @@ export default function LinkedInSection({ allowed = true }: LinkedInSectionProps
   return (
     <section style={sectionStyle}>
       <h2 style={{ ...h2Style, margin: 0 }}>LinkedIn API</h2>
-      <p style={{ color: "#64748b", fontSize: 12, margin: "4px 0 0" }}>
-        Publica artículos automáticamente en LinkedIn. Integración 100% gratuita.
+      <p className="lead-copy" style={{ fontSize: 13, margin: "4px 0 0" }}>
+        Publica artículos automáticamente en LinkedIn.
       </p>
 
       {loading ? (
-        <p style={{ color: "#64748b", fontSize: 13 }}>Cargando...</p>
+        <p className="muted" style={{ fontSize: 13, marginTop: 12 }}>Cargando...</p>
       ) : (
         <>
-          {/* Bloque de configuración de Administrador */}
           {settings?.isAdmin && (
-            <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 14, paddingTop: 14 }}>
+            <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 14, paddingTop: 14 }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
                 <div>
-                  <strong style={{ color: "#1e293b", fontSize: 13 }}>Credenciales globales de la App</strong>
-                  <p style={{ color: "#64748b", fontSize: 11, margin: "2px 0 0" }}>
+                  <strong style={{ color: "#1d1d1f", fontSize: 13 }}>Credenciales globales de la App</strong>
+                  <p className="lead-copy" style={{ fontSize: 12, margin: "2px 0 0" }}>
                     Client ID y Secret de developer.linkedin.com (solo visible para admin).
                   </p>
                 </div>
-                <span style={{ color: isConfigured ? "#16a34a" : "#92400e", fontSize: 12, fontWeight: 700 }}>
-                  {isConfigured ? "Configurada" : "Sin configurar"}
+                <span style={{ color: isConfigured ? "#16803c" : "#8a4b08", fontSize: 12, fontWeight: 600 }}>
+                  {isConfigured ? "✓ Configurada" : "Sin configurar"}
                 </span>
               </div>
 
               {!editing ? (
-                <div style={{ marginTop: 10 }}>
+                <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {isConfigured && (
-                    <p style={{ color: "#475569", fontSize: 12, margin: "0 0 8px" }}>
-                      Client ID guardado: {settings.clientId}
+                    <p className="muted" style={{ fontSize: 12, width: "100%", margin: "0 0 8px" }}>
+                      Client ID: {settings.clientId}
                     </p>
                   )}
-                  <button onClick={startEditing} style={secondaryButtonStyle}>
-                    {isConfigured ? "Editar credenciales global" : "Configurar credenciales de LinkedIn"}
+                  <button onClick={startEditing} className="secondary" style={secondaryButtonStyle}>
+                    {isConfigured ? "Editar credenciales" : "Configurar credenciales"}
                   </button>
                   <button
                     onClick={syncSchema}
                     disabled={syncing}
-                    style={disabledStyle({ ...secondaryButtonStyle, marginLeft: 8 }, syncing)}
-                    title="Crea las tablas de Twitter/LinkedIn en la base de datos si no existen todavía. Seguro ejecutar varias veces."
+                    className="secondary"
+                    style={disabledStyle(secondaryButtonStyle, syncing)}
+                    title="Crea las tablas en la base de datos si no existen todavía."
                   >
-                    {syncing ? "Sincronizando..." : "🛠 Sincronizar base de datos"}
+                    {syncing ? "Sincronizando..." : "Sincronizar base de datos"}
                   </button>
                 </div>
               ) : (
-                <div style={{ display: "grid", gap: 10, marginTop: 12, background: "#f8fafc", padding: 12, borderRadius: 8, border: "1px solid #e2e8f0" }}>
-                  <label style={{ color: "#475569", fontSize: 12, fontWeight: 600 }}>
+                <div style={{ display: "grid", gap: 10, marginTop: 12, background: "#ffffff", padding: 14, borderRadius: 12, border: "1px solid #e5e5ea" }}>
+                  <label style={{ color: "#1d1d1f", fontSize: 12, fontWeight: 500 }}>
                     Client ID
                     <input value={clientId} onChange={(e) => setClientId(e.target.value)} style={inputStyle} placeholder="78nh5bw8fbvw2v" />
                   </label>
-                  <label style={{ color: "#475569", fontSize: 12, fontWeight: 600 }}>
+                  <label style={{ color: "#1d1d1f", fontSize: 12, fontWeight: 500 }}>
                     Client Secret
                     <input type="password" value={clientSecret} onChange={(e) => setClientSecret(e.target.value)} style={inputStyle} placeholder="WPL_AP1..." />
                   </label>
@@ -195,43 +195,45 @@ export default function LinkedInSection({ allowed = true }: LinkedInSectionProps
                     <button
                       onClick={saveSettings}
                       disabled={saving}
-                      style={disabledStyle(
-                        { ...secondaryButtonStyle, background: "#0f172a", color: "#fff" },
-                        saving,
-                      )}
+                      style={{
+                        ...secondaryButtonStyle,
+                        background: "#0071e3",
+                        color: "#ffffff",
+                        border: "none",
+                      }}
                     >
                       {saving ? "Guardando..." : "Guardar credenciales"}
                     </button>
-                    <button onClick={() => setEditing(false)} style={secondaryButtonStyle}>Cancelar</button>
+                    <button onClick={() => setEditing(false)} className="secondary" style={secondaryButtonStyle}>Cancelar</button>
                   </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* Bloque de conexión del usuario final */}
           {allowed && (
-          <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 16, paddingTop: 16 }}>
-            <strong style={{ color: "#1e293b", fontSize: 14 }}>Conectar cuenta de usuario</strong>
-            <p style={{ color: "#64748b", fontSize: 12, margin: "3px 0 12px" }}>
+          <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 16, paddingTop: 16 }}>
+            <strong style={{ color: "#1d1d1f", fontSize: 14 }}>Conectar cuenta de usuario</strong>
+            <p className="lead-copy" style={{ fontSize: 13, margin: "3px 0 12px" }}>
               Cada usuario conecta su perfil de LinkedIn autorizando mediante OAuth.
             </p>
 
             {!isConfigured ? (
-              <p style={{ color: "#92400e", fontSize: 13, background: "#fffbeb", border: "1px solid #fef3c7", padding: 10, borderRadius: 8 }}>
-                LinkedIn no está configurado todavía. {settings?.isAdmin ? "Usa el botón de arriba para ingresar el Client ID y Client Secret." : "Contacta al administrador para activar esta integración."}
+              <p className="notice">
+                LinkedIn no está configurado todavía. {settings?.isAdmin ? "Ingresa el Client ID y Client Secret arriba." : "Contacta al administrador para activar esta integración."}
               </p>
             ) : connection?.connected ? (
               <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                <span style={{ color: "#16a34a", fontSize: 13, fontWeight: 600 }}>
+                <span style={{ color: "#16803c", fontSize: 13, fontWeight: 600 }}>
                   ✓ Conectado{connection.linkedinUsername ? ` — ${connection.linkedinUsername}` : ""}
                 </span>
                 {connection.isExpired && (
-                  <span style={{ color: "#dc2626", fontSize: 12 }}>Token expirado</span>
+                  <span style={{ color: "#ff3b30", fontSize: 12 }}>Token expirado</span>
                 )}
                 <button
                   onClick={disconnect}
                   disabled={disconnecting}
+                  className="secondary"
                   style={disabledStyle(secondaryButtonStyle, disconnecting)}
                 >
                   {disconnecting ? "Desconectando..." : "Desconectar"}
@@ -240,16 +242,12 @@ export default function LinkedInSection({ allowed = true }: LinkedInSectionProps
             ) : (
               <a
                 href="/api/search-integrations/linkedin/connect"
+                className="secondary"
                 style={{
                   ...secondaryButtonStyle,
                   display: "inline-flex",
-                  background: "#0077b5",
-                  color: "#fff",
-                  border: "none",
                   textDecoration: "none",
-                  fontWeight: 700,
                   fontSize: 14,
-                  padding: "10px 20px",
                 }}
               >
                 Conectar mi cuenta de LinkedIn
@@ -261,12 +259,12 @@ export default function LinkedInSection({ allowed = true }: LinkedInSectionProps
       )}
 
       {!allowed && (
-        <p style={{ color: "#92400e", fontSize: 13, background: "#fffbeb", border: "1px solid #fef3c7", padding: 10, borderRadius: 8, marginTop: 16 }}>
+        <p className="notice" style={{ marginTop: 16 }}>
           LinkedIn no está disponible para tu cuenta. Contacta al administrador para activar esta integración.
         </p>
       )}
 
-      {message && <p style={{ color: "#16a34a", fontSize: 13, marginTop: 10 }}>{message}</p>}
+      {message && <p style={{ color: "#16803c", fontSize: 13, marginTop: 10 }}>{message}</p>}
     </section>
   );
 }

@@ -65,8 +65,8 @@ export default function BusinessProfileSection() {
   return (
     <section style={sectionStyle}>
       <h2 style={h2Style}>Google Business Profile</h2>
-      <p style={{ fontSize: 13, color: "#6b7280" }}>
-        Cada vez que publiques un artículo, el sistema creará automáticamente una publicación en tu Perfil de Negocio de Google con un resumen, imagen y enlace al artículo completo. Es una forma adicional de que tus clientes te encuentren.
+      <p className="lead-copy" style={{ margin: "0 0 14px 0" }}>
+        Cada vez que publiques un artículo, el sistema creará automáticamente una publicación en tu Perfil de Negocio de Google con un resumen, imagen y enlace al artículo completo.
       </p>
       {!data?.connected ? (
         <div>
@@ -74,16 +74,17 @@ export default function BusinessProfileSection() {
             type="button"
             disabled
             title="Todavía no disponible"
+            className="secondary"
             style={{
               ...secondaryButtonStyle,
-              opacity: 0.4,
+              opacity: 0.45,
               cursor: "not-allowed",
             }}
           >
             Conectar Google Business Profile
           </button>
-          <p style={{ fontSize: 12, color: "#8a6d1a", marginTop: 6 }}>
-            Esta función está en espera de aprobación por parte de Google. Te avisaremos en cuanto esté disponible para conectarla.
+          <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>
+            Esta función está en espera de aprobación por parte de Google. Te avisaremos en cuanto esté disponible.
           </p>
         </div>
       ) : data.needsLocation ? (
@@ -105,37 +106,34 @@ export default function BusinessProfileSection() {
               <button
                 onClick={save}
                 disabled={saving || !selected}
+                className="secondary"
                 style={secondaryButtonStyle}
               >
                 {saving ? "Guardando..." : "Guardar ubicación"}
               </button>
             </>
           ) : (
-            <p style={{ fontSize: 13, color: "#8a6d1a", margin: 0 }}>
-              No encontramos ninguna ubicación administrada por esta cuenta de
-              Google.
+            <p style={{ fontSize: 13, color: "#8a4b08", margin: 0 }}>
+              No encontramos ninguna ubicación administrada por esta cuenta de Google.
             </p>
           )}
           {data.error && (
-            <p style={{ color: "#d64545", fontSize: 12 }}>{data.error}</p>
+            <p style={{ color: "#ff3b30", fontSize: 12 }}>{data.error}</p>
           )}
-          <button onClick={disconnect} style={secondaryButtonStyle}>
-            Desconectar Google
-          </button>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <p style={{ fontSize: 13, color: "#1e8a4b", margin: 0 }}>
-            ✓ Conectado: {data.locationTitle}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <p style={{ fontSize: 13, color: "#16803c", margin: 0 }}>
+            ✓ Conectado a {data.locationTitle ?? data.locationName}
           </p>
           <div>
-            <button onClick={disconnect} style={secondaryButtonStyle}>
-              Desconectar Google
+            <button onClick={disconnect} className="secondary" style={secondaryButtonStyle}>
+              Desconectar
             </button>
           </div>
         </div>
       )}
-      {message && <p style={{ fontSize: 13, color: "#1e8a4b" }}>{message}</p>}
+      {message && <p style={{ fontSize: 13, color: "#16803c", marginTop: 10 }}>{message}</p>}
     </section>
   );
 }

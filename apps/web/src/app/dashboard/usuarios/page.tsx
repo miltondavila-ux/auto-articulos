@@ -557,42 +557,30 @@ export default function UsuariosPage() {
   }
 
   return (
-    <div>
+    <div style={{ maxWidth: 1120, margin: "0 auto" }}>
       <section
+        className="panel"
         style={{
-          marginTop: 20,
-          padding: "26px 28px",
-          borderRadius: 18,
-          color: "#fff",
-          background:
-            "radial-gradient(circle at 85% 10%, rgba(77, 216, 232, 0.3), transparent 34%), linear-gradient(135deg, #102f72 0%, #174d9a 52%, #117c92 100%)",
-          border: "1px solid rgba(151, 214, 255, 0.35)",
-          boxShadow: "0 20px 45px rgba(0, 9, 35, 0.24)",
+          ...sectionStyle,
+          padding: "24px 28px",
+          marginTop: 0,
+          marginBottom: 16,
         }}
       >
-        <div
-          style={{
-            fontSize: 11,
-            fontWeight: 800,
-            letterSpacing: "0.15em",
-            color: "#aeeef5",
-            textTransform: "uppercase",
-          }}
-        >
-          Centro de control
-        </div>
-        <h2 style={{ margin: "8px 0 6px", fontSize: 28 }}>Administración</h2>
+        <p className="eyebrow" style={{ margin: "0 0 4px" }}>
+          Centro de Control
+        </p>
+        <h1 style={{ margin: "0 0 6px", fontSize: 26, fontWeight: 600, color: "#1d1d1f", letterSpacing: "-0.03em" }}>
+          Administración
+        </h1>
         <p
+          className="lead-copy"
           style={{
             margin: 0,
             maxWidth: 720,
-            color: "rgba(255,255,255,0.78)",
-            fontSize: 14,
-            lineHeight: 1.6,
           }}
         >
-          Supervisa la actividad de la plataforma, controla los accesos y
-          administra la capacidad desde un solo lugar.
+          Supervisa la actividad de la plataforma, controla los accesos y administra la capacidad desde un solo lugar.
         </p>
       </section>
 
@@ -601,52 +589,36 @@ export default function UsuariosPage() {
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
           gap: 12,
-          marginTop: 14,
+          marginBottom: 16,
         }}
       >
         {metrics.map((metric) => (
           <div
             key={metric.label}
+            className="row"
             style={{
-              position: "relative",
-              overflow: "hidden",
-              minHeight: 116,
-              padding: "18px 19px",
+              padding: "16px 18px",
               borderRadius: 14,
-              background: "#fff",
-              color: "#16181d",
-              border: "1px solid #e4e9f1",
-              boxShadow: "0 8px 22px rgba(12, 35, 75, 0.08)",
+              background: "#ffffff",
+              color: "#1d1d1f",
+              border: "1px solid #e5e5ea",
             }}
           >
-            <div
-              aria-hidden="true"
-              style={{
-                position: "absolute",
-                width: 64,
-                height: 64,
-                borderRadius: "50%",
-                background: metric.color,
-                opacity: 0.1,
-                right: -18,
-                top: -20,
-              }}
-            />
-            <div style={{ fontSize: 12, color: "#64748b", fontWeight: 600 }}>
+            <div className="muted" style={{ fontSize: 12, fontWeight: 500 }}>
               {metric.label}
             </div>
             <div
               style={{
-                marginTop: 7,
-                fontSize: 27,
-                lineHeight: 1,
-                fontWeight: 800,
-                color: metric.color,
+                marginTop: 6,
+                fontSize: 24,
+                lineHeight: 1.1,
+                fontWeight: 600,
+                color: "#1d1d1f",
               }}
             >
               {metric.value}
             </div>
-            <div style={{ marginTop: 10, fontSize: 11, color: "#7b8798" }}>
+            <div className="muted" style={{ marginTop: 6, fontSize: 11 }}>
               {metric.detail}
             </div>
           </div>
@@ -659,7 +631,7 @@ export default function UsuariosPage() {
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
           gap: 12,
-          marginTop: 14,
+          marginBottom: 16,
         }}
       >
         {tabs.map((t) => (
@@ -668,36 +640,28 @@ export default function UsuariosPage() {
             onClick={() => openSection(t.id)}
             aria-pressed={tab === t.id}
             aria-controls="administracion-contenido"
+            className="row"
             style={{
-              position: "relative",
-              minHeight: 126,
-              padding: 18,
-              overflow: "hidden",
+              padding: 16,
               textAlign: "left",
               fontFamily: "inherit",
               cursor: "pointer",
               borderRadius: 14,
-              border: tab === t.id ? "1px solid #78cfe0" : "1px solid #e4e9f1",
-              background:
-                tab === t.id
-                  ? "linear-gradient(135deg, #effbff 0%, #f5f8ff 100%)"
-                  : "#fff",
-              color: "#16181d",
-              boxShadow:
-                tab === t.id
-                  ? "0 10px 26px rgba(47, 95, 219, 0.12)"
-                  : "0 4px 14px rgba(12, 35, 75, 0.06)",
+              border: tab === t.id ? "1px solid #0071e3" : "1px solid #e5e5ea",
+              background: "#ffffff",
+              color: "#1d1d1f",
+              boxShadow: tab === t.id ? "0 4px 14px rgba(0, 113, 227, 0.1)" : "none",
             }}
           >
             <span
               style={{
                 display: "inline-flex",
-                padding: "3px 8px",
+                padding: "2px 8px",
                 borderRadius: 999,
-                background: tab === t.id ? "#d7f3f8" : "#eef2f7",
-                color: tab === t.id ? "#0d7283" : "#64748b",
+                background: tab === t.id ? "#e8f2ff" : "#f5f5f7",
+                color: tab === t.id ? "#0071e3" : "#6e6e73",
                 fontSize: 10,
-                fontWeight: 800,
+                fontWeight: 600,
                 letterSpacing: "0.06em",
                 textTransform: "uppercase",
               }}
@@ -707,37 +671,24 @@ export default function UsuariosPage() {
             <span
               style={{
                 display: "block",
-                marginTop: 11,
-                fontSize: 16,
-                fontWeight: 800,
+                marginTop: 8,
+                fontSize: 15,
+                fontWeight: 600,
+                color: "#1d1d1f",
               }}
             >
               {t.label}
             </span>
             <span
+              className="muted"
               style={{
                 display: "block",
-                marginTop: 5,
-                maxWidth: 330,
-                color: "#6b7280",
+                marginTop: 4,
                 fontSize: 12,
-                lineHeight: 1.45,
+                lineHeight: 1.4,
               }}
             >
               {t.description}
-            </span>
-            <span
-              aria-hidden="true"
-              style={{
-                position: "absolute",
-                right: 16,
-                bottom: 12,
-                color: tab === t.id ? "#0d7283" : "#a4afbd",
-                fontSize: 18,
-                fontWeight: 700,
-              }}
-            >
-              →
             </span>
           </button>
         ))}

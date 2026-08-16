@@ -7,7 +7,6 @@ import {
   h2Style,
   secondaryButtonStyle,
   sectionStyle,
-  inputStyle,
 } from "@/components/dashboard-ui";
 
 interface SocialOpportunity {
@@ -16,7 +15,7 @@ interface SocialOpportunity {
   articleUrl: string;
   platform: string;
   suggestedText: string;
-  status: string; // "pending" | "published" | "skipped" | "error" | "queued" | "processing"
+  status: string;
   postId: string | null;
   errorLog: string | null;
   skipReason: string | null;
@@ -153,10 +152,9 @@ export default function OportunidadesRedesPage() {
     }
   }
 
-  async function handleTextChange(id: string, text: string) {
-    // Actualizar localmente el estado
+  function handleTextChange(id: string, newText: string) {
     setOpportunities((prev) =>
-      prev.map((opp) => (opp.id === id ? { ...opp, suggestedText: text } : opp))
+      prev.map((o) => (o.id === id ? { ...o, suggestedText: newText } : o)),
     );
   }
 
@@ -168,13 +166,12 @@ export default function OportunidadesRedesPage() {
         body: JSON.stringify({ id: opp.id, suggestedText: opp.suggestedText }),
       });
       if (res.ok) {
-        setMessage({ kind: "success", text: "Propuesta de copy guardada." });
+        setMessage({ kind: "success", text: "Borrador guardado correctamente." });
       } else {
-        const data = await res.json();
-        setMessage({ kind: "error", text: data.error || "No se pudo guardar la propuesta." });
+        setMessage({ kind: "error", text: "No se pudo guardar el borrador." });
       }
-    } catch (err: any) {
-      setMessage({ kind: "error", text: err.message });
+    } catch {
+      setMessage({ kind: "error", text: "Error de conexión." });
     }
   }
 
@@ -182,9 +179,6 @@ export default function OportunidadesRedesPage() {
     setPublishingId(opp.id);
     setMessage(null);
     try {
-      // Guardar el texto actual primero
-      await handleSaveText(opp);
-
       const res = await fetch("/api/social-opportunities/publish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -192,10 +186,10 @@ export default function OportunidadesRedesPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setMessage({ kind: "success", text: `Publicado con éxito en ${opp.platform.toUpperCase()}!` });
+        setMessage({ kind: "success", text: "Publicación iniciada con éxito." });
         loadOpportunities();
       } else {
-        setMessage({ kind: "error", text: data.error || "Fallo en la publicación." });
+        setMessage({ kind: "error", text: data.error || "Error al publicar." });
       }
     } catch (err: any) {
       setMessage({ kind: "error", text: err.message });
@@ -266,7 +260,7 @@ export default function OportunidadesRedesPage() {
       });
 
       if (res.ok) {
-        setMessage({ kind: "info", text: "Propuesta descartada. Gracias por tu retroalimentación." });
+        setMessage({ kind: "info", text: "Propuesta descartada." });
         setSkipModal(null);
         loadOpportunities();
       } else {
@@ -303,122 +297,149 @@ export default function OportunidadesRedesPage() {
   const queuedList = opportunities.filter((o) => o.status === "queued" || o.status === "processing");
 
   return (
-    <div style={{ padding: "0 10px", maxWidth: 1200, margin: "0 auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 20 }}>
-        <h2 style={{ ...h2Style, fontSize: 22, color: "#e8ecf5", margin: 0 }}>
-          Oportunidades en Redes Sociales
-        </h2>
-        <div style={{ display: "flex", gap: 12 }}>
-          {connectedNetworks.threads && (
-            <button
-              onClick={() => handleGenerate("threads")}
-              disabled={generating || loading}
-              style={disabledStyle({ ...buttonStyle, background: "#111827" }, generating || loading)}
-            >
-              {generatingNetwork === "threads" ? "Analizando Threads..." : "Solicitar para Threads"}
-            </button>
-          )}
-          {connectedNetworks.x && (
-            <button
-              onClick={() => handleGenerate("x")}
-              disabled={generating || loading}
-              style={disabledStyle({ ...buttonStyle, background: "#000" }, generating || loading)}
-            >
-              {generatingNetwork === "x" ? "Analizando X..." : "Solicitar para X"}
-            </button>
-          )}
-          {connectedNetworks.linkedin && (
-            <button
-              onClick={() => handleGenerate("linkedin")}
-              disabled={generating || loading}
-              style={disabledStyle({ ...buttonStyle, background: "#0077b5" }, generating || loading)}
-            >
-              {generatingNetwork === "linkedin" ? "Analizando LinkedIn..." : "Solicitar para LinkedIn"}
-            </button>
-          )}
-          {connectedNetworks.instagram && (
-            <button
-              onClick={() => handleGenerate("instagram")}
-              disabled={generating || loading}
-              style={disabledStyle({ ...buttonStyle, background: "linear-gradient(135deg, #f58529, #dd2a7b, #8134af)" }, generating || loading)}
-            >
-              {generatingNetwork === "instagram" ? "Analizando Instagram..." : "Solicitar para Instagram"}
-            </button>
-          )}
-          {!connectedNetworks.threads && !connectedNetworks.x && !connectedNetworks.linkedin && !connectedNetworks.instagram && !loading && (
-            <span style={{ color: "#f59e0b", fontSize: 13 }}>
-              Conecta una red social en Configuración para solicitar oportunidades.
-            </span>
-          )}
-          {generating && (
-            <div
-              role="status"
-              aria-live="polite"
+    <div style={{ maxWidth: 1120, margin: "0 auto" }}>
+      {/* Panel Superior */}
+      <div
+        className="panel"
+        style={{
+          ...sectionStyle,
+          padding: "24px 28px",
+          marginBottom: 20,
+          marginTop: 0,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            flexWrap: "wrap",
+            gap: 16,
+          }}
+        >
+          <div>
+            <p className="eyebrow" style={{ margin: "0 0 6px" }}>Difusión Social</p>
+            <h1
               style={{
-                marginTop: 16,
-                padding: 16,
-                border: "1px solid #b8caf7",
-                borderRadius: 10,
-                background: "#f3f6ff",
-                width: "100%",
+                fontSize: 26,
+                fontWeight: 600,
+                color: "#1d1d1f",
+                margin: "0 0 6px 0",
+                letterSpacing: "-0.03em",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "center", marginBottom: 10 }}>
-                <strong style={{ fontSize: 14, color: "#24458f" }}>
-                  {stages[currentStage]}
-                </strong>
-                <span style={{ minWidth: 52, textAlign: "center", padding: "4px 8px", borderRadius: 999, background: "#dfe8ff", color: "#24458f", fontSize: 12, fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>
-                  {elapsed}
-                </span>
-              </div>
-              <div aria-hidden="true" style={{ height: 8, borderRadius: 999, background: "#dfe5f2", overflow: "hidden" }}>
-                <div style={{ width: `${progress}%`, height: "100%", borderRadius: 999, background: "linear-gradient(90deg, #2f5fdb, #4dd8e8)", transition: "width 1s linear" }} />
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 8, marginTop: 12 }}>
-                {stages.map((stage, index) => (
-                  <div key={stage} style={{ display: "flex", gap: 7, alignItems: "flex-start", color: index <= currentStage ? "#24458f" : "#8a94a6", fontSize: 11, fontWeight: index === currentStage ? 700 : 500 }}>
-                    <span aria-hidden="true">
-                      {index < currentStage ? "✓" : index === currentStage ? "●" : "○"}
-                    </span>
-                    <span>{stage}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          {pendingList.length > 0 && queuedList.length === 0 && (
-            <button
-              onClick={handlePublishAll}
-              disabled={publishingAll}
-              style={disabledStyle({ ...buttonStyle, background: "#10b981" }, publishingAll)}
-            >
-              {publishingAll ? "Publicando todo..." : "🚀 Publicar Todo el Lote"}
-            </button>
-          )}
-          {queuedList.length > 0 && (
-            <span style={{ color: "#f59e0b", fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ display: "inline-block", animation: "spin-v2 1s linear infinite" }}>🔄</span>
-              {queuedList.length} en proceso de publicación — se actualiza automáticamente...
-            </span>
-          )}
-        </div>
-      </div>
+              Oportunidades en Redes Sociales
+            </h1>
+            <p className="lead-copy" style={{ margin: 0, maxWidth: 650 }}>
+              Genera y publica contenido optimizado para tus redes sociales a partir de tus artículos publicados y datos de búsqueda.
+            </p>
+          </div>
 
-      <p style={{ color: "#a8b3c7", fontSize: 14, marginTop: 8, marginBottom: 20 }}>
-        Elige la red para la que quieres solicitar oportunidades. El sistema usa Google Search Console y también artículos recientes como alternativa.
-      </p>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {connectedNetworks.threads && (
+              <button
+                onClick={() => handleGenerate("threads")}
+                disabled={generating || loading}
+                className="secondary"
+                style={disabledStyle({ ...secondaryButtonStyle, padding: "9px 14px", fontSize: 13 }, generating || loading)}
+              >
+                {generatingNetwork === "threads" ? "Analizando..." : "Threads"}
+              </button>
+            )}
+            {connectedNetworks.x && (
+              <button
+                onClick={() => handleGenerate("x")}
+                disabled={generating || loading}
+                className="secondary"
+                style={disabledStyle({ ...secondaryButtonStyle, padding: "9px 14px", fontSize: 13 }, generating || loading)}
+              >
+                {generatingNetwork === "x" ? "Analizando..." : "X (Twitter)"}
+              </button>
+            )}
+            {connectedNetworks.linkedin && (
+              <button
+                onClick={() => handleGenerate("linkedin")}
+                disabled={generating || loading}
+                className="secondary"
+                style={disabledStyle({ ...secondaryButtonStyle, padding: "9px 14px", fontSize: 13 }, generating || loading)}
+              >
+                {generatingNetwork === "linkedin" ? "Analizando..." : "LinkedIn"}
+              </button>
+            )}
+            {connectedNetworks.instagram && (
+              <button
+                onClick={() => handleGenerate("instagram")}
+                disabled={generating || loading}
+                className="secondary"
+                style={disabledStyle({ ...secondaryButtonStyle, padding: "9px 14px", fontSize: 13 }, generating || loading)}
+              >
+                {generatingNetwork === "instagram" ? "Analizando..." : "Instagram"}
+              </button>
+            )}
+            {pendingList.length > 0 && queuedList.length === 0 && (
+              <button
+                onClick={handlePublishAll}
+                disabled={publishingAll}
+                style={{ ...buttonStyle, marginTop: 0, padding: "9px 16px", fontSize: 13 }}
+              >
+                {publishingAll ? "Publicando..." : "Publicar todo el lote"}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {!connectedNetworks.threads && !connectedNetworks.x && !connectedNetworks.linkedin && !connectedNetworks.instagram && !loading && (
+          <p className="notice" style={{ marginTop: 14 }}>
+            Conecta una red social en Configuración para solicitar propuestas.
+          </p>
+        )}
+
+        {generating && (
+          <div
+            role="status"
+            aria-live="polite"
+            style={{
+              marginTop: 16,
+              padding: 16,
+              border: "1px solid #e5e5ea",
+              borderRadius: 14,
+              background: "#f5f5f7",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "center", marginBottom: 10 }}>
+              <strong style={{ fontSize: 13, color: "#1d1d1f" }}>
+                {stages[currentStage]}
+              </strong>
+              <span style={{ fontSize: 12, color: "#6e6e73", fontVariantNumeric: "tabular-nums" }}>
+                {elapsed}
+              </span>
+            </div>
+            <div style={{ height: 6, borderRadius: 999, background: "rgba(0,0,0,0.06)", overflow: "hidden" }}>
+              <div style={{ width: `${progress}%`, height: "100%", background: "#0071e3", transition: "width 1s linear" }} />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 8, marginTop: 12 }}>
+              {stages.map((stage, index) => (
+                <div key={stage} style={{ display: "flex", gap: 6, alignItems: "center", color: index <= currentStage ? "#1d1d1f" : "#86868b", fontSize: 12, fontWeight: index === currentStage ? 600 : 400 }}>
+                  <span aria-hidden="true">{index < currentStage ? "✓" : index === currentStage ? "●" : "○"}</span>
+                  <span>{stage}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {message && (
         <div
           style={{
             padding: "12px 16px",
-            borderRadius: 8,
+            borderRadius: 12,
             marginBottom: 20,
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: 500,
-            background: message.kind === "success" ? "#d1fae5" : message.kind === "error" ? "#fee2e2" : "#e0f2fe",
-            color: message.kind === "success" ? "#065f46" : message.kind === "error" ? "#991b1b" : "#075985",
-            border: `1px solid ${message.kind === "success" ? "#a7f3d0" : message.kind === "error" ? "#fecaca" : "#bae6fd"}`,
+            background: message.kind === "success" ? "#f2faf4" : message.kind === "error" ? "#fff2f1" : "#f5f5f7",
+            color: message.kind === "success" ? "#16803c" : message.kind === "error" ? "#ff3b30" : "#6e6e73",
+            border: `1px solid ${message.kind === "success" ? "rgba(52, 199, 89, 0.25)" : message.kind === "error" ? "rgba(255, 59, 48, 0.25)" : "#e5e5ea"}`,
           }}
         >
           {message.text}
@@ -426,106 +447,119 @@ export default function OportunidadesRedesPage() {
       )}
 
       {loading ? (
-        <div style={{ color: "#e8ecf5", textAlign: "center", padding: 40 }}>
+        <div className="muted" style={{ textAlign: "center", padding: 40 }}>
           Cargando propuestas...
         </div>
       ) : (
-        <>
-          <div style={{ marginBottom: 40 }}>
-            <h3 style={{ color: "#e8ecf5", fontSize: 18, borderBottom: "1px solid rgba(232, 236, 245, 0.15)", paddingBottom: 8 }}>
-              Propuestas Pendientes ({pendingList.length}){queuedList.length > 0 && <span style={{ color: "#f59e0b", fontSize: 13, marginLeft: 10 }}>· {queuedList.length} en cola/proceso</span>}
-            </h3>
-            {pendingList.length === 0 && queuedList.length === 0 ? (
-              <div style={{ color: "#a8b3c7", textAlign: "center", padding: 20, background: "rgba(255,255,255,0.02)", borderRadius: 12 }}>
-                No tienes propuestas pendientes. Usa arriba el botón de la red que quieras analizar.
-              </div>
-            ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 20, marginTop: 15 }}>
-                {[...pendingList, ...queuedList].map((opp) => {
-                  const isQueuedOrProcessing = opp.status === "queued" || opp.status === "processing";
-                  const statusConfig = {
-                    queued: { label: "En cola...", icon: "⏳", color: "#f59e0b", bg: "rgba(245, 158, 11, 0.15)" },
-                    processing: { label: "Publicando...", icon: "🔄", color: "#3b82f6", bg: "rgba(59, 130, 246, 0.15)" },
-                    published: { label: "Publicado", icon: "✅", color: "#10b981", bg: "rgba(16, 185, 129, 0.15)" },
-                    error: { label: "Error", icon: "❌", color: "#ef4444", bg: "rgba(239, 68, 68, 0.15)" },
-                    pending: { label: "Pendiente", icon: "📝", color: "#9ca3af", bg: "rgba(156, 163, 175, 0.15)" },
-                  };
-                  const statusInfo = statusConfig[opp.status as keyof typeof statusConfig] || statusConfig.pending;
-                  const showSpinner = opp.status === "processing";
-                  return (
-                  <div key={opp.id} style={{ ...sectionStyle, background: "#111827", border: `1px solid ${isQueuedOrProcessing ? "#f59e0b" : "#374151"}` }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10 }}>
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <h2 style={{ ...h2Style, margin: 0, fontSize: 18 }}>
+              Propuestas Pendientes ({pendingList.length})
+            </h2>
+            {queuedList.length > 0 && (
+              <span style={{ color: "#8a4b08", fontSize: 12 }}>
+                {queuedList.length} en proceso
+              </span>
+            )}
+          </div>
+
+          {pendingList.length === 0 && queuedList.length === 0 ? (
+            <section style={{ ...sectionStyle, textAlign: "center", padding: 32 }}>
+              <p className="muted" style={{ margin: 0 }}>
+                No tienes propuestas pendientes. Usa los botones de arriba para generarlas.
+              </p>
+            </section>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
+              {[...pendingList, ...queuedList].map((opp) => {
+                const isQueuedOrProcessing = opp.status === "queued" || opp.status === "processing";
+                return (
+                  <div key={opp.id} className="panel" style={sectionStyle}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
                       <div>
-                        <span
-                          style={{
-                            display: "inline-block",
-                            padding: "4px 8px",
-                            borderRadius: 6,
-                            fontSize: 11,
-                            fontWeight: 700,
-                            background: opp.platform === "threads" ? "rgba(77, 216, 232, 0.15)" : opp.platform === "x" ? "rgba(29, 161, 242, 0.15)" : opp.platform === "linkedin" ? "rgba(0, 119, 181, 0.15)" : opp.platform.startsWith("instagram") ? "rgba(221, 42, 123, 0.15)" : "#374151",
-                            color: opp.platform === "threads" ? "#4dd8e8" : opp.platform === "x" ? "#1da1f2" : opp.platform === "linkedin" ? "#0077b5" : opp.platform.startsWith("instagram") ? "#dd2a7b" : "#9ca3af",
-                            marginBottom: 8,
-                          }}
-                        >
-                          {opp.platform === "threads" ? "🌀 THREADS" : opp.platform === "x" ? "🐦 X (TWITTER)" : opp.platform === "linkedin" ? "💼 LINKEDIN" : opp.platform === "instagram-carousel" ? "📸 IG CARRUSEL" : opp.platform === "instagram-reel-image" ? "📸 IG REEL-IMG" : opp.platform === "instagram-infografia" ? "📸 IG INFOGRAFÍA" : opp.platform.toUpperCase()}
-                        </span>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, background: statusInfo.bg, color: statusInfo.color, marginLeft: 6 }}>
-                          {showSpinner && <span style={{ display: "inline-block", animation: "spin-v2 1s linear infinite" }}>🔄</span>}
-                          {!showSpinner && <span>{statusInfo.icon}</span>}
-                          {statusInfo.label}
-                        </span>
-                        <h4 style={{ color: "#f3f4f6", margin: 0, fontSize: 16 }}>
-                          Artículo: {opp.articleTitle}
+                        <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              padding: "2px 8px",
+                              borderRadius: 999,
+                              fontSize: 11,
+                              fontWeight: 600,
+                              textTransform: "uppercase",
+                              background: "#e8f2ff",
+                              color: "#0071e3",
+                            }}
+                          >
+                            {opp.platform}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 500,
+                              padding: "2px 8px",
+                              borderRadius: 999,
+                              background: opp.status === "published" ? "rgba(52, 199, 89, 0.1)" : "#f5f5f7",
+                              color: opp.status === "published" ? "#16803c" : "#6e6e73",
+                            }}
+                          >
+                            {opp.status === "published" ? "✓ Publicado" : opp.status === "processing" ? "Publicando..." : "Pendiente"}
+                          </span>
+                        </div>
+                        <h4 style={{ color: "#1d1d1f", margin: "0 0 4px 0", fontSize: 16, fontWeight: 600 }}>
+                          {opp.articleTitle}
                         </h4>
                         <a
                           href={opp.articleUrl}
                           target="_blank"
                           rel="noreferrer"
-                          style={{ color: "#3b82f6", fontSize: 13, textDecoration: "none" }}
+                          className="link-button"
+                          style={{ fontSize: 12 }}
                         >
-                          Ver artículo original ↗
+                          Ver artículo original &rarr;
                         </a>
                       </div>
-                      <div style={{ display: "flex", gap: 8 }}>
+
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                         {!isQueuedOrProcessing && (
                           <>
-                        {(opp.platform.startsWith("instagram") || opp.platform === "threads" || opp.platform === "linkedin") && (
-                          <button
-                            onClick={() => handlePreview(opp)}
-                            style={{ ...secondaryButtonStyle, padding: "8px 12px", fontSize: 13 }}
-                          >
-                            👁 Ver preview
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleSaveText(opp)}
-                          style={{ ...secondaryButtonStyle, padding: "8px 12px", fontSize: 13 }}
-                        >
-                          Guardar Borrador
-                        </button>
-                        <button
-                          onClick={() => handlePublishOne(opp)}
-                          disabled={publishingId === opp.id}
-                          style={{ ...buttonStyle, marginTop: 0, padding: "8px 16px", fontSize: 13, background: "#3b82f6" }}
-                        >
-                          {publishingId === opp.id ? "Publicando..." : "🚀 Publicar Ahora"}
-                        </button>
-                        <button
-                          onClick={() => handleSkipOne(opp)}
-                          style={{ ...secondaryButtonStyle, padding: "8px 12px", fontSize: 13, color: "#ef4444", border: "1px solid #ef4444" }}
-                        >
-                          ✕ Descartar
-                        </button>
-                        </>
+                            {(opp.platform.startsWith("instagram") || opp.platform === "threads" || opp.platform === "linkedin") && (
+                              <button
+                                onClick={() => handlePreview(opp)}
+                                className="secondary"
+                                style={{ ...secondaryButtonStyle, padding: "7px 12px", fontSize: 12 }}
+                              >
+                                Preview
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleSaveText(opp)}
+                              className="secondary"
+                              style={{ ...secondaryButtonStyle, padding: "7px 12px", fontSize: 12 }}
+                            >
+                              Guardar
+                            </button>
+                            <button
+                              onClick={() => handlePublishOne(opp)}
+                              disabled={publishingId === opp.id}
+                              style={{ ...buttonStyle, marginTop: 0, padding: "7px 14px", fontSize: 12 }}
+                            >
+                              {publishingId === opp.id ? "Publicando..." : "Publicar"}
+                            </button>
+                            <button
+                              onClick={() => handleSkipOne(opp)}
+                              className="secondary"
+                              style={{ ...secondaryButtonStyle, padding: "7px 12px", fontSize: 12, color: "#ff3b30" }}
+                            >
+                              Descartar
+                            </button>
+                          </>
                         )}
                       </div>
                     </div>
 
-
-                    <div style={{ marginTop: 15 }}>
-                      <label style={{ display: "block", color: "#9ca3af", fontSize: 12, marginBottom: 4 }}>
-                        Propuesta de Copy{isQueuedOrProcessing ? " (publicación en curso)" : " (Puedes editar el texto antes de publicar)"}:
+                    <div style={{ marginTop: 14 }}>
+                      <label style={{ display: "block", color: "#6e6e73", fontSize: 12, marginBottom: 4 }}>
+                        Texto de la publicación:
                       </label>
                       <textarea
                         value={opp.suggestedText}
@@ -533,79 +567,62 @@ export default function OportunidadesRedesPage() {
                         disabled={isQueuedOrProcessing}
                         style={{
                           width: "100%",
-                          minHeight: 100,
+                          minHeight: 90,
                           padding: 10,
-                          borderRadius: 8,
-                          background: isQueuedOrProcessing ? "#374151" : "#1f2937",
-                          color: "#f9fafb",
-                          border: "1px solid #4b5563",
+                          borderRadius: 10,
+                          background: "#ffffff",
+                          color: "#1d1d1f",
+                          border: "1px solid #d2d2d7",
                           fontSize: 14,
                           fontFamily: "inherit",
                           resize: "vertical",
+                          boxSizing: "border-box",
                         }}
                       />
-                      <span style={{ fontSize: 11, color: opp.suggestedText.length > 500 ? "#ef4444" : "#9ca3af", display: "block", marginTop: 4 }}>
-                        Caracteres: {opp.suggestedText.length}
-                      </span>
                     </div>
-                    {isQueuedOrProcessing && (
-                      <div style={{ marginTop: 12, height: 4, borderRadius: 2, background: "#374151", overflow: "hidden" }}>
-                        <div style={{ height: "100%", width: "30%", borderRadius: 2, background: "linear-gradient(90deg, transparent, #3b82f6, transparent)", animation: "slide-v2 1.5s linear infinite" }} />
-                      </div>
-                    )}
-                    {opp.status === "error" && opp.errorLog && (
-                      <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: 6, background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)" }}>
-                        <details style={{ fontSize: 12, color: "#ef4444" }}>
-                          <summary style={{ cursor: "pointer", fontWeight: 600 }}>❌ Ver detalle del error</summary>
-                          <p style={{ margin: "8px 0 0", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{opp.errorLog}</p>
-                        </details>
-                      </div>
-                    )}
-                    {opp.status === "published" && opp.postId && (
-                      <div style={{ marginTop: 12, fontSize: 12, color: "#10b981" }}>
-                        ✅ Publicado — ID: {opp.postId}
-                      </div>
-                    )}
                   </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </>
+                );
+              })}
+            </div>
+          )}
+        </div>
       )}
-      {/* Modal de descarte */}
+
+      {/* Modal de Descarte */}
       {skipModal && (
         <div
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.7)",
+            backgroundColor: "rgba(0, 0, 0, 0.2)",
+            backdropFilter: "blur(5px)",
+            WebkitBackdropFilter: "blur(5px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             zIndex: 1000,
-            padding: 20,
+            padding: 16,
           }}
           onClick={() => setSkipModal(null)}
         >
           <div
             style={{
-              background: "#1f2937",
-              border: "1px solid #374151",
-              borderRadius: 16,
-              padding: 28,
-              maxWidth: 480,
+              background: "rgba(255, 255, 255, 0.96)",
+              borderRadius: 22,
+              padding: 24,
+              maxWidth: 440,
               width: "100%",
-              boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+              boxShadow: "0 24px 80px rgba(0, 0, 0, 0.15)",
+              border: "1px solid rgba(0, 0, 0, 0.08)",
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{ color: "#f3f4f6", margin: 0, fontSize: 18 }}>
+            <p className="eyebrow" style={{ margin: "0 0 4px" }}>Descartar</p>
+            <h3 style={{ color: "#1d1d1f", margin: "0 0 6px 0", fontSize: 18, fontWeight: 600 }}>
               ¿Por qué descartas esta propuesta?
             </h3>
-            <p style={{ color: "#9ca3af", fontSize: 13, margin: "8px 0 16px 0" }}>
-              Tu respuesta nos ayuda a mejorar las recomendaciones futuras.
+            <p className="lead-copy" style={{ fontSize: 13, margin: "0 0 16px 0" }}>
+              Tu respuesta nos ayuda a optimizar futuras recomendaciones.
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -616,15 +633,13 @@ export default function OportunidadesRedesPage() {
                     display: "flex",
                     alignItems: "center",
                     gap: 10,
-                    padding: "10px 14px",
+                    padding: "8px 12px",
                     borderRadius: 10,
-                    background: skipModal.reason === reason ? "rgba(59, 130, 246, 0.15)" : "#111827",
-                    border: `1px solid ${skipModal.reason === reason ? "#3b82f6" : "#374151"}`,
+                    background: skipModal.reason === reason ? "#e8f2ff" : "#ffffff",
+                    border: `1px solid ${skipModal.reason === reason ? "#0071e3" : "#e5e5ea"}`,
                     cursor: "pointer",
-                    color: "#e5e7eb",
-                    fontSize: 14,
-                    fontWeight: skipModal.reason === reason ? 600 : 400,
-                    transition: "all 0.15s",
+                    color: "#1d1d1f",
+                    fontSize: 13,
                   }}
                 >
                   <input
@@ -633,155 +648,102 @@ export default function OportunidadesRedesPage() {
                     value={reason}
                     checked={skipModal.reason === reason}
                     onChange={() => setSkipModal({ ...skipModal, reason })}
-                    style={{ accentColor: "#3b82f6" }}
                   />
                   {reason}
                 </label>
               ))}
-
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 10,
-                  padding: "10px 14px",
-                  borderRadius: 10,
-                  background: skipModal.reason === "__custom__" ? "rgba(59, 130, 246, 0.15)" : "#111827",
-                  border: `1px solid ${skipModal.reason === "__custom__" ? "#3b82f6" : "#374151"}`,
-                  cursor: "pointer",
-                  flexDirection: "column",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 10, width: "100%" }}>
-                  <input
-                    type="radio"
-                    name="skipReason"
-                    value="__custom__"
-                    checked={skipModal.reason === "__custom__"}
-                    onChange={() => setSkipModal({ ...skipModal, reason: "__custom__" })}
-                    style={{ accentColor: "#3b82f6", marginTop: 2 }}
-                  />
-                  <span style={{ color: "#e5e7eb", fontSize: 14 }}>Otro</span>
-                </div>
-                {skipModal.reason === "__custom__" && (
-                  <input
-                    type="text"
-                    placeholder="Escribe tu razón..."
-                    value={skipModal.customReason}
-                    onChange={(e) => setSkipModal({ ...skipModal, customReason: e.target.value })}
-                    style={{
-                      ...inputStyle,
-                      marginLeft: 26,
-                      width: "calc(100% - 26px)",
-                    }}
-                    autoFocus
-                  />
-                )}
-              </label>
             </div>
 
-            <div style={{ display: "flex", gap: 10, marginTop: 20, justifyContent: "flex-end" }}>
+            <div style={{ display: "flex", gap: 8, marginTop: 18, justifyContent: "flex-end" }}>
               <button
                 onClick={() => setSkipModal(null)}
-                style={secondaryButtonStyle}
+                className="secondary"
+                style={{ ...secondaryButtonStyle, padding: "8px 14px", fontSize: 13 }}
               >
                 Cancelar
               </button>
               <button
                 onClick={handleConfirmSkip}
-                disabled={
-                  !skipModal.reason ||
-                  (skipModal.reason === "__custom__" && !skipModal.customReason.trim())
-                }
-                style={disabledStyle(
-                  {
-                    ...buttonStyle,
-                    background: "#ef4444",
-                  },
-                  !skipModal.reason ||
-                    (skipModal.reason === "__custom__" && !skipModal.customReason.trim())
-                )}
+                disabled={!skipModal.reason}
+                style={{
+                  ...buttonStyle,
+                  background: "#ff3b30",
+                  marginTop: 0,
+                  padding: "8px 16px",
+                  fontSize: 13,
+                }}
               >
-                Descartar propuesta
+                Descartar
               </button>
             </div>
           </div>
         </div>
       )}
-      {/* Modal de preview */}
+
+      {/* Modal de Preview */}
       {previewModal && (
         <div
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.8)",
+            backgroundColor: "rgba(0, 0, 0, 0.2)",
+            backdropFilter: "blur(5px)",
+            WebkitBackdropFilter: "blur(5px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             zIndex: 1000,
-            padding: 20,
+            padding: 16,
           }}
           onClick={() => setPreviewModal(null)}
         >
           <div
             style={{
-              background: "#1f2937",
-              border: "1px solid #374151",
-              borderRadius: 16,
-              padding: 28,
-              maxWidth: 520,
+              background: "rgba(255, 255, 255, 0.96)",
+              borderRadius: 22,
+              padding: 24,
+              maxWidth: 480,
               width: "100%",
-              boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+              boxShadow: "0 24px 80px rgba(0, 0, 0, 0.15)",
+              border: "1px solid rgba(0, 0, 0, 0.08)",
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{ color: "#f3f4f6", margin: 0, fontSize: 18 }}>
-              Preview: {previewModal.title}
+            <p className="eyebrow" style={{ margin: "0 0 4px" }}>Vista Previa</p>
+            <h3 style={{ color: "#1d1d1f", margin: "0 0 12px 0", fontSize: 18, fontWeight: 600 }}>
+              {previewModal.title}
             </h3>
-            <p style={{ color: "#9ca3af", fontSize: 12, margin: "6px 0 16px 0" }}>
-              Formato: {previewModal.platform}
-            </p>
 
-            <div style={{ background: "#111827", borderRadius: 12, overflow: "hidden", minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ background: "#f5f5f7", borderRadius: 12, overflow: "hidden", minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
               {previewModal.loading ? (
-                <div style={{ color: "#9ca3af", textAlign: "center", padding: 40 }}>
-                  <div style={{ fontSize: 24, marginBottom: 8 }}>⏳</div>
+                <div className="muted" style={{ textAlign: "center", padding: 30, fontSize: 13 }}>
                   Generando preview...
                 </div>
               ) : previewModal.imageUrl || previewModal.imageBase64 ? (
                 <img
                   src={previewModal.imageBase64 ? `data:image/png;base64,${previewModal.imageBase64}` : previewModal.imageUrl!}
                   alt="Preview"
-                  style={{ width: "100%", maxHeight: 400, objectFit: "contain" }}
+                  style={{ width: "100%", maxHeight: 380, objectFit: "contain" }}
                 />
               ) : (
-                <div style={{ color: "#ef4444", textAlign: "center", padding: 40 }}>
+                <div style={{ color: "#ff3b30", textAlign: "center", padding: 30, fontSize: 13 }}>
                   No se pudo generar el preview
                 </div>
               )}
             </div>
 
-            <div style={{ display: "flex", gap: 10, marginTop: 16, justifyContent: "flex-end" }}>
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 14 }}>
               <button
-                 onClick={() => setPreviewModal(null)}
-                 style={secondaryButtonStyle}
-               >
-                 Cerrar
-               </button>
-             </div>
-           </div>
-         </div>
-       )}
-        <style>{`
-          @keyframes spin-v2 {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-          @keyframes slide-v2 {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(400%); }
-          }
-        `}</style>
-     </div>
-   );
+                onClick={() => setPreviewModal(null)}
+                className="secondary"
+                style={{ ...secondaryButtonStyle, padding: "8px 16px", fontSize: 13 }}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

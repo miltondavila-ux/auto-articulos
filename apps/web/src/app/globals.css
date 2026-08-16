@@ -2,91 +2,270 @@
 @tailwind components;
 @tailwind utilities;
 
-/*
- * Apple Human Interface Guidelines - Tokens & Responsive Baseline
- */
+/* ==========================================================================
+   Apple Minimalist Design System (Inspirado en Apple HIG & Agente Enrutador)
+   ========================================================================== */
+
 :root {
-  /* Tipografía San Francisco / Apple System */
-  --apple-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --apple-font-mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
-
-  /* Colores de Sistema - Apple Impeccable White Theme */
-  --apple-bg: #f5f5f7;
-  --apple-bg-subtle: #ffffff;
-  --apple-surface: rgba(255, 255, 255, 0.85);
-  --apple-surface-hover: rgba(255, 255, 255, 0.95);
-  --apple-surface-card: #ffffff;
-  --apple-surface-solid: #ffffff;
-  --apple-border: rgba(0, 0, 0, 0.08);
-  --apple-border-subtle: rgba(0, 0, 0, 0.05);
-
-  /* Texto */
-  --apple-text-primary: #1d1d1f;
-  --apple-text-secondary: #86868b;
-  --apple-text-tertiary: #a1a1a6;
-
-  /* Acentos de Sistema Apple */
-  --apple-accent: #0071e3;
-  --apple-accent-hover: #0077ed;
-  --apple-accent-active: #0062c4;
-  --apple-accent-tint: rgba(0, 113, 227, 0.08);
-  --apple-cyan: #00c7be;
-  --apple-success: #34c759;
-  --apple-success-bg: rgba(52, 199, 89, 0.1);
-  --apple-warning: #ff9500;
-  --apple-warning-bg: rgba(255, 149, 0, 0.1);
-  --apple-danger: #ff3b30;
-  --apple-danger-bg: rgba(255, 59, 48, 0.1);
-
-  /* Radios Squircle */
-  --apple-radius-sm: 8px;
-  --apple-radius-md: 12px;
-  --apple-radius-lg: 16px;
-  --apple-radius-xl: 22px;
-  --apple-radius-pill: 9999px;
-
-  /* Sombras y Filtros Apple */
-  --apple-blur: blur(20px) saturate(180%);
-  --apple-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-  --apple-shadow-md: 0 4px 20px rgba(0, 0, 0, 0.06);
-  --apple-shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.08);
-
-  /* Curvas de Transición Apple */
-  --apple-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
-  --apple-transition: all 0.2s var(--apple-ease);
-}
-
-/* Box-sizing universal para evitar desbordes responsivos */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-html {
-  font-family: var(--apple-font);
-  background: var(--apple-bg);
-  color: var(--apple-text-primary);
-  text-rendering: optimizeLegibility;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #1d1d1f;
+  background: #f5f5f7;
+  font-synthesis: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  -webkit-tap-highlight-color: transparent;
-  scroll-behavior: smooth;
+
+  --apple-font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif;
+  --apple-bg: #f5f5f7;
+  --apple-surface: rgba(255, 255, 255, 0.88);
+  --apple-surface-card: #ffffff;
+  --apple-text-primary: #1d1d1f;
+  --apple-text-secondary: #6e6e73;
+  --apple-accent: #0071e3;
+  --apple-border: rgba(0, 0, 0, 0.07);
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  background-color: var(--apple-bg);
-  color: var(--apple-text-primary);
+  background: #f5f5f7;
+  color: #1d1d1f;
   overflow-x: hidden;
 }
 
-/* Scrollbar refinado estilo macOS */
+/* Estructura base */
+.shell {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 28px 22px 64px;
+}
+
+/* Paneles Apple */
+.panel {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 22px;
+  box-shadow: 0 12px 38px rgba(0, 0, 0, 0.06);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+/* Tipografía Apple */
+.eyebrow {
+  color: #6e6e73;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 0 0 8px;
+}
+
+.lead-copy {
+  color: #6e6e73;
+  line-height: 1.5;
+  margin: 0 0 22px;
+  font-size: 14px;
+}
+
+h1 {
+  font-size: 30px;
+  letter-spacing: -0.04em;
+  margin: 0 0 10px;
+  color: #1d1d1f;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 20px;
+  letter-spacing: -0.025em;
+  margin: 0 0 14px;
+  color: #1d1d1f;
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 16px;
+  color: #1d1d1f;
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+
+.muted {
+  color: #6e6e73;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Botones Apple */
+button {
+  border: 0;
+  border-radius: 10px;
+  background: #0071e3;
+  color: #ffffff;
+  padding: 11px 16px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button:hover {
+  background: #0077ed;
+  transform: translateY(-1px);
+}
+
+button.secondary {
+  background: #ffffff;
+  color: #0071e3;
+  border: 1px solid #d2d2d7;
+}
+
+button.secondary:hover {
+  background: #f5f5f7;
+  color: #0071e3;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.link-button {
+  padding: 0;
+  background: transparent;
+  color: #0071e3;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.link-button:hover {
+  background: transparent;
+  transform: none;
+  text-decoration: underline;
+}
+
+/* Controles de Formulario */
+input, textarea, select {
+  width: 100%;
+  border: 1px solid #d2d2d7;
+  border-radius: 11px;
+  padding: 11px 12px;
+  background: #ffffff;
+  color: #1d1d1f;
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: #0071e3;
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15) !important;
+}
+
+textarea {
+  min-height: 76px;
+  resize: vertical;
+}
+
+/* Bloques de Métricas y Resumen */
+.summary-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.summary-strip div {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 16px;
+  padding: 15px 17px;
+}
+
+.summary-strip span {
+  display: block;
+  color: #6e6e73;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+.summary-strip strong {
+  font-size: 24px;
+  letter-spacing: -0.04em;
+  color: #1d1d1f;
+  font-weight: 600;
+}
+
+/* Tarjetas y Filas de Lista */
+.list {
+  display: grid;
+  gap: 8px;
+}
+
+.row {
+  padding: 12px 14px;
+  border: 1px solid #e5e5ea;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.row strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 3px;
+  color: #1d1d1f;
+}
+
+.row small {
+  color: #6e6e73;
+  font-size: 12px;
+}
+
+.row a {
+  color: #0071e3;
+  text-decoration: none;
+}
+
+/* Avisos y Badges */
+.notice {
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: #fff4e5;
+  border: 1px solid #ffd8a8;
+  color: #8a4b08;
+  margin: 0 0 18px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.step-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #e8f2ff;
+  color: #0071e3;
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+/* Scrollbars sutiles estilo macOS */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
@@ -101,15 +280,3 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.28);
 }
-
-/* Inputs / Enfoque Accesible */
-input:focus, select:focus, textarea:focus, button:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.25) !important;
-}
-
-/* Responsive Touch Optimizations */
-button, a, input, select {
-  touch-action: manipulation;
-}
-

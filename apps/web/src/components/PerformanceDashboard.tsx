@@ -110,11 +110,11 @@ export default function PerformanceDashboard() {
   const msg = empathyMessage(stats);
 
   return (
-    <div className="dark" style={{ marginTop: 20 }}>
+    <div style={{ marginTop: 20 }}>
       <Callout title={msg.title} color={msg.color}>
         {msg.text}{" "}
         {msg.cta && (
-          <Link href={msg.cta.href} className="font-semibold underline">
+          <Link href={msg.cta.href} className="font-medium underline" style={{ color: "#0071e3" }}>
             {msg.cta.label} →
           </Link>
         )}

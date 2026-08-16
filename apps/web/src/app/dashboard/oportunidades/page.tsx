@@ -752,20 +752,27 @@ export default function OportunidadesPage() {
         <div
           style={{
             marginTop: 16,
-            padding: 12,
-            borderRadius: 8,
+            padding: "12px 16px",
+            borderRadius: 12,
             background:
               message.kind === "error"
-                ? "#fdecec"
+                ? "#fff2f1"
                 : message.kind === "info"
-                  ? "#f1f5f9"
-                  : "#eafaf0",
+                  ? "#f5f5f7"
+                  : "#f2faf4",
+            border:
+              message.kind === "error"
+                ? "1px solid rgba(255, 59, 48, 0.25)"
+                : message.kind === "info"
+                  ? "1px solid rgba(0, 0, 0, 0.08)"
+                  : "1px solid rgba(52, 199, 89, 0.25)",
             color:
               message.kind === "error"
-                ? "#d64545"
+                ? "#ff3b30"
                 : message.kind === "info"
-                  ? "#475569"
-                  : "#1e8a4b",
+                  ? "#6e6e73"
+                  : "#16803c",
+            fontSize: 13,
           }}
         >
           {message.text}
@@ -774,8 +781,8 @@ export default function OportunidadesPage() {
               <button
                 onClick={() => analyze(true)}
                 disabled={analyzing}
+                className="secondary"
                 style={{
-                  ...secondaryButtonStyle,
                   fontSize: 13,
                   padding: "6px 14px",
                 }}
@@ -787,10 +794,10 @@ export default function OportunidadesPage() {
         </div>
       )}
 
-      {loading && <p style={{ color: "#a8b3c7" }}>Cargando oportunidades...</p>}
+      {loading && <p className="muted" style={{ marginTop: 20 }}>Cargando oportunidades...</p>}
       {!loading && groups.length === 0 && (
         <section style={sectionStyle}>
-          <p style={{ margin: 0, color: "#6b7280" }}>
+          <p className="muted" style={{ margin: 0 }}>
             Todavía no hay oportunidades guardadas. Presiona el botón para crear
             el primer análisis.
           </p>
@@ -809,20 +816,20 @@ export default function OportunidadesPage() {
             }}
           >
             <div>
-              <h2 style={{ ...h2Style, marginBottom: 6 }}>
+              <h2 style={{ ...h2Style, marginBottom: 4 }}>
                 {group.category.name}
                 {group.category.panel ? ` (${group.category.panel})` : ""}
               </h2>
-              <p style={{ margin: 0, color: "#6b7280", fontSize: 13 }}>
+              <p style={{ margin: 0, color: "#6e6e73", fontSize: 13 }}>
                 {group.rationale}
               </p>
-              <p style={{ color: "#526077", fontSize: 12 }}>
+              <p style={{ color: "#86868b", fontSize: 12, marginTop: 4 }}>
                 {Math.round(group.impressions).toLocaleString("es-US")}{" "}
                 impresiones · {Math.round(group.clicks).toLocaleString("es-US")}{" "}
                 clics
               </p>
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <button
                 onClick={() => execute("group", group.id)}
                 disabled={
@@ -851,7 +858,8 @@ export default function OportunidadesPage() {
               <button
                 onClick={() => remove("groups", group.id)}
                 disabled={busyId !== null}
-                style={disabledStyle(secondaryButtonStyle, busyId !== null)}
+                className="secondary"
+                style={disabledStyle({ ...secondaryButtonStyle, marginTop: 0 }, busyId !== null)}
               >
                 Eliminar categoría
               </button>
@@ -861,31 +869,32 @@ export default function OportunidadesPage() {
             {group.titles.map((title, index) => (
               <div
                 key={title.id}
+                className="row"
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
                   flexWrap: "wrap",
                   gap: 16,
-                  padding: 12,
-                  border: "1px solid #e5e8ec",
-                  borderRadius: 9,
-                  background: "#f8fafc",
+                  padding: "12px 14px",
+                  borderRadius: 12,
+                  border: "1px solid #e5e5ea",
+                  background: "#ffffff",
                 }}
               >
                 <div style={{ minWidth: 200, flex: "1 1 200px" }}>
-                  <strong style={{ fontSize: 14 }}>
+                  <strong style={{ fontSize: 14, color: "#1d1d1f" }}>
                     {index + 1}. {title.text}
                   </strong>
                   {title.rationale && (
                     <div
-                      style={{ color: "#6b7280", fontSize: 12, marginTop: 4 }}
+                      style={{ color: "#6e6e73", fontSize: 12, marginTop: 3 }}
                     >
                       {title.rationale}
                     </div>
                   )}
                 </div>
-                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                   <button
                     onClick={() => execute("title", title.id)}
                     disabled={busyId !== null || !contentLanguage}
@@ -894,8 +903,9 @@ export default function OportunidadesPage() {
                         ? "Debes configurar tu idioma de redacción en Configuración antes de ejecutar."
                         : undefined
                     }
+                    className="secondary"
                     style={disabledStyle(
-                      { ...secondaryButtonStyle, color: "#2f5fdb" },
+                      { ...secondaryButtonStyle, fontSize: 12, padding: "6px 12px" },
                       busyId !== null || !contentLanguage,
                     )}
                   >
@@ -904,8 +914,9 @@ export default function OportunidadesPage() {
                   <button
                     onClick={() => remove("titles", title.id)}
                     disabled={busyId !== null}
+                    className="secondary"
                     style={disabledStyle(
-                      { ...secondaryButtonStyle, color: "#d64545" },
+                      { ...secondaryButtonStyle, color: "#ff3b30", fontSize: 12, padding: "6px 12px" },
                       busyId !== null,
                     )}
                   >

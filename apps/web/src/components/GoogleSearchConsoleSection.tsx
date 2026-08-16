@@ -25,12 +25,6 @@ export default function GoogleSearchConsoleSection() {
   const [sitemapUrl, setSitemapUrl] = useState("");
   const [message, setMessage] = useState("");
   const [sendingSitemap, setSendingSitemap] = useState(false);
-  // El sitemap se detecta solo preguntándole a Google (ver la API) — no
-  // tiene sentido mostrarle a todo el mundo un campo de texto para
-  // escribirlo a mano si ya se detectó. Pedido explícito del usuario
-  // (1/8/2026): "eso debería estar en automático en la plataforma". El
-  // campo manual solo se muestra si la detección automática no encontró
-  // nada, o si el usuario pide explícitamente cambiarlo.
   const [editingSitemap, setEditingSitemap] = useState(false);
 
   async function load() {
@@ -86,53 +80,54 @@ export default function GoogleSearchConsoleSection() {
   return (
     <section style={sectionStyle}>
       <h2 style={h2Style}>Google Search Console</h2>
-      <p style={{ fontSize: 13, color: "#6b7280", margin: "0 0 12px 0" }}>
+      <p className="lead-copy" style={{ margin: "0 0 16px 0" }}>
         Conecta tu cuenta de Google para que tus artículos aparezcan en los resultados de búsqueda de Google. Auto Artículos enviará tu sitemap automáticamente y te mostrará el estado de indexación de cada artículo.
       </p>
 
       <div
+        className="row"
         style={{
-          background: "#eff6ff",
-          border: "1px solid #bfdbfe",
-          borderRadius: 8,
-          padding: "12px 14px",
-          marginBottom: 14,
-          fontSize: 13,
-          color: "#1e40af",
-          lineHeight: 1.5,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 12,
+          padding: "14px 16px",
+          marginBottom: 16,
+          borderRadius: 12,
         }}
       >
-        <p style={{ margin: "0 0 4px 0", fontWeight: 700, color: "#0f172a" }}>
-          📺 ¿No tienes el Google Search Console?
-        </p>
-        <p style={{ margin: "0 0 8px 0", fontSize: 12, color: "#475569" }}>
-          Aprende cómo activarte paso a paso con este video tutorial:
-        </p>
+        <div>
+          <div style={{ fontWeight: 600, fontSize: 13, color: "#1d1d1f" }}>
+            ¿No tienes Google Search Console?
+          </div>
+          <div style={{ fontSize: 12, color: "#6e6e73", marginTop: 2 }}>
+            Aprende cómo activarlo paso a paso con este video tutorial oficial.
+          </div>
+        </div>
         <a
           href="https://youtu.be/c9aOFmvaHHo?si=0K0XfnbJPE2j8OMt&t=5"
           target="_blank"
           rel="noreferrer"
+          className="secondary"
           style={{
+            ...secondaryButtonStyle,
+            fontSize: 12,
+            padding: "6px 14px",
+            textDecoration: "none",
             display: "inline-flex",
             alignItems: "center",
             gap: 6,
-            background: "#dc2626",
-            color: "#ffffff",
-            textDecoration: "none",
-            padding: "6px 12px",
-            borderRadius: 6,
-            fontWeight: 700,
-            fontSize: 12,
-            boxShadow: "0 2px 6px rgba(220, 38, 38, 0.2)",
           }}
         >
-          ▶️ Ver video: Cómo activar Google Search Console ↗
+          Ver video tutorial &rarr;
         </a>
       </div>
 
       {!data?.connected ? (
         <a
           href="/api/search-integrations/google/connect"
+          className="link-button"
           style={{
             ...secondaryButtonStyle,
             display: "inline-block",
@@ -156,19 +151,19 @@ export default function GoogleSearchConsoleSection() {
             ))}
           </select>
           {data.sitemapUrl && !editingSitemap ? (
-            <div style={{ fontSize: 13, color: "#1e8a4b" }}>
+            <div style={{ fontSize: 13, color: "#16803c" }}>
               ✓ Sitemap detectado automáticamente: {data.sitemapUrl}{" "}
               <button
                 type="button"
                 onClick={() => setEditingSitemap(true)}
+                className="link-button"
                 style={{
                   border: 0,
                   padding: 0,
                   background: "transparent",
-                  color: "#1358a3",
-                  cursor: "pointer",
                   fontSize: 12,
-                  fontWeight: 600,
+                  fontWeight: 500,
+                  marginLeft: 6,
                 }}
               >
                 Cambiar
@@ -177,15 +172,14 @@ export default function GoogleSearchConsoleSection() {
           ) : (
             <>
               {!data.sitemapUrl && (
-                <p style={{ fontSize: 12, color: "#8a6d1a", margin: 0 }}>
-                  No pudimos detectar tu sitemap automáticamente — podés
-                  escribirlo a mano si lo conocés.
+                <p style={{ fontSize: 12, color: "#8a4b08", margin: 0 }}>
+                  No pudimos detectar tu sitemap automáticamente — puedes escribirlo a mano.
                 </p>
               )}
               <input
                 value={sitemapUrl}
                 onChange={(e) => setSitemapUrl(e.target.value)}
-                placeholder="URL del sitemap, por ejemplo https://tusitio.com/sitemap.xml"
+                placeholder="URL del sitemap, ej: https://tusitio.com/sitemap.xml"
                 style={inputStyle}
               />
             </>
@@ -193,50 +187,45 @@ export default function GoogleSearchConsoleSection() {
           {data.sitemapUrl && (
             <div style={{ fontSize: 12 }}>
               {data.lastSitemapSyncStatus === "success" && (
-                <p style={{ color: "#1e8a4b", margin: 0 }}>
+                <p style={{ color: "#16803c", margin: 0 }}>
                   ✓ Último envío exitoso
                   {data.lastSitemapSyncAt
                     ? `: ${new Date(data.lastSitemapSyncAt).toLocaleString("es-US")}`
                     : "."}
                 </p>
               )}
-              {/*
-                Mismo criterio que en BingWebmasterSection (pedido de Milton,
-                13/8/2026): solo se muestran los envíos exitosos. El aviso de
-                falla no es accionable para el usuario y solo genera llamados a
-                soporte. El error sigue guardado en la base de datos y en logs.
-              */}
               {!data.lastSitemapSyncStatus && (
-                <p style={{ color: "#6b7280", margin: 0 }}>
+                <p className="muted" style={{ margin: 0 }}>
                   Todavía no se ha enviado el sitemap.
                 </p>
               )}
             </div>
           )}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button onClick={save} style={secondaryButtonStyle}>
+            <button onClick={save} className="secondary" style={secondaryButtonStyle}>
               Guardar propiedad
             </button>
             {data.sitemapUrl && (
               <button
                 onClick={sendSitemapNow}
                 disabled={sendingSitemap}
+                className="secondary"
                 style={secondaryButtonStyle}
               >
                 {sendingSitemap ? "Enviando..." : "Enviar sitemap ahora"}
               </button>
             )}
-            <button onClick={disconnect} style={secondaryButtonStyle}>
+            <button onClick={disconnect} className="secondary" style={secondaryButtonStyle}>
               Desconectar Google
             </button>
           </div>
           {data.error && (
-            <p style={{ color: "#d64545", fontSize: 12 }}>{data.error}</p>
+            <p style={{ color: "#ff3b30", fontSize: 12 }}>{data.error}</p>
           )}
         </div>
       )}
-      {message && <p style={{ fontSize: 13, color: "#1e8a4b" }}>{message}</p>}
-      <p style={{ fontSize: 12, color: "#6b7280" }}>
+      {message && <p style={{ fontSize: 13, color: "#16803c", marginTop: 10 }}>{message}</p>}
+      <p className="muted" style={{ fontSize: 12, marginTop: 14 }}>
         El sistema enviará tu sitemap a Google todas las noches y consultará el estado de cada URL automáticamente. Si un artículo no se indexa, verás un acceso directo para solicitar la indexación manual desde Search Console.
       </p>
     </section>

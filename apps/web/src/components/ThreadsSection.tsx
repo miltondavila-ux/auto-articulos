@@ -158,23 +158,29 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
     const isEditing = editing === type;
 
     return (
-      <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 16, paddingTop: 16 }}>
+      <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 16, paddingTop: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
           <div>
-            <strong style={{ color: "#1e293b", fontSize: 14 }}>{title}</strong>
-            <p style={{ color: "#64748b", fontSize: 12, margin: "3px 0 0" }}>{description}</p>
+            <strong style={{ color: "#1d1d1f", fontSize: 14 }}>{title}</strong>
+            <p className="lead-copy" style={{ fontSize: 12, margin: "2px 0 0" }}>{description}</p>
           </div>
-          <span style={{ color: settings?.configured ? "#16a34a" : "#92400e", fontSize: 12, fontWeight: 700 }}>
-            {settings?.configured ? "Configurada" : "Sin configurar"}
+          <span
+            style={{
+              color: settings?.configured ? "#16803c" : "#8a4b08",
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
+            {settings?.configured ? "✓ Configurada" : "Sin configurar"}
           </span>
         </div>
 
         {settings?.isAdmin && !isEditing && (
           <div style={{ marginTop: 12 }}>
             {settings.configured && (
-              <p style={{ color: "#475569", fontSize: 13 }}>App ID guardado: {settings.appId}</p>
+              <p className="muted" style={{ fontSize: 13, marginBottom: 8 }}>App ID: {settings.appId}</p>
             )}
-            <button onClick={() => startEditing(type)} style={secondaryButtonStyle}>
+            <button onClick={() => startEditing(type)} className="secondary" style={secondaryButtonStyle}>
               {settings.configured ? "Editar credenciales" : "Configurar credenciales"}
             </button>
           </div>
@@ -182,11 +188,11 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
 
         {settings?.isAdmin && isEditing && (
           <div style={{ display: "grid", gap: 12, marginTop: 14 }}>
-            <label style={{ color: "#475569", fontSize: 12, fontWeight: 600 }}>
+            <label style={{ color: "#1d1d1f", fontSize: 12, fontWeight: 500 }}>
               App ID
               <input value={appId} onChange={(event) => setAppId(event.target.value)} style={inputStyle} />
             </label>
-            <label style={{ color: "#475569", fontSize: 12, fontWeight: 600 }}>
+            <label style={{ color: "#1d1d1f", fontSize: 12, fontWeight: 500 }}>
               App Secret
               <input type="password" value={appSecret} onChange={(event) => setAppSecret(event.target.value)} style={inputStyle} />
             </label>
@@ -194,14 +200,16 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
               <button
                 onClick={saveSettings}
                 disabled={saving}
-                style={disabledStyle(
-                  { ...secondaryButtonStyle, background: "#0f172a", color: "#fff" },
-                  saving,
-                )}
+                style={{
+                  ...secondaryButtonStyle,
+                  background: "#0071e3",
+                  color: "#ffffff",
+                  border: "none",
+                }}
               >
                 {saving ? "Guardando..." : "Guardar credenciales"}
               </button>
-              <button onClick={() => setEditing(null)} style={secondaryButtonStyle}>Cancelar</button>
+              <button onClick={() => setEditing(null)} className="secondary" style={secondaryButtonStyle}>Cancelar</button>
             </div>
           </div>
         )}
@@ -212,17 +220,17 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
   return (
     <section style={sectionStyle}>
       <h2 style={{ ...h2Style, margin: 0 }}>Meta API</h2>
-      <p style={{ color: "#64748b", fontSize: 12, margin: "4px 0 0" }}>
-        Credenciales de las integraciones sociales de Meta.
+      <p className="lead-copy" style={{ fontSize: 13, margin: "4px 0 0" }}>
+        Credenciales e integraciones sociales de Meta (Instagram y Threads).
       </p>
 
       {loading ? (
-        <p style={{ color: "#64748b", fontSize: 13 }}>Cargando configuración...</p>
+        <p className="muted" style={{ fontSize: 13, marginTop: 12 }}>Cargando configuración...</p>
       ) : (
         <>
           {credentialBlock(
             "meta",
-            "Meta principal",
+            "Meta Principal",
             "Credenciales principales para Instagram y Facebook.",
             metaSettings,
           )}
@@ -234,24 +242,20 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
           )}
 
           {(allowThreads || allowInstagram) && (
-          <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 18, paddingTop: 16 }}>
-            <strong style={{ color: "#1e293b", fontSize: 14 }}>Conectar cuentas</strong>
-            <p style={{ color: "#64748b", fontSize: 12, margin: "3px 0 12px" }}>
-              Auto Artículos no guarda contraseñas de redes sociales. La autorización se realiza directamente en Meta.
+          <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 18, paddingTop: 16 }}>
+            <strong style={{ color: "#1d1d1f", fontSize: 14 }}>Conectar cuentas</strong>
+            <p className="lead-copy" style={{ fontSize: 13, margin: "3px 0 12px" }}>
+              La autorización se realiza directamente en Meta de forma segura.
             </p>
 
             {allowInstagram && !instagramConnection?.connected && (
-              <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12, marginBottom: 14, fontSize: 12, color: "#475569", lineHeight: 1.5 }}>
-                <strong style={{ color: "#1e293b" }}>Requisitos para conectar Instagram:</strong>
-                <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
-                  <li>Tener una <strong>cuenta de Instagram Profesional</strong> (Business o Creator)</li>
-                  <li>Tener una <strong>Página de Facebook</strong> vinculada a esa cuenta de Instagram</li>
-                  <li>Tener acceso a <strong>Meta Business Suite</strong> (<a href="https://business.facebook.com" target="_blank" rel="noopener noreferrer" style={{ color: "#6366f1" }}>business.facebook.com</a>)</li>
-                  <li>Ser <strong>Administrador o Editor</strong> de la Página de Facebook</li>
+              <div className="row" style={{ padding: 14, marginBottom: 14, fontSize: 13 }}>
+                <strong style={{ color: "#1d1d1f" }}>Requisitos para conectar Instagram:</strong>
+                <ul style={{ margin: "6px 0 0", paddingLeft: 18, color: "#6e6e73" }}>
+                  <li>Tener una cuenta de Instagram Profesional (Business o Creator).</li>
+                  <li>Tener una Página de Facebook vinculada a esa cuenta.</li>
+                  <li>Tener acceso a Meta Business Suite.</li>
                 </ul>
-                <p style={{ margin: "8px 0 0", color: "#94a3b8" }}>
-                  ¿No tienes cuenta profesional? <a href="https://help.instagram.com/502981923235522" target="_blank" rel="noopener noreferrer" style={{ color: "#6366f1" }}>Conviértela aquí</a>
-                </p>
               </div>
             )}
 
@@ -260,6 +264,7 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
                 <button
                   onClick={() => disconnect("threads")}
                   disabled={disconnecting === "threads"}
+                  className="secondary"
                   style={disabledStyle(secondaryButtonStyle, disconnecting === "threads")}
                 >
                   {disconnecting === "threads" ? "Desconectando..." : `Desconectar Threads${threadsConnection.threadsUsername ? ` (@${threadsConnection.threadsUsername})` : ""}`}
@@ -267,7 +272,8 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
               ) : (
                 <a
                   href="/api/search-integrations/threads/connect"
-                  style={{ ...secondaryButtonStyle, display: "inline-flex", background: "#000", color: "#fff", border: "none", textDecoration: "none", fontWeight: 700 }}
+                  className="secondary"
+                  style={{ ...secondaryButtonStyle, textDecoration: "none", display: "inline-flex" }}
                 >
                   Conectar Threads
                 </a>
@@ -277,6 +283,7 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
                 <button
                   onClick={() => disconnect("meta")}
                   disabled={disconnecting === "meta"}
+                  className="secondary"
                   style={disabledStyle(secondaryButtonStyle, disconnecting === "meta")}
                 >
                   {disconnecting === "meta" ? "Desconectando..." : `Desconectar Instagram${instagramConnection.instagramUsername ? ` (@${instagramConnection.instagramUsername})` : ""}`}
@@ -284,7 +291,8 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
               ) : (
                 <a
                   href="/api/search-integrations/instagram/connect"
-                  style={{ ...secondaryButtonStyle, display: "inline-flex", background: "linear-gradient(135deg, #f58529, #dd2a7b, #8134af)", color: "#fff", border: "none", textDecoration: "none", fontWeight: 700 }}
+                  className="secondary"
+                  style={{ ...secondaryButtonStyle, textDecoration: "none", display: "inline-flex" }}
                 >
                   Conectar Instagram
                 </a>
@@ -296,12 +304,12 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
       )}
 
       {!allowThreads && !allowInstagram && (
-        <p style={{ color: "#92400e", fontSize: 13, background: "#fffbeb", border: "1px solid #fef3c7", padding: 10, borderRadius: 8, marginTop: 16 }}>
+        <p className="notice" style={{ marginTop: 16 }}>
           Las integraciones de Meta no están disponibles para tu cuenta. Contacta al administrador para activarlas.
         </p>
       )}
 
-      {message && <p style={{ color: "#16a34a", fontSize: 13 }}>{message}</p>}
+      {message && <p style={{ color: "#16803c", fontSize: 13, marginTop: 10 }}>{message}</p>}
     </section>
   );
 }

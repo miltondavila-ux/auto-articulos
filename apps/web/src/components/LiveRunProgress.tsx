@@ -1,15 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { readySectionStyle, h2Style } from "@/components/dashboard-ui";
+import { sectionStyle, h2Style, secondaryButtonStyle } from "@/components/dashboard-ui";
 import type { RunRow, TitleEventRow, TitleRow } from "@/types/dashboard";
 import GoogleIndexingStatus from "@/components/GoogleIndexingStatus";
 import { platformHelpUrl, platformProductName } from "@auto-articulos/shared";
 
-// Pasos reales que va reportando la automatización (ver onStep(...) en
-// apps/worker/src/automation/10minutesWebsite.ts), en orden, con un % estimado
-// de avance de UN artículo — para poder mostrar una barra de progreso
-// individual mientras se está creando, no solo el % del lote completo.
 const TITLE_PROGRESS_STEPS: {
   match: (msg: string) => boolean;
   percent: number;
@@ -62,23 +58,20 @@ function TitleProgressRow({
   const helpUrl = platformHelpUrl(platformDomain);
   const icon =
     title.status === "success"
-      ? "✅"
+      ? "✓"
       : title.status === "error"
-        ? "❌"
+        ? "✕"
         : title.status === "cancelled"
-          ? "🚫"
+          ? "–"
           : title.status === "processing"
-            ? "⏳"
-            : "⬜";
+            ? "●"
+            : "○";
   const lastStep =
     title.events.length > 0
       ? title.events[title.events.length - 1].message
       : null;
   const titlePercent = estimateTitleProgress(title);
 
-  // El log completo (con imágenes de diagnóstico) se trae bajo demanda, no
-  // en cada poll: ver el comentario en /api/runs/route.ts sobre el consumo
-  // de transferencia de datos que esto evita.
   const [fullEvents, setFullEvents] = useState<TitleEventRow[] | null>(null);
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [retrying, setRetrying] = useState(false);
@@ -107,46 +100,77 @@ function TitleProgressRow({
 
   return (
     <div
+      className="row"
       style={{
-        background: "#f7f8fa",
-        color: "#16181d",
-        border: "1px solid #dfe3e8",
-        borderRadius: 8,
-        padding: "10px 14px",
+        background: "#ffffff",
+        color: "#1d1d1f",
+        border: "1px solid #e5e5ea",
+        borderRadius: 12,
+        padding: "12px 16px",
       }}
     >
       <div
         style={{
           display: "flex",
-          gap: 8,
-          alignItems: "baseline",
-          fontSize: 13,
+          gap: 10,
+          alignItems: "center",
+          fontSize: 14,
         }}
       >
-        <span>{icon}</span>
-        <span style={{ fontWeight: 600 }}>
+        <span
+          style={{
+            width: 22,
+            height: 22,
+            borderRadius: "50%",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 11,
+            fontWeight: 600,
+            background:
+              title.status === "success"
+                ? "rgba(52, 199, 89, 0.12)"
+                : title.status === "error"
+                  ? "#fff2f1"
+                  : title.status === "processing"
+                    ? "#e8f2ff"
+                    : "#f5f5f7",
+            color:
+              title.status === "success"
+                ? "#16803c"
+                : title.status === "error"
+                  ? "#ff3b30"
+                  : title.status === "processing"
+                    ? "#0071e3"
+                    : "#6e6e73",
+            flexShrink: 0,
+          }}
+        >
+          {icon}
+        </span>
+        <span style={{ fontWeight: 500, color: "#1d1d1f" }}>
           {index + 1}. {title.text}
         </span>
       </div>
 
       {title.status === "processing" && (
-        <div style={{ margin: "6px 0 0 24px" }}>
+        <div style={{ margin: "8px 0 0 32px" }}>
           <div
             style={{
               display: "flex",
               justifyContent: "space-between",
-              fontSize: 11,
-              color: "#6b7280",
-              marginBottom: 3,
+              fontSize: 12,
+              color: "#6e6e73",
+              marginBottom: 4,
             }}
           >
             {lastStep && <span>{lastStep}</span>}
-            <span style={{ marginLeft: "auto" }}>{titlePercent}%</span>
+            <span style={{ marginLeft: "auto", fontWeight: 500 }}>{titlePercent}%</span>
           </div>
           <div
             style={{
-              height: 5,
-              background: "#e9ecf1",
+              height: 4,
+              background: "rgba(0, 0, 0, 0.05)",
               borderRadius: 999,
               overflow: "hidden",
             }}
@@ -155,58 +179,41 @@ function TitleProgressRow({
               style={{
                 height: "100%",
                 width: `${titlePercent}%`,
-                background: "#8a6d1a",
+                background: "#0071e3",
                 transition: "width 0.4s ease",
               }}
             />
           </div>
-          <details style={{ marginTop: 6 }}>
-            <summary
-              style={{ cursor: "pointer", fontSize: 11, color: "#6b7280" }}
+          <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 8 }}>
+            <button
+              onClick={handleRetry}
+              disabled={retrying}
+              className="secondary"
+              style={{
+                ...secondaryButtonStyle,
+                padding: "4px 10px",
+                fontSize: 12,
+              }}
             >
-              ¿Parece atascado?
-            </summary>
-            <p style={{ fontSize: 11, color: "#6b7280", margin: "4px 0" }}>
-              Si lleva mucho rato sin avanzar (por ejemplo, por una caída de
-              conexión), puedes forzar un reintento.
-            </p>
-          </details>
-          <button
-            onClick={handleRetry}
-            disabled={retrying}
-            style={{
-              marginTop: 6,
-              background: "#fff8e6",
-              color: "#8a6d1a",
-              border: "1px solid #f0deac",
-              borderRadius: 6,
-              padding: "4px 10px",
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: retrying ? "default" : "pointer",
-            }}
-          >
-            {retrying ? "Reintentando..." : "Reintentar ahora"}
-          </button>
+              {retrying ? "Reintentando..." : "Forzar reintento"}
+            </button>
+          </div>
         </div>
       )}
 
       {title.status === "success" && title.articleUrl && (
-        <div style={{ margin: "6px 0 0 24px" }}>
+        <div style={{ margin: "6px 0 0 32px" }}>
           <a
             href={title.articleUrl}
             target="_blank"
             rel="noreferrer"
-            style={{
-              color: "#031537",
-              fontWeight: 600,
-              textDecoration: "none",
-            }}
+            className="link-button"
+            style={{ fontSize: 13, fontWeight: 500 }}
           >
-            🔗 Ver artículo publicado
+            Ver artículo publicado &rarr;
           </a>
           {title.finalTitle && title.finalTitle !== title.text && (
-            <span style={{ display: "block", fontSize: 11, color: "#6b7280" }}>
+            <span className="muted" style={{ display: "block", fontSize: 12, marginTop: 2 }}>
               Publicado como: {title.finalTitle}
             </span>
           )}
@@ -215,80 +222,62 @@ function TitleProgressRow({
       )}
 
       {title.status === "error" && title.errorMessage && (
-        <div style={{ margin: "6px 0 0 24px" }}>
-          {/* Pedido explícito del usuario (repetido varias veces): cuando
-              10minutesWebsite se queda sin créditos de generación de imagen
-              con IA, el error pasaba desapercibido como un párrafo rojo
-              chico entre el resto del log. Casos reales: Mariana Romero y
-              Eira Rivas (11/8/2026), ambas sin darse cuenta de que el
-              problema era de su cuenta en 10minutesWebsite, no del sistema.
-              El worker deja el mensaje real del servidor ("Se han agotado
-              los créditos de tu imagen...") textual dentro de errorMessage
-              (ver generateImage() en automation/10minutesWebsite.ts) —
-              suficiente para detectarlo acá sin adivinar. */}
+        <div style={{ margin: "8px 0 0 32px" }}>
           {/créditos.*imagen|imagen.*créditos/i.test(title.errorMessage) ? (
             <div
               style={{
-                background: "#fff7ed",
-                border: "2px solid #f59e0b",
-                borderRadius: 8,
+                background: "#fff4e5",
+                border: "1px solid rgba(255, 149, 0, 0.3)",
+                borderRadius: 12,
                 padding: "12px 14px",
                 marginBottom: 8,
               }}
             >
               <p
                 style={{
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: "#9a3412",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#8a4b08",
                   margin: 0,
                 }}
               >
-                ⚠️ Se agotaron los créditos de generación de imágenes de tu
-                cuenta en {productName}
+                Se agotaron los créditos de generación de imágenes en tu cuenta de {productName}
               </p>
-              <p style={{ fontSize: 13, color: "#9a3412", margin: "6px 0 0" }}>
-                Esto no es un error del sistema — la cuenta de {productName}{" "}
-                usada para publicar ya no tiene créditos para crear imágenes con
-                IA. Solicita más créditos directamente con ellos y luego
-                reintenta este artículo.
+              <p style={{ fontSize: 12, color: "#8a4b08", margin: "4px 0 0" }}>
+                Solicita más créditos directamente con ellos y luego reintenta este artículo.
               </p>
               {helpUrl && (
                 <a
                   href={helpUrl}
                   target="_blank"
                   rel="noreferrer"
+                  className="link-button"
                   style={{
                     display: "inline-block",
-                    marginTop: 8,
-                    color: "#9a3412",
-                    fontWeight: 700,
-                    textDecoration: "underline",
+                    marginTop: 6,
+                    fontSize: 12,
+                    fontWeight: 600,
                   }}
                 >
-                  Solicitar más créditos al servicio al cliente de {productName}{" "}
-                  →
+                  Solicitar créditos en {productName} &rarr;
                 </a>
               )}
             </div>
           ) : (
-            <p style={{ fontSize: 13, color: "#d64545", margin: 0 }}>
+            <p style={{ fontSize: 13, color: "#ff3b30", margin: 0 }}>
               {title.errorMessage}
             </p>
           )}
           <button
             onClick={handleRetry}
             disabled={retrying}
+            className="secondary"
             style={{
+              ...secondaryButtonStyle,
               marginTop: 6,
-              background: "#fde8e8",
-              color: "#d64545",
-              border: "1px solid #e8b4b4",
-              borderRadius: 6,
               padding: "4px 10px",
               fontSize: 12,
-              fontWeight: 600,
-              cursor: retrying ? "default" : "pointer",
+              color: "#ff3b30",
             }}
           >
             {retrying ? "Reintentando..." : "Reintentar"}
@@ -298,7 +287,7 @@ function TitleProgressRow({
 
       {title.attempts > 0 && (
         <details
-          style={{ marginTop: 8, marginLeft: 24 }}
+          style={{ marginTop: 8, marginLeft: 32 }}
           onToggle={(e) => {
             if ((e.target as HTMLDetailsElement).open && !fullEvents) {
               loadFullEvents();
@@ -306,12 +295,12 @@ function TitleProgressRow({
           }}
         >
           <summary
-            style={{ cursor: "pointer", fontSize: 11, color: "#6b7280" }}
+            style={{ cursor: "pointer", fontSize: 12, color: "#6e6e73" }}
           >
-            Ver todos los pasos
+            Ver todos los pasos del proceso
           </summary>
           {loadingEvents && !fullEvents && (
-            <p style={{ fontSize: 11, color: "#6b7280", marginTop: 6 }}>
+            <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>
               Cargando...
             </p>
           )}
@@ -320,8 +309,8 @@ function TitleProgressRow({
               style={{
                 marginTop: 6,
                 paddingLeft: 16,
-                fontSize: 11,
-                color: "#374151",
+                fontSize: 12,
+                color: "#6e6e73",
                 display: "flex",
                 flexDirection: "column",
                 gap: 4,
@@ -335,7 +324,7 @@ function TitleProgressRow({
                 );
                 return (
                   <li key={event.id} style={{ overflowWrap: "anywhere" }}>
-                    <span style={{ color: "#6b7280" }}>
+                    <span style={{ color: "#86868b" }}>
                       {new Date(event.createdAt).toLocaleTimeString()}
                     </span>{" "}
                     {imageMatch ? (
@@ -348,8 +337,8 @@ function TitleProgressRow({
                           style={{
                             maxWidth: "100%",
                             marginTop: 4,
-                            borderRadius: 6,
-                            border: "1px solid #dfe3e8",
+                            borderRadius: 8,
+                            border: "1px solid #e5e5ea",
                           }}
                         />
                       </>
@@ -389,12 +378,6 @@ export default function LiveProgress({
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
 
-  // Pedido explícito del usuario (16/8/2026): mientras el worker todavía no
-  // arrancó, la única señal de vida era un spinner de 14px fácil de pasar
-  // por alto — a simple vista, la pantalla se veía igual de "colgada" con o
-  // sin animación. Un contador de segundos que avanza solo es una prueba
-  // mucho más clara de que la página sigue viva y actualizándose, no
-  // trabada, mientras se espera a que el worker tome el lote.
   const [waitingSeconds, setWaitingSeconds] = useState(0);
   useEffect(() => {
     if (!nothingStartedYet) return;
@@ -425,7 +408,7 @@ export default function LiveProgress({
   }
 
   return (
-    <section style={readySectionStyle(true)}>
+    <section className="panel" style={sectionStyle}>
       <style>{`
         @keyframes auto-articulos-spin {
           to { transform: rotate(360deg); }
@@ -440,7 +423,10 @@ export default function LiveProgress({
           flexWrap: "wrap",
         }}
       >
-        <h2 style={h2Style}>Publicando — {run.category?.name ?? "—"}</h2>
+        <div>
+          <p className="eyebrow" style={{ margin: "0 0 4px" }}>Ejecución Activa</p>
+          <h2 style={{ ...h2Style, margin: 0 }}>Publicando: {run.category?.name ?? "—"}</h2>
+        </div>
         <div
           style={{
             display: "flex",
@@ -449,27 +435,24 @@ export default function LiveProgress({
             marginLeft: "auto",
           }}
         >
-          <span style={{ fontSize: 12, color: "#6b7280" }}>
+          <span className="muted" style={{ fontSize: 13 }}>
             {doneCount}/{total} completados —{" "}
-            <strong style={{ color: "#16181d" }}>{percent}%</strong>
+            <strong style={{ color: "#1d1d1f" }}>{percent}%</strong>
           </span>
           {confirmingCancel ? (
             <>
-              <span style={{ fontSize: 12, color: "#8a6d1a" }}>
-                ¿Cancelar todo el lote?
+              <span style={{ fontSize: 12, color: "#8a4b08" }}>
+                ¿Cancelar lote?
               </span>
               <button
                 onClick={handleCancel}
                 disabled={cancelling}
+                className="secondary"
                 style={{
-                  background: "#fde8e8",
-                  color: "#d64545",
-                  border: "1px solid #e8b4b4",
-                  borderRadius: 6,
+                  ...secondaryButtonStyle,
+                  color: "#ff3b30",
                   padding: "4px 10px",
                   fontSize: 12,
-                  fontWeight: 600,
-                  cursor: cancelling ? "default" : "pointer",
                 }}
               >
                 {cancelling ? "Cancelando..." : "Sí, cancelar"}
@@ -477,14 +460,11 @@ export default function LiveProgress({
               <button
                 onClick={() => setConfirmingCancel(false)}
                 disabled={cancelling}
+                className="secondary"
                 style={{
-                  background: "none",
-                  color: "#6b7280",
-                  border: "1px solid #dfe3e8",
-                  borderRadius: 6,
+                  ...secondaryButtonStyle,
                   padding: "4px 10px",
                   fontSize: 12,
-                  cursor: cancelling ? "default" : "pointer",
                 }}
               >
                 No
@@ -493,15 +473,12 @@ export default function LiveProgress({
           ) : (
             <button
               onClick={() => setConfirmingCancel(true)}
+              className="secondary"
               style={{
-                background: "none",
-                color: "#d64545",
-                border: "1px solid #fde8e8",
-                borderRadius: 6,
+                ...secondaryButtonStyle,
+                color: "#ff3b30",
                 padding: "4px 10px",
                 fontSize: 12,
-                fontWeight: 600,
-                cursor: "pointer",
               }}
             >
               ✕ Cancelar
@@ -510,7 +487,7 @@ export default function LiveProgress({
         </div>
       </div>
       {cancelError && (
-        <p style={{ fontSize: 12, color: "#d64545", margin: "6px 0 0" }}>
+        <p style={{ fontSize: 12, color: "#ff3b30", margin: "6px 0 0" }}>
           {cancelError}
         </p>
       )}
@@ -518,8 +495,8 @@ export default function LiveProgress({
         <p
           style={{
             fontSize: 13,
-            color: "#8a6d1a",
-            margin: "8px 0 0",
+            color: "#6e6e73",
+            margin: "12px 0 0",
             display: "flex",
             alignItems: "center",
             gap: 8,
@@ -529,36 +506,34 @@ export default function LiveProgress({
             aria-hidden
             style={{
               display: "inline-block",
-              width: 18,
-              height: 18,
-              border: "3px solid #f5e6c8",
-              borderTopColor: "#8a6d1a",
+              width: 14,
+              height: 14,
+              border: "2px solid #d2d2d7",
+              borderTopColor: "#0071e3",
               borderRadius: "50%",
               animation: "auto-articulos-spin 0.8s linear infinite",
               flexShrink: 0,
             }}
           />
           <span>
-            En cola para procesarse. El worker está arrancando — esta pantalla
-            se actualiza sola cuando comience.{" "}
-            <strong>Esperando hace {waitingSeconds}s.</strong>
+            En cola para procesarse. El worker está iniciando ({waitingSeconds}s).
           </span>
         </p>
       )}
       <div
         style={{
-          height: 8,
-          background: "#f7f8fa",
+          height: 6,
+          background: "rgba(0, 0, 0, 0.05)",
           borderRadius: 999,
           overflow: "hidden",
-          margin: "10px 0 16px",
+          margin: "14px 0 18px",
         }}
       >
         <div
           style={{
             height: "100%",
             width: `${percent}%`,
-            background: "#2f5fdb",
+            background: "#0071e3",
             transition: "width 0.4s ease",
           }}
         />

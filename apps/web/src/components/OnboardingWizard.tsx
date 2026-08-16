@@ -506,20 +506,23 @@ export default function OnboardingWizard({
       )}
 
       <div
+        className="panel"
         style={{
-          background: "#ffffff",
-          borderRadius: 14,
-          border: "1px solid #e2e8f0",
-          boxShadow: "0 4px 16px rgba(0, 0, 0, 0.04)",
+          background: "rgba(255, 255, 255, 0.88)",
+          borderRadius: 22,
+          border: "1px solid rgba(0, 0, 0, 0.07)",
+          boxShadow: "0 12px 38px rgba(0, 0, 0, 0.06)",
           overflow: "hidden",
+          padding: 0,
         }}
       >
         {/* Cabecera del Wizard */}
         <div
           style={{
-            padding: "20px 24px",
-            background: "linear-gradient(135deg, #071330 0%, #17347a 100%)",
-            color: "#ffffff",
+            padding: "24px 28px",
+            background: "#ffffff",
+            borderBottom: "1px solid rgba(0, 0, 0, 0.07)",
+            color: "#1d1d1f",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -529,28 +532,19 @@ export default function OnboardingWizard({
         >
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-              <span
-                style={{
-                  background: "rgba(255, 255, 255, 0.2)",
-                  padding: "2px 8px",
-                  borderRadius: 6,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  letterSpacing: "0.05em",
-                }}
-              >
+              <span className="step-badge" style={{ marginBottom: 0 }}>
                 GUÍA PASO A PASO
               </span>
-              <span style={{ fontSize: 13, opacity: 0.9 }}>
+              <span className="muted" style={{ fontSize: 13 }}>
                 {completedCoreSteps} de {totalCoreSteps} pasos listos ({progressPercent}%)
               </span>
             </div>
-            <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0, color: "#ffffff" }}>
+            <h2 style={{ fontSize: 22, fontWeight: 600, margin: 0, color: "#1d1d1f", letterSpacing: "-0.025em" }}>
               {allCoreDone
-                ? "🎉 ¡Configuración Inicial Completa!"
-                : "🚀 Configuración Inicial: Pon a punto tu cuenta"}
+                ? "Configuración Inicial Completa"
+                : "Configuración Inicial: Puesta a punto"}
             </h2>
-            <p style={{ margin: "6px 0 0", fontSize: 13, color: "#cbd5e1", maxWidth: 620 }}>
+            <p className="lead-copy" style={{ margin: "6px 0 0", maxWidth: 620 }}>
               Completa estos 4 pasos en orden para dejar tu plataforma 100% activa para redactar y posicionar artículos.
             </p>
           </div>
@@ -559,8 +553,8 @@ export default function OnboardingWizard({
             <div
               style={{
                 width: "100%",
-                height: 8,
-                background: "rgba(255, 255, 255, 0.2)",
+                height: 6,
+                background: "rgba(0, 0, 0, 0.06)",
                 borderRadius: 999,
                 overflow: "hidden",
                 marginBottom: 6,
@@ -570,19 +564,19 @@ export default function OnboardingWizard({
                 style={{
                   width: `${progressPercent}%`,
                   height: "100%",
-                  background: "#4ade80",
+                  background: allCoreDone ? "#34c759" : "#0071e3",
                   transition: "width 0.4s ease",
                 }}
               />
             </div>
-            <span style={{ fontSize: 12, fontWeight: 700, color: allCoreDone ? "#4ade80" : "#93c5fd" }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: allCoreDone ? "#16803c" : "#0071e3" }}>
               {allCoreDone ? "100% Configurado" : `${progressPercent}% completado`}
             </span>
           </div>
         </div>
 
         {/* Lista Vertical de Pasos */}
-        <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 14 }}>
 
           {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
           {/* PASO 1: 10minutesWebsite                               */}
@@ -1458,24 +1452,16 @@ function StepCard({
   return (
     <div
       style={{
-        borderRadius: 12,
-        transition: "all 0.25s ease",
-        border: isDone
-          ? "1px solid #bbf7d0"
-          : isActive
-            ? "2px solid #2563eb"
-            : "1px solid #e2e8f0",
-        background: isDone
-          ? "#fcfdfd"
-          : isActive
-            ? "#ffffff"
-            : "#f8fafc",
+        borderRadius: 14,
+        transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
+        border: isActive
+          ? "1px solid #0071e3"
+          : "1px solid #e5e5ea",
+        background: "#ffffff",
         boxShadow: isActive
-          ? "0 8px 24px rgba(37, 99, 235, 0.12)"
-          : isDone
-            ? "0 1px 4px rgba(0, 0, 0, 0.02)"
-            : "none",
-        opacity: isPending ? 0.6 : 1,
+          ? "0 4px 16px rgba(0, 113, 227, 0.08)"
+          : "none",
+        opacity: isPending ? 0.65 : 1,
         padding: "18px 20px",
       }}
     >
@@ -1491,22 +1477,25 @@ function StepCard({
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div
             style={{
-              width: 32,
-              height: 32,
+              width: 28,
+              height: 28,
               borderRadius: "50%",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 14,
-              fontWeight: 800,
+              fontSize: 13,
+              fontWeight: 600,
               flexShrink: 0,
               background: isDone
-                ? "#22c55e"
+                ? "#e8f2ff"
                 : isActive
-                  ? "#2563eb"
-                  : "#cbd5e1",
-              color: "#ffffff",
-              boxShadow: isActive ? "0 0 10px rgba(37, 99, 235, 0.4)" : "none",
+                  ? "#0071e3"
+                  : "#f5f5f7",
+              color: isDone
+                ? "#0071e3"
+                : isActive
+                  ? "#ffffff"
+                  : "#6e6e73",
             }}
           >
             {isDone ? "✓" : stepNumber}
@@ -1516,8 +1505,8 @@ function StepCard({
               style={{
                 margin: 0,
                 fontSize: 15,
-                fontWeight: 700,
-                color: isDone ? "#166534" : isActive ? "#0f172a" : "#64748b",
+                fontWeight: 600,
+                color: "#1d1d1f",
               }}
             >
               {title}
@@ -1525,8 +1514,8 @@ function StepCard({
             <p
               style={{
                 margin: "3px 0 0 0",
-                fontSize: 12,
-                color: isDone ? "#15803d" : isActive ? "#475569" : "#94a3b8",
+                fontSize: 13,
+                color: "#6e6e73",
                 lineHeight: 1.4,
               }}
             >
@@ -1539,32 +1528,27 @@ function StepCard({
           <span
             style={{
               fontSize: 11,
-              fontWeight: 700,
+              fontWeight: 500,
               padding: "4px 10px",
               borderRadius: 999,
               background: isDone
-                ? "#dcfce7"
+                ? "rgba(52, 199, 89, 0.1)"
                 : isActive
-                  ? "#dbeafe"
-                  : "#f1f5f9",
+                  ? "#e8f2ff"
+                  : "#f5f5f7",
               color: isDone
-                ? "#15803d"
+                ? "#16803c"
                 : isActive
-                  ? "#1e40af"
-                  : "#64748b",
-              border: isDone
-                ? "1px solid #86efac"
-                : isActive
-                  ? "1px solid #93c5fd"
-                  : "1px solid #e2e8f0",
+                  ? "#0071e3"
+                  : "#6e6e73",
             }}
           >
-            {isDone ? `✅ ${badgeText}` : isActive ? `👉 ${badgeText}` : badgeText}
+            {isDone ? `✓ ${badgeText}` : badgeText}
           </span>
         )}
       </div>
 
-      <div style={{ marginTop: 6, paddingLeft: 44 }}>
+      <div style={{ marginTop: 6, paddingLeft: 40 }}>
         {children}
       </div>
     </div>

@@ -7,6 +7,7 @@ import {
   h2Style,
   inputStyle,
   secondaryButtonStyle,
+  buttonStyle,
 } from "./dashboard-ui";
 
 type Site = { Url: string; IsVerified: boolean };
@@ -20,18 +21,6 @@ type Message = {
 export default function BingWebmasterSection() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // Bug real encontrado el 11/8/2026 (cuenta de Julio Paso): el enlace
-  // "Reconectar Bing"/"Conectar Bing Webmaster Tools" no daba NINGUNA señal
-  // visual al hacer clic — el usuario, al no ver nada, hacía varios clics
-  // seguidos (confirmado en logs: 5 solicitudes a /connect en menos de 1
-  // segundo). Cada clic pisa la cookie de estado OAuth del clic anterior, y
-  // cuando el callback finalmente llega, el estado ya no coincide con el más
-  // reciente — la reconexión falla EN SILENCIO (el callback redirige a
-  // `?bing=error` pero nada en esta pantalla leía ese parámetro), dejando al
-  // usuario de vuelta en el mismo aviso rojo sin ninguna explicación ni forma
-  // de saber qué pasó. Se agrega: (1) estado de "conectando" que bloquea
-  // clics repetidos, y (2) lectura real de `?bing=error`/`?bing=connected`
-  // para mostrar qué pasó de verdad.
   const [connecting, setConnecting] = useState(false);
   const [data, setData] = useState<{
     connected: boolean;
@@ -70,31 +59,6 @@ export default function BingWebmasterSection() {
     setEditingSitemap(false);
   }
 
-  // Bug real encontrado el 11/8/2026 (cuenta de Julio Paso): cuando el token
-  // de Bing vence, la lista de sitios queda vacía (no se puede volver a
-  // traer de Bing) y por eso nunca se pudo guardar un `siteUrl`. Eso hacía
-  // que "MASTER INDEXACION BING" fallara con OTRO mensaje distinto ("conecta
-  // y elige tu sitio primero"), sin relación aparente con el error real de
-  // arriba ("Refresh token is invalid or expired") — dos síntomas de la
-  // MISMA causa, mostrados como si fueran dos problemas separados, sin decir
-  // qué hacer. Se detecta ese patrón específico para mostrar un solo aviso
-  // claro con la acción correcta (reconectar), en vez de dos.
-  //
-  // Ampliado el 13/8/2026 (cuenta de Lorena Álvarez): Bing también reporta la
-  // conexión muerta como `invalid_client` / "Client authentication failed.",
-  // que no coincidía con ninguno de los patrones de arriba. Resultado: el
-  // selector de sitios quedaba vacío, se mostraba ese texto en inglés en letra
-  // chica y NO aparecía el botón "Reconectar Bing" — el usuario no tenía forma
-  // de salir del problema desde la pantalla.
-  //
-  // `reconectando` evita un tercer problema que vio Milton el 13/8/2026: justo
-  // después de reconectar aparecían DOS mensajes contradictorios a la vez,
-  // "Bing reconectado correctamente" en verde y "Tu conexión con Bing venció"
-  // en rojo. No era un error de texto: la primera consulta a Bing con el token
-  // recién emitido falla, y al refrescar la página anda perfecto. Mientras se
-  // está reintentando no se muestra el aviso de conexión vencida, porque en ese
-  // momento es falso y manda al usuario a reconectar algo que acaba de
-  // conectar.
   const tokenExpired =
     !reconectando &&
     !!data?.error &&
@@ -108,12 +72,6 @@ export default function BingWebmasterSection() {
       setMessage({ text: "Bing reconectado correctamente.", type: "success" });
       setConnecting(false);
       setReconectando(true);
-      // Acá NO se llama a load() de entrada, a propósito. El refresh token de
-      // Bing es de un solo uso: dos consultas simultáneas se pisan entre sí
-      // (la rotación de una anula el token que está usando la otra) y la
-      // conexión recién hecha queda rota. Como `router.replace` puede volver a
-      // montar el componente y disparar este efecto otra vez, una sola consulta
-      // diferida es más segura que dos inmediatas.
       const t = setTimeout(() => {
         load().finally(() => setReconectando(false));
       }, 2500);
@@ -125,12 +83,12 @@ export default function BingWebmasterSection() {
       setMessage({
         text:
           searchParams.get("motivo") === "token"
-            ? `Bing aceptó el permiso pero rechazó el último paso de la conexión. Esto no se arregla reintentando: revisá que el Client ID, el Client Secret y la Redirect URI configurados coincidan exactamente con los de tu app en Bing Webmaster Tools.${
+            ? `Bing aceptó el permiso pero rechazó el último paso de la conexión. Revisa que el Client ID, el Client Secret y la Redirect URI coincidan exactamente con tu app en Bing Webmaster Tools.${
                 searchParams.get("detalle")
-                  ? ` — Bing respondió: "${searchParams.get("detalle")}"`
+                  ? ` — Detalle: "${searchParams.get("detalle")}"`
                   : ""
               }`
-            : "No se pudo completar la reconexión con Bing (puede pasar si se hizo clic varias veces seguidas). Probá una sola vez y esperá a que la página redirija sola.",
+            : "No se pudo completar la reconexión con Bing. Intenta una sola vez y espera la redirección.",
         type: "error",
       });
       setConnecting(false);
@@ -196,7 +154,7 @@ export default function BingWebmasterSection() {
           });
         } else {
           setMessage({
-            text: `MASTER INDEXACION COMPLETADA: Se enviaron ${value.enviados} de ${value.total} artículos a Bing.`,
+            text: `Indexación completada: Se enviaron ${value.enviados} de ${value.total} artículos a Bing.`,
             type: value.errores > 0 ? "error" : "success",
             link: { label: "Ver artículos en historial", href: "/dashboard/historial" },
           });
@@ -242,16 +200,17 @@ export default function BingWebmasterSection() {
   return (
     <section style={sectionStyle}>
       <h2 style={h2Style}>Bing Webmaster Tools</h2>
-      <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12, marginBottom: 12 }}>
-        <p style={{ margin: "0 0 6px", fontSize: 13, fontWeight: 700, color: "#1e293b" }}>
-          💡 Paso a paso para conectar:
+      <div className="row" style={{ padding: "12px 16px", marginBottom: 16 }}>
+        <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 600, color: "#1d1d1f" }}>
+          Paso a paso para conectar:
         </p>
-        <p style={{ margin: 0, fontSize: 13, color: "#475569", lineHeight: 1.6 }}>
-          1. Abre una pestaña en tu navegador con <strong>Bing Webmaster Tools</strong> (con tu sesión ya iniciada).<br />
-          2. Vuelve a esta pestaña de Creador de artículos y presiona el botón de abajo <strong>"Conectar Bing Webmaster Tools"</strong>.<br />
-          3. Acepta los permisos en Microsoft y el sistema se conectará solo.
+        <p className="lead-copy" style={{ margin: 0, fontSize: 13, lineHeight: 1.5 }}>
+          1. Abre una pestaña con <strong>Bing Webmaster Tools</strong> (sesión iniciada).<br />
+          2. Presiona <strong>"Conectar Bing Webmaster Tools"</strong> abajo.<br />
+          3. Acepta los permisos de Microsoft y la sincronización será automática.
         </p>
       </div>
+
       {!data?.connected ? (
         <a
           href="/api/search-integrations/bing/connect"
@@ -263,6 +222,7 @@ export default function BingWebmasterSection() {
             }
             setConnecting(true);
           }}
+          className="secondary"
           style={{
             ...secondaryButtonStyle,
             display: "inline-block",
@@ -277,32 +237,26 @@ export default function BingWebmasterSection() {
       ) : tokenExpired ? (
         <div
           style={{
-            background: "#fef2f2",
-            border: "1px solid #fecaca",
-            borderRadius: 8,
-            padding: 14,
+            background: "#fff2f1",
+            border: "1px solid rgba(255, 59, 48, 0.2)",
+            borderRadius: 12,
+            padding: 16,
           }}
         >
-          <p style={{ margin: 0, fontWeight: 700, color: "#991b1b", fontSize: 14 }}>
-            ⚠️ Tu conexión con Bing venció
+          <p style={{ margin: 0, fontWeight: 600, color: "#ff3b30", fontSize: 14 }}>
+            Tu conexión con Bing venció
           </p>
-          <p style={{ margin: "6px 0 10px", color: "#991b1b", fontSize: 13, lineHeight: 1.6 }}>
-            Para reconectar de forma fácil y rápida:<br />
-            1. Abre en otra pestaña tu cuenta de <strong>Bing Webmaster Tools</strong> (para tener la sesión iniciada).<br />
-            2. Vuelve aquí y haz clic en <strong>"Reconectar Bing"</strong>.<br />
-            3. Al autorizar, tu sitio y tu sitemap se mantendrán guardados exactamente como los tenías.
+          <p style={{ margin: "6px 0 12px", color: "#6e6e73", fontSize: 13, lineHeight: 1.5 }}>
+            Para reconectar:<br />
+            1. Abre tu cuenta de <strong>Bing Webmaster Tools</strong> en otra pestaña.<br />
+            2. Haz clic en <strong>"Reconectar Bing"</strong>.<br />
+            3. Al autorizar, tu sitio y sitemap seguirán guardados.
           </p>
-          {/*
-            El recuadro rojo tapaba el texto real que devuelve Bing, que es lo
-            único que permite distinguir un token vencido de un problema de
-            credenciales o de rotación. Se muestra en letra chica: al usuario no
-            le cambia nada, y evita otra ronda de diagnóstico a ciegas.
-          */}
           {data.error && (
             <p
               style={{
                 margin: "0 0 10px",
-                color: "#b45309",
+                color: "#8a4b08",
                 fontSize: 11,
                 fontFamily: "monospace",
               }}
@@ -321,27 +275,17 @@ export default function BingWebmasterSection() {
               setConnecting(true);
             }}
             style={{
+              ...buttonStyle,
               display: "inline-block",
-              background: "#991b1b",
-              color: "#fff",
-              padding: "8px 16px",
-              borderRadius: 8,
-              fontWeight: 700,
               textDecoration: "none",
+              padding: "8px 16px",
               fontSize: 13,
               opacity: connecting ? 0.6 : 1,
               pointerEvents: connecting ? "none" : "auto",
-              cursor: connecting ? "wait" : "pointer",
             }}
           >
             {connecting ? "Conectando con Bing..." : "Reconectar Bing"}
           </a>
-          {connecting && (
-            <p style={{ margin: "8px 0 0", color: "#991b1b", fontSize: 12 }}>
-              Un solo clic alcanza — te vamos a redirigir a Bing y de vuelta
-              automáticamente. Esperá, no hace falta volver a presionar.
-            </p>
-          )}
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -358,19 +302,19 @@ export default function BingWebmasterSection() {
             ))}
           </select>
           {data.sitemapUrl && !editingSitemap ? (
-            <div style={{ fontSize: 13, color: "#1e8a4b" }}>
+            <div style={{ fontSize: 13, color: "#16803c" }}>
               ✓ Sitemap detectado: {data.sitemapUrl}{" "}
               <button
                 type="button"
                 onClick={() => setEditingSitemap(true)}
+                className="link-button"
                 style={{
                   border: 0,
                   padding: 0,
                   background: "transparent",
-                  color: "#1358a3",
-                  cursor: "pointer",
                   fontSize: 12,
-                  fontWeight: 600,
+                  fontWeight: 500,
+                  marginLeft: 6,
                 }}
               >
                 Cambiar
@@ -379,15 +323,14 @@ export default function BingWebmasterSection() {
           ) : (
             <>
               {!data.sitemapUrl && (
-                <p style={{ fontSize: 12, color: "#8a6d1a", margin: 0 }}>
-                  No pudimos detectar tu sitemap automáticamente — podés
-                  escribirlo a mano si lo conocés.
+                <p style={{ fontSize: 12, color: "#8a4b08", margin: 0 }}>
+                  No pudimos detectar tu sitemap automáticamente — puedes escribirlo a mano.
                 </p>
               )}
               <input
                 value={sitemapUrl}
                 onChange={(e) => setSitemapUrl(e.target.value)}
-                placeholder="URL del sitemap, por ejemplo https://tusitio.com/sitemap.xml"
+                placeholder="URL del sitemap, ej: https://tusitio.com/sitemap.xml"
                 style={inputStyle}
               />
             </>
@@ -395,150 +338,99 @@ export default function BingWebmasterSection() {
           {data.sitemapUrl && (
             <div style={{ fontSize: 12 }}>
               {data.lastSitemapSyncStatus === "success" && (
-                <p style={{ color: "#1e8a4b", margin: 0 }}>
+                <p style={{ color: "#16803c", margin: 0 }}>
                   ✓ Último envío exitoso
                   {data.lastSitemapSyncAt
                     ? `: ${new Date(data.lastSitemapSyncAt).toLocaleString("es-US")}`
                     : "."}
                 </p>
               )}
-              {/*
-                Pedido explícito de Milton (13/8/2026): acá solo se muestran los
-                envíos EXITOSOS. El aviso de "el último envío falló" no le sirve
-                al usuario — no hay nada que él pueda hacer al respecto, y lo
-                único que logra es que llame a soporte por algo que se resuelve
-                del lado del sistema. Mismo criterio que el commit c577508, que
-                sacó del historial los avisos de indexación no accionables.
-                El error NO se pierde: sigue guardado en
-                SearchIntegration.lastSitemapSyncError y en los logs.
-              */}
               {!data.lastSitemapSyncStatus && (
-                <p style={{ color: "#6b7280", margin: 0 }}>
+                <p className="muted" style={{ margin: 0 }}>
                   Todavía no se ha enviado el sitemap.
                 </p>
               )}
             </div>
           )}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button onClick={save} style={secondaryButtonStyle}>
+            <button onClick={save} className="secondary" style={secondaryButtonStyle}>
               Guardar sitio
             </button>
             {data.sitemapUrl && (
               <button
                 onClick={sendSitemapNow}
                 disabled={sendingSitemap}
+                className="secondary"
                 style={secondaryButtonStyle}
               >
                 {sendingSitemap ? "Enviando..." : "Enviar sitemap ahora"}
               </button>
             )}
-            <button onClick={disconnect} style={secondaryButtonStyle}>
+            <button onClick={disconnect} className="secondary" style={secondaryButtonStyle}>
               Desconectar Bing
             </button>
           </div>
-          <div style={{ borderTop: "1px solid #e5e8ec", marginTop: 12, paddingTop: 12 }}>
+          <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 12, paddingTop: 14 }}>
             <button
               onClick={masterIndexAll}
               disabled={masterIndexing}
               style={{
-                padding: "12px 20px",
-                borderRadius: 8,
-                border: "2px solid #d97706",
-                background: masterIndexing
-                  ? "#fef3c7"
-                  : "linear-gradient(135deg, #f59e0b, #d97706)",
-                color: masterIndexing ? "#92400e" : "#ffffff",
-                fontWeight: 700,
-                fontSize: 14,
-                cursor: masterIndexing ? "wait" : "pointer",
-                letterSpacing: 0.5,
-                boxShadow: masterIndexing
-                  ? "none"
-                  : "0 2px 8px rgba(217, 119, 6, 0.3)",
+                ...buttonStyle,
+                marginTop: 0,
+                padding: "10px 18px",
               }}
             >
               {masterIndexing
                 ? "Enviando artículos a Bing..."
-                : "⚡ MASTER INDEXACION BING"}
+                : "Indexación masiva en Bing"}
             </button>
-            <p style={{ fontSize: 11, color: "#6b7280", margin: "6px 0 0" }}>
-              Envía a Bing los artículos publicados que todavía no se enviaron.
-              Bing limita cuántas URLs acepta por día, así que si tenés muchos
-              se envían por tandas: volvé a pulsarlo otro día y sigue desde
-              donde quedó.
+            <p className="muted" style={{ fontSize: 12, margin: "6px 0 0" }}>
+              Envía a Bing los artículos publicados pendientes. Bing limita los envíos diarios por sitio.
             </p>
           </div>
           {masterResult && (() => {
-            // Quedó trabajo sin hacer si algo falló o si el cupo diario de Bing
-            // cortó el envío antes de llegar a todos. Con cupo agotado se
-            // enviaban 0 artículos y la tarjeta igual salía verde diciendo
-            // "completada exitosamente", que es justo lo contrario de lo que
-            // pasó y deja al usuario sin saber que tiene que volver mañana.
             const masterIncompleto =
               masterResult.errores > 0 || (masterResult.sinCupo ?? 0) > 0;
             return (
             <div
               style={{
-                background: masterIncompleto ? "#fffbeb" : "#f0fdf4",
-                border: `1px solid ${masterIncompleto ? "#fde68a" : "#bbf7d0"}`,
-                borderRadius: 8,
-                padding: 12,
+                background: masterIncompleto ? "#fff4e5" : "#f2faf4",
+                border: `1px solid ${masterIncompleto ? "rgba(255, 149, 0, 0.25)" : "rgba(52, 199, 89, 0.25)"}`,
+                borderRadius: 12,
+                padding: "12px 16px",
                 fontSize: 13,
               }}
             >
-              <p style={{ margin: 0, fontWeight: 600, color: masterIncompleto ? "#92400e" : "#166534" }}>
+              <p style={{ margin: 0, fontWeight: 600, color: masterIncompleto ? "#8a4b08" : "#16803c" }}>
                 {masterResult.errores > 0
-                  ? "⚠️ Indexación masiva completada con algunos errores:"
+                  ? "Indexación masiva con algunos errores:"
                   : masterIncompleto
-                    ? "⏳ Indexación masiva parcial — falta una parte:"
-                    : "✓ Indexación masiva completada exitosamente:"}
+                    ? "Indexación parcial pendiente:"
+                    : "✓ Indexación completada exitosamente:"}
               </p>
-              <p style={{ margin: "4px 0 0", color: "#1f2937" }}>
-                • <strong>{masterResult.enviados}</strong> artículos enviados a Bing para indexar de un total de <strong>{masterResult.total}</strong> publicados.
+              <p style={{ margin: "4px 0 0", color: "#1d1d1f" }}>
+                • <strong>{masterResult.enviados}</strong> artículos enviados a Bing de un total de <strong>{masterResult.total}</strong>.
                 {masterResult.errores > 0 && (
-                  <span style={{ color: "#dc2626", marginLeft: 8 }}>
+                  <span style={{ color: "#ff3b30", marginLeft: 8 }}>
                     ({masterResult.errores} no se pudieron enviar)
                   </span>
                 )}
               </p>
               {masterResult.yaIndexados > 0 && (
-                <p style={{ margin: "4px 0 0", color: "#1f2937" }}>
-                  • <strong>{masterResult.yaIndexados}</strong> ya se habían
-                  enviado antes, así que no se reenviaron (habrían gastado cupo
-                  en artículos que Bing ya conoce).
+                <p style={{ margin: "4px 0 0", color: "#6e6e73" }}>
+                  • <strong>{masterResult.yaIndexados}</strong> ya estaban indexados previamente.
                 </p>
               )}
               {!!masterResult.sinCupo && masterResult.sinCupo > 0 && (
-                <p style={{ margin: "4px 0 0", color: "#92400e" }}>
-                  • Quedaron <strong>{masterResult.sinCupo}</strong> esperando:
-                  Bing solo permite{" "}
-                  {masterResult.cupoDiario !== null
-                    ? `${masterResult.cupoDiario} envío(s)`
-                    : "una cantidad limitada de envíos"}{" "}
-                  por día para este sitio. Volvé a pulsar el botón mañana y
-                  siguen desde donde quedaron — no se pierden.
+                <p style={{ margin: "4px 0 0", color: "#8a4b08" }}>
+                  • Quedaron <strong>{masterResult.sinCupo}</strong> esperando cupo diario de Bing.
                 </p>
               )}
-              {masterResult.erroresDetalle &&
-                masterResult.erroresDetalle.length > 0 && (
-                  <ul
-                    style={{
-                      margin: "8px 0 0",
-                      paddingLeft: 16,
-                      fontSize: 12,
-                      color: "#991b1b",
-                    }}
-                  >
-                    {masterResult.erroresDetalle.map((e, i) => (
-                      <li key={i}>{e}</li>
-                    ))}
-                  </ul>
-                )}
             </div>
             );
           })()}
           {data.error && !tokenExpired && (
-            <p style={{ color: "#d64545", fontSize: 12 }}>{data.error}</p>
+            <p style={{ color: "#ff3b30", fontSize: 12 }}>{data.error}</p>
           )}
         </div>
       )}
@@ -546,8 +438,8 @@ export default function BingWebmasterSection() {
         <p
           style={{
             fontSize: 13,
-            color: message.type === "error" ? "#d64545" : message.type === "success" ? "#16a34a" : "#6b7280",
-            margin: 0,
+            color: message.type === "error" ? "#ff3b30" : message.type === "success" ? "#16803c" : "#6e6e73",
+            margin: "12px 0 0",
             display: "flex",
             alignItems: "center",
             gap: 8,
@@ -558,19 +450,16 @@ export default function BingWebmasterSection() {
           {message.link && (
             <a
               href={message.link.href}
-              style={{
-                color: "#1358a3",
-                fontWeight: 600,
-                textDecoration: "underline",
-              }}
+              className="link-button"
+              style={{ fontSize: 13 }}
             >
               {message.link.label}
             </a>
           )}
         </p>
       )}
-      <p style={{ fontSize: 12, color: "#6b7280" }}>
-        El sistema enviará tu sitemap a Bing todas las noches. Bing permite indexación instantánea para cada artículo nuevo — cuando publiques, el sistema lo enviará a Bing automáticamente para que aparezca en los resultados de búsqueda más rápido.
+      <p className="muted" style={{ fontSize: 12, marginTop: 14 }}>
+        El sistema enviará tu sitemap a Bing todas las noches y procesará cada artículo publicado para acelerar su aparición en búsquedas.
       </p>
     </section>
   );

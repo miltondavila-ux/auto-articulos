@@ -6,26 +6,21 @@ import ConfigurationStatus from "@/components/ConfigurationStatus";
 type Categoria = "nuevas-herramientas" | "arreglos";
 
 const CATEGORY_LABELS: Record<Categoria, string> = {
-  "nuevas-herramientas": "✨ Nuevas herramientas",
-  arreglos: "🛠 Arreglos",
+  "nuevas-herramientas": "Nuevas herramientas",
+  arreglos: "Mejoras y arreglos",
 };
 
-function filterButtonStyle(active: boolean, category: "todas" | Categoria) {
-  const palette = category === "arreglos"
-    ? ["#d97706", "#f0deac", "#fff8e6", "#92400e"]
-    : category === "nuevas-herramientas"
-      ? ["#16a34a", "#a8dfc0", "#f3fbf6", "#166534"]
-      : ["#2f5fdb", "#dfe3e8", "#f7f8fa", "#374151"];
-
+function filterButtonStyle(active: boolean) {
   return {
     padding: "6px 14px",
     borderRadius: 20,
     fontSize: 13,
-    fontWeight: 600,
-    border: active ? `1px solid ${palette[0]}` : `1px solid ${palette[1]}`,
-    background: active ? palette[0] : palette[2],
-    color: active ? "#ffffff" : palette[3],
+    fontWeight: 500,
+    border: active ? "1px solid #0071e3" : "1px solid #d2d2d7",
+    background: active ? "#0071e3" : "#ffffff",
+    color: active ? "#ffffff" : "#1d1d1f",
     textDecoration: "none",
+    transition: "all 0.15s ease",
   };
 }
 
@@ -50,27 +45,28 @@ export default async function ActualizacionesPage({
   const total = totalNuevas + totalArreglos;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 1120, margin: "0 auto" }}>
       <ConfigurationStatus />
-      <div style={sectionStyle}>
+      <div className="panel" style={sectionStyle}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
           <div>
-            <h2 style={{ ...h2Style, marginBottom: 4 }}>🚀 Registro de Actualizaciones</h2>
-            <p style={{ margin: 0, fontSize: 13, color: "#6b7280" }}>
+            <p className="eyebrow" style={{ margin: "0 0 4px" }}>Novedades del Sistema</p>
+            <h1 style={{ ...h2Style, fontSize: 26, marginBottom: 6 }}>Registro de Actualizaciones</h1>
+            <p className="lead-copy" style={{ margin: 0, maxWidth: 680 }}>
               Entérate de las nuevas herramientas incorporadas y los arreglos realizados en la plataforma, explicados de forma clara y sencilla.
             </p>
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
-          <Link href="/dashboard/actualizaciones" style={filterButtonStyle(filtroCategoria === "todas", "todas")}>Todas ({total})</Link>
-          <Link href="/dashboard/actualizaciones?categoria=nuevas-herramientas" style={filterButtonStyle(filtroCategoria === "nuevas-herramientas", "nuevas-herramientas")}>✨ Nuevas herramientas ({totalNuevas})</Link>
-          <Link href="/dashboard/actualizaciones?categoria=arreglos" style={filterButtonStyle(filtroCategoria === "arreglos", "arreglos")}>🛠 Arreglos ({totalArreglos})</Link>
+          <Link href="/dashboard/actualizaciones" style={filterButtonStyle(filtroCategoria === "todas")}>Todas ({total})</Link>
+          <Link href="/dashboard/actualizaciones?categoria=nuevas-herramientas" style={filterButtonStyle(filtroCategoria === "nuevas-herramientas")}>Nuevas herramientas ({totalNuevas})</Link>
+          <Link href="/dashboard/actualizaciones?categoria=arreglos" style={filterButtonStyle(filtroCategoria === "arreglos")}>Mejoras ({totalArreglos})</Link>
         </div>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {actualizaciones.length === 0 ? (
-          <div style={sectionStyle}><p style={{ margin: 0, fontSize: 13, color: "#6b7280" }}>No hay actualizaciones en esta categoría.</p></div>
+          <div className="panel" style={sectionStyle}><p className="muted" style={{ margin: 0 }}>No hay actualizaciones en esta categoría.</p></div>
         ) : actualizaciones.map((item) => <TarjetaActualizacion key={item.id} item={item} />)}
       </div>
     </div>
@@ -79,24 +75,50 @@ export default async function ActualizacionesPage({
 
 function TarjetaActualizacion({ item }: { item: { date: Date; title: string; category: string; summary: string; example: string; modulePath?: string | null } }) {
   const esNueva = item.category === "nuevas-herramientas";
-  const bannerColor = esNueva ? "#166534" : "#92400e";
-  const bannerBg = esNueva ? "#dcfce7" : "#fef3c7";
-  const bannerBorder = esNueva ? "#bbf7d0" : "#fde68a";
   const badgeTexto = esNueva ? CATEGORY_LABELS["nuevas-herramientas"] : CATEGORY_LABELS.arreglos;
 
-  return <div style={{ ...sectionStyle, marginTop: 0, borderLeft: `5px solid ${esNueva ? "#16a34a" : "#d97706"}` }}>
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-        <span style={{ padding: "2px 10px", borderRadius: 12, fontSize: 11, fontWeight: 700, color: bannerColor, background: bannerBg, border: `1px solid ${bannerBorder}` }}>{badgeTexto}</span>
-        <span style={{ fontSize: 12, color: "#6b7280" }}>{item.date.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })}</span>
+  return (
+    <div className="panel" style={{ ...sectionStyle, marginTop: 0 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <span
+            style={{
+              padding: "3px 10px",
+              borderRadius: 999,
+              fontSize: 11,
+              fontWeight: 500,
+              color: esNueva ? "#16803c" : "#0071e3",
+              background: esNueva ? "rgba(52, 199, 89, 0.1)" : "#e8f2ff",
+            }}
+          >
+            {badgeTexto}
+          </span>
+          <span className="muted" style={{ fontSize: 12 }}>
+            {item.date.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })}
+          </span>
+        </div>
+      </div>
+      <h3 style={{ fontSize: 17, fontWeight: 600, color: "#1d1d1f", margin: "10px 0 6px 0", letterSpacing: "-0.02em" }}>
+        {item.title}
+      </h3>
+      <p className="lead-copy" style={{ margin: "0 0 12px 0", lineHeight: 1.5 }}>
+        {item.summary}
+      </p>
+      {item.modulePath && (
+        <div style={{ marginBottom: 10 }}>
+          <Link href={item.modulePath} className="link-button" style={{ fontSize: 13, fontWeight: 500 }}>
+            Ir al módulo &rarr;
+          </Link>
+        </div>
+      )}
+      <div className="row" style={{ padding: "10px 14px", marginTop: 8 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: "#1d1d1f", marginBottom: 3 }}>
+          Ejemplo de uso:
+        </div>
+        <p style={{ margin: 0, fontSize: 13, color: "#6e6e73", lineHeight: 1.45 }}>
+          {item.example}
+        </p>
       </div>
     </div>
-    <h3 style={{ fontSize: 16, fontWeight: 700, color: "#16181d", margin: "10px 0 6px 0" }}>{item.title}</h3>
-    <p style={{ fontSize: 14, color: "#374151", lineHeight: "1.5", margin: "0 0 12px 0" }}>{item.summary}</p>
-    {item.modulePath && <Link href={item.modulePath} style={{ color: "#2f5fdb", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>Ir al módulo →</Link>}
-    <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: "10px 14px", marginTop: 8 }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}><span>💡</span> Ejemplo para entenderlo fácil:</div>
-      <p style={{ margin: 0, fontSize: 13, color: "#334155", fontStyle: "italic", lineHeight: "1.4" }}>{item.example}</p>
-    </div>
-  </div>;
+  );
 }

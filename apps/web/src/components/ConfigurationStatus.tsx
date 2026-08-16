@@ -28,10 +28,10 @@ interface ConfigurationStatusResponse {
 }
 
 const SECTION_META = {
-  platform: { label: "Cuenta & Plataforma", icon: "⚙️", color: "#2f5fdb" },
-  seo: { label: "SEO & Indexación", icon: "🔍", color: "#8b5cf6" },
-  social: { label: "Redes Sociales", icon: "📱", color: "#0ea5e9" },
-  content: { label: "Contenido", icon: "✍️", color: "#f59e0b" },
+  platform: { label: "Cuenta & Plataforma" },
+  seo: { label: "SEO & Indexación" },
+  social: { label: "Redes Sociales" },
+  content: { label: "Contenido" },
 } as const;
 
 export default function ConfigurationStatus() {
@@ -58,7 +58,6 @@ export default function ConfigurationStatus() {
     loadStatus();
   }, []);
 
-  // Recargar cuando cambie la ruta (después de configurar algo)
   useEffect(() => {
     loadStatus();
   }, [pathname]);
@@ -67,18 +66,14 @@ export default function ConfigurationStatus() {
 
   const { checks, summary } = data;
 
-  // Si TODO (obligatorio + opcional) está configurado, mostrar solo un banner
-  // verde colapsable. Ojo: no usar "isFullyConfigured" aquí, porque ese
-  // booleano solo mira los campos obligatorios y puede ser true con
-  // opcionales pendientes, mostrando un 100% engañoso junto a un porcentaje
-  // menor (ej. "73%" con banner de "todo listo").
   if (summary.percentage === 100) {
     return (
       <details
+        className="row"
         style={{
-          background: "#f3fbf6",
-          border: "1px solid #a8dfc0",
-          borderRadius: 10,
+          background: "#ffffff",
+          border: "1px solid #e5e5ea",
+          borderRadius: 14,
           marginTop: 15,
           marginBottom: 5,
           overflow: "hidden",
@@ -89,18 +84,18 @@ export default function ConfigurationStatus() {
             padding: "12px 16px",
             cursor: "pointer",
             fontSize: 13,
-            fontWeight: 600,
-            color: "#1e8a4b",
+            fontWeight: 500,
+            color: "#16803c",
             display: "flex",
             alignItems: "center",
             gap: 8,
             listStyle: "none",
           }}
         >
-          <span style={{ fontSize: 16 }}>✅</span>
-          Plataforma configurada al {summary.percentage}% —{" "}
-          <span style={{ fontWeight: 400, color: "#6b7280" }}>
-            haz clic para ver detalles
+          <span>✓</span>
+          Plataforma configurada al 100% —{" "}
+          <span className="muted" style={{ fontWeight: 400 }}>
+            ver detalles
           </span>
         </summary>
         <div style={{ padding: "0 16px 16px" }}>
@@ -110,22 +105,21 @@ export default function ConfigurationStatus() {
     );
   }
 
-  // Si faltan cosas, mostrar banner con progreso y checklist expandible
   const pendingRequired = checks.filter((c) => c.required && !c.configured);
   const pendingOptional = checks.filter((c) => !c.required && !c.configured);
 
   return (
     <div
+      className="row"
       style={{
-        background: pendingRequired.length > 0 ? "#fffbeb" : "#f0f9ff",
-        border: pendingRequired.length > 0 ? "1px solid #fcd34d" : "1px solid #bae6fd",
-        borderRadius: 10,
+        background: "#ffffff",
+        border: "1px solid #e5e5ea",
+        borderRadius: 14,
         marginTop: 15,
         marginBottom: 5,
         overflow: "hidden",
       }}
     >
-      {/* Header always visible */}
       <div
         onClick={() => setExpanded(!expanded)}
         style={{
@@ -138,25 +132,22 @@ export default function ConfigurationStatus() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1 }}>
-          <span style={{ fontSize: 16 }}>
-            {pendingRequired.length > 0 ? "⚠️" : "📋"}
-          </span>
           <div style={{ flex: 1 }}>
             <div
               style={{
                 fontSize: 13,
                 fontWeight: 600,
-                color: pendingRequired.length > 0 ? "#92400e" : "#0c4a6e",
+                color: "#1d1d1f",
               }}
             >
               {pendingRequired.length > 0
-                ? `Faltan ${pendingRequired.length} configuración${pendingRequired.length > 1 ? "es" : ""} obligatoria${pendingRequired.length > 1 ? "s" : ""}`
-                : `${pendingOptional.length} configuración${pendingOptional.length > 1 ? "es" : ""} opcional${pendingOptional.length > 1 ? "es" : ""} disponible${pendingOptional.length > 1 ? "s" : ""}`}
+                ? `${pendingRequired.length} configuración${pendingRequired.length > 1 ? "es" : ""} pendiente${pendingRequired.length > 1 ? "s" : ""}`
+                : `${pendingOptional.length} opción${pendingOptional.length > 1 ? "es" : ""} adicional${pendingOptional.length > 1 ? "es" : ""}`}
             </div>
             <div
+              className="muted"
               style={{
                 fontSize: 12,
-                color: "#6b7280",
                 marginTop: 2,
               }}
             >
@@ -167,9 +158,9 @@ export default function ConfigurationStatus() {
           <div
             style={{
               width: 80,
-              height: 6,
-              background: "#e5e7eb",
-              borderRadius: 3,
+              height: 4,
+              background: "rgba(0,0,0,0.06)",
+              borderRadius: 999,
               overflow: "hidden",
               flexShrink: 0,
             }}
@@ -178,17 +169,17 @@ export default function ConfigurationStatus() {
               style={{
                 width: `${summary.percentage}%`,
                 height: "100%",
-                background: pendingRequired.length > 0 ? "#f59e0b" : "#10b981",
-                borderRadius: 3,
+                background: "#0071e3",
+                borderRadius: 999,
                 transition: "width 0.3s ease",
               }}
             />
           </div>
         </div>
         <span
+          className="muted"
           style={{
-            fontSize: 12,
-            color: "#6b7280",
+            fontSize: 11,
             transition: "transform 0.2s",
             transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
           }}
@@ -197,49 +188,28 @@ export default function ConfigurationStatus() {
         </span>
       </div>
 
-      {/* Expanded checklist */}
       {expanded && (
         <div
           style={{
             padding: "0 16px 16px",
-            borderTop: "1px solid rgba(0,0,0,0.06)",
+            borderTop: "1px solid #e5e5ea",
           }}
         >
-          {/* Required items first */}
           {pendingRequired.length > 0 && (
             <div style={{ marginTop: 12 }}>
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "#92400e",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  marginBottom: 8,
-                }}
-              >
+              <div className="eyebrow" style={{ marginBottom: 6 }}>
                 Obligatorio para publicar
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {pendingRequired.map((check) => (
-                      <CheckRow key={check.id} check={check} />
-                    ))}
+                  <CheckRow key={check.id} check={check} />
+                ))}
               </div>
             </div>
           )}
 
-          {/* All checks grouped by section */}
           <div style={{ marginTop: 12 }}>
-            <div
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: "#6b7280",
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                marginBottom: 8,
-              }}
-            >
+            <div className="eyebrow" style={{ marginBottom: 6 }}>
               Todos los módulos
             </div>
             {(["platform", "seo", "social", "content"] as const).map(
@@ -256,22 +226,15 @@ export default function ConfigurationStatus() {
                       style={{
                         fontSize: 12,
                         fontWeight: 600,
-                        color: meta.color,
+                        color: "#1d1d1f",
                         marginBottom: 4,
                         display: "flex",
                         alignItems: "center",
                         gap: 6,
                       }}
                     >
-                      <span>{meta.icon}</span>
                       {meta.label}
-                      <span
-                        style={{
-                          fontSize: 10,
-                          fontWeight: 400,
-                          color: "#9ca3af",
-                        }}
-                      >
+                      <span className="muted" style={{ fontSize: 11, fontWeight: 400 }}>
                         ({configuredCount}/{sectionChecks.length})
                       </span>
                     </div>
@@ -300,29 +263,27 @@ function CheckRow({ check }: { check: ConfigurationCheck }) {
         justifyContent: "space-between",
         gap: 8,
         padding: "8px 10px",
-        borderRadius: 6,
-        background: check.configured ? "#f3fbf6" : "#ffffff",
-        border: check.configured
-          ? "1px solid #d1fae5"
-          : "1px solid #e5e7eb",
+        borderRadius: 8,
+        background: check.configured ? "#ffffff" : "#f5f5f7",
+        border: "1px solid #e5e5ea",
         fontSize: 13,
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
-        <span style={{ fontSize: 14, flexShrink: 0 }}>
-          {check.configured ? "✅" : check.required ? "🔴" : "⚪"}
+        <span style={{ fontSize: 12, flexShrink: 0, color: check.configured ? "#16803c" : "#86868b" }}>
+          {check.configured ? "✓" : "○"}
         </span>
         <div>
           <div
             style={{
               fontWeight: 500,
-              color: check.configured ? "#065f46" : "#16181d",
+              color: check.configured ? "#16803c" : "#1d1d1f",
             }}
           >
             {check.label}
           </div>
           {!check.configured && (
-            <div style={{ fontSize: 11, color: "#6b7280", marginTop: 1 }}>
+            <div className="muted" style={{ fontSize: 11, marginTop: 1 }}>
               {check.description}
             </div>
           )}
@@ -331,21 +292,15 @@ function CheckRow({ check }: { check: ConfigurationCheck }) {
       {!check.configured && (
         <Link
           href={check.actionUrl}
+          className="link-button"
           style={{
             fontSize: 12,
-            fontWeight: 600,
-            color: "#2f5fdb",
-            textDecoration: "none",
+            fontWeight: 500,
             whiteSpace: "nowrap",
-            padding: "4px 10px",
-            borderRadius: 6,
-            background: "#eef2ff",
-            border: "1px solid #c7d2fe",
-            transition: "background 0.15s",
             flexShrink: 0,
           }}
         >
-          {check.actionLabel} →
+          {check.actionLabel} &rarr;
         </Link>
       )}
     </div>
@@ -365,10 +320,10 @@ function ConfiguredGrid({ checks }: { checks: ConfigurationCheck[] }) {
               alignItems: "center",
               gap: 8,
               fontSize: 12,
-              color: "#065f46",
+              color: "#16803c",
             }}
           >
-            <span>✅</span>
+            <span>✓</span>
             <span>{check.label}</span>
           </div>
         ))}

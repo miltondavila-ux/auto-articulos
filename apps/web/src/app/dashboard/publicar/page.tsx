@@ -201,16 +201,17 @@ export default function PublicarPage() {
             style={{
               marginTop: 20,
               padding: "12px 16px",
-              borderRadius: 8,
-              background: "#eafaf0",
-              color: "#1e8a4b",
+              borderRadius: 12,
+              background: "#f2faf4",
+              border: "1px solid rgba(52, 199, 89, 0.3)",
+              color: "#16803c",
               fontSize: 13,
             }}
           >
             Ya hay una ejecución en curso.{" "}
             <Link
               href="/dashboard/publicaciones-en-curso"
-              style={{ color: "#2f5fdb" }}
+              style={{ color: "#0071e3", fontWeight: 500 }}
             >
               Ver progreso en Publicaciones en Curso
             </Link>
@@ -220,7 +221,7 @@ export default function PublicarPage() {
 
         <section style={readySectionStyle(Boolean(selectedCategoryId))}>
           <h2 style={h2Style}>Categoría</h2>
-          <p style={{ fontSize: 13, color: "#6b7280" }}>
+          <p style={{ fontSize: 13, color: "#6e6e73", margin: "0 0 12px" }}>
             Elige primero la categoría bajo la que se publicarán los artículos de
             esta ejecución.
           </p>
@@ -231,7 +232,7 @@ export default function PublicarPage() {
                 alignItems: "center",
                 gap: 8,
                 fontSize: 13,
-                color: "#6b7280",
+                color: "#6e6e73",
                 margin: "8px 0",
               }}
             >
@@ -266,9 +267,9 @@ export default function PublicarPage() {
             ))}
           </select>
           {categories.length === 0 && (
-            <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
+            <p style={{ fontSize: 13, color: "#6e6e73", marginTop: 8 }}>
               Sincroniza tus categorías desde{" "}
-              <Link href="/dashboard/configuracion?tab=platform#categories" style={{ color: "#2f5fdb", fontWeight: 600 }}>
+              <Link href="/dashboard/configuracion?tab=platform#categories" style={{ color: "#0071e3", fontWeight: 500 }}>
                 Configuración &gt; Categorías
               </Link>
               .
@@ -276,7 +277,7 @@ export default function PublicarPage() {
           )}
 
           <h2 style={{ ...h2Style, marginTop: 24 }}>Idioma de este lote</h2>
-          <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 8 }}>
+          <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 8 }}>
             En este idioma se escribirán los artículos de este lote. Puedes dar
             los títulos en español aunque elijas otro idioma. Solo aplica a este
             lote; no cambia tu configuración.
@@ -301,7 +302,7 @@ export default function PublicarPage() {
 
         <section style={readySectionStyle(titleCount > 0 && !overLimit)}>
           <h2 style={h2Style}>Títulos</h2>
-          <p style={{ fontSize: 13, color: "#6b7280" }}>
+          <p style={{ fontSize: 13, color: "#6e6e73", margin: "0 0 12px" }}>
             Pega un título por línea. Puedes publicar como máximo{" "}
             <strong>{maxTitlesPerBatch}</strong> por lote (si tienes más,
             divídelos en varios lotes).
@@ -312,15 +313,15 @@ export default function PublicarPage() {
             placeholder={"Título del primer artículo\nTítulo del segundo artículo"}
             rows={8}
             disabled={hasActiveRun}
-            style={{ ...inputStyle, width: "100%", fontFamily: "monospace" }}
+            style={{ ...inputStyle, width: "100%", fontFamily: "inherit" }}
           />
           <div
             style={{
               display: "flex",
               justifyContent: "space-between",
               fontSize: 12,
-              marginTop: 4,
-              color: overLimit ? "#d64545" : "#6b7280",
+              marginTop: 6,
+              color: overLimit ? "#ff3b30" : "#6e6e73",
             }}
           >
             <span>
@@ -336,7 +337,7 @@ export default function PublicarPage() {
 
         <section style={sectionStyle}>
           <h2 style={h2Style}>Publicar</h2>
-          <p style={{ fontSize: 13, color: "#6b7280" }}>
+          <p style={{ fontSize: 13, color: "#6e6e73", margin: "0 0 12px" }}>
             Al iniciar, se creará una nueva ejecución en segundo plano que
             procesará los artículos uno a uno.
           </p>
@@ -346,8 +347,8 @@ export default function PublicarPage() {
               alignItems: "center",
               gap: 8,
               fontSize: 13,
-              color: "#6b7280",
-              margin: "10px 0",
+              color: "#6e6e73",
+              margin: "10px 0 14px",
             }}
           >
             <input
@@ -386,12 +387,12 @@ export default function PublicarPage() {
                 : "Iniciar"}
           </button>
           {!selectedCategoryId && !hasActiveRun && (
-            <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
+            <p style={{ fontSize: 13, color: "#6e6e73", marginTop: 8 }}>
               Elige una categoría arriba antes de iniciar.
             </p>
           )}
           {!contentLanguage && !hasActiveRun && (
-            <p style={{ fontSize: 13, color: "#d64545", marginTop: 8 }}>
+            <p style={{ fontSize: 13, color: "#ff3b30", marginTop: 8 }}>
               Debes seleccionar o configurar un idioma de redacción antes de iniciar.
             </p>
           )}
@@ -400,11 +401,12 @@ export default function PublicarPage() {
         {banner && (
           <div
             style={{
-              padding: 12,
-              borderRadius: 8,
-              marginTop: 8,
-              background: banner.type === "error" ? "#fdecec" : "#eafaf0",
-              color: banner.type === "error" ? "#d64545" : "#1e8a4b",
+              padding: "12px 16px",
+              borderRadius: 12,
+              marginTop: 12,
+              background: banner.type === "error" ? "#fff2f1" : "#f2faf4",
+              border: banner.type === "error" ? "1px solid rgba(255, 59, 48, 0.25)" : "1px solid rgba(52, 199, 89, 0.25)",
+              color: banner.type === "error" ? "#ff3b30" : "#16803c",
               fontSize: 14,
             }}
           >
