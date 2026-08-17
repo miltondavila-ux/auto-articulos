@@ -152,9 +152,8 @@ async function getConnectedNetworks(userId: string) {
     prisma.linkedInIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.instagramIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.facebookPageIntegration.findUnique({ where: { userId }, select: { id: true } }),
-    prisma.user.findUnique({ where: { id: userId }, select: { role: true } }),
   ]);
-  return { threads: Boolean(threads), x: Boolean(twitter), linkedin: Boolean(linkedin), instagram: Boolean(instagram), facebookPage: user?.role === "admin" && Boolean(facebookPage) };
+  return { threads: Boolean(threads), x: Boolean(twitter), linkedin: Boolean(linkedin), instagram: Boolean(instagram), facebookPage: Boolean(facebookPage) };
 }
 
 export async function GET() {

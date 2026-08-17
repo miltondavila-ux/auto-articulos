@@ -103,7 +103,7 @@ export default function OportunidadesRedesPage() {
 
   async function loadConnectedNetworks() {
     try {
-      const response = await fetch("/api/social-opportunities/generate");
+      const response = await fetch("/api/social-opportunities/generate", { cache: "no-store" });
       if (response.ok) {
         const data = await response.json();
         setConnectedNetworks({

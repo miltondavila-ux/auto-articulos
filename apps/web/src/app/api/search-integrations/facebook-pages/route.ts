@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
-import { getCurrentUser, getCurrentUserId } from "@/lib/current-user";
+import { getCurrentUserId } from "@/lib/current-user";
+import { canUseSocialModule } from "@/lib/social-access";
 
 export async function GET() {
   const userId = await getCurrentUserId();
-  const user = await getCurrentUser();
-  if (user.role !== "admin") return NextResponse.json({ connected: false });
+  if (!(await canUseSocialModule(userId))) return NextResponse.json({ connected: false });
   const integration = await prisma.facebookPageIntegration.findUnique({ where: { userId } });
   if (!integration) return NextResponse.json({ connected: false });
 
@@ -21,7 +21,7 @@ export async function GET() {
 export async function DELETE() {
   const userId = await getCurrentUserId();
   const user = await getCurrentUser();
-  if (user.role !== "admin") return NextResponse.json({ error: "Solo administradores." }, { status: 403 });
+  if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Módulo reservado a administradores y Lorena." }, { status: 403 });
   await prisma.facebookPageIntegration.deleteMany({ where: { userId } });
   return NextResponse.json({ ok: true });
 }

@@ -2,13 +2,13 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { encryptSecret, exchangeCodeForInstagramTokens } from "@auto-articulos/shared";
-import { getCurrentUser, getCurrentUserId } from "@/lib/current-user";
+import { getCurrentUserId } from "@/lib/current-user";
 import { getStoredInstagramAppCredentials } from "@/lib/instagram-app-config";
+import { canUseSocialModule } from "@/lib/social-access";
 import { INSTAGRAM_STATE_COOKIE } from "../connect/route";
 
 export async function GET(request: NextRequest) {
   const userId = await getCurrentUserId();
-  const currentUser = await getCurrentUser();
   const cookieStore = await cookies();
   const state = request.nextUrl.searchParams.get("state");
   const code = request.nextUrl.searchParams.get("code");
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    if (currentUser.role === "admin") await prisma.facebookPageIntegration.upsert({
+    if (await canUseSocialModule(userId)) await prisma.facebookPageIntegration.upsert({
       where: { userId },
       create: {
         userId,
