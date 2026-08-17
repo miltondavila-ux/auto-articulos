@@ -4223,3 +4223,11 @@ Auto Artículos.
 - 2026-08-17 — Solicitud de Milton: se cancelaron en Supabase las publicaciones sociales activas de `linkedin` y `facebook-page` (2 registros). Se marcaron `skipped` con motivo `Cancelado por el usuario`; verificación posterior: 0 registros de esas plataformas en `queued`/`processing`. No se modificaron Threads, Instagram ni X.
 - 2026-08-17 — Diagnóstico del parpadeo social: el dominio principal seguía apuntando al despliegue anterior `dpl_F7RJWufaGWWkLMLYrMT6EBcSsKTi`, que no contenía el redireccionamiento a Publicaciones en Curso. Se promovió `dpl_nqAXPCqE7RwwoWp8S77b4L8kkXCJ` (Ready), y se confirmó que `auto-articulos-web.vercel.app` ya apunta al despliegue corregido.
 - 2026-08-17 — Solicitud de detener todo: se cancelaron todas las `SocialOpportunity` en `queued`/`processing`; verificación: 0 activas. Se reforzó `cache: "no-store"` en las lecturas de redes y publicaciones en curso; `next.config.js` ya mantiene headers globales `no-store/no-cache`. Vercel desplegó `dpl_2P1HS1rUkaSSqLSuzV1XdkcJ4DLM` en Ready con el dominio principal asignado.
+
+### 2026-08-17 — Implementación del flujo explicativo interactivo (Cómo Funciona)
+
+- Se creó la nueva página responsiva `/dashboard/como-funciona` con una infografía interactiva de tres fases (Captura de Demanda, Automatización Web & SEO, y Difusión en Redes Sociales) siguiendo las directrices estéticas de diseño minimalista de Apple.
+- Se registró el módulo `como-funciona` en `SYSTEM_MODULES` (`src/lib/modules.ts`) y se integró en la barra de navegación global (`DashboardNav.tsx`) como pestaña accesible.
+- Se documentó la existencia de esta sección en el manual base del usuario (`manual-usuario.ts`) para alimentar la base de conocimiento del asistente.
+- Verificación: `npm run typecheck` completado localmente sin errores de compilación TypeScript. No se ha ejecutado Prisma, hecho commit, push ni despliegue de este cambio a producción.
+
