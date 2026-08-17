@@ -6,7 +6,7 @@ import {
   sectionStyle,
   buttonStyle,
 } from "./dashboard-ui";
-import { platformProductName } from "@auto-articulos/shared";
+import { platformProductName, platformHelpUrl } from "@auto-articulos/shared";
 
 interface PreValidationGuardProps {
   type: "publicar" | "oportunidades";
@@ -19,6 +19,7 @@ interface PreValidationGuardProps {
   googleConnected?: boolean;
   hasGoogleSiteUrl?: boolean;
   platformDomain?: string;
+  loading?: boolean;
   onOpenImageCreditsModal?: () => void;
   children: React.ReactNode;
 }
@@ -34,11 +35,30 @@ export default function PreValidationGuard({
   googleConnected = false,
   hasGoogleSiteUrl = false,
   platformDomain = "net",
+  loading = false,
   onOpenImageCreditsModal,
   children,
 }: PreValidationGuardProps) {
   const productName = platformProductName(platformDomain);
+  const helpUrl = platformHelpUrl(platformDomain);
   const isGoogleReady = googleConnected && hasGoogleSiteUrl;
+
+  if (loading) {
+    return (
+      <div style={{ maxWidth: 840, margin: "0 auto", padding: "10px 0 30px" }}>
+        <section className="panel" style={{ ...sectionStyle, padding: 28 }}>
+          <div style={{ height: 12, width: 140, background: "rgba(0,0,0,0.06)", borderRadius: 6, marginBottom: 12 }} />
+          <div style={{ height: 24, width: 280, background: "rgba(0,0,0,0.06)", borderRadius: 6, marginBottom: 16 }} />
+          <div style={{ height: 14, width: "70%", background: "rgba(0,0,0,0.04)", borderRadius: 4, marginBottom: 24 }} />
+          <div style={{ display: "grid", gap: 10 }}>
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="row" style={{ height: 56, background: "#ffffff", borderRadius: 12, border: "1px solid #e5e5ea" }} />
+            ))}
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   const isReady =
     type === "publicar"
@@ -70,7 +90,7 @@ export default function PreValidationGuard({
     firstMissingUrl = "/dashboard/configuracion?tab=wizard";
   } else if (!hasImageCredits) {
     firstMissingName = "Solicitar créditos de imagen";
-    firstMissingUrl = "https://www.10minuteswebsite.com/ayuda";
+    firstMissingUrl = helpUrl ?? "#";
   }
 
   const steps = [
@@ -128,7 +148,7 @@ export default function PreValidationGuard({
       readyText: "Disponibles",
       missingText: "Agotados",
       isImageCredit: true,
-      actionUrl: "https://www.10minuteswebsite.com/ayuda",
+      actionUrl: helpUrl ?? "#",
       actionLabel: "Solicitar créditos",
     },
   ];

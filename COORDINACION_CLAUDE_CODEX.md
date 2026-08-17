@@ -98,6 +98,8 @@ sobre la prisa de cerrar una tarea.
   credenciales inválidas; no hay error de conexión a Supabase.
 - **Módulos:** se está implementando el modelo de permisos de tres estados:
   heredar global, forzar habilitado y forzar deshabilitado.
+- **Antigravity (17/8/2026):** Se unificó el diseño visual de toda la plataforma bajo la estética minimalista estilo Apple (paleta sobria `#f5f5f7`, tarjetas `#ffffff` con bordes sutiles `#e5e5ea`, tipografía `#1d1d1f` y subtítulos `#6e6e73`, acentos limpios `#0071e3`).
+- **Antigravity (17/8/2026 - Corrección doble versión / flash):** Se corrigió el parpadeo / doble versión que ocurría al entrar a `/dashboard/oportunidades` y `/dashboard/publicar`. Antes, `PreValidationGuard` evaluaba los flags como `false` durante el `fetch` inicial, renderizando por una fracción de segundo el bloque de advertencia de requisitos faltantes antes de mostrar la pantalla real. Se agregó soporte de `loading` con skeleton Apple minimalista tanto en el guard como en las páginas para una transición instantánea y fluida sin saltos visuales.
 - **Siguiente tarea activa:** validar ese modelo y después probar Facebook
   Pages con el usuario tester.
 - **No pendiente:** recuperación de producción, DATABASE_URL, Transaction
@@ -4242,4 +4244,16 @@ Auto Artículos.
   - Esto evita que los checkboxes y radios hereden el ancho de 100%, bordes, padding, y efectos de enfoque inadecuados, permitiendo que se alineen a la izquierda correctamente conforme al flexbox de su contenedor.
 - **Verificaciones:** Cambio puramente estético de CSS verificado; se mantiene compatibilidad con los estilos específicos inline de otros checkboxes en el panel de usuarios.
 - **Estado del área:** Cambios completados. Área LIBERADA.
-- 2026-08-17 — Incidente posterior al despliegue: las rutas autenticadas devolvieron 500 por `prepared statement already exists` al usar Transaction Pooler. Se corrigió `packages/db/src/index.ts` para forzar `pgbouncer=true` y `connection_limit=1` cuando detecta `pooler.supabase.com:6543`; commit `c130fea`, Vercel `dpl_2AgiViqURausx8kMSX6jCQ6iUSNS` Ready y `/login` 200.
+- 2026-08-17 — Incidente posterior al despliegue: las rutas autenticadas devolvieron 500 por `prepared statement already exists` al usar Transaction Pooler. Se corrigió `packages/db/src/index.ts` para forzar `pgbouncer=true` y `connection_limit=1` when detecta `pooler.supabase.com:6543`; commit `c130fea`, Vercel `dpl_2AgiViqURausx8kMSX6jCQ6iUSNS` Ready y `/login` 200.
+
+### 2026-08-17 18:52 EDT — Antigravity: Habilitación de permisos de publicación en GET /api/me
+
+- **Agente:** Antigravity.
+- **Tarea:** Asegurar que las variables de permisos de publicación social (`allowFacebookPublishing`, `allowLinkedInPublishing` y `allowThreadsPublishing`) se devuelvan en la respuesta JSON del endpoint `GET /api/me`.
+- **Archivos/área:**
+  - `apps/web/src/app/api/me/route.ts`
+- **Resultado:**
+  - Se añadieron `allowFacebookPublishing`, `allowLinkedInPublishing` y `allowThreadsPublishing` a la respuesta del handler GET de `/api/me`. Esto permite que el panel de Configuración refleje adecuadamente los permisos definidos para la cuenta de usuario efectiva.
+- **Verificaciones:** Compilación de TypeScript limpia tanto para la app web (`npm run typecheck --workspace=@auto-articulos/web`) como para el worker (`npm run build --workspace=@auto-articulos/worker`) con código de salida 0.
+- **Estado del área:** Cambios completados. Área LIBERADA.
+

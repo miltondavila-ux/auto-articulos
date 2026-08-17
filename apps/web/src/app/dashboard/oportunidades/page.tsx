@@ -116,6 +116,19 @@ export default function OportunidadesPage() {
     if (opportunitiesResponse.ok) {
       setGroups(data.groups ?? []);
       setLastAnalysisAt(data.lastAnalysisAt ?? null);
+      if (data.noNewOpportunities) {
+        const nextDate = data.nextAvailableAt
+          ? formatDateTime(data.nextAvailableAt)
+          : null;
+        setMessage({
+          kind: "info",
+          text: `Con la información actual de Search Console no encontramos nuevas oportunidades para publicar. Te recomendamos esperar al menos 3 días antes de repetir el análisis${nextDate ? ` (podrás volver a intentarlo a partir del ${nextDate})` : ""}, para darle tiempo a Google de reflejar cambios en tus datos. Si prefieres, puedes intentarlo de todas formas ahora mismo.`,
+        });
+        if (data.canForce) setCanForce(true);
+      } else {
+        setMessage(null);
+        setCanForce(false);
+      }
     }
     if (meResponse.ok) {
       const me = await meResponse.json();
@@ -338,7 +351,20 @@ export default function OportunidadesPage() {
     router.refresh();
   }
 
-  if (!loading && disclosureAcceptedAt === null) {
+  if (loading) {
+    return (
+      <div style={{ display: "grid", gap: 16 }}>
+        <section style={sectionStyle}>
+          <div style={{ height: 26, width: 220, background: "rgba(0,0,0,0.06)", borderRadius: 6, marginBottom: 12 }} />
+          <div style={{ height: 14, width: "85%", background: "rgba(0,0,0,0.04)", borderRadius: 4, marginBottom: 8 }} />
+          <div style={{ height: 14, width: "60%", background: "rgba(0,0,0,0.04)", borderRadius: 4, marginBottom: 20 }} />
+          <div style={{ height: 42, width: 190, background: "rgba(0,0,0,0.06)", borderRadius: 11 }} />
+        </section>
+      </div>
+    );
+  }
+
+  if (disclosureAcceptedAt === null) {
     return (
       <section style={sectionStyle}>
         <h2 style={h2Style}>Aviso importante sobre Oportunidades</h2>
@@ -622,7 +648,7 @@ export default function OportunidadesPage() {
             }}
           >
             <span>
-              ⚠️ Tu cuenta de 10minutesWebsite no tiene créditos de imagen disponibles.
+              ⚠️ Tu cuenta no tiene créditos de imagen disponibles.
             </span>
             <button
               type="button"
@@ -661,7 +687,7 @@ export default function OportunidadesPage() {
             onChange={(e) => setDisableIndexing(e.target.checked)}
           />
           Desactivar indexación en buscadores al ejecutar (por defecto queda
-          activada, como en 10minutesWebsite)
+          activada, como en la plataforma)
         </label>
 
         <div style={{ marginTop: 16 }}>
@@ -711,7 +737,7 @@ export default function OportunidadesPage() {
             onChange={(e) => setSelectedPromptId(e.target.value)}
             style={{ ...inputStyle, width: "100%", maxWidth: 320 }}
           >
-            <option value="">STANDARD (Estilo de la plataforma 10minutesWebsite)</option>
+            <option value="">STANDARD (Estilo predeterminado de la plataforma)</option>
             {prompts.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}

@@ -48,93 +48,71 @@ export default function PublicarPage() {
   // Para marca blanca (tagcrush): PreValidationGuard necesita saber el
   // servidor de la cuenta para no mostrar "10minutesWebsite" ni enlaces de
   // ayuda equivocados. Ver packages/shared/src/platform-servers.ts.
+  const [loading, setLoading] = useState(true);
   const [platformDomain, setPlatformDomain] = useState<string>("net");
 
-  const loadUserLimits = useCallback(async () => {
-    const res = await fetch("/api/me");
-    if (res.ok) {
-      const data = await res.json();
-      if (
-        typeof data.maxTitlesPerBatch === "number" &&
-        data.maxTitlesPerBatch >= 1
-      ) {
-        setMaxTitlesPerBatch(data.maxTitlesPerBatch);
-      }
-      if (typeof data.contentLanguage === "string") {
-        setContentLanguage(data.contentLanguage);
-      }
-      if (typeof data.defaultPromptId === "string" && data.defaultPromptId) {
-        setSelectedPromptId(data.defaultPromptId);
-      }
-      if (typeof data.hasImageCredits === "boolean") {
-        setHasImageCredits(data.hasImageCredits);
-      }
-      if (typeof data.platformDomain === "string") {
-        setPlatformDomain(data.platformDomain);
-      }
-    }
-  }, []);
+  const loadAll = useCallback(async () => {
+    try {
+      const [credRes, catRes, runsRes, meRes, langRes, promptRes] = await Promise.all([
+        fetch("/api/credentials", { cache: "no-store" }),
+        fetch("/api/categories", { cache: "no-store" }),
+        fetch("/api/runs", { cache: "no-store" }),
+        fetch("/api/me", { cache: "no-store" }),
+        fetch("/api/languages", { cache: "no-store" }),
+        fetch("/api/prompts", { cache: "no-store" }),
+      ]);
 
-  const loadPrompts = useCallback(async () => {
-    const res = await fetch("/api/prompts");
-    if (res.ok) {
-      const data = await res.json();
-      setPrompts(data.prompts ?? []);
-    }
-  }, []);
-
-  const loadLanguages = useCallback(async () => {
-    const res = await fetch("/api/languages");
-    if (res.ok) {
-      const data = await res.json();
-      setLanguages(data.languages ?? []);
-    }
-  }, []);
-
-  const loadCredentialsStatus = useCallback(async () => {
-    const res = await fetch("/api/credentials");
-    if (res.ok) {
-      const data = await res.json();
-      setCredentialsConfigured(Boolean(data.configured));
-    }
-  }, []);
-
-  const loadCategories = useCallback(async () => {
-    const res = await fetch("/api/categories");
-    if (res.ok) {
-      const data = await res.json();
-      setCategories(data.categories);
-    }
-  }, []);
-
-  const checkActiveRun = useCallback(async () => {
-    const res = await fetch("/api/runs");
-    if (res.ok) {
-      const data = await res.json();
-      setHasActiveRun(
-        data.runs.some(
-          (r: { status: string }) =>
-            r.status === "pending" || r.status === "running",
-        ),
-      );
+      if (credRes.ok) {
+        const credData = await credRes.json().catch(() => ({}));
+        setCredentialsConfigured(Boolean(credData.configured));
+      }
+      if (catRes.ok) {
+        const catData = await catRes.json().catch(() => ({}));
+        setCategories(catData.categories ?? []);
+      }
+      if (runsRes.ok) {
+        const runsData = await runsRes.json().catch(() => ({}));
+        setHasActiveRun(
+          (runsData.runs ?? []).some(
+            (r: { status: string }) =>
+              r.status === "pending" || r.status === "running",
+          ),
+        );
+      }
+      if (meRes.ok) {
+        const meData = await meRes.json().catch(() => ({}));
+        if (typeof meData.maxTitlesPerBatch === "number" && meData.maxTitlesPerBatch >= 1) {
+          setMaxTitlesPerBatch(meData.maxTitlesPerBatch);
+        }
+        if (typeof meData.contentLanguage === "string") {
+          setContentLanguage(meData.contentLanguage);
+        }
+        if (typeof meData.defaultPromptId === "string" && meData.defaultPromptId) {
+          setSelectedPromptId(meData.defaultPromptId);
+        }
+        if (typeof meData.hasImageCredits === "boolean") {
+          setHasImageCredits(meData.hasImageCredits);
+        }
+        if (typeof meData.platformDomain === "string") {
+          setPlatformDomain(meData.platformDomain);
+        }
+      }
+      if (langRes.ok) {
+        const langData = await langRes.json().catch(() => ({}));
+        setLanguages(langData.languages ?? []);
+      }
+      if (promptRes.ok) {
+        const promptData = await promptRes.json().catch(() => ({}));
+        setPrompts(promptData.prompts ?? []);
+      }
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadCredentialsStatus();
-    loadCategories();
-    checkActiveRun();
-    loadUserLimits();
-    loadLanguages();
-    loadPrompts();
-  }, [
-    loadCredentialsStatus,
-    loadCategories,
-    checkActiveRun,
-    loadUserLimits,
-    loadLanguages,
-    loadPrompts,
-  ]);
+    loadAll();
+  }, [loadAll]);
 
   // 10minutesWebsite distingue categorías "regulares" de categorías "de
   // secuencia" — por defecto solo se ofrecen las regulares; las de
@@ -203,6 +181,7 @@ export default function PublicarPage() {
     <div>
       <PreValidationGuard
         type="publicar"
+        loading={loading}
         credentialsConfigured={credentialsConfigured}
         hasCategories={categories.length > 0}
         categoriesCount={categories.length}
@@ -325,7 +304,7 @@ export default function PublicarPage() {
             disabled={hasActiveRun}
             style={{ ...inputStyle, width: "100%" }}
           >
-            <option value="">STANDARD (Estilo de la plataforma 10minutesWebsite)</option>
+            <option value="">STANDARD (Estilo predeterminado de la plataforma)</option>
             {prompts.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -392,7 +371,7 @@ export default function PublicarPage() {
               onChange={(e) => setDisableIndexing(e.target.checked)}
             />
             Desactivar indexación en buscadores para este lote (por defecto queda
-            activada, como en 10minutesWebsite)
+            activada, como en la plataforma)
           </label>
           <button
             onClick={handleIniciar}
