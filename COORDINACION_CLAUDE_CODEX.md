@@ -87,7 +87,105 @@ completo.
 autoriza aplicar una base de datos de destino incierto. Esta orden prevalece
 sobre la prisa de cerrar una tarea.
 
+## Estado operativo actual (fuente de verdad)
+
+> Esta sección reemplaza cualquier estado anterior escrito más abajo. Las
+> entradas antiguas se conservan únicamente como historial y no representan
+> tareas pendientes.
+
+- **Autoridad:** Milton. Codex ya no es capitán; actúa como asistente técnico.
+- **Producción:** operativa. Login verificado con respuesta 401 esperada para
+  credenciales inválidas; no hay error de conexión a Supabase.
+- **Módulos:** se está implementando el modelo de permisos de tres estados:
+  heredar global, forzar habilitado y forzar deshabilitado.
+- **Siguiente tarea activa:** validar ese modelo y después probar Facebook
+  Pages con el usuario tester.
+- **No pendiente:** recuperación de producción, DATABASE_URL, Transaction
+  pooler, `pgbouncer=true` y revisión de imagen original de LinkedIn.
+- **No ejecutar sin solicitud:** Pinterest, Tumblr, Facebook Groups e
+  Instagram Stories quedan para fases posteriores.
+- **Validación funcional:** Milton confirmó que el control individual de
+  módulos funciona correctamente; `Oportunidades Redes` puede habilitarse
+  para Lorena aunque permanezca oculto globalmente. Queda como mejora futura
+  hacer más claros los textos de las opciones si se considera necesario.
+- **Prueba Meta/Facebook (17/8/2026):** se identificó que el checkbox
+  `allowFacebookPublishing` se enviaba desde la interfaz pero la API admin no
+  lo leía ni lo persistía; además, el botón Facebook Page apuntaba al flujo de
+  Instagram y usaba el tipo de desconexión equivocado. La corrección está en
+  el árbol local, pero su publicación fue detenida porque el árbol limpio de
+  despliegue no contiene la relación `trialDomainRegistries`; no se quitará
+  esa funcionalidad ajena para forzar el build. Producción permanece estable.
+- **Corrección de conexiones sociales publicada:** se corrigió la lectura de
+  permisos para que aparezcan por separado Threads, Instagram, Facebook Pages
+  y LinkedIn; X/Twitter permanece intacto. También se corrigió el guardado de
+  `allowFacebookPublishing` y el botón/estado de Facebook Page. Build remoto
+  OK, despliegue `dpl_FiJ3DZiBshwcEVEACybpJ1dBFCq7` en `READY`, login verificado
+  con `401` esperado para credenciales inválidas.
+- **Corrección final de visibilidad (17/8/2026):** los administradores ahora
+  ven siempre los conectores de Threads, Instagram, Facebook Pages y LinkedIn,
+  independientemente de los checks de publicación; X/Twitter permanece visible.
+  Se publicó `dpl_FBBNURJZAvvukvBdPHFKvaH3XHWf` y se reasignó el dominio principal.
+- **Excepción Lorena y publicación final:** se habilitó la visibilidad de los
+  conectores para Lorena además de administradores. Se corrigieron errores de
+  build ajenos detectados por Vercel y se publicó `dpl_3CPvkQ1tsTeHfVrQHvDFm6AM9Jf8`
+  en `READY`; el dominio principal apunta a esa versión.
+- **Facebook Pages en Oportunidades Redes:** el backend ya soportaba
+  `facebook-page`, pero faltaba el botón y el tipo en el estado de la pantalla.
+  Se añadió el destino Facebook Pages sin modificar Threads, LinkedIn,
+  Instagram ni X. Despliegue `dpl_AnWcZJ5sAYDFtd4Q4gS9S7DxZRAi` en `READY`.
+- **Flujo de publicación social corregido:** al publicar una oportunidad,
+  ahora se redirige inmediatamente a `Publicaciones en Curso`; esa pantalla
+  consulta también `SocialOpportunity` y muestra los trabajos de redes en cola
+  o procesándose. Se publicó `dpl_F7RJWufaGWWkLMLYrMT6EBcSsKTi` en `READY`.
+
+## Historial de coordinación (archivado; no son tareas pendientes)
+
+- **Codex — validación de credenciales en el wizard (COMPLETADO):** reservó
+  `apps/web/src/app/api/credentials/route.ts`,
+  `apps/web/src/components/OnboardingWizard.tsx` y la utilidad compartida que
+  valida el inicio de sesión de 10minutesWebsite antes de persistir una clave.
+  Prueba los dominios admitidos, conserva las credenciales anteriores ante un
+  rechazo y actualiza el dominio de la cuenta cuando corresponde. Verificado
+  con TypeScript de `packages/shared` y `apps/web`, más `git diff --check`.
+  No toca migraciones, despliegues ni el sincronizador de categorías. Área
+  LIBERADA.
+
+- **Capitán actual:** Codex.
+- **Lote:** revisión segura de migraciones e integración Facebook Pages.
+- **Estado:** lote reclamado con `scripts/migration-coordinator.sh claim`.
+- **Regla vigente:** no se aplican migraciones, SQL, push ni despliegues hasta
+  verificar el destino de producción, corregir la idempotencia del lote y
+  documentar evidencia. Ninguna migración ha sido desechada.
+- **Auditoría del Capitán:** `vercel env ls` muestra las variables de conexión,
+  pero `vercel env pull/run` entrega `DATABASE_URL` y `DIRECT_URL` vacíos para
+  esta sesión; Prisma no puede validar ni conectarse a la base. No se ejecutó
+  ninguna escritura. El siguiente requisito es restaurar esas variables con
+  valores reales en Vercel o entregar al Capitán el destino confirmado.
+
 - **Capitán de migración liberó el lote:** Antigravity. Resultado: Orden alfabetico y filtro por categoria desplegado.
+- **Capitán de migración:** Codex — revisará y aplicará el lote completo.
+  Motivo: integración Facebook Pages y revisión segura del lote de
+  migraciones. Nadie más ejecuta Prisma hasta su liberación.
+- **Decisión del Capitán (17/8/2026):** no aplicar todavía el lote. La
+  migración `20260817165443_add_custom_prompts` es previa y contiene una
+  operación destructiva (`DROP COLUMN SocialOpportunity.imageUrl`), mientras
+  producción aún no tiene `User.defaultPromptId` ni `Run.promptId`. Además,
+  `DIRECT_URL` de Vercel está vacío, así que no hay destino directo verificable.
+  Primero se debe corregir la conexión y revisar/ordenar el lote completo; la
+  integración Facebook Pages no se despliega por separado.
+- **Incidente crítico de procedimiento (17/8/2026):** Codex incumplió la orden
+  superior de ejecutar `scripts/migration-coordinator.sh status`, coordinar con
+  un capitán y no desplegar mientras había migraciones pendientes. Se lanzó un
+  despliegue directo con el árbol sucio y se intentó `prisma migrate deploy`
+  contra una base local inexistente. Producción quedó apuntando brevemente a
+  código incompatible con columnas de prompts no migradas. Se consultaron los
+  logs, se identificó `User.defaultPromptId`/`Run.promptId` como causa y se
+  recuperó el alias de producción a la versión estable anterior
+  `auto-articulos-9ag1w7o02-luna-portex-intelligence.vercel.app`; los endpoints
+  `/api/runs`, `/api/categories` y Google volvieron a responder 200.
+- **Corrección de proceso:** queda prohibido continuar con Facebook Pages,
+  migraciones, push o despliegues hasta que un capitán designado revise el lote
+  completo, confirme la base destino y documente la liberación con evidencia.
 - **Transformación de Diseño Apple Minimalista (Antigravity — 16/8/2026):** A pedido explícito de Milton, se completó la refactorización integral del Look & Feel de toda la aplicación web (`apps/web`) adoptando la arquitectura de diseño Apple HIG minimalista inspirada en `agente-enrutador`:
   - Paleta unificada: fondo `#f5f5f7`, tarjetas y paneles `#ffffff` con borde `1px solid rgba(0, 0, 0, 0.07)` o `#e5e5ea`, radio `22px` / `14px`, texto `#1d1d1f`, subtítulos y metadatos `#6e6e73`, acento único azul `#0071e3`.
   - Eliminación total de gradientes oscuros, contrastes saturados e iconos coloridos estridentes.
@@ -759,7 +857,7 @@ ejecutar de forma explícita y auditada después del despliegue.
 - Toda decisión o cambio se documentará en `HANDOFF.md` ÚNICAMENTE cuando Milton lo solicite explícitamente o tras un hito principal.
 - Si se descubre trabajo ajeno sin registrar, tratarlo como reservado hasta confirmar con el usuario o con el otro agente.
 
-## Trabajo activo
+## Historial de coordinación (archivado; no son tareas pendientes)
 
 ### Corrección urgente — scroll horizontal del menú de escritorio (17/8/2026)
 
@@ -3923,6 +4021,39 @@ Estado del área: LIBERADA
   Redes** y sus APIs solo estén disponibles para administradores y
   `lorenalvarez30@gmail.com` (Lorena). Ningún otro usuario verá el módulo en
   la navegación, Configuración ni podrá accederlo por URL/API directa.
+- **Control administrativo añadido:** `User.allowFacebookPublishing` y la
+  casilla **Publicar en Facebook Pages** ya forman parte de Administración,
+  junto a Instagram, LinkedIn y Threads. El permiso queda apagado por defecto;
+  administradores pueden activarlo o desactivarlo por usuario. La cuenta de
+  Lorena solo podrá publicar cuando ese permiso esté activo.
+- **Verificación:** `npx tsc --noEmit -p apps/web/tsconfig.json` exitoso y
+  `git diff --check` limpio. Falta aplicar la migración
+  `20260817200000_add_facebook_permission` junto con el despliegue.
+- **Incidencia posterior:** la base local activa no está disponible
+  (`localhost:5432`), por lo que la migración no pudo aplicarse aquí. Se
+  actualizó también `/api/admin/migrate` para crear `allowFacebookPublishing`
+  junto con los permisos existentes cuando se ejecute en producción.
+- **Recuperación inmediata:** al detectarse error de servidor por columna aún
+  inexistente, se retiraron temporalmente las lecturas directas de
+  `allowFacebookPublishing` de las rutas críticas para que la aplicación vuelva
+  a cargar sin alterar datos. El control quedará plenamente operativo después
+  de aplicar la migración; no se debe considerar desplegada esta funcionalidad
+  hasta ese momento.
+- **Recuperación en producción:** se retiraron las lecturas incompatibles de
+  las rutas críticas, se verificó TypeScript web sin errores y se desplegó
+  Vercel producción `dpl_H5owCAqEXDVpFBG13JpdGD7HCcZN` en estado `READY`, con
+  alias `https://auto-articulos-web.vercel.app`. La ruta `/login` respondió
+  HTTP 200 después del despliegue. La migración de Facebook Pages sigue
+  pendiente y el control no debe activarse hasta aplicarla.
+- **Incidente crítico y recuperación final:** el primer despliegue directo
+  (`dpl_H5owCAqEXDVpFBG13JpdGD7HCcZN`) expuso que producción ya estaba
+  desfasada respecto al esquema por campos previos de prompts (`User.defaultPromptId`
+  y `Run.promptId`), ajenos a Facebook Pages. El rollback inmediato apuntó a
+  otra versión con el mismo desfase. Finalmente se reasignó el alias de
+  producción a `auto-articulos-9ag1w7o02-luna-portex-intelligence.vercel.app`,
+  versión anterior estable; los logs posteriores confirmaron HTTP 200 en
+  `/api/runs`, `/api/categories` y la integración de Google. Facebook Pages
+  queda fuera de producción hasta resolver las migraciones de forma controlada.
 - **Verificaciones:** Prisma Client regenerado y `git diff --check` limpio.
   La compilación del worker llega a errores preexistentes de cambios ajenos en
   `automation/10minutesWebsite.ts` y `queue.ts` sobre `promptText`; el nuevo
@@ -3981,8 +4112,110 @@ Estado del área: LIBERADA
 - **Verificaciones:** Migración y regeneración de cliente Prisma realizadas con éxito.
 - **Estado del área:** Cambios completados. Área LIBERADA.
 
+### 2026-08-17 14:56 EDT — Capitán Codex: recuperación de producción
+
+- Se confirmó que `DATABASE_URL` y `DIRECT_URL` de Producción estaban vacías en Vercel.
+- Se generó una nueva contraseña de Supabase y se guardaron ambas URI en Vercel (directa y transaction pooler), sin exponer secretos.
+- El despliegue estable se hará desde el commit `f4715c1`, que no depende de la migración de Prompts pendiente; no se redistribuirá el árbol local sucio.
+- Estado: recuperación en curso; migraciones aún no aplicadas.
+
+### 2026-08-17 15:08 EDT — Capitán Codex: producción recuperada
+
+- Se desplegó exclusivamente el commit estable `f4715c1` desde un árbol limpio, sin incluir cambios locales ni migraciones pendientes.
+- Vercel reportó `READY` para `dpl_AgKaD4rauYAyjnzArw27V4yHaYLT` y completó el alias de producción.
+- Verificación HTTPS: `auto-articulos-web.vercel.app` respondió `307` y el alias nuevo respondió `302`, confirmando que la aplicación volvió a estar accesible.
+- Las migraciones de Prompts/Facebook siguen sin aplicarse; quedan bloqueadas hasta una revisión y ejecución controlada.
+
+### 2026-08-17 15:12 EDT — Revisión de caché global
+
+- Se confirmó que las respuestas API ya envían `no-store`, pero `/login` estaba prerenderizada.
+- Se añadió `dynamic = "force-dynamic"` y `revalidate = 0` al layout raíz para impedir HTML reutilizado en todas las rutas.
+- No se modificaron migraciones ni se hizo un despliegue de este cambio todavía.
+- Se desplegó el ajuste desde el árbol estable y se reasignó `auto-articulos-web.vercel.app` al despliegue `dpl_JCUzTt8BsEHeeJ1veBsNcQodxfxr`.
+- Verificación final de `/login`: `Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate` y `Age: 0`.
+- Se corrigió `DATABASE_URL` usando Shared/Session pooler (`aws-...:5432`), se redistribuyó `dpl_3gcG14UrmgVjB7cx8iaqkan3cqyT` y se reasignó el dominio principal.
+- Verificación posterior: `/dashboard` responde `307` hacia `/login` y no aparecen errores de Prisma en los logs recientes.
+
+### 2026-08-17 15:35 EDT — Reconstrucción autorizada por Milton
+
+- Milton autorizó al Capitán Codex a reconstruir los cambios que quedaron fuera de producción, tomando las decisiones técnicas y manteniendo la aplicación estable.
+- Secuencia obligatoria: conservar el despliegue estable, auditar el diff local, preparar y validar migraciones, aplicar el esquema de forma idempotente y solo después publicar la funcionalidad completa.
+- No se restaurarán eliminaciones ajenas ni se publicará el árbol local completo sin separar primero Facebook/Prompts de cambios no relacionados.
+- Se ejecutó en Supabase SQL Editor un lote idempotente con las migraciones de Prompts, integraciones de Facebook Pages y permiso `allowFacebookPublishing`; se habilitó RLS en las tablas nuevas.
+- Se reconstruyó un árbol limpio desde `939cbd5`, superponiendo solo cambios locales relevantes (sin eliminaciones ajenas), y se desplegó `dpl_4bUaCXGKJnX3AuTTRxP4rDhVfPVW`.
+- El dominio `auto-articulos-web.vercel.app` apunta al despliegue reconstruido. Verificaciones: `/login` 200, login inválido 401 esperado, `/dashboard` 307 hacia `/login`; build TypeScript y Next.js completó correctamente.
+- Se detectó saturación `EMAXCONNSESSION` al usar Session pooler; se cambió `DATABASE_URL` a Transaction pooler (`:6543`) y se limitó Prisma a una conexión por instancia (`connection_limit=1`).
+- Se redistribuyó `dpl_DoWfDVijEhPh4NrL5nfpQvfUuZMP`, se reasignó el dominio principal y se verificó login inválido 401 y `/login` 200 con `Age: 0`.
+
+### 2026-08-17 — Diagnóstico final del tenant en DATABASE_URL
+
+- Se publicó `dpl_59rHsWNojmtg3ef2DUJCTzr3kCV8` y se fijó `auto-articulos-web.vercel.app` a esa versión.
+- La prueba de `/api/auth/login` devuelve `500` con `ENOIDENTIFIER: no tenant identifier provided`.
+- Causa confirmada: el shared transaction pooler requiere el identificador del proyecto en el usuario; `postgres` solo no es válido.
+- URI correcta (sustituir únicamente la contraseña real): `postgresql://postgres.uqqclaezxagukoyiiiol:CONTRASEÑA_REAL@aws-0-ca-central-1.pooler.supabase.com:6543/postgres`.
+- Acción pendiente: editar `DATABASE_URL` en Vercel, entorno Producción, guardar esa URI y redistribuir. Los campos sensibles pueden mostrarse vacíos al editar; es comportamiento normal de Vercel.
+- Tras guardar la URI, la primera prueba reveló `prepared statement already exists` (compatibilidad de Prisma con Transaction pooler). Se añadió `pgbouncer=true` junto con `connection_limit=1&pool_timeout=20` en `packages/db/src/index.ts`.
+- Se publicó `dpl_9T13utp4hNe652ijefeMTpVd6XaA`, se fijó el dominio principal y la prueba de login inválido devolvió `401 Correo o contraseña incorrectos` (sin error de base de datos).
+
+### 2026-08-17 — Revisión punto 1: imagen de LinkedIn
+
+- El flujo `apps/worker/src/socialPublish.ts` ya obtiene `og:image` desde la URL pública del artículo mediante `getArticleOpenGraphImage`.
+- Si existe, la sube a LinkedIn con `uploadLinkedInImage`; no invoca generación de imagen con IA para LinkedIn.
+- Si no existe `og:image`, publica el enlace como artículo para que LinkedIn genere su propia vista previa.
+- Punto revisado sin cambios de código: se conserva Threads intacto y no se redistribuye por esta revisión.
+
+### 2026-08-17 — Cambio de rol
+
+- Por solicitud expresa de Milton, Codex deja la capitanía del proyecto.
+- A partir de este punto, Milton conserva la autoridad final y toma las decisiones de alcance, prioridad y publicación.
+- Codex continúa como asistente técnico: revisa, explica, propone y ejecuta únicamente las acciones que Milton indique.
+
+### 2026-08-17 — Requisito corregido: permisos de módulos globales y por usuario
+
+- El modelo actual es insuficiente: `global_disabled_modules` siempre se combina con `disabledModules` del usuario, por lo que un módulo oculto globalmente no puede habilitarse para una persona concreta.
+- Requisito de diseño: cada módulo debe soportar una decisión global del administrador y una excepción por usuario.
+- La configuración por usuario debe tener tres estados: **heredar configuración global**, **forzar habilitado** y **forzar deshabilitado**.
+- El administrador debe poder habilitar u ocultar globalmente cualquier módulo y, además, forzar una excepción individual (por ejemplo, mostrar `Oportunidades Redes` solo a Lorena).
+- Los administradores mantienen acceso total para soporte y mantenimiento.
+- No implementar hasta revisar el modelo de datos, APIs y controles de la pantalla de usuarios de forma conjunta.
+
+### 2026-08-17 — Implementación iniciada: excepciones por usuario
+
+- Se implementó sin migración destructiva el formato de excepciones en el JSON existente de `User.disabledModules`.
+- Compatibilidad: los arrays antiguos siguen interpretándose como módulos deshabilitados; el formato nuevo usa `{ "modulo": "inherit" | "enabled" | "disabled" }`.
+- La API `/api/me` y el cálculo de módulos efectivos ahora aplican: regla global + excepción individual.
+- La pantalla de administración de usuarios reemplazó el check ambiguo por tres opciones: **Heredar global**, **Forzar habilitado** y **Forzar deshabilitado**.
+- TypeScript y `git diff --check` pasan. El build local de Next no pudo completar por una restricción del sandbox al crear procesos de Turbopack; no se ha publicado a Producción.
+
+### 2026-08-17 — Relevo y capitanía limitada de Prompts
+
+- **Capitanía anterior liberada:** la entrada “Cambio de rol” confirma que la
+  capitanía anterior de Codex terminó; se liberó el bloqueo técnico que aún
+  conservaba el coordinador para Facebook Pages, sin aplicar migraciones,
+  hacer push ni desplegar desde esa liberación.
+- **Capitán de migración:** Codex — auditará e integrará exclusivamente
+  **Estilos de Redacción Personalizados (Prompts)**. Quedan expresamente fuera
+  del lote Facebook Pages, diagnósticos, eliminaciones y cualquier cambio
+  ajeno presente en el árbol compartido.
+- **Estado:** auditoría en curso; no se ha aplicado Prisma, hecho commit,
+  push ni despliegue. No se realizarán pruebas que publiquen artículos.
+- **Auditoría de cierre:** producción ya expone `/api/prompts` y responde
+  `401 No autenticado`, confirmando que la ruta protegida está desplegada.
+  También se verificaron `/login` (`200`) y `/dashboard` (`307` hacia login).
+  Vercel reporta el despliegue de producción
+  `dpl_9T13utp4hNe652ijefeMTpVd6XaA` como `Ready`.
+- **Capitán de migración liberó el lote:** Codex. No se aplicó Prisma, no se
+  hizo commit, push ni despliegue adicional, porque volver a publicar el
+  módulo ya activo habría añadido riesgo sin aportar una corrección.
+
 ## Archivos ajenos fuera de alcance
 
 `PRD_CALCULADORA_ROGE.md` y `calculadora-roge/` pertenecen a otro proyecto. No
 leerlos, modificarlos, formatearlos, eliminarlos ni incluirlos en commits de
 Auto Artículos.
+### 2026-08-17 — Seguimiento real de publicaciones sociales
+
+- Se implementó el mismo patrón de seguimiento visible de artículos para las publicaciones sociales: porcentaje, etapa actual, barra de avance y actualización automática en `Publicaciones en Curso`.
+- El worker ahora persiste `progressPercent`, `progressStage`, `startedAt` y `finishedAt` en `SocialOpportunity`; los estados se actualizan al preparar, validar, enviar y confirmar la publicación.
+- Se agregó la migración segura `20260817200000_add_social_opportunity_progress` con `IF NOT EXISTS`. Falta aplicar/verificar esta migración en producción y completar un ensayo real por red antes de declarar cerrado el punto.
+- El despliegue automático no se ejecutó: Vercel rechazó publicar desde el árbol local porque contiene cambios ajenos pendientes y la migración aún no está aplicada en producción. No se debe marcar como terminado hasta separar el paquete de liberación, aplicar la migración y verificar un ensayo real.

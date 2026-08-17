@@ -87,6 +87,7 @@ model User {
   // Control de acceso a publicación en Threads. Solo el admin puede
   // activarlo por usuario. Default: false (nadie tiene acceso).
   allowThreadsPublishing            Boolean   @default(false)
+  allowFacebookPublishing           Boolean   @default(false)
   // Foto de perfil del usuario y logo de su negocio/marca.
   // Se usan como elementos visuales en las publicaciones de redes sociales
   // (carruseles, reels, infografías). Subidas como URLs de Vercel Blob.
@@ -609,6 +610,10 @@ model SocialOpportunity {
   platform      String // "threads" | "linkedin" | "x" | "instagram" | "facebook"
   suggestedText String    @db.Text
   status        String    @default("pending") // "pending" | "published" | "skipped"
+  progressPercent Int       @default(0)
+  progressStage   String?
+  startedAt       DateTime?
+  finishedAt      DateTime?
   postId        String?
   errorLog      String?   @db.Text
   skipReason    String?

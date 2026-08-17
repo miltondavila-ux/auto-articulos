@@ -6,8 +6,21 @@ import { sectionStyle, h2Style, buttonStyle } from "@/components/dashboard-ui";
 import type { RunRow } from "@/types/dashboard";
 import LiveProgress from "@/components/LiveRunProgress";
 
+type SocialRun = {
+  id: string;
+  platform: string;
+  articleTitle: string;
+  status: string;
+  progressPercent: number;
+  progressStage: string | null;
+  startedAt: string | null;
+  errorLog: string | null;
+  createdAt: string;
+};
+
 export default function PublicacionesEnCursoPage() {
   const [runs, setRuns] = useState<RunRow[]>([]);
+  const [socialRuns, setSocialRuns] = useState<SocialRun[]>([]);
   const [loading, setLoading] = useState(true);
   // Para marca blanca (tagcrush): LiveProgress necesita el servidor de la
   // cuenta para no mostrar "10minutesWebsite" en los mensajes de créditos
@@ -34,10 +47,11 @@ export default function PublicacionesEnCursoPage() {
   );
 
   const loadRuns = useCallback(async () => {
-    const res = await fetch("/api/runs");
-    if (res.ok) {
-      const data = await res.json();
-      setRuns(data.runs);
+    const [runsRes, socialRes] = await Promise.all([fetch("/api/runs"), fetch("/api/social-opportunities")]);
+    if (runsRes.ok) setRuns((await runsRes.json()).runs);
+    if (socialRes.ok) {
+      const data = await socialRes.json();
+      setSocialRuns((data.opportunities ?? []).filter((item: SocialRun) => item.status === "queued" || item.status === "processing"));
     }
     setLoading(false);
   }, []);
@@ -47,16 +61,16 @@ export default function PublicacionesEnCursoPage() {
   }, [loadRuns]);
 
   useEffect(() => {
-    if (activeRuns.length === 0) return;
+    if (activeRuns.length === 0 && socialRuns.length === 0) return;
     const interval = setInterval(loadRuns, 4000);
     return () => clearInterval(interval);
-  }, [activeRuns.length, loadRuns]);
+  }, [activeRuns.length, socialRuns.length, loadRuns]);
 
   if (loading) return null;
 
   return (
     <div>
-      {activeRuns.length > 0 ? (
+      {activeRuns.length > 0 || socialRuns.length > 0 ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {activeRuns.map((run) => (
             <LiveProgress
@@ -66,6 +80,22 @@ export default function PublicacionesEnCursoPage() {
               platformDomain={platformDomain}
             />
           ))}
+          {socialRuns.length > 0 && (
+            <section style={{ ...sectionStyle, display: "flex", flexDirection: "column", gap: 10 }}>
+              <h2 style={{ ...h2Style, margin: 0 }}>Publicaciones de redes sociales</h2>
+              {socialRuns.map((item) => (
+                <div key={item.id} style={{ padding: 14, border: "1px solid #e5e5ea", borderRadius: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                    <div><strong>{item.articleTitle}</strong><div style={{ color: "#6e6e73", fontSize: 12, marginTop: 4 }}>{item.platform} · {item.progressStage ?? (item.status === "processing" ? "Publicando..." : "En cola")}</div></div>
+                    <span style={{ color: item.status === "processing" ? "#0071e3" : "#8a4b08", fontSize: 12, fontWeight: 600 }}>{item.progressPercent}%</span>
+                  </div>
+                  <div style={{ height: 5, background: "#f1f1f4", borderRadius: 999, overflow: "hidden", marginTop: 10 }}>
+                    <div style={{ height: "100%", width: `${Math.max(0, Math.min(100, item.progressPercent ?? 0))}%`, background: "#0071e3", transition: "width .4s ease" }} />
+                  </div>
+                </div>
+              ))}
+            </section>
+          )}
         </div>
       ) : (
         <section style={{ ...sectionStyle, textAlign: "center" }}>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   buttonStyle,
   disabledStyle,
@@ -45,11 +46,12 @@ const fallbackStages = [
 ];
 
 export default function OportunidadesRedesPage() {
+  const router = useRouter();
   const [opportunities, setOpportunities] = useState<SocialOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [generatingNetwork, setGeneratingNetwork] = useState<"threads" | "x" | "linkedin" | "instagram" | null>(null);
-  const [connectedNetworks, setConnectedNetworks] = useState({ threads: false, x: false, linkedin: false, instagram: false });
+  const [generatingNetwork, setGeneratingNetwork] = useState<"threads" | "x" | "linkedin" | "instagram" | "facebook-page" | null>(null);
+  const [connectedNetworks, setConnectedNetworks] = useState({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false });
   const [generateSeconds, setGenerateSeconds] = useState(0);
   const [usedGsc, setUsedGsc] = useState(false);
   const [publishingId, setPublishingId] = useState<string | null>(null);
@@ -109,10 +111,11 @@ export default function OportunidadesRedesPage() {
           x: Boolean(data.x),
           linkedin: Boolean(data.linkedin),
           instagram: Boolean(data.instagram),
+          facebookPage: Boolean(data.facebookPage),
         });
       }
     } catch {
-      setConnectedNetworks({ threads: false, x: false, linkedin: false, instagram: false });
+      setConnectedNetworks({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false });
     }
   }
 
@@ -124,7 +127,7 @@ export default function OportunidadesRedesPage() {
   const progress = Math.min(92, 8 + generateSeconds * 4);
   const elapsed = `${Math.floor(generateSeconds / 60)}:${String(generateSeconds % 60).padStart(2, "0")}`;
 
-  async function handleGenerate(network: "threads" | "x" | "linkedin" | "instagram") {
+  async function handleGenerate(network: "threads" | "x" | "linkedin" | "instagram" | "facebook-page") {
     setGenerating(true);
     setGeneratingNetwork(network);
     setMessage(null);
@@ -186,8 +189,7 @@ export default function OportunidadesRedesPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setMessage({ kind: "success", text: "Publicación iniciada con éxito." });
-        loadOpportunities();
+        router.push("/dashboard/publicaciones-en-curso");
       } else {
         setMessage({ kind: "error", text: data.error || "Error al publicar." });
       }
@@ -232,6 +234,7 @@ export default function OportunidadesRedesPage() {
       kind: failCount === 0 ? "success" : "info",
       text: `Publicación en lote completada: ${successCount} exitosas, ${failCount} fallidas.`,
     });
+    router.push("/dashboard/publicaciones-en-curso");
     loadOpportunities();
     setPublishingAll(false);
   }
@@ -374,6 +377,16 @@ export default function OportunidadesRedesPage() {
                 style={disabledStyle({ ...secondaryButtonStyle, padding: "9px 14px", fontSize: 13 }, generating || loading)}
               >
                 {generatingNetwork === "instagram" ? "Analizando..." : "Instagram"}
+              </button>
+            )}
+            {connectedNetworks.facebookPage && (
+              <button
+                onClick={() => handleGenerate("facebook-page")}
+                disabled={generating || loading}
+                className="secondary"
+                style={disabledStyle({ ...secondaryButtonStyle, padding: "9px 14px", fontSize: 13 }, generating || loading)}
+              >
+                {generatingNetwork === "facebook-page" ? "Analizando..." : "Facebook Pages"}
               </button>
             )}
             {pendingList.length > 0 && queuedList.length === 0 && (

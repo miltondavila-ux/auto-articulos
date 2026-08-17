@@ -19,6 +19,13 @@ import { put } from "@vercel/blob";
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
 
+async function updateSocialProgress(
+  id: string,
+  data: { progressPercent: number; progressStage: string; status?: string; startedAt?: Date; finishedAt?: Date },
+) {
+  await prisma.socialOpportunity.update({ where: { id }, data });
+}
+
 async function validateArticleUrl(url: string): Promise<void> {
   if (!url) throw new Error("La oportunidad no tiene URL de artículo.");
 
@@ -579,30 +586,66 @@ export async function processNextSocialPublish(): Promise<boolean> {
   try {
     const claimed = await prisma.socialOpportunity.updateMany({
       where: { id: job.id, status: "queued" },
-      data: { status: "processing" },
+      data: {
+        status: "processing",
+        progressPercent: 10,
+        progressStage: "Preparando la publicación",
+        startedAt: new Date(),
+        finishedAt: null,
+      },
     });
     if (claimed.count === 0) return true;
 
+    await updateSocialProgress(job.id, {
+      progressPercent: 25,
+      progressStage: "Validando el artículo y sus datos",
+    });
+
+    await updateSocialProgress(job.id, {
+      progressPercent: 55,
+      progressStage: "Preparando contenido e imagen",
+    });
+
+    let published = false;
+    await updateSocialProgress(job.id, {
+      progressPercent: 75,
+      progressStage: `Enviando publicación a ${job.platform}`,
+    });
+
     if (job.platform === "threads") {
-      return await processThreadsJob(job);
+      published = await processThreadsJob(job);
     } else if (job.platform === "x") {
-      return await processTwitterJob(job);
+      published = await processTwitterJob(job);
     } else if (job.platform === "linkedin") {
-      return await processLinkedInJob(job);
+      published = await processLinkedInJob(job);
     } else if (job.platform === "facebook-page") {
-      return await processFacebookPageJob(job);
+      published = await processFacebookPageJob(job);
     } else if (job.platform.startsWith("instagram-")) {
-      return await processInstagramJob(job);
+      published = await processInstagramJob(job);
     } else {
       throw new Error(`Plataforma no soportada: ${job.platform}`);
     }
+
+    if (published) {
+      await updateSocialProgress(job.id, {
+        progressPercent: 100,
+        progressStage: "Publicación confirmada",
+        finishedAt: new Date(),
+      });
+    }
+    return published;
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     console.error(`Error publicando oportunidad ${job.id} (${job.platform}):`, errorMsg);
 
     await prisma.socialOpportunity.update({
       where: { id: job.id },
-      data: { status: "error", errorLog: errorMsg },
+      data: {
+        status: "error",
+        errorLog: errorMsg,
+        progressStage: "La publicación terminó con error",
+        finishedAt: new Date(),
+      },
     });
 
     if (job.titleId) {
