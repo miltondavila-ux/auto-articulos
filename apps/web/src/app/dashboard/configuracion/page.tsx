@@ -81,7 +81,6 @@ export default function ConfiguracionPage() {
   const [allowFacebookPublishing, setAllowFacebookPublishing] = useState(false);
   const [allowLinkedInPublishing, setAllowLinkedInPublishing] = useState(false);
   const [allowThreadsPublishing, setAllowThreadsPublishing] = useState(false);
-  const [disabledModules, setDisabledModules] = useState<string[]>([]);
   const [triggeringFix, setTriggeringFix] = useState(false);
   const [clearingFixHistory, setClearingFixHistory] = useState(false);
   const [fixStatus, setFixStatus] = useState<{
@@ -184,9 +183,6 @@ export default function ConfiguracionPage() {
         }
         if (typeof data.platformDomain === "string") {
           setPlatformDomain(data.platformDomain);
-        }
-        if (Array.isArray(data.disabledModules)) {
-          setDisabledModules(data.disabledModules);
         }
     }
   }, []);

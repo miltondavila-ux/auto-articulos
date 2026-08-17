@@ -41,10 +41,11 @@ type CredentialType = "meta" | "threads" | "facebook";
 interface ThreadsSectionProps {
   allowThreads?: boolean;
   allowInstagram?: boolean;
+  allowFacebook?: boolean;
   isAdmin?: boolean;
 }
 
-export default function ThreadsSection({ allowThreads = true, allowInstagram = true, isAdmin = false }: ThreadsSectionProps) {
+export default function ThreadsSection({ allowThreads = true, allowInstagram = true, allowFacebook = false, isAdmin = false }: ThreadsSectionProps) {
   const [metaSettings, setMetaSettings] = useState<ApiSettings | null>(null);
   const [threadsSettings, setThreadsSettings] = useState<ApiSettings | null>(null);
   const [threadsConnection, setThreadsConnection] = useState<ThreadsConnection | null>(null);
@@ -254,7 +255,7 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
             threadsSettings,
           )}
 
-          {(allowThreads || allowInstagram) && (
+          {(allowThreads || allowInstagram || allowFacebook) && (
           <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 18, paddingTop: 16 }}>
             <strong style={{ color: "#1d1d1f", fontSize: 14 }}>Conectar cuentas</strong>
             <p className="lead-copy" style={{ fontSize: 13, margin: "3px 0 12px" }}>
@@ -312,10 +313,10 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
               ))}
               {isAdmin && (facebookPageConnection?.connected ? (
                 <button
-                  onClick={() => disconnect("meta")}
-                  disabled={disconnecting === "meta"}
+                  onClick={() => disconnect("facebook")}
+                  disabled={disconnecting === "facebook"}
                   className="secondary"
-                  style={disabledStyle(secondaryButtonStyle, disconnecting === "meta")}
+                  style={disabledStyle(secondaryButtonStyle, disconnecting === "facebook")}
                 >
                   {`Facebook Page conectada${facebookPageConnection.facebookPageName ? ` (${facebookPageConnection.facebookPageName})` : ""}`}
                 </button>
