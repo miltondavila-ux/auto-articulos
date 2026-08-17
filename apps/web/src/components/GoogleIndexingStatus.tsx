@@ -21,14 +21,14 @@ export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
   if (status === "not_configured") {
     return (
       <div style={{ marginTop: 7, fontSize: 12 }}>
-        <div style={{ color: "#6b7280" }}>
+        <div style={{ color: "#6e6e73" }}>
           Google Search Console no estaba conectado cuando se publicó este
           artículo.
         </div>
         <div style={{ marginTop: 5 }}>
           <a
             href="/dashboard/configuracion"
-            style={{ color: "#1358a3", fontWeight: 600 }}
+            style={{ color: "#0071e3", fontWeight: 600 }}
           >
             Conectar Google Search Console
           </a>
@@ -40,7 +40,7 @@ export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
   return (
     <div style={{ marginTop: 7, fontSize: 12 }}>
       {title.lastSitemapSentAt && (
-        <div style={{ color: "#1e8a4b" }}>
+        <div style={{ color: "#16803c" }}>
           {`✓ Sitemap enviado: ${new Date(title.lastSitemapSentAt).toLocaleString("es-US")}`}
         </div>
       )}
@@ -49,11 +49,11 @@ export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
           style={{
             color:
               title.businessProfilePost.status === "sent"
-                ? "#1e8a4b"
+                ? "#16803c"
                 : title.businessProfilePost.status === "rejected" ||
                     title.businessProfilePost.status === "error"
-                  ? "#d64545"
-                  : "#8a6d1a",
+                  ? "#ff3b30"
+                  : "#8a4b08",
           }}
         >
           {title.businessProfilePost.status === "sent"
@@ -66,14 +66,14 @@ export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
         </div>
       )}
       {(status === "error" || indexed) && (
-        <div style={{ color: status === "error" ? "#d64545" : "#1e8a4b" }}>
+        <div style={{ color: status === "error" ? "#ff3b30" : "#16803c" }}>
           {status === "error"
             ? "Google: error al consultar la indexación"
             : "✓ Indexada en Google"}
         </div>
       )}
       {message && status === "error" && (
-        <div style={{ color: "#6b7280", marginTop: 2 }}>{message}</div>
+        <div style={{ color: "#6e6e73", marginTop: 2 }}>{message}</div>
       )}
       {/* Bing Indexing Status.
           Pedido explícito del usuario (11/8/2026): el error "InvalidToken" de
@@ -95,16 +95,16 @@ export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
             fontSize: 12,
             background:
               title.bingIndexingStatus === "error"
-                ? "#fef2f2"
+                ? "#fff2f1"
                 : title.bingIndexingStatus === "submitted"
-                  ? "#f0fdf4"
-                  : "#f8fafc",
+                  ? "rgba(52, 199, 89, 0.1)"
+                  : "#f5f5f7",
             border: `1px solid ${
               title.bingIndexingStatus === "error"
-                ? "#fecaca"
+                ? "rgba(255, 59, 48, 0.25)"
                 : title.bingIndexingStatus === "submitted"
-                  ? "#bbf7d0"
-                  : "#e2e8f0"
+                  ? "rgba(52, 199, 89, 0.25)"
+                  : "rgba(0, 0, 0, 0.07)"
             }`,
           }}
         >
@@ -114,7 +114,7 @@ export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
               alignItems: "center",
               gap: 6,
               color:
-                title.bingIndexingStatus === "error" ? "#d64545" : "#16a34a",
+                title.bingIndexingStatus === "error" ? "#ff3b30" : "#16803c",
               fontWeight: 600,
             }}
           >
@@ -130,12 +130,12 @@ export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
             </span>
           </div>
           {title.bingIndexingMessage && (
-            <div style={{ color: "#6b7280", marginTop: 3, paddingLeft: 20 }}>
+            <div style={{ color: "#6e6e73", marginTop: 3, paddingLeft: 20 }}>
               {title.bingIndexingMessage}
             </div>
           )}
           {title.bingIndexingAt && (
-            <div style={{ color: "#9ca3af", marginTop: 2, paddingLeft: 20, fontSize: 11 }}>
+            <div style={{ color: "#6e6e73", marginTop: 2, paddingLeft: 20, fontSize: 11 }}>
               {new Date(title.bingIndexingAt).toLocaleString("es-US")}
             </div>
           )}

@@ -536,10 +536,10 @@ export default function ConfiguracionPage() {
 
   const signatureBarColor =
     signaturePercent >= 95
-      ? "#ef4444"
+      ? "#ff3b30"
       : signaturePercent >= 80
-        ? "#f59e0b"
-        : "#2563eb";
+        ? "#ff9500"
+        : "#0071e3";
 
   const showSocialTab =
     isAdmin || !disabledModules.includes("oportunidades-redes");
@@ -941,8 +941,8 @@ export default function ConfiguracionPage() {
                 style={{
                   fontSize: 11,
                   fontWeight: 700,
-                  color: "#475569",
-                  background: "#f1f5f9",
+                  color: "#6e6e73",
+                  background: "#f5f5f7",
                   padding: "4px 10px",
                   borderRadius: 8,
                   display: "inline-flex",
@@ -963,7 +963,7 @@ export default function ConfiguracionPage() {
                   background: "rgba(255,255,255,0.7)",
                   padding: "12px 16px",
                   borderRadius: 10,
-                  border: "1px solid #e2e8f0",
+                  border: "1px solid #e5e5ea",
                 }}
               >
                 <div>
@@ -971,7 +971,7 @@ export default function ConfiguracionPage() {
                     style={{
                       fontSize: 13,
                       fontWeight: 600,
-                      color: "#1e293b",
+                      color: "#1d1d1f",
                       margin: 0,
                     }}
                   >
@@ -980,7 +980,7 @@ export default function ConfiguracionPage() {
                   <p
                     style={{
                       fontSize: 12,
-                      color: "#64748b",
+                      color: "#6e6e73",
                       margin: "2px 0 0 0",
                     }}
                   >
@@ -1033,13 +1033,13 @@ export default function ConfiguracionPage() {
               </form>
             )}
             {showCredentialsForm && (
-              <p style={{ fontSize: 12, color: "#64748b", marginTop: 10 }}>
+              <p style={{ fontSize: 12, color: "#6e6e73", marginTop: 10 }}>
                 Ingresa tu usuario y contraseña de {platformBase.replace(/^https?:\/\//, "")} (no los de Auto Artículos). Si no recuerdas tu contraseña,{" "}
                 <a
                   href={`${platformBase}/dashboard/forgot-password.php`}
                   target="_blank"
                   rel="noreferrer"
-                  style={{ color: "#2563eb", fontWeight: 600 }}
+                  style={{ color: "#0071e3", fontWeight: 600 }}
                 >
                   recupérala con tu correo aquí
                 </a>
@@ -1050,7 +1050,7 @@ export default function ConfiguracionPage() {
                       href={helpUrl}
                       target="_blank"
                       rel="noreferrer"
-                      style={{ color: "#2563eb", fontWeight: 600 }}
+                      style={{ color: "#0071e3", fontWeight: 600 }}
                     >
                       servicio al cliente de {productName}
                     </a>
@@ -1078,8 +1078,8 @@ export default function ConfiguracionPage() {
                 style={{
                   fontSize: 12,
                   fontWeight: 700,
-                  color: "#2563eb",
-                  background: "#eff6ff",
+                  color: "#0071e3",
+                  background: "#e8f2ff",
                   padding: "4px 10px",
                   borderRadius: 999,
                 }}
@@ -1088,7 +1088,7 @@ export default function ConfiguracionPage() {
               </span>
             </div>
 
-            <p style={{ fontSize: 13, color: "#64748b", marginBottom: 14 }}>
+            <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 14 }}>
               Las categorías definen en qué secciones se publicarán tus artículos. Sincronízalas desde tu cuenta de {productName} para mantenerlas actualizadas.
             </p>
 
@@ -1106,7 +1106,7 @@ export default function ConfiguracionPage() {
             </button>
 
             {!credentialsConfigured && (
-              <p style={{ fontSize: 13, color: "#e11d48", marginTop: 8 }}>
+              <p style={{ fontSize: 13, color: "#ff3b30", marginTop: 8 }}>
                 Guarda primero tus credenciales arriba para sincronizar.
               </p>
             )}
@@ -1115,12 +1115,12 @@ export default function ConfiguracionPage() {
               <p
                 style={{
                   fontSize: 13,
-                  color: "#b45309",
+                  color: "#8a4b08",
                   marginTop: 10,
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
-                  background: "#fffbeb",
+                  background: "#fff4e5",
                   padding: "8px 12px",
                   borderRadius: 8,
                 }}
@@ -1136,8 +1136,8 @@ export default function ConfiguracionPage() {
                     display: "inline-block",
                     width: 14,
                     height: 14,
-                    border: "2px solid #fef3c7",
-                    borderTopColor: "#b45309",
+                    border: "2px solid #fff4e5",
+                    borderTopColor: "#8a4b08",
                     borderRadius: "50%",
                     animation: "auto-articulos-spin 0.8s linear infinite",
                     flexShrink: 0,
@@ -1151,18 +1151,18 @@ export default function ConfiguracionPage() {
 
             {lastSyncStatus === "error" && (
               <div style={{ marginTop: 10 }}>
-                <p style={{ fontSize: 13, color: "#ef4444", margin: 0 }}>
+                <p style={{ fontSize: 13, color: "#ff3b30", margin: 0 }}>
                   La última sincronización falló.
                 </p>
                 {lastSyncError && (
                   <p
                     style={{
                       fontSize: 12,
-                      color: "#b91c1c",
+                      color: "#ff3b30",
                       marginTop: 4,
                       fontFamily: "monospace",
                       whiteSpace: "pre-wrap",
-                      background: "#fef2f2",
+                      background: "rgba(255, 59, 48, 0.08)",
                       padding: "8px 12px",
                       borderRadius: 6,
                     }}
@@ -1180,7 +1180,7 @@ export default function ConfiguracionPage() {
                   style={{
                     fontSize: 12,
                     fontWeight: 700,
-                    color: "#475569",
+                    color: "#6e6e73",
                     letterSpacing: "0.04em",
                     textTransform: "uppercase",
                     marginBottom: 10,
@@ -1203,9 +1203,9 @@ export default function ConfiguracionPage() {
                         style={{
                           fontSize: 12,
                           fontWeight: 600,
-                          color: "#1e293b",
-                          background: "#f8fafc",
-                          border: "1px solid #cbd5e1",
+                          color: "#1d1d1f",
+                          background: "#f5f5f7",
+                          border: "1px solid #e5e5ea",
                           padding: "5px 12px",
                           borderRadius: 20,
                           boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
@@ -1223,7 +1223,7 @@ export default function ConfiguracionPage() {
                       style={{
                         fontSize: 12,
                         fontWeight: 700,
-                        color: "#6b21a8",
+                        color: "#5e5ce6",
                         letterSpacing: "0.04em",
                         textTransform: "uppercase",
                         marginBottom: 6,
@@ -1246,9 +1246,9 @@ export default function ConfiguracionPage() {
                             style={{
                               fontSize: 12,
                               fontWeight: 600,
-                              color: "#6b21a8",
-                              background: "#f3e8ff",
-                              border: "1px solid #d8b4fe",
+                              color: "#5e5ce6",
+                              background: "rgba(94, 92, 230, 0.08)",
+                              border: "1px solid rgba(94, 92, 230, 0.25)",
                               padding: "5px 12px",
                               borderRadius: 20,
                             }}
@@ -1281,8 +1281,8 @@ export default function ConfiguracionPage() {
                 style={{
                   fontSize: 12,
                   fontWeight: 700,
-                  color: "#0369a1",
-                  background: "#e0f2fe",
+                  color: "#0071e3",
+                  background: "#e8f2ff",
                   padding: "4px 10px",
                   borderRadius: 999,
                 }}
@@ -1291,7 +1291,7 @@ export default function ConfiguracionPage() {
               </span>
             </div>
 
-            <p style={{ fontSize: 13, color: "#64748b", marginBottom: 14 }}>
+            <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 14 }}>
               Tus artículos se redactarán en este idioma. Sincroniza los idiomas disponibles desde tu cuenta de {productName} y elige el que prefieras.
             </p>
 
@@ -1357,13 +1357,13 @@ export default function ConfiguracionPage() {
             </div>
 
             {languageSyncInProgress && (
-              <p style={{ fontSize: 13, color: "#b45309", marginTop: 10 }}>
+              <p style={{ fontSize: 13, color: "#8a4b08", marginTop: 10 }}>
                 Conectando con {productName} para sincronizar idiomas...
               </p>
             )}
 
             {lastLanguageSyncStatus === "error" && (
-              <p style={{ fontSize: 13, color: "#ef4444", marginTop: 10 }}>
+              <p style={{ fontSize: 13, color: "#ff3b30", marginTop: 10 }}>
                 La última sincronización de idiomas falló
                 {lastLanguageSyncError ? `: ${lastLanguageSyncError}` : "."}
               </p>
@@ -1398,7 +1398,7 @@ export default function ConfiguracionPage() {
               </span>
             </div>
 
-            <p style={{ fontSize: 13, color: "#64748b", marginBottom: 12 }}>
+            <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 12 }}>
               Este texto se agregará automáticamente al final de cada artículo nuevo. Puedes usarlo como firma profesional, datos de contacto o un llamado a la acción.
             </p>
 
@@ -1423,7 +1423,7 @@ export default function ConfiguracionPage() {
               style={{
                 width: "100%",
                 height: 6,
-                background: "#e2e8f0",
+                background: "#e5e5ea",
                 borderRadius: 999,
                 marginTop: 8,
                 overflow: "hidden",
@@ -1454,7 +1454,7 @@ export default function ConfiguracionPage() {
           {/* Teléfono de Contacto */}
           <section style={sectionStyle}>
             <h2 style={h2Style}>Teléfono de Contacto</h2>
-            <p style={{ fontSize: 13, color: "#64748b", marginBottom: 12 }}>
+            <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 12 }}>
               Este número se usará en los botones de WhatsApp y llamada dentro de tus artículos. Incluye el código de país (ej: <code>+19546529929</code>).
             </p>
 
@@ -1498,18 +1498,18 @@ export default function ConfiguracionPage() {
                 style={{
                   fontSize: 11,
                   fontWeight: 700,
-                  color: "#7c3aed",
-                  background: "#f3e8ff",
+                  color: "#5e5ce6",
+                  background: "rgba(94, 92, 230, 0.08)",
                   padding: "4px 10px",
                   borderRadius: 999,
-                  border: "1px solid #ddd6fe",
+                  border: "1px solid rgba(94, 92, 230, 0.25)",
                 }}
               >
                 📸 Marca personal
               </span>
             </div>
 
-            <p style={{ fontSize: 13, color: "#64748b", marginBottom: 14 }}>
+            <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 14 }}>
               Estas dos imágenes se usan como elementos visuales al generar las
               publicaciones de Instagram, Threads, X y LinkedIn (carruseles,
               reels e infografías). Sube aquí las tuyas y el sistema las
@@ -1565,18 +1565,18 @@ export default function ConfiguracionPage() {
                 style={{
                   fontSize: 11,
                   fontWeight: 700,
-                  color: "#7c3aed",
-                  background: "#f3e8ff",
+                  color: "#5e5ce6",
+                  background: "rgba(94, 92, 230, 0.08)",
                   padding: "4px 10px",
                   borderRadius: 999,
-                  border: "1px solid #ddd6fe",
+                  border: "1px solid rgba(94, 92, 230, 0.25)",
                 }}
               >
                 🎨 Personalización IA
               </span>
             </div>
 
-            <p style={{ fontSize: 13, color: "#64748b", marginBottom: 14 }}>
+            <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 14 }}>
               Personaliza los prompts que la IA usa para generar imágenes de artículos y publicaciones de redes sociales. Si dejas el campo vacío, se usará el prompt por defecto del sistema.
             </p>
 
@@ -1587,13 +1587,13 @@ export default function ConfiguracionPage() {
                   display: "block",
                   fontSize: 13,
                   fontWeight: 700,
-                  color: "#1e293b",
+                  color: "#1d1d1f",
                   marginBottom: 6,
                 }}
               >
                 Prompt para Imágenes de Artículos y Redes
               </label>
-              <p style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>
+              <p style={{ fontSize: 12, color: "#6e6e73", marginBottom: 8 }}>
                 Este prompt se usa como base para generar imágenes de artículos ({productName}) y publicaciones de Threads, Instagram Reels y Carruseles. El sistema agregará automáticamente el resumen del artículo al final.
               </p>
               <textarea
@@ -1627,13 +1627,13 @@ export default function ConfiguracionPage() {
                   display: "block",
                   fontSize: 13,
                   fontWeight: 700,
-                  color: "#1e293b",
+                  color: "#1d1d1f",
                   marginBottom: 6,
                 }}
               >
                 Prompt para Infografías de Instagram
               </label>
-              <p style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>
+              <p style={{ fontSize: 12, color: "#6e6e73", marginBottom: 8 }}>
                 Este prompt define el estilo visual de las infografías que se publican en Instagram. Se combina con el prompt base de imagen para generar el resultado final.
               </p>
               <textarea
@@ -1686,8 +1686,8 @@ export default function ConfiguracionPage() {
                   fontSize: 11,
                   fontWeight: 800,
                   letterSpacing: "0.06em",
-                  color: "#2563eb",
-                  background: "#eff6ff",
+                  color: "#0071e3",
+                  background: "#e8f2ff",
                   padding: "4px 10px",
                   borderRadius: 999,
                   textTransform: "uppercase",
@@ -1698,7 +1698,7 @@ export default function ConfiguracionPage() {
               <h2 style={{ ...h2Style, marginTop: 10, fontSize: 18 }}>
                 Abre Auto Artículos en tu Celular
               </h2>
-              <p style={{ fontSize: 13, color: "#64748b", margin: "6px 0 16px 0" }}>
+              <p style={{ fontSize: 13, color: "#6e6e73", margin: "6px 0 16px 0" }}>
                 Apunta la cámara de tu teléfono al código QR para acceder al instante.
               </p>
 
@@ -1709,7 +1709,7 @@ export default function ConfiguracionPage() {
                   borderRadius: 16,
                   display: "inline-block",
                   boxShadow: "0 8px 24px rgba(15, 23, 42, 0.08)",
-                  border: "1px solid #e2e8f0",
+                  border: "1px solid #e5e5ea",
                 }}
               >
                 <img
@@ -1724,23 +1724,23 @@ export default function ConfiguracionPage() {
 
             {/* PWA Instructions */}
             <div>
-              <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 14px 0", color: "#0f172a" }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 14px 0", color: "#1d1d1f" }}>
                 💡 ¿Cómo agregar a la pantalla de inicio?
               </h3>
 
               <div
                 style={{
-                  background: "#f8fafc",
-                  border: "1px solid #e2e8f0",
+                  background: "#f5f5f7",
+                  border: "1px solid #e5e5ea",
                   borderRadius: 12,
                   padding: 16,
                   marginBottom: 12,
                 }}
               >
-                <p style={{ fontSize: 13, fontWeight: 700, margin: "0 0 4px 0", color: "#1e293b" }}>
+                <p style={{ fontSize: 13, fontWeight: 700, margin: "0 0 4px 0", color: "#1d1d1f" }}>
                   🍏 En iPhone / iPad (Safari):
                 </p>
-                <ol style={{ fontSize: 12, color: "#475569", margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
+                <ol style={{ fontSize: 12, color: "#6e6e73", margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
                   <li>Abre el enlace en Safari desde el código QR.</li>
                   <li>Toca el botón **Compartir** (icono cuadrado con flecha).</li>
                   <li>Selecciona **&quot;Agregar al inicio&quot;** (Add to Home Screen).</li>
@@ -1749,16 +1749,16 @@ export default function ConfiguracionPage() {
 
               <div
                 style={{
-                  background: "#f8fafc",
-                  border: "1px solid #e2e8f0",
+                  background: "#f5f5f7",
+                  border: "1px solid #e5e5ea",
                   borderRadius: 12,
                   padding: 16,
                 }}
               >
-                <p style={{ fontSize: 13, fontWeight: 700, margin: "0 0 4px 0", color: "#1e293b" }}>
+                <p style={{ fontSize: 13, fontWeight: 700, margin: "0 0 4px 0", color: "#1d1d1f" }}>
                   🤖 En Android (Chrome):
                 </p>
-                <ol style={{ fontSize: 12, color: "#475569", margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
+                <ol style={{ fontSize: 12, color: "#6e6e73", margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
                   <li>Abre la página en Google Chrome.</li>
                   <li>Toca los tres puntos de menú (⋮) en la esquina superior.</li>
                   <li>Elige **&quot;Instalar aplicación&quot;** o **&quot;Agregar a inicio&quot;**.</li>
@@ -1775,12 +1775,12 @@ export default function ConfiguracionPage() {
           style={{
             ...sectionStyle,
             marginTop: 30,
-            border: "1px solid #f87171",
-            background: "#fef2f2",
+            border: "1px solid rgba(255, 59, 48, 0.3)",
+            background: "rgba(255, 59, 48, 0.08)",
           }}
         >
-          <h2 style={{ ...h2Style, color: "#991b1b" }}>⚙️ Herramientas de Administrador (Temporal)</h2>
-          <p style={{ fontSize: 13, color: "#7f1d1d", marginBottom: 12 }}>
+          <h2 style={{ ...h2Style, color: "#ff3b30" }}>⚙️ Herramientas de Administrador (Temporal)</h2>
+          <p style={{ fontSize: 13, color: "#ff3b30", marginBottom: 12 }}>
             Repara hasta 20 artículos por lote, completando cada artículo antes de abrir el siguiente.
           </p>
           <button
@@ -1788,9 +1788,9 @@ export default function ConfiguracionPage() {
             disabled={triggeringFix}
             style={{
               ...secondaryButtonStyle,
-              background: "#dc2626",
+              background: "#ff3b30",
               color: "#ffffff",
-              border: "1px solid #b91c1c",
+              border: "1px solid #ff3b30",
               padding: "10px 20px",
               fontWeight: 700,
             }}
@@ -1804,8 +1804,8 @@ export default function ConfiguracionPage() {
               ...secondaryButtonStyle,
               marginLeft: 10,
               background: "#ffffff",
-              color: "#991b1b",
-              border: "1px solid #b91c1c",
+              color: "#ff3b30",
+              border: "1px solid #ff3b30",
               padding: "10px 20px",
               fontWeight: 700,
             }}
@@ -1820,7 +1820,7 @@ export default function ConfiguracionPage() {
                 padding: 16,
                 borderRadius: 8,
                 background: "#ffffff",
-                border: "1px solid #fca5a5",
+                border: "1px solid rgba(255, 59, 48, 0.3)",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
               }}
             >
@@ -1835,15 +1835,15 @@ export default function ConfiguracionPage() {
                       marginBottom: 8,
                     }}
                   >
-                    <span style={{ fontWeight: 700, color: "#991b1b", fontSize: 13 }}>
+                    <span style={{ fontWeight: 700, color: "#ff3b30", fontSize: 13 }}>
                       Estado: {fixStatus.status === "running" ? "⏳ Procesando..." : "⏳ En cola (Iniciando robot...)"}
                     </span>
                     {fixStatus.total ? (
-                      <span style={{ fontSize: 12, fontWeight: 700, color: "#7f1d1d" }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#ff3b30" }}>
                         Progreso: {fixStatus.processed} / {fixStatus.total} ({Math.round(((fixStatus.processed || 0) / (fixStatus.total || 1)) * 100)}%)
                       </span>
                     ) : (
-                      <span style={{ fontSize: 12, color: "#64748b" }}>Cargando información del lote...</span>
+                      <span style={{ fontSize: 12, color: "#6e6e73" }}>Cargando información del lote...</span>
                     )}
                   </div>
 
@@ -1853,7 +1853,7 @@ export default function ConfiguracionPage() {
                       style={{
                         width: "100%",
                         height: 10,
-                        background: "#fee2e2",
+                        background: "rgba(255, 59, 48, 0.08)",
                         borderRadius: 999,
                         overflow: "hidden",
                         marginBottom: 16,
@@ -1863,7 +1863,7 @@ export default function ConfiguracionPage() {
                         style={{
                           width: `${Math.round(((fixStatus.processed || 0) / (fixStatus.total || 1)) * 100)}%`,
                           height: "100%",
-                          background: "#ef4444",
+                          background: "#ff3b30",
                           borderRadius: 999,
                           transition: "width 0.3s ease",
                         }}
@@ -1874,7 +1874,7 @@ export default function ConfiguracionPage() {
                   {/* Live console logs */}
                   {fixStatus.logs && fixStatus.logs.length > 0 ? (
                     <div>
-                      <h3 style={{ fontSize: 12, fontWeight: 700, color: "#7f1d1d", margin: "0 0 6px 0" }}>
+                      <h3 style={{ fontSize: 12, fontWeight: 700, color: "#ff3b30", margin: "0 0 6px 0" }}>
                         📋 Consola de avance en tiempo real:
                       </h3>
                       <div
@@ -1902,12 +1902,12 @@ export default function ConfiguracionPage() {
               )}
 
               {fixStatus.history && fixStatus.history.length > 0 ? (
-                <div style={{ marginTop: 16, borderTop: "1px solid #fee2e2", paddingTop: 16 }}>
+                <div style={{ marginTop: 16, borderTop: "1px solid rgba(255, 59, 48, 0.08)", paddingTop: 16 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                    <h3 style={{ fontSize: 13, fontWeight: 700, color: "#991b1b", margin: 0 }}>
+                    <h3 style={{ fontSize: 13, fontWeight: 700, color: "#ff3b30", margin: 0 }}>
                       📋 Historial de Lotes Procesados
                     </h3>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: "#7f1d1d", background: "#fecaca", padding: "2px 8px", borderRadius: 999 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#ff3b30", background: "rgba(255, 59, 48, 0.15)", padding: "2px 8px", borderRadius: 999 }}>
                       Total revisados: {fixStatus.history.reduce((acc, curr) => acc + (curr.totalReviewed || 0), 0)}
                     </span>
                   </div>
@@ -1920,7 +1920,7 @@ export default function ConfiguracionPage() {
                         style={{
                           fontSize: 12,
                           padding: "10px 0",
-                          borderBottom: "1px solid #fee2e2",
+                          borderBottom: "1px solid rgba(255, 59, 48, 0.08)",
                         }}
                       >
                         <div
@@ -1931,13 +1931,13 @@ export default function ConfiguracionPage() {
                             alignItems: "center",
                             cursor: "pointer",
                             fontWeight: 600,
-                            color: "#7f1d1d",
+                            color: "#ff3b30",
                           }}
                         >
                           <span style={{ userSelect: "none" }}>
                             {isExpanded ? "▼" : "▶"}{" "}
                             <strong>Lote #{fixStatus.history!.length - index}</strong>{" "}
-                            <span style={{ fontWeight: 400, color: "#475569", marginLeft: 4 }}>
+                            <span style={{ fontWeight: 400, color: "#6e6e73", marginLeft: 4 }}>
                               (Iniciado: {new Date(batch.createdAt).toLocaleTimeString("es-ES")}
                               {batch.finishedAt ? ` | Finalizado: ${new Date(batch.finishedAt).toLocaleTimeString("es-ES")} | Duración: ${(() => {
                                 const sec = Math.round((new Date(batch.finishedAt).getTime() - new Date(batch.createdAt).getTime()) / 1000);
@@ -1945,7 +1945,7 @@ export default function ConfiguracionPage() {
                               })()}` : " | En curso"})
                             </span>
                           </span>
-                          <span style={{ fontSize: 11, color: "#475569", display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 11, color: "#6e6e73", display: "flex", alignItems: "center", gap: 8 }}>
                             <span
                               style={{
                                 fontSize: 9,
@@ -1953,8 +1953,8 @@ export default function ConfiguracionPage() {
                                 textTransform: "uppercase",
                                 padding: "2px 6px",
                                 borderRadius: 4,
-                                background: batch.status === "success" ? "#dcfce7" : batch.status === "running" ? "#fef9c3" : "#fee2e2",
-                                color: batch.status === "success" ? "#166534" : batch.status === "running" ? "#854d0e" : "#991b1b",
+                                background: batch.status === "success" ? "rgba(52, 199, 89, 0.1)" : batch.status === "running" ? "rgba(255, 149, 0, 0.15)" : "rgba(255, 59, 48, 0.08)",
+                                color: batch.status === "success" ? "#16803c" : batch.status === "running" ? "#8a4b08" : "#ff3b30",
                               }}
                             >
                               {batch.status === "success" ? "Completado" : batch.status === "running" ? "Procesando" : batch.status}
@@ -1966,19 +1966,19 @@ export default function ConfiguracionPage() {
                         </div>
 
                         {isExpanded && (
-                          <div style={{ marginTop: 8, paddingLeft: 14, background: "#fcf8f8", borderRadius: 6, padding: 8 }}>
+                          <div style={{ marginTop: 8, paddingLeft: 14, background: "rgba(255, 59, 48, 0.05)", borderRadius: 6, padding: 8 }}>
                             {batch.articles && batch.articles.length > 0 ? (
                               <ul style={{ margin: 0, paddingLeft: 16, fontSize: 11 }}>
                                 {batch.articles.map((art, idx) => (
                                   <li key={idx} style={{ marginBottom: 4 }}>
-                                    <span style={{ color: art.status === "repaired" ? "#16a34a" : "#64748b", fontWeight: 700, marginRight: 6 }}>
+                                    <span style={{ color: art.status === "repaired" ? "#16803c" : "#6e6e73", fontWeight: 700, marginRight: 6 }}>
                                       [{art.status === "repaired" ? "REPARADO" : "CORRECTO"}]
                                     </span>
                                     <a
                                       href={art.url}
                                       target="_blank"
                                       rel="noreferrer"
-                                      style={{ color: "#2563eb", textDecoration: "underline" }}
+                                      style={{ color: "#0071e3", textDecoration: "underline" }}
                                     >
                                       {art.title}
                                     </a>
@@ -1986,18 +1986,18 @@ export default function ConfiguracionPage() {
                                 ))}
                               </ul>
                             ) : (
-                              <div style={{ fontSize: 11, color: "#64748b", fontStyle: "italic" }}>No se procesó ningún artículo en este lote o el worker se detuvo antes de iniciar.</div>
+                              <div style={{ fontSize: 11, color: "#6e6e73", fontStyle: "italic" }}>No se procesó ningún artículo en este lote o el worker se detuvo antes de iniciar.</div>
                             )}
                             {batch.stopPoint ? (
-                              <div style={{ color: "#b91c1c", marginTop: 6, fontSize: 11, fontWeight: 500 }}>
+                              <div style={{ color: "#ff3b30", marginTop: 6, fontSize: 11, fontWeight: 500 }}>
                                 🏁 Detenido: {batch.stopPoint}
                               </div>
                             ) : null}
 
                             {/* Logs de este lote específico */}
                             {batch.logs && batch.logs.length > 0 ? (
-                              <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px dashed #fee2e2" }}>
-                                <div style={{ fontSize: 10, fontWeight: 700, color: "#7f1d1d", marginBottom: 4 }}>
+                              <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px dashed rgba(255, 59, 48, 0.08)" }}>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: "#ff3b30", marginBottom: 4 }}>
                                   📋 Registro de avances (Log de la tanda):
                                 </div>
                                 <div
@@ -2041,12 +2041,12 @@ export default function ConfiguracionPage() {
             padding: "14px 18px",
             borderRadius: 12,
             marginTop: 20,
-            background: banner.type === "error" ? "#fef2f2" : "#f0fdf4",
-            color: banner.type === "error" ? "#991b1b" : "#166534",
+            background: banner.type === "error" ? "rgba(255, 59, 48, 0.08)" : "rgba(52, 199, 89, 0.1)",
+            color: banner.type === "error" ? "#ff3b30" : "#16803c",
             border:
               banner.type === "error"
-                ? "1px solid #fecaca"
-                : "1px solid #bbf7d0",
+                ? "1px solid rgba(255, 59, 48, 0.3)"
+                : "1px solid rgba(52, 199, 89, 0.25)",
             fontSize: 14,
             fontWeight: 600,
             boxShadow: "0 4px 12px rgba(0,0,0,0.03)",

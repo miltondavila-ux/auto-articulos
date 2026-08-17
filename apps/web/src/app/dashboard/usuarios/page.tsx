@@ -68,7 +68,7 @@ const permissionLabelStyle: CSSProperties = {
   gap: 8,
   cursor: "pointer",
   fontSize: 13,
-  color: "#16181d",
+  color: "#1d1d1f",
 };
 const createFieldStyle: CSSProperties = {
   display: "grid",
@@ -98,9 +98,9 @@ interface UsageData {
 
 const riskColors: Record<UsagePerUser["risk"], { bg: string; color: string }> =
   {
-    alto: { bg: "#fdecec", color: "#d64545" },
-    medio: { bg: "#fff8e6", color: "#8a6d1a" },
-    bajo: { bg: "#dff5e6", color: "#1e8a4b" },
+    alto: { bg: "rgba(255, 59, 48, 0.08)", color: "#ff3b30" },
+    medio: { bg: "#fff4e5", color: "#8a4b08" },
+    bajo: { bg: "rgba(52, 199, 89, 0.1)", color: "#16803c" },
   };
 
 const PAGE_SIZE = 10;
@@ -112,7 +112,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
         style={{
           fontSize: 11,
           fontWeight: 700,
-          color: "#8a94a6",
+          color: "#6e6e73",
           textTransform: "uppercase",
           letterSpacing: "0.03em",
           marginBottom: 4,
@@ -148,7 +148,7 @@ function Pagination({
         gap: 10,
       }}
     >
-      <span style={{ fontSize: 12, color: "#6b7280" }}>
+      <span style={{ fontSize: 12, color: "#6e6e73" }}>
         {totalCount.toLocaleString("es-US")} usuarios en total
         {filteredCount !== totalCount &&
           ` · ${filteredCount.toLocaleString("es-US")} coinciden con el filtro`}
@@ -164,7 +164,7 @@ function Pagination({
         >
           ← Anterior
         </button>
-        <span style={{ fontSize: 12, color: "#16181d", fontWeight: 600 }}>
+        <span style={{ fontSize: 12, color: "#1d1d1f", fontWeight: 600 }}>
           Página {page} de {totalPages}
         </span>
         <button
@@ -468,7 +468,7 @@ export default function UsuariosPage() {
     return (
       <section style={sectionStyle}>
         <h2 style={h2Style}>Administración</h2>
-        <p style={{ fontSize: 13, color: "#6b7280" }}>
+        <p style={{ fontSize: 13, color: "#6e6e73" }}>
           Esta sección es solo para administradores.
         </p>
       </section>
@@ -486,19 +486,19 @@ export default function UsuariosPage() {
       label: "Usuarios totales",
       value: users.length.toLocaleString("es-US"),
       detail: `${adminCount} con acceso administrativo`,
-      color: "#2f5fdb",
+      color: "#0071e3",
     },
     {
       label: "Activos ahora",
       value: loadingUsage ? "…" : activeNow.toLocaleString("es-US"),
       detail: "Con ejecuciones en curso o pendientes",
-      color: "#16a06b",
+      color: "#34c759",
     },
     {
       label: "Artículos publicados",
       value: totalPublished.toLocaleString("es-US"),
       detail: "Suma de todas las cuentas",
-      color: "#7c3aed",
+      color: "#5e5ce6",
     },
     {
       label: "Base de datos usada",
@@ -506,7 +506,7 @@ export default function UsuariosPage() {
       detail: usage
         ? `${formatBytes(usage.remainingBytes)} disponibles`
         : "Calculando almacenamiento",
-      color: "#d97706",
+      color: "#ff9500",
     },
   ];
   const tabs: {
@@ -700,7 +700,7 @@ export default function UsuariosPage() {
       {tab === "crear" && (
         <section id="administracion-contenido" style={sectionStyle}>
           <h2 style={h2Style}>Agregar usuario</h2>
-          <p style={{ fontSize: 13, color: "#6b7280" }}>
+          <p style={{ fontSize: 13, color: "#6e6e73" }}>
             Crea una cuenta para dar acceso a otra persona. Cada usuario tiene
             sus propias credenciales de 10minutesWebsite y su propio historial,
             completamente separados.
@@ -827,7 +827,7 @@ export default function UsuariosPage() {
                   </option>
                 ))}
               </select>
-              <span style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>
+              <span style={{ fontSize: 11, color: "#6e6e73", marginTop: 4 }}>
                 Europa usa 10minuteswebsite.site, el resto del mundo
                 10minuteswebsite.net, y tagcrush.net es aparte (no depende de
                 geografía). Si te equivocas acá, el robot no podrá iniciar
@@ -851,8 +851,8 @@ export default function UsuariosPage() {
                 padding: 12,
                 borderRadius: 8,
                 marginTop: 12,
-                background: banner.type === "error" ? "#fdecec" : "#eafaf0",
-                color: banner.type === "error" ? "#d64545" : "#1e8a4b",
+                background: banner.type === "error" ? "rgba(255, 59, 48, 0.08)" : "rgba(52, 199, 89, 0.1)",
+                color: banner.type === "error" ? "#ff3b30" : "#16803c",
                 fontSize: 14,
               }}
             >
@@ -885,7 +885,7 @@ export default function UsuariosPage() {
               {loadingUsage ? "Actualizando..." : "Actualizar"}
             </button>
           </div>
-          <p style={{ fontSize: 13, color: "#6b7280", marginTop: -6 }}>
+          <p style={{ fontSize: 13, color: "#6e6e73", marginTop: -6 }}>
             Tamaño real de la base y cuánto contenido corresponde a cada
             usuario, calculado directamente con SQL (no consume cuota de
             transferencia extra al mirarlo).
@@ -907,7 +907,7 @@ export default function UsuariosPage() {
                   </span>
                   <span
                     style={{
-                      color: usage.percentUsed >= 0.8 ? "#d64545" : "#6b7280",
+                      color: usage.percentUsed >= 0.8 ? "#ff3b30" : "#6e6e73",
                     }}
                   >
                     {(usage.percentUsed * 100).toFixed(1)}% usado — quedan{" "}
@@ -917,7 +917,7 @@ export default function UsuariosPage() {
                 <div
                   style={{
                     height: 8,
-                    background: "#e9ecf1",
+                    background: "#f5f5f7",
                     borderRadius: 999,
                     overflow: "hidden",
                     marginTop: 6,
@@ -928,7 +928,7 @@ export default function UsuariosPage() {
                       height: "100%",
                       width: `${Math.min(100, usage.percentUsed * 100)}%`,
                       background:
-                        usage.percentUsed >= 0.8 ? "#d64545" : "#2f5fdb",
+                        usage.percentUsed >= 0.8 ? "#ff3b30" : "#0071e3",
                       transition: "width 0.4s ease",
                     }}
                   />
@@ -946,10 +946,10 @@ export default function UsuariosPage() {
                   <details
                     key={row.userId}
                     style={{
-                      border: "1px solid #e5e8ec",
+                      border: "1px solid #e5e5ea",
                       borderRadius: 10,
-                      background: row.active ? "#e6f4ff" : "#fff",
-                      color: "#16181d",
+                      background: row.active ? "rgba(0, 113, 227, 0.06)" : "#fff",
+                      color: "#1d1d1f",
                       overflow: "hidden",
                     }}
                   >
@@ -981,7 +981,7 @@ export default function UsuariosPage() {
                               fontWeight: 700,
                               padding: "2px 8px",
                               borderRadius: 999,
-                              background: "#2f5fdb",
+                              background: "#0071e3",
                               color: "#fff",
                             }}
                           >
@@ -1005,8 +1005,8 @@ export default function UsuariosPage() {
                     <div
                       style={{
                         padding: 14,
-                        borderTop: "1px solid #eef1f4",
-                        background: "#fafbfc",
+                        borderTop: "1px solid #e5e5ea",
+                        background: "#f5f5f7",
                         display: "grid",
                         gridTemplateColumns:
                           "repeat(auto-fit, minmax(140px, 1fr))",
@@ -1101,7 +1101,7 @@ export default function UsuariosPage() {
               </select>
             </div>
           </div>
-          <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
+          <p style={{ fontSize: 12, color: "#6e6e73", marginTop: 4 }}>
             Listado ordenado alfabéticamente por defecto. Puedes filtrar por categoría o buscar por nombre/correo. Haz clic en una cuenta para ver o editar sus accesos y configuración.
           </p>
 
@@ -1124,7 +1124,7 @@ export default function UsuariosPage() {
             }}
           >
             {pagedUsers.length === 0 && (
-              <p style={{ fontSize: 13, color: "#6b7280" }}>
+              <p style={{ fontSize: 13, color: "#6e6e73" }}>
                 No se encontraron usuarios.
               </p>
             )}
@@ -1199,7 +1199,7 @@ export default function UsuariosPage() {
               </button>
             </div>
           </div>
-          <p style={{ fontSize: 13, color: "#6b7280", marginTop: -4 }}>
+          <p style={{ fontSize: 13, color: "#6e6e73", marginTop: -4 }}>
             Controla qué módulos del sistema están visibles para los usuarios
             regulares. Si un módulo está en desarrollo o reparación, desmárcalo
             aquí para ocultarlo completamente de su menú y bloquear su acceso
@@ -1213,8 +1213,8 @@ export default function UsuariosPage() {
                 padding: "10px 14px",
                 borderRadius: 8,
                 marginTop: 8,
-                background: "#eafaf0",
-                color: "#1e8a4b",
+                background: "rgba(52, 199, 89, 0.1)",
+                color: "#16803c",
                 fontSize: 13,
                 fontWeight: 600,
               }}
@@ -1229,8 +1229,8 @@ export default function UsuariosPage() {
                 padding: "10px 14px",
                 borderRadius: 8,
                 marginTop: 8,
-                background: "#fdecec",
-                color: "#d64545",
+                background: "rgba(255, 59, 48, 0.08)",
+                color: "#ff3b30",
                 fontSize: 13,
               }}
             >
@@ -1254,10 +1254,10 @@ export default function UsuariosPage() {
                   style={{
                     padding: 16,
                     borderRadius: 12,
-                    background: isHidden ? "#fffcf4" : "#ffffff",
+                    background: isHidden ? "#fff4e5" : "#ffffff",
                     border: isHidden
-                      ? "1px solid #f6d289"
-                      : "1px solid #e4e9f1",
+                      ? "1px solid rgba(255, 149, 0, 0.3)"
+                      : "1px solid #e5e5ea",
                     boxShadow: "0 2px 8px rgba(0, 9, 35, 0.04)",
                     display: "flex",
                     flexDirection: "column",
@@ -1274,7 +1274,7 @@ export default function UsuariosPage() {
                         gap: 8,
                       }}
                     >
-                      <strong style={{ fontSize: 15, color: "#16181d" }}>
+                      <strong style={{ fontSize: 15, color: "#1d1d1f" }}>
                         {mod.label}
                       </strong>
                       <span
@@ -1283,11 +1283,11 @@ export default function UsuariosPage() {
                           fontWeight: 700,
                           padding: "2px 8px",
                           borderRadius: 999,
-                          background: isHidden ? "#fff3d6" : "#e6f8ef",
-                          color: isHidden ? "#a05e03" : "#0d7f44",
+                          background: isHidden ? "rgba(255, 149, 0, 0.15)" : "rgba(52, 199, 89, 0.1)",
+                          color: isHidden ? "#8a4b08" : "#16803c",
                           border: isHidden
-                            ? "1px solid #fedc97"
-                            : "1px solid #b7ebd0",
+                            ? "1px solid rgba(255, 149, 0, 0.3)"
+                            : "1px solid rgba(52, 199, 89, 0.25)",
                         }}
                       >
                         {isHidden
@@ -1298,7 +1298,7 @@ export default function UsuariosPage() {
                     <div
                       style={{
                         fontSize: 12,
-                        color: "#6b7280",
+                        color: "#6e6e73",
                         marginTop: 4,
                         lineHeight: 1.4,
                       }}
@@ -1308,7 +1308,7 @@ export default function UsuariosPage() {
                     <div
                       style={{
                         fontSize: 11,
-                        color: "#8a94a6",
+                        color: "#6e6e73",
                         marginTop: 6,
                         fontFamily: "monospace",
                       }}
@@ -1325,7 +1325,7 @@ export default function UsuariosPage() {
                       cursor: "pointer",
                       fontSize: 13,
                       fontWeight: 600,
-                      color: isHidden ? "#a05e03" : "#16181d",
+                      color: isHidden ? "#8a4b08" : "#1d1d1f",
                       paddingTop: 10,
                       borderTop: "1px solid rgba(0,0,0,0.06)",
                     }}
@@ -1344,7 +1344,7 @@ export default function UsuariosPage() {
                       style={{
                         width: 18,
                         height: 18,
-                        accentColor: "#0d7283",
+                        accentColor: "#0071e3",
                         cursor: "pointer",
                       }}
                     />
@@ -1738,10 +1738,10 @@ function UserCard({
   return (
     <details
       style={{
-        border: "1px solid #e5e8ec",
+        border: "1px solid #e5e5ea",
         borderRadius: 10,
         background: "#fff",
-        color: "#16181d",
+        color: "#1d1d1f",
         overflow: "hidden",
       }}
     >
@@ -1767,9 +1767,9 @@ function UserCard({
                   fontWeight: 700,
                   padding: "2px 7px",
                   borderRadius: 999,
-                  background: user.trialUnlocked ? "#eafaf0" : "#fff8e6",
-                  color: user.trialUnlocked ? "#1a7f47" : "#8a6d1a",
-                  border: `1px solid ${user.trialUnlocked ? "#a8dfc0" : "#f0deac"}`,
+                  background: user.trialUnlocked ? "rgba(52, 199, 89, 0.1)" : "#fff4e5",
+                  color: user.trialUnlocked ? "#16803c" : "#8a4b08",
+                  border: `1px solid ${user.trialUnlocked ? "rgba(52, 199, 89, 0.25)" : "rgba(255, 149, 0, 0.25)"}`,
                 }}
                 title={
                   user.trialUnlocked
@@ -1790,9 +1790,9 @@ function UserCard({
                   fontWeight: 600,
                   padding: "2px 7px",
                   borderRadius: 999,
-                  background: "#eff6ff",
-                  color: "#1d4ed8",
-                  border: "1px solid #bfdbfe",
+                  background: "#e8f2ff",
+                  color: "#0071e3",
+                  border: "1px solid rgba(0, 113, 227, 0.25)",
                 }}
                 title={`Dominio vinculado: ${user.connectedDomain}`}
               >
@@ -1806,9 +1806,9 @@ function UserCard({
                   fontWeight: 700,
                   padding: "2px 7px",
                   borderRadius: 999,
-                  background: "#fef2f2",
-                  color: "#991b1b",
-                  border: "1px solid #fecaca",
+                  background: "rgba(255, 59, 48, 0.08)",
+                  color: "#ff3b30",
+                  border: "1px solid rgba(255, 59, 48, 0.3)",
                 }}
                 title="Esta cuenta se quedó sin créditos de imagen en 10minutesWebsite."
               >
@@ -1817,7 +1817,7 @@ function UserCard({
             )}
           </div>
           <span
-            style={{ fontSize: 12, color: "#6b7280", wordBreak: "break-word" }}
+            style={{ fontSize: 12, color: "#6e6e73", wordBreak: "break-word" }}
           >
             {user.email}
           </span>
@@ -1831,7 +1831,7 @@ function UserCard({
           }}
         >
           {isCurrentUser && (
-            <span style={{ fontSize: 11, color: "#6b7280" }}>Tu cuenta</span>
+            <span style={{ fontSize: 11, color: "#6e6e73" }}>Tu cuenta</span>
           )}
           <span
             style={{
@@ -1839,13 +1839,13 @@ function UserCard({
               fontWeight: 700,
               padding: "2px 8px",
               borderRadius: 999,
-              background: user.role === "admin" ? "#dfe8ff" : "#eef2f7",
-              color: user.role === "admin" ? "#24458f" : "#64748b",
+              background: user.role === "admin" ? "rgba(0, 113, 227, 0.12)" : "#f5f5f7",
+              color: user.role === "admin" ? "#0071e3" : "#6e6e73",
             }}
           >
             {user.role === "admin" ? "Administrador" : "Usuario"}
           </span>
-          <span style={{ fontSize: 11, color: "#6b7280" }}>
+          <span style={{ fontSize: 11, color: "#6e6e73" }}>
             {user.articlesPublished} artículos
           </span>
         </div>
@@ -1854,8 +1854,8 @@ function UserCard({
       <div
         style={{
           padding: "14px",
-          borderTop: "1px solid #eef1f4",
-          background: "#fafbfc",
+          borderTop: "1px solid #e5e5ea",
+          background: "#f5f5f7",
         }}
       >
         <div
@@ -1868,13 +1868,13 @@ function UserCard({
           <Field label="Teléfono">{user.phone ?? "—"}</Field>
 
           <Field label="Dominio Web Vinculado">
-            <span style={{ fontSize: 13, color: user.connectedDomain ? "#1e293b" : "#94a3b8", wordBreak: "break-all" }}>
+            <span style={{ fontSize: 13, color: user.connectedDomain ? "#1d1d1f" : "#6e6e73", wordBreak: "break-all" }}>
               {user.connectedDomain ? `🌐 ${user.connectedDomain}` : "Sin dominio vinculado"}
             </span>
           </Field>
 
           <Field label="Cuenta 10minutesWebsite">
-            <span style={{ fontSize: 13, color: user.tenMinutesUsername ? "#1e293b" : "#94a3b8", wordBreak: "break-all" }}>
+            <span style={{ fontSize: 13, color: user.tenMinutesUsername ? "#1d1d1f" : "#6e6e73", wordBreak: "break-all" }}>
               {user.tenMinutesUsername ? `👤 ${user.tenMinutesUsername}` : "Sin credenciales guardadas"}
             </span>
           </Field>
@@ -1907,7 +1907,7 @@ function UserCard({
               )}
             </div>
             {roleError && (
-              <div style={{ fontSize: 11, color: "#d64545", marginTop: 4 }}>
+              <div style={{ fontSize: 11, color: "#ff3b30", marginTop: 4 }}>
                 {roleError}
               </div>
             )}
@@ -1951,7 +1951,7 @@ function UserCard({
                   checked={permImageCredits}
                   onChange={(e) => setPermImageCredits(e.target.checked)}
                   disabled={savingPermissions}
-                  style={{ accentColor: "#d97706", width: 16, height: 16 }}
+                  style={{ accentColor: "#ff9500", width: 16, height: 16 }}
                 />
                 Créditos de imagen disponibles (10minutesWebsite)
               </label>
@@ -1961,8 +1961,8 @@ function UserCard({
                   marginTop: 6,
                   padding: "8px 10px",
                   borderRadius: 8,
-                  background: permIsTrialSignup ? "#fffcf0" : "#f8fafc",
-                  border: `1px solid ${permIsTrialSignup ? "#f6d289" : "#e2e8f0"}`,
+                  background: permIsTrialSignup ? "#fff4e5" : "#f5f5f7",
+                  border: `1px solid ${permIsTrialSignup ? "rgba(255, 149, 0, 0.3)" : "#e5e5ea"}`,
                   display: "grid",
                   gap: 6,
                 }}
@@ -1971,7 +1971,7 @@ function UserCard({
                   style={{
                     fontSize: 11,
                     fontWeight: 700,
-                    color: permIsTrialSignup ? "#8a6d1a" : "#475569",
+                    color: permIsTrialSignup ? "#8a4b08" : "#6e6e73",
                     textTransform: "uppercase",
                     letterSpacing: "0.04em",
                   }}
@@ -1990,7 +1990,7 @@ function UserCard({
                       }
                     }}
                     disabled={savingPermissions}
-                    style={{ accentColor: "#d97706", width: 16, height: 16 }}
+                    style={{ accentColor: "#ff9500", width: 16, height: 16 }}
                   />
                   Cuenta en prueba gratuita (Free Trial)
                 </label>
@@ -2003,7 +2003,7 @@ function UserCard({
                         checked={permTrialUnlocked}
                         onChange={(e) => setPermTrialUnlocked(e.target.checked)}
                         disabled={savingPermissions}
-                        style={{ accentColor: "#1a7f47", width: 16, height: 16 }}
+                        style={{ accentColor: "#16803c", width: 16, height: 16 }}
                       />
                       Desbloqueado permanente (sin límite de 7 días)
                     </label>
@@ -2017,9 +2017,9 @@ function UserCard({
                             ...secondaryButtonStyle,
                             padding: "4px 8px",
                             fontSize: 11,
-                            background: "#eef6ff",
-                            color: "#1d4ed8",
-                            borderColor: "#bfdbfe",
+                            background: "#e8f2ff",
+                            color: "#0071e3",
+                            borderColor: "rgba(0, 113, 227, 0.25)",
                           },
                           savingPermissions,
                         )}
@@ -2029,7 +2029,7 @@ function UserCard({
                     </div>
                   </>
                 ) : (
-                  <span style={{ fontSize: 11, color: "#16a34a", fontWeight: 600 }}>
+                  <span style={{ fontSize: 11, color: "#16803c", fontWeight: 600 }}>
                     ✓ Cuenta estándar (acceso regular permanente)
                   </span>
                 )}
@@ -2047,13 +2047,13 @@ function UserCard({
                   {savingPermissions ? "Guardando..." : "Guardar permisos"}
                 </button>
                 {permissionsSaved && (
-                  <span style={{ fontSize: 11, color: "#1a7f47" }}>
+                  <span style={{ fontSize: 11, color: "#16803c" }}>
                     Permisos guardados
                   </span>
                 )}
               </div>
               {permissionsError && (
-                <div style={{ fontSize: 11, color: "#d64545" }}>
+                <div style={{ fontSize: 11, color: "#ff3b30" }}>
                   {permissionsError}
                 </div>
               )}
@@ -2082,7 +2082,7 @@ function UserCard({
                       }}
                       disabled={savingUserModules}
                       style={{
-                        accentColor: "#0d7283",
+                        accentColor: "#0071e3",
                         width: 16,
                         height: 16,
                       }}
@@ -2095,9 +2095,9 @@ function UserCard({
                           fontWeight: 700,
                           padding: "1px 5px",
                           borderRadius: 4,
-                          background: "#fff8e6",
-                          color: "#8a6d1a",
-                          border: "1px solid #f0deac",
+                          background: "#fff4e5",
+                          color: "#8a4b08",
+                          border: "1px solid rgba(255, 149, 0, 0.25)",
                         }}
                         title="Este módulo ya está oculto globalmente para todos los usuarios"
                       >
@@ -2126,13 +2126,13 @@ function UserCard({
                   {savingUserModules ? "Guardando..." : "Guardar módulos"}
                 </button>
                 {userModulesSaved && (
-                  <span style={{ fontSize: 11, color: "#1a7f47" }}>
+                  <span style={{ fontSize: 11, color: "#16803c" }}>
                     Módulos guardados
                   </span>
                 )}
               </div>
               {userModulesError && (
-                <div style={{ fontSize: 11, color: "#d64545" }}>
+                <div style={{ fontSize: 11, color: "#ff3b30" }}>
                   {userModulesError}
                 </div>
               )}
@@ -2251,7 +2251,7 @@ function UserCard({
               </button>
             </div>
             {batchLimitError && (
-              <div style={{ fontSize: 11, color: "#d64545", marginTop: 4 }}>
+              <div style={{ fontSize: 11, color: "#ff3b30", marginTop: 4 }}>
                 {batchLimitError}
               </div>
             )}
@@ -2328,7 +2328,7 @@ function UserCard({
                 ...secondaryButtonStyle,
                 padding: "4px 10px",
                 fontSize: 12,
-                color: "#2f5fdb",
+                color: "#0071e3",
               },
               isCurrentUser || user.role === "admin" || impersonating,
             )}
@@ -2349,9 +2349,9 @@ function UserCard({
                 padding: "4px 10px",
                 fontSize: 12,
                 background: copied
-                  ? "#dff5e6"
+                  ? "rgba(52, 199, 89, 0.1)"
                   : secondaryButtonStyle.background,
-                color: copied ? "#1e8a4b" : secondaryButtonStyle.color,
+                color: copied ? "#16803c" : secondaryButtonStyle.color,
               },
               !user.currentPassword,
             )}
@@ -2373,8 +2373,8 @@ function UserCard({
               onClick={() => setConfirmingDelete(true)}
               style={{
                 background: "none",
-                color: "#d64545",
-                border: "1px solid #fde8e8",
+                color: "#ff3b30",
+                border: "1px solid rgba(255, 59, 48, 0.08)",
                 borderRadius: 6,
                 padding: "4px 10px",
                 fontSize: 12,
@@ -2385,14 +2385,14 @@ function UserCard({
             </button>
           ) : (
             <>
-              <span style={{ fontSize: 12, color: "#8a6d1a" }}>¿Seguro?</span>
+              <span style={{ fontSize: 12, color: "#8a4b08" }}>¿Seguro?</span>
               <button
                 onClick={handleDelete}
                 disabled={deleting}
                 style={{
-                  background: "#fde8e8",
-                  color: "#d64545",
-                  border: "1px solid #e8b4b4",
+                  background: "rgba(255, 59, 48, 0.08)",
+                  color: "#ff3b30",
+                  border: "1px solid rgba(255, 59, 48, 0.25)",
                   borderRadius: 6,
                   padding: "4px 10px",
                   fontSize: 12,
@@ -2407,8 +2407,8 @@ function UserCard({
                 disabled={deleting}
                 style={{
                   background: "none",
-                  color: "#6b7280",
-                  border: "1px solid #dfe3e8",
+                  color: "#6e6e73",
+                  border: "1px solid #e5e5ea",
                   borderRadius: 6,
                   padding: "4px 10px",
                   fontSize: 12,
@@ -2421,12 +2421,12 @@ function UserCard({
           )}
         </div>
         {deleteError && (
-          <div style={{ fontSize: 11, color: "#d64545", marginTop: 6 }}>
+          <div style={{ fontSize: 11, color: "#ff3b30", marginTop: 6 }}>
             {deleteError}
           </div>
         )}
         {impersonateError && (
-          <div style={{ fontSize: 11, color: "#d64545", marginTop: 6 }}>
+          <div style={{ fontSize: 11, color: "#ff3b30", marginTop: 6 }}>
             {impersonateError}
           </div>
         )}
@@ -2436,7 +2436,7 @@ function UserCard({
             style={{
               marginTop: 14,
               padding: "10px 10px",
-              background: "#f0f2f5",
+              background: "#f5f5f7",
               borderRadius: 8,
             }}
           >
@@ -2492,7 +2492,7 @@ function UserCard({
               </button>
             </div>
             {editError && (
-              <p style={{ fontSize: 12, color: "#d64545", marginTop: 6 }}>
+              <p style={{ fontSize: 12, color: "#ff3b30", marginTop: 6 }}>
                 {editError}
               </p>
             )}
@@ -2551,16 +2551,16 @@ function UserHistorial({ email }: { email: string }) {
         if ((e.target as HTMLDetailsElement).open && !runs) loadHistorial();
       }}
     >
-      <summary style={{ cursor: "pointer", fontSize: 12, color: "#6b7280" }}>
+      <summary style={{ cursor: "pointer", fontSize: 12, color: "#6e6e73" }}>
         Ver historial
       </summary>
       {loading && !runs && (
-        <p style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
+        <p style={{ fontSize: 12, color: "#6e6e73", marginTop: 6 }}>
           Cargando...
         </p>
       )}
       {runs && runs.length === 0 && (
-        <p style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
+        <p style={{ fontSize: 12, color: "#6e6e73", marginTop: 6 }}>
           Todavía no tiene ejecuciones.
         </p>
       )}
@@ -2581,14 +2581,14 @@ function UserHistorial({ email }: { email: string }) {
               <details
                 key={run.id}
                 style={{
-                  background: "#f3f4f6",
-                  border: "1px solid #dfe3e8",
+                  background: "#f5f5f7",
+                  border: "1px solid #e5e5ea",
                   borderRadius: 6,
                   padding: "6px 10px",
                 }}
               >
                 <summary
-                  style={{ cursor: "pointer", fontSize: 12, color: "#374151" }}
+                  style={{ cursor: "pointer", fontSize: 12, color: "#1d1d1f" }}
                 >
                   {new Date(run.createdAt).toLocaleString()} —{" "}
                   {run.category?.name ?? "—"} — {successCount}/
@@ -2605,7 +2605,7 @@ function UserHistorial({ email }: { email: string }) {
                   }}
                 >
                   <thead>
-                    <tr style={{ textAlign: "left", color: "#6b7280" }}>
+                    <tr style={{ textAlign: "left", color: "#6e6e73" }}>
                       <th style={thStyle}>Título</th>
                       <th style={thStyle}>Estado</th>
                       <th style={thStyle}>Intentos</th>
@@ -2616,7 +2616,7 @@ function UserHistorial({ email }: { email: string }) {
                     {run.titles.map((title) => (
                       <tr
                         key={title.id}
-                        style={{ borderTop: "1px solid #dfe3e8" }}
+                        style={{ borderTop: "1px solid #e5e5ea" }}
                       >
                         <td style={tdStyle} data-label="Título">
                           {title.text}
@@ -2625,7 +2625,7 @@ function UserHistorial({ email }: { email: string }) {
                               <div
                                 style={{
                                   fontSize: 10,
-                                  color: "#6b7280",
+                                  color: "#6e6e73",
                                   marginTop: 2,
                                 }}
                               >
@@ -2645,7 +2645,7 @@ function UserHistorial({ email }: { email: string }) {
                               href={title.articleUrl}
                               target="_blank"
                               rel="noreferrer"
-                              style={{ color: "#031537", fontWeight: 600 }}
+                              style={{ color: "#0071e3", fontWeight: 600 }}
                             >
                               Ver artículo
                             </a>

@@ -449,7 +449,7 @@ export default function OnboardingWizard({
 
   if (loading) {
     return (
-      <div style={{ ...sectionStyle, padding: "24px", textAlign: "center", color: "#6b7280" }}>
+      <div style={{ ...sectionStyle, padding: "24px", textAlign: "center", color: "#6e6e73" }}>
         Cargando asistente de configuración...
       </div>
     );
@@ -471,22 +471,22 @@ export default function OnboardingWizard({
             alignItems: "center",
             background:
               message.type === "success"
-                ? "#eafaf0"
+                ? "rgba(52, 199, 89, 0.1)"
                 : message.type === "error"
-                  ? "#fde8e8"
-                  : "#eff6ff",
+                  ? "rgba(255, 59, 48, 0.08)"
+                  : "#e8f2ff",
             border:
               message.type === "success"
-                ? "1px solid #a8dfc0"
+                ? "1px solid rgba(52, 199, 89, 0.25)"
                 : message.type === "error"
-                  ? "1px solid #f8b4b4"
-                  : "1px solid #bfdbfe",
+                  ? "1px solid rgba(255, 59, 48, 0.3)"
+                  : "1px solid rgba(0, 113, 227, 0.25)",
             color:
               message.type === "success"
-                ? "#1e8a4b"
+                ? "#16803c"
                 : message.type === "error"
-                  ? "#9b1c1c"
-                  : "#1e40af",
+                  ? "#ff3b30"
+                  : "#0071e3",
           }}
         >
           <span>{message.text}</span>
@@ -599,12 +599,12 @@ export default function OnboardingWizard({
                   gap: 12,
                   marginTop: 10,
                   padding: "10px 14px",
-                  background: "#f0fdf4",
+                  background: "rgba(52, 199, 89, 0.1)",
                   borderRadius: 8,
-                  border: "1px solid #bbf7d0",
+                  border: "1px solid rgba(52, 199, 89, 0.25)",
                 }}
               >
-                <div style={{ fontSize: 13, color: "#166534" }}>
+                <div style={{ fontSize: 13, color: "#16803c" }}>
                   ✅ Credenciales de {productName} guardadas y verificadas de forma segura.
                 </div>
                 <button
@@ -620,13 +620,13 @@ export default function OnboardingWizard({
                 {/* Cuadro de ayuda para contraseña */}
                 <div
                   style={{
-                    background: "#eff6ff",
-                    border: "1px solid #bfdbfe",
+                    background: "#e8f2ff",
+                    border: "1px solid rgba(0, 113, 227, 0.25)",
                     borderRadius: 8,
                     padding: "12px 14px",
                     marginBottom: 14,
                     fontSize: 13,
-                    color: "#1e40af",
+                    color: "#0071e3",
                     lineHeight: 1.45,
                   }}
                 >
@@ -644,7 +644,7 @@ export default function OnboardingWizard({
                       display: "inline-flex",
                       alignItems: "center",
                       gap: 6,
-                      background: "#2563eb",
+                      background: "#0071e3",
                       color: "#ffffff",
                       padding: "6px 12px",
                       borderRadius: 6,
@@ -655,7 +655,7 @@ export default function OnboardingWizard({
                   >
                     🔑 Resetear contraseña en {platformHost} ↗
                   </a>
-                  <p style={{ margin: "8px 0 0 0", fontSize: 12, color: "#3b82f6" }}>
+                  <p style={{ margin: "8px 0 0 0", fontSize: 12, color: "#0071e3" }}>
                     <strong>Recomendación práctica:</strong> Al generar tu contraseña en {platformHost}, copia y pega esa misma clave aquí para que ambos sistemas queden sincronizados.
                   </p>
                 </div>
@@ -670,7 +670,7 @@ export default function OnboardingWizard({
                   }}
                 >
                   <div>
-                    <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4 }}>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#1d1d1f", marginBottom: 4 }}>
                       Usuario o Email de {productName}:
                     </label>
                     <input
@@ -683,7 +683,7 @@ export default function OnboardingWizard({
                     />
                   </div>
                   <div>
-                    <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4 }}>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#1d1d1f", marginBottom: 4 }}>
                       Contraseña de {productName}:
                     </label>
                     <input
@@ -700,7 +700,7 @@ export default function OnboardingWizard({
                       type="submit"
                       disabled={savingCreds}
                       style={{
-                        background: "#2f5fdb",
+                        background: "#0071e3",
                         color: "#fff",
                         border: "none",
                         borderRadius: 8,
@@ -748,7 +748,7 @@ export default function OnboardingWizard({
           >
             <div style={{ marginTop: 10 }}>
               {!step1Done ? (
-                <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>
+                <p style={{ fontSize: 13, color: "#6e6e73", margin: 0 }}>
                   🔒 Este paso se desbloqueará automáticamente al completar el Paso 1.
                 </p>
               ) : step2Done ? (
@@ -761,13 +761,13 @@ export default function OnboardingWizard({
                       flexWrap: "wrap",
                       gap: 12,
                       padding: "10px 14px",
-                      background: "#f0fdf4",
+                      background: "rgba(52, 199, 89, 0.1)",
                       borderRadius: 8,
-                      border: "1px solid #bbf7d0",
+                      border: "1px solid rgba(52, 199, 89, 0.25)",
                       marginBottom: 8,
                     }}
                   >
-                    <div style={{ fontSize: 13, color: "#166534" }}>
+                    <div style={{ fontSize: 13, color: "#16803c" }}>
                       ✅ <strong>{categories.length} categorías</strong> sincronizadas y listas para publicar.
                     </div>
                     <button
@@ -787,8 +787,8 @@ export default function OnboardingWizard({
                       <span
                         key={cat.id}
                         style={{
-                          background: "#e0f2fe",
-                          color: "#0369a1",
+                          background: "#e8f2ff",
+                          color: "#0071e3",
                           fontSize: 12,
                           padding: "3px 8px",
                           borderRadius: 6,
@@ -804,8 +804,8 @@ export default function OnboardingWizard({
               ) : (
                 <div
                   style={{
-                    background: "#eff6ff",
-                    border: "1px solid #bfdbfe",
+                    background: "#e8f2ff",
+                    border: "1px solid rgba(0, 113, 227, 0.25)",
                     borderRadius: 8,
                     padding: "14px 16px",
                   }}
@@ -814,7 +814,7 @@ export default function OnboardingWizard({
                     <div
                       style={{
                         background: "#ffffff",
-                        border: "2px solid #3b82f6",
+                        border: "2px solid #0071e3",
                         borderRadius: 10,
                         padding: "18px 20px",
                         textAlign: "center",
@@ -822,10 +822,10 @@ export default function OnboardingWizard({
                       }}
                     >
                       <div style={{ fontSize: 36, marginBottom: 8 }}>⏳</div>
-                      <h4 style={{ margin: "0 0 6px 0", fontSize: 16, color: "#1e40af", fontWeight: 800 }}>
+                      <h4 style={{ margin: "0 0 6px 0", fontSize: 16, color: "#0071e3", fontWeight: 800 }}>
                         Conectando con tu sitio web de {productName}...
                       </h4>
-                      <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#334155", lineHeight: 1.5, maxWidth: 500, marginLeft: "auto", marginRight: "auto" }}>
+                      <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#6e6e73", lineHeight: 1.5, maxWidth: 500, marginLeft: "auto", marginRight: "auto" }}>
                         Nuestro robot está ingresando a tu cuenta para descargar automáticamente todas las categorías de tu web. Puede tardar <strong>unos minutos</strong> según la cola de trabajo; esta pantalla se actualiza sola cuando termine, no hace falta que hagas nada.
                       </p>
                       <div
@@ -833,8 +833,8 @@ export default function OnboardingWizard({
                           display: "inline-flex",
                           alignItems: "center",
                           gap: 8,
-                          background: "#dbeafe",
-                          color: "#1e40af",
+                          background: "#e8f2ff",
+                          color: "#0071e3",
                           padding: "8px 16px",
                           borderRadius: 20,
                           fontSize: 13,
@@ -846,7 +846,7 @@ export default function OnboardingWizard({
                     </div>
                   ) : (
                     <>
-                      <p style={{ margin: "0 0 10px 0", fontSize: 13, color: "#1e40af", fontWeight: 500 }}>
+                      <p style={{ margin: "0 0 10px 0", fontSize: 13, color: "#0071e3", fontWeight: 500 }}>
                         Haz clic a continuación para conectar con tu cuenta de {productName} y descargar tus categorías:
                       </p>
                       <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
@@ -855,7 +855,7 @@ export default function OnboardingWizard({
                           onClick={handleSyncCategories}
                           disabled={syncingCategories}
                           style={{
-                            background: "#2f5fdb",
+                            background: "#0071e3",
                             color: "#fff",
                             border: "none",
                             borderRadius: 8,
@@ -873,7 +873,7 @@ export default function OnboardingWizard({
                         </button>
                       </div>
 
-                      <div style={{ marginTop: 12, borderTop: "1px dashed #bfdbfe", paddingTop: 10 }}>
+                      <div style={{ marginTop: 12, borderTop: "1px dashed rgba(0, 113, 227, 0.25)", paddingTop: 10 }}>
                         {!showManualCategory ? (
                           <button
                             type="button"
@@ -881,7 +881,7 @@ export default function OnboardingWizard({
                             style={{
                               background: "none",
                               border: "none",
-                              color: "#2563eb",
+                              color: "#0071e3",
                               fontSize: 12,
                               fontWeight: 600,
                               cursor: "pointer",
@@ -908,7 +908,7 @@ export default function OnboardingWizard({
                               type="submit"
                               disabled={savingManualCategory || !manualCategoryName.trim()}
                               style={{
-                                background: "#2f5fdb",
+                                background: "#0071e3",
                                 color: "#fff",
                                 border: "none",
                                 borderRadius: 8,
@@ -956,7 +956,7 @@ export default function OnboardingWizard({
           >
             <div style={{ marginTop: 10 }}>
               {!step2Done ? (
-                <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>
+                <p style={{ fontSize: 13, color: "#6e6e73", margin: 0 }}>
                   🔒 Este paso se desbloqueará automáticamente al completar el Paso 2.
                 </p>
               ) : step3Done && !editingLang ? (
@@ -968,12 +968,12 @@ export default function OnboardingWizard({
                     flexWrap: "wrap",
                     gap: 12,
                     padding: "10px 14px",
-                    background: "#f0fdf4",
+                    background: "rgba(52, 199, 89, 0.1)",
                     borderRadius: 8,
-                    border: "1px solid #bbf7d0",
+                    border: "1px solid rgba(52, 199, 89, 0.25)",
                   }}
                 >
-                  <div style={{ fontSize: 13, color: "#166534" }}>
+                  <div style={{ fontSize: 13, color: "#16803c" }}>
                     ✅ Idioma activo: <strong>{activeLangName}</strong>. Los artículos se generarán en este idioma.
                   </div>
                   <button
@@ -987,13 +987,13 @@ export default function OnboardingWizard({
               ) : (
                 <div
                   style={{
-                    background: "#eff6ff",
-                    border: "1px solid #bfdbfe",
+                    background: "#e8f2ff",
+                    border: "1px solid rgba(0, 113, 227, 0.25)",
                     borderRadius: 8,
                     padding: "14px 16px",
                   }}
                 >
-                  <p style={{ fontSize: 13, color: "#1e40af", margin: "0 0 10px 0", fontWeight: 500 }}>
+                  <p style={{ fontSize: 13, color: "#0071e3", margin: "0 0 10px 0", fontWeight: 500 }}>
                     Elige el idioma principal para tus artículos:
                   </p>
 
@@ -1006,7 +1006,7 @@ export default function OnboardingWizard({
                         ...inputStyle,
                         maxWidth: 320,
                         fontWeight: 600,
-                        color: "#1e40af",
+                        color: "#0071e3",
                         background: "#fff",
                       }}
                     >
@@ -1029,7 +1029,7 @@ export default function OnboardingWizard({
                       onClick={() => handleSaveLanguage(selectedLang || contentLanguage || "es")}
                       disabled={savingLanguage}
                       style={{
-                        background: "#2f5fdb",
+                        background: "#0071e3",
                         color: "#fff",
                         border: "none",
                         borderRadius: 8,
@@ -1088,21 +1088,21 @@ export default function OnboardingWizard({
               {/* Bloque del video tutorial: SIEMPRE VISIBLE */}
               <div
                 style={{
-                  background: "#eff6ff",
-                  border: "1px solid #bfdbfe",
+                  background: "#e8f2ff",
+                  border: "1px solid rgba(0, 113, 227, 0.25)",
                   borderRadius: 8,
                   padding: "14px 16px",
                   marginBottom: 14,
                   fontSize: 13,
-                  color: "#1e40af",
+                  color: "#0071e3",
                   lineHeight: 1.5,
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
                   <span style={{ fontSize: 16 }}>📺</span>
-                  <strong style={{ fontSize: 14, color: "#0f172a" }}>¿No tienes el Google Search Console?</strong>
+                  <strong style={{ fontSize: 14, color: "#1d1d1f" }}>¿No tienes el Google Search Console?</strong>
                 </div>
-                <p style={{ margin: "0 0 10px 0", fontSize: 13, color: "#334155" }}>
+                <p style={{ margin: "0 0 10px 0", fontSize: 13, color: "#6e6e73" }}>
                   Aprende cómo activarte paso a paso con este video tutorial:
                 </p>
                 <a
@@ -1113,7 +1113,7 @@ export default function OnboardingWizard({
                     display: "inline-flex",
                     alignItems: "center",
                     gap: 6,
-                    background: "#dc2626",
+                    background: "#ff3b30",
                     color: "#ffffff",
                     textDecoration: "none",
                     padding: "8px 14px",
@@ -1128,7 +1128,7 @@ export default function OnboardingWizard({
               </div>
 
               {!step3Done ? (
-                <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>
+                <p style={{ fontSize: 13, color: "#6e6e73", margin: 0 }}>
                   🔒 El botón de conexión se desbloqueará automáticamente al completar el Paso 3.
                 </p>
               ) : (
@@ -1142,13 +1142,13 @@ export default function OnboardingWizard({
                         flexWrap: "wrap",
                         gap: 12,
                         padding: "10px 14px",
-                        background: "#f0fdf4",
+                        background: "rgba(52, 199, 89, 0.1)",
                         borderRadius: 8,
-                        border: "1px solid #bbf7d0",
+                        border: "1px solid rgba(52, 199, 89, 0.25)",
                         marginBottom: 10,
                       }}
                     >
-                      <div style={{ fontSize: 13, color: "#166534" }}>
+                      <div style={{ fontSize: 13, color: "#16803c" }}>
                         ✅ Google Search Console conectado y activo en: <strong>{googleData?.siteUrl}</strong>
                       </div>
                       <button
@@ -1163,13 +1163,13 @@ export default function OnboardingWizard({
 
                   <div
                     style={{
-                      background: "#f8fafc",
-                      border: "1px solid #cbd5e1",
+                      background: "#f5f5f7",
+                      border: "1px solid #e5e5ea",
                       borderRadius: 8,
                       padding: "12px 14px",
                       marginBottom: 12,
                       fontSize: 13,
-                      color: "#334155",
+                      color: "#6e6e73",
                       lineHeight: 1.5,
                     }}
                   >
@@ -1177,7 +1177,7 @@ export default function OnboardingWizard({
                       🌐 Instrucción antes de conectar:
                     </p>
                     <p style={{ margin: 0 }}>
-                      Abre tu <a href="https://search.google.com/search-console" target="_blank" rel="noreferrer" style={{ color: "#2563eb", fontWeight: 700, textDecoration: "underline" }}>Google Search Console ↗</a> en una pestaña al lado de tu navegador, asegúrate de que funciona y que lo tienes activado con la misma cuenta de Google dueña de tu sitio web, y luego haz clic en el botón de abajo.
+                      Abre tu <a href="https://search.google.com/search-console" target="_blank" rel="noreferrer" style={{ color: "#0071e3", fontWeight: 700, textDecoration: "underline" }}>Google Search Console ↗</a> en una pestaña al lado de tu navegador, asegúrate de que funciona y que lo tienes activado con la misma cuenta de Google dueña de tu sitio web, y luego haz clic en el botón de abajo.
                     </p>
                   </div>
 
@@ -1186,7 +1186,7 @@ export default function OnboardingWizard({
                       <a
                         href="/api/search-integrations/google/connect?returnTo=/dashboard"
                         style={{
-                          background: "#2f5fdb",
+                          background: "#0071e3",
                           color: "#fff",
                           textDecoration: "none",
                           borderRadius: 8,
@@ -1213,7 +1213,7 @@ export default function OnboardingWizard({
                             <select
                               value={selectedGoogleSite}
                               onChange={(e) => setSelectedGoogleSite(e.target.value)}
-                              style={{ ...inputStyle, maxWidth: 360, background: "#fff", color: "#0f172a" }}
+                              style={{ ...inputStyle, maxWidth: 360, background: "#fff", color: "#1d1d1f" }}
                             >
                               <option value="">-- Selecciona la propiedad de tu sitio --</option>
                               {googleData.sites.map((s) => (
@@ -1226,7 +1226,7 @@ export default function OnboardingWizard({
                               type="submit"
                               disabled={savingGoogleSite || !selectedGoogleSite}
                               style={{
-                                background: "#2f5fdb",
+                                background: "#0071e3",
                                 color: "#fff",
                                 border: "none",
                                 borderRadius: 8,
@@ -1247,7 +1247,7 @@ export default function OnboardingWizard({
                               style={{
                                 background: "none",
                                 border: "none",
-                                color: "#2563eb",
+                                color: "#0071e3",
                                 fontSize: 12,
                                 fontWeight: 600,
                                 cursor: "pointer",
@@ -1270,12 +1270,12 @@ export default function OnboardingWizard({
                           {(!googleData.sites || googleData.sites.length === 0) && (
                             <div
                               style={{
-                                background: "#fef3c7",
-                                border: "1px solid #fde047",
+                                background: "#fff4e5",
+                                border: "1px solid rgba(255, 149, 0, 0.3)",
                                 borderRadius: 8,
                                 padding: "10px 14px",
                                 fontSize: 13,
-                                color: "#854d0e",
+                                color: "#8a4b08",
                               }}
                             >
                               ⚠️ Tu cuenta de Google está vinculada, pero no tiene sitios listados en Google Search Console. Puedes ingresar la URL exacta de tu propiedad a continuación:
@@ -1292,13 +1292,13 @@ export default function OnboardingWizard({
                               value={selectedGoogleSite}
                               onChange={(e) => setSelectedGoogleSite(e.target.value)}
                               disabled={savingGoogleSite}
-                              style={{ ...inputStyle, maxWidth: 360, background: "#fff", color: "#0f172a" }}
+                              style={{ ...inputStyle, maxWidth: 360, background: "#fff", color: "#1d1d1f" }}
                             />
                             <button
                               type="submit"
                               disabled={savingGoogleSite || !selectedGoogleSite.trim()}
                               style={{
-                                background: "#2f5fdb",
+                                background: "#0071e3",
                                 color: "#fff",
                                 border: "none",
                                 borderRadius: 8,
@@ -1320,7 +1320,7 @@ export default function OnboardingWizard({
                                 style={{
                                   background: "none",
                                   border: "none",
-                                  color: "#2563eb",
+                                  color: "#0071e3",
                                   fontSize: 12,
                                   fontWeight: 600,
                                   cursor: "pointer",
@@ -1366,29 +1366,29 @@ export default function OnboardingWizard({
           >
             <div style={{ marginTop: 10 }}>
               {!allCoreDone ? (
-                <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>
+                <p style={{ fontSize: 13, color: "#6e6e73", margin: 0 }}>
                   🔒 Completa los 4 pasos anteriores para comenzar a generar oportunidades de posicionamiento SEO.
                 </p>
               ) : (
                 <div
                   style={{
-                    background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
-                    border: "1px solid #93c5fd",
+                    background: "linear-gradient(135deg, #e8f2ff 0%, #e8f2ff 100%)",
+                    border: "1px solid rgba(0, 113, 227, 0.3)",
                     borderRadius: 10,
                     padding: "18px 20px",
                   }}
                 >
-                  <p style={{ margin: "0 0 8px 0", fontSize: 16, fontWeight: 800, color: "#1e3a8a" }}>
+                  <p style={{ margin: "0 0 8px 0", fontSize: 16, fontWeight: 800, color: "#0071e3" }}>
                     🎯 ¡Felicitaciones! Has completado todos los pasos de configuración inicial.
                   </p>
-                  <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "#1e40af", lineHeight: 1.5 }}>
+                  <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "#0071e3", lineHeight: 1.5 }}>
                     El siguiente paso es ingresar al módulo de <strong>Oportunidades</strong>. La Inteligencia Artificial analizará las consultas de tus clientes potenciales en Google y creará ideas de contenido listas para publicar con 1 solo clic.
                   </p>
                   <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
                     <Link
                       href="/dashboard/oportunidades"
                       style={{
-                        background: "#2563eb",
+                        background: "#0071e3",
                         color: "#fff",
                         textDecoration: "none",
                         padding: "11px 20px",
@@ -1407,8 +1407,8 @@ export default function OnboardingWizard({
                       href="/dashboard/publicar"
                       style={{
                         background: "#ffffff",
-                        color: "#1e40af",
-                        border: "1px solid #93c5fd",
+                        color: "#0071e3",
+                        border: "1px solid rgba(0, 113, 227, 0.3)",
                         textDecoration: "none",
                         padding: "10px 16px",
                         borderRadius: 8,

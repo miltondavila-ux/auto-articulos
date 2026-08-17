@@ -331,13 +331,13 @@ export default function OportunidadesPage() {
     return (
       <section style={sectionStyle}>
         <h2 style={h2Style}>Aviso importante sobre Oportunidades</h2>
-        <p style={{ color: "#16181d", fontSize: 14, lineHeight: 1.6 }}>
+        <p style={{ color: "#1d1d1f", fontSize: 14, lineHeight: 1.6 }}>
           Las oportunidades que vas a ver aquí son generadas mediante un
           algoritmo automatizado conectado a fuentes como Google Search
           Console y Bing, y los resultados son producidos con inteligencia
           artificial.
         </p>
-        <p style={{ color: "#16181d", fontSize: 14, lineHeight: 1.6 }}>
+        <p style={{ color: "#1d1d1f", fontSize: 14, lineHeight: 1.6 }}>
           Cada usuario es responsable de revisar el contenido y decidir si
           desea publicarlo o no. El administrador del programa no asume
           responsabilidad por las decisiones de publicación ni por los
@@ -387,7 +387,7 @@ export default function OportunidadesPage() {
       >
         <section style={sectionStyle}>
         <h2 style={h2Style}>Oportunidades SEO</h2>
-        <p style={{ color: "#6b7280", fontSize: 14, lineHeight: 1.55 }}>
+        <p style={{ color: "#6e6e73", fontSize: 14, lineHeight: 1.55 }}>
           Analiza impresiones, tendencias, posiciones, consultas y páginas de tu
           propiedad de Google Search Console. El sistema selecciona hasta 10
           categorías y crea 9 oportunidades long tail únicas para cada una,
@@ -395,7 +395,7 @@ export default function OportunidadesPage() {
         </p>
         {availablePanels.length > 1 && (
           <div style={{ marginTop: 12 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>
+            <label style={{ fontSize: 13, fontWeight: 600, color: "#1d1d1f" }}>
               ¿Para cuál sitio generar oportunidades?
               <select
                 value={selectedPanel}
@@ -432,7 +432,7 @@ export default function OportunidadesPage() {
                 : "Analizar oportunidades"}
           </button>
           {lastAnalysisAt && (
-            <span style={{ fontSize: 12, color: "#6b7280" }}>
+            <span style={{ fontSize: 12, color: "#6e6e73" }}>
               Último análisis: {formatDateTime(lastAnalysisAt)}
             </span>
           )}
@@ -444,9 +444,9 @@ export default function OportunidadesPage() {
             style={{
               marginTop: 16,
               padding: 16,
-              border: "1px solid #b8caf7",
+              border: "1px solid rgba(0, 113, 227, 0.25)",
               borderRadius: 10,
-              background: "#f3f6ff",
+              background: "#e8f2ff",
             }}
           >
             <div
@@ -458,7 +458,7 @@ export default function OportunidadesPage() {
                 marginBottom: 10,
               }}
             >
-              <strong style={{ fontSize: 14, color: "#24458f" }}>
+              <strong style={{ fontSize: 14, color: "#0071e3" }}>
                 {analysisStages[currentStage]}
               </strong>
               <span
@@ -467,8 +467,8 @@ export default function OportunidadesPage() {
                   textAlign: "center",
                   padding: "4px 8px",
                   borderRadius: 999,
-                  background: "#dfe8ff",
-                  color: "#24458f",
+                  background: "rgba(0, 113, 227, 0.15)",
+                  color: "#0071e3",
                   fontSize: 12,
                   fontVariantNumeric: "tabular-nums",
                   fontWeight: 700,
@@ -482,7 +482,7 @@ export default function OportunidadesPage() {
               style={{
                 height: 8,
                 borderRadius: 999,
-                background: "#dfe5f2",
+                background: "rgba(0, 113, 227, 0.15)",
                 overflow: "hidden",
               }}
             >
@@ -491,7 +491,7 @@ export default function OportunidadesPage() {
                   width: `${analysisProgress}%`,
                   height: "100%",
                   borderRadius: 999,
-                  background: "linear-gradient(90deg, #2f5fdb, #4dd8e8)",
+                  background: "#0071e3",
                   transition: "width 1s linear",
                 }}
               />
@@ -514,10 +514,10 @@ export default function OportunidadesPage() {
                     fontSize: 12,
                     color:
                       index < currentStage
-                        ? "#15803d"
+                        ? "#16803c"
                         : index === currentStage
-                          ? "#24458f"
-                          : "#8a97ab",
+                          ? "#0071e3"
+                          : "#6e6e73",
                     fontWeight: index === currentStage ? 600 : 400,
                   }}
                 >
@@ -532,7 +532,7 @@ export default function OportunidadesPage() {
                 </div>
               ))}
             </div>
-            <p style={{ margin: "12px 0 0", color: "#5e6b83", fontSize: 12 }}>
+            <p style={{ margin: "12px 0 0", color: "#6e6e73", fontSize: 12 }}>
               El tiempo depende de la cantidad de datos. No cierres esta página
               mientras termina el análisis.
             </p>
@@ -548,8 +548,8 @@ export default function OportunidadesPage() {
                 marginTop: 12,
                 padding: "10px 14px",
                 borderRadius: 8,
-                background: "#fef3c7",
-                color: "#92400e",
+                background: "#fff4e5",
+                color: "#8a4b08",
                 fontSize: 13,
                 display: "flex",
                 flexDirection: "column",
@@ -562,7 +562,7 @@ export default function OportunidadesPage() {
                   <li>
                     <Link
                       href="/dashboard/configuracion?tab=integrations#google"
-                      style={{ color: "#2563eb", fontWeight: 600 }}
+                      style={{ color: "#0071e3", fontWeight: 600 }}
                     >
                       {!setupStatus.googleConnected
                         ? "Conectar Google Search Console"
@@ -574,7 +574,7 @@ export default function OportunidadesPage() {
                   <li>
                     <Link
                       href="/dashboard/configuracion?tab=platform#categories"
-                      style={{ color: "#2563eb", fontWeight: 600 }}
+                      style={{ color: "#0071e3", fontWeight: 600 }}
                     >
                       Sincronizar tus categorías
                     </Link>
@@ -584,7 +584,7 @@ export default function OportunidadesPage() {
                   <li>
                     <Link
                       href="/dashboard/configuracion?tab=platform#language"
-                      style={{ color: "#2563eb", fontWeight: 600 }}
+                      style={{ color: "#0071e3", fontWeight: 600 }}
                     >
                       Configurar tu idioma de redacción
                     </Link>
@@ -600,8 +600,8 @@ export default function OportunidadesPage() {
               marginTop: 12,
               padding: "10px 14px",
               borderRadius: 8,
-              background: "#fef3c7",
-              color: "#92400e",
+              background: "#fff4e5",
+              color: "#8a4b08",
               fontSize: 13,
               display: "flex",
               alignItems: "center",
@@ -617,7 +617,7 @@ export default function OportunidadesPage() {
               type="button"
               onClick={() => setShowImageCreditsModal(true)}
               style={{
-                background: "#d97706",
+                background: "#ff9500",
                 color: "#ffffff",
                 border: "none",
                 borderRadius: 6,
@@ -631,7 +631,7 @@ export default function OportunidadesPage() {
             </button>
           </div>
         )}
-        <p style={{ color: "#6b7280", fontSize: 12 }}>
+        <p style={{ color: "#6e6e73", fontSize: 12 }}>
           Tu máximo permitido es de {maxTitlesPerBatch} títulos por lote.
         </p>
         <label
@@ -640,7 +640,7 @@ export default function OportunidadesPage() {
             alignItems: "center",
             gap: 8,
             fontSize: 13,
-            color: "#6b7280",
+            color: "#6e6e73",
             margin: "10px 0 0",
           }}
         >
@@ -658,7 +658,7 @@ export default function OportunidadesPage() {
             style={{
               display: "block",
               fontSize: 13,
-              color: "#6b7280",
+              color: "#6e6e73",
               marginBottom: 6,
             }}
           >
@@ -721,7 +721,7 @@ export default function OportunidadesPage() {
                       style={{
                         margin: "6px 0 0",
                         fontSize: 12,
-                        color: "#d64545",
+                        color: "#ff3b30",
                       }}
                     >
                       Tienes {totalTitles} títulos en {groups.length}{" "}
@@ -735,7 +735,7 @@ export default function OportunidadesPage() {
                       style={{
                         margin: "6px 0 0",
                         fontSize: 12,
-                        color: "#d64545",
+                        color: "#ff3b30",
                       }}
                     >
                       Debes seleccionar o configurar un idioma de redacción antes de publicar.
@@ -823,7 +823,7 @@ export default function OportunidadesPage() {
               <p style={{ margin: 0, color: "#6e6e73", fontSize: 13 }}>
                 {group.rationale}
               </p>
-              <p style={{ color: "#86868b", fontSize: 12, marginTop: 4 }}>
+              <p style={{ color: "#6e6e73", fontSize: 12, marginTop: 4 }}>
                 {Math.round(group.impressions).toLocaleString("es-US")}{" "}
                 impresiones · {Math.round(group.clicks).toLocaleString("es-US")}{" "}
                 clics

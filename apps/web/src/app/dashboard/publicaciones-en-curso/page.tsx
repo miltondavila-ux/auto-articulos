@@ -70,7 +70,7 @@ export default function PublicacionesEnCursoPage() {
       ) : (
         <section style={{ ...sectionStyle, textAlign: "center" }}>
           <h2 style={h2Style}>No hay ninguna ejecución en curso</h2>
-          <p style={{ fontSize: 13, color: "#6b7280" }}>
+          <p style={{ fontSize: 13, color: "#6e6e73" }}>
             Ve a "Publicar" para elegir una categoría, pegar títulos e iniciar
             una nueva tanda.
           </p>

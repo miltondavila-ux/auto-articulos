@@ -43,10 +43,10 @@ export default function ModuleGuard({ children }: { children: ReactNode }) {
         style={{
           marginTop: 24,
           padding: "36px 24px",
-          background: "#fff",
-          borderRadius: 14,
-          border: "1px solid #e4e9f1",
-          boxShadow: "0 4px 18px rgba(12, 35, 75, 0.06)",
+          background: "#ffffff",
+          borderRadius: 22,
+          border: "1px solid rgba(0, 0, 0, 0.07)",
+          boxShadow: "0 12px 38px rgba(0, 0, 0, 0.06)",
           textAlign: "center",
           maxWidth: 600,
           marginLeft: "auto",
@@ -54,13 +54,13 @@ export default function ModuleGuard({ children }: { children: ReactNode }) {
         }}
       >
         <div style={{ fontSize: 40, marginBottom: 12 }}>🛠️</div>
-        <h2 style={{ fontSize: 22, color: "#16181d", margin: "0 0 10px" }}>
+        <h2 style={{ fontSize: 22, color: "#1d1d1f", margin: "0 0 10px" }}>
           Módulo en mantenimiento
         </h2>
         <p
           style={{
             fontSize: 14,
-            color: "#6b7280",
+            color: "#6e6e73",
             lineHeight: 1.5,
             margin: "0 0 20px",
           }}
@@ -74,9 +74,9 @@ export default function ModuleGuard({ children }: { children: ReactNode }) {
           style={{
             display: "inline-block",
             padding: "10px 20px",
-            background: "#2f5fdb",
-            color: "#fff",
-            borderRadius: 8,
+            background: "#0071e3",
+            color: "#ffffff",
+            borderRadius: 10,
             fontSize: 14,
             fontWeight: 600,
             textDecoration: "none",
