@@ -3067,6 +3067,79 @@ título, cuenta de Lorena):**
   una causa distinta a las cinco ya investigadas.
 - **Estado del área:** LIBERADA.
 
+### Claude — Bug real: tarjetas de pestañas aplastadas en Configuración/Usuarios (17/8/2026)
+
+- **Agente:** Claude. **Estado:** `RESUELTO`.
+- **Contexto importante — dos implementaciones paralelas del mismo pedido:**
+  esta misma sesión de Claude había empezado el 16/8/2026 (en el mismo
+  branch de trabajo, `claude/coordination-document-bu3fbo`) una
+  transformación completa a Apple HIG de las 10 pantallas del dashboard,
+  a pedido explícito de Milton. Esa sesión NUNCA pudo hacer `git push`
+  (permiso de escritura denegado — `403` tanto en Git directo como en la
+  integración MCP de GitHub), así que ese trabajo quedó **solo local, sin
+  llegar nunca a este archivo remoto ni a producción**. Mientras tanto,
+  **Antigravity completó de forma independiente una transformación
+  equivalente** (ver la entrada más arriba en este archivo,
+  "Transformación de Diseño Apple Minimalista (Antigravity — 16/8/2026)",
+  commit `f4715c1` en `main`), con push real y despliegue a producción.
+  Como la reserva de la primera sesión de Claude nunca se publicó,
+  Antigravity no tuvo forma de verla — no es un fallo de coordinación de
+  nadie, es consecuencia directa del bloqueo de permisos. Al retomar esta
+  tarea, se comprobó que el trabajo de Antigravity es más completo (cubre
+  también `globals.css` y todos los componentes de integración) y ya está
+  en producción, así que **se descartó publicar la versión paralela de
+  Claude** (queda solo como backup local en el branch
+  `claude/apple-hig-superseded-backup-16ago`, sin publicar, por si hiciera
+  falta consultar algún detalle) y se continuó trabajando directo sobre
+  `main` (con el trabajo de Antigravity ya incorporado).
+- **Pedido de Milton (17/8/2026):** reportó con captura de pantalla que en
+  `/dashboard/configuracion` las tarjetas del selector de pestañas se ven
+  con el texto apretado en una columna angosta, partiéndose palabra por
+  palabra — pidió revisar cada botón y que todo lo responsive funcione
+  bien en iPad y celular.
+- **Causa raíz encontrada:** `globals.css` (parte de la transformación de
+  Antigravity) define un reset global: `button { display: inline-flex;
+  align-items: center; justify-content: center; }`. Las tarjetas de
+  pestaña de Configuración y Usuarios son `<button>` con 3 elementos
+  apilados (etiqueta, título, descripción) pensados para ir en columna,
+  pero como no fijaban su propio `flexDirection`, heredaban el
+  `inline-flex` en FILA del reset global — los tres bloques de texto
+  quedaban lado a lado en vez de uno debajo del otro, apretando la
+  descripción larga en el espacio sobrante. Mismo síntoma en ambas
+  pantallas porque comparten el mismo patrón de tarjeta.
+- **Arreglo:** se agregó `display: "flex", flexDirection: "column",
+  alignItems: "flex-start"` explícito a esas dos tarjetas
+  (`app/dashboard/configuracion/page.tsx` y `app/dashboard/usuarios/page.tsx`),
+  que ahora gana sobre el reset global. Commit local: `1eee32f`.
+- **Auditoría del resto de la app:** se corrió un script que busca
+  cualquier `<button>` con 2 o más hijos "apilados" (`display: block` o
+  `className="muted"/"eyebrow"/"lead-copy"`) sin `flexDirection: "column"`
+  propio, sobre todos los archivos de `app/dashboard/**` y
+  `components/*.tsx`. **No se encontraron más instancias** de este mismo
+  patrón de bug — Configuración y Usuarios eran los dos únicos lugares
+  que usan tarjetas de texto apilado dentro de un `<button>`.
+- **Observación secundaria, NO corregida todavía (queda pendiente si se
+  quiere revisar):** la altura efectiva de un botón con el padding por
+  defecto del reset global (`11px 16px`, fuente 14px) da un alto
+  aproximado de ~38-39px, por debajo del mínimo de 44×44pt que recomienda
+  Apple HIG para objetivos táctiles. No se tocó porque es un cambio al
+  estilo `button` GLOBAL (afecta literalmente todos los botones de la
+  app) y requeriría verificación visual real en dispositivo antes de
+  aplicarlo a ciegas — se deja anotado para que Milton decida si vale la
+  pena ajustarlo.
+- **Verificado:** `npm --prefix apps/web run typecheck` y `npm --prefix
+  apps/web run build` limpios (código 0).
+- **Bloqueo de publicación sigue activo:** esta sesión sigue sin permiso
+  de escritura en GitHub (mismo diagnóstico 403 documentado más abajo). El
+  commit `1eee32f` está solo en este contenedor. Milton recibió un
+  `git bundle` (`auto-articulos-apple-hig.bundle`) con las instrucciones
+  para publicarlo desde su computadora principal — **ese bundle quedó
+  desactualizado** porque estaba armado sobre el branch viejo que ya se
+  descartó (base `8fab5c1`, antes del commit `f4715c1` de Antigravity).
+  Hace falta un bundle NUEVO armado sobre `main` actual — pendiente de
+  generar y entregar en esta misma sesión.
+- **Estado del área:** LIBERADA.
+
 ## Zona compartida: requiere coordinación explícita
 
 Estos archivos pueden ser necesarios para ambos y nadie debe asumir control
