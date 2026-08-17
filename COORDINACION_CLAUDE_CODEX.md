@@ -3152,6 +3152,50 @@ título, cuenta de Lorena):**
   nadie más entre `f4715c1` y este bundle).
 - **Estado del área:** LIBERADA.
 
+### Claude — Revisión completa: consistencia Apple HIG + objetivos táctiles (17/8/2026)
+
+- **Agente:** Claude. **Estado:** `RESUELTO Y PUBLICADO`.
+- **Pedido de Milton:** revisar todo el sistema (encima del trabajo de
+  Antigravity, commit `f4715c1`) para asegurar consistencia visual Apple
+  completa y que todo lo responsive funcione bien en iPad y celular.
+- **Encontrado y corregido:**
+  1. **8 archivos con paleta suelta** que Antigravity no llegó a tocar o
+     dejó a medias: `app/dashboard/configuracion/page.tsx`,
+     `app/dashboard/usuarios/page.tsx`, `app/dashboard/oportunidades/page.tsx`
+     (incluye el degradé de la barra "analizando oportunidades"),
+     `app/dashboard/publicaciones-en-curso/page.tsx`,
+     `components/OnboardingWizard.tsx`, `components/GoogleIndexingStatus.tsx`,
+     `components/ModuleGuard.tsx` (nunca se había tocado). Todo remapeado a
+     los tokens ya establecidos por Antigravity (acento `#0071e3`, texto
+     secundario `#6e6e73`, éxito `#16803c`, aviso `#8a4b08`/`#fff4e5`,
+     error `#ff3b30`, índigo `#5e5ce6` para categorías).
+  2. **`components/FloatingAssistant.tsx` tenía DOS degradés propios**
+     (encabezado y botón flotante) con paleta azul-marino distinta del
+     resto — aplanados a acento sólido, consistente con la propia regla
+     de Antigravity ("eliminación total de gradientes").
+  3. **Objetivos táctiles insuficientes:** botones y campos de formulario
+     medían ~39px de alto, por debajo del mínimo de 44px que recomienda
+     Apple HIG para uso táctil. Se agregó `min-height: 44px` a
+     `button`/`input`/`select` en `globals.css` (excluyendo checkboxes,
+     radios y `.link-button`, que no deben ocupar ese espacio) y
+     `touch-action: manipulation`.
+  - Colores de marca de terceros preservados a propósito (Instagram
+    `#8134af`, LinkedIn `#0077b5`, Threads/X negro).
+  - Tablas anchas, grillas de tarjetas y el panel del chat flotante ya
+    manejaban bien pantallas chicas (breakpoints existentes de
+    `layout.tsx` y unidades `svh`/`env(safe-area-inset-*)` en el chat) —
+    no requirieron cambios.
+  - **Verificado:** `typecheck` y `build` de producción limpios en cada
+    tramo. Commit: `eb2907d`.
+- **✅ BLOQUEO DE PUBLICACIÓN RESUELTO (17/8/2026):** Milton reinstaló la
+  GitHub App "Claude" en la cuenta `miltondavila-ux` (se había
+  desinstalado o revocado en algún momento — causa exacta desconocida,
+  no visible desde esta sesión). Con permiso de escritura confirmado,
+  esta sesión pudo hacer `git push` directo por primera vez. La rama
+  `claude/coordination-document-bu3fbo` ya está publicada en GitHub con
+  todo el historial de esta entrada.
+- **Estado del área:** LIBERADA.
+
 ## Zona compartida: requiere coordinación explícita
 
 Estos archivos pueden ser necesarios para ambos y nadie debe asumir control
