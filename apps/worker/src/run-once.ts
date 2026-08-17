@@ -88,7 +88,12 @@ async function runLane(
   let idleSince = Date.now();
   while (Date.now() < deadline) {
     try {
+      const startedAt = Date.now();
+      console.log(`Lane "${laneName}": inicia unidad de trabajo.`);
       const did = await processOne();
+      console.log(
+        `Lane "${laneName}": unidad terminó en ${Date.now() - startedAt}ms (trabajo=${did}).`,
+      );
       if (did) {
         didWork = true;
         idleSince = Date.now();
