@@ -27,6 +27,7 @@ const ADMIN_TAB: TabItem = { href: "/dashboard/usuarios", label: "Administració
 export default function DashboardNav() {
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
   const [disabledModules, setDisabledModules] = useState<string[]>([]);
   const [globalDisabledModules, setGlobalDisabledModules] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
@@ -39,6 +40,7 @@ export default function DashboardNav() {
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         setIsAdmin(data?.role === "admin" || Boolean(data?.isActingAdmin));
+        setUserEmail(typeof data?.email === "string" ? data.email.toLowerCase() : "");
         if (Array.isArray(data?.disabledModules)) {
           setDisabledModules(data.disabledModules);
         }
@@ -58,9 +60,10 @@ export default function DashboardNav() {
   }, [pathname]);
 
   const rawTabs = isAdmin ? [...BASE_TABS, ADMIN_TAB] : BASE_TABS;
+  const canUseSocial = isAdmin || userEmail === "lorenalvarez30@gmail.com";
   const tabs = isAdmin
     ? rawTabs
-    : rawTabs.filter((tab) => !tab.id || !disabledModules.includes(tab.id));
+    : rawTabs.filter((tab) => tab.id !== "oportunidades-redes" && (!tab.id || !disabledModules.includes(tab.id)) || tab.id === "oportunidades-redes" && canUseSocial && !disabledModules.includes(tab.id));
   const activeTab = tabs.find((tab) => tab.href === pathname);
 
   const linkStyle = (active: boolean): CSSProperties => ({

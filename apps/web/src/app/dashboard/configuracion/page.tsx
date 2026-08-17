@@ -61,6 +61,9 @@ export default function ConfiguracionPage() {
   const [savingLanguage, setSavingLanguage] = useState(false);
   const [articleSignature, setArticleSignature] = useState("");
   const [savingSignature, setSavingSignature] = useState(false);
+  const [prompts, setPrompts] = useState<{ id: string; name: string; prompt: string }[]>([]);
+  const [defaultPromptId, setDefaultPromptId] = useState("");
+  const [savingPrompt, setSavingPrompt] = useState(false);
   const [phone, setPhone] = useState("");
   const [savingPhone, setSavingPhone] = useState(false);
   const [imagePrompt, setImagePrompt] = useState("");
@@ -144,9 +147,10 @@ export default function ConfiguracionPage() {
   }, []);
 
   const loadLanguages = useCallback(async () => {
-    const [langRes, meRes] = await Promise.all([
+    const [langRes, meRes, promptsRes] = await Promise.all([
       fetch("/api/languages", { cache: "no-store" }),
       fetch("/api/me", { cache: "no-store" }),
+      fetch("/api/prompts", { cache: "no-store" }),
     ]);
     if (langRes.ok) {
       const data = await langRes.json();
@@ -154,10 +158,15 @@ export default function ConfiguracionPage() {
       setLastLanguageSyncStatus(data.lastSyncJob?.status ?? null);
       setLastLanguageSyncError(data.lastSyncJob?.errorMessage ?? null);
     }
+    if (promptsRes.ok) {
+      const data = await promptsRes.json();
+      setPrompts(data.prompts ?? []);
+    }
     if (meRes.ok) {
        const data = await meRes.json();
        setContentLanguage(data.contentLanguage ?? "");
        setArticleSignature(data.articleSignature ?? "");
+       setDefaultPromptId(data.defaultPromptId ?? "");
        setPhone(data.phone ?? "");
        setImagePrompt(data.imagePrompt ?? "");
        setInfographicPrompt(data.infographicPrompt ?? "");
@@ -294,6 +303,29 @@ export default function ConfiguracionPage() {
       setBanner({ type: "info", text: "Idioma de los artículos guardado." });
     } finally {
       setSavingLanguage(false);
+    }
+  }
+
+  async function handleSaveDefaultPrompt() {
+    setSavingPrompt(true);
+    setBanner(null);
+    try {
+      const res = await fetch("/api/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ defaultPromptId: defaultPromptId || null }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setBanner({
+          type: "error",
+          text: data.error ?? "Error al guardar el estilo de redacción por defecto",
+        });
+        return;
+      }
+      setBanner({ type: "info", text: "Estilo de redacción por defecto guardado." });
+    } finally {
+      setSavingPrompt(false);
     }
   }
 
@@ -542,7 +574,8 @@ export default function ConfiguracionPage() {
         : "#0071e3";
 
   const showSocialTab =
-    isAdmin || !disabledModules.includes("oportunidades-redes");
+    (isAdmin || userEmail.toLowerCase() === "lorenalvarez30@gmail.com") &&
+    !disabledModules.includes("oportunidades-redes");
 
   useEffect(() => {
     if (activeTab === "social" && !showSocialTab) {
@@ -911,7 +944,7 @@ export default function ConfiguracionPage() {
         >
           <BusinessProfileSection />
           {(allowThreadsPublishing || allowInstagramPublishing || isAdmin) && (
-            <ThreadsSection allowThreads={allowThreadsPublishing} allowInstagram={allowInstagramPublishing} />
+            <ThreadsSection allowThreads={allowThreadsPublishing} allowInstagram={allowInstagramPublishing} isAdmin={isAdmin} />
           )}
           <TwitterSection />
           {(allowLinkedInPublishing || isAdmin) && <LinkedInSection allowed={allowLinkedInPublishing} />}
@@ -1368,6 +1401,35 @@ export default function ConfiguracionPage() {
                 {lastLanguageSyncError ? `: ${lastLanguageSyncError}` : "."}
               </p>
             )}
+          </section>
+
+          {/* Estilo de Redacción por Defecto */}
+          <section style={sectionStyle}>
+            <h2 style={h2Style}>Estilo de redacción por defecto</h2>
+            <p style={{ fontSize: 13, color: "#64748b", marginBottom: 12 }}>
+              Selecciona el estilo de escritura que se usará por defecto para tus artículos. Puedes cambiarlo individualmente al publicar un lote o ejecutar una oportunidad.
+            </p>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <select
+                value={defaultPromptId}
+                onChange={(e) => setDefaultPromptId(e.target.value)}
+                style={{ ...inputStyle, width: 280, height: 40 }}
+              >
+                <option value="">STANDARD (Estilo de la plataforma 10minutesWebsite)</option>
+                {prompts.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handleSaveDefaultPrompt}
+                disabled={savingPrompt}
+                style={disabledStyle(secondaryButtonStyle, savingPrompt)}
+              >
+                {savingPrompt ? "Guardando..." : "Guardar estilo por defecto"}
+              </button>
+            </div>
           </section>
 
           {/* Firma / Texto al Final del Artículo */}

@@ -6,13 +6,14 @@ import { hasTrialAccess } from "@/lib/trial";
 
 export async function POST(request: NextRequest) {
   const userId = await getCurrentUserId();
-  const { type, id, ids, disableIndexing, contentLanguage } =
+  const { type, id, ids, disableIndexing, contentLanguage, promptId } =
     (await request.json()) as {
       type?: string;
       id?: string;
       ids?: string[];
       disableIndexing?: boolean;
       contentLanguage?: string;
+      promptId?: string;
     };
   const selectedIds = type === "titles" && Array.isArray(ids)
     ? [...new Set(ids.filter((candidate): candidate is string => typeof candidate === "string" && candidate.length > 0))]
@@ -39,6 +40,7 @@ export async function POST(request: NextRequest) {
         maxTitlesPerBatch: true,
         contentLanguage: true,
         hasImageCredits: true,
+        defaultPromptId: true,
       },
     }),
   ]);
@@ -140,6 +142,10 @@ export async function POST(request: NextRequest) {
           typeof contentLanguage === "string" && contentLanguage.trim()
             ? contentLanguage.trim()
             : null,
+        promptId:
+          typeof promptId === "string" && promptId.trim()
+            ? promptId.trim()
+            : user.defaultPromptId,
         titles: {
           create: selected.map((title, order) => ({ text: title.text, order })),
         },

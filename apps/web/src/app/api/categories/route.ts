@@ -7,7 +7,7 @@ export async function GET() {
 
   const [categories, lastSyncJob] = await Promise.all([
     prisma.category.findMany({
-      where: { userId, platform: "10minutesWebsite" },
+      where: { userId, platform: "10minutesWebsite", source: { not: "archived" } },
       orderBy: { name: "asc" },
     }),
     prisma.categorySyncJob.findFirst({

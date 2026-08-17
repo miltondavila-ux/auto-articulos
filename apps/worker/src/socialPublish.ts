@@ -12,6 +12,7 @@ import {
   publishInstagramCarousel,
   publishInstagramImage,
   generateSocialImageRaw,
+  publishFacebookPagePost,
 } from "@auto-articulos/shared";
 import { put } from "@vercel/blob";
 
@@ -26,6 +27,35 @@ async function validateArticleUrl(url: string): Promise<void> {
     if (!res.ok) throw new Error(`La URL del artículo devuelve error ${res.status}. Verifica que el artículo siga publicado en tu blog.`);
   } catch (err) {
     throw new Error(`No se pudo validar la URL del artículo (${url}): ${err instanceof Error ? err.message : String(err)}. Verifica que el artículo siga publicado.`);
+  }
+}
+
+/**
+ * Obtiene la imagen pública que el propio artículo declara para compartirse.
+ * No generamos una imagen alternativa para LinkedIn: así la publicación usa
+ * exactamente la imagen destacada/OG del artículo, igual que su vista previa.
+ */
+async function getArticleOpenGraphImage(articleUrl: string): Promise<string | null> {
+  try {
+    const res = await fetch(articleUrl, {
+      redirect: "follow",
+      signal: AbortSignal.timeout(10000),
+      headers: { Accept: "text/html,application/xhtml+xml" },
+    });
+    if (!res.ok) return null;
+
+    const html = await res.text();
+    const match = html.match(
+      /<meta\s+[^>]*(?:property|name)=["']og:image["'][^>]*content=["']([^"']+)["'][^>]*>/i,
+    ) ?? html.match(
+      /<meta\s+[^>]*content=["']([^"']+)["'][^>]*(?:property|name)=["']og:image["'][^>]*>/i,
+    );
+    if (!match?.[1]) return null;
+
+    return new URL(match[1].replace(/&amp;/g, "&"), res.url).toString();
+  } catch (error) {
+    console.warn("No se pudo obtener og:image del artículo para LinkedIn:", error);
+    return null;
   }
 }
 
@@ -264,22 +294,10 @@ async function processLinkedInJob(job: {
     finalPost = `${finalPost}\n\n${job.articleUrl}`;
   }
 
-  // Preferir la imagen ya generada al crear la propuesta; solo se genera
-  // una nueva aquí como respaldo (propuestas creadas antes de este flujo).
-  // En ambos casos, LinkedIn requiere subirla a su sistema de assets nativo
-  // antes de poder adjuntarla a un post.
-  let sourceImageUrl: string | undefined = undefined;
-  if (!sourceImageUrl && job.titleId) {
-    const [title, user] = await Promise.all([
-      prisma.title.findUnique({ where: { id: job.titleId } }),
-      prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true, businessLogoUrl: true } }),
-    ]);
-    const imageBasis = title?.summary || job.articleTitle;
-    if (imageBasis) {
-      sourceImageUrl =
-        (await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt, user?.businessLogoUrl, "linkedin")) ?? undefined;
-    }
-  }
+  // LinkedIn debe reutilizar la imagen destacada del artículo, no crear una
+  // imagen con IA. Si el sitio no expone og:image, publicamos como ARTICLE
+  // para que LinkedIn resuelva su previsualización nativa del enlace.
+  const sourceImageUrl = await getArticleOpenGraphImage(job.articleUrl) ?? undefined;
 
   let imageAssetUrn: string | undefined;
   if (sourceImageUrl) {
@@ -317,6 +335,29 @@ async function processLinkedInJob(job: {
     });
   }
 
+  return true;
+}
+
+// ─── FACEBOOK PAGES ───────────────────────────────────────────────────────
+
+async function processFacebookPageJob(job: {
+  id: string; userId: string; titleId: string | null; articleUrl: string; articleTitle: string; suggestedText: string;
+}): Promise<boolean> {
+  const integration = await prisma.facebookPageIntegration.findUnique({ where: { userId: job.userId } });
+  if (!integration) throw new Error("Facebook Pages no está configurado en tu cuenta.");
+  if (integration.expiresAt <= new Date()) throw new Error("La autorización de Facebook Pages expiró. Vuelve a conectar Meta en Configuración.");
+
+  await validateArticleUrl(job.articleUrl);
+  const finalPost = job.suggestedText.includes("[ENLACE]")
+    ? job.suggestedText.replace("[ENLACE]", job.articleUrl)
+    : `${job.suggestedText}\n\n${job.articleUrl}`;
+  const imageUrl = await getArticleOpenGraphImage(job.articleUrl) ?? undefined;
+  const result = await publishFacebookPagePost(
+    decryptSecret(integration.accessTokenEncrypted), integration.facebookPageId, finalPost, imageUrl,
+  );
+
+  await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: result.permalink || result.postId, publishedAt: new Date(), errorLog: null } });
+  if (job.titleId) await prisma.titleEvent.create({ data: { titleId: job.titleId, message: `Publicado en Facebook Page (${integration.facebookPageName || integration.facebookPageId}) - ID: ${result.postId}${imageUrl ? " (con imagen del artículo)" : ""}` } });
   return true;
 }
 
@@ -548,6 +589,8 @@ export async function processNextSocialPublish(): Promise<boolean> {
       return await processTwitterJob(job);
     } else if (job.platform === "linkedin") {
       return await processLinkedInJob(job);
+    } else if (job.platform === "facebook-page") {
+      return await processFacebookPageJob(job);
     } else if (job.platform.startsWith("instagram-")) {
       return await processInstagramJob(job);
     } else {

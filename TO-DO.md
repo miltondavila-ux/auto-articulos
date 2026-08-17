@@ -109,18 +109,33 @@ HANDOFF, solo alimenta ideas hacia él).
 - **(16/8/2026)** Queja: la transformación de todas las pantallas al estilo
   Apple quedó a medias, se ve mal y feo. Falta terminarla bien en todas las
   pantallas.
-- **(16/8/2026)** Hacer un análisis de ingeniería inversa de cómo se crean los
-  artículos actualmente (el flujo de 10minutesWebsite), para poder ofrecer en
-  Auto Artículos la opción de elegir entre dos máquinas de creación:
-  1) la máquina actual de 10minutesWebsite (como hoy), o
-  2) una máquina secundaria más abierta, con su propio prompt dentro de la
-     misma Auto Artículos. Ese prompt escribiría/copiaría directamente sobre
-     el artículo y NO usaría el botón de generación de ChatGPT. Lo único que
-     seguiría usando del flujo actual es el botón de imágenes; todo lo demás
-     quedaría igual.
-  Adición del mismo día: ese prompt tiene que ser más inteligente y mostrar
-  gráficas y números; el resultado debe ser fácil de leer para personas, no
-  solo para máquinas.
+- **(16/8/2026, ampliado 17/8/2026)** Máquina secundaria de creación de
+  artículos (alternativa al botón de ChatGPT de 10minutesWebsite/TagCrush):
+  - Primero, un análisis de ingeniería inversa de cómo se crean los
+    artículos actualmente (el flujo de 10minutesWebsite), para poder
+    ofrecer en Auto Artículos la opción de elegir entre dos máquinas de
+    creación: 1) la máquina actual de 10minutesWebsite (como hoy), o 2) una
+    máquina secundaria más abierta, con su propio prompt dentro de la misma
+    Auto Artículos.
+  - Esa máquina secundaria escribiría/copiaría el contenido directamente
+    sobre el artículo y NO usaría el botón de generación de ChatGPT nativo
+    del sitio. Lo único que seguiría usando del flujo actual es el botón de
+    imágenes; todo lo demás (edición, publicación, maquetación) queda igual.
+  - El prompt de esa máquina secundaria tiene que ser más inteligente,
+    mostrar gráficas y números, y el resultado debe ser fácil de leer para
+    personas, no solo para máquinas.
+  - **Panel de Administración**: crear un menú interactivo con cajas de
+    texto y botón "Crear prompt". Los prompts creados se listan en pantalla
+    con opción de edición directa.
+  - **Selección de los usuarios**: los prompts personalizados quedan
+    disponibles para todos los usuarios al momento de crear una nueva
+    publicación o ejecutar una oportunidad SEO, permitiéndoles elegir entre
+    el prompt por defecto del sistema o cualquiera de los personalizados
+    (ej: Prompt 1, 2, 3, etc.).
+  - La máquina de creación alternativa usa el prompt seleccionado desde
+    Administración para generar el contenido del artículo e
+    inyectar/escribir el texto directamente en el editor de la plataforma,
+    evitando pulsar el botón de ChatGPT nativo.
 
 ## Hecho
 

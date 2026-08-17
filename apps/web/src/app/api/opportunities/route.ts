@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     );
   }
   const categories = await prisma.category.findMany({
-    where: { userId, panel },
+    where: { userId, panel, source: { not: "archived" } },
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   });

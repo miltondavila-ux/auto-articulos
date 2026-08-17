@@ -18,11 +18,12 @@ import { hasTrialAccess } from "@/lib/trial";
 // se le pierda de vista el resto.
 export async function POST(request: NextRequest) {
   const userId = await getCurrentUserId();
-  const { disableIndexing, contentLanguage } = (await request
+  const { disableIndexing, contentLanguage, promptId } = (await request
     .json()
     .catch(() => ({}))) as {
     disableIndexing?: boolean;
     contentLanguage?: string;
+    promptId?: string;
   };
 
   const [credential, activeRun, user] = await Promise.all([
@@ -44,6 +45,7 @@ export async function POST(request: NextRequest) {
         maxTitlesPerBatch: true,
         contentLanguage: true,
         hasImageCredits: true,
+        defaultPromptId: true,
       },
     }),
   ]);
@@ -129,6 +131,10 @@ export async function POST(request: NextRequest) {
           status: "running",
           disableIndexing: Boolean(disableIndexing),
           contentLanguage: normalizedContentLanguage,
+          promptId:
+            typeof promptId === "string" && promptId.trim()
+              ? promptId.trim()
+              : user.defaultPromptId,
           titles: {
             create: group.titles.map((title, order) => ({
               text: title.text,

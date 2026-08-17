@@ -8,6 +8,7 @@ import { buildImagePrompt, isImageRelevant } from "../imagePrompt";
 import { generateFaqs, type Faq } from "../faqPrompt";
 import { translateText } from "../translateText";
 import { replacePhonePlaceholders } from "../phonePlaceholders";
+import { generateCustomArticle } from "./generateCustomArticle";
 
 export interface TenMinutesWebsiteCredentials {
   username: string;
@@ -258,6 +259,7 @@ export async function publishArticle(
       credentials.articleSignature,
       credentials.userPhone,
       onStep,
+      credentials.promptText,
     );
     await generateImage(page, finalTitle, summary, onStep);
     await fillFaqWidget(page, finalTitle, summary, contentHtml, onStep);
@@ -491,6 +493,7 @@ async function createArticleDraft(
   articleSignature: string | null | undefined,
   userPhone: string | null | undefined,
   onStep: OnStep,
+  promptText?: string | null,
 ): Promise<{ summary: string; contentHtml: string; finalTitle: string }> {
   await onStep("Abriendo formulario de creación de artículo...");
   await page.goto(`${baseUrl}/dashboard/direct-articles`, {
@@ -569,6 +572,92 @@ async function createArticleDraft(
       .setChecked(false, { force: true })
       .catch(() => {});
     await onStep("Indexación en buscadores desactivada para este artículo.");
+  }
+
+  if (promptText) {
+    await onStep("Usando estilo de redacción personalizado con prompt propio.");
+    await onStep("Generando contenido del artículo con OpenAI...");
+    const lang = contentLanguage || "es";
+    const customArticle = await generateCustomArticle(title, promptText, lang);
+    await onStep(`✓ Artículo generado con éxito por OpenAI. Título: "${customArticle.title}"`);
+
+    let contentHtml = customArticle.contentHtml;
+
+    // Reemplazo del teléfono
+    if (contentHtml.includes("PHONE_NUMBER")) {
+      if (userPhone) {
+        const repaired = replacePhonePlaceholders(contentHtml, userPhone);
+        contentHtml = repaired.html;
+        await onStep(
+          `✓ Marcador 'PHONE_NUMBER' reemplazado: ${repaired.replacements.whatsapp} enlace(s) de WhatsApp/QR, ${repaired.replacements.call} de llamada y ${repaired.replacements.other} uso(s) adicional(es).`,
+        );
+      } else {
+        await onStep("⚠️ ADVERTENCIA CRÍTICA: Se detectó el marcador de posición 'PHONE_NUMBER' (botones de WhatsApp o llamada) en el artículo generado, pero NO tienes un número de teléfono configurado en tu perfil. El artículo se publicará con 'PHONE_NUMBER'.");
+      }
+    }
+
+    // Inyección de firma
+    const trimmedSignature = articleSignature?.trim();
+    if (trimmedSignature) {
+      const signatureText = await translateText(trimmedSignature, lang);
+      if (signatureText !== trimmedSignature) {
+        await onStep("Tu texto propio fue traducido al idioma del artículo.");
+      }
+      contentHtml = `${contentHtml}\n<p>${escapeHtml(signatureText)}</p>`;
+      await onStep("Texto propio agregado al final del artículo.");
+    }
+
+    // Rellenar título (#titlees)
+    const titleSelector = await page
+      .evaluate(() => (document.querySelector("#titlees") ? "#titlees" : null))
+      .catch(() => null);
+    if (titleSelector) {
+      const titleField = page.locator(titleSelector);
+      await titleField.fill(customArticle.title.slice(0, 200));
+      await onStep("Título completado en el formulario.");
+    }
+
+    // Rellenar resumen
+    const excerptSelector = await page
+      .evaluate(() => {
+        for (const id of ["#excerptes", "#excerpt"]) {
+          if (document.querySelector(id)) return id;
+        }
+        const candidate = Array.from(
+          document.querySelectorAll("textarea, input[type=text]"),
+        ).find((el) => {
+          const field = el as HTMLInputElement;
+          return (
+            /excerpt|resumen/i.test(field.id) ||
+            /excerpt|resumen/i.test(field.name ?? "")
+          );
+        });
+        if (!candidate) return null;
+        candidate.setAttribute("data-auto-articulos-excerpt", "1");
+        return '[data-auto-articulos-excerpt="1"]';
+      })
+      .catch(() => null);
+
+    let summary = customArticle.summary || "";
+    if (excerptSelector) {
+      const excerptField = page.locator(excerptSelector);
+      if (summary.length >= 300) {
+        summary = summary.slice(0, 280);
+        await onStep("Resumen recortado para respetar el límite de 300 caracteres de la plataforma.");
+      }
+      await excerptField.fill(summary);
+      await onStep("Resumen completado en el formulario.");
+    }
+
+    // Inyectar HTML en el editor
+    await onStep("Inyectando el HTML del artículo en el editor...");
+    let injected = await fillCKEditorSource(page, contentHtml, onStep);
+    if (!injected) {
+      await onStep("No se pudo usar el modo Fuente HTML. Usando inyección programática...");
+      await injectContentIntoEditor(page, contentHtml, onStep);
+    }
+
+    return { summary, contentHtml, finalTitle: customArticle.title };
   }
 
   await page.getByRole("button", { name: TEXT_USAR_CHATGPT }).click();
@@ -1026,6 +1115,14 @@ async function injectContentIntoEditor(
     }
   }
 
+  if (await fillCKEditorSource(page, contentHtml, onStep)) {
+      const state = await diagnoseEditorState(page);
+      if (state.contentesLen > 0) {
+          await onStep(`✓ Contenido confirmado en el textarea real después de Fuente HTML (${state.contentesLen} chars).`);
+          return;
+      }
+  }
+
   // Estrategia 3: Encontrar contenteditable visible y usar execCommand('insertHTML')
   const editableResult = await page.evaluate((html) => {
     const editables = Array.from(document.querySelectorAll("[contenteditable='true']")) as HTMLElement[];
@@ -1113,6 +1210,36 @@ async function injectContentIntoEditor(
   }
 
   await onStep("⚠️ Ninguna estrategia logró poner el contenido real en el textarea. Se continúa de todas formas.");
+}
+
+async function fillCKEditorSource(
+  page: Page,
+  contentHtml: string,
+  onStep: OnStep,
+): Promise<boolean> {
+  try {
+    const sourceButton = page.locator(".cke_button__source, a[class*='cke_button__source']").first();
+    if (await sourceButton.isVisible()) {
+      await onStep("Haciendo clic en el botón 'Fuente HTML' de CKEditor...");
+      await sourceButton.click();
+      await page.waitForTimeout(1000);
+
+      const sourceTextarea = page.locator("textarea.cke_source, .cke_source textarea").first();
+      if (await sourceTextarea.isVisible()) {
+        await onStep("Pegando el HTML en el textarea de Fuente HTML...");
+        await sourceTextarea.fill(contentHtml);
+        await page.waitForTimeout(500);
+
+        await onStep("Haciendo clic nuevamente en 'Fuente HTML' para volver al modo visual...");
+        await sourceButton.click();
+        await page.waitForTimeout(1000);
+        return true;
+      }
+    }
+  } catch (e) {
+    await onStep(`Aviso: fallo al usar Fuente HTML de CKEditor (${e}). Se continuará con inyección directa.`);
+  }
+  return false;
 }
 
 const MAX_IMAGE_ATTEMPTS = 3;

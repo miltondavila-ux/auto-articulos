@@ -31,6 +31,7 @@ export async function processNext(): Promise<boolean> {
     orderBy: { createdAt: "asc" },
     include: {
       category: true,
+      prompt: true,
       user: {
         select: {
           platformDomain: true,
@@ -224,6 +225,7 @@ async function processRunTitle(
         contentLanguage: effectiveLanguage,
         articleSignature: run.user.articleSignature,
         userPhone: run.user.phone,
+        promptText: run.prompt?.prompt || null,
       },
       nextTitle.text,
       run.category.externalId,

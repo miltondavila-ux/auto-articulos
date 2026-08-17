@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
+import { canUseSocialModule } from "@/lib/social-access";
 
 export async function GET() {
   try {
     const userId = await getCurrentUserId();
+    if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Módulo reservado a administradores y Lorena." }, { status: 403 });
     const opportunities = await prisma.socialOpportunity.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
@@ -18,6 +20,7 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     const userId = await getCurrentUserId();
+    if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Módulo reservado a administradores y Lorena." }, { status: 403 });
     const body = await request.json();
     const { id } = body;
 
@@ -73,6 +76,7 @@ export async function PUT(request: NextRequest) {
 export async function DELETE() {
   try {
     const userId = await getCurrentUserId();
+    if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Módulo reservado a administradores y Lorena." }, { status: 403 });
 
     // Borrar todas las propuestas que no estén pendientes (es decir, publicadas o con error)
     await prisma.socialOpportunity.deleteMany({

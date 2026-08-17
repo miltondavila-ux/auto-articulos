@@ -43,6 +43,8 @@ export default function PublicarPage() {
     { id: string; externalId: string; name: string }[]
   >([]);
   const [contentLanguage, setContentLanguage] = useState("");
+  const [prompts, setPrompts] = useState<{ id: string; name: string; prompt: string }[]>([]);
+  const [selectedPromptId, setSelectedPromptId] = useState("");
   // Para marca blanca (tagcrush): PreValidationGuard necesita saber el
   // servidor de la cuenta para no mostrar "10minutesWebsite" ni enlaces de
   // ayuda equivocados. Ver packages/shared/src/platform-servers.ts.
@@ -61,12 +63,23 @@ export default function PublicarPage() {
       if (typeof data.contentLanguage === "string") {
         setContentLanguage(data.contentLanguage);
       }
+      if (typeof data.defaultPromptId === "string" && data.defaultPromptId) {
+        setSelectedPromptId(data.defaultPromptId);
+      }
       if (typeof data.hasImageCredits === "boolean") {
         setHasImageCredits(data.hasImageCredits);
       }
       if (typeof data.platformDomain === "string") {
         setPlatformDomain(data.platformDomain);
       }
+    }
+  }, []);
+
+  const loadPrompts = useCallback(async () => {
+    const res = await fetch("/api/prompts");
+    if (res.ok) {
+      const data = await res.json();
+      setPrompts(data.prompts ?? []);
     }
   }, []);
 
@@ -113,12 +126,14 @@ export default function PublicarPage() {
     checkActiveRun();
     loadUserLimits();
     loadLanguages();
+    loadPrompts();
   }, [
     loadCredentialsStatus,
     loadCategories,
     checkActiveRun,
     loadUserLimits,
     loadLanguages,
+    loadPrompts,
   ]);
 
   // 10minutesWebsite distingue categorías "regulares" de categorías "de
@@ -160,6 +175,7 @@ export default function PublicarPage() {
           categoryId: selectedCategoryId,
           disableIndexing,
           contentLanguage,
+          promptId: selectedPromptId || null,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -297,6 +313,24 @@ export default function PublicarPage() {
                 </option>
               ))
             )}
+          </select>
+
+          <h2 style={{ ...h2Style, marginTop: 24 }}>Estilo de escritura (Prompt)</h2>
+          <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 8 }}>
+            Elige el estilo de escritura/prompt con el que la IA generará el contenido de tus artículos.
+          </p>
+          <select
+            value={selectedPromptId}
+            onChange={(e) => setSelectedPromptId(e.target.value)}
+            disabled={hasActiveRun}
+            style={{ ...inputStyle, width: "100%" }}
+          >
+            <option value="">STANDARD (Estilo de la plataforma 10minutesWebsite)</option>
+            {prompts.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
           </select>
         </section>
 

@@ -1,0 +1,522 @@
+[
+  {
+    "id": "cmsaqlus9000010wr4bd7wdlr",
+    "email": "david.delsacramento@gmail.com",
+    "name": "David del Sacramento",
+    "role": "admin",
+    "dailyArticleLimit": 100,
+    "maxTitlesPerBatch": 100
+  },
+  {
+    "id": "cmsu5noa8000112vna59pe9vv",
+    "email": "labora.a@gmail.com",
+    "name": "Alfonso Jimenez Labora",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms967f1p00147rwgctun5fks",
+    "email": "svetlana.botnarciuc@expglobalspain.com",
+    "name": "Svetlana Botnarciuc",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms9671k9000c7rwguwkqkij8",
+    "email": "lizzaoropezarealtor@gmail.com",
+    "name": "Lizzammar Oropeza",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cmst3e2nv0000rlg8bpf16bec",
+    "email": "stefcarreazo4@gmail.com",
+    "name": "Stefany Meza",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms9679tf000t7rwgv8030kho",
+    "email": "alex.ferwerda@gmail.com",
+    "name": "Alex Ferwerda",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms96730h000f7rwgpbqs82a3",
+    "email": "pasoparga@gmail.com",
+    "name": "Julio Paso - Parga Cruz",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms966vsv00007rwghouaz7qv",
+    "email": "gestions.pascual@gmail.com",
+    "name": "Gestions Joan Pascual Slu / Pascual",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms967cof000z7rwga8v3x0a1",
+    "email": "hector.tupropiedadenmiami@gmail.com",
+    "name": "HECTOR FARFAN",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms967d5f00107rwgubl4n4ne",
+    "email": "zulmadrealestate@gmail.com",
+    "name": "Zulmad Antolinez",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cmsrmbfkb0000e0u5vb8de7uw",
+    "email": "info@rafaelzuzolorealtor.com",
+    "name": "Rafael Zuzolo",
+    "role": "user",
+    "dailyArticleLimit": 95,
+    "maxTitlesPerBatch": 50
+  },
+  {
+    "id": "cmsrmfrsp0001e0u5z6xgkz62",
+    "email": "soymiltondavila@gmail.com",
+    "name": "Milton Davila",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms9675em000k7rwgankekjtt",
+    "email": "belcazzo65@gmail.com",
+    "name": "Erick Flores",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms967c7f000y7rwgsy631l7t",
+    "email": "omelisrealtor@gmail.com",
+    "name": "Omelis Azuaje",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cmsascpup00003pgjamkil81l",
+    "email": "contacto@elequipoinmobiliario.com",
+    "name": "El Equipo Inmobiliario",
+    "role": "user",
+    "dailyArticleLimit": 90,
+    "maxTitlesPerBatch": 90
+  },
+  {
+    "id": "cmst42tz5000l6fwbbrhjeva8",
+    "email": "alejandro.cana@gmail.com",
+    "name": "Alejandro Caña",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cmsdi0qng0000xpcgcnist6ai",
+    "email": "reloayza8@gmail.com",
+    "name": "Rigo Loayza",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms967b93000w7rwg21yr53fh",
+    "email": "soniadelaparte.mia@gmail.com",
+    "name": "Sonia De La Parte",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms9673yx000h7rwgqk4tprfv",
+    "email": "v.exclusivehomes@gmail.com",
+    "name": "Veneranda Feliciano",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms9674g3000i7rwg5t9lvp72",
+    "email": "monica@mpazrealestate.com",
+    "name": "Monica Paz",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms9674xc000j7rwg03k69gz6",
+    "email": "danny-em@hotmail.com",
+    "name": "Danny Echavarria",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cmsb5gnr20000l58fovsnityn",
+    "email": "Juanfernavia@gmail.com",
+    "name": "Tu Comision Completa",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 400
+  },
+  {
+    "id": "cms966z4t00077rwgdmfevnls",
+    "email": "brendyrealtor@gmail.com",
+    "name": "Brendy Calderon",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms96721k000d7rwgulk01j0d",
+    "email": "lidia.capdevila@expglobalspain.com",
+    "name": "Lidia Capdevila Aguiló",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cmssv6jk90000pqoy2nrfu5ms",
+    "email": "comercial@viviendajoven.es",
+    "name": "Iraido Rodríguez",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms9679bn000s7rwgul1uyge3",
+    "email": "remuzgoteam@gmail.com",
+    "name": "Patricia Remuzgo",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms9673hq000g7rwgykpmtk5e",
+    "email": "german.mteba@gmail.com",
+    "name": "German Martín Teba",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms967aan000u7rwge3rjq36o",
+    "email": "m.mejia@seekers.com.do",
+    "name": "Miguelina Mejia",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cmsby52c20000sz3h991giiii",
+    "email": "veronica.rojas@expglobalspain.com",
+    "name": "Veronica Rojas",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cmst72v9i000013xlxjh73cvd",
+    "email": "curbinabienesraices@gmail.com",
+    "name": "Claudia Leticia Urbina Moran",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms9678ud000r7rwgiczqtjyk",
+    "email": "mirmontejore@gmail.com",
+    "name": "Mirtza Montejo",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms966x8g00037rwgqkid5k8w",
+    "email": "tamairaben@gmail.com",
+    "name": "Tamaira Benavides",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms966wre00027rwg1t1n2clc",
+    "email": "realtorronnymeza@gmail.com",
+    "name": "Ronny Meza",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms966y6z00057rwgb9vb8aee",
+    "email": "realtorspenagos@gmail.com",
+    "name": "STELLA PENAGOS",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms9676fd000m7rwg8o0auk15",
+    "email": "andres.reche@altadares.com",
+    "name": "Andrés Jesús Reche Molina",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms94tprj0000bhbqxpt4bsem",
+    "email": "sandra.gomezperez@gmail.com",
+    "name": "Sandra Gómez Pérez",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms9675vs000l7rwghlkhjvxi",
+    "email": "eirarivasrealtor@gmail.com",
+    "name": "Eira Rivas",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms966wa700017rwganzxdues",
+    "email": "yelo2201@gmail.com",
+    "name": "Yenimar Lopez",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cmsen0xtn0010614i836o1fon",
+    "email": "info@patriciacoy.com",
+    "name": "Patricia coy",
+    "role": "user",
+    "dailyArticleLimit": 90,
+    "maxTitlesPerBatch": 90
+  },
+  {
+    "id": "cms9678d5000q7rwgrv3a55af",
+    "email": "virginiaglequerica@gmail.com",
+    "name": "Virginia González Lequerica",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cmsdobbfz000c60v0qtkkfqqz",
+    "email": "gustavobaja@gmail.com",
+    "name": "Gustavo Torres",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms967arw000v7rwgnhayd4fs",
+    "email": "yolandalandinezrealtor@gmail.com",
+    "name": "Yolanda Landinez",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms9677vu000p7rwg34dbf4on",
+    "email": "realestate@amparolillo.com",
+    "name": "Amparo Lillo Bilbao",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms967bqa000x7rwgnkuba8cw",
+    "email": "axelle.clement@expglobalspain.com",
+    "name": "Axelle Clément",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms9677el000o7rwgsj73epxx",
+    "email": "monicachediakbarbur@gmail.com",
+    "name": "MONICA CHEDIAK",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms96702w00097rwgeffwooy4",
+    "email": "mirellacrisafulli70@gmail.com",
+    "name": "Mireya Crisafulli",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms966ynu00067rwgw2lhtfu9",
+    "email": "tony@antonioaguirre.com",
+    "name": "Antonio Aguirre",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms966xpw00047rwg0y0nwqiw",
+    "email": "almaguer42@hotmail.com",
+    "name": "Ma Rosa Almaguer González",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cmssx2ogo0000hnjmflivrq1c",
+    "email": "suiterealtor@gmail.com",
+    "name": "Alisha Walker",
+    "role": "admin",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms9676x9000n7rwgx9fl4wdg",
+    "email": "guzman.myhome@gmail.com",
+    "name": "Guzman Erramuspe",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms967ekp00137rwgeoc89z6k",
+    "email": "olga.varja@gmail.com",
+    "name": "Olga Varja",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms9670jp000a7rwghkfams0n",
+    "email": "hector.colon.realtor@gmail.com",
+    "name": "Hector L. Colón",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms96712i000b7rwgv8uuqyii",
+    "email": "carmengerman727@gmail.com",
+    "name": "Carmen German",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cmsdn664m0001zcn2rr499vuu",
+    "email": "mmcleod@mpmrealtygroup.com",
+    "name": "Maria Pia Mcleod",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 90
+  },
+  {
+    "id": "cms8cw9ff00043k8hsfcls122",
+    "email": "mariodavila@gmail.com",
+    "name": null,
+    "role": "admin",
+    "dailyArticleLimit": 95,
+    "maxTitlesPerBatch": 300
+  },
+  {
+    "id": "cmssxmtgd0000t130sfjxvaw2",
+    "email": "ignacioscubas@gmail.com",
+    "name": "ignacio Sanchez Cubas",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cmsbw37i20000xl5snlup056i",
+    "email": "vidaybienesraicesenmiami@gmail.com",
+    "name": "Nelida Gomez",
+    "role": "user",
+    "dailyArticleLimit": 90,
+    "maxTitlesPerBatch": 99
+  },
+  {
+    "id": "cms967e3t00127rwgp2yskw19",
+    "email": "mariffer574@gmail.com",
+    "name": "Mariffer De Armas",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cmst1lu59000hi297srw5zjbc",
+    "email": "realtyjater@gmail.com",
+    "name": "Edward Jater",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms8c1zrr0000iilb6or98tr5",
+    "email": "miltondavila@gmail.com",
+    "name": null,
+    "role": "admin",
+    "dailyArticleLimit": 95,
+    "maxTitlesPerBatch": 95
+  },
+  {
+    "id": "cmstgp0t00000exed9pc72pzf",
+    "email": "esteerealtor@gmail.com",
+    "name": "Estee Soto",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms9cj3v40000ahp0iwgex2bt",
+    "email": "carolinaospinay@gmail.com",
+    "name": "Carolina Ospina",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms8cv2f40000x3xauyqqeenc",
+    "email": "lorenalvarez30@gmail.com",
+    "name": null,
+    "role": "user",
+    "dailyArticleLimit": 90,
+    "maxTitlesPerBatch": 90
+  },
+  {
+    "id": "cms9672j9000e7rwglkf20bvj",
+    "email": "arantza.gomez@expglobalspain.com",
+    "name": "Aranzazu Gomez Baldor",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  },
+  {
+    "id": "cms967dmo00117rwguz9affrp",
+    "email": "rmarianarealestate@gmail.com",
+    "name": "Mariana Romero",
+    "role": "user",
+    "dailyArticleLimit": 20,
+    "maxTitlesPerBatch": 20
+  }
+]

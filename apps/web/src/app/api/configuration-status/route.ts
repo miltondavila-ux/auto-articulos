@@ -35,7 +35,7 @@ export async function GET() {
     }),
     // 2. Categorías sincronizadas
     prisma.category.findMany({
-      where: { userId },
+      where: { userId, source: { not: "archived" } },
       select: { id: true },
     }),
     // 3. Datos del usuario (idioma, firma, teléfono)

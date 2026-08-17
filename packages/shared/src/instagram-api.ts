@@ -17,6 +17,8 @@ export interface InstagramTokenExchangeResult {
   expiresInSeconds: number;
   instagramBusinessAccountId: string;
   instagramUsername: string;
+  facebookPageId: string;
+  facebookPageName: string;
 }
 
 export interface InstagramPublishResult {
@@ -42,7 +44,8 @@ export function getInstagramAppCredentials(overrideId?: string, overrideSecret?:
 
 /**
  * Genera la URL de autorización OAuth 2.0 para Instagram (Meta Graph API).
- * Necesita los scopes: instagram_basic, instagram_content_publish, pages_show_list.
+ * Necesita los scopes: instagram_basic, instagram_content_publish, pages_show_list
+ * y pages_manage_posts para también publicar en la Página seleccionada.
  */
 export function getInstagramAuthUrl(
   state: string,
@@ -50,7 +53,7 @@ export function getInstagramAuthUrl(
   appCredentials?: { appId: string; appSecret: string }
 ): string {
   const { appId } = appCredentials || getInstagramAppCredentials();
-  const scope = "instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement,business_management";
+  const scope = "instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement,pages_manage_posts,business_management";
   const params = new URLSearchParams({
     client_id: appId,
     redirect_uri: redirectUri,
@@ -152,6 +155,8 @@ export async function exchangeCodeForInstagramTokens(
   // Usar la primera página que tenga Instagram Business Account
   let instagramBusinessAccountId = "";
   let instagramUsername = "";
+  let facebookPageId = "";
+  let facebookPageName = "";
 
   for (const page of pagesData.data) {
     const pageRes = await fetch(
@@ -167,6 +172,8 @@ export async function exchangeCodeForInstagramTokens(
         instagramBusinessAccountId = pageData.instagram_business_account.id;
         instagramUsername = pageData.instagram_business_account.username || "";
         publishingAccessToken = page.access_token || longLivedToken;
+        facebookPageId = page.id;
+        facebookPageName = page.name || "";
         break;
       }
     }
@@ -185,6 +192,8 @@ export async function exchangeCodeForInstagramTokens(
     expiresInSeconds,
     instagramBusinessAccountId,
     instagramUsername,
+    facebookPageId,
+    facebookPageName,
   };
 }
 

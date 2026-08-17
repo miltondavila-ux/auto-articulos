@@ -11,7 +11,7 @@ export async function GET() {
       select: { updatedAt: true },
     }),
     prisma.category.findMany({
-      where: { userId },
+      where: { userId, source: { not: "archived" } },
       select: { id: true, isSequence: true },
     }),
     prisma.user.findUnique({

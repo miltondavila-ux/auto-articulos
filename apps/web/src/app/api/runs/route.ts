@@ -43,7 +43,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const userId = await getCurrentUserId();
-  const { titlesText, categoryId, disableIndexing, contentLanguage } =
+  const { titlesText, categoryId, disableIndexing, contentLanguage, promptId } =
     await request.json();
 
   if (typeof titlesText !== "string") {
@@ -83,6 +83,7 @@ export async function POST(request: NextRequest) {
       dailyArticleLimit: true,
       contentLanguage: true,
       hasImageCredits: true,
+      defaultPromptId: true,
     },
   });
 
@@ -143,7 +144,7 @@ export async function POST(request: NextRequest) {
   }
 
   const category = await prisma.category.findFirst({
-    where: { id: categoryId, userId },
+    where: { id: categoryId, userId, source: { not: "archived" } },
   });
   if (!category) {
     return NextResponse.json({ error: "Categoría inválida" }, { status: 400 });
@@ -223,6 +224,10 @@ export async function POST(request: NextRequest) {
         typeof contentLanguage === "string" && contentLanguage.trim()
           ? contentLanguage.trim()
           : null,
+      promptId:
+        typeof promptId === "string" && promptId.trim()
+          ? promptId.trim()
+          : user.defaultPromptId,
       titles: {
         create: titles.map((text: string, index: number) => ({
           text,

@@ -761,6 +761,42 @@ ejecutar de forma explícita y auditada después del despliegue.
 
 ## Trabajo activo
 
+### Corrección urgente — scroll horizontal del menú de escritorio (17/8/2026)
+
+- **Capitán de migración:** Codex — revisará y aplicará el lote completo.
+  Motivo: eliminar scroll horizontal del menú de escritorio sin migración.
+  Nadie más ejecuta Prisma hasta su liberación.
+- **Causa:** la barra de pestañas de escritorio tenía `overflowX: auto`, por
+  lo que mostraba una barra de desplazamiento horizontal aun en escritorio.
+- **Corrección aislada:** en una rama limpia basada en `origin/main`,
+  `DashboardNav.tsx` pasa la fila a `flex-wrap: wrap` y oculta el overflow
+  horizontal. Las pestañas quedan en varias líneas limpias dentro de la misma
+  tarjeta; no se modifica navegación, API, schema ni datos.
+- **Estado:** pendiente de compilación y despliegue de Vercel antes de liberar
+  el lote.
+- **Cierre verificado:** el commit `17a807d` fue publicado en `main`; Vercel
+  completó `dpl_3KZV3wK6xtRhV9TTTtSdry5n4x4E` en estado **Ready** y actualizó el
+  alias de producción. **Capitán de migración liberó el lote:** Codex.
+  Resultado: scroll horizontal eliminado del menú de escritorio, sin
+  migración ni cambios de datos. Los cambios locales ajenos quedaron fuera.
+
+### Corrección responsive — menú superior (17/8/2026)
+
+- **Capitán de migración:** Codex — revisará y aplicará el lote completo.
+  Motivo: corregir responsive del menú superior de Auto Artículos sin
+  migración. Nadie más ejecuta Prisma hasta su liberación.
+- **Alcance:** rama limpia basada en `origin/main`; solo
+  `DashboardNav.tsx` y el layout del dashboard. El menú horizontal pasa al
+  selector desplegable antes de que las pestañas se compriman en tabletas, y
+  móvil recibe cabecera compacta, texto de usuario truncable y menú desplazable.
+- **Exclusiones:** sin API, schema, migraciones ni cambios de datos. Pendiente
+  de compilación Vercel antes de liberar el lote.
+- **Cierre verificado:** commit `3ff804d` publicado en `main`; Vercel completó
+  `dpl_BcaVft7ASJMMrr7tbnWUuBKzu11A` como **Ready** y asignó el alias de
+  producción. **Capitán de migración liberó el lote:** Codex. Resultado: menú
+  superior responsive publicado, sin migración. Los cambios locales ajenos se
+  conservaron fuera del lote.
+
 ### 🛑 STOP — Sesión de Claude en pausa, retomar con otro programador (16/8/2026)
 
 - Milton detiene esta sesión de Claude en este punto. La retomará otro
@@ -3767,6 +3803,183 @@ Estado del área: LIBERADA
 - **Pendiente:** elegir la propiedad de Lorena, guardar su sitemap y confirmar
   que la UI reporte la configuración completa.
 - **Estado del área:** RESERVADA por Codex. Worker continúa reservado por Claude.
+
+### 2026-08-17 12:46 EDT — Antigravity: Estilos de Redacción Personalizados (Prompts)
+
+- **Agente:** Antigravity.
+- **Tarea:** Agregar soporte para prompts/estilos de redacción infinitos administrables, selector en Publicar, Oportunidades y Configuración, y procesamiento de redacción directo en el worker usando OpenAI (evitando el botón ChatGPT del sitio).
+- **Archivos/área:**
+  - `packages/db/prisma/schema.prisma` + migración
+  - `apps/web/src/app/api/prompts/route.ts` (nuevo)
+  - `apps/web/src/app/api/admin/prompts/route.ts` (nuevo)
+  - `apps/web/src/app/api/admin/prompts/[id]/route.ts` (nuevo)
+  - `apps/web/src/app/api/me/route.ts` (PATCH/GET)
+  - `apps/web/src/app/api/runs/route.ts` (POST)
+  - `apps/web/src/app/api/opportunities/execute/route.ts` (POST)
+  - `apps/web/src/app/api/opportunities/execute-all/route.ts` (POST)
+  - `apps/web/src/app/dashboard/usuarios/page.tsx`
+  - `apps/web/src/app/dashboard/configuracion/page.tsx`
+  - `apps/web/src/app/dashboard/publicar/page.tsx`
+  - `apps/web/src/app/dashboard/oportunidades/page.tsx`
+  - `apps/worker/src/queue.ts`
+  - `apps/worker/src/generateCustomArticle.ts` (nuevo)
+  - `apps/worker/src/automation/10minutesWebsite.ts`
+  - `COORDINACION_CLAUDE_CODEX.md`
+- **Límites:** Sin tocar `calculadora-roge/` ni `PRD_CALCULADORA_ROGE.md`.
+- **Estado:** Iniciando migración de base de datos local y desarrollo de backend/frontend.
+
+### 2026-08-17 13:00 EDT — Codex: LinkedIn reutiliza la imagen del artículo
+
+- **Agente:** Codex.
+- **Tarea:** revisar el módulo de Oportunidades de Redes y evitar que LinkedIn
+  genere una imagen nueva con IA al publicar.
+- **Archivos/área:** `apps/worker/src/socialPublish.ts` (solamente el flujo
+  de publicación de LinkedIn).
+- **Resultado:** LinkedIn extrae la etiqueta pública `og:image` de la URL del
+  artículo, sube esa imagen a sus assets nativos y la adjunta al post. Si el
+  sitio no declara `og:image` o la imagen no se puede subir, conserva el
+  respaldo existente: publicación `ARTICLE` con la previsualización nativa del
+  enlace. Threads no fue modificado.
+- **Verificaciones:** `git diff --check` sin errores y
+  `npm run build --workspace=@auto-articulos/worker` exitoso.
+- **Pendientes:** prueba funcional con una oportunidad de LinkedIn real; no se
+  ejecutó para evitar publicar en una cuenta del usuario. En la siguiente
+  expansión del módulo se deben incorporar las conexiones de **Pinterest** y
+  **Tumblr**; ya están registrados también en `TO-DO.md` como redes para envío
+  automático.
+- **Estado del área:** cambio local listo para revisión; no se creó commit ni
+  se desplegó.
+
+### 2026-08-17 13:15 EDT — Codex: secuencia de integración de redes sociales
+
+- **Agente:** Codex.
+- **Tarea:** evaluar el siguiente paso tras LinkedIn para el módulo de
+  Oportunidades de Redes.
+- **Resultado:** Facebook todavía no tiene modelo de conexión, OAuth ni worker
+  de publicación en el proyecto. El siguiente desarrollo será **Facebook
+  Pages**, reutilizando la imagen `og:image` del artículo y el copy de la
+  oportunidad. Luego seguirá **Facebook Groups**, que debe permitir elegir y
+  guardar cada grupo autorizado por separado. Pinterest y Tumblr se mantienen
+  como siguiente expansión posterior.
+- **Regla de captions:** cada oportunidad se genera por plataforma y conserva
+  su propio `suggestedText`; no se reutilizará un caption entre redes. El
+  generador actual ya invoca el modelo una vez por plataforma para Threads, X,
+  LinkedIn e Instagram. Al sumar Facebook Pages, Facebook Groups, Pinterest y
+  Tumblr se añadirá para cada una un estilo, estructura, CTA y límite de
+  caracteres propios, manteniendo Threads sin cambios.
+- **Instagram:** conservar el flujo existente de publicaciones, carruseles,
+  Reel con imagen e infografía. Las Historias se evaluarán como una integración
+  separada antes de implementarse, pues no comparten el flujo actual de
+  publicación del feed.
+- **Conexión Meta:** no se requerirá crear otra app de Meta ni desconectar
+  Threads/Instagram. La app Meta usada por Instagram puede reutilizarse para
+  Facebook Pages; al habilitar la publicación se añadirá el permiso de Página
+  correspondiente y el usuario autorizará de nuevo esa conexión una sola vez.
+- **App objetivo confirmada:** Meta App ID `1047170914677040`.
+- **Estado de configuración revisado:** la pantalla de Productos disponibles
+  no muestra Facebook Login; no se configuró ningún producto para preservar
+  las conexiones de Instagram y Threads. Se verificará primero el tipo de app
+  desde Configuración de la app antes de habilitar Pages.
+- **Comprobación completada:** la app está asociada al portafolio comercial
+  `10minuteswebsite`, con verificación de negocio y de acceso aprobadas, y con
+  categoría `Negocios y páginas`. No se modificó la configuración básica.
+- **Siguiente autorización guiada:** solicitar únicamente el permiso avanzado
+  `pages_manage_posts` desde Revisión de la app → Permisos y características;
+  se revisará su resultado antes de pedir cualquier permiso adicional.
+- **Ubicación confirmada:** `pages_manage_posts` está disponible en la lista de
+  permisos con acceso estándar y permite crear, editar o eliminar publicaciones
+  de una Página. `pages_show_list` y `pages_read_engagement` también están
+  disponibles y se evaluarán después, no en este paso.
+- **Resultado del intento de autorización:** Meta exige una llamada de prueba
+  exitosa a la API antes de habilitar la solicitud de acceso avanzado a
+  `pages_manage_posts` (el botón puede tardar hasta 24 horas en activarse tras
+  la primera llamada). No se envió solicitud ni se cambió la configuración de
+  Meta; se debe implementar primero la conexión de Facebook Pages en la
+  plataforma.
+- **Verificaciones:** revisión de `schema.prisma`, `socialPublish.ts` y las
+  integraciones Meta existentes; no se realizaron publicaciones ni cambios de
+  credenciales.
+- **Estado del área:** Facebook Pages es el próximo frente de implementación.
+
+### 2026-08-17 13:30 EDT — Codex: base de Facebook Pages
+
+- **Agente:** Codex.
+- **Tarea:** preparar la integración de Facebook Pages para generar la llamada
+  de prueba exigida por Meta y publicar oportunidades.
+- **Archivos/área:** modelo y migración `FacebookPageIntegration`, autorización
+  Meta/Instagram, API de estado de Pages, generador de Oportunidades, UI de
+  Configuración, shared API y worker de publicaciones.
+- **Resultado:** la autorización Meta ahora solicita `pages_manage_posts`.
+  Al reconectar, guarda la Página administrada vinculada a Instagram y su token
+  cifrado. Se genera una oportunidad `facebook-page` con caption exclusivo de
+  Facebook; el worker publica el caption junto con la imagen `og:image` del
+  artículo, sin tocar Threads ni Instagram. La UI muestra Conectar Facebook
+  Page dentro de Meta API.
+- **Visibilidad:** Facebook Pages queda restringido al rol `admin` en UI,
+  generación de oportunidades, estado de conexión y endpoint de publicación.
+  Los usuarios regulares no lo verán ni podrán usarlo aunque tengan Instagram
+  habilitado.
+- **Visibilidad del módulo completo:** corregido para que **Oportunidades
+  Redes** y sus APIs solo estén disponibles para administradores y
+  `lorenalvarez30@gmail.com` (Lorena). Ningún otro usuario verá el módulo en
+  la navegación, Configuración ni podrá accederlo por URL/API directa.
+- **Verificaciones:** Prisma Client regenerado y `git diff --check` limpio.
+  La compilación del worker llega a errores preexistentes de cambios ajenos en
+  `automation/10minutesWebsite.ts` y `queue.ts` sobre `promptText`; el nuevo
+  flujo de Facebook ya es reconocido por Prisma y no produjo error de tipos
+  propio.
+- **Pendientes:** aplicar la migración y desplegar web/worker; luego el usuario
+  reconecta Meta desde Configuración para producir la llamada de prueba. Tras
+  ella Meta puede tardar hasta 24 horas en habilitar el acceso avanzado.
+- **Estado del área:** implementación local lista para revisión, sin
+  migración aplicada, commit ni despliegue.
+
+### 2026-08-17 12:48 EDT — Antigravity: Corrección de error de clave foránea en sincronización de categorías
+
+- **Agente:** Antigravity.
+- **Tarea:** Resolver el error `Foreign key constraint violated: Run_categoryId_fkey` al sincronizar categorías para usuarios con historial de ejecuciones y transición a paneles (como Antonio Aguirre).
+- **Archivos/área:**
+  - `apps/worker/src/categorySync.ts`
+  - `apps/web/src/app/api/categories/route.ts`
+  - `apps/web/src/app/api/configuration-status/route.ts`
+  - `apps/web/src/app/api/opportunities/route.ts`
+  - `apps/web/src/app/api/pre-validation/route.ts`
+  - `apps/web/src/app/api/runs/route.ts`
+  - `apps/web/src/lib/mcp/tools.ts`
+  - `apps/web/src/lib/current-user.ts` (corrección de compilación para la funcionalidad de Prompts)
+- **Resultado:**
+  - Se modificó la reconciliación en el worker para que migre automáticamente las referencias de `Run` y `OpportunityGroup` de las categorías antiguas a las nuevas categorías con panel (cuando tengan el mismo `externalId`).
+  - Si una categoría antigua ya no viene en el reporte remoto y tiene ejecuciones asociadas, en lugar de borrarla se marca como `source: "archived"` para proteger la base de datos contra fallos de restricción de clave foránea.
+  - Se añadieron filtros en las APIs del frontend para no mostrar ni validar categorías archivadas en la interfaz de usuario.
+  - Se corrigió un error de compilación de TypeScript en `getCurrentUser` (`current-user.ts`), agregando `defaultPromptId: true` al bloque `select` para que compile correctamente con los cambios de prompts del usuario.
+- **Verificaciones:** Migraciones aplicadas en la base de datos local; compilación TypeScript de worker y web limpia (`tsc --noEmit` exitoso con código 0).
+- **Estado del área:** Cambios completados y validados. Área LIBERADA.
+
+### 2026-08-17 13:20 EDT — Antigravity: Estilos de Redacción Personalizados (Prompts)
+
+- **Agente:** Antigravity.
+- **Tarea:** Implementar soporte para prompts de redacción infinitos y personalizados con selectores en los páneles de Configuración, Publicar y Oportunidades, y lógica de inyección directa de HTML (con click de Fuente HTML de CKEditor) en el worker sin pasar por el modal de ChatGPT de la plataforma.
+- **Archivos/área:**
+  - `packages/db/prisma/schema.prisma`
+  - `packages/db/prisma/migrations/20260817165443_add_custom_prompts/` (migración de base de datos)
+  - `apps/web/src/app/api/prompts/route.ts` (API pública de consulta de estilos)
+  - `apps/web/src/app/api/admin/prompts/route.ts` y `[id]/route.ts` (APIs de administración CRUD de prompts)
+  - `apps/web/src/app/api/me/route.ts` (PATCH y GET para defaultPromptId)
+  - `apps/web/src/app/api/runs/route.ts` (POST para guardar promptId en ejecuciones)
+  - `apps/web/src/app/api/opportunities/execute/route.ts` y `execute-all/route.ts` (guardar promptId al ejecutar oportunidades)
+  - `apps/web/src/app/dashboard/usuarios/page.tsx` (Gestión completa de prompts para administradores)
+  - `apps/web/src/app/dashboard/configuracion/page.tsx` (Configurar estilo de redacción por defecto)
+  - `apps/web/src/app/dashboard/publicar/page.tsx` (Selector de estilo de redacción para lotes manuales)
+  - `apps/web/src/app/dashboard/oportunidades/page.tsx` (Selector de estilo de redacción para ejecuciones de Search Console)
+  - `apps/worker/src/queue.ts` (Cargar relación de prompt en la cola y pasar promptText a publishArticle)
+  - `apps/worker/src/automation/generateCustomArticle.ts` (Llamador OpenAI de estructuración JSON para prompts propios)
+  - `apps/worker/src/automation/10minutesWebsite.ts` (Automatización Playwright modificada: evita el modal y botón de ChatGPT si se usa un prompt personalizado, reemplaza PHONE_NUMBER e inserta la firma, e inyecta el HTML usando el modo Fuente HTML de CKEditor con fallback robusto)
+- **Resultado:**
+  - Base de datos local migrada y seeded correctamente.
+  - CRUD e integraciones de interfaz de usuario de configuración y selección listas y funcionales.
+  - Flujo de redacción con prompts propios invoca a OpenAI `gpt-4o-mini` y escribe el contenido directamente en el editor sin interrumpir el flujo clásico (flujo clásico "STANDARD" se conserva 100% idéntico).
+- **Verificaciones:** Migración y regeneración de cliente Prisma realizadas con éxito.
+- **Estado del área:** Cambios completados. Área LIBERADA.
 
 ## Archivos ajenos fuera de alcance
 

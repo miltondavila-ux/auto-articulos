@@ -147,64 +147,163 @@ export async function processNextCategorySync(): Promise<boolean> {
       byPanel.set(cat.panel, list);
     }
 
-    const operations = Array.from(byPanel.entries()).flatMap(
-      ([panel, cats]) => [
-        prisma.category.deleteMany({
+    // 1. Primero upsertamos todas las categorías remotas para asegurarnos de que existan y tengan ID.
+    const upsertedCategories = await Promise.all(
+      remoteCategories.map((cat) =>
+        prisma.category.upsert({
           where: {
-            userId: job.userId,
-            platform: "10minutesWebsite",
-            source: "sync",
-            panel,
-            externalId: { notIn: cats.map((c) => c.externalId) },
-          },
-        }),
-        ...cats.map((cat) =>
-          prisma.category.upsert({
-            where: {
-              userId_platform_panel_externalId: {
-                userId: job.userId,
-                platform: "10minutesWebsite",
-                panel,
-                externalId: cat.externalId,
-              },
-            },
-            create: {
+            userId_platform_panel_externalId: {
               userId: job.userId,
               platform: "10minutesWebsite",
-              panel,
+              panel: cat.panel,
               externalId: cat.externalId,
-              name: cat.name,
-              isSequence: cat.isSequence,
-              source: "sync",
             },
-            update: { name: cat.name, isSequence: cat.isSequence, source: "sync" },
-          }),
-        ),
-      ],
-    );
-
-    // Limpieza de transición: si ESTE sync sí detectó paneles, cualquier
-    // categoría "sync" vieja marcada panel="" es basura de un intento
-    // anterior de ANTES de que la detección de paneles funcionara para esta
-    // cuenta (bug real de producción, 15/8/2026 — visto con Antonio Aguirre:
-    // categorías sin etiqueta mezcladas con las recién sincronizadas). La
-    // reconciliación de arriba nunca la toca porque solo limpia DENTRO de
-    // cada panel detectado, nunca cruza a "sin panel". Una cuenta con
-    // paneles no debería tener nunca categorías "sync" sin panel.
-    if (byPanel.size > 0 && !byPanel.has("")) {
-      operations.push(
-        prisma.category.deleteMany({
-          where: {
+          },
+          create: {
             userId: job.userId,
             platform: "10minutesWebsite",
+            panel: cat.panel,
+            externalId: cat.externalId,
+            name: cat.name,
+            isSequence: cat.isSequence,
             source: "sync",
-            panel: "",
+          },
+          update: { name: cat.name, isSequence: cat.isSequence, source: "sync" },
+        }),
+      ),
+    );
+
+    // 2. Traer las categorías que existen actualmente en la base de datos para este usuario.
+    const existingCategories = await prisma.category.findMany({
+      where: {
+        userId: job.userId,
+        platform: "10minutesWebsite",
+      },
+    });
+
+    // 3. Determinar cuáles categorías se deberían borrar según las dos reglas de reconciliación:
+    //    Regla A: Sincronizadas que ya no vienen en el reporte remoto del mismo panel.
+    //    Regla B: Transición del panel vacío ("") si ahora sí se detectaron paneles.
+    const categoriesToDelete = existingCategories.filter((c) => {
+      if (c.source !== "sync") return false;
+
+      const remoteCatsInPanel = byPanel.get(c.panel);
+      if (remoteCatsInPanel) {
+        return !remoteCatsInPanel.some((rc) => rc.externalId === c.externalId);
+      }
+
+      if (c.panel === "" && byPanel.size > 0 && !byPanel.has("")) {
+        return true;
+      }
+
+      return false;
+    });
+
+    const categoriesToForceDeleteIds: string[] = [];
+    const categoriesToArchiveIds: string[] = [];
+    const runUpdates: { fromId: string; toId: string }[] = [];
+    const oppGroupUpdates: { fromId: string; toId: string }[] = [];
+    const oppGroupDeletes: string[] = [];
+
+    // 4. Analizar dependencias de clave foránea para cada categoría que se debería borrar
+    for (const catToDelete of categoriesToDelete) {
+      const replacement = upsertedCategories.find(
+        (rc) => rc.externalId === catToDelete.externalId,
+      );
+
+      if (replacement) {
+        // Si hay un reemplazo activo (por ejemplo, misma categoría pero ahora con panel),
+        // migramos las referencias de Run y OpportunityGroup.
+        runUpdates.push({ fromId: catToDelete.id, toId: replacement.id });
+
+        const hasOppGroupForReplacement = await prisma.opportunityGroup.findUnique({
+          where: {
+            userId_categoryId: {
+              userId: job.userId,
+              categoryId: replacement.id,
+            },
+          },
+        });
+
+        if (hasOppGroupForReplacement) {
+          oppGroupDeletes.push(catToDelete.id);
+        } else {
+          oppGroupUpdates.push({ fromId: catToDelete.id, toId: replacement.id });
+        }
+
+        categoriesToForceDeleteIds.push(catToDelete.id);
+      } else {
+        // Si no hay reemplazo, verificamos si tiene corridas (Run) asociadas.
+        const runsCount = await prisma.run.count({
+          where: { categoryId: catToDelete.id },
+        });
+
+        if (runsCount > 0) {
+          // Si tiene corridas, no la borramos para no violar la clave foránea e invalidar el historial;
+          // en su lugar la marcamos como "archived".
+          categoriesToArchiveIds.push(catToDelete.id);
+        } else {
+          // Si no tiene corridas, la borramos definitivamente (las OpportunityGroups se borran en cascada).
+          categoriesToForceDeleteIds.push(catToDelete.id);
+        }
+      }
+    }
+
+    // 5. Ejecutar todas las operaciones de base de datos en una sola transacción
+    const syncOperations: any[] = [];
+
+    for (const update of runUpdates) {
+      syncOperations.push(
+        prisma.run.updateMany({
+          where: { categoryId: update.fromId },
+          data: { categoryId: update.toId },
+        }),
+      );
+    }
+
+    if (oppGroupDeletes.length > 0) {
+      syncOperations.push(
+        prisma.opportunityGroup.deleteMany({
+          where: {
+            userId: job.userId,
+            categoryId: { in: oppGroupDeletes },
           },
         }),
       );
     }
 
-    await prisma.$transaction(operations);
+    for (const update of oppGroupUpdates) {
+      syncOperations.push(
+        prisma.opportunityGroup.updateMany({
+          where: {
+            userId: job.userId,
+            categoryId: update.fromId,
+          },
+          data: { categoryId: update.toId },
+        }),
+      );
+    }
+
+    if (categoriesToArchiveIds.length > 0) {
+      syncOperations.push(
+        prisma.category.updateMany({
+          where: { id: { in: categoriesToArchiveIds } },
+          data: { source: "archived" },
+        }),
+      );
+    }
+
+    if (categoriesToForceDeleteIds.length > 0) {
+      syncOperations.push(
+        prisma.category.deleteMany({
+          where: { id: { in: categoriesToForceDeleteIds } },
+        }),
+      );
+    }
+
+    if (syncOperations.length > 0) {
+      await prisma.$transaction(syncOperations);
+    }
 
     await prisma.categorySyncJob.update({
       where: { id: job.id },

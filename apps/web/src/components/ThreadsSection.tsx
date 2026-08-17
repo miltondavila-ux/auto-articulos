@@ -30,18 +30,26 @@ interface InstagramConnection {
   isExpired?: boolean;
 }
 
-type CredentialType = "meta" | "threads";
+interface FacebookPageConnection {
+  connected: boolean;
+  facebookPageName?: string;
+  isExpired?: boolean;
+}
+
+type CredentialType = "meta" | "threads" | "facebook";
 
 interface ThreadsSectionProps {
   allowThreads?: boolean;
   allowInstagram?: boolean;
+  isAdmin?: boolean;
 }
 
-export default function ThreadsSection({ allowThreads = true, allowInstagram = true }: ThreadsSectionProps) {
+export default function ThreadsSection({ allowThreads = true, allowInstagram = true, isAdmin = false }: ThreadsSectionProps) {
   const [metaSettings, setMetaSettings] = useState<ApiSettings | null>(null);
   const [threadsSettings, setThreadsSettings] = useState<ApiSettings | null>(null);
   const [threadsConnection, setThreadsConnection] = useState<ThreadsConnection | null>(null);
   const [instagramConnection, setInstagramConnection] = useState<InstagramConnection | null>(null);
+  const [facebookPageConnection, setFacebookPageConnection] = useState<FacebookPageConnection | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<CredentialType | null>(null);
   const [appId, setAppId] = useState("");
@@ -53,11 +61,12 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
   async function load() {
     try {
       setLoading(true);
-      const [metaResponse, threadsResponse, threadsConnectionResponse, instagramConnectionResponse] = await Promise.all([
+      const [metaResponse, threadsResponse, threadsConnectionResponse, instagramConnectionResponse, facebookPageResponse] = await Promise.all([
         fetch("/api/search-integrations/instagram/settings"),
         fetch("/api/search-integrations/threads/settings"),
         fetch("/api/search-integrations/threads"),
         fetch("/api/search-integrations/instagram"),
+        fetch("/api/search-integrations/facebook-pages"),
       ]);
       setMetaSettings(await metaResponse.json());
       setThreadsSettings(await threadsResponse.json());
@@ -71,11 +80,13 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
           ? await instagramConnectionResponse.json()
           : { connected: false },
       );
+      setFacebookPageConnection(facebookPageResponse.ok ? await facebookPageResponse.json() : { connected: false });
     } catch {
       setMetaSettings({ configured: false, appId: null });
       setThreadsSettings({ configured: false, appId: null });
       setThreadsConnection({ connected: false });
       setInstagramConnection({ connected: false });
+      setFacebookPageConnection({ connected: false });
     } finally {
       setLoading(false);
     }
@@ -129,15 +140,17 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
   }
 
   async function disconnect(type: CredentialType) {
-    const network = type === "meta" ? "Instagram" : "Threads";
+    const network = type === "meta" ? "Instagram" : type === "facebook" ? "Facebook Page" : "Threads";
     if (!confirm(`¿Deseas desconectar ${network}?`)) return;
 
     setDisconnecting(type);
     setMessage("");
     try {
-      const endpoint = type === "meta"
-        ? "/api/search-integrations/instagram"
-        : "/api/search-integrations/threads";
+    const endpoint = type === "meta"
+      ? "/api/search-integrations/instagram"
+      : type === "facebook"
+      ? "/api/search-integrations/facebook-pages"
+      : "/api/search-integrations/threads";
       const response = await fetch(endpoint, { method: "DELETE" });
       if (!response.ok) throw new Error();
       setMessage(`${network} fue desconectado.`);
@@ -281,10 +294,10 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
 
               {allowInstagram && (instagramConnection?.connected ? (
                 <button
-                  onClick={() => disconnect("meta")}
-                  disabled={disconnecting === "meta"}
+                  onClick={() => disconnect("facebook")}
+                  disabled={disconnecting === "facebook"}
                   className="secondary"
-                  style={disabledStyle(secondaryButtonStyle, disconnecting === "meta")}
+                  style={disabledStyle(secondaryButtonStyle, disconnecting === "facebook")}
                 >
                   {disconnecting === "meta" ? "Desconectando..." : `Desconectar Instagram${instagramConnection.instagramUsername ? ` (@${instagramConnection.instagramUsername})` : ""}`}
                 </button>
@@ -295,6 +308,24 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
                   style={{ ...secondaryButtonStyle, textDecoration: "none", display: "inline-flex" }}
                 >
                   Conectar Instagram
+                </a>
+              ))}
+              {isAdmin && (facebookPageConnection?.connected ? (
+                <button
+                  onClick={() => disconnect("meta")}
+                  disabled={disconnecting === "meta"}
+                  className="secondary"
+                  style={disabledStyle(secondaryButtonStyle, disconnecting === "meta")}
+                >
+                  {`Facebook Page conectada${facebookPageConnection.facebookPageName ? ` (${facebookPageConnection.facebookPageName})` : ""}`}
+                </button>
+              ) : (
+                <a
+                  href="/api/search-integrations/instagram/connect"
+                  className="secondary"
+                  style={{ ...secondaryButtonStyle, textDecoration: "none", display: "inline-flex" }}
+                >
+                  Conectar Facebook Page
                 </a>
               ))}
             </div>

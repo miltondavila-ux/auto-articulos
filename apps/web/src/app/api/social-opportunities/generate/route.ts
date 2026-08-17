@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
+import { canUseSocialModule } from "@/lib/social-access";
 import { triggerWorkerNow } from "@/lib/trigger-worker";
 import {
   decryptSecret,
@@ -44,10 +45,13 @@ async function generateGPTCopy(
   // LinkedIn permite hasta 3000 caracteres y funciona mejor con posts más
   // elaborados; Threads/X son de formato corto (límites reales 500/280).
   const isLinkedIn = platform === "linkedin";
-  const charLimit = isLinkedIn ? 1300 : 360;
-  const maxTokens = isLinkedIn ? 700 : 300;
+  const isFacebookPage = platform === "facebook-page";
+  const charLimit = isLinkedIn ? 1300 : isFacebookPage ? 700 : 360;
+  const maxTokens = isLinkedIn ? 700 : isFacebookPage ? 450 : 300;
   const styleNote = isLinkedIn
     ? "Tono profesional pero cercano (LinkedIn), con más contexto y valor. Puedes usar párrafos cortos separados por saltos de línea."
+    : isFacebookPage
+    ? "Tono cálido y útil de Facebook Page: presenta el beneficio del artículo, usa uno o dos párrafos breves y una invitación clara a leerlo. Debe ser diferente a Threads y LinkedIn."
     : "Tono súper casual y directo, como un mensaje rápido a un amigo.";
   try {
     const response = await fetch(OPENAI_CHAT_URL, {
@@ -142,18 +146,21 @@ async function selectArticlesWithoutGSC(userId: string): Promise<ArticleCandidat
 }
 
 async function getConnectedNetworks(userId: string) {
-  const [threads, twitter, linkedin, instagram] = await Promise.all([
+  const [threads, twitter, linkedin, instagram, facebookPage, user] = await Promise.all([
     prisma.threadsIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.twitterIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.linkedInIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.instagramIntegration.findUnique({ where: { userId }, select: { id: true } }),
+    prisma.facebookPageIntegration.findUnique({ where: { userId }, select: { id: true } }),
+    prisma.user.findUnique({ where: { id: userId }, select: { role: true } }),
   ]);
-  return { threads: Boolean(threads), x: Boolean(twitter), linkedin: Boolean(linkedin), instagram: Boolean(instagram) };
+  return { threads: Boolean(threads), x: Boolean(twitter), linkedin: Boolean(linkedin), instagram: Boolean(instagram), facebookPage: user?.role === "admin" && Boolean(facebookPage) };
 }
 
 export async function GET() {
   try {
     const userId = await getCurrentUserId();
+    if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Módulo reservado a administradores y Lorena." }, { status: 403 });
     return NextResponse.json(await getConnectedNetworks(userId));
   } catch {
     return NextResponse.json({ error: "Error al consultar redes conectadas" }, { status: 500 });
@@ -163,11 +170,12 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const userId = await getCurrentUserId();
+    if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Módulo reservado a administradores y Lorena." }, { status: 403 });
     const body = await request.json().catch(() => ({})) as { networks?: string[] };
     const connected = await getConnectedNetworks(userId);
     const requestedNetworks = Array.isArray(body.networks)
-      ? body.networks.filter((network) => network === "threads" || network === "x" || network === "linkedin" || network === "instagram")
-      : ["threads", "x", "linkedin", "instagram"];
+      ? body.networks.filter((network) => network === "threads" || network === "x" || network === "linkedin" || network === "instagram" || network === "facebook-page")
+      : ["threads", "x", "linkedin", "instagram", "facebook-page"];
 
     const integrations: string[] = [];
     if (requestedNetworks.includes("threads") && connected.threads) {
@@ -178,6 +186,9 @@ export async function POST(request: Request) {
     }
     if (requestedNetworks.includes("linkedin") && connected.linkedin) {
       integrations.push("linkedin");
+    }
+    if (requestedNetworks.includes("facebook-page") && connected.facebookPage) {
+      integrations.push("facebook-page");
     }
     if (requestedNetworks.includes("instagram") && connected.instagram) {
       const user = await prisma.user.findUnique({

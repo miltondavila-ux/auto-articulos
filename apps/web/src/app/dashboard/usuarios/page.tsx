@@ -244,7 +244,76 @@ export default function UsuariosPage() {
   const [userCategory, setUserCategory] = useState<UserCategoryFilter>("all");
   const [sortOrder, setSortOrder] = useState<UserSortOrder>("alpha_asc");
   const [accessPage, setAccessPage] = useState(1);
-  const [tab, setTab] = useState<"crear" | "uso" | "accesos" | "modulos">("accesos");
+  const [tab, setTab] = useState<"crear" | "uso" | "accesos" | "modulos" | "prompts">("accesos");
+  const [prompts, setPrompts] = useState<{ id: string; name: string; prompt: string }[]>([]);
+  const [loadingPrompts, setLoadingPrompts] = useState(false);
+  const [promptName, setPromptName] = useState("");
+  const [promptText, setPromptText] = useState("");
+  const [editingPromptId, setEditingPromptId] = useState<string | null>(null);
+  const [savingPrompt, setSavingPrompt] = useState(false);
+  const [promptBanner, setPromptBanner] = useState<{ type: "error" | "info"; text: string } | null>(null);
+
+  async function loadPrompts() {
+    setLoadingPrompts(true);
+    try {
+      const res = await fetch("/api/prompts");
+      if (res.ok) {
+        const data = await res.json();
+        setPrompts(data.prompts ?? []);
+      }
+    } catch (e) {
+      console.error("Error al cargar prompts", e);
+    } finally {
+      setLoadingPrompts(false);
+    }
+  }
+
+  async function handleSavePrompt(e: React.FormEvent) {
+    e.preventDefault();
+    if (!promptName.trim() || !promptText.trim()) return;
+    setSavingPrompt(true);
+    setPromptBanner(null);
+    try {
+      const url = editingPromptId ? `/api/admin/prompts/${editingPromptId}` : "/api/admin/prompts";
+      const method = editingPromptId ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: promptName, prompt: promptText }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPromptBanner({ type: "error", text: data.error ?? "Error al guardar el prompt" });
+        return;
+      }
+      setPromptBanner({ type: "info", text: editingPromptId ? "Prompt actualizado con éxito" : "Prompt creado con éxito" });
+      setPromptName("");
+      setPromptText("");
+      setEditingPromptId(null);
+      loadPrompts();
+    } catch (e: any) {
+      setPromptBanner({ type: "error", text: e.message || "Error al conectar con el servidor" });
+    } finally {
+      setSavingPrompt(false);
+    }
+  }
+
+  async function handleDeletePrompt(id: string) {
+    if (!confirm("¿Estás seguro de que deseas eliminar este estilo de redacción?")) return;
+    setPromptBanner(null);
+    try {
+      const res = await fetch(`/api/admin/prompts/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setPromptBanner({ type: "info", text: "Prompt eliminado con éxito" });
+        loadPrompts();
+      } else {
+        const data = await res.json();
+        setPromptBanner({ type: "error", text: data.error ?? "Error al eliminar el prompt" });
+      }
+    } catch (e: any) {
+      setPromptBanner({ type: "error", text: e.message || "Error al conectar con el servidor" });
+    }
+  }
   const [globalDisabledModules, setGlobalDisabledModules] = useState<string[]>([]);
   const [loadingModules, setLoadingModules] = useState(false);
   const [savingGlobalModules, setSavingGlobalModules] = useState(false);
@@ -338,6 +407,12 @@ export default function UsuariosPage() {
     loadUsage();
     loadGlobalModules();
   }, []);
+
+  useEffect(() => {
+    if (tab === "prompts") {
+      loadPrompts();
+    }
+  }, [tab]);
 
   const filteredUsers = users
     .filter((u) => {
@@ -543,6 +618,12 @@ export default function UsuariosPage() {
         globalDisabledModules.length > 0
           ? `${globalDisabledModules.length} ocultos`
           : "Todos visibles",
+    },
+    {
+      id: "prompts",
+      label: "Prompts de redacción",
+      description: "Crea y edita estilos de escritura personalizados para artículos.",
+      eyebrow: "Estilos de escritura",
     },
   ];
 
@@ -1358,6 +1439,157 @@ export default function UsuariosPage() {
               );
             })}
           </div>
+        </section>
+      )}
+
+      {tab === "prompts" && (
+        <section id="administracion-contenido" style={sectionStyle}>
+          <h2 style={h2Style}>
+            {editingPromptId ? "Editar estilo de redacción" : "Agregar nuevo estilo de redacción (Prompt)"}
+          </h2>
+          <p style={{ fontSize: 13, color: "#6b7280" }}>
+            Los prompts de redacción personalizados permiten a los usuarios elegir diferentes estilos de escritura al generar artículos.
+            Puedes usar placeholders como <code style={{ background: "#f1f1f1", padding: "2px 4px", borderRadius: 4 }}>{"{title}"}</code> o <code style={{ background: "#f1f1f1", padding: "2px 4px", borderRadius: 4 }}>{"{keyword}"}</code> en el texto del prompt, que serán reemplazados automáticamente con el tema del artículo.
+          </p>
+
+          <form onSubmit={handleSavePrompt} style={{ marginTop: 14 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13, fontWeight: 600 }}>
+                Nombre del estilo (ej. Profesional, Directo, Creativo)
+                <input
+                  type="text"
+                  required
+                  placeholder="Nombre corto"
+                  value={promptName}
+                  onChange={(e) => setPromptName(e.target.value)}
+                  style={inputStyle}
+                />
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13, fontWeight: 600 }}>
+                Instrucciones del Prompt
+                <textarea
+                  required
+                  placeholder="Instrucciones detalladas que recibirá la IA para escribir el artículo. Ej: Escribe un artículo con tono informal sobre {title}..."
+                  value={promptText}
+                  onChange={(e) => setPromptText(e.target.value)}
+                  rows={8}
+                  style={{ ...inputStyle, fontFamily: "inherit" }}
+                />
+              </label>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button
+                  type="submit"
+                  disabled={savingPrompt}
+                  style={disabledStyle(buttonStyle, savingPrompt)}
+                >
+                  {savingPrompt ? "Guardando..." : "Guardar Estilo"}
+                </button>
+                {editingPromptId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingPromptId(null);
+                      setPromptName("");
+                      setPromptText("");
+                    }}
+                    style={secondaryButtonStyle}
+                  >
+                    Cancelar Edición
+                  </button>
+                )}
+              </div>
+            </div>
+          </form>
+
+          {promptBanner && (
+            <div
+              style={{
+                padding: "10px 14px",
+                borderRadius: 8,
+                marginTop: 14,
+                background: promptBanner.type === "error" ? "#fdecec" : "#eafaf0",
+                color: promptBanner.type === "error" ? "#d64545" : "#1e8a4b",
+                fontSize: 13,
+              }}
+            >
+              {promptBanner.text}
+            </div>
+          )}
+
+          <h2 style={{ ...h2Style, marginTop: 28 }}>Estilos de redacción registrados</h2>
+          {loadingPrompts ? (
+            <p style={{ fontSize: 13, color: "#6b7280" }}>Cargando estilos...</p>
+          ) : prompts.length === 0 ? (
+            <p style={{ fontSize: 13, color: "#6b7280" }}>No hay estilos personalizados guardados. Todos los artículos se generarán con el flujo estándar.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 14 }}>
+              {prompts.map((p) => (
+                <div
+                  key={p.id}
+                  style={{
+                    padding: 16,
+                    borderRadius: 12,
+                    border: "1px solid #e4e9f1",
+                    background: "#ffffff",
+                    boxShadow: "0 2px 8px rgba(0, 9, 35, 0.04)",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <strong style={{ fontSize: 15, color: "#16181d" }}>{p.name}</strong>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button
+                        onClick={() => {
+                          setEditingPromptId(p.id);
+                          setPromptName(p.name);
+                          setPromptText(p.prompt);
+                          window.scrollTo({ top: 300, behavior: "smooth" });
+                        }}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#0071e3",
+                          cursor: "pointer",
+                          fontSize: 13,
+                          fontWeight: 500,
+                        }}
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleDeletePrompt(p.id)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#ff3b30",
+                          cursor: "pointer",
+                          fontSize: 13,
+                          fontWeight: 500,
+                        }}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                  <pre
+                    style={{
+                      fontSize: 12,
+                      color: "#4b5563",
+                      background: "#f9fafb",
+                      padding: 10,
+                      borderRadius: 6,
+                      whiteSpace: "pre-wrap",
+                      margin: 0,
+                      maxHeight: 120,
+                      overflowY: "auto",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    {p.prompt}
+                  </pre>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
     </div>

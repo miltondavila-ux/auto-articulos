@@ -44,6 +44,7 @@ export async function GET() {
       phone: user.phone,
       imagePrompt: user.imagePrompt,
       infographicPrompt: user.infographicPrompt,
+      defaultPromptId: user.defaultPromptId,
       profilePhotoUrl: user.profilePhotoUrl,
       businessLogoUrl: user.businessLogoUrl,
       allowInstagramPublishing: user.allowInstagramPublishing,
@@ -69,6 +70,7 @@ export async function PATCH(request: NextRequest) {
     phone?: string | null;
     imagePrompt?: string | null;
     infographicPrompt?: string | null;
+    defaultPromptId?: string | null;
   } = {};
 
   if ("contentLanguage" in body) {
@@ -155,6 +157,31 @@ export async function PATCH(request: NextRequest) {
     data.infographicPrompt = trimmed || null;
   }
 
+  if ("defaultPromptId" in body) {
+    const { defaultPromptId } = body;
+    if (defaultPromptId !== null && typeof defaultPromptId !== "string") {
+      return NextResponse.json(
+        { error: "defaultPromptId debe ser texto o null" },
+        { status: 400 },
+      );
+    }
+    const cleanPromptId = typeof defaultPromptId === "string" ? defaultPromptId.trim() : "";
+    if (cleanPromptId) {
+      const exists = await prisma.prompt.findUnique({
+        where: { id: cleanPromptId },
+      });
+      if (!exists) {
+        return NextResponse.json(
+          { error: "El estilo de redacción seleccionado no existe" },
+          { status: 400 },
+        );
+      }
+      data.defaultPromptId = cleanPromptId;
+    } else {
+      data.defaultPromptId = null;
+    }
+  }
+
   const user = await prisma.user.update({
     where: { id: userId },
     data,
@@ -164,6 +191,7 @@ export async function PATCH(request: NextRequest) {
       phone: true,
       imagePrompt: true,
       infographicPrompt: true,
+      defaultPromptId: true,
     },
   });
 

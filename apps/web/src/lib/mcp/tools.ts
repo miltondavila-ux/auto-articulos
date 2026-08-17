@@ -195,7 +195,7 @@ export const TOOLS: ToolDef[] = [
       const titles = Array.isArray(args.titulos) ? args.titulos.filter((title): title is string => typeof title === "string" && title.trim().length > 0).map((title) => title.trim()) : [];
       if (!categoryName || titles.length === 0) return toolText("Indica una categoría y al menos un título.", true);
       const userId = await getCurrentUserId();
-      const categories = await prisma.category.findMany({ where: { userId, platform: "10minutesWebsite", name: { equals: categoryName, mode: "insensitive" } }, select: { id: true, name: true } });
+      const categories = await prisma.category.findMany({ where: { userId, platform: "10minutesWebsite", source: { not: "archived" }, name: { equals: categoryName, mode: "insensitive" } }, select: { id: true, name: true } });
       if (categories.length !== 1) return toolText(`No encontré una categoría exacta llamada "${categoryName}". Usa las categorías existentes antes de publicar.`, true);
       if (args.confirmar !== true) return toolText(`Sin publicar todavía. Se crearán ${titles.length} artículo(s) en "${categories[0].name}":\n${titles.map((title) => `- ${title}`).join("\n")}\n\nPide confirmación explícita y vuelve a llamar con confirmar=true.`, false);
       const { ok, data } = await readRoute(await publicarTitulosRoute(jsonRequest("/api/runs", {
