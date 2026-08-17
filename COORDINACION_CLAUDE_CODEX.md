@@ -4231,3 +4231,15 @@ Auto Artículos.
 - Se documentó la existencia de esta sección en el manual base del usuario (`manual-usuario.ts`) para alimentar la base de conocimiento del asistente.
 - Verificación: `npm run typecheck` completado localmente sin errores de compilación TypeScript. No se ha ejecutado Prisma, hecho commit, push ni despliegue de este cambio a producción.
 
+### 2026-08-17 18:48 EDT — Antigravity: Corrección de alineación y estilos de checkboxes en la interfaz de usuario
+
+- **Agente:** Antigravity.
+- **Tarea:** Resolver el error visual donde los checkboxes (como el de "Desactivar indexación en buscadores") se mostraban centrados dentro de un contenedor ancho de borde azul/gris (100% width, padding y border heredados de estilos globales de input).
+- **Archivos/área:**
+  - `apps/web/src/app/globals.css`
+- **Resultado:**
+  - Se modificaron los selectores de controles de formulario globales en `globals.css` (líneas 163 y 180) para usar `input:not([type="checkbox"]):not([type="radio"])` en lugar de `input` genérico.
+  - Esto evita que los checkboxes y radios hereden el ancho de 100%, bordes, padding, y efectos de enfoque inadecuados, permitiendo que se alineen a la izquierda correctamente conforme al flexbox de su contenedor.
+- **Verificaciones:** Cambio puramente estético de CSS verificado; se mantiene compatibilidad con los estilos específicos inline de otros checkboxes en el panel de usuarios.
+- **Estado del área:** Cambios completados. Área LIBERADA.
+- 2026-08-17 — Incidente posterior al despliegue: las rutas autenticadas devolvieron 500 por `prepared statement already exists` al usar Transaction Pooler. Se corrigió `packages/db/src/index.ts` para forzar `pgbouncer=true` y `connection_limit=1` cuando detecta `pooler.supabase.com:6543`; commit `c130fea`, Vercel `dpl_2AgiViqURausx8kMSX6jCQ6iUSNS` Ready y `/login` 200.
