@@ -791,6 +791,9 @@ export default function ConfiguracionPage() {
               onClick={() => setActiveTab(t.id)}
               aria-pressed={isActive}
               style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
                 minHeight: 105,
                 padding: "16px 18px",
                 textAlign: "left",

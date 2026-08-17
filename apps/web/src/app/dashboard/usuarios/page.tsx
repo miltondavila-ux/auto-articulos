@@ -642,6 +642,9 @@ export default function UsuariosPage() {
             aria-controls="administracion-contenido"
             className="row"
             style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
               padding: 16,
               textAlign: "left",
               fontFamily: "inherit",
