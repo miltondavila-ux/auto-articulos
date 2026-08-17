@@ -13,6 +13,7 @@ interface TabItem {
 
 const BASE_TABS: TabItem[] = [
   { href: "/dashboard", label: "Inicio" },
+  { id: "como-funciona", href: "/dashboard/como-funciona", label: "Cómo Funciona" },
   { id: "publicar", href: "/dashboard/publicar", label: "Publicar" },
   { id: "publicaciones-en-curso", href: "/dashboard/publicaciones-en-curso", label: "Publicaciones en Curso" },
   { id: "oportunidades", href: "/dashboard/oportunidades", label: "Oportunidades" },
@@ -63,7 +64,11 @@ export default function DashboardNav() {
   const canUseSocial = isAdmin || userEmail === "lorenalvarez30@gmail.com";
   const tabs = isAdmin
     ? rawTabs
-    : rawTabs.filter((tab) => tab.id !== "oportunidades-redes" && (!tab.id || !disabledModules.includes(tab.id)) || tab.id === "oportunidades-redes" && canUseSocial && !disabledModules.includes(tab.id));
+    : rawTabs.filter((tab) =>
+        tab.id === "oportunidades-redes"
+          ? canUseSocial
+          : (!tab.id || !disabledModules.includes(tab.id)),
+      );
   const activeTab = tabs.find((tab) => tab.href === pathname);
 
   const linkStyle = (active: boolean): CSSProperties => ({

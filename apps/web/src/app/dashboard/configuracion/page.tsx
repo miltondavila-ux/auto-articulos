@@ -78,6 +78,7 @@ export default function ConfiguracionPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [allowInstagramPublishing, setAllowInstagramPublishing] = useState(false);
+  const [allowFacebookPublishing, setAllowFacebookPublishing] = useState(false);
   const [allowLinkedInPublishing, setAllowLinkedInPublishing] = useState(false);
   const [allowThreadsPublishing, setAllowThreadsPublishing] = useState(false);
   const [disabledModules, setDisabledModules] = useState<string[]>([]);
@@ -175,6 +176,7 @@ export default function ConfiguracionPage() {
         setIsAdmin(data.role === "admin");
         setUserEmail(data.email ?? "");
         setAllowInstagramPublishing(data.allowInstagramPublishing ?? false);
+        setAllowFacebookPublishing(data.allowFacebookPublishing ?? false);
         setAllowLinkedInPublishing(data.allowLinkedInPublishing ?? false);
         setAllowThreadsPublishing(data.allowThreadsPublishing ?? false);
         if (typeof data.platformBaseUrl === "string" && data.platformBaseUrl) {
@@ -574,8 +576,7 @@ export default function ConfiguracionPage() {
         : "#0071e3";
 
   const showSocialTab =
-    (isAdmin || userEmail.toLowerCase() === "lorenalvarez30@gmail.com") &&
-    !disabledModules.includes("oportunidades-redes");
+    isAdmin || userEmail.toLowerCase() === "lorenalvarez30@gmail.com";
 
   useEffect(() => {
     if (activeTab === "social" && !showSocialTab) {
@@ -943,11 +944,11 @@ export default function ConfiguracionPage() {
           style={{ display: "flex", flexDirection: "column", gap: 16 }}
         >
           <BusinessProfileSection />
-          {(allowThreadsPublishing || allowInstagramPublishing || isAdmin) && (
-            <ThreadsSection allowThreads={allowThreadsPublishing} allowInstagram={allowInstagramPublishing} isAdmin={isAdmin} />
+          {(allowThreadsPublishing || allowInstagramPublishing || allowFacebookPublishing || isAdmin || userEmail.toLowerCase() === "lorenalvarez30@gmail.com") && (
+            <ThreadsSection allowThreads={isAdmin || userEmail.toLowerCase() === "lorenalvarez30@gmail.com" || allowThreadsPublishing} allowInstagram={isAdmin || userEmail.toLowerCase() === "lorenalvarez30@gmail.com" || allowInstagramPublishing} allowFacebook={isAdmin || userEmail.toLowerCase() === "lorenalvarez30@gmail.com" || allowFacebookPublishing} isAdmin={isAdmin || userEmail.toLowerCase() === "lorenalvarez30@gmail.com"} />
           )}
           <TwitterSection />
-          {(allowLinkedInPublishing || isAdmin) && <LinkedInSection allowed={allowLinkedInPublishing} />}
+          {(allowLinkedInPublishing || isAdmin || userEmail.toLowerCase() === "lorenalvarez30@gmail.com") && <LinkedInSection allowed={allowLinkedInPublishing || isAdmin || userEmail.toLowerCase() === "lorenalvarez30@gmail.com"} />}
         </div>
       )}
 
@@ -1415,7 +1416,7 @@ export default function ConfiguracionPage() {
                 onChange={(e) => setDefaultPromptId(e.target.value)}
                 style={{ ...inputStyle, width: 280, height: 40 }}
               >
-                <option value="">STANDARD (Estilo de la plataforma 10minutesWebsite)</option>
+                <option value="">STANDARD (Estilo predeterminado de la plataforma)</option>
                 {prompts.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}

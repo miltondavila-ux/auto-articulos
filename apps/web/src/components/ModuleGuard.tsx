@@ -9,6 +9,7 @@ export default function ModuleGuard({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [disabledModules, setDisabledModules] = useState<string[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isLorena, setIsLorena] = useState(false);
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
@@ -19,6 +20,7 @@ export default function ModuleGuard({ children }: { children: ReactNode }) {
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         setIsAdmin(data?.role === "admin" || Boolean(data?.isActingAdmin));
+        setIsLorena(typeof data?.email === "string" && data.email.toLowerCase() === "lorenalvarez30@gmail.com");
         if (Array.isArray(data?.disabledModules)) {
           setDisabledModules(data.disabledModules);
         }
@@ -37,7 +39,7 @@ export default function ModuleGuard({ children }: { children: ReactNode }) {
   const matchingModule = SYSTEM_MODULES.find((m) =>
     Boolean(pathname && pathname.startsWith(m.href)),
   );
-  if (matchingModule && disabledModules.includes(matchingModule.id)) {
+  if (matchingModule && disabledModules.includes(matchingModule.id) && !(isLorena && matchingModule.id === "oportunidades-redes")) {
     return (
       <div
         style={{
