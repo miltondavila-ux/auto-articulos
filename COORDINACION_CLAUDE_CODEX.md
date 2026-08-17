@@ -3130,14 +3130,26 @@ título, cuenta de Lorena):**
 - **Verificado:** `npm --prefix apps/web run typecheck` y `npm --prefix
   apps/web run build` limpios (código 0).
 - **Bloqueo de publicación sigue activo:** esta sesión sigue sin permiso
-  de escritura en GitHub (mismo diagnóstico 403 documentado más abajo). El
-  commit `1eee32f` está solo en este contenedor. Milton recibió un
-  `git bundle` (`auto-articulos-apple-hig.bundle`) con las instrucciones
-  para publicarlo desde su computadora principal — **ese bundle quedó
-  desactualizado** porque estaba armado sobre el branch viejo que ya se
-  descartó (base `8fab5c1`, antes del commit `f4715c1` de Antigravity).
-  Hace falta un bundle NUEVO armado sobre `main` actual — pendiente de
-  generar y entregar en esta misma sesión.
+  de escritura en GitHub (mismo diagnóstico 403 documentado más abajo).
+  Los commits `1eee32f` y `d9ff50d` están solo en este contenedor. El
+  bundle viejo (`auto-articulos-apple-hig.bundle`, base `8fab5c1`) quedó
+  **obsoleto** — no usarlo. Se generó y entregó a Milton un bundle NUEVO,
+  `auto-articulos-apple-hig-fix.bundle` (5 KB, base = `f4715c1`, la punta
+  real de `main` con el trabajo de Antigravity ya incluido). Como está
+  armado directo sobre la punta actual de `main`, publicarlo es un simple
+  fast-forward:
+  ```bash
+  cd /ruta/a/auto-articulos
+  git fetch origin main
+  git fetch auto-articulos-apple-hig-fix.bundle claude/coordination-document-bu3fbo:claude/coordination-document-bu3fbo
+  git checkout main
+  git merge --ff-only claude/coordination-document-bu3fbo
+  git push origin main
+  ```
+  (o, si se prefiere no tocar `main` directo, publicar la rama
+  `claude/coordination-document-bu3fbo` y abrir un PR — el merge sería
+  fast-forward de todas formas, sin conflictos, porque no hay commits de
+  nadie más entre `f4715c1` y este bundle).
 - **Estado del área:** LIBERADA.
 
 ## Zona compartida: requiere coordinación explícita
