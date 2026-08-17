@@ -211,7 +211,8 @@ export default function DashboardNav() {
           border: "1px solid rgba(0, 0, 0, 0.06)",
           borderRadius: 14,
           padding: 4,
-          overflowX: "auto",
+          flexWrap: "wrap",
+          overflowX: "hidden",
           boxShadow: "0 2px 8px rgba(0, 0, 0, 0.02)",
         }}
       >
