@@ -20,7 +20,6 @@ export async function GET() {
 
 export async function DELETE() {
   const userId = await getCurrentUserId();
-  const user = await getCurrentUser();
   if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Módulo reservado a administradores y Lorena." }, { status: 403 });
   await prisma.facebookPageIntegration.deleteMany({ where: { userId } });
   return NextResponse.json({ ok: true });

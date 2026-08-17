@@ -146,7 +146,7 @@ async function selectArticlesWithoutGSC(userId: string): Promise<ArticleCandidat
 }
 
 async function getConnectedNetworks(userId: string) {
-  const [threads, twitter, linkedin, instagram, facebookPage, user] = await Promise.all([
+  const [threads, twitter, linkedin, instagram, facebookPage] = await Promise.all([
     prisma.threadsIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.twitterIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.linkedInIntegration.findUnique({ where: { userId }, select: { id: true } }),
