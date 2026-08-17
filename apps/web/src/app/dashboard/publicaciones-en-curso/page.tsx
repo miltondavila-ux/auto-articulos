@@ -28,7 +28,7 @@ export default function PublicacionesEnCursoPage() {
   const [platformDomain, setPlatformDomain] = useState("net");
 
   useEffect(() => {
-    fetch("/api/me")
+    fetch("/api/me", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data && typeof data.platformDomain === "string") {
@@ -47,7 +47,10 @@ export default function PublicacionesEnCursoPage() {
   );
 
   const loadRuns = useCallback(async () => {
-    const [runsRes, socialRes] = await Promise.all([fetch("/api/runs"), fetch("/api/social-opportunities")]);
+    const [runsRes, socialRes] = await Promise.all([
+      fetch("/api/runs", { cache: "no-store" }),
+      fetch("/api/social-opportunities", { cache: "no-store" }),
+    ]);
     if (runsRes.ok) setRuns((await runsRes.json()).runs);
     if (socialRes.ok) {
       const data = await socialRes.json();
