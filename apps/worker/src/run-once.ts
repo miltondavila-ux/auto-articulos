@@ -57,10 +57,10 @@ const SYNC_LANE_CONCURRENCY = 1;
 // group durante 15 minutos completos, y cualquier código nuevo recién
 // desplegado queda esperando detrás de ella (medido en vivo el 15/8/2026:
 // media hora de espera real para ver un log). Este punto medio deja cada
-// lane vivo unos minutos por si llega algo cerca, sin bloquear el turno
+// lane vivo unos segundos por si llega algo cerca, sin bloquear el turno
 // entero cuando de verdad no hay nada.
 const IDLE_DELAY_MS = 5_000;
-const IDLE_EXIT_MS = 3 * 60 * 1000;
+const IDLE_EXIT_MS = 30 * 1000;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
