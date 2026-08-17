@@ -30,6 +30,29 @@ export default async function DashboardLayout({
       }}
     >
       <style>{`
+        @media (max-width: 639px) {
+          .dashboard-main {
+            padding: 20px 16px 44px !important;
+          }
+          .topbar {
+            align-items: stretch !important;
+            gap: 14px !important;
+          }
+          .topbar-title h1 {
+            font-size: 23px !important;
+          }
+          .session-actions {
+            width: 100%;
+            justify-content: space-between !important;
+            gap: 8px !important;
+          }
+          .session-user {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
         @media (min-width: 768px) and (max-width: 1023px) {
           .dashboard-main { padding-bottom: 48px !important; }
         }
@@ -89,7 +112,7 @@ export default async function DashboardLayout({
           marginBottom: 18,
         }}
       >
-        <div>
+        <div className="topbar-title">
           <h1
             style={{
               fontSize: 26,
@@ -149,6 +172,7 @@ export default async function DashboardLayout({
             </div>
           ) : (
             <span
+              className="session-user"
               style={{
                 fontSize: 13,
                 color: "#6e6e73",

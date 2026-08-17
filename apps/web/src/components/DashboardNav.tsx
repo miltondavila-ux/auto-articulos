@@ -80,10 +80,14 @@ export default function DashboardNav() {
   return (
     <nav style={{ position: "relative", marginTop: 18, marginBottom: 28 }}>
       <style>{`
-        @media (min-width: 1024px) {
+        @media (min-width: 1180px) {
           .nav-mobile-toggle { display: none !important; }
           .nav-mobile-menu { display: none !important; }
           .nav-desktop-row { display: flex !important; }
+        }
+        @media (max-width: 420px) {
+          .nav-mobile-toggle { padding: 11px 12px !important; }
+          .nav-mobile-menu { border-radius: 12px !important; }
         }
       `}</style>
 
@@ -111,11 +115,18 @@ export default function DashboardNav() {
           transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
         }}
       >
-        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#0071e3" }} />
-          {activeTab?.label ?? "Menú de Módulos"}
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {activeTab?.label ?? "Menú de Módulos"}
+          </span>
         </span>
-        <span style={{ fontSize: 11, opacity: 0.7 }} aria-hidden="true">{open ? "▲" : "▼"}</span>
+        <span
+          style={{ fontSize: 18, lineHeight: 1, opacity: 0.75, flexShrink: 0 }}
+          aria-hidden="true"
+        >
+          {open ? "×" : "☰"}
+        </span>
       </button>
 
       {open && (
@@ -135,6 +146,8 @@ export default function DashboardNav() {
             overflow: "hidden",
             boxShadow: "0 16px 40px rgba(0, 0, 0, 0.12)",
             padding: 4,
+            maxHeight: "min(70vh, 520px)",
+            overflowY: "auto",
           }}
         >
           {tabs.map((tab) => {
