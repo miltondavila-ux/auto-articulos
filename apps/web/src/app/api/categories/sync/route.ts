@@ -33,7 +33,7 @@ export async function POST() {
   });
   if (!credential) {
     return NextResponse.json(
-      { error: "Primero debes guardar tus credenciales de 10minutesWebsite" },
+      { error: "Primero debes guardar tus credenciales de la plataforma" },
       { status: 400 }
     );
   }

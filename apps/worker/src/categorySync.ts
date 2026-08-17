@@ -101,7 +101,7 @@ export async function processNextCategorySync(): Promise<boolean> {
       }),
     ]);
     if (!credential) {
-      throw new Error("Primero debes guardar tus credenciales de 10minutesWebsite.");
+      throw new Error("Primero debes guardar tus credenciales de la plataforma.");
     }
 
     const username = decryptSecret(credential.encryptedUsername);

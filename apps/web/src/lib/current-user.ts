@@ -40,6 +40,9 @@ export async function getCurrentUser() {
       disabledModules: true,
       hasImageCredits: true,
       defaultPromptId: true,
+      allowLinkedInPublishing: true,
+      allowThreadsPublishing: true,
+      allowFacebookPublishing: true,
     },
   });
 }
