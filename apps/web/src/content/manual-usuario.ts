@@ -86,13 +86,19 @@ Esta pantalla muestra el avance de la ejecución actual. Úsala para saber si lo
 
 Ruta: /dashboard/oportunidades
 
-Oportunidades analiza datos de Google Search Console para sugerir temas y títulos relacionados con lo que busca tu audiencia.
+En este módulo le pides al sistema que te cree títulos de artículos, pero no al azar: los saca de lo que Google ya te está mostrando. Google Search Console sabe qué buscó la gente antes de llegar a tu página, y esa información es la que se usa.
 
-Antes de usarlo debes conectar Google Search Console, elegir una propiedad, sincronizar categorías y configurar un idioma de redacción. Ejecuta el análisis y espera a que termine sin cerrar la página. El sistema agrupa sugerencias por categoría y muestra una explicación de cada oportunidad, impresiones y clics cuando están disponibles.
+Con eso se arman títulos de cola larga: búsquedas más específicas y menos peleadas, donde es más fácil entrar. Cada artículo que se posiciona atrae visitas nuevas, y esas visitas le dan más señales a Google sobre tu sitio. Es un efecto bola de nieve: empieza pequeño y va creciendo solo.
 
-Puedes ejecutar una categoría completa o un título individual. También puedes eliminar sugerencias que no quieras usar. Respeta el máximo de títulos por lote: si una categoría lo supera, publícala en partes o elimina títulos antes de ejecutar.
+La pantalla está separada en tres pasos.
 
-Las sugerencias ayudan a decidir, pero tú decides qué publicar. Revisa que cada título sea adecuado para tu negocio y audiencia.
+Paso 1, pide el análisis. Si tienes más de un sitio, eliges para cuál generar oportunidades y pulsas Analizar. Tarda unos minutos y no debes cerrar la página. Si te falta conectar Google Search Console, elegir la propiedad, sincronizar categorías o configurar el idioma, la propia pantalla te lo dice con un enlace directo a donde se arregla.
+
+Paso 2, elige cómo se escribirán. Seleccionas el idioma de los artículos y el estilo de escritura. También puedes desactivar la indexación en buscadores, aunque por defecto queda activada, que es lo normal si quieres que Google los encuentre. Estas opciones solo afectan a lo que publiques desde esta pantalla; no cambian tu configuración general.
+
+Paso 3, revisa y publica. Aparecen las propuestas agrupadas por categoría, con su explicación, impresiones y clics. Puedes eliminar los títulos que no te convenzan, publicar un título suelto, una categoría completa o todas de una vez. Respeta el máximo de títulos por lote: si una categoría lo supera, publícala en partes o elimina títulos antes.
+
+Nada se publica sin que tú lo mandes. Las sugerencias ayudan a decidir, pero la decisión es tuya: revisa que cada título sea adecuado para tu negocio y tu audiencia.
 
 ## Oportunidades Redes
 
