@@ -117,9 +117,11 @@ async function normalizeSocialImage(imageUrl: string, targetAspect = 3 / 4): Pro
       }
       const cropLeft = left + Math.max(0, Math.round((trimmedWidth - cropWidth) / 2));
       const cropTop = top + Math.max(0, Math.round((trimmedHeight - cropHeight) / 2));
+      const outputWidth = targetAspect > 1 ? 1200 : targetAspect < 0.65 ? 1080 : 900;
+      const outputHeight = targetAspect > 1 ? 900 : targetAspect < 0.65 ? 1920 : 1200;
       normalized = await sharp(source)
         .extract({ left: cropLeft, top: cropTop, width: cropWidth, height: cropHeight })
-        .resize(targetAspect > 1 ? 1200 : 900, targetAspect > 1 ? 900 : 1200, { fit: "fill" })
+        .resize(outputWidth, outputHeight, { fit: "fill" })
         .jpeg({ quality: 92, mozjpeg: true })
         .toBuffer();
     }
