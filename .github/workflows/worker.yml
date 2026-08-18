@@ -6,7 +6,11 @@ on:
   workflow_dispatch: {}
 
 concurrency:
-  group: auto-articulos-worker
+  # Las reservas atómicas en la base de datos ya impiden que dos procesos
+  # trabajen sobre la misma cuenta. Separar por SHA permite que una corrección
+  # recién publicada arranque sin esperar a que termine la versión anterior;
+  # las corridas de la misma versión siguen compartiendo una sola cola.
+  group: auto-articulos-worker-${{ github.sha }}
   cancel-in-progress: false
 
 jobs:
