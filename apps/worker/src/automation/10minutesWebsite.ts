@@ -32,6 +32,8 @@ export interface TenMinutesWebsiteCredentials {
   articleSignature?: string | null;
   // Teléfono del usuario para reemplazar marcadores "PHONE_NUMBER" de WhatsApp/llamada
   userPhone?: string | null;
+  // Nombre para resolver {NOMBRE_AUTOR} de un estilo personalizado.
+  authorName?: string | null;
   // Prompt de redacción personalizado cargado desde Run.prompt.
   promptText?: string | null;
 }
@@ -299,6 +301,7 @@ export async function publishArticle(
       credentials.contentLanguage,
       credentials.articleSignature,
       credentials.userPhone,
+      credentials.authorName,
       onStep,
       credentials.promptText,
     );
@@ -533,6 +536,7 @@ async function createArticleDraft(
   contentLanguage: string | null | undefined,
   articleSignature: string | null | undefined,
   userPhone: string | null | undefined,
+  authorName: string | null | undefined,
   onStep: OnStep,
   promptText?: string | null,
 ): Promise<{ summary: string; contentHtml: string; finalTitle: string }> {
@@ -619,7 +623,12 @@ async function createArticleDraft(
     await onStep("Usando estilo de redacción personalizado con prompt propio.");
     await onStep("Generando contenido del artículo con OpenAI...");
     const lang = contentLanguage || "es";
-    const customArticle = await generateCustomArticle(title, promptText, lang);
+    const customArticle = await generateCustomArticle(
+      title,
+      promptText,
+      lang,
+      authorName,
+    );
     await onStep(`✓ Artículo generado con éxito por OpenAI. Título: "${customArticle.title}"`);
 
     let contentHtml = customArticle.contentHtml;

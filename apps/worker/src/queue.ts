@@ -38,6 +38,9 @@ export async function processNext(): Promise<boolean> {
           contentLanguage: true,
           articleSignature: true,
           phone: true,
+          name: true,
+          firstName: true,
+          lastName: true,
         },
       },
     },
@@ -75,6 +78,9 @@ async function processRunTitle(
           contentLanguage: true;
           articleSignature: true;
           phone: true;
+          name: true;
+          firstName: true;
+          lastName: true;
         };
       };
     };
@@ -226,6 +232,10 @@ async function processRunTitle(
         contentLanguage: effectiveLanguage,
         articleSignature: run.user.articleSignature,
         userPhone: run.user.phone,
+        authorName:
+          [run.user.firstName, run.user.lastName].filter(Boolean).join(" ") ||
+          run.user.name ||
+          null,
         promptText: run.prompt?.prompt || null,
       },
       nextTitle.text,

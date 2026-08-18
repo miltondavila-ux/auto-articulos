@@ -7,10 +7,38 @@ interface CustomArticleResult {
   contentHtml: string;
 }
 
+/**
+ * Los estilos corporativos existentes pueden pedir marcadores de identidad.
+ * Nunca deben hacer fallar toda la generación: el teléfono se resuelve más
+ * adelante con el dato real del perfil y el nombre se conoce en el worker.
+ */
+export function sanitizeGeneratedArticleResult(
+  article: CustomArticleResult,
+  authorName?: string | null,
+): CustomArticleResult {
+  const replaceIdentityMarkers = (value: string, preservePhone: boolean) =>
+    value
+      .replace(
+        /\{(?:TELEFONO|PHONE_NUMBER|NUMERO-WHATSAPP)\}/gi,
+        preservePhone ? "PHONE_NUMBER" : "",
+      )
+      .replace(/\{NOMBRE_AUTOR\}/gi, authorName?.trim() || "")
+      // Aún no existe un campo de ciudad en User; nunca dejamos el marcador
+      // crudo en el artículo mientras ese dato no esté configurado.
+      .replace(/\{CIUDAD_ESTADO\}/gi, "");
+
+  return {
+    title: replaceIdentityMarkers(article.title, false).trim(),
+    summary: replaceIdentityMarkers(article.summary || "", false).trim(),
+    contentHtml: replaceIdentityMarkers(article.contentHtml, true).trim(),
+  };
+}
+
 export async function generateCustomArticle(
   titleText: string,
   promptTemplate: string,
-  contentLanguage: string
+  contentLanguage: string,
+  authorName?: string | null,
 ): Promise<CustomArticleResult> {
   if (!OPENAI_API_KEY) {
     throw new Error(
@@ -41,7 +69,7 @@ Asegúrate de que el HTML generado sea válido y esté limpio.`;
 Límites obligatorios para que el resultado pueda guardarse correctamente:
 - Escribe un máximo de 1.200 palabras en contentHtml.
 - No incluyas <script>, JSON-LD, CSS, códigos QR, botones de contacto ni enlaces tel:/wa.me: Auto Artículos añade los datos de contacto reales de forma segura.
-- No uses marcadores como {TELEFONO}, {NOMBRE_AUTOR}, {CIUDAD_ESTADO} ni ningún texto entre llaves.
+- No uses marcadores de datos personales; Auto Artículos los resuelve de forma segura si aparecieran.
 - Escapa correctamente cualquier comilla dentro del valor JSON de contentHtml.`;
 
   let lastError = "";
@@ -96,15 +124,11 @@ Límites obligatorios para que el resultado pueda guardarse correctamente:
         lastError = "El JSON retornado por OpenAI no contiene título y contenido completos.";
         continue;
       }
-      if (/(?:\{(?:TELEFONO|NOMBRE_AUTOR|CIUDAD_ESTADO)\}|<script\b)/i.test(parsed.contentHtml)) {
-        lastError = "OpenAI devolvió marcadores o código no permitido en el artículo.";
+      if (/<script\b/i.test(parsed.contentHtml)) {
+        lastError = "OpenAI devolvió código script no permitido en el artículo.";
         continue;
       }
-      return {
-        title: parsed.title.trim(),
-        summary: (parsed.summary || "").trim(),
-        contentHtml: parsed.contentHtml.trim(),
-      };
+      return sanitizeGeneratedArticleResult(parsed, authorName);
     } catch (error) {
       lastError = `OpenAI devolvió JSON inválido: ${error instanceof Error ? error.message : String(error)}`;
     }
