@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
       "facebook-page",
       "instagram-carousel",
       "instagram-reel-image",
+      "instagram-story",
       "instagram-infografia",
     ];
     if (!supported.includes(opp.platform)) {

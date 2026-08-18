@@ -279,6 +279,28 @@ export async function publishInstagramImage(
   return publishMediaContainer(accessToken, instagramBusinessAccountId, creationId);
 }
 
+/** Publica una imagen vertical como Historia de Instagram. */
+export async function publishInstagramStory(
+  accessToken: string,
+  instagramBusinessAccountId: string,
+  imageUrl: string,
+): Promise<InstagramPublishResult> {
+  const containerParams = new URLSearchParams({
+    media_type: "STORIES",
+    image_url: imageUrl,
+    access_token: accessToken,
+  });
+  const containerRes = await fetch(`${GRAPH_API_URL}/${instagramBusinessAccountId}/media`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: containerParams.toString(),
+  });
+  if (!containerRes.ok) throw new Error(`Error al crear la Historia de Instagram: ${await containerRes.text()}`);
+  const { id: creationId } = (await containerRes.json()) as { id: string };
+  await pollMediaContainerStatus(accessToken, creationId);
+  return publishMediaContainer(accessToken, instagramBusinessAccountId, creationId);
+}
+
 // ─── PUBLICACIÓN: CAROUSEL ────────────────────────────────────────────────
 
 /**

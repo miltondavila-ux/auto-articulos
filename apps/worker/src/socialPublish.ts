@@ -11,6 +11,7 @@ import {
   uploadLinkedInImage,
   publishInstagramCarousel,
   publishInstagramImage,
+  publishInstagramStory,
   generateSocialImageRaw,
   publishFacebookPagePost,
 } from "@auto-articulos/shared";
@@ -547,7 +548,7 @@ async function processInstagramJob(job: {
 
   await validateArticleUrl(job.articleUrl);
 
-  const format = job.platform.replace("instagram-", "") as "carousel" | "reel-image" | "infografia";
+  const format = job.platform.replace("instagram-", "") as "carousel" | "reel-image" | "story" | "infografia";
   const [title, user] = await Promise.all([
     job.titleId ? prisma.title.findUnique({ where: { id: job.titleId } }) : Promise.resolve(null),
     prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true, infographicPrompt: true } }),
@@ -598,6 +599,18 @@ async function processInstagramJob(job: {
         integration.instagramBusinessAccountId,
         imageUrl,
         finalPost,
+      );
+      break;
+    }
+
+    case "story": {
+      const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
+      const imageUrl = sourceImage ? await normalizeSocialImage(sourceImage, 9 / 16) : null;
+      if (!imageUrl) throw new Error("No se pudo adaptar la imagen del artículo para Stories.");
+      result = await publishInstagramStory(
+        accessToken,
+        integration.instagramBusinessAccountId,
+        imageUrl,
       );
       break;
     }
