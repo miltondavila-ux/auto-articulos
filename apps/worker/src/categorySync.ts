@@ -305,9 +305,16 @@ export async function processNextCategorySync(): Promise<boolean> {
       await prisma.$transaction(syncOperations);
     }
 
+    // errorMessage: null es necesario porque el mismo job puede haber sido
+    // marcado "error" de forma prematura por recoverStuckSyncJobs (ver
+    // cleanup.ts) mientras seguía realmente en curso, y luego terminar solo
+    // con éxito: sin este reseteo, un job en status="success" podía quedar
+    // con el mensaje de "posible caída del worker" pegado para siempre
+    // (caso real: Wendy Chawa, 18/8/2026 — 24 categorías sincronizadas bien,
+    // pero el mensaje de error seguía ahí confundiendo a quien lo mirara).
     await prisma.categorySyncJob.update({
       where: { id: job.id },
-      data: { status: "success", finishedAt: new Date() },
+      data: { status: "success", errorMessage: null, finishedAt: new Date() },
     });
     // Único rastro visible en el log de esta corrida hasta ahora era la
     // corrección de servidor (arriba), que solo dispara cuando el servidor

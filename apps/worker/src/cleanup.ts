@@ -88,7 +88,11 @@ export async function recoverStuckTitles(): Promise<number> {
 // existente en estado "pending"/"running" en vez de crear uno nuevo, así que
 // un job muerto bloquea TODOS los reintentos futuros del usuario (cada click
 // en "Sincronizar" vuelve a mostrar el mismo job que nunca va a terminar).
-const STUCK_SYNC_JOB_MS = 3 * 60 * 1000; // 3 minutos
+// Debe coincidir con STUCK_SYNC_JOB_MS en apps/web/src/lib/sync-jobs.ts —
+// subido de 3 a 20 minutos el 18/8/2026 (caso Wendy Chawa: un sync
+// genuinamente en curso, no muerto, tardó 8.3 min y se marcó "atascado"
+// antes de terminar; ver comentario completo en ese archivo).
+const STUCK_SYNC_JOB_MS = 20 * 60 * 1000; // 20 minutos
 
 export async function recoverStuckSyncJobs(): Promise<number> {
   const cutoff = new Date(Date.now() - STUCK_SYNC_JOB_MS);
