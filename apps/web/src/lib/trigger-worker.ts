@@ -19,11 +19,12 @@ const GITHUB_API_HEADERS = (token: string) => ({
 async function isWorkerAlreadyActive(
   token: string,
   repo: string,
+  workflow: string,
 ): Promise<boolean> {
   for (const status of ["in_progress", "queued"]) {
     try {
       const res = await fetch(
-        `https://api.github.com/repos/${repo}/actions/workflows/worker.yml/runs?status=${status}&per_page=1`,
+        `https://api.github.com/repos/${repo}/actions/workflows/${workflow}/runs?status=${status}&per_page=1`,
         { headers: GITHUB_API_HEADERS(token) },
       );
       if (!res.ok) continue; // si la consulta falla, no bloqueamos el disparo por las dudas
@@ -43,24 +44,24 @@ async function isWorkerAlreadyActive(
  * falla (token vencido, sin permisos, etc.) no debe romper la petición del
  * usuario: el respaldo por horario sigue funcionando de todos modos.
  */
-export async function triggerWorkerNow(): Promise<void> {
+async function triggerWorkflowNow(workflow: string, label: string): Promise<void> {
   const token = process.env.GITHUB_ACTIONS_TOKEN;
   const repo = process.env.GITHUB_REPO;
 
   if (!token || !repo) {
     console.error(
-      "triggerWorkerNow: falta GITHUB_ACTIONS_TOKEN o GITHUB_REPO, se depende solo del horario (cada 5 min, con posible demora extra de GitHub).",
+      `${label}: falta GITHUB_ACTIONS_TOKEN o GITHUB_REPO; se depende del horario.`,
     );
     return;
   }
 
   try {
-    if (await isWorkerAlreadyActive(token, repo)) {
+    if (await isWorkerAlreadyActive(token, repo, workflow)) {
       return;
     }
 
     const res = await fetch(
-      `https://api.github.com/repos/${repo}/actions/workflows/worker.yml/dispatches`,
+      `https://api.github.com/repos/${repo}/actions/workflows/${workflow}/dispatches`,
       {
         method: "POST",
         headers: GITHUB_API_HEADERS(token),
@@ -75,10 +76,18 @@ export async function triggerWorkerNow(): Promise<void> {
     if (!res.ok) {
       const body = await res.text().catch(() => "");
       console.error(
-        `triggerWorkerNow: GitHub respondió ${res.status} al intentar disparar el worker de inmediato: ${body}`,
+        `${label}: GitHub respondió ${res.status} al intentar disparar el workflow: ${body}`,
       );
     }
   } catch (err) {
-    console.error("No se pudo disparar el worker de inmediato:", err);
+    console.error(`${label}: no se pudo disparar el workflow:`, err);
   }
+}
+
+export function triggerWorkerNow(): Promise<void> {
+  return triggerWorkflowNow("worker.yml", "triggerWorkerNow");
+}
+
+export function triggerSocialWorkerNow(): Promise<void> {
+  return triggerWorkflowNow("social-worker.yml", "triggerSocialWorkerNow");
 }

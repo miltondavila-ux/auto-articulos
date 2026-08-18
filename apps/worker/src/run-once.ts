@@ -112,10 +112,13 @@ async function runLane(
 }
 
 async function main() {
+  const workerMode = process.env.WORKER_MODE ?? "all";
+  const isSocialOnly = workerMode === "social";
+  const isContentOnly = workerMode === "content";
   // Con varios shards, ejecutar mantenimiento en todos duplicaría consultas y
   // limpiezas. El shard 1 se encarga; todos publican en paralelo.
   const isMaintenanceShard = (process.env.WORKER_SHARD ?? "1") === "1";
-  if (isMaintenanceShard) {
+  if (isMaintenanceShard && !isSocialOnly) {
     const recovered = await recoverStuckTitles();
     if (recovered > 0) {
       console.log(
@@ -132,26 +135,30 @@ async function main() {
 
   const deadline = Date.now() + BUDGET_MS;
 
-  const results = await Promise.all([
-    ...Array.from({ length: SYNC_LANE_CONCURRENCY }, () =>
-      runLane("categorías", processNextCategorySync, deadline),
-    ),
-    ...Array.from({ length: SYNC_LANE_CONCURRENCY }, () =>
-      runLane("idiomas", processNextLanguageSync, deadline),
-    ),
-    ...Array.from({ length: SYNC_LANE_CONCURRENCY }, () =>
-      runLane("perfil de negocio", processNextBusinessProfilePost, deadline),
-    ),
-    ...Array.from({ length: SYNC_LANE_CONCURRENCY }, () =>
-      runLane("redes sociales", processNextSocialPublish, deadline),
-    ),
-    ...Array.from({ length: TITLE_LANE_CONCURRENCY }, () =>
-      runLane("títulos", processNext, deadline),
-    ),
-  ]);
+  const lanes: Promise<boolean>[] = [];
+  if (!isSocialOnly) {
+    lanes.push(
+      ...Array.from({ length: SYNC_LANE_CONCURRENCY }, () =>
+        runLane("categorías", processNextCategorySync, deadline),
+      ),
+      ...Array.from({ length: SYNC_LANE_CONCURRENCY }, () =>
+        runLane("idiomas", processNextLanguageSync, deadline),
+      ),
+      ...Array.from({ length: SYNC_LANE_CONCURRENCY }, () =>
+        runLane("perfil de negocio", processNextBusinessProfilePost, deadline),
+      ),
+      ...Array.from({ length: TITLE_LANE_CONCURRENCY }, () =>
+        runLane("títulos", processNext, deadline),
+      ),
+    );
+  }
+  if (!isContentOnly) {
+    lanes.push(runLane("redes sociales", processNextSocialPublish, deadline));
+  }
+  const results = await Promise.all(lanes);
   const didAnyWork = results.some(Boolean);
 
-  if (isMaintenanceShard) {
+  if (isMaintenanceShard && !isSocialOnly) {
     const deletedEvents = await cleanupOldEvents();
     if (deletedEvents > 0) {
       console.log(`Limpieza: ${deletedEvents} eventos de log viejos borrados.`);

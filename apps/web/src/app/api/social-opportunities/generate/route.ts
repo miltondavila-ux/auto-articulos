@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
 import { canUseSocialModule } from "@/lib/social-access";
-import { triggerWorkerNow } from "@/lib/trigger-worker";
+import { triggerSocialWorkerNow } from "@/lib/trigger-worker";
 import {
   decryptSecret,
   getGoogleAccessToken,
@@ -292,8 +292,8 @@ export async function POST(request: Request) {
     // se actualice automáticamente al refrescar. No esperamos la respuesta
     // para no bloquear el handler de Vercel.
     if (createdOpportunities.length > 0) {
-      void triggerWorkerNow().catch((err) => {
-        console.error("[social-opportunities/generate] triggerWorkerNow falló:", err);
+      void triggerSocialWorkerNow().catch((err) => {
+        console.error("[social-opportunities/generate] triggerSocialWorkerNow falló:", err);
       });
     }
 

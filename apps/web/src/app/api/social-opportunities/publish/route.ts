@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
 import { canUseSocialModule } from "@/lib/social-access";
-import { triggerWorkerNow } from "@/lib/trigger-worker";
+import { triggerSocialWorkerNow } from "@/lib/trigger-worker";
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       data: { status: "queued", errorLog: null },
     });
 
-    await triggerWorkerNow();
+    await triggerSocialWorkerNow();
 
     return NextResponse.json({
       success: true,
