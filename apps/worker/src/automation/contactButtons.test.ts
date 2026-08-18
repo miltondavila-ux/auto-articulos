@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   buildContactButtonsHtml,
+  distributeContactButtonsHtml,
   removeGeneratedContactLinks,
 } from "./10minutesWebsite";
 import {
@@ -48,4 +49,17 @@ test("descarta CTAs generados para usar solamente los botones oficiales", () => 
   assert.equal(cleaned.includes("tel:"), false);
   assert.match(official, /href="https:\/\/wa\.me\/17866088613"/);
   assert.match(official, /href="tel:17866088613"/);
+});
+
+test("distribuye WhatsApp y llamada en puntos distintos del contenido", () => {
+  const source = "<p>Inicio.</p><h2>Primer paso</h2><p>Detalle.</p><h2>Segundo paso</h2><p>Cierre.</p>";
+  const whatsapp = buildContactButtonsHtml("17866088613", "CONTACTA AHORA", "LLAMA AHORA", true, false);
+  const call = buildContactButtonsHtml("17866088613", "CONTACTA AHORA", "LLAMA AHORA", false, true);
+  const result = distributeContactButtonsHtml(source, whatsapp, call);
+
+  const whatsappIndex = result.indexOf("https://wa.me/17866088613");
+  const callIndex = result.indexOf("tel:17866088613");
+  assert.ok(whatsappIndex > result.indexOf("Inicio.</p>"));
+  assert.ok(callIndex > whatsappIndex);
+  assert.ok(callIndex < result.indexOf("Cierre.</p>"));
 });

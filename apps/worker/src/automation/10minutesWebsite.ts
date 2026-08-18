@@ -81,6 +81,28 @@ export function removeGeneratedContactLinks(html: string): string {
   );
 }
 
+/** Inserta los CTA en dos pausas naturales del artículo, nunca juntos al final. */
+export function distributeContactButtonsHtml(
+  html: string,
+  whatsappButton: string,
+  callButton: string,
+): string {
+  const endings = [...html.matchAll(/<\/(?:p|ul|ol|blockquote|h2|h3|h4)>/gi)];
+  if (endings.length < 2) {
+    return `${whatsappButton}\n${html}\n${callButton}`;
+  }
+
+  const firstBlock = Math.ceil(endings.length / 3) - 1;
+  const secondBlock = Math.max(
+    firstBlock + 1,
+    Math.ceil((endings.length * 2) / 3) - 1,
+  );
+  const firstEnd = (endings[firstBlock].index ?? 0) + endings[firstBlock][0].length;
+  const secondEnd = (endings[secondBlock].index ?? 0) + endings[secondBlock][0].length;
+
+  return `${html.slice(0, firstEnd)}\n${whatsappButton}\n${html.slice(firstEnd, secondEnd)}\n${callButton}\n${html.slice(secondEnd)}`;
+}
+
 export interface PublishResult {
   articleUrl: string | null;
   finalTitle: string;
@@ -669,12 +691,26 @@ async function createArticleDraft(
         translateText("CONTACTA AHORA", lang),
         translateText("LLAMA AHORA", lang),
       ]);
-      contentHtml = `${contentHtml}\n${buildContactButtonsHtml(
+      const whatsappButton = buildContactButtonsHtml(
         userPhone,
         whatsappLabel,
         callLabel,
-      )}`;
-      await onStep("Botones oficiales de WhatsApp y llamada agregados con el teléfono de tu perfil.");
+        true,
+        false,
+      );
+      const callButton = buildContactButtonsHtml(
+        userPhone,
+        whatsappLabel,
+        callLabel,
+        false,
+        true,
+      );
+      contentHtml = distributeContactButtonsHtml(
+        contentHtml,
+        whatsappButton,
+        callButton,
+      );
+      await onStep("Botones oficiales de WhatsApp y llamada distribuidos dentro del artículo.");
     } else {
       await onStep("⚠️ No se agregaron botones de contacto porque no tienes un teléfono configurado en tu perfil.");
     }
