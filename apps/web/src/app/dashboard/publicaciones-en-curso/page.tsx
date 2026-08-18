@@ -125,6 +125,7 @@ export default function PublicacionesEnCursoPage() {
                     <div style={{ display: "grid", gap: 5, marginTop: 8, paddingLeft: 4 }}>
                       <div>{item.progressPercent >= 10 ? "✓" : "○"} Publicación encolada</div>
                       <div>{item.progressPercent >= 30 ? "✓" : "○"} Worker iniciado</div>
+                      <div>{item.progressPercent >= 55 ? "✓" : "○"} Preparando y ajustando la imagen</div>
                       <div>{item.progressPercent >= 70 ? "✓" : "○"} Enviando contenido a {item.platform}</div>
                       <div>{item.progressPercent >= 100 ? "✓" : "○"} Publicación finalizada</div>
                     </div>
