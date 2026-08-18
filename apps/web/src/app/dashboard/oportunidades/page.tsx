@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -30,6 +31,105 @@ interface OpportunityGroup {
 }
 
 const DEFAULT_MAX_TITLES_PER_BATCH = 20;
+
+// Botonera propia de esta pantalla. No se usa `buttonStyle` compartido porque
+// su azul lleno domina la página; el lenguaje de Apple reserva el azul para
+// enlaces y deja las acciones en grafito. Es local a propósito: cambiar el
+// estilo compartido afectaría a toda la plataforma.
+const pillPrimary: CSSProperties = {
+  padding: "11px 22px",
+  borderRadius: 980,
+  border: "none",
+  background: "#1d1d1f",
+  color: "#ffffff",
+  fontWeight: 500,
+  fontSize: 14,
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  transition: "opacity 0.15s ease",
+};
+
+const pillSecondary: CSSProperties = {
+  padding: "10px 20px",
+  borderRadius: 980,
+  border: "1px solid #d2d2d7",
+  background: "#ffffff",
+  color: "#1d1d1f",
+  fontWeight: 500,
+  fontSize: 14,
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const pillQuiet: CSSProperties = {
+  ...pillSecondary,
+  padding: "7px 15px",
+  fontSize: 13,
+  background: "#f5f5f7",
+  border: "1px solid transparent",
+};
+
+const stepCardStyle: CSSProperties = {
+  ...sectionStyle,
+  padding: 28,
+};
+
+/** Encabezado de paso: número en círculo, título y una línea de apoyo. */
+function StepHeader({
+  number,
+  title,
+  hint,
+}: {
+  number: number;
+  title: string;
+  hint: string;
+}) {
+  return (
+    <div style={{ display: "flex", gap: 14, alignItems: "flex-start", marginBottom: 20 }}>
+      <div
+        aria-hidden="true"
+        style={{
+          flexShrink: 0,
+          width: 30,
+          height: 30,
+          borderRadius: 980,
+          background: "#1d1d1f",
+          color: "#ffffff",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 14,
+          fontWeight: 600,
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        {number}
+      </div>
+      <div>
+        <p
+          style={{
+            margin: 0,
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            color: "#86868b",
+          }}
+        >
+          Paso {number}
+        </p>
+        <h2 style={{ ...h2Style, margin: "2px 0 0", fontSize: 21 }}>{title}</h2>
+        <p style={{ margin: "6px 0 0", fontSize: 14, color: "#6e6e73", lineHeight: 1.5 }}>
+          {hint}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 function formatDateTime(value: string | Date) {
   return new Date(value).toLocaleString("es-US", {
@@ -422,574 +522,635 @@ export default function OportunidadesPage() {
         platformDomain={platformDomain}
         onOpenImageCreditsModal={() => setShowImageCreditsModal(true)}
       >
-        <section style={sectionStyle}>
-        <h2 style={h2Style}>Oportunidades SEO</h2>
-        <p style={{ color: "#6e6e73", fontSize: 14, lineHeight: 1.55 }}>
-          Analiza impresiones, tendencias, posiciones, consultas y páginas de tu
-          propiedad de Google Search Console. El sistema selecciona hasta 10
-          categorías y crea 9 oportunidades long tail únicas para cada una,
-          evitando duplicados y canibalización.
-        </p>
-        {availablePanels.length > 1 && (
-          <div style={{ marginTop: 12 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: "#1d1d1f" }}>
-              ¿Para cuál sitio generar oportunidades?
-              <select
-                value={selectedPanel}
-                onChange={(e) => setSelectedPanel(e.target.value)}
-                style={{ ...inputStyle, marginTop: 4, maxWidth: 260 }}
-              >
-                {availablePanels.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-        )}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            flexWrap: "wrap",
-            marginTop: 12,
-          }}
-        >
-          <button
-            onClick={() => analyze()}
-            disabled={analyzing}
-            style={disabledStyle({ ...buttonStyle, marginTop: 0 }, analyzing)}
-          >
-            {analyzing
-              ? "Analizando Search Console..."
-              : groups.length
-                ? "Actualizar análisis"
-                : "Analizar oportunidades"}
-          </button>
-          {lastAnalysisAt && (
-            <span style={{ fontSize: 12, color: "#6e6e73" }}>
-              Último análisis: {formatDateTime(lastAnalysisAt)}
-            </span>
-          )}
-        </div>
-        {analyzing && (
-          <div
-            role="status"
-            aria-live="polite"
+        {/* ------------------------------------------------------------------
+            Introducción. Va primero y sin adornos: mucha gente llegaba aquí
+            sin saber qué hace el módulo ni para qué le sirve.
+        ------------------------------------------------------------------- */}
+        <section style={{ ...stepCardStyle, marginTop: 0 }}>
+          <p
             style={{
-              marginTop: 16,
-              padding: 16,
-              border: "1px solid rgba(0, 113, 227, 0.25)",
-              borderRadius: 10,
-              background: "#e8f2ff",
+              margin: 0,
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "#86868b",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: 16,
-                alignItems: "center",
-                marginBottom: 10,
-              }}
-            >
-              <strong style={{ fontSize: 14, color: "#0071e3" }}>
-                {analysisStages[currentStage]}
-              </strong>
-              <span
-                style={{
-                  minWidth: 52,
-                  textAlign: "center",
-                  padding: "4px 8px",
-                  borderRadius: 999,
-                  background: "rgba(0, 113, 227, 0.15)",
-                  color: "#0071e3",
-                  fontSize: 12,
-                  fontVariantNumeric: "tabular-nums",
-                  fontWeight: 700,
-                }}
-              >
-                {elapsedTime}
-              </span>
-            </div>
-            <div
-              aria-hidden="true"
-              style={{
-                height: 8,
-                borderRadius: 999,
-                background: "rgba(0, 113, 227, 0.15)",
-                overflow: "hidden",
-              }}
-            >
-              <div
-                style={{
-                  width: `${analysisProgress}%`,
-                  height: "100%",
-                  borderRadius: 999,
-                  background: "#0071e3",
-                  transition: "width 1s linear",
-                }}
-              />
-            </div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
-                gap: 8,
-                marginTop: 12,
-              }}
-            >
-              {analysisStages.map((stage, index) => (
-                <div
-                  key={stage}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    fontSize: 12,
-                    color:
-                      index < currentStage
-                        ? "#16803c"
-                        : index === currentStage
-                          ? "#0071e3"
-                          : "#6e6e73",
-                    fontWeight: index === currentStage ? 600 : 400,
-                  }}
-                >
-                  <span aria-hidden="true">
-                    {index < currentStage
-                      ? "✓"
-                      : index === currentStage
-                        ? "●"
-                        : "○"}
-                  </span>
-                  <span>{stage}</span>
-                </div>
-              ))}
-            </div>
-            <p style={{ margin: "12px 0 0", color: "#6e6e73", fontSize: 12 }}>
-              El tiempo depende de la cantidad de datos. No cierres esta página
-              mientras termina el análisis.
+            Antes de avanzar, lee esto
+          </p>
+          <h1
+            style={{
+              margin: "8px 0 0",
+              fontSize: 30,
+              fontWeight: 600,
+              letterSpacing: "-0.02em",
+              color: "#1d1d1f",
+            }}
+          >
+            Oportunidades
+          </h1>
+          <div style={{ marginTop: 14, maxWidth: 720 }}>
+            <p style={{ margin: 0, fontSize: 16, lineHeight: 1.6, color: "#1d1d1f" }}>
+              Aquí le pides al sistema que te invente títulos de artículos, pero
+              no al azar: los saca de lo que <strong>Google ya te está
+              mostrando</strong>. Tu Google Search Console sabe qué buscó la
+              gente antes de llegar a tu página, y esa información es la que
+              usamos.
+            </p>
+            <p style={{ margin: "14px 0 0", fontSize: 16, lineHeight: 1.6, color: "#1d1d1f" }}>
+              Con eso se arman títulos de <strong>cola larga</strong>: búsquedas
+              más específicas y menos peleadas, donde entrar es más fácil. Cada
+              artículo que se posiciona atrae visitas nuevas, y esas visitas le
+              dan más señales a Google sobre tu sitio. Es un efecto bola de
+              nieve: empieza pequeño y va creciendo solo.
+            </p>
+            <p style={{ margin: "14px 0 0", fontSize: 16, lineHeight: 1.6, color: "#6e6e73" }}>
+              Son tres pasos. Pides el análisis, eliges cómo quieres que se
+              escriban y revisas antes de publicar. Nada se publica sin que tú
+              lo mandes.
             </p>
           </div>
-        )}
-        {setupStatus &&
-          (!setupStatus.googleConnected ||
-            !setupStatus.hasSiteUrl ||
-            !setupStatus.hasCategories ||
-            !contentLanguage) && (
-            <div
-              style={{
-                marginTop: 12,
-                padding: "10px 14px",
-                borderRadius: 8,
-                background: "#fff4e5",
-                color: "#8a4b08",
-                fontSize: 13,
-                display: "flex",
-                flexDirection: "column",
-                gap: 4,
-              }}
-            >
-              <strong>Faltan configuraciones para aprovechar Oportunidades:</strong>
-              <ul style={{ margin: "4px 0 0 18px", padding: 0 }}>
-                {(!setupStatus.googleConnected || !setupStatus.hasSiteUrl) && (
-                  <li>
-                    <Link
-                      href="/dashboard/configuracion?tab=integrations#google"
-                      style={{ color: "#0071e3", fontWeight: 600 }}
-                    >
-                      {!setupStatus.googleConnected
-                        ? "Conectar Google Search Console"
-                        : "Elegir propiedad de Search Console"}
-                    </Link>
-                  </li>
-                )}
-                {!setupStatus.hasCategories && (
-                  <li>
-                    <Link
-                      href="/dashboard/configuracion?tab=platform#categories"
-                      style={{ color: "#0071e3", fontWeight: 600 }}
-                    >
-                      Sincronizar tus categorías
-                    </Link>
-                  </li>
-                )}
-                {!contentLanguage && (
-                  <li>
-                    <Link
-                      href="/dashboard/configuracion?tab=platform#language"
-                      style={{ color: "#0071e3", fontWeight: 600 }}
-                    >
-                      Configurar tu idioma de redacción
-                    </Link>
-                  </li>
-                )}
-              </ul>
+        </section>
+
+        {/* ---------------------------- PASO 1 ---------------------------- */}
+        <section style={stepCardStyle}>
+          <StepHeader
+            number={1}
+            title="Pide el análisis"
+            hint="El sistema revisa tu Google Search Console y propone títulos por categoría. Tarda unos minutos."
+          />
+
+          {availablePanels.length > 1 && (
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "#1d1d1f" }}>
+                ¿Para cuál sitio generar oportunidades?
+                <select
+                  value={selectedPanel}
+                  onChange={(e) => setSelectedPanel(e.target.value)}
+                  style={{ ...inputStyle, marginTop: 4, maxWidth: 260 }}
+                >
+                  {availablePanels.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
           )}
 
-        {!hasImageCredits && (
           <div
             style={{
-              marginTop: 12,
-              padding: "10px 14px",
-              borderRadius: 8,
-              background: "#fff4e5",
-              color: "#8a4b08",
-              fontSize: 13,
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
+              gap: 14,
               flexWrap: "wrap",
-              gap: 8,
             }}
           >
-            <span>
-              ⚠️ Tu cuenta no tiene créditos de imagen disponibles.
-            </span>
             <button
-              type="button"
-              onClick={() => setShowImageCreditsModal(true)}
+              onClick={() => analyze()}
+              disabled={analyzing}
+              style={disabledStyle({ ...pillPrimary }, analyzing)}
+            >
+              {analyzing
+                ? "Analizando Search Console..."
+                : groups.length
+                  ? "Actualizar análisis"
+                  : "Analizar oportunidades"}
+            </button>
+            {lastAnalysisAt && (
+              <span style={{ fontSize: 13, color: "#86868b" }}>
+                Último análisis: {formatDateTime(lastAnalysisAt)}
+              </span>
+            )}
+          </div>
+
+          {analyzing && (
+            <div
+              role="status"
+              aria-live="polite"
               style={{
-                background: "#ff9500",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: 6,
-                padding: "6px 12px",
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: "pointer",
+                marginTop: 18,
+                padding: 18,
+                border: "1px solid #e5e5ea",
+                borderRadius: 16,
+                background: "#f5f5f7",
               }}
             >
-              Solicitar créditos gratuitos
-            </button>
-          </div>
-        )}
-        <p style={{ color: "#6e6e73", fontSize: 12 }}>
-          Tu máximo permitido es de {maxTitlesPerBatch} títulos por lote.
-        </p>
-        <label
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            fontSize: 13,
-            color: "#6e6e73",
-            margin: "10px 0 0",
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={disableIndexing}
-            onChange={(e) => setDisableIndexing(e.target.checked)}
-          />
-          Desactivar indexación en buscadores al ejecutar (por defecto queda
-          activada, como en la plataforma)
-        </label>
-
-        <div style={{ marginTop: 16 }}>
-          <label
-            style={{
-              display: "block",
-              fontSize: 13,
-              color: "#6e6e73",
-              marginBottom: 6,
-            }}
-          >
-            Idioma con el que se escribirán los artículos que ejecutes desde
-            aquí. Solo aplica a lo que ejecutes ahora; no cambia tu
-            configuración.
-          </label>
-          <select
-            value={contentLanguage}
-            onChange={(e) => setContentLanguage(e.target.value)}
-            disabled={languages.length === 0}
-            style={{ ...inputStyle, width: "100%", maxWidth: 320 }}
-          >
-            {languages.length === 0 ? (
-              <option value="">Sin idiomas sincronizados</option>
-            ) : (
-              languages.map((l) => (
-                <option key={l.id} value={l.externalId}>
-                  {l.name}
-                </option>
-              ))
-            )}
-          </select>
-        </div>
-
-        <div style={{ marginTop: 12 }}>
-          <label
-            style={{
-              display: "block",
-              fontSize: 13,
-              color: "#6b7280",
-              marginBottom: 6,
-            }}
-          >
-            Estilo de escritura (Prompt) con el que se generarán los artículos de estas oportunidades.
-          </label>
-          <select
-            value={selectedPromptId}
-            onChange={(e) => setSelectedPromptId(e.target.value)}
-            style={{ ...inputStyle, width: "100%", maxWidth: 320 }}
-          >
-            <option value="">STANDARD (Estilo predeterminado de la plataforma)</option>
-            {prompts.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {groups.length > 0 && (
-          <div style={{ marginTop: 16 }}>
-            {(() => {
-              const totalTitles = groups.reduce(
-                (sum, g) => sum + g.titles.length,
-                0,
-              );
-              const overLimit = totalTitles > maxTitlesPerBatch;
-              const disabled = busyId !== null || overLimit || !contentLanguage;
-              return (
-                <>
-                  <button
-                    onClick={executeAll}
-                    disabled={disabled}
-                    title={
-                      !contentLanguage
-                        ? "Debes configurar tu idioma de redacción en Configuración antes de publicar."
-                        : overLimit
-                          ? `Tienes ${totalTitles} títulos en ${groups.length} categorías, más de tu máximo de ${maxTitlesPerBatch} por lote.`
-                          : undefined
-                    }
-                    style={disabledStyle(
-                      { ...buttonStyle, marginTop: 0 },
-                      disabled,
-                    )}
-                  >
-                    {busyId === "__all__"
-                      ? "Publicando todas..."
-                      : overLimit
-                        ? `Supera el máximo (${totalTitles}/${maxTitlesPerBatch})`
-                        : `Publicar todas las categorías (${totalTitles})`}
-                  </button>
-                  {overLimit && (
-                    <p
-                      style={{
-                        margin: "6px 0 0",
-                        fontSize: 12,
-                        color: "#ff3b30",
-                      }}
-                    >
-                      Tienes {totalTitles} títulos en {groups.length}{" "}
-                      categorías, más de tu máximo de {maxTitlesPerBatch} por
-                      lote. Publica categoría por categoría, o elimina algunos
-                      títulos primero.
-                    </p>
-                  )}
-                  {!contentLanguage && (
-                    <p
-                      style={{
-                        margin: "6px 0 0",
-                        fontSize: 12,
-                        color: "#ff3b30",
-                      }}
-                    >
-                      Debes seleccionar o configurar un idioma de redacción antes de publicar.
-                    </p>
-                  )}
-                </>
-              );
-            })()}
-          </div>
-        )}
-      </section>
-
-      {message && (
-        <div
-          style={{
-            marginTop: 16,
-            padding: "12px 16px",
-            borderRadius: 12,
-            background:
-              message.kind === "error"
-                ? "#fff2f1"
-                : message.kind === "info"
-                  ? "#f5f5f7"
-                  : "#f2faf4",
-            border:
-              message.kind === "error"
-                ? "1px solid rgba(255, 59, 48, 0.25)"
-                : message.kind === "info"
-                  ? "1px solid rgba(0, 0, 0, 0.08)"
-                  : "1px solid rgba(52, 199, 89, 0.25)",
-            color:
-              message.kind === "error"
-                ? "#ff3b30"
-                : message.kind === "info"
-                  ? "#6e6e73"
-                  : "#16803c",
-            fontSize: 13,
-          }}
-        >
-          {message.text}
-          {canForce && (
-            <div style={{ marginTop: 10 }}>
-              <button
-                onClick={() => analyze(true)}
-                disabled={analyzing}
-                className="secondary"
-                style={{
-                  fontSize: 13,
-                  padding: "6px 14px",
-                }}
-              >
-                Analizar de todas formas ahora
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {loading && <p className="muted" style={{ marginTop: 20 }}>Cargando oportunidades...</p>}
-      {!loading && groups.length === 0 && (
-        <section style={sectionStyle}>
-          <p className="muted" style={{ margin: 0 }}>
-            Todavía no hay oportunidades guardadas. Presiona el botón para crear
-            el primer análisis.
-          </p>
-        </section>
-      )}
-
-      {groups.map((group) => (
-        <section key={group.id} style={sectionStyle}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              gap: 16,
-              alignItems: "flex-start",
-              flexWrap: "wrap",
-            }}
-          >
-            <div>
-              <h2 style={{ ...h2Style, marginBottom: 4 }}>
-                {group.category.name}
-                {group.category.panel ? ` (${group.category.panel})` : ""}
-              </h2>
-              <p style={{ margin: 0, color: "#6e6e73", fontSize: 13 }}>
-                {group.rationale}
-              </p>
-              <p style={{ color: "#6e6e73", fontSize: 12, marginTop: 4 }}>
-                {Math.round(group.impressions).toLocaleString("es-US")}{" "}
-                impresiones · {Math.round(group.clicks).toLocaleString("es-US")}{" "}
-                clics
-              </p>
-            </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button
-                onClick={() => execute("group", group.id)}
-                disabled={
-                  busyId !== null ||
-                  group.titles.length > maxTitlesPerBatch ||
-                  !contentLanguage
-                }
-                title={
-                  !contentLanguage
-                    ? "Debes configurar tu idioma de redacción en Configuración antes de ejecutar."
-                    : group.titles.length > maxTitlesPerBatch
-                      ? `Esta categoría supera tu máximo de ${maxTitlesPerBatch} títulos por lote.`
-                      : undefined
-                }
-                style={disabledStyle(
-                  { ...buttonStyle, marginTop: 0 },
-                  busyId !== null ||
-                    group.titles.length > maxTitlesPerBatch ||
-                    !contentLanguage,
-                )}
-              >
-                {group.titles.length > maxTitlesPerBatch
-                  ? `Supera el máximo (${group.titles.length}/${maxTitlesPerBatch})`
-                  : `Ejecutar categoría (${group.titles.length})`}
-              </button>
-              <button
-                onClick={() => remove("groups", group.id)}
-                disabled={busyId !== null}
-                className="secondary"
-                style={disabledStyle({ ...secondaryButtonStyle, marginTop: 0 }, busyId !== null)}
-              >
-                Eliminar categoría
-              </button>
-            </div>
-          </div>
-          <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
-            {group.titles.map((title, index) => (
               <div
-                key={title.id}
-                className="row"
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
-                  alignItems: "center",
-                  flexWrap: "wrap",
                   gap: 16,
-                  padding: "12px 14px",
-                  borderRadius: 12,
+                  alignItems: "center",
+                  marginBottom: 12,
+                }}
+              >
+                <strong style={{ fontSize: 14, color: "#1d1d1f", fontWeight: 600 }}>
+                  {analysisStages[currentStage]}
+                </strong>
+                <span
+                  style={{
+                    minWidth: 52,
+                    textAlign: "center",
+                    padding: "4px 10px",
+                    borderRadius: 980,
+                    background: "#ffffff",
+                    border: "1px solid #e5e5ea",
+                    color: "#1d1d1f",
+                    fontSize: 12,
+                    fontVariantNumeric: "tabular-nums",
+                    fontWeight: 600,
+                  }}
+                >
+                  {elapsedTime}
+                </span>
+              </div>
+              <div
+                aria-hidden="true"
+                style={{
+                  height: 6,
+                  borderRadius: 980,
+                  background: "rgba(0, 0, 0, 0.08)",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    width: `${analysisProgress}%`,
+                    height: "100%",
+                    borderRadius: 980,
+                    background: "#1d1d1f",
+                    transition: "width 1s linear",
+                  }}
+                />
+              </div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+                  gap: 8,
+                  marginTop: 14,
+                }}
+              >
+                {analysisStages.map((stage, index) => (
+                  <div
+                    key={stage}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      fontSize: 12,
+                      color:
+                        index < currentStage
+                          ? "#1d1d1f"
+                          : index === currentStage
+                            ? "#1d1d1f"
+                            : "#a1a1a6",
+                      fontWeight: index === currentStage ? 600 : 400,
+                    }}
+                  >
+                    <span aria-hidden="true">
+                      {index < currentStage
+                        ? "✓"
+                        : index === currentStage
+                          ? "●"
+                          : "○"}
+                    </span>
+                    <span>{stage}</span>
+                  </div>
+                ))}
+              </div>
+              <p style={{ margin: "14px 0 0", color: "#86868b", fontSize: 12 }}>
+                El tiempo depende de la cantidad de datos. No cierres esta página
+                mientras termina el análisis.
+              </p>
+            </div>
+          )}
+
+          {setupStatus &&
+            (!setupStatus.googleConnected ||
+              !setupStatus.hasSiteUrl ||
+              !setupStatus.hasCategories ||
+              !contentLanguage) && (
+              <div
+                style={{
+                  marginTop: 16,
+                  padding: "14px 16px",
+                  borderRadius: 14,
+                  background: "#fff8f0",
+                  border: "1px solid rgba(255, 149, 0, 0.25)",
+                  color: "#8a4b08",
+                  fontSize: 13,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 4,
+                }}
+              >
+                <strong>Antes de analizar, te falta completar:</strong>
+                <ul style={{ margin: "4px 0 0 18px", padding: 0 }}>
+                  {(!setupStatus.googleConnected || !setupStatus.hasSiteUrl) && (
+                    <li>
+                      <Link
+                        href="/dashboard/configuracion?tab=integrations#google"
+                        style={{ color: "#0071e3", fontWeight: 600 }}
+                      >
+                        {!setupStatus.googleConnected
+                          ? "Conectar Google Search Console"
+                          : "Elegir propiedad de Search Console"}
+                      </Link>
+                    </li>
+                  )}
+                  {!setupStatus.hasCategories && (
+                    <li>
+                      <Link
+                        href="/dashboard/configuracion?tab=platform#categories"
+                        style={{ color: "#0071e3", fontWeight: 600 }}
+                      >
+                        Sincronizar tus categorías
+                      </Link>
+                    </li>
+                  )}
+                  {!contentLanguage && (
+                    <li>
+                      <Link
+                        href="/dashboard/configuracion?tab=platform#language"
+                        style={{ color: "#0071e3", fontWeight: 600 }}
+                      >
+                        Configurar tu idioma de redacción
+                      </Link>
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
+
+          {!hasImageCredits && (
+            <div
+              style={{
+                marginTop: 16,
+                padding: "14px 16px",
+                borderRadius: 14,
+                background: "#fff8f0",
+                border: "1px solid rgba(255, 149, 0, 0.25)",
+                color: "#8a4b08",
+                fontSize: 13,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 10,
+              }}
+            >
+              <span>Tu cuenta no tiene créditos de imagen disponibles.</span>
+              <button
+                type="button"
+                onClick={() => setShowImageCreditsModal(true)}
+                style={{ ...pillQuiet, background: "#ffffff", border: "1px solid rgba(255, 149, 0, 0.4)", color: "#8a4b08" }}
+              >
+                Solicitar créditos gratuitos
+              </button>
+            </div>
+          )}
+        </section>
+
+        {/* ---------------------------- PASO 2 ---------------------------- */}
+        <section style={stepCardStyle}>
+          <StepHeader
+            number={2}
+            title="Elige cómo se escribirán"
+            hint="Esto solo afecta a los artículos que publiques desde esta pantalla. No cambia tu configuración general."
+          />
+
+          <div style={{ display: "grid", gap: 18, maxWidth: 420 }}>
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "#1d1d1f",
+                  marginBottom: 6,
+                }}
+              >
+                Idioma de los artículos
+              </label>
+              <select
+                value={contentLanguage}
+                onChange={(e) => setContentLanguage(e.target.value)}
+                disabled={languages.length === 0}
+                style={{ ...inputStyle, width: "100%" }}
+              >
+                {languages.length === 0 ? (
+                  <option value="">Sin idiomas sincronizados</option>
+                ) : (
+                  languages.map((l) => (
+                    <option key={l.id} value={l.externalId}>
+                      {l.name}
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "#1d1d1f",
+                  marginBottom: 6,
+                }}
+              >
+                Estilo de escritura
+              </label>
+              <select
+                value={selectedPromptId}
+                onChange={(e) => setSelectedPromptId(e.target.value)}
+                style={{ ...inputStyle, width: "100%" }}
+              >
+                <option value="">STANDARD (Estilo predeterminado de la plataforma)</option>
+                {prompts.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <label
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 10,
+              fontSize: 14,
+              color: "#1d1d1f",
+              margin: "20px 0 0",
+              maxWidth: 560,
+              lineHeight: 1.5,
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={disableIndexing}
+              onChange={(e) => setDisableIndexing(e.target.checked)}
+              style={{ marginTop: 3 }}
+            />
+            <span>
+              Desactivar indexación en buscadores al ejecutar
+              <span style={{ display: "block", color: "#86868b", fontSize: 13 }}>
+                Por defecto queda activada, igual que en la plataforma. Déjala
+                así si quieres que Google encuentre estos artículos.
+              </span>
+            </span>
+          </label>
+
+          <p style={{ color: "#86868b", fontSize: 13, margin: "18px 0 0" }}>
+            Tu máximo permitido es de {maxTitlesPerBatch} títulos por lote.
+          </p>
+        </section>
+
+        {/* ---------------------------- PASO 3 ---------------------------- */}
+        <section style={stepCardStyle}>
+          <StepHeader
+            number={3}
+            title="Revisa y publica"
+            hint="Lee los títulos propuestos. Puedes borrar los que no te convenzan y publicar solo lo que te guste."
+          />
+
+          {message && (
+            <div
+              style={{
+                marginBottom: 18,
+                padding: "14px 16px",
+                borderRadius: 14,
+                background:
+                  message.kind === "error"
+                    ? "#fff2f1"
+                    : message.kind === "info"
+                      ? "#f5f5f7"
+                      : "#f2faf4",
+                border:
+                  message.kind === "error"
+                    ? "1px solid rgba(255, 59, 48, 0.25)"
+                    : message.kind === "info"
+                      ? "1px solid #e5e5ea"
+                      : "1px solid rgba(52, 199, 89, 0.25)",
+                color:
+                  message.kind === "error"
+                    ? "#ff3b30"
+                    : message.kind === "info"
+                      ? "#6e6e73"
+                      : "#16803c",
+                fontSize: 14,
+              }}
+            >
+              {message.text}
+              {canForce && (
+                <div style={{ marginTop: 12 }}>
+                  <button
+                    onClick={() => analyze(true)}
+                    disabled={analyzing}
+                    style={disabledStyle({ ...pillSecondary }, analyzing)}
+                  >
+                    Analizar de todas formas ahora
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {groups.length === 0 && (
+            <p style={{ margin: 0, color: "#86868b", fontSize: 15, lineHeight: 1.6 }}>
+              Todavía no hay propuestas. Vuelve al paso 1 y pide el primer
+              análisis; cuando termine, los títulos aparecerán aquí.
+            </p>
+          )}
+
+          {groups.length > 0 && (() => {
+            const totalTitles = groups.reduce(
+              (sum, g) => sum + g.titles.length,
+              0,
+            );
+            const overLimit = totalTitles > maxTitlesPerBatch;
+            const disabled = busyId !== null || overLimit || !contentLanguage;
+            return (
+              <div style={{ marginBottom: 24 }}>
+                <button
+                  onClick={executeAll}
+                  disabled={disabled}
+                  title={
+                    !contentLanguage
+                      ? "Debes configurar tu idioma de redacción en Configuración antes de publicar."
+                      : overLimit
+                        ? `Tienes ${totalTitles} títulos en ${groups.length} categorías, más de tu máximo de ${maxTitlesPerBatch} por lote.`
+                        : undefined
+                  }
+                  style={disabledStyle({ ...pillPrimary }, disabled)}
+                >
+                  {busyId === "__all__"
+                    ? "Publicando todas..."
+                    : overLimit
+                      ? `Supera el máximo (${totalTitles}/${maxTitlesPerBatch})`
+                      : `Publicar todas las categorías (${totalTitles})`}
+                </button>
+                {overLimit && (
+                  <p style={{ margin: "8px 0 0", fontSize: 13, color: "#ff3b30" }}>
+                    Tienes {totalTitles} títulos en {groups.length} categorías,
+                    más de tu máximo de {maxTitlesPerBatch} por lote. Publica
+                    categoría por categoría, o elimina algunos títulos primero.
+                  </p>
+                )}
+                {!contentLanguage && (
+                  <p style={{ margin: "8px 0 0", fontSize: 13, color: "#ff3b30" }}>
+                    Debes seleccionar un idioma de redacción en el paso 2 antes
+                    de publicar.
+                  </p>
+                )}
+              </div>
+            );
+          })()}
+
+          <div style={{ display: "grid", gap: 16 }}>
+            {groups.map((group) => (
+              <div
+                key={group.id}
+                style={{
                   border: "1px solid #e5e5ea",
+                  borderRadius: 18,
+                  padding: 20,
                   background: "#ffffff",
                 }}
               >
-                <div style={{ minWidth: 200, flex: "1 1 200px" }}>
-                  <strong style={{ fontSize: 14, color: "#1d1d1f" }}>
-                    {index + 1}. {title.text}
-                  </strong>
-                  {title.rationale && (
-                    <div
-                      style={{ color: "#6e6e73", fontSize: 12, marginTop: 3 }}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 16,
+                    alignItems: "flex-start",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div>
+                    <h3
+                      style={{
+                        margin: "0 0 4px",
+                        fontSize: 17,
+                        fontWeight: 600,
+                        letterSpacing: "-0.01em",
+                        color: "#1d1d1f",
+                      }}
                     >
-                      {title.rationale}
-                    </div>
-                  )}
+                      {group.category.name}
+                      {group.category.panel ? ` (${group.category.panel})` : ""}
+                    </h3>
+                    <p style={{ margin: 0, color: "#6e6e73", fontSize: 13, lineHeight: 1.5 }}>
+                      {group.rationale}
+                    </p>
+                    <p style={{ color: "#86868b", fontSize: 12, marginTop: 6 }}>
+                      {Math.round(group.impressions).toLocaleString("es-US")}{" "}
+                      impresiones · {Math.round(group.clicks).toLocaleString("es-US")}{" "}
+                      clics
+                    </p>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <button
+                      onClick={() => execute("group", group.id)}
+                      disabled={
+                        busyId !== null ||
+                        group.titles.length > maxTitlesPerBatch ||
+                        !contentLanguage
+                      }
+                      title={
+                        !contentLanguage
+                          ? "Debes configurar tu idioma de redacción en Configuración antes de ejecutar."
+                          : group.titles.length > maxTitlesPerBatch
+                            ? `Esta categoría supera tu máximo de ${maxTitlesPerBatch} títulos por lote.`
+                            : undefined
+                      }
+                      style={disabledStyle(
+                        { ...pillPrimary, padding: "9px 18px", fontSize: 13 },
+                        busyId !== null ||
+                          group.titles.length > maxTitlesPerBatch ||
+                          !contentLanguage,
+                      )}
+                    >
+                      {group.titles.length > maxTitlesPerBatch
+                        ? `Supera el máximo (${group.titles.length}/${maxTitlesPerBatch})`
+                        : `Publicar categoría (${group.titles.length})`}
+                    </button>
+                    <button
+                      onClick={() => remove("groups", group.id)}
+                      disabled={busyId !== null}
+                      style={disabledStyle({ ...pillQuiet }, busyId !== null)}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
                 </div>
-                <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-                  <button
-                    onClick={() => execute("title", title.id)}
-                    disabled={busyId !== null || !contentLanguage}
-                    title={
-                      !contentLanguage
-                        ? "Debes configurar tu idioma de redacción en Configuración antes de ejecutar."
-                        : undefined
-                    }
-                    className="secondary"
-                    style={disabledStyle(
-                      { ...secondaryButtonStyle, fontSize: 12, padding: "6px 12px" },
-                      busyId !== null || !contentLanguage,
-                    )}
-                  >
-                    Ejecutar
-                  </button>
-                  <button
-                    onClick={() => remove("titles", title.id)}
-                    disabled={busyId !== null}
-                    className="secondary"
-                    style={disabledStyle(
-                      { ...secondaryButtonStyle, color: "#ff3b30", fontSize: 12, padding: "6px 12px" },
-                      busyId !== null,
-                    )}
-                  >
-                    Eliminar
-                  </button>
+                <div style={{ display: "grid", gap: 8, marginTop: 18 }}>
+                  {group.titles.map((title, index) => (
+                    <div
+                      key={title.id}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        gap: 16,
+                        padding: "12px 14px",
+                        borderRadius: 12,
+                        background: "#f5f5f7",
+                      }}
+                    >
+                      <div style={{ minWidth: 200, flex: "1 1 200px" }}>
+                        <strong style={{ fontSize: 14, color: "#1d1d1f", fontWeight: 500 }}>
+                          {index + 1}. {title.text}
+                        </strong>
+                        {title.rationale && (
+                          <div style={{ color: "#86868b", fontSize: 12, marginTop: 3 }}>
+                            {title.rationale}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                        <button
+                          onClick={() => execute("title", title.id)}
+                          disabled={busyId !== null || !contentLanguage}
+                          title={
+                            !contentLanguage
+                              ? "Debes configurar tu idioma de redacción en Configuración antes de ejecutar."
+                              : undefined
+                          }
+                          style={disabledStyle(
+                            { ...pillQuiet, background: "#ffffff", border: "1px solid #d2d2d7" },
+                            busyId !== null || !contentLanguage,
+                          )}
+                        >
+                          Publicar
+                        </button>
+                        <button
+                          onClick={() => remove("titles", title.id)}
+                          disabled={busyId !== null}
+                          style={disabledStyle(
+                            { ...pillQuiet, color: "#ff3b30" },
+                            busyId !== null,
+                          )}
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
           </div>
         </section>
-      ))}
+
       </PreValidationGuard>
 
       <ImageCreditsModal
