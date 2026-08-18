@@ -7,6 +7,7 @@ export * from "./twitter-api";
 export * from "./linkedin-api";
 export * from "./instagram-api";
 export * from "./facebook-pages-api";
+export * from "./pinterest-api";
 export * from "./image-prompt";
 export * from "./social-image";
 export * from "./platform-servers";
