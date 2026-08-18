@@ -7,7 +7,10 @@ import { platformBaseUrl } from "@auto-articulos/shared";
 import { buildImagePrompt, isImageRelevant } from "../imagePrompt";
 import { generateFaqs, type Faq } from "../faqPrompt";
 import { translateText } from "../translateText";
-import { replacePhonePlaceholders } from "../phonePlaceholders";
+import {
+  normalizePhonePlaceholders,
+  replacePhonePlaceholders,
+} from "../phonePlaceholders";
 import { generateCustomArticle } from "./generateCustomArticle";
 
 export interface TenMinutesWebsiteCredentials {
@@ -66,6 +69,14 @@ export function buildContactButtonsHtml(
     );
   }
   return buttons.join("");
+}
+
+/** Los CTAs del modelo no son confiables: sólo conservamos los botones propios. */
+export function removeGeneratedContactLinks(html: string): string {
+  return html.replace(
+    /<a\b[^>]*\bhref=["'](?:https?:\/\/(?:api\.)?whatsapp\.com|https?:\/\/wa\.me|tel:)[^"']*["'][^>]*>[\s\S]*?<\/a>/gi,
+    "",
+  );
 }
 
 export interface PublishResult {
@@ -615,10 +626,7 @@ async function createArticleDraft(
 
     // El modelo puede devolver los marcadores del sistema en inglés o español.
     // Se normalizan antes de reutilizar el reparador contextual ya probado.
-    contentHtml = contentHtml.replace(
-      /\{(?:TELEFONO|PHONE_NUMBER|NUMERO-WHATSAPP)\}/gi,
-      "PHONE_NUMBER",
-    );
+    contentHtml = normalizePhonePlaceholders(contentHtml);
 
     if (/(?:PHONE_NUMBER|NUMERO-WHATSAPP)/.test(contentHtml)) {
       if (userPhone) {
@@ -644,24 +652,20 @@ async function createArticleDraft(
     }
 
     // Los artículos con prompt propio no reciben la plantilla de CTA de la
-    // plataforma; estos botones no dependen de que el modelo invente enlaces.
+    // plataforma. Se descartan CTAs creados por el modelo para no conservar
+    // URLs incompletas y se añaden siempre los dos botones oficiales.
     if (userPhone?.replace(/\D/g, "")) {
-      const hasWhatsAppButton = /<a\b[^>]*href=["'][^"']*(?:wa\.me|api\.whatsapp\.com)/i.test(contentHtml);
-      const hasCallButton = /<a\b[^>]*href=["']tel:/i.test(contentHtml);
-      if (!hasWhatsAppButton || !hasCallButton) {
-        const [whatsappLabel, callLabel] = await Promise.all([
-          translateText("CONTACTA AHORA", lang),
-          translateText("LLAMA AHORA", lang),
-        ]);
-        contentHtml = `${contentHtml}\n${buildContactButtonsHtml(
-          userPhone,
-          whatsappLabel,
-          callLabel,
-          !hasWhatsAppButton,
-          !hasCallButton,
-        )}`;
-        await onStep("Botones de WhatsApp y llamada agregados con el teléfono de tu perfil.");
-      }
+      contentHtml = removeGeneratedContactLinks(contentHtml);
+      const [whatsappLabel, callLabel] = await Promise.all([
+        translateText("CONTACTA AHORA", lang),
+        translateText("LLAMA AHORA", lang),
+      ]);
+      contentHtml = `${contentHtml}\n${buildContactButtonsHtml(
+        userPhone,
+        whatsappLabel,
+        callLabel,
+      )}`;
+      await onStep("Botones oficiales de WhatsApp y llamada agregados con el teléfono de tu perfil.");
     } else {
       await onStep("⚠️ No se agregaron botones de contacto porque no tienes un teléfono configurado en tu perfil.");
     }
