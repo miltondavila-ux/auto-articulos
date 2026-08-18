@@ -68,6 +68,7 @@ async function processRunTitle(
   run: Prisma.RunGetPayload<{
     include: {
       category: true;
+      prompt: true;
       user: {
         select: {
           platformDomain: true;

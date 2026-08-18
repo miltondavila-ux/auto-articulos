@@ -19,9 +19,10 @@ export async function generateCustomArticle(
   }
 
   // Reemplazar placeholders en el prompt del usuario
-  const userPrompt = promptTemplate
+  const customInstructions = promptTemplate
     .replace(/{title}/gi, titleText)
     .replace(/{keyword}/gi, titleText);
+  const userPrompt = `${customInstructions}\n\nTEMA OBLIGATORIO: "${titleText}". Escribe únicamente sobre este tema, aunque las instrucciones personalizadas no incluyan {title} ni {keyword}.`;
 
   const systemPrompt = `Eres un redactor experto en SEO y marketing digital.
 Tu tarea es escribir un artículo de blog completo de alta calidad en el idioma "${contentLanguage}", siguiendo de manera estricta las instrucciones dadas por el usuario.
@@ -35,46 +36,79 @@ Debes responder ÚNICAMENTE en formato JSON con la siguiente estructura exacta:
 
 Asegúrate de que el HTML generado sea válido y esté limpio.`;
 
-  const response = await fetch(OPENAI_CHAT_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini", // Modelo económico, rápido y de alto rendimiento
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      temperature: 0.7,
-    }),
-  });
+  const safetyRules = `
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Error en la llamada a OpenAI (Status ${response.status}): ${errorText}`);
-  }
+Límites obligatorios para que el resultado pueda guardarse correctamente:
+- Escribe un máximo de 1.200 palabras en contentHtml.
+- No incluyas <script>, JSON-LD, CSS, códigos QR, botones de contacto ni enlaces tel:/wa.me: Auto Artículos añade los datos de contacto reales de forma segura.
+- No uses marcadores como {TELEFONO}, {NOMBRE_AUTOR}, {CIUDAD_ESTADO} ni ningún texto entre llaves.
+- Escapa correctamente cualquier comilla dentro del valor JSON de contentHtml.`;
 
-  const data = (await response.json()) as any;
-  const content = data.choices?.[0]?.message?.content;
+  let lastError = "";
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const response = await fetch(OPENAI_CHAT_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: systemPrompt + safetyRules },
+          {
+            role: "user",
+            content:
+              attempt === 0
+                ? userPrompt
+                : `${userPrompt}\n\nReintento: responde con un artículo más conciso y JSON completo, sin marcadores ni código estructurado.`,
+          },
+        ],
+        temperature: 0.5,
+        max_tokens: 10000,
+      }),
+    });
 
-  if (!content) {
-    throw new Error("La llamada a OpenAI no retornó ningún contenido.");
-  }
-
-  try {
-    const parsed = JSON.parse(content) as CustomArticleResult;
-    if (!parsed.title || !parsed.contentHtml) {
-      throw new Error("El JSON retornado por OpenAI no contiene los campos obligatorios 'title' y 'contentHtml'.");
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Error en la llamada a OpenAI (Status ${response.status}): ${errorText}`);
     }
-    return {
-      title: parsed.title.trim(),
-      summary: (parsed.summary || "").trim(),
-      contentHtml: parsed.contentHtml.trim(),
+
+    const data = (await response.json()) as {
+      choices?: { finish_reason?: string | null; message?: { content?: string } }[];
     };
-  } catch (e: any) {
-    throw new Error(`Error al parsear el JSON generado por OpenAI: ${e.message}. Contenido crudo: ${content}`);
+    const choice = data.choices?.[0];
+    const content = choice?.message?.content;
+
+    if (!content) {
+      lastError = "OpenAI no retornó contenido.";
+      continue;
+    }
+    if (choice?.finish_reason === "length") {
+      lastError = "OpenAI alcanzó el límite de longitud antes de completar el JSON.";
+      continue;
+    }
+
+    try {
+      const parsed = JSON.parse(content) as CustomArticleResult;
+      if (!parsed.title || !parsed.contentHtml) {
+        lastError = "El JSON retornado por OpenAI no contiene título y contenido completos.";
+        continue;
+      }
+      if (/(?:\{(?:TELEFONO|NOMBRE_AUTOR|CIUDAD_ESTADO)\}|<script\b)/i.test(parsed.contentHtml)) {
+        lastError = "OpenAI devolvió marcadores o código no permitido en el artículo.";
+        continue;
+      }
+      return {
+        title: parsed.title.trim(),
+        summary: (parsed.summary || "").trim(),
+        contentHtml: parsed.contentHtml.trim(),
+      };
+    } catch (error) {
+      lastError = `OpenAI devolvió JSON inválido: ${error instanceof Error ? error.message : String(error)}`;
+    }
   }
+
+  throw new Error(`OpenAI no pudo generar un artículo válido tras dos intentos: ${lastError}`);
 }

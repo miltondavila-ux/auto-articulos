@@ -29,6 +29,8 @@ export interface TenMinutesWebsiteCredentials {
   articleSignature?: string | null;
   // Teléfono del usuario para reemplazar marcadores "PHONE_NUMBER" de WhatsApp/llamada
   userPhone?: string | null;
+  // Prompt de redacción personalizado cargado desde Run.prompt.
+  promptText?: string | null;
 }
 
 function escapeHtml(value: string): string {
@@ -36,6 +38,34 @@ function escapeHtml(value: string): string {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
+}
+
+export function buildContactButtonsHtml(
+  phone: string,
+  whatsappLabel: string,
+  callLabel: string,
+  includeWhatsApp = true,
+  includeCall = true,
+): string {
+  const digits = phone.replace(/\D/g, "");
+  if (!digits) return "";
+
+  const buttons: string[] = [];
+  if (includeWhatsApp) {
+    buttons.push(
+      '<div class="visible-xs visible-sm" style="text-align:center;margin:20px 0;">',
+      `<a href="https://wa.me/${digits}" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;text-align:center;text-decoration:none;padding:10px 20px;border-radius:7px;box-sizing:border-box;" target="_blank">${escapeHtml(whatsappLabel)}</a>`,
+      "</div>",
+    );
+  }
+  if (includeCall) {
+    buttons.push(
+      '<div class="visible-xs visible-sm" style="text-align:center;margin:20px 0;">',
+      `<a href="tel:${digits}" style="display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#838b8e;color:#fff;text-align:center;text-decoration:none;padding:10px 20px;border-radius:7px;box-sizing:border-box;">${escapeHtml(callLabel)}</a>`,
+      "</div>",
+    );
+  }
+  return buttons.join("");
 }
 
 export interface PublishResult {
@@ -583,8 +613,14 @@ async function createArticleDraft(
 
     let contentHtml = customArticle.contentHtml;
 
-    // Reemplazo del teléfono
-    if (contentHtml.includes("PHONE_NUMBER")) {
+    // El modelo puede devolver los marcadores del sistema en inglés o español.
+    // Se normalizan antes de reutilizar el reparador contextual ya probado.
+    contentHtml = contentHtml.replace(
+      /\{(?:TELEFONO|PHONE_NUMBER|NUMERO-WHATSAPP)\}/gi,
+      "PHONE_NUMBER",
+    );
+
+    if (/(?:PHONE_NUMBER|NUMERO-WHATSAPP)/.test(contentHtml)) {
       if (userPhone) {
         const repaired = replacePhonePlaceholders(contentHtml, userPhone);
         contentHtml = repaired.html;
@@ -607,15 +643,49 @@ async function createArticleDraft(
       await onStep("Texto propio agregado al final del artículo.");
     }
 
-    // Rellenar título (#titlees)
-    const titleSelector = await page
-      .evaluate(() => (document.querySelector("#titlees") ? "#titlees" : null))
-      .catch(() => null);
-    if (titleSelector) {
-      const titleField = page.locator(titleSelector);
-      await titleField.fill(customArticle.title.slice(0, 200));
-      await onStep("Título completado en el formulario.");
+    // Los artículos con prompt propio no reciben la plantilla de CTA de la
+    // plataforma; estos botones no dependen de que el modelo invente enlaces.
+    if (userPhone?.replace(/\D/g, "")) {
+      const hasWhatsAppButton = /<a\b[^>]*href=["'][^"']*(?:wa\.me|api\.whatsapp\.com)/i.test(contentHtml);
+      const hasCallButton = /<a\b[^>]*href=["']tel:/i.test(contentHtml);
+      if (!hasWhatsAppButton || !hasCallButton) {
+        const [whatsappLabel, callLabel] = await Promise.all([
+          translateText("CONTACTA AHORA", lang),
+          translateText("LLAMA AHORA", lang),
+        ]);
+        contentHtml = `${contentHtml}\n${buildContactButtonsHtml(
+          userPhone,
+          whatsappLabel,
+          callLabel,
+          !hasWhatsAppButton,
+          !hasCallButton,
+        )}`;
+        await onStep("Botones de WhatsApp y llamada agregados con el teléfono de tu perfil.");
+      }
+    } else {
+      await onStep("⚠️ No se agregaron botones de contacto porque no tienes un teléfono configurado en tu perfil.");
     }
+
+    // El panel español usa #titlees y el panel inglés usa #title. Validamos
+    // que el título realmente quedó escrito antes de gastar créditos de imagen.
+    const titleSelector = await page
+      .evaluate(() => {
+        for (const id of ["#titlees", "#title"]) {
+          if (document.querySelector(id)) return id;
+        }
+        return null;
+      })
+      .catch(() => null);
+    if (!titleSelector) {
+      throw new Error("No se encontró el campo obligatorio de título (#titlees o #title) en el formulario.");
+    }
+    const titleField = page.locator(titleSelector);
+    await titleField.fill(customArticle.title.slice(0, 200));
+    const savedTitle = await titleField.inputValue().catch(() => "");
+    if (!savedTitle.trim()) {
+      throw new Error("El título generado no quedó escrito en el formulario; se detiene antes de generar imagen o guardar.");
+    }
+    await onStep("Título completado y verificado en el formulario.");
 
     // Rellenar resumen
     const excerptSelector = await page
@@ -2114,5 +2184,3 @@ async function saveAndGetUrl(
 
   return { url: null, titleUsed: titleInUse };
 }
-
-
