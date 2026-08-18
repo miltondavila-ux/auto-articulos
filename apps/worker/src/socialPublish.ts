@@ -15,6 +15,7 @@ import {
   publishFacebookPagePost,
 } from "@auto-articulos/shared";
 import { put } from "@vercel/blob";
+import sharp from "sharp";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
@@ -63,6 +64,28 @@ async function getArticleOpenGraphImage(articleUrl: string): Promise<string | nu
   } catch (error) {
     console.warn("No se pudo obtener og:image del artículo para LinkedIn:", error);
     return null;
+  }
+}
+
+/** Quita barras negras incorporadas en la imagen OG antes de subirla a redes. */
+async function normalizeSocialImage(imageUrl: string): Promise<string> {
+  try {
+    const response = await fetch(imageUrl, { signal: AbortSignal.timeout(15000) });
+    if (!response.ok) return imageUrl;
+    const source = Buffer.from(await response.arrayBuffer());
+    const normalized = await sharp(source)
+      .trim({ background: { r: 20, g: 24, b: 26, alpha: 1 }, threshold: 12 })
+      .jpeg({ quality: 92, mozjpeg: true })
+      .toBuffer();
+    const uploaded = await put(`social-normalized/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`, normalized, {
+      access: "public",
+      addRandomSuffix: false,
+      contentType: "image/jpeg",
+    });
+    return uploaded.url;
+  } catch (error) {
+    console.warn("No se pudo normalizar la imagen social; se usará la original:", error);
+    return imageUrl;
   }
 }
 
@@ -304,7 +327,8 @@ async function processLinkedInJob(job: {
   // LinkedIn debe reutilizar la imagen destacada del artículo, no crear una
   // imagen con IA. Si el sitio no expone og:image, publicamos como ARTICLE
   // para que LinkedIn resuelva su previsualización nativa del enlace.
-  const sourceImageUrl = await getArticleOpenGraphImage(job.articleUrl) ?? undefined;
+  const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
+  const sourceImageUrl = sourceImage ? await normalizeSocialImage(sourceImage) : undefined;
 
   let imageAssetUrn: string | undefined;
   if (sourceImageUrl) {
@@ -358,7 +382,8 @@ async function processFacebookPageJob(job: {
   const finalPost = job.suggestedText.includes("[ENLACE]")
     ? job.suggestedText.replace("[ENLACE]", job.articleUrl)
     : `${job.suggestedText}\n\n${job.articleUrl}`;
-  const imageUrl = await getArticleOpenGraphImage(job.articleUrl) ?? undefined;
+  const articleImage = await getArticleOpenGraphImage(job.articleUrl);
+  const imageUrl = articleImage ? await normalizeSocialImage(articleImage) : undefined;
   const result = await publishFacebookPagePost(
     decryptSecret(integration.accessTokenEncrypted), integration.facebookPageId, finalPost, imageUrl,
   );
