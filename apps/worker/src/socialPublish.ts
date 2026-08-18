@@ -68,7 +68,7 @@ async function getArticleOpenGraphImage(articleUrl: string): Promise<string | nu
 }
 
 /** Quita barras negras incorporadas en la imagen OG antes de subirla a redes. */
-async function normalizeSocialImage(imageUrl: string): Promise<string> {
+async function normalizeSocialImage(imageUrl: string, targetAspect = 3 / 4): Promise<string> {
   try {
     const response = await fetch(imageUrl, { signal: AbortSignal.timeout(15000) });
     if (!response.ok) return imageUrl;
@@ -95,7 +95,6 @@ async function normalizeSocialImage(imageUrl: string): Promise<string> {
       while (bottom > height * 0.75 && rowIsDark(bottom)) bottom--;
       const trimmedHeight = bottom - top + 1;
       const trimmedWidth = width;
-      const targetAspect = 3 / 4;
       let cropWidth = trimmedWidth;
       let cropHeight = trimmedHeight;
       if (trimmedWidth / trimmedHeight > targetAspect) {
@@ -107,7 +106,7 @@ async function normalizeSocialImage(imageUrl: string): Promise<string> {
       const cropTop = top + Math.max(0, Math.round((trimmedHeight - cropHeight) / 2));
       normalized = await sharp(source)
         .extract({ left, top: cropTop, width: cropWidth, height: cropHeight })
-        .resize(900, 1200, { fit: "fill" })
+        .resize(targetAspect > 1 ? 1200 : 900, targetAspect > 1 ? 900 : 1200, { fit: "fill" })
         .jpeg({ quality: 92, mozjpeg: true })
         .toBuffer();
     }
@@ -417,7 +416,7 @@ async function processFacebookPageJob(job: {
     ? job.suggestedText.replace("[ENLACE]", job.articleUrl)
     : `${job.suggestedText}\n\n${job.articleUrl}`;
   const articleImage = await getArticleOpenGraphImage(job.articleUrl);
-  const imageUrl = articleImage ? await normalizeSocialImage(articleImage) : undefined;
+  const imageUrl = articleImage ? await normalizeSocialImage(articleImage, 4 / 3) : undefined;
   const result = await publishFacebookPagePost(
     decryptSecret(integration.accessTokenEncrypted), integration.facebookPageId, finalPost, imageUrl,
   );
