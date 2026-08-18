@@ -4257,3 +4257,17 @@ Auto Artículos.
 - **Verificaciones:** Compilación de TypeScript limpia tanto para la app web (`npm run typecheck --workspace=@auto-articulos/web`) como para el worker (`npm run build --workspace=@auto-articulos/worker`) con código de salida 0.
 - **Estado del área:** Cambios completados. Área LIBERADA.
 
+### 2026-08-18 — Claude: Investigación en curso — Wendy Chawa no sincroniza categorías
+
+- **Agente:** Claude (sesión `bu3fbo`).
+- **Tarea:** Milton reportó que la usuaria Wendy Chawa no le está leyendo/sincronizando las categorías.
+- **Área reclamada:** `apps/worker/src/categorySync.ts`, `apps/worker/src/cleanup.ts` (solo lectura hasta ahora, ningún cambio de comportamiento todavía).
+- **Revisión de código hecha:**
+  - `categorySync.ts`: la reconciliación por panel y la migración de referencias `Run`/`OpportunityGroup` (fix del 17/8 para Antonio Aguirre) se ven correctas y ya están en `main`.
+  - `cleanup.ts` → `recoverStuckSyncJobs()`: si un `CategorySyncJob` queda en `"running"` más de 3 minutos (`STUCK_SYNC_JOB_MS`), el shard de mantenimiento lo marca `"error"` con el mensaje `"El proceso se interrumpió de forma inesperada (posible caída del worker) y quedó atascado; vuelve a presionar el botón de sincronizar."` — este es exactamente el mensaje que Milton reportó ver. Es un mecanismo de recuperación ya existente (no un bug nuevo), pero si se repite en cada intento de Wendy indicaría una falla real y recurrente (credenciales, servidor equivocado, o el fetch tardando de verdad más de 3 min) y no solo un caído aislado.
+- **Herramienta añadida para diagnosticar sin acceso directo a la base:**
+  - `apps/worker/src/diagnose-category-sync.ts` (nuevo): recibe `USER_EMAIL_QUERY` y muestra, para el/los usuario(s) que coincidan: si tiene credencial de `10minutesWebsite` guardada, sus últimos 10 `CategorySyncJob` (status/error/duración) y sus `Category` agrupadas por `source`/`panel`.
+  - `.github/workflows/diagnose-category-sync.yml` (nuevo): `workflow_dispatch` con input `user_email_query`, mismo patrón de solo lectura que `query-users.yml`. **Pensado para reutilizarse en futuros casos similares** (ya hubo varios: Estee Soto, Antonio Aguirre) sin tener que crear un script nuevo cada vez.
+  - Publicado directamente en `main` (commit `65fd59d`) y disparado con `user_email_query="wendy"`. Resultado pendiente de revisar — se actualizará esta entrada con el diagnóstico y la causa raíz apenas se lean los logs de la corrida.
+- **Estado del área:** EN PROGRESO. No tocar `categorySync.ts`/`cleanup.ts` hasta que esta entrada se actualice con el diagnóstico y, si aplica, la corrección aplicada.
+
