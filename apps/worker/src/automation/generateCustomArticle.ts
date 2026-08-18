@@ -26,11 +26,21 @@ export function sanitizeGeneratedArticleResult(
       // Aún no existe un campo de ciudad en User; nunca dejamos el marcador
       // crudo en el artículo mientras ese dato no esté configurado.
       .replace(/\{CIUDAD_ESTADO\}/gi, "");
+  const removeScripts = (html: string) =>
+    html
+      // JSON-LD y scripts del prompt no pertenecen al editor del artículo.
+      // Quitarlos conserva el texto visible y evita que el reintento entero
+      // falle por un bloque no ejecutable en esta plataforma.
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, "")
+      // Defensa ante una etiqueta de script incompleta/malformada.
+      .replace(/<\/?script\b[^>]*>/gi, "");
 
   return {
     title: replaceIdentityMarkers(article.title, false).trim(),
     summary: replaceIdentityMarkers(article.summary || "", false).trim(),
-    contentHtml: replaceIdentityMarkers(article.contentHtml, true).trim(),
+    contentHtml: removeScripts(
+      replaceIdentityMarkers(article.contentHtml, true),
+    ).trim(),
   };
 }
 
@@ -122,10 +132,6 @@ Límites obligatorios para que el resultado pueda guardarse correctamente:
       const parsed = JSON.parse(content) as CustomArticleResult;
       if (!parsed.title || !parsed.contentHtml) {
         lastError = "El JSON retornado por OpenAI no contiene título y contenido completos.";
-        continue;
-      }
-      if (/<script\b/i.test(parsed.contentHtml)) {
-        lastError = "OpenAI devolvió código script no permitido en el artículo.";
         continue;
       }
       return sanitizeGeneratedArticleResult(parsed, authorName);
