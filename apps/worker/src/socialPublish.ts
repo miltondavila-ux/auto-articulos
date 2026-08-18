@@ -73,10 +73,33 @@ async function normalizeSocialImage(imageUrl: string): Promise<string> {
     const response = await fetch(imageUrl, { signal: AbortSignal.timeout(15000) });
     if (!response.ok) return imageUrl;
     const source = Buffer.from(await response.arrayBuffer());
-    const normalized = await sharp(source)
-      .trim({ background: { r: 20, g: 24, b: 26, alpha: 1 }, threshold: 12 })
-      .jpeg({ quality: 92, mozjpeg: true })
-      .toBuffer();
+    const image = sharp(source);
+    const metadata = await image.metadata();
+    const width = metadata.width ?? 0;
+    const height = metadata.height ?? 0;
+    let normalized = source;
+    if (width > 0 && height > 0) {
+      const { data, info } = await image.raw().toBuffer({ resolveWithObject: true });
+      const channels = info.channels;
+      const rowIsDark = (row: number) => {
+        let luminance = 0;
+        for (let x = 0; x < width; x++) {
+          const offset = (row * width + x) * channels;
+          luminance += 0.2126 * data[offset] + 0.7152 * data[offset + 1] + 0.0722 * data[offset + 2];
+        }
+        return luminance / width < 48;
+      };
+      let top = 0;
+      let bottom = height - 1;
+      while (top < height * 0.25 && rowIsDark(top)) top++;
+      while (bottom > height * 0.75 && rowIsDark(bottom)) bottom--;
+      if (top > 2 || bottom < height - 3) {
+        normalized = await sharp(source)
+          .extract({ left: 0, top, width, height: bottom - top + 1 })
+          .jpeg({ quality: 92, mozjpeg: true })
+          .toBuffer();
+      }
+    }
     const uploaded = await put(`social-normalized/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`, normalized, {
       access: "public",
       addRandomSuffix: false,
