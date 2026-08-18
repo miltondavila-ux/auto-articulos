@@ -319,6 +319,9 @@ export default function UsuariosPage() {
   const [savingGlobalModules, setSavingGlobalModules] = useState(false);
   const [globalModulesSaved, setGlobalModulesSaved] = useState(false);
   const [globalModulesError, setGlobalModulesError] = useState<string | null>(null);
+  const [maintenanceEnabled, setMaintenanceEnabled] = useState(false);
+  const [loadingMaintenance, setLoadingMaintenance] = useState(false);
+  const [savingMaintenance, setSavingMaintenance] = useState(false);
   const [banner, setBanner] = useState<{
     type: "error" | "info";
     text: string;
@@ -375,6 +378,39 @@ export default function UsuariosPage() {
     }
   }
 
+  async function loadMaintenance() {
+    setLoadingMaintenance(true);
+    try {
+      const res = await fetch(`/api/admin/maintenance?_t=${Date.now()}`, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMaintenanceEnabled(Boolean(data.enabled));
+      }
+    } finally {
+      setLoadingMaintenance(false);
+    }
+  }
+
+  async function handleMaintenanceChange(enabled: boolean) {
+    setSavingMaintenance(true);
+    try {
+      const res = await fetch("/api/admin/maintenance", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled }),
+      });
+      if (!res.ok) throw new Error("No se pudo actualizar el mantenimiento.");
+      setMaintenanceEnabled(enabled);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setSavingMaintenance(false);
+    }
+  }
+
   async function handleSaveGlobalModules() {
     setSavingGlobalModules(true);
     setGlobalModulesError(null);
@@ -406,6 +442,7 @@ export default function UsuariosPage() {
     loadUsers();
     loadUsage();
     loadGlobalModules();
+    loadMaintenance();
   }, []);
 
   useEffect(() => {
@@ -1234,6 +1271,49 @@ export default function UsuariosPage() {
 
       {tab === "modulos" && (
         <section id="administracion-contenido" style={sectionStyle}>
+          <div
+            style={{
+              marginBottom: 20,
+              padding: 16,
+              borderRadius: 14,
+              background: maintenanceEnabled ? "#fff4e5" : "#f5f5f7",
+              border: maintenanceEnabled
+                ? "1px solid rgba(255,149,0,.35)"
+                : "1px solid #e5e5ea",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 16,
+              flexWrap: "wrap",
+            }}
+          >
+            <div>
+              <h2 style={{ ...h2Style, margin: 0, fontSize: 18 }}>Mantenimiento global</h2>
+              <p style={{ margin: "6px 0 0", fontSize: 13, color: "#6e6e73" }}>
+                Bloquea el acceso de usuarios y muestra solo el aviso de mantenimiento. Los administradores conservan el acceso.
+              </p>
+              <strong style={{ display: "block", marginTop: 8, fontSize: 12, color: maintenanceEnabled ? "#8a4b08" : "#16803c" }}>
+                {loadingMaintenance ? "Consultando..." : maintenanceEnabled ? "Activo" : "Inactivo"}
+              </strong>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleMaintenanceChange(!maintenanceEnabled)}
+              disabled={loadingMaintenance || savingMaintenance}
+              style={disabledStyle(
+                maintenanceEnabled
+                  ? { ...secondaryButtonStyle, color: "#8a4b08", borderColor: "rgba(255,149,0,.45)" }
+                  : { ...buttonStyle, marginTop: 0 },
+                loadingMaintenance || savingMaintenance,
+              )}
+            >
+              {savingMaintenance
+                ? "Guardando..."
+                : maintenanceEnabled
+                  ? "Desactivar mantenimiento"
+                  : "Activar mantenimiento"}
+            </button>
+          </div>
           <div
             style={{
               display: "flex",

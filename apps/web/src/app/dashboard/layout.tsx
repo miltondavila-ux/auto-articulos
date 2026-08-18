@@ -5,8 +5,10 @@ import LogoutButton from "@/components/LogoutButton";
 import ModuleGuard from "@/components/ModuleGuard";
 import StopImpersonationButton from "@/components/StopImpersonationButton";
 import TrialBlockedScreen from "@/components/TrialBlockedScreen";
+import MaintenanceScreen from "@/components/MaintenanceScreen";
 import { displayName, getSessionContext } from "@/lib/current-user";
 import { hasTrialAccess } from "@/lib/trial";
+import { getMaintenanceMode } from "@/lib/maintenance";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -18,6 +20,11 @@ export default async function DashboardLayout({
 }) {
   const { user, actingAdmin } = await getSessionContext();
   const blocked = !actingAdmin && user.role !== "admin" && !hasTrialAccess(user);
+  const maintenance = await getMaintenanceMode();
+
+  if (maintenance && !actingAdmin && user.role !== "admin") {
+    return <MaintenanceScreen />;
+  }
 
   return (
     <main
