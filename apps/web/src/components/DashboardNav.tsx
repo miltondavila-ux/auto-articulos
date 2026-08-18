@@ -11,16 +11,20 @@ interface TabItem {
   label: string;
 }
 
+// Orden del menú definido por Milton (18/8/2026): el recorrido sigue el flujo
+// real de trabajo — primero se entiende el sistema, después se detectan
+// oportunidades, se publica, se sigue lo que está en curso y se consulta el
+// historial. Configuración y Administración quedan al final por ser ajustes.
 const BASE_TABS: TabItem[] = [
   { href: "/dashboard", label: "Inicio" },
   { id: "como-funciona", href: "/dashboard/como-funciona", label: "Cómo Funciona" },
-  { id: "publicar", href: "/dashboard/publicar", label: "Publicar" },
-  { id: "publicaciones-en-curso", href: "/dashboard/publicaciones-en-curso", label: "Publicaciones en Curso" },
   { id: "oportunidades", href: "/dashboard/oportunidades", label: "Oportunidades" },
   { id: "oportunidades-redes", href: "/dashboard/oportunidades-redes", label: "Oportunidades Redes" },
+  { id: "publicar", href: "/dashboard/publicar", label: "Publicar" },
+  { id: "publicaciones-en-curso", href: "/dashboard/publicaciones-en-curso", label: "Publicaciones en Curso" },
   { id: "historial", href: "/dashboard/historial", label: "Historial" },
-  { id: "configuracion", href: "/dashboard/configuracion", label: "Configuración" },
   { id: "actualizaciones", href: "/dashboard/actualizaciones", label: "Actualizaciones" },
+  { id: "configuracion", href: "/dashboard/configuracion", label: "Configuración" },
 ];
 
 const ADMIN_TAB: TabItem = { href: "/dashboard/usuarios", label: "Administración" };
