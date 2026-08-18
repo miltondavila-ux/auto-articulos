@@ -51,6 +51,12 @@ export const SYSTEM_MODULES: SystemModule[] = [
     href: "/dashboard/actualizaciones",
     description: "Registro de novedades, cambios y mejoras visibles del sistema.",
   },
+  {
+    id: "como-funciona",
+    label: "Cómo Funciona",
+    href: "/dashboard/como-funciona",
+    description: "Explicación visual del flujo de trabajo y automatización del sistema.",
+  },
 ];
 
 export const GLOBAL_DISABLED_MODULES_KEY = "global_disabled_modules";

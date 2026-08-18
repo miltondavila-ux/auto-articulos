@@ -110,6 +110,12 @@ Historial conserva las ejecuciones anteriores y el estado de los títulos. Puede
 
 Si un artículo muestra un error, lee el mensaje antes de repetir la acción. Si el problema indica una conexión, revisa primero Configuración.
 
+## Cómo Funciona
+
+Ruta: /dashboard/como-funciona
+
+Muestra una explicación visual e infografía interactiva de la automatización del sistema. Te enseña cómo Auto Artículos captura consultas reales en Google Search Console y Bing para luego alimentar dos flujos paralelos: la generación automática y secuencial de artículos en tu blog web, y la creación de propuestas borradores de contenido para tus redes sociales (LinkedIn, X, Threads, etc.).
+
 ## Actualizaciones
 
 Ruta: /dashboard/actualizaciones
