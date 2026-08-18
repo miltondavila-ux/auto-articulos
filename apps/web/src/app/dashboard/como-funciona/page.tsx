@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { sectionStyle } from "@/components/dashboard-ui";
-import ConfigurationStatus from "@/components/ConfigurationStatus";
 
 export default function ComoFuncionaPage() {
   return (
@@ -123,8 +122,6 @@ export default function ComoFuncionaPage() {
           }
         }
       `}</style>
-
-      <ConfigurationStatus />
 
       {/* Hero */}
       <div className="minimal-hero">

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@auto-articulos/db";
 import { sectionStyle, h2Style } from "@/components/dashboard-ui";
-import ConfigurationStatus from "@/components/ConfigurationStatus";
 
 type Categoria = "nuevas-herramientas" | "arreglos";
 
@@ -46,7 +45,6 @@ export default async function ActualizacionesPage({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 1120, margin: "0 auto" }}>
-      <ConfigurationStatus />
       <div className="panel" style={sectionStyle}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
           <div>
