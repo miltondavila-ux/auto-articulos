@@ -61,7 +61,7 @@ export default function OportunidadesRedesPage() {
   const [previewModal, setPreviewModal] = useState<{ loading: boolean; imageUrl: string | null; imageBase64: string | null; platform: string; title: string } | null>(null);
 
   useEffect(() => {
-    loadOpportunities();
+    loadOpportunities(true);
     loadConnectedNetworks();
   }, []);
 
@@ -86,8 +86,8 @@ export default function OportunidadesRedesPage() {
     return () => window.clearInterval(timer);
   }, [generating]);
 
-  async function loadOpportunities() {
-    setLoading(true);
+  async function loadOpportunities(showLoading = false) {
+    if (showLoading) setLoading(true);
     try {
       const res = await fetch("/api/social-opportunities", { cache: "no-store" });
       if (res.ok) {
