@@ -75,7 +75,11 @@ export async function POST(request: NextRequest) {
       data: { status: "queued", errorLog: null },
     });
 
-    await triggerSocialWorkerNow();
+    // La oportunidad ya quedó encolada de forma transaccional. No bloqueamos
+    // la respuesta esperando la consulta/dispatch de GitHub Actions: el
+    // workflow programado funciona como respaldo si el disparo inmediato
+    // falla y la UI puede pasar de inmediato a Publicaciones en Curso.
+    void triggerSocialWorkerNow();
 
     return NextResponse.json({
       success: true,

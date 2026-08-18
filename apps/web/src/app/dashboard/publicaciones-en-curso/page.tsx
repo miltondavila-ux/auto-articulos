@@ -26,6 +26,21 @@ export default function PublicacionesEnCursoPage() {
   // cuenta para no mostrar "10minutesWebsite" en los mensajes de créditos
   // agotados. Ver platform-servers.ts.
   const [platformDomain, setPlatformDomain] = useState("net");
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+  const cancelSocialRun = async (id: string) => {
+    setCancellingId(id);
+    try {
+      await fetch("/api/social-opportunities/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      await loadRuns();
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   useEffect(() => {
     fetch("/api/me", { cache: "no-store" })
@@ -90,7 +105,17 @@ export default function PublicacionesEnCursoPage() {
                 <div key={item.id} style={{ padding: 14, border: "1px solid #e5e5ea", borderRadius: 12 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                     <div><strong>{item.articleTitle}</strong><div style={{ color: "#6e6e73", fontSize: 12, marginTop: 4 }}>{item.platform} · {item.progressStage ?? (item.status === "processing" ? "Publicando..." : "En cola")}</div></div>
-                    <span style={{ color: item.status === "processing" ? "#0071e3" : "#8a4b08", fontSize: 12, fontWeight: 600 }}>{item.progressPercent}%</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <span style={{ color: item.status === "processing" ? "#0071e3" : "#8a4b08", fontSize: 12, fontWeight: 600 }}>{item.progressPercent}%</span>
+                      <button
+                        type="button"
+                        onClick={() => cancelSocialRun(item.id)}
+                        disabled={cancellingId === item.id}
+                        style={{ border: "1px solid #ff3b30", color: "#ff3b30", background: "#fff", borderRadius: 8, padding: "4px 8px", fontSize: 11, cursor: "pointer" }}
+                      >
+                        {cancellingId === item.id ? "Cancelando..." : "Cancelar"}
+                      </button>
+                    </div>
                   </div>
                   <div style={{ height: 5, background: "#f1f1f4", borderRadius: 999, overflow: "hidden", marginTop: 10 }}>
                     <div style={{ height: "100%", width: `${Math.max(0, Math.min(100, item.progressPercent ?? 0))}%`, background: "#0071e3", transition: "width .4s ease" }} />

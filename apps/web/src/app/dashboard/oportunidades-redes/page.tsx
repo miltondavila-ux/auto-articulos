@@ -297,7 +297,6 @@ export default function OportunidadesRedesPage() {
   }
 
   const pendingList = opportunities.filter((o) => o.status === "pending");
-  const queuedList = opportunities.filter((o) => o.status === "queued" || o.status === "processing");
 
   return (
     <div style={{ maxWidth: 1120, margin: "0 auto" }}>
@@ -389,7 +388,7 @@ export default function OportunidadesRedesPage() {
                 {generatingNetwork === "facebook-page" ? "Analizando..." : "Facebook Pages"}
               </button>
             )}
-            {pendingList.length > 0 && queuedList.length === 0 && (
+            {pendingList.length > 0 && (
               <button
                 onClick={handlePublishAll}
                 disabled={publishingAll}
@@ -469,23 +468,25 @@ export default function OportunidadesRedesPage() {
             <h2 style={{ ...h2Style, margin: 0, fontSize: 18 }}>
               Propuestas Pendientes ({pendingList.length})
             </h2>
-            {queuedList.length > 0 && (
-              <span style={{ color: "#8a4b08", fontSize: 12 }}>
-                {queuedList.length} en proceso
-              </span>
-            )}
           </div>
 
-          {pendingList.length === 0 && queuedList.length === 0 ? (
+          {pendingList.length === 0 ? (
             <section style={{ ...sectionStyle, textAlign: "center", padding: 32 }}>
               <p className="muted" style={{ margin: 0 }}>
                 No tienes propuestas pendientes. Usa los botones de arriba para generarlas.
               </p>
+              <button
+                onClick={() => router.push("/dashboard/publicaciones-en-curso")}
+                className="secondary"
+                style={{ ...secondaryButtonStyle, marginTop: 14, padding: "8px 14px", fontSize: 13 }}
+              >
+                Ver publicaciones en curso
+              </button>
             </section>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
-              {[...pendingList, ...queuedList].map((opp) => {
-                const isQueuedOrProcessing = opp.status === "queued" || opp.status === "processing";
+              {pendingList.map((opp) => {
+                const isQueuedOrProcessing = false;
                 return (
                   <div key={opp.id} className="panel" style={sectionStyle}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
