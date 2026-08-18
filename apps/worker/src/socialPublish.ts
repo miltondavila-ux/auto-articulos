@@ -89,12 +89,24 @@ async function normalizeSocialImage(imageUrl: string, targetAspect = 3 / 4): Pro
         }
         return luminance / width < 48;
       };
+      const columnIsDark = (column: number) => {
+        let luminance = 0;
+        for (let y = 0; y < height; y++) {
+          const offset = (y * width + column) * channels;
+          luminance += 0.2126 * data[offset] + 0.7152 * data[offset + 1] + 0.0722 * data[offset + 2];
+        }
+        return luminance / height < 48;
+      };
       let top = 0;
       let bottom = height - 1;
+      let left = 0;
+      let right = width - 1;
       while (top < height * 0.25 && rowIsDark(top)) top++;
       while (bottom > height * 0.75 && rowIsDark(bottom)) bottom--;
+      while (left < width * 0.25 && columnIsDark(left)) left++;
+      while (right > width * 0.75 && columnIsDark(right)) right--;
       const trimmedHeight = bottom - top + 1;
-      const trimmedWidth = width;
+      const trimmedWidth = right - left + 1;
       let cropWidth = trimmedWidth;
       let cropHeight = trimmedHeight;
       if (trimmedWidth / trimmedHeight > targetAspect) {
@@ -102,10 +114,10 @@ async function normalizeSocialImage(imageUrl: string, targetAspect = 3 / 4): Pro
       } else {
         cropHeight = Math.max(1, Math.round(trimmedWidth / targetAspect));
       }
-      const left = Math.max(0, Math.round((trimmedWidth - cropWidth) / 2));
+      const cropLeft = left + Math.max(0, Math.round((trimmedWidth - cropWidth) / 2));
       const cropTop = top + Math.max(0, Math.round((trimmedHeight - cropHeight) / 2));
       normalized = await sharp(source)
-        .extract({ left, top: cropTop, width: cropWidth, height: cropHeight })
+        .extract({ left: cropLeft, top: cropTop, width: cropWidth, height: cropHeight })
         .resize(targetAspect > 1 ? 1200 : 900, targetAspect > 1 ? 900 : 1200, { fit: "fill" })
         .jpeg({ quality: 92, mozjpeg: true })
         .toBuffer();
