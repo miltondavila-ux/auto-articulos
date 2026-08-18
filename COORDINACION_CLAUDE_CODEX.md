@@ -4268,6 +4268,16 @@ Auto Artículos.
 - **Herramienta añadida para diagnosticar sin acceso directo a la base:**
   - `apps/worker/src/diagnose-category-sync.ts` (nuevo): recibe `USER_EMAIL_QUERY` y muestra, para el/los usuario(s) que coincidan: si tiene credencial de `10minutesWebsite` guardada, sus últimos 10 `CategorySyncJob` (status/error/duración) y sus `Category` agrupadas por `source`/`panel`.
   - `.github/workflows/diagnose-category-sync.yml` (nuevo): `workflow_dispatch` con input `user_email_query`, mismo patrón de solo lectura que `query-users.yml`. **Pensado para reutilizarse en futuros casos similares** (ya hubo varios: Estee Soto, Antonio Aguirre) sin tener que crear un script nuevo cada vez.
-  - Publicado directamente en `main` (commit `65fd59d`) y disparado con `user_email_query="wendy"`. Resultado pendiente de revisar — se actualizará esta entrada con el diagnóstico y la causa raíz apenas se lean los logs de la corrida.
-- **Estado del área:** EN PROGRESO. No tocar `categorySync.ts`/`cleanup.ts` hasta que esta entrada se actualice con el diagnóstico y, si aplica, la corrección aplicada.
+  - Publicado directamente en `main` (commit `65fd59d`) y disparado con `user_email_query="wendy"`.
+- **Diagnóstico (corrida de GitHub Actions `32153930797`):**
+  - Wendy Chawa `<wchawa1@gmail.com>`, cuenta creada 2026-08-18 15:05:44, credencial de `10minutesWebsite` guardada 15:08:36.
+  - Un único `CategorySyncJob` (creado 15:08:40): `status=success`, duración real 500539ms (~8.3 min), pero con `errorMessage` = *"El proceso se interrumpió de forma inesperada (posible caída del worker) y quedó atascado; vuelve a presionar el botón de sincronizar."*
+  - Categorías guardadas: **24, source=sync, panel="Español"** — la sincronización sí funcionó correctamente.
+- **Causa raíz confirmada:** `STUCK_SYNC_JOB_MS` (umbral de "job atascado") estaba en **3 minutos** tanto en `apps/web/src/lib/sync-jobs.ts` (usado por `POST /api/categories/sync` al reintentar) como en `apps/worker/src/cleanup.ts` (`recoverStuckSyncJobs`, corre al inicio de cada `run-once.ts`). Ese umbral es mucho menor que la latencia real documentada en el propio código: encolar un runner de GitHub Actions puede tardar hasta 14 minutos, más el tiempo real de `fetchCategoriesDetectingServer`. El job de Wendy seguía genuinamente en curso a los 3 minutos, se marcó `"error"` de forma prematura, y como el `update` final de éxito no limpiaba `errorMessage`, el mensaje de error quedó pegado a un job que en realidad terminó bien. Ella vio el mensaje de "vuelve a presionar" aunque sus categorías ya estaban guardadas.
+- **Corrección aplicada (commit `2ed661d`, publicado directo en `main`):**
+  - `STUCK_SYNC_JOB_MS` subido de 3 a **20 minutos** en `apps/web/src/lib/sync-jobs.ts` y `apps/worker/src/cleanup.ts` (deben coincidir, ver comentarios cruzados en ambos archivos).
+  - `categorySync.ts`: el `update` final de éxito ahora limpia `errorMessage: null`, para que un job exitoso nunca vuelva a mostrar un mensaje de error viejo.
+  - Verificado: `npm run typecheck --workspace=@auto-articulos/web` limpio (tras `prisma generate`); `git status` sin cambios accidentales en `package-lock.json` ni otros archivos.
+- **Situación de Wendy:** sus 24 categorías ya están guardadas correctamente en su cuenta — no necesita hacer nada. Si vuelve a sincronizar ahora, con el umbral nuevo no debería volver a ver el mensaje de "atascado" salvo que el worker realmente se caiga.
+- **Estado del área:** RESUELTO y publicado en `main`. Área LIBERADA.
 
