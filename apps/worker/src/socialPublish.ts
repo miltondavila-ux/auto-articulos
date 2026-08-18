@@ -373,7 +373,8 @@ async function processLinkedInJob(job: {
   // imagen con IA. Si el sitio no expone og:image, publicamos como ARTICLE
   // para que LinkedIn resuelva su previsualización nativa del enlace.
   const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
-  const sourceImageUrl = sourceImage ? await normalizeSocialImage(sourceImage) : undefined;
+  // LinkedIn muestra el adjunto del feed en un contenedor horizontal 4:3.
+  const sourceImageUrl = sourceImage ? await normalizeSocialImage(sourceImage, 4 / 3) : undefined;
 
   let imageAssetUrn: string | undefined;
   if (sourceImageUrl) {
