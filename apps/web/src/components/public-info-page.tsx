@@ -105,7 +105,7 @@ export function PublicInfoPage({
             textAlign: "center",
           }}
         >
-          © 2026 Auto Artículos · Contacto: 10minuteswebsite@gmail.com
+          © 2026 Auto Artículos · Contacto: miltondavila@gmail.com
         </footer>
       </div>
     </main>

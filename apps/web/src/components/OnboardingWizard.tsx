@@ -9,7 +9,7 @@ import {
 } from "./dashboard-ui";
 import {
   DEFAULT_PLATFORM_DOMAIN,
-  PLATFORM_SERVERS,
+  platformForgotPasswordUrl,
   platformProductName,
 } from "@auto-articulos/shared";
 import type { CategoryRow, LanguageRow, RunRow } from "@/types/dashboard";
@@ -28,12 +28,6 @@ export default function OnboardingWizard({
   const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [languages, setLanguages] = useState<LanguageRow[]>([]);
   const [contentLanguage, setContentLanguage] = useState("");
-  // Servidor real de la cuenta (net / site / tagcrush). Arranca en el valor
-  // histórico por defecto para que, si /api/me todavía no respondió, el
-  // enlace apunte a donde apuntaba antes en vez de quedar roto.
-  const [platformBase, setPlatformBase] = useState(
-    PLATFORM_SERVERS[DEFAULT_PLATFORM_DOMAIN].baseUrl,
-  );
   // Para marca blanca (tagcrush): decide si el texto dice "10minutesWebsite"
   // o un término genérico. Ver platform-servers.ts.
   const [platformDomain, setPlatformDomain] = useState<string>(
@@ -138,9 +132,6 @@ export default function OnboardingWizard({
         const lang = data.contentLanguage || "";
         setContentLanguage(lang);
         setSelectedLang(lang || "es");
-        if (typeof data.platformBaseUrl === "string" && data.platformBaseUrl) {
-          setPlatformBase(data.platformBaseUrl);
-        }
         if (typeof data.platformDomain === "string") {
           setPlatformDomain(data.platformDomain);
         }
@@ -437,8 +428,6 @@ export default function OnboardingWizard({
   const allCoreDone = completedCoreSteps === totalCoreSteps;
   const progressPercent = Math.round((completedCoreSteps / totalCoreSteps) * 100);
 
-  // "https://tagcrush.net" -> "tagcrush.net", para el texto visible.
-  const platformHost = platformBase.replace(/^https?:\/\//, "");
   // Nombre de marca a mostrar: "10minutesWebsite" para cuentas normales, un
   // término genérico para marca blanca (tagcrush) — ver platform-servers.ts.
   const productName = platformProductName(platformDomain);
@@ -617,46 +606,46 @@ export default function OnboardingWizard({
               </div>
             ) : (
               <div style={{ marginTop: 12 }}>
-                {/* Cuadro de ayuda para contraseña */}
+                {/* Cuadro de recomendación fuerte para resetear contraseña */}
                 <div
                   style={{
-                    background: "#e8f2ff",
-                    border: "1px solid rgba(0, 113, 227, 0.25)",
+                    background: "#fff4e5",
+                    border: "1.5px solid rgba(255, 149, 0, 0.4)",
                     borderRadius: 8,
                     padding: "12px 14px",
                     marginBottom: 14,
                     fontSize: 13,
-                    color: "#0071e3",
+                    color: "#8a5a00",
                     lineHeight: 1.45,
                   }}
                 >
                   <p style={{ margin: "0 0 6px 0", fontWeight: 700 }}>
-                    💡 ¿No tienes o no recuerdas tu contraseña de {platformHost}?
+                    🔑 Paso recomendado antes de continuar: resetea tu contraseña de la plataforma
                   </p>
                   <p style={{ margin: "0 0 8px 0" }}>
-                    Puedes recuperarla o crear una nueva en segundos aquí:
+                    Aunque ya conozcas tu contraseña, te recomendamos generarla de nuevo aquí. Así evitas errores por claves antiguas, olvidadas o mal copiadas, y te aseguras de que la que ingreses abajo sea exactamente la correcta.
                   </p>
                   <a
-                    href={`${platformBase}/dashboard/forgot-password.php`}
+                    href={platformForgotPasswordUrl(platformDomain)}
                     target="_blank"
                     rel="noreferrer"
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
                       gap: 6,
-                      background: "#0071e3",
+                      background: "#ff9500",
                       color: "#ffffff",
-                      padding: "6px 12px",
+                      padding: "7px 14px",
                       borderRadius: 6,
                       fontSize: 12,
-                      fontWeight: 600,
+                      fontWeight: 700,
                       textDecoration: "none",
                     }}
                   >
-                    🔑 Resetear contraseña en {platformHost} ↗
+                    🔑 Resetear contraseña de la plataforma ahora ↗
                   </a>
-                  <p style={{ margin: "8px 0 0 0", fontSize: 12, color: "#0071e3" }}>
-                    <strong>Recomendación práctica:</strong> Al generar tu contraseña en {platformHost}, copia y pega esa misma clave aquí para que ambos sistemas queden sincronizados.
+                  <p style={{ margin: "8px 0 0 0", fontSize: 12, color: "#8a5a00" }}>
+                    <strong>Importante:</strong> al generar tu nueva contraseña en la plataforma, copia y pega esa misma clave en el campo de abajo para que ambos sistemas queden sincronizados.
                   </p>
                 </div>
 

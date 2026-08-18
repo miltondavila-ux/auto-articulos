@@ -57,8 +57,8 @@ export default function TermsPage() {
         Podemos suspender cuentas que comprometan la seguridad, incumplan estas
         condiciones o utilicen el servicio sin autorización. El usuario puede
         solicitar el cierre y eliminación de su cuenta escribiendo a{" "}
-        <a href="mailto:10minuteswebsite@gmail.com" style={publicLinkStyle}>
-          10minuteswebsite@gmail.com
+        <a href="mailto:miltondavila@gmail.com" style={publicLinkStyle}>
+          miltondavila@gmail.com
         </a>
         .
       </p>
@@ -66,8 +66,8 @@ export default function TermsPage() {
       <h2 style={publicHeadingStyle}>Contacto</h2>
       <p>
         Para preguntas sobre estas condiciones, contacta a{" "}
-        <a href="mailto:10minuteswebsite@gmail.com" style={publicLinkStyle}>
-          10minuteswebsite@gmail.com
+        <a href="mailto:miltondavila@gmail.com" style={publicLinkStyle}>
+          miltondavila@gmail.com
         </a>
         .
       </p>

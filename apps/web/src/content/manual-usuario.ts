@@ -12,7 +12,7 @@ Este manual explica cómo usar la plataforma desde la perspectiva de una persona
 
 Cuando ingresas a tu cuenta por primera vez o aún no tienes artículos publicados, Inicio te muestra el **Asistente de Configuración Inicial Paso a Paso**. Este asistente te guía de forma secuencial por los 4 pasos esenciales:
 
-1. **Paso 1 (Cuenta de 10minutesWebsite):** Guarda tu usuario y contraseña de 10minutesWebsite. Si no recuerdas esa clave, puedes restablecerla o crear una nueva en segundos desde el enlace directo de recuperación de 10minutesWebsite incluido en el asistente.
+1. **Paso 1 (Cuenta de la plataforma):** Guarda tu usuario y contraseña de la plataforma. Si no recuerdas esa clave, puedes restablecerla o crear una nueva en segundos desde el enlace directo de recuperación de la plataforma incluido en el asistente.
 2. **Paso 2 (Sincronizar categorías):** Descarga en vivo las categorías reales de tu web para clasificar tus artículos.
 3. **Paso 3 (Idioma de redacción):** Confirma el idioma principal en el que la Inteligencia Artificial redactará tus contenidos.
 4. **Paso 4 (Google Search Console):** Abre Search Console en una pestaña contigua de tu navegador para comprobar que esté activo con la cuenta de Google dueña de tu web, y luego conéctalo mediante Google OAuth seleccionando tu sitio.
@@ -39,9 +39,9 @@ Aquí preparas tu cuenta y personalizas el contenido.
 
 Pestaña destacada en Configuración que te permite repasar o completar el asistente de 4 pasos en cualquier momento. Cuenta con un banner superior para abrirlo directamente.
 
-### Cuenta de 10minutesWebsite
+### Cuenta de la plataforma de publicación
 
-Guarda el usuario y contraseña de tu cuenta de 10minutesWebsite. La plataforma los usa para publicar artículos en tu sitio. Si no recuerdas esa contraseña, usa el enlace de recuperación de 10minutesWebsite; no uses aquí la contraseña de Auto Artículos.
+Guarda el usuario y contraseña de tu cuenta de la plataforma. El sistema los usa para publicar artículos en tu sitio. Si no recuerdas esa contraseña, usa el enlace de recuperación de la plataforma; no uses aquí la contraseña de Auto Artículos.
 
 ### Categorías e idiomas
 
@@ -140,7 +140,7 @@ Configuración está organizada por pestañas. Si una opción no aparece, puede 
 
 Ruta: /dashboard/configuracion?tab=wizard
 
-Puedes repetir el asistente de cuatro pasos cuando quieras: cuenta de 10minutesWebsite, categorías, idioma y Google Search Console. Es la forma más rápida de preparar una cuenta nueva.
+Puedes repetir el asistente de cuatro pasos cuando quieras: cuenta de la plataforma, categorías, idioma y Google Search Console. Es la forma más rápida de preparar una cuenta nueva.
 
 ### Google Search Console
 
@@ -169,11 +169,11 @@ Aquí conectas Google Business Profile, Threads, Instagram, X y LinkedIn. Las re
 
 Ruta: /dashboard/configuracion?tab=platform
 
-Guarda las credenciales de 10minutesWebsite, sincroniza categorías e idiomas y elige el idioma habitual. También puedes definir la firma de los artículos, teléfono de contacto, foto de perfil, logo y las instrucciones de estilo para imágenes e infografías. Estos últimos campos son opcionales y se aplican a los contenidos nuevos; no modifican artículos ya publicados.
+Guarda las credenciales de la plataforma, sincroniza categorías e idiomas y elige el idioma habitual. También puedes definir la firma de los artículos, teléfono de contacto, foto de perfil, logo y las instrucciones de estilo para imágenes e infografías. Estos últimos campos son opcionales y se aplican a los contenidos nuevos; no modifican artículos ya publicados.
 
 ### Estado de configuración
 
-Inicio muestra una lista de progreso con lo obligatorio y opcional. Para publicar necesitas credenciales de 10minutesWebsite, categorías sincronizadas e idioma. Google, Bing y redes sociales amplían lo que puedes hacer, pero no impiden publicar artículos.
+Inicio muestra una lista de progreso con lo obligatorio y opcional. Para publicar necesitas credenciales de la plataforma, categorías sincronizadas e idioma. Google, Bing y redes sociales amplían lo que puedes hacer, pero no impiden publicar artículos.
 
 ## Publicaciones, progreso e historial
 
@@ -205,8 +205,8 @@ La plataforma cuenta con un diseño minimalista y limpio en blanco impecable, si
 ## Pre-Validación Inteligente antes de Publicar
 
 Tanto en **Publicar** (/dashboard/publicar) como en **Oportunidades SEO** (/dashboard/oportunidades), el sistema cuenta con un panel de protección preventiva (**PreValidationGuard**):
-- Si falta algún requisito previo (credenciales de 10minutesWebsite, categorías sincronizadas, idioma de redacción o Search Console), la plataforma te muestra una tarjeta clara con un checklist interactivo indicando exactamente qué falta y un botón directo para resolverlo.
-- **Créditos de imagen:** Si tu cuenta de 10minutesWebsite no cuenta con créditos para generar imágenes de portada e infografías, la plataforma te avisa de inmediato mediante un aviso informativo para que puedas recargarlos.
+- Si falta algún requisito previo (credenciales de la plataforma, categorías sincronizadas, idioma de redacción o Search Console), la plataforma te muestra una tarjeta clara con un checklist interactivo indicando exactamente qué falta y un botón directo para resolverlo.
+- **Créditos de imagen:** Si tu cuenta de la plataforma no cuenta con créditos para generar imágenes de portada e infografías, la plataforma te avisa de inmediato mediante un aviso informativo para que puedas recargarlos.
 
 ## Administración
 
@@ -225,7 +225,7 @@ Comprueba que tienes categorías sincronizadas, un idioma elegido y que no hay o
 
 ### Aviso de falta de créditos de imagen
 
-Si aparece el aviso de créditos de imagen, significa que tu cuenta de 10minutesWebsite necesita saldo para ilustrar artículos. Puedes adquirir créditos en 10minutesWebsite o consultar a soporte.
+Si aparece el aviso de créditos de imagen, significa que tu cuenta necesita saldo para ilustrar artículos. Puedes adquirir créditos en la plataforma o consultar a soporte.
 
 ### No veo Oportunidades SEO
 

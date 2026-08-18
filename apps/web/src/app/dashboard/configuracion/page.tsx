@@ -22,6 +22,7 @@ import OnboardingWizard from "@/components/OnboardingWizard";
 import {
   DEFAULT_PLATFORM_DOMAIN,
   PLATFORM_SERVERS,
+  platformForgotPasswordUrl,
   platformHelpUrl,
   platformProductName,
 } from "@auto-articulos/shared";
@@ -1066,7 +1067,7 @@ export default function ConfiguracionPage() {
               <p style={{ fontSize: 12, color: "#6e6e73", marginTop: 10 }}>
                 Ingresa tu usuario y contraseña de {platformBase.replace(/^https?:\/\//, "")} (no los de Auto Artículos). Si no recuerdas tu contraseña,{" "}
                 <a
-                  href={`${platformBase}/dashboard/forgot-password.php`}
+                  href={platformForgotPasswordUrl(platformDomain)}
                   target="_blank"
                   rel="noreferrer"
                   style={{ color: "#0071e3", fontWeight: 600 }}

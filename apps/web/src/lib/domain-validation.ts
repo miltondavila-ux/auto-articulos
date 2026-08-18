@@ -84,7 +84,7 @@ export async function validateAndRegisterTrialCredentials(
     if (existingTrialRegistry) {
       return {
         ok: false,
-        error: `La cuenta de 10minutesWebsite "${normalizedUsername}" ya fue utilizada en una prueba gratuita anterior. Para reactivar tu acceso o contratar un plan, contacta al administrador.`,
+        error: `La cuenta de la plataforma "${normalizedUsername}" ya fue utilizada en una prueba gratuita anterior. Para reactivar tu acceso o contratar un plan, contacta al administrador.`,
       };
     }
 
@@ -106,7 +106,7 @@ export async function validateAndRegisterTrialCredentials(
         if (decryptedUser === normalizedUsername) {
           return {
             ok: false,
-            error: `La cuenta de 10minutesWebsite "${normalizedUsername}" ya está vinculada a otro usuario en el sistema. Contacta al administrador para habilitar el acceso.`,
+            error: `La cuenta de la plataforma "${normalizedUsername}" ya está vinculada a otro usuario en el sistema. Contacta al administrador para habilitar el acceso.`,
           };
         }
       } catch {

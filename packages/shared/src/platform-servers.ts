@@ -84,9 +84,18 @@ export function platformLabel(value: unknown): string {
   return PLATFORM_SERVERS[normalizePlatformDomain(value)].label;
 }
 
-/** Pantalla de recuperación de contraseña del servidor correspondiente. */
+/**
+ * Pantalla de recuperación de contraseña del servidor correspondiente.
+ *
+ * No es simplemente `${baseUrl}/dashboard/forgot-password.php`: tagcrush.net
+ * tiene su propia recuperación, pero net Y site comparten la misma — vive en
+ * www.10minuteswebsite.net incluso para cuentas alojadas en el dominio .site.
+ * Confirmado por Milton, 18/8/2026.
+ */
 export function platformForgotPasswordUrl(value: unknown): string {
-  return `${platformBaseUrl(value)}/dashboard/forgot-password.php`;
+  return isWhiteLabelPlatform(value)
+    ? `${platformBaseUrl(value)}/dashboard/forgot-password.php`
+    : "https://www.10minuteswebsite.net/dashboard/forgot-password.php";
 }
 
 export function isWhiteLabelPlatform(value: unknown): boolean {

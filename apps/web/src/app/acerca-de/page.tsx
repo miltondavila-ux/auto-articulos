@@ -43,8 +43,8 @@ export default function AboutPage() {
           iniciar sesión aquí
         </a>
         . Para preguntas sobre la aplicación o sus permisos, escribe a{" "}
-        <a href="mailto:10minuteswebsite@gmail.com" style={publicLinkStyle}>
-          10minuteswebsite@gmail.com
+        <a href="mailto:miltondavila@gmail.com" style={publicLinkStyle}>
+          miltondavila@gmail.com
         </a>
         .
       </p>

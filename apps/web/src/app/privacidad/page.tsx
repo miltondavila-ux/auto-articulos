@@ -54,8 +54,8 @@ export default function PrivacyPage() {
         el token guardado, y también puede revocar el acceso desde su Cuenta de
         Google. Para solicitar la eliminación de la cuenta y sus datos, escribe
         a{" "}
-        <a href="mailto:10minuteswebsite@gmail.com" style={publicLinkStyle}>
-          10minuteswebsite@gmail.com
+        <a href="mailto:miltondavila@gmail.com" style={publicLinkStyle}>
+          miltondavila@gmail.com
         </a>
         .
       </p>
@@ -73,8 +73,8 @@ export default function PrivacyPage() {
         Podemos actualizar esta política cuando cambie el servicio o la
         normativa. La fecha vigente siempre aparecerá al inicio. Las preguntas
         de privacidad pueden enviarse a{" "}
-        <a href="mailto:10minuteswebsite@gmail.com" style={publicLinkStyle}>
-          10minuteswebsite@gmail.com
+        <a href="mailto:miltondavila@gmail.com" style={publicLinkStyle}>
+          miltondavila@gmail.com
         </a>
         .
       </p>
