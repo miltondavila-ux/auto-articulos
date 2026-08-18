@@ -46,6 +46,7 @@ const TITLE_LANE_CONCURRENCY = 4;
 // lee un <select>, no genera contenido/imagen con IA), así que puede tener
 // más carriles sin pesar tanto en el runner. Pedido explícito del usuario:
 // que sincronizar categorías no haga esperar tanto.
+const CATEGORY_SYNC_LANE_CONCURRENCY = 2;
 const SYNC_LANE_CONCURRENCY = 1;
 
 // Antes se apagaban tras solo 1.5 segundos sin trabajo; como
@@ -138,7 +139,7 @@ async function main() {
   const lanes: Promise<boolean>[] = [];
   if (!isSocialOnly) {
     lanes.push(
-      ...Array.from({ length: SYNC_LANE_CONCURRENCY }, () =>
+      ...Array.from({ length: CATEGORY_SYNC_LANE_CONCURRENCY }, () =>
         runLane("categorías", processNextCategorySync, deadline),
       ),
       ...Array.from({ length: SYNC_LANE_CONCURRENCY }, () =>
