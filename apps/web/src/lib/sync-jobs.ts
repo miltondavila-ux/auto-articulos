@@ -19,7 +19,7 @@
  * llegado a tomar 14 minutos. Aplicar el mismo criterio aquí, en el momento
  * del clic, hace que el desbloqueo sea inmediato para quien está esperando.
  */
-export const STUCK_SYNC_JOB_MS = 10 * 60 * 1000;
+export const STUCK_SYNC_JOB_MS = 3 * 60 * 1000;
 
 export const STUCK_SYNC_JOB_MESSAGE =
   "El intento anterior se interrumpió de forma inesperada y quedó atascado. Se descartó automáticamente para que este nuevo intento pueda ejecutarse.";
