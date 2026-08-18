@@ -72,14 +72,13 @@ export async function POST(request: NextRequest) {
 
     await prisma.socialOpportunity.update({
       where: { id },
-      data: { status: "queued", errorLog: null },
+      data: { status: "queued", progressPercent: 1, progressStage: "En cola, esperando al worker", errorLog: null },
     });
 
-    // La oportunidad ya quedó encolada de forma transaccional. No bloqueamos
-    // la respuesta esperando la consulta/dispatch de GitHub Actions: el
-    // workflow programado funciona como respaldo si el disparo inmediato
-    // falla y la UI puede pasar de inmediato a Publicaciones en Curso.
-    void triggerSocialWorkerNow();
+    // Esperar el dispatch garantiza que Vercel no cierre la función antes de
+    // enviar la corrida a GitHub Actions. El estado ya está guardado, por lo
+    // que aunque GitHub tarde, la corrida programada de respaldo la recoge.
+    await triggerSocialWorkerNow();
 
     return NextResponse.json({
       success: true,
