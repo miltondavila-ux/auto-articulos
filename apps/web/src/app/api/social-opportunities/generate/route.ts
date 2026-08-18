@@ -195,9 +195,7 @@ export async function POST(request: Request) {
         select: { allowInstagramPublishing: true },
       });
       if (user?.allowInstagramPublishing) {
-        integrations.push("instagram-carousel");
         integrations.push("instagram-reel-image");
-        integrations.push("instagram-infografia");
       }
     }
 

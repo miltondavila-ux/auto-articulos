@@ -589,8 +589,9 @@ async function processInstagramJob(job: {
     }
 
     case "reel-image": {
-      const imageUrl = await generateInstagramImage(job.titleId || job.id, summary, "reel-image", undefined, user?.imagePrompt, user?.infographicPrompt);
-      console.log(`[Instagram Reel-Image] generated image: ${imageUrl?.substring(0, 80)}`);
+      const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
+      const imageUrl = sourceImage ? await normalizeSocialImage(sourceImage, 9 / 16) : null;
+      console.log(`[Instagram ${format}] adapted article image: ${imageUrl?.substring(0, 80)}`);
       if (!imageUrl) throw new Error("No se pudo generar la imagen estilo Reel.");
       result = await publishInstagramImage(
         accessToken,
