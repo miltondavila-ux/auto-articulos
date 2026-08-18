@@ -93,12 +93,23 @@ async function normalizeSocialImage(imageUrl: string): Promise<string> {
       let bottom = height - 1;
       while (top < height * 0.25 && rowIsDark(top)) top++;
       while (bottom > height * 0.75 && rowIsDark(bottom)) bottom--;
-      if (top > 2 || bottom < height - 3) {
-        normalized = await sharp(source)
-          .extract({ left: 0, top, width, height: bottom - top + 1 })
-          .jpeg({ quality: 92, mozjpeg: true })
-          .toBuffer();
+      const trimmedHeight = bottom - top + 1;
+      const trimmedWidth = width;
+      const targetAspect = 3 / 4;
+      let cropWidth = trimmedWidth;
+      let cropHeight = trimmedHeight;
+      if (trimmedWidth / trimmedHeight > targetAspect) {
+        cropWidth = Math.max(1, Math.round(trimmedHeight * targetAspect));
+      } else {
+        cropHeight = Math.max(1, Math.round(trimmedWidth / targetAspect));
       }
+      const left = Math.max(0, Math.round((trimmedWidth - cropWidth) / 2));
+      const cropTop = top + Math.max(0, Math.round((trimmedHeight - cropHeight) / 2));
+      normalized = await sharp(source)
+        .extract({ left, top: cropTop, width: cropWidth, height: cropHeight })
+        .resize(900, 1200, { fit: "fill" })
+        .jpeg({ quality: 92, mozjpeg: true })
+        .toBuffer();
     }
     const uploaded = await put(`social-normalized/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`, normalized, {
       access: "public",
