@@ -120,6 +120,15 @@ export default function PublicacionesEnCursoPage() {
                   <div style={{ height: 5, background: "#f1f1f4", borderRadius: 999, overflow: "hidden", marginTop: 10 }}>
                     <div style={{ height: "100%", width: `${Math.max(0, Math.min(100, item.progressPercent ?? 0))}%`, background: "#0071e3", transition: "width .4s ease" }} />
                   </div>
+                  <details style={{ marginTop: 10, color: "#6e6e73", fontSize: 12 }}>
+                    <summary style={{ cursor: "pointer", color: "#0071e3", fontWeight: 600 }}>Ver etapas de la publicación</summary>
+                    <div style={{ display: "grid", gap: 5, marginTop: 8, paddingLeft: 4 }}>
+                      <div>{item.progressPercent >= 10 ? "✓" : "○"} Publicación encolada</div>
+                      <div>{item.progressPercent >= 30 ? "✓" : "○"} Worker iniciado</div>
+                      <div>{item.progressPercent >= 70 ? "✓" : "○"} Enviando contenido a {item.platform}</div>
+                      <div>{item.progressPercent >= 100 ? "✓" : "○"} Publicación finalizada</div>
+                    </div>
+                  </details>
                 </div>
               ))}
             </section>
