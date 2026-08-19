@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   buildContactButtonsHtml,
+  buildContactQrHtml,
   distributeContactButtonsHtml,
   removeGeneratedContactLinks,
 } from "./10minutesWebsite";
@@ -30,6 +31,23 @@ test("permite añadir únicamente el botón que falta", () => {
   assert.match(html, /href="tel:17866088613"/);
 });
 
+test("normaliza un número local de Estados Unidos para botones y QR", () => {
+  const button = buildContactButtonsHtml(
+    "786 608 8613",
+    "CONTACTA AHORA",
+    "LLAMA AHORA",
+    true,
+    false,
+    "US",
+  );
+  const qr = buildContactQrHtml("786 608 8613", "US");
+
+  assert.match(button, /href="https:\/\/wa\.me\/17866088613"/);
+  assert.match(qr, /href="https:\/\/wa\.me\/17866088613"/);
+  assert.match(qr, /quickchart\.io\/chart\?cht=qr/);
+  assert.match(qr, /chl=https:\/\/wa\.me\/17866088613/);
+});
+
 test("repara un marcador de WhatsApp doblemente codificado", () => {
   const broken = 'href="https://api.whatsapp.com/resolve/?deeplink=%2F%257BTELEFONO%257D&not_found=1"';
   const normalized = normalizePhonePlaceholders(broken);
@@ -49,6 +67,14 @@ test("descarta CTAs generados para usar solamente los botones oficiales", () => 
   assert.equal(cleaned.includes("tel:"), false);
   assert.match(official, /href="https:\/\/wa\.me\/17866088613"/);
   assert.match(official, /href="tel:17866088613"/);
+});
+
+test("elimina etiquetas huérfanas de CTA generadas por el modelo", () => {
+  const cleaned = removeGeneratedContactLinks("<p>Whatsapp</p><p>Contenido útil.</p><p>Código QR</p>");
+
+  assert.equal(cleaned.includes("Whatsapp"), false);
+  assert.equal(cleaned.includes("Código QR"), false);
+  assert.match(cleaned, /Contenido útil/);
 });
 
 test("distribuye WhatsApp y llamada en puntos distintos del contenido", () => {

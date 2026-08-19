@@ -38,6 +38,7 @@ export async function processNext(): Promise<boolean> {
           contentLanguage: true,
           articleSignature: true,
           phone: true,
+          country: true,
           name: true,
           firstName: true,
           lastName: true,
@@ -78,6 +79,7 @@ async function processRunTitle(
           contentLanguage: true;
           articleSignature: true;
           phone: true;
+          country: true;
           name: true;
           firstName: true;
           lastName: true;
@@ -232,6 +234,7 @@ async function processRunTitle(
         contentLanguage: effectiveLanguage,
         articleSignature: run.user.articleSignature,
         userPhone: run.user.phone,
+        userCountry: run.user.country,
         authorName:
           [run.user.firstName, run.user.lastName].filter(Boolean).join(" ") ||
           run.user.name ||

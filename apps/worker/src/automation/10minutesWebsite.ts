@@ -32,6 +32,8 @@ export interface TenMinutesWebsiteCredentials {
   articleSignature?: string | null;
   // Teléfono del usuario para reemplazar marcadores "PHONE_NUMBER" de WhatsApp/llamada
   userPhone?: string | null;
+  // País ISO de la cuenta para completar teléfonos locales de EE. UU./Canadá.
+  userCountry?: string | null;
   // Nombre para resolver {NOMBRE_AUTOR} de un estilo personalizado.
   authorName?: string | null;
   // Prompt de redacción personalizado cargado desde Run.prompt.
@@ -51,8 +53,9 @@ export function buildContactButtonsHtml(
   callLabel: string,
   includeWhatsApp = true,
   includeCall = true,
+  country?: string | null,
 ): string {
-  const digits = phone.replace(/\D/g, "");
+  const digits = normalizeContactPhone(phone, country);
   if (!digits) return "";
 
   const buttons: string[] = [];
@@ -73,12 +76,46 @@ export function buildContactButtonsHtml(
   return buttons.join("");
 }
 
+/** Normaliza a formato internacional sin adivinar prefijos fuera de NANP. */
+export function normalizeContactPhone(
+  phone: string,
+  country?: string | null,
+): string {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length !== 10) return digits;
+
+  const normalizedCountry = country?.trim().toUpperCase();
+  const isNanp = /^[2-9]\d{2}[2-9]\d{6}$/.test(digits);
+  // Las cuentas antiguas sin país son el caso histórico de Florida; para un
+  // número NANP local aplicamos el mismo prefijo 1 que exige wa.me.
+  if (isNanp && (!normalizedCountry || normalizedCountry === "US" || normalizedCountry === "CA")) {
+    return `1${digits}`;
+  }
+  return digits;
+}
+
+/** QR de contacto con el patrón que ya utiliza la plataforma. */
+export function buildContactQrHtml(
+  phone: string,
+  country?: string | null,
+): string {
+  const digits = normalizeContactPhone(phone, country);
+  if (!digits) return "";
+
+  const whatsappUrl = `https://wa.me/${digits}`;
+  return `<div class="hidden-xs hidden-sm" style="text-align:left;"><a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer"><img alt="QR Code" src="https://quickchart.io/chart?cht=qr&amp;chl=${whatsappUrl}&amp;chs=140x140&amp;chld=M|0" style="border:0;" /></a></div>`;
+}
+
 /** Los CTAs del modelo no son confiables: sólo conservamos los botones propios. */
 export function removeGeneratedContactLinks(html: string): string {
-  return html.replace(
-    /<a\b[^>]*\bhref=["'](?:https?:\/\/(?:api\.)?whatsapp\.com|https?:\/\/wa\.me|tel:)[^"']*["'][^>]*>[\s\S]*?<\/a>/gi,
-    "",
-  );
+  return html
+    .replace(
+      /<a\b[^>]*\bhref=["'](?:https?:\/\/(?:api\.)?whatsapp\.com|https?:\/\/wa\.me|tel:)[^"']*["'][^>]*>[\s\S]*?<\/a>/gi,
+      "",
+    )
+    // Al retirar un enlace defectuoso, el modelo a veces deja sólo el título
+    // del CTA. No es contenido del artículo ni un contacto funcional.
+    .replace(/<p\b[^>]*>\s*(?:whats\s*app|c[oó]digo\s*qr|qr\s*code)\s*<\/p>/gi, "");
 }
 
 /** Inserta los CTA en dos pausas naturales del artículo, nunca juntos al final. */
@@ -323,6 +360,7 @@ export async function publishArticle(
       credentials.contentLanguage,
       credentials.articleSignature,
       credentials.userPhone,
+      credentials.userCountry,
       credentials.authorName,
       onStep,
       credentials.promptText,
@@ -558,6 +596,7 @@ async function createArticleDraft(
   contentLanguage: string | null | undefined,
   articleSignature: string | null | undefined,
   userPhone: string | null | undefined,
+  userCountry: string | null | undefined,
   authorName: string | null | undefined,
   onStep: OnStep,
   promptText?: string | null,
@@ -697,6 +736,7 @@ async function createArticleDraft(
         callLabel,
         true,
         false,
+        userCountry,
       );
       const callButton = buildContactButtonsHtml(
         userPhone,
@@ -704,13 +744,16 @@ async function createArticleDraft(
         callLabel,
         false,
         true,
+        userCountry,
       );
+      // QR + WhatsApp en el primer tercio; llamada en el segundo, nunca juntos.
+      const whatsappContact = `${buildContactQrHtml(userPhone, userCountry)}${whatsappButton}`;
       contentHtml = distributeContactButtonsHtml(
         contentHtml,
-        whatsappButton,
+        whatsappContact,
         callButton,
       );
-      await onStep("Botones oficiales de WhatsApp y llamada distribuidos dentro del artículo.");
+      await onStep("QR de contacto y botones oficiales de WhatsApp/llamada distribuidos dentro del artículo.");
     } else {
       await onStep("⚠️ No se agregaron botones de contacto porque no tienes un teléfono configurado en tu perfil.");
     }
