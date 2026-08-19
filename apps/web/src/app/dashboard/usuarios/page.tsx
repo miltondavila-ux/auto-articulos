@@ -108,9 +108,17 @@ const riskColors: Record<UsagePerUser["risk"], { bg: string; color: string }> =
 
 const PAGE_SIZE = 10;
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({
+  label,
+  children,
+  filaCompleta = false,
+}: {
+  label: string;
+  children: ReactNode;
+  filaCompleta?: boolean;
+}) {
   return (
-    <div>
+    <div style={filaCompleta ? { gridColumn: "1 / -1" } : undefined}>
       <div
         style={{
           fontSize: 11,
@@ -1980,6 +1988,10 @@ function UserCard({
           isTrialSignup: permIsTrialSignup,
           trialUnlocked: permTrialUnlocked,
           hasImageCredits: permImageCredits,
+          // El acceso a los módulos viaja con el mismo botón: tenerlo en una
+          // sección aparte hacía que se guardaran los permisos y el acceso se
+          // quedara sin guardar sin que nadie se diera cuenta.
+          moduleOverrides,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -2384,13 +2396,13 @@ function UserCard({
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginTop: 4 }}>
                 <button
                   onClick={handleSavePermissions}
-                  disabled={savingPermissions || !permissionsDirty}
+                  disabled={savingPermissions || (!permissionsDirty && !userModulesDirty)}
                   style={disabledStyle(
                     { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
                     savingPermissions || !permissionsDirty,
                   )}
                 >
-                  {savingPermissions ? "Guardando..." : "Guardar permisos"}
+                  {savingPermissions ? "Guardando..." : "Guardar permisos y accesos"}
                 </button>
                 {permissionsSaved && (
                   <span style={{ fontSize: 11, color: "#16803c" }}>
@@ -2406,7 +2418,12 @@ function UserCard({
             </div>
           </Field>
 
-          <Field label="Visibilidad de módulos (esta cuenta)">
+          <Field label="Acceso a módulos (esta cuenta)" filaCompleta>
+            <p style={{ margin: "0 0 8px", fontSize: 11, lineHeight: 1.5, color: "#6e6e73" }}>
+              <strong>Dárselo a esta cuenta</strong> pasa por encima del apagado
+              global: aunque el módulo esté oculto para todos, esta persona sí lo
+              verá. Se guarda con el botón <strong>Guardar permisos y accesos</strong> de arriba.
+            </p>
             <div style={{ display: "grid", gap: 6 }}>
               {SYSTEM_MODULES.map((mod) => {
                 const acceso = moduleOverrides[mod.id] ?? "inherit";
@@ -2414,10 +2431,26 @@ function UserCard({
                 return (
                   <label
                     key={mod.id}
-                    style={{ ...permissionLabelStyle, justifyContent: "space-between", gap: 8 }}
+                    style={{
+                      ...permissionLabelStyle,
+                      display: "flex",
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 10,
+                    }}
                   >
                     <span>{mod.label}</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                        gap: 8,
+                        flex: "1 1 240px",
+                        justifyContent: "flex-end",
+                      }}
+                    >
                       {isGloballyDisabled && (
                         <span
                           style={{
@@ -2443,7 +2476,15 @@ function UserCard({
                           }))
                         }
                         disabled={savingUserModules}
-                        style={{ width: "auto", minWidth: 150, margin: 0, fontSize: 12, padding: "4px 8px", minHeight: 0 }}
+                        style={{
+                          flex: "1 1 220px",
+                          maxWidth: 280,
+                          margin: 0,
+                          fontSize: 13,
+                          padding: "8px 10px",
+                          minHeight: 36,
+                          cursor: "pointer",
+                        }}
                       >
                         <option value="inherit">Según la config. general</option>
                         <option value="enabled">Dárselo a esta cuenta</option>
