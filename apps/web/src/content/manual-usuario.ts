@@ -27,7 +27,22 @@ Ruta: /dashboard
 Inicio es tu centro de operaciones:
 - **Para cuentas nuevas (sin artículos aún):** Muestra de forma prioritaria el Asistente de Configuración Inicial para que completes tu puesta a punto sin distracciones.
 - **Para cuentas con artículos publicados:** Muestra el panel de métricas de rendimiento (artículos publicados hoy, en el mes, límites y gráfico de actividad).
-- Desde el menú superior tienes acceso a: Publicar, Publicaciones en Curso, Oportunidades, Oportunidades Redes, Historial, Configuración y Actualizaciones.
+- Desde el menú superior tienes acceso a: Cómo Funciona, Publicaciones, Historial, Actualizaciones y Configuración.
+
+## El menú
+
+El menú superior tiene, en este orden: **Inicio**, **Cómo Funciona**, **Publicaciones**, **Historial**, **Actualizaciones** y **Configuración**. Los administradores ven además **Administración**.
+
+**Publicaciones** no es una pantalla: es un grupo que se despliega. Dentro están las cuatro pantallas relacionadas con publicar:
+
+- **Publicaciones propias** (/dashboard/publicar): tus propios títulos.
+- **Oportunidades SEO/AEO** (/dashboard/oportunidades): las que propone el sistema a partir de Google Search Console.
+- **Oportunidades para Redes Sociales** (/dashboard/oportunidades-redes): llevar artículos ya publicados a tus redes.
+- **Publicaciones en Curso** (/dashboard/publicaciones-en-curso): lo que se está publicando ahora mismo.
+
+En computadora, Publicaciones se abre al pulsarlo y se cierra al elegir una opción, al pulsar fuera o con la tecla Escape. En teléfono y tableta no se despliega: las cuatro opciones aparecen listadas debajo del título Publicaciones.
+
+Si el administrador te oculta algún módulo, simplemente no aparece en el menú. Si te oculta los cuatro, el grupo Publicaciones desaparece entero.
 
 ## Configuración
 
@@ -120,7 +135,17 @@ Si un artículo muestra un error, lee el mensaje antes de repetir la acción. Si
 
 Ruta: /dashboard/como-funciona
 
-Muestra una explicación visual e infografía interactiva de la automatización del sistema. Te enseña cómo Auto Artículos captura consultas reales en Google Search Console y Bing para luego alimentar dos flujos paralelos: la generación automática y secuencial de artículos en tu blog web, y la creación de propuestas borradores de contenido para tus redes sociales (LinkedIn, X, Threads, etc.).
+Explica en texto, sin gráficas, para qué sirve la plataforma y en qué orden ocurre todo.
+
+El objetivo es indexarte y posicionarte en tiempo récord en Google Search Console, en Bing y en las inteligencias artificiales, además de darte acceso a un motor de publicación en redes sociales inteligente y equilibrado.
+
+Lo explica en tres pasos:
+
+1. **Configura tu cuenta.** Es lo primero y lo único que no se puede saltar. Si no estás seguro de haberlo dejado todo listo, entra en Configuración y revísalo. Si algo no queda claro, la burbuja de ayuda está en la esquina de todas las pantallas.
+2. **Publica tus artículos.** Hay dos caminos y puedes usar los dos: publicar tus propios títulos, hasta diez a la vez, o dejar que el sistema decida por ti desde Oportunidades, donde consulta Google Search Console y Bing. Cuando la inteligencia artificial haya decidido, publicas de uno en uno o por lotes.
+3. **Lleva lo publicado a las redes.** Desde Oportunidades para Redes Sociales, los artículos más relevantes pasan a tus redes de forma repartida y equilibrada, sin parecer spam.
+
+Cierra explicando para qué sirve todo esto: posicionarte con autoridad en internet. Aparecer en los resultados de la inteligencia artificial, de Google y de Bing es lo más importante que le puede pasar a tu negocio en internet.
 
 ## Actualizaciones
 

@@ -311,8 +311,11 @@ export default function DashboardNav() {
           borderRadius: 14,
           padding: 4,
           flexWrap: "wrap",
-          overflowX: "hidden",
           alignItems: "center",
+          // Sin `overflow` aquí: por regla de CSS, poner overflow-x en hidden
+          // convierte el eje vertical en auto, y eso recortaba el desplegable
+          // de Publicaciones, que cae por debajo de la barra. La fila envuelve
+          // con flexWrap, así que no necesita recorte horizontal.
         }}
       >
         {entries.map((entry) => {
