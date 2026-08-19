@@ -1,228 +1,243 @@
-"use client";
-
+import type { Metadata } from "next";
 import Link from "next/link";
-import { sectionStyle } from "@/components/dashboard-ui";
+
+export const metadata: Metadata = {
+  title: "Cómo funciona — Auto Artículos",
+  description:
+    "Qué hace Auto Artículos, en qué orden ocurre y qué debes hacer tú en cada paso.",
+};
+
+// Estilo pedido por Milton (18/8/2026): explicación en texto, con títulos
+// bien hechos. Sin gráficas y sin emoticones — Apple no los usa. Toda la
+// jerarquía se sostiene con tipografía y espacio en blanco, no con adornos.
+
+const PASOS = [
+  {
+    numero: "01",
+    titulo: "Configura tu cuenta",
+    cuerpo: [
+      "Es lo primero y lo único que no puede saltarse. Sin la configuración completa, el sistema no tiene con qué trabajar.",
+      "Si no estás seguro de haberlo dejado todo listo, entra en Configuración y revísalo. Es muy sencillo y se hace una sola vez.",
+    ],
+    ayuda: {
+      texto: "Ir a Configuración",
+      href: "/dashboard/configuracion",
+    },
+    nota: "Si algo no te queda claro, abre la burbuja de ayuda que aparece en la esquina de la pantalla y pregunta. Está en todas las pantallas.",
+  },
+  {
+    numero: "02",
+    titulo: "Publica tus artículos",
+    cuerpo: [
+      "Aquí tienes dos caminos, y puedes usar los dos.",
+      "El primero es publicar tus propios artículos: escribes hasta diez títulos a la vez y el sistema los redacta y los publica por ti.",
+      "El segundo es dejarle el trabajo al sistema. En Oportunidades, se comunica con Google Search Console y con Bing, mira qué está buscando de verdad la gente que llega a tu sitio, y decide qué te conviene publicar. Cuando la inteligencia artificial haya decidido, tú publicas: de uno en uno o por lotes.",
+    ],
+    ayuda: {
+      texto: "Ver Oportunidades SEO/AEO",
+      href: "/dashboard/oportunidades",
+    },
+    nota: "Ambos caminos están dentro del menú Publicaciones.",
+  },
+  {
+    numero: "03",
+    titulo: "Lleva lo publicado a las redes",
+    cuerpo: [
+      "Una vez tienes artículos publicados, el módulo de Oportunidades para Redes Sociales te permite llevar los más relevantes a tus redes.",
+      "No se publica todo ni todo el tiempo. El sistema reparte y equilibra, para que tu presencia crezca sin parecer spam.",
+    ],
+    ayuda: {
+      texto: "Ver Oportunidades para Redes Sociales",
+      href: "/dashboard/oportunidades-redes",
+    },
+    nota: null,
+  },
+];
 
 export default function ComoFuncionaPage() {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 28, maxWidth: 1120, margin: "0 auto" }}>
-      <style>{`
-        .minimal-hero {
-          padding: 40px 0 20px;
-        }
-        .minimal-hero h1 {
-          font-size: 32px;
-          font-weight: 700;
-          letter-spacing: -0.03em;
-          color: #1d1d1f;
-          margin-bottom: 8px;
-        }
-        .minimal-hero p {
-          font-size: 15px;
-          color: #86868b;
-          margin: 0;
-        }
+    <div style={{ maxWidth: 760, margin: "0 auto", paddingBottom: 64 }}>
+      {/* Objetivo */}
+      <header style={{ padding: "48px 0 40px" }}>
+        <p
+          style={{
+            margin: 0,
+            fontSize: 12,
+            fontWeight: 600,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            color: "#86868b",
+          }}
+        >
+          El objetivo
+        </p>
+        <h1
+          style={{
+            margin: "14px 0 0",
+            fontSize: 44,
+            lineHeight: 1.1,
+            fontWeight: 600,
+            letterSpacing: "-0.03em",
+            color: "#1d1d1f",
+          }}
+        >
+          Indexarte y posicionarte en tiempo récord.
+        </h1>
+        <p
+          style={{
+            margin: "22px 0 0",
+            fontSize: 19,
+            lineHeight: 1.6,
+            color: "#6e6e73",
+          }}
+        >
+          En Google Search Console, en Bing y en las inteligencias artificiales.
+          Y con acceso a un motor de publicación en redes sociales inteligente y
+          equilibrado.
+        </p>
+      </header>
 
-        /* Contenedor del flujo */
-        .diagram-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 20px;
-          padding: 40px 24px;
-          background: #ffffff;
-          border: 1px solid #e5e5ea;
-          border-radius: 20px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.01);
-        }
+      <hr style={{ border: "none", borderTop: "1px solid #e5e5ea", margin: 0 }} />
 
-        /* Fila del diagrama en Desktop */
-        .diagram-row {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 100%;
-          max-width: 1000px;
-          position: relative;
-        }
+      {/* Cómo sucede */}
+      <section style={{ paddingTop: 48 }}>
+        <h2
+          style={{
+            margin: 0,
+            fontSize: 30,
+            fontWeight: 600,
+            letterSpacing: "-0.02em",
+            color: "#1d1d1f",
+          }}
+        >
+          Cómo sucede
+        </h2>
+        <p
+          style={{
+            margin: "14px 0 0",
+            fontSize: 17,
+            lineHeight: 1.6,
+            color: "#6e6e73",
+          }}
+        >
+          Son tres pasos, en este orden. El primero se hace una vez; los otros
+          dos se repiten tantas veces como quieras.
+        </p>
 
-        /* Cajas de pasos */
-        .step-node {
-          background: #ffffff;
-          border: 1px solid #d2d2d7;
-          border-radius: 14px;
-          padding: 20px;
-          width: 240px;
-          flex-shrink: 0;
-          transition: border-color 0.2s ease;
-        }
-        .step-node:hover {
-          border-color: #86868b;
-        }
-        .step-node .node-num {
-          font-size: 11px;
-          font-weight: 600;
-          color: #86868b;
-          letter-spacing: 0.05em;
-          margin-bottom: 6px;
-          text-transform: uppercase;
-        }
-        .step-node h3 {
-          font-size: 16px;
-          font-weight: 600;
-          color: #1d1d1f;
-          margin: 0 0 6px 0;
-        }
-        .step-node p {
-          font-size: 13px;
-          color: #6e6e73;
-          line-height: 1.4;
-          margin: 0;
-        }
+        {PASOS.map((paso) => (
+          <article key={paso.numero} style={{ paddingTop: 52 }}>
+            <p
+              style={{
+                margin: 0,
+                fontSize: 15,
+                fontWeight: 600,
+                color: "#86868b",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {paso.numero}
+            </p>
+            <h3
+              style={{
+                margin: "10px 0 0",
+                fontSize: 25,
+                fontWeight: 600,
+                letterSpacing: "-0.02em",
+                color: "#1d1d1f",
+              }}
+            >
+              {paso.titulo}
+            </h3>
+            {paso.cuerpo.map((parrafo) => (
+              <p
+                key={parrafo.slice(0, 40)}
+                style={{
+                  margin: "16px 0 0",
+                  fontSize: 17,
+                  lineHeight: 1.65,
+                  color: "#1d1d1f",
+                }}
+              >
+                {parrafo}
+              </p>
+            ))}
+            {paso.nota && (
+              <p
+                style={{
+                  margin: "16px 0 0",
+                  fontSize: 15,
+                  lineHeight: 1.6,
+                  color: "#86868b",
+                }}
+              >
+                {paso.nota}
+              </p>
+            )}
+            <p style={{ margin: "22px 0 0" }}>
+              <Link
+                href={paso.ayuda.href}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 16,
+                  color: "#0071e3",
+                  textDecoration: "none",
+                }}
+              >
+                {paso.ayuda.texto}
+                <span aria-hidden="true">›</span>
+              </Link>
+            </p>
+          </article>
+        ))}
+      </section>
 
-        /* Líneas y flechas SVG */
-        .flow-line {
-          flex-grow: 1;
-          height: 2px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-width: 40px;
-        }
-        .flow-line svg {
-          color: #86868b;
-          width: 100%;
-        }
+      <hr
+        style={{
+          border: "none",
+          borderTop: "1px solid #e5e5ea",
+          margin: "56px 0 0",
+        }}
+      />
 
-        /* Bifurcación */
-        .split-branches {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-          width: 240px;
-          flex-shrink: 0;
-        }
-
-        /* Responsive */
-        @media (max-width: 820px) {
-          .diagram-row {
-            flex-direction: column;
-            gap: 16px;
-          }
-          .flow-line {
-            height: 40px;
-            width: 2px;
-            min-width: 0;
-            transform: rotate(90deg);
-            margin: 8px 0;
-          }
-          .split-branches {
-            width: 100%;
-            align-items: center;
-          }
-        }
-      `}</style>
-
-      {/* Hero */}
-      <div className="minimal-hero">
-        <h1>Cómo Funciona el Flujo</h1>
-        <p>Esquema simplificado de los pasos que sigue Auto Artículos en tu cuenta.</p>
-      </div>
-
-      {/* Infografía Minimalista */}
-      <div className="diagram-container">
-        <div className="diagram-row">
-
-          {/* Paso 1 */}
-          <div className="step-node">
-            <div className="node-num">01. Buscadores</div>
-            <h3>Google & Bing</h3>
-            <p>El sistema detecta los temas y consultas reales que la gente busca en internet.</p>
-          </div>
-
-          {/* Flecha Conectora 1 */}
-          <div className="flow-line">
-            <svg height="8" width="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M0 4H92M92 4L87 1M92 4L87 7" stroke="#d2d2d7" strokeWidth="1.5" />
-            </svg>
-          </div>
-
-          {/* Paso 2 */}
-          <div className="step-node">
-            <div className="node-num">02. El Cerebro</div>
-            <h3>Auto Artículos</h3>
-            <p>Analiza las consultas y las organiza por tus categorías de contenido.</p>
-          </div>
-
-          {/* Flecha Conectora 2 (Bifurcación) */}
-          <div className="flow-line">
-            <svg height="8" width="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M0 4H92M92 4L87 1M92 4L87 7" stroke="#d2d2d7" strokeWidth="1.5" />
-            </svg>
-          </div>
-
-          {/* Bifurcación (Paso 3) */}
-          <div className="split-branches">
-
-            {/* Paso 3A */}
-            <div className="step-node" style={{ width: "100%" }}>
-              <div className="node-num" style={{ color: "#0071e3" }}>03A. Automático</div>
-              <h3>Tu Blog Web</h3>
-              <p>Genera artículos SEO optimizados y los publica directamente en tu blog.</p>
-            </div>
-
-            {/* Paso 3B */}
-            <div className="step-node" style={{ width: "100%" }}>
-              <div className="node-num" style={{ color: "#86868b" }}>03B. Borrador</div>
-              <h3>Redes Sociales</h3>
-              <p>Prepara propuestas de posts para que los apruebes con un solo clic.</p>
-            </div>
-
-          </div>
-
-        </div>
-      </div>
-
-      {/* Detalle en tarjetas limpias */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
-
-        <div className="panel" style={{ ...sectionStyle, marginTop: 0, padding: 24 }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: "#86868b", textTransform: "uppercase", letterSpacing: "0.05em" }}>Fase Inicial</span>
-          <h3 style={{ fontSize: 16, fontWeight: 600, color: "#1d1d1f", margin: "8px 0 10px 0" }}>1. Detección Inteligente</h3>
-          <p style={{ fontSize: 13.5, color: "#6e6e73", lineHeight: 1.5, margin: "0 0 16px 0" }}>
-            El sistema se vincula de forma segura a Google Search Console y Bing Webmaster.
-            Extrae de forma desatendida las dudas y temas con mayor tráfico e interés.
-          </p>
-          <Link href="/dashboard/configuracion?tab=integrations" style={{ fontSize: 13, fontWeight: 500, color: "#0071e3", textDecoration: "none" }}>
-            Gestionar buscadores &rarr;
-          </Link>
-        </div>
-
-        <div className="panel" style={{ ...sectionStyle, marginTop: 0, padding: 24 }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: "#0071e3", textTransform: "uppercase", letterSpacing: "0.05em" }}>Flujo Principal</span>
-          <h3 style={{ fontSize: 16, fontWeight: 600, color: "#1d1d1f", margin: "8px 0 10px 0" }}>2. Publicación de Artículos</h3>
-          <p style={{ fontSize: 13.5, color: "#6e6e73", lineHeight: 1.5, margin: "0 0 16px 0" }}>
-            La Inteligencia Artificial escribe los contenidos según los términos sugeridos por el buscador.
-            Se publican de manera automática e indexan al instante para ganar visitas en tu blog.
-          </p>
-          <Link href="/dashboard/oportunidades" style={{ fontSize: 13, fontWeight: 500, color: "#0071e3", textDecoration: "none" }}>
-            Ver Oportunidades SEO &rarr;
-          </Link>
-        </div>
-
-        <div className="panel" style={{ ...sectionStyle, marginTop: 0, padding: 24 }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: "#86868b", textTransform: "uppercase", letterSpacing: "0.05em" }}>Flujo Alterno</span>
-          <h3 style={{ fontSize: 16, fontWeight: 600, color: "#1d1d1f", margin: "8px 0 10px 0" }}>3. Presencia en Redes</h3>
-          <p style={{ fontSize: 13.5, color: "#6e6e73", lineHeight: 1.5, margin: "0 0 16px 0" }}>
-            El sistema toma los temas de los artículos y crea borradores de posts.
-            Tú tienes el control total: puedes revisarlos, modificarlos y aprobar su publicación.
-          </p>
-          <Link href="/dashboard/oportunidades-redes" style={{ fontSize: 13, fontWeight: 500, color: "#0071e3", textDecoration: "none" }}>
-            Revisar propuestas &rarr;
-          </Link>
-        </div>
-
-      </div>
+      {/* Cierre */}
+      <section style={{ paddingTop: 48 }}>
+        <h2
+          style={{
+            margin: 0,
+            fontSize: 30,
+            fontWeight: 600,
+            letterSpacing: "-0.02em",
+            color: "#1d1d1f",
+          }}
+        >
+          Para qué sirve todo esto
+        </h2>
+        <p
+          style={{
+            margin: "18px 0 0",
+            fontSize: 19,
+            lineHeight: 1.65,
+            color: "#1d1d1f",
+          }}
+        >
+          Para posicionarte con autoridad en internet.
+        </p>
+        <p
+          style={{
+            margin: "16px 0 0",
+            fontSize: 17,
+            lineHeight: 1.65,
+            color: "#6e6e73",
+          }}
+        >
+          Aparecer en los resultados de la inteligencia artificial, de Google y
+          de Bing es lo más importante que le puede pasar a tu negocio en
+          internet. Es la diferencia entre que te encuentren y que no sepan que
+          existes. Todo lo que hace esta plataforma va dirigido a eso.
+        </p>
+      </section>
     </div>
   );
 }
