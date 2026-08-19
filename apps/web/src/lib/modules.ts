@@ -61,6 +61,15 @@ export const SYSTEM_MODULES: SystemModule[] = [
 
 export const GLOBAL_DISABLED_MODULES_KEY = "global_disabled_modules";
 
+/*
+ * Permiso de módulo por usuario, en tres posturas. Antes solo existía una
+ * lista de "apagados", que no distinguía entre "no lo ve porque está oculto
+ * para todos" y "a esta persona se lo quité". Por eso el acceso de una cuenta
+ * concreta acababa clavado en el código.
+ */
+export type ModuleAccessOverride = "inherit" | "enabled" | "disabled";
+export type ModuleAccessOverrides = Record<string, ModuleAccessOverride>;
+
 /**
  * Obtiene los módulos deshabilitados globalmente (para todos los usuarios regulares).
  */
@@ -130,6 +139,39 @@ export function getEffectiveDisabledModules(
   if (user.role === "admin") {
     return [];
   }
-  const userDisabled = parseUserDisabledModules(user.disabledModules);
-  return Array.from(new Set([...globalDisabled, ...userDisabled]));
+  const overrides = parseUserModuleOverrides(user.disabledModules);
+  const effective = new Set(globalDisabled);
+  for (const [moduleId, access] of Object.entries(overrides)) {
+    if (access === "enabled") effective.delete(moduleId);
+    if (access === "disabled") effective.add(moduleId);
+  }
+  return Array.from(effective);
+}
+
+/**
+ * Lee el formato nuevo de excepciones conservando compatibilidad con el array
+ * anterior: una lista de ids se interpreta como "forzar deshabilitado" en cada
+ * uno, que es exactamente lo que significaba antes.
+ */
+export function parseUserModuleOverrides(raw?: string | null): ModuleAccessOverrides {
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return Object.fromEntries(
+        parsed
+          .filter((id): id is string => typeof id === "string")
+          .map((id) => [id, "disabled" as const]),
+      );
+    }
+    if (!parsed || typeof parsed !== "object") return {};
+    return Object.fromEntries(
+      Object.entries(parsed).filter(
+        ([, value]) =>
+          value === "inherit" || value === "enabled" || value === "disabled",
+      ),
+    ) as ModuleAccessOverrides;
+  } catch {
+    return {};
+  }
 }

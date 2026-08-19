@@ -10,7 +10,11 @@ import {
 } from "@auto-articulos/shared";
 import { auditLog } from "@/lib/audit";
 import { getCurrentUserId, requireAdmin } from "@/lib/current-user";
-import { parseUserDisabledModules } from "@/lib/modules";
+import {
+  parseUserDisabledModules,
+  parseUserModuleOverrides,
+  type ModuleAccessOverrides,
+} from "@/lib/modules";
 
 interface PublishedCountRow {
   userId: string;
@@ -75,6 +79,7 @@ export async function GET() {
         allowInstagramPublishing: true,
         allowLinkedInPublishing: true,
         allowThreadsPublishing: true,
+        allowFacebookPublishing: true,
         profilePhotoUrl: true,
         businessLogoUrl: true,
         opportunitiesDisclosureAcceptedAt: true,
@@ -145,6 +150,7 @@ export async function GET() {
       return {
         ...rest,
         disabledModules: parseUserDisabledModules(disabledModules),
+        moduleOverrides: parseUserModuleOverrides(disabledModules),
         currentPassword,
         tenMinutesUsername,
         connectedDomain,
@@ -179,11 +185,13 @@ export async function PATCH(request: NextRequest) {
     allowInstagramPublishing,
     allowLinkedInPublishing,
     allowThreadsPublishing,
+    allowFacebookPublishing,
     profilePhotoUrl,
     businessLogoUrl,
     isTrialSignup,
     trialUnlocked,
     disabledModules,
+    moduleOverrides,
   } = body;
 
   if (typeof userId !== "string" || !userId) {
@@ -206,6 +214,7 @@ export async function PATCH(request: NextRequest) {
     allowInstagramPublishing?: boolean;
     allowLinkedInPublishing?: boolean;
     allowThreadsPublishing?: boolean;
+    allowFacebookPublishing?: boolean;
     profilePhotoUrl?: string | null;
     businessLogoUrl?: string | null;
     isTrialSignup?: boolean;
@@ -322,6 +331,26 @@ export async function PATCH(request: NextRequest) {
     data.allowThreadsPublishing = Boolean(allowThreadsPublishing);
   }
 
+  if ("allowFacebookPublishing" in body) {
+    data.allowFacebookPublishing = Boolean(allowFacebookPublishing);
+  }
+
+  if ("moduleOverrides" in body) {
+    if (!moduleOverrides || typeof moduleOverrides !== "object" || Array.isArray(moduleOverrides)) {
+      return NextResponse.json(
+        { error: "moduleOverrides debe ser un objeto" },
+        { status: 400 },
+      );
+    }
+    const limpio = Object.fromEntries(
+      Object.entries(moduleOverrides as ModuleAccessOverrides).filter(
+        ([, value]) =>
+          value === "inherit" || value === "enabled" || value === "disabled",
+      ),
+    );
+    data.disabledModules = JSON.stringify(limpio);
+  }
+
   if ("isTrialSignup" in body) {
     data.isTrialSignup = Boolean(isTrialSignup);
     if (!data.isTrialSignup) {
@@ -399,6 +428,7 @@ export async function PATCH(request: NextRequest) {
         allowInstagramPublishing: true,
         allowLinkedInPublishing: true,
         allowThreadsPublishing: true,
+        allowFacebookPublishing: true,
         createdAt: true,
         isTrialSignup: true,
         trialStartedAt: true,

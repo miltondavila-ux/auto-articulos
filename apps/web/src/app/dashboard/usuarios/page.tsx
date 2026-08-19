@@ -46,6 +46,8 @@ interface UserRow {
   allowInstagramPublishing: boolean;
   allowLinkedInPublishing: boolean;
   allowThreadsPublishing: boolean;
+  allowFacebookPublishing: boolean;
+  moduleOverrides?: Record<string, "inherit" | "enabled" | "disabled">;
   profilePhotoUrl: string | null;
   businessLogoUrl: string | null;
   opportunitiesDisclosureAcceptedAt: string | null;
@@ -1737,6 +1739,9 @@ function UserCard({
   const [permThreads, setPermThreads] = useState(
     Boolean(user.allowThreadsPublishing),
   );
+  const [permFacebook, setPermFacebook] = useState(
+    Boolean(user.allowFacebookPublishing),
+  );
   // Sistema de prueba gratuita (13/8/2026): estado de prueba y desbloqueo manual.
   const [permIsTrialSignup, setPermIsTrialSignup] = useState(
     Boolean(user.isTrialSignup),
@@ -1750,6 +1755,9 @@ function UserCard({
   const [savingPermissions, setSavingPermissions] = useState(false);
   const [permissionsError, setPermissionsError] = useState<string | null>(null);
   const [permissionsSaved, setPermissionsSaved] = useState(false);
+  const [moduleOverrides, setModuleOverrides] = useState<
+    Record<string, "inherit" | "enabled" | "disabled">
+  >(user.moduleOverrides ?? {});
   const [userDisabledModules, setUserDisabledModules] = useState<string[]>(
     user.disabledModules ?? [],
   );
@@ -1767,6 +1775,7 @@ function UserCard({
     setPermInstagram(Boolean(user.allowInstagramPublishing));
     setPermLinkedIn(Boolean(user.allowLinkedInPublishing));
     setPermThreads(Boolean(user.allowThreadsPublishing));
+    setPermFacebook(Boolean(user.allowFacebookPublishing));
     setPermIsTrialSignup(Boolean(user.isTrialSignup));
     setPermTrialUnlocked(Boolean(user.trialUnlocked));
     setPermImageCredits(user.hasImageCredits !== false);
@@ -1777,11 +1786,13 @@ function UserCard({
     permInstagram !== Boolean(user.allowInstagramPublishing) ||
     permLinkedIn !== Boolean(user.allowLinkedInPublishing) ||
     permThreads !== Boolean(user.allowThreadsPublishing) ||
+    permFacebook !== Boolean(user.allowFacebookPublishing) ||
     permIsTrialSignup !== Boolean(user.isTrialSignup) ||
     permTrialUnlocked !== Boolean(user.trialUnlocked) ||
     permImageCredits !== (user.hasImageCredits !== false);
 
   const userModulesDirty =
+    JSON.stringify(moduleOverrides) !== JSON.stringify(user.moduleOverrides ?? {}) ||
     JSON.stringify((userDisabledModules ?? []).slice().sort()) !==
     JSON.stringify((user.disabledModules ?? []).slice().sort());
 
@@ -1795,7 +1806,7 @@ function UserCard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: user.id,
-          disabledModules: userDisabledModules,
+          moduleOverrides,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -1965,6 +1976,7 @@ function UserCard({
           allowInstagramPublishing: permInstagram,
           allowLinkedInPublishing: permLinkedIn,
           allowThreadsPublishing: permThreads,
+          allowFacebookPublishing: permFacebook,
           isTrialSignup: permIsTrialSignup,
           trialUnlocked: permTrialUnlocked,
           hasImageCredits: permImageCredits,
@@ -2272,6 +2284,16 @@ function UserCard({
               <label style={permissionLabelStyle}>
                 <input
                   type="checkbox"
+                  checked={permFacebook}
+                  onChange={(e) => setPermFacebook(e.target.checked)}
+                  disabled={savingPermissions}
+                  style={{ accentColor: "#1d1d1f", width: 16, height: 16 }}
+                />
+                Publicar en Facebook Pages
+              </label>
+              <label style={permissionLabelStyle}>
+                <input
+                  type="checkbox"
                   checked={permImageCredits}
                   onChange={(e) => setPermImageCredits(e.target.checked)}
                   disabled={savingPermissions}
@@ -2387,47 +2409,47 @@ function UserCard({
           <Field label="Visibilidad de módulos (esta cuenta)">
             <div style={{ display: "grid", gap: 6 }}>
               {SYSTEM_MODULES.map((mod) => {
-                const isAllowed = !userDisabledModules.includes(mod.id);
-                const isGloballyDisabled = globalDisabledModules.includes(
-                  mod.id,
-                );
+                const acceso = moduleOverrides[mod.id] ?? "inherit";
+                const isGloballyDisabled = globalDisabledModules.includes(mod.id);
                 return (
-                  <label key={mod.id} style={permissionLabelStyle}>
-                    <input
-                      type="checkbox"
-                      checked={isAllowed}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setUserDisabledModules((prev) =>
-                          checked
-                            ? prev.filter((id) => id !== mod.id)
-                            : [...prev, mod.id],
-                        );
-                      }}
-                      disabled={savingUserModules}
-                      style={{
-                        accentColor: "#1d1d1f",
-                        width: 16,
-                        height: 16,
-                      }}
-                    />
+                  <label
+                    key={mod.id}
+                    style={{ ...permissionLabelStyle, justifyContent: "space-between", gap: 8 }}
+                  >
                     <span>{mod.label}</span>
-                    {isGloballyDisabled && (
-                      <span
-                        style={{
-                          fontSize: 9,
-                          fontWeight: 700,
-                          padding: "1px 5px",
-                          borderRadius: 4,
-                          background: "#fff4e5",
-                          color: "#8a4b08",
-                          border: "1px solid rgba(255, 149, 0, 0.25)",
-                        }}
-                        title="Este módulo ya está oculto globalmente para todos los usuarios"
+                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      {isGloballyDisabled && (
+                        <span
+                          style={{
+                            fontSize: 9,
+                            fontWeight: 700,
+                            padding: "1px 5px",
+                            borderRadius: 4,
+                            background: "#fff4e5",
+                            color: "#8a4b08",
+                            border: "1px solid rgba(255, 149, 0, 0.25)",
+                          }}
+                          title="Este módulo está oculto globalmente para todos los usuarios"
+                        >
+                          Oculto global
+                        </span>
+                      )}
+                      <select
+                        value={acceso}
+                        onChange={(e) =>
+                          setModuleOverrides((prev) => ({
+                            ...prev,
+                            [mod.id]: e.target.value as "inherit" | "enabled" | "disabled",
+                          }))
+                        }
+                        disabled={savingUserModules}
+                        style={{ width: "auto", minWidth: 150, margin: 0, fontSize: 12, padding: "4px 8px", minHeight: 0 }}
                       >
-                        Oculto global
-                      </span>
-                    )}
+                        <option value="inherit">Según la config. general</option>
+                        <option value="enabled">Dárselo a esta cuenta</option>
+                        <option value="disabled">Quitárselo a esta cuenta</option>
+                      </select>
+                    </span>
                   </label>
                 );
               })}

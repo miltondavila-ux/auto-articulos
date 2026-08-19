@@ -7,6 +7,7 @@ import {
   getGlobalDisabledModules,
   getEffectiveDisabledModules,
   parseUserDisabledModules,
+  parseUserModuleOverrides,
 } from "@/lib/modules";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +23,7 @@ export async function GET() {
   const globalDisabledModules = await getGlobalDisabledModules();
   const disabledModules = getEffectiveDisabledModules(user, globalDisabledModules);
   const userDisabledModules = parseUserDisabledModules(user.disabledModules);
+  const moduleOverrides = parseUserModuleOverrides(user.disabledModules);
 
   return NextResponse.json(
     {
@@ -48,9 +50,13 @@ export async function GET() {
       profilePhotoUrl: user.profilePhotoUrl,
       businessLogoUrl: user.businessLogoUrl,
       allowInstagramPublishing: user.allowInstagramPublishing,
+      allowFacebookPublishing: user.allowFacebookPublishing,
+      allowLinkedInPublishing: user.allowLinkedInPublishing,
+      allowThreadsPublishing: user.allowThreadsPublishing,
       hasImageCredits: user.hasImageCredits,
       disabledModules,
       userDisabledModules,
+      moduleOverrides,
       globalDisabledModules,
     },
     {
