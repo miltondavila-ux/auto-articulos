@@ -119,7 +119,7 @@ export async function GET() {
 
   return NextResponse.json({
     currentUserId,
-    users: users.map((u) => {
+    users: users.map((u, indice) => {
       let currentPassword: string | null = null;
       if (u.initialPasswordEncrypted) {
         try {
@@ -149,6 +149,11 @@ export async function GET() {
       const { initialPasswordEncrypted, disabledModules, credentials, searchIntegrations, trialDomainRegistries, ...rest } = u;
       return {
         ...rest,
+        // Número de cuenta: el puesto que ocupa por antigüedad de registro. La
+        // consulta viene ordenada por createdAt ascendente, así que el índice
+        // es el orden de llegada. Sirve para que Milton pueda decir "revisa la
+        // 42" sin depender del filtro ni del orden que tenga en pantalla.
+        numeroCuenta: indice + 1,
         disabledModules: parseUserDisabledModules(disabledModules),
         moduleOverrides: parseUserModuleOverrides(disabledModules),
         currentPassword,

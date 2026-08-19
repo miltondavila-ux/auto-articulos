@@ -47,6 +47,7 @@ interface UserRow {
   allowLinkedInPublishing: boolean;
   allowThreadsPublishing: boolean;
   allowFacebookPublishing: boolean;
+  numeroCuenta?: number;
   moduleOverrides?: Record<string, "inherit" | "enabled" | "disabled">;
   profilePhotoUrl: string | null;
   businessLogoUrl: string | null;
@@ -491,7 +492,8 @@ export default function UsuariosPage() {
         (u.firstName ?? "").toLowerCase().includes(q) ||
         (u.lastName ?? "").toLowerCase().includes(q) ||
         (u.name ?? "").toLowerCase().includes(q) ||
-        (u.phone ?? "").toLowerCase().includes(q)
+        (u.phone ?? "").toLowerCase().includes(q) ||
+        String(u.numeroCuenta ?? "") === q.replace("#", "")
       );
     })
     .sort((a, b) => {
@@ -2108,6 +2110,20 @@ function UserCard({
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+            {user.numeroCuenta !== undefined && (
+              <span
+                title="Número de cuenta. Es fijo: no cambia al filtrar ni al reordenar la lista."
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "#86868b",
+                  fontVariantNumeric: "tabular-nums",
+                  minWidth: 34,
+                }}
+              >
+                #{user.numeroCuenta}
+              </span>
+            )}
             <strong style={{ fontSize: 14 }}>{fullName || "(sin nombre)"}</strong>
             {user.isTrialSignup && user.role !== "admin" && (
               <span
