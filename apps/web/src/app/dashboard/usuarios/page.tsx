@@ -109,17 +109,6 @@ const PAGE_SIZE = 10;
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
-      <ModuleIntro titulo="Administración">
-        <IntroP>
-          Desde aquí gestionas las cuentas de la plataforma: crear usuarios, cambiar sus contraseñas, ver cuánto consume cada uno y decidir a qué módulos y a qué redes sociales tiene acceso.
-        </IntroP>
-        <IntroP>
-          El control de módulos tiene tres posturas por usuario: heredar lo que diga la configuración general, forzar que lo vea aunque esté oculto para todos, o forzar que no lo vea aunque esté visible.
-        </IntroP>
-        <IntroP>
-          También está aquí el modo de mantenimiento, que oculta la plataforma a todo el mundo menos a los administradores mientras se trabaja en ella.
-        </IntroP>
-      </ModuleIntro>
       <div
         style={{
           fontSize: 11,
@@ -688,6 +677,17 @@ export default function UsuariosPage() {
 
   return (
     <div style={{ maxWidth: 1120, margin: "0 auto" }}>
+      <ModuleIntro titulo="Administración">
+        <IntroP>
+          Desde aquí gestionas las cuentas de la plataforma: crear usuarios, cambiar sus contraseñas, ver cuánto consume cada uno y decidir a qué módulos y a qué redes sociales tiene acceso.
+        </IntroP>
+        <IntroP>
+          El control de módulos tiene tres posturas por usuario: heredar lo que diga la configuración general, forzar que lo vea aunque esté oculto para todos, o forzar que no lo vea aunque esté visible.
+        </IntroP>
+        <IntroP>
+          También está aquí el modo de mantenimiento, que oculta la plataforma a todo el mundo menos a los administradores mientras se trabaja en ella.
+        </IntroP>
+      </ModuleIntro>
       <section
         className="panel"
         style={{
