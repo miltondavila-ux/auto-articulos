@@ -4281,3 +4281,42 @@ Auto Artículos.
 - **Situación de Wendy:** sus 24 categorías ya están guardadas correctamente en su cuenta — no necesita hacer nada. Si vuelve a sincronizar ahora, con el umbral nuevo no debería volver a ver el mensaje de "atascado" salvo que el worker realmente se caiga.
 - **Estado del área:** RESUELTO y publicado en `main`. Área LIBERADA.
 
+## BLOQUE DE RELEVO OPERATIVO — 2026-08-19
+
+Este bloque permite que otro programador tome el turno sin depender del contexto del chat.
+
+### Protocolo del capitán
+
+- Reclamar el área en este documento antes de modificar código; al terminar, registrar resultado y liberar el área.
+- No usar `git reset --hard`, `git checkout --`, borrados masivos ni `push --force`.
+- El árbol de trabajo puede contener cambios ajenos: hacer *stage* únicamente de los archivos propios.
+- Antes de una migración: auditar el esquema, ejecutar generación/typecheck/build y no usar `accept_data_loss` sin autorización explícita.
+- Registrar aquí commit, ejecución de CI y despliegue; no dar por terminado un cambio sin verificación.
+
+### Base de datos y migraciones
+
+- La migración `20260818060000_add_pinterest_integration` fue aplicada en producción mediante `migrate.yml` (GitHub Actions run `32129537461`).
+- La ejecución terminó con “Your database is now in sync with your Prisma schema.”; no se usó seed ni `accept_data_loss`.
+- La conexión de migración usa Session pooler (`:5432`). No hay migraciones Prisma pendientes respecto al esquema actual; el trabajo pendiente de Pinterest es funcional (UI/publicación), no otra migración.
+
+### Pinterest
+
+- Cliente API v5 y rutas OAuth están en los commits `300a2d8` y `40f41c7` (`/api/search-integrations/pinterest/connect` y `/callback`). Los tokens se cifran en `PinterestIntegration`.
+- En Vercel Producción existen `PINTEREST_CLIENT_ID` y `PINTEREST_CLIENT_SECRET`; App ID `1602125`. El secreto nunca debe aparecer en chat, logs o commits.
+- Pendiente: botón en Configuración, flujo OAuth visible, listar/seleccionar board y crear Pin. No activar publicación automática antes de que el usuario seleccione el board.
+
+### Instagram y redes validadas
+
+- Stories usa la imagen del artículo y `media_type=STORIES`, con salida 9:16 (commits `43eb2f3` y `d462758`). Las pruebas reales agotaron el tiempo después de crear el `creation_id`; antes de reintentar hay que consultar estado/error de Meta y validar elegibilidad/permisos de la cuenta.
+- Reels reales quedan fuera hasta disponer de vídeo; no llamar “Reel” a una imagen estática.
+- LinkedIn y Facebook Pages ya fueron validados con la imagen del artículo normalizada a 4:3 (1200x900). Threads sigue operativo.
+
+### Comandos mínimos de verificación
+
+```bash
+npm run typecheck --workspace=apps/web
+npm run build --workspace=apps/worker
+npx prisma generate --schema=packages/db/prisma/schema.prisma
+```
+
+Al tomar el turno, leer primero este bloque y los últimos commits de `main`; después actualizar esta sección con cualquier decisión o bloqueo nuevo.
