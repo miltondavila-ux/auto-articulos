@@ -252,7 +252,7 @@ export default function DashboardNav() {
             overflow: "hidden",
             boxShadow: "0 16px 40px rgba(0, 0, 0, 0.12)",
             padding: 4,
-            maxHeight: "min(70vh, 520px)",
+            maxHeight: "min(70svh, 520px)",
             overflowY: "auto",
           }}
         >

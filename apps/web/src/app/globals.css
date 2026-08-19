@@ -36,7 +36,18 @@
 body {
   margin: 0;
   padding: 0;
+  /*
+   * En un teléfono, 100vh mide la pantalla CON la barra del navegador
+   * escondida. Al deslizar con el dedo esa barra aparece y desaparece, el
+   * alto visible cambia, pero 100vh no — y la página salta y parece cambiar
+   * de tamaño. Era el bug de responsive reportado por Milton el 16/8/2026.
+   *
+   * svh (small viewport height) mide siempre el alto MÍNIMO, con la barra
+   * visible, así que no cambia durante el desplazamiento. La primera línea es
+   * el respaldo para navegadores que no conocen svh.
+   */
   min-height: 100vh;
+  min-height: 100svh;
   background: #ffffff;
   color: #1d1d1f;
   overflow-x: hidden;
@@ -291,4 +302,10 @@ textarea {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.28);
+}
+
+/* Alto de pantalla completo sin saltos en móvil. Ver la nota en body. */
+.pantalla-completa {
+  min-height: 100vh;
+  min-height: 100svh;
 }
