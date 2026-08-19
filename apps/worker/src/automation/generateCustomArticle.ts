@@ -8,6 +8,44 @@ interface CustomArticleResult {
 }
 
 /**
+ * El editor de 10minutesWebsite muestra las tablas sin un estilo útil en
+ * móvil. Convertimos las tablas informativas simples que puede devolver el
+ * modelo en listas: conservan cada dato, pero se leen como parte natural del
+ * artículo y se adaptan a cualquier ancho de pantalla.
+ */
+export function convertGeneratedTablesToLists(html: string): string {
+  return html.replace(/<table\b[^>]*>([\s\S]*?)<\/table\s*>/gi, (_table, tableBody: string) => {
+    const rows = [...tableBody.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr\s*>/gi)]
+      .map((row) => {
+        const cells = [...row[1].matchAll(/<(th|td)\b[^>]*>([\s\S]*?)<\/\1\s*>/gi)];
+        return cells.length
+          ? {
+              cells: cells.map((cell) => cell[2].trim()),
+              isHeader: cells.every((cell) => cell[1].toLowerCase() === "th"),
+            }
+          : null;
+      })
+      .filter((row): row is { cells: string[]; isHeader: boolean } => row !== null);
+
+    if (!rows.length) return "";
+    const dataRows = rows[0].isHeader ? rows.slice(1) : rows;
+    if (!dataRows.length) return "";
+
+    const items = dataRows
+      .map(({ cells }) => {
+        const [label, ...details] = cells;
+        if (!label) return "";
+        const detail = details.filter(Boolean).join(" — ");
+        return `<li><strong>${label}</strong>${detail ? `: ${detail}` : ""}</li>`;
+      })
+      .filter(Boolean)
+      .join("");
+
+    return items ? `<ul>${items}</ul>` : "";
+  });
+}
+
+/**
  * Los estilos corporativos existentes pueden pedir marcadores de identidad.
  * Nunca deben hacer fallar toda la generación: el teléfono se resuelve más
  * adelante con el dato real del perfil y el nombre se conoce en el worker.
@@ -39,7 +77,9 @@ export function sanitizeGeneratedArticleResult(
     title: replaceIdentityMarkers(article.title, false).trim(),
     summary: replaceIdentityMarkers(article.summary || "", false).trim(),
     contentHtml: removeScripts(
-      replaceIdentityMarkers(article.contentHtml, true),
+      convertGeneratedTablesToLists(
+        replaceIdentityMarkers(article.contentHtml, true),
+      ),
     ).trim(),
   };
 }
@@ -69,7 +109,7 @@ Debes responder ÚNICAMENTE en formato JSON con la siguiente estructura exacta:
 {
   "title": "El título final u optimizado para el artículo (máximo 200 caracteres)",
   "summary": "Un resumen/extracto corto y atractivo para SEO, de 150 a 280 caracteres",
-  "contentHtml": "El cuerpo del artículo redactado en formato HTML limpio. Utiliza etiquetas semánticas como <h2>, <h3>, <p>, <strong>, <em>, <ul>, <ol>, <li>. NO incluyas etiquetas estructurales de documento completo como <html>, <head>, <body>, <!DOCTYPE>, ni bloques de código markdown como \`\`\`html."
+  "contentHtml": "El cuerpo del artículo redactado en formato HTML limpio. Utiliza etiquetas semánticas como <h2>, <h3>, <p>, <strong>, <em>, <ul>, <ol>, <li>. Para datos comparativos usa listas con etiquetas en negrita; NO uses <table>, <tr>, <th> ni <td>. NO incluyas etiquetas estructurales de documento completo como <html>, <head>, <body>, <!DOCTYPE>, ni bloques de código markdown como \`\`\`html."
 }
 
 Asegúrate de que el HTML generado sea válido y esté limpio.`;
@@ -79,6 +119,7 @@ Asegúrate de que el HTML generado sea válido y esté limpio.`;
 Límites obligatorios para que el resultado pueda guardarse correctamente:
 - Escribe un máximo de 1.200 palabras en contentHtml.
 - No incluyas <script>, JSON-LD, CSS, códigos QR, botones de contacto ni enlaces tel:/wa.me: Auto Artículos añade los datos de contacto reales de forma segura.
+- No uses tablas HTML. Si quieres destacar datos, redacta una lista de puntos breves y claros, con el dato en <strong> y su explicación a continuación.
 - No uses marcadores de datos personales; Auto Artículos los resuelve de forma segura si aparecieran.
 - Escapa correctamente cualquier comilla dentro del valor JSON de contentHtml.`;
 
