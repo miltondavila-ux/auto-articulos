@@ -273,7 +273,7 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
               botón te lleva a una pantalla de inicio de sesión y la conexión se
               queda a medias. Pedido de Milton (19/8/2026).
             */}
-            <div className="row" style={{ padding: 16, marginBottom: 14, fontSize: 13, display: "block" }}>
+            <div style={{ padding: 16, marginBottom: 14, fontSize: 13, border: "1px solid #d2d2d7", borderRadius: 14, background: "#ffffff" }}>
               <strong style={{ color: "#1d1d1f", fontSize: 14 }}>
                 Antes de pulsar el botón, haz esto
               </strong>
