@@ -1,4 +1,8 @@
 import type { ReactNode } from "react";
+import {
+  DEFAULT_PLATFORM_DOMAIN,
+  platformContactEmail,
+} from "@auto-articulos/shared";
 
 const linkStyle = { color: "#66d9e8", textDecoration: "none" } as const;
 
@@ -105,7 +109,7 @@ export function PublicInfoPage({
             textAlign: "center",
           }}
         >
-          © 2026 Auto Artículos · Contacto: miltondavila@gmail.com
+          © 2026 Auto Artículos · Contacto: {platformContactEmail(DEFAULT_PLATFORM_DOMAIN)}
         </footer>
       </div>
     </main>

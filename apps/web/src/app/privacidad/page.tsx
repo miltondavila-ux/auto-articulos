@@ -4,6 +4,18 @@ import {
   publicHeadingStyle,
   publicLinkStyle,
 } from "@/components/public-info-page";
+import {
+  DEFAULT_PLATFORM_DOMAIN,
+  platformContactEmail,
+} from "@auto-articulos/shared";
+
+/*
+ * Contacto del servidor por defecto: estas páginas son públicas y quien las
+ * lee todavía no tiene sesión, así que no se puede saber si viene de
+ * 10minutesWebsite o de tagcrush. Dentro del panel sí se sabe y se usa
+ * platformContactEmail(user.platformDomain).
+ */
+const CONTACTO = platformContactEmail(DEFAULT_PLATFORM_DOMAIN);
 
 export const metadata: Metadata = {
   title: "Política de Privacidad | Auto Artículos",
@@ -54,8 +66,8 @@ export default function PrivacyPage() {
         el token guardado, y también puede revocar el acceso desde su Cuenta de
         Google. Para solicitar la eliminación de la cuenta y sus datos, escribe
         a{" "}
-        <a href="mailto:miltondavila@gmail.com" style={publicLinkStyle}>
-          miltondavila@gmail.com
+        <a href={`mailto:${CONTACTO}`} style={publicLinkStyle}>
+          {CONTACTO}
         </a>
         .
       </p>
@@ -73,8 +85,8 @@ export default function PrivacyPage() {
         Podemos actualizar esta política cuando cambie el servicio o la
         normativa. La fecha vigente siempre aparecerá al inicio. Las preguntas
         de privacidad pueden enviarse a{" "}
-        <a href="mailto:miltondavila@gmail.com" style={publicLinkStyle}>
-          miltondavila@gmail.com
+        <a href={`mailto:${CONTACTO}`} style={publicLinkStyle}>
+          {CONTACTO}
         </a>
         .
       </p>
