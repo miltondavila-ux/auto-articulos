@@ -161,7 +161,8 @@ export default function ComoFuncionaPage() {
             color: "#1d1d1f",
           }}
         >
-          Indexarte y posicionarte en tiempo récord
+          Que te encuentren. En Google, en Bing y dentro de la
+          inteligencia artificial.
         </h1>
         <p
           style={{
@@ -172,9 +173,41 @@ export default function ComoFuncionaPage() {
             color: "#6e6e73",
           }}
         >
-          En Google, en Bing y en las inteligencias artificiales. Con acceso,
-          además, a un motor de publicación en redes sociales inteligente y
-          equilibrado.
+          Indexarte y posicionarte en tiempo récord. No dentro de un año:
+          desde la primera semana de trabajo constante.
+        </p>
+        <p
+          style={{
+            margin: "16px auto 0",
+            maxWidth: 760,
+            fontSize: 17,
+            lineHeight: "25px",
+            color: "#1d1d1f",
+          }}
+        >
+          Esto ya no va solo de salir en Google. Hoy mucha gente pregunta
+          directamente a una inteligencia artificial y se queda con la
+          respuesta que le da, sin llegar a mirar una lista de resultados. Esa
+          respuesta se construye con lo que la IA encontró indexado. Si tu sitio
+          no está ahí, no apareces en la conversación: no es que salgas
+          abajo, es que no existes.
+        </p>
+        <p
+          style={{
+            margin: "16px auto 0",
+            maxWidth: 760,
+            fontSize: 17,
+            lineHeight: "25px",
+            color: "#1d1d1f",
+          }}
+        >
+          Y hay algo que se suele pasar por alto: la persona que busca en Google
+          es exactamente la misma que después abre Instagram, LinkedIn o
+          Facebook. No son dos públicos distintos. Por eso esto no termina en tu
+          web: el sistema lleva a tus redes los temas que esa gente ya está
+          buscando, y cada visita que vuelve desde ahí le confirma a Google que
+          tu sitio merece estar arriba. Buscadores, inteligencia artificial y
+          redes empujan en la misma dirección.
         </p>
         <p
           style={{
@@ -185,10 +218,11 @@ export default function ComoFuncionaPage() {
             color: "#6e6e73",
           }}
         >
-          Dicho en simple: esta plataforma escribe artículos y los publica
-          dentro de tu página web, uno detrás de otro, sobre los temas que la
-          gente está buscando de verdad. Cuantos más artículos útiles tengas,
-          más veces aparece tu web cuando alguien busca algo de lo tuyo.
+          Dicho en simple: esta plataforma escribe artículos sobre lo que tu
+          público busca de verdad y los publica dentro de tu página web, uno
+          detrás de otro. Cuantos más artículos útiles tengas, más veces te
+          encuentran — en el buscador, en la inteligencia artificial y en las
+          redes.
         </p>
       </header>
 

@@ -143,7 +143,11 @@ Ruta: /dashboard/como-funciona
 
 Explica en texto, sin gráficas, para qué sirve la plataforma y en qué orden ocurre todo.
 
-El objetivo es indexarte y posicionarte en tiempo récord en Google Search Console, en Bing y en las inteligencias artificiales, además de darte acceso a un motor de publicación en redes sociales inteligente y equilibrado.
+El objetivo es que te encuentren: en Google, en Bing y dentro de la inteligencia artificial, en tiempo récord.
+
+Explica por qué ya no basta con salir en Google: hoy mucha gente le pregunta directamente a una inteligencia artificial y se queda con esa respuesta, que se construye con lo que la IA encontró indexado. Si tu sitio no está ahí, no aparece en la conversación.
+
+También explica por qué las redes sociales cuentan para el posicionamiento: quien busca en Google es la misma persona que luego abre Instagram o LinkedIn. Por eso el sistema lleva a tus redes los temas que esa gente ya está buscando, y cada visita que vuelve desde ahí refuerza tu posición en el buscador.
 
 Lo explica en tres pasos:
 
