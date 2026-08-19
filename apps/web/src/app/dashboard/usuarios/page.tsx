@@ -467,18 +467,19 @@ export default function UsuariosPage() {
       // Category / Type filter
       if (userCategory === "admin" && u.role !== "admin") return false;
       if (userCategory === "user" && u.role !== "user") return false;
-      if (userCategory === "trial" && !u.isTrialSignup) return false;
+      const enPrueba = u.isTrialSignup && u.role !== "admin";
+      if (userCategory === "trial" && !enPrueba) return false;
       if (
         userCategory === "trial_active" &&
-        (!u.isTrialSignup || u.trialUnlocked)
+        (!enPrueba || u.trialUnlocked)
       )
         return false;
       if (
         userCategory === "trial_unlocked" &&
-        (!u.isTrialSignup || !u.trialUnlocked)
+        (!enPrueba || !u.trialUnlocked)
       )
         return false;
-      if (userCategory === "standard" && u.isTrialSignup) return false;
+      if (userCategory === "standard" && enPrueba) return false;
       if (userCategory === "no_image_credits" && u.hasImageCredits !== false)
         return false;
 
@@ -2125,10 +2126,15 @@ function UserCard({
                     : "Se registró desde Solicitar prueba; sin desbloquear, pierde el acceso al terminar los 7 días."
                 }
               >
-                PRUEBA
-                {!user.trialUnlocked && user.trialStartedAt
-                  ? ` · ${trialDaysRemaining(new Date(user.trialStartedAt))}d`
-                  : ""}
+                {user.trialUnlocked
+                  ? "Prueba desbloqueada"
+                  : user.trialStartedAt
+                    ? (() => {
+                        const dias = trialDaysRemaining(new Date(user.trialStartedAt));
+                        if (dias <= 0) return "Prueba vencida";
+                        return `Prueba · le queda${dias === 1 ? "" : "n"} ${dias} día${dias === 1 ? "" : "s"}`;
+                      })()
+                    : "Prueba gratuita"}
               </span>
             )}
             {user.connectedDomain && (
