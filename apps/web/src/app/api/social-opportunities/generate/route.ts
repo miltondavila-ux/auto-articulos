@@ -18,6 +18,7 @@ type ArticleCandidate = {
   text: string;
   summary: string | null;
   articleUrl: string | null;
+  searchQueries?: string[];
 };
 
 const formulas = [
@@ -36,7 +37,8 @@ const formulas = [
 async function generateGPTCopy(
   platform: string,
   finalTitle: string,
-  summary: string
+  summary: string,
+  searchQueries: string[] = [],
 ): Promise<string> {
   if (!OPENAI_API_KEY) {
     return `${finalTitle}\n\n${summary}\n\nLeer más: [ENLACE]`;
@@ -53,6 +55,9 @@ async function generateGPTCopy(
     : isFacebookPage
     ? "Tono cálido y útil de Facebook Page: presenta el beneficio del artículo, usa uno o dos párrafos breves y una invitación clara a leerlo. Debe ser diferente a Threads y LinkedIn."
     : "Tono súper casual y directo, como un mensaje rápido a un amigo.";
+  const searchContext = searchQueries.length > 0
+    ? `- Consultas reales que están llevando usuarios a este artículo: ${searchQueries.join(" | ")}\n`
+    : "";
   try {
     const response = await fetch(OPENAI_CHAT_URL, {
       method: "POST",
@@ -76,7 +81,9 @@ async function generateGPTCopy(
               `- NO escribas la URL del artículo directamente. Escribe la palabra exacta "[ENLACE]" (en mayúsculas y con corchetes) al final, integrada en tu frase de cierre (Ej: "Te lo explico con peras y manzanas aquí: [ENLACE]").\n\n` +
               `Datos:\n` +
               `- Título del artículo: ${finalTitle}\n` +
-              `- Resumen: ${summary}`,
+              `- Resumen: ${summary}\n` +
+              searchContext +
+              `- Usa las consultas reales solo como contexto: no las enumeres, no inventes datos y mantén un tono natural.`,
           },
         ],
         temperature: 0.85,
@@ -98,35 +105,110 @@ async function selectArticlesWithGSC(userId: string): Promise<ArticleCandidate[]
 
   try {
     const accessToken = await getGoogleAccessToken(decryptSecret(gsc.encryptedRefreshToken));
+    // Search Console consolida los últimos días con retraso. Excluirlos evita
+    // comparar datos parciales contra un período anterior completo.
     const endDate = new Date();
-    const startDate = new Date(Date.now() - 30 * 86400000);
+    endDate.setUTCDate(endDate.getUTCDate() - 3);
+    const startDate = new Date(endDate);
+    startDate.setUTCDate(startDate.getUTCDate() - 27);
+    const previousEndDate = new Date(startDate);
+    previousEndDate.setUTCDate(previousEndDate.getUTCDate() - 1);
+    const previousStartDate = new Date(previousEndDate);
+    previousStartDate.setUTCDate(previousStartDate.getUTCDate() - 27);
     const fmt = (d: Date) => d.toISOString().slice(0, 10);
 
-    const rows = await queryGoogleSearchAnalytics(
-      accessToken,
-      gsc.siteUrl,
-      fmt(startDate),
-      fmt(endDate),
-      ["page"],
-    );
+    const [rows, previousRows] = await Promise.all([
+      queryGoogleSearchAnalytics(
+        accessToken,
+        gsc.siteUrl,
+        fmt(startDate),
+        fmt(endDate),
+        ["query", "page"],
+      ),
+      queryGoogleSearchAnalytics(
+        accessToken,
+        gsc.siteUrl,
+        fmt(previousStartDate),
+        fmt(previousEndDate),
+        ["query", "page"],
+      ),
+    ]);
 
     if (rows.length === 0) return [];
 
-    const gscUrls = rows.map((r) => r.keys[0]);
+    const articleUrls = Array.from(new Set(rows.map((row) => row.keys[1]).filter(Boolean)));
 
     const articles = await prisma.title.findMany({
       where: {
         run: { userId },
         status: "success",
-        articleUrl: { in: gscUrls },
+        articleUrl: { in: articleUrls },
       },
       select: { id: true, finalTitle: true, text: true, summary: true, articleUrl: true },
     });
+    const articlesByUrl = new Map(
+      articles
+        .filter((article): article is ArticleCandidate & { articleUrl: string } => Boolean(article.articleUrl))
+        .map((article) => [article.articleUrl, article]),
+    );
+    if (articlesByUrl.size === 0) return [];
 
-    const urlOrder = new Map(gscUrls.map((url, i) => [url, i]));
-    articles.sort((a, b) => (urlOrder.get(a.articleUrl!) ?? 999) - (urlOrder.get(b.articleUrl!) ?? 999));
+    const previousByQueryAndPage = new Map(
+      previousRows.map((row) => [`${row.keys[0]}\u0000${row.keys[1]}`, row]),
+    );
+    type PageSignals = {
+      impressions: number;
+      clicks: number;
+      weightedPosition: number;
+      previousImpressions: number;
+      queries: Map<string, number>;
+    };
+    const signalsByUrl = new Map<string, PageSignals>();
 
-    return articles;
+    for (const row of rows) {
+      const [query, page] = row.keys;
+      if (!query || !page || !articlesByUrl.has(page)) continue;
+      const signal = signalsByUrl.get(page) ?? {
+        impressions: 0,
+        clicks: 0,
+        weightedPosition: 0,
+        previousImpressions: 0,
+        queries: new Map<string, number>(),
+      };
+      const previous = previousByQueryAndPage.get(`${query}\u0000${page}`);
+      signal.impressions += row.impressions;
+      signal.clicks += row.clicks;
+      signal.weightedPosition += row.position * row.impressions;
+      signal.previousImpressions += previous?.impressions ?? 0;
+      signal.queries.set(query, (signal.queries.get(query) ?? 0) + row.impressions);
+      signalsByUrl.set(page, signal);
+    }
+
+    return Array.from(signalsByUrl.entries())
+      .map(([articleUrl, signal]) => {
+        const article = articlesByUrl.get(articleUrl)!;
+        const averagePosition = signal.weightedPosition / Math.max(signal.impressions, 1);
+        const ctr = signal.clicks / Math.max(signal.impressions, 1);
+        const growthRate = (signal.impressions - signal.previousImpressions) /
+          Math.max(signal.previousImpressions, 20);
+        const longTailCount = Array.from(signal.queries.keys())
+          .filter((query) => query.trim().split(/\s+/).length >= 3).length;
+        // Priorizamos demanda real, crecimiento, visibilidad alcanzable y
+        // preguntas long tail. Un CTR bajo suma solo cuando ya hay volumen.
+        const score =
+          Math.log10(signal.impressions + 1) * 20 +
+          Math.min(Math.max(growthRate, 0) * 15, 25) +
+          (averagePosition >= 4 && averagePosition <= 20 ? 18 : averagePosition >= 2 && averagePosition < 4 ? 8 : averagePosition <= 40 ? 5 : 0) +
+          (signal.impressions >= 20 && ctr < 0.05 ? 12 : 0) +
+          Math.min(longTailCount, 3) * 5;
+        const searchQueries = Array.from(signal.queries.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([query]) => query);
+        return { article, score, searchQueries };
+      })
+      .sort((a, b) => b.score - a.score)
+      .map(({ article, searchQueries }) => ({ ...article, searchQueries }));
   } catch {
     return [];
   }
@@ -206,15 +288,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const [gscCandidates, recentCandidates] = await Promise.all([
-      selectArticlesWithGSC(userId),
-      selectArticlesWithoutGSC(userId),
-    ]);
-    const candidateMap = new Map<string, ArticleCandidate>();
-    for (const article of [...gscCandidates, ...recentCandidates]) {
-      candidateMap.set(article.id, article);
-    }
-    const allCandidates = Array.from(candidateMap.values());
+    const gscCandidates = await selectArticlesWithGSC(userId);
+    // Solo recurrimos a artículos recientes si no hay evidencia GSC asociada a
+    // artículos publicados. Cuando sí existe, las señales de búsqueda mandan.
+    const allCandidates = gscCandidates.length > 0
+      ? gscCandidates
+      : await selectArticlesWithoutGSC(userId);
 
     const candidateIds = allCandidates.map((article) => article.id);
     const candidatesByUrl = new Map(
@@ -267,7 +346,8 @@ export async function POST(request: Request) {
         const copyText = await generateGPTCopy(
           platform,
           article.finalTitle || article.text,
-          article.summary || ""
+          article.summary || "",
+          article.searchQueries,
         );
 
         const opp = await prisma.socialOpportunity.create({
@@ -287,10 +367,6 @@ export async function POST(request: Request) {
       }
     }
 
-    const source = await prisma.searchIntegration.findUnique({
-      where: { userId_provider: { userId, provider: "google" } },
-    });
-
     if (createdOpportunities.length === 0) {
       return NextResponse.json(
         { error: "Los artículos encontrados ya tienen historial de propuesta, publicación o descarte para las redes seleccionadas." },
@@ -306,7 +382,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({
-      message: `Se generaron ${createdOpportunities.length} nuevas propuestas usando ${source?.siteUrl ? "Google Search Console y artículos recientes" : "artículos publicados recientes"}.`,
+      message: `Se generaron ${createdOpportunities.length} nuevas propuestas usando ${gscCandidates.length > 0 ? "consultas, tendencia y rendimiento de Google Search Console" : "artículos publicados recientes (sin señales de Search Console asociadas)"}.`,
       count: createdOpportunities.length,
     });
   } catch (unexpected) {
