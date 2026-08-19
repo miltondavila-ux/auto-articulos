@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import ModuleIntro, { EnPrueba, IntroP, Modulo } from "@/components/ModuleIntro";
 import { useRouter } from "next/navigation";
 import {
@@ -419,9 +420,29 @@ export default function OportunidadesRedesPage() {
         </div>
 
         {!connectedNetworks.threads && !connectedNetworks.x && !connectedNetworks.linkedin && !connectedNetworks.instagram && !loading && (
-          <p className="notice" style={{ marginTop: 14 }}>
-            Conecta una red social en Configuración para solicitar propuestas.
-          </p>
+          <div className="notice" style={{ marginTop: 14 }}>
+            <p style={{ margin: 0 }}>
+              Todavía no tienes ninguna red social conectada, así que no hay
+              dónde publicar. Conecta al menos una y vuelve aquí: las propuestas
+              se generan a partir de tus artículos ya publicados.
+            </p>
+            <p style={{ margin: "10px 0 0" }}>
+              <Link
+                href="/dashboard/configuracion?tab=social"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  fontWeight: 600,
+                  color: "#0066cc",
+                  textDecoration: "none",
+                }}
+              >
+                Conectar una red social en Configuración
+                <span aria-hidden="true">›</span>
+              </Link>
+            </p>
+          </div>
         )}
 
         {generating && (
