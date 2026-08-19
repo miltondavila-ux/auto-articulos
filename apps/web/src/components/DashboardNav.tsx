@@ -216,7 +216,7 @@ export default function DashboardNav() {
           border: "1px solid rgba(0, 0, 0, 0.08)",
           borderRadius: 12,
           cursor: "pointer",
-          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.06)",
+          boxShadow: "none",
           transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
           fontFamily: "inherit",
         }}
