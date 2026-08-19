@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import PasosAntesDeConectar from "@/components/PasosAntesDeConectar";
 import {
   sectionStyle,
   h2Style,
@@ -84,8 +85,18 @@ export default function BusinessProfileSection() {
             Conectar Google Business Profile
           </button>
           <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>
-            Esta función está en espera de aprobación por parte de Google. Te avisaremos en cuanto esté disponible.
+            Esta función está EN ESPERA DE APROBACIÓN POR PARTE DE GOOGLE. Todavía no se puede usar: el botón está desactivado a propósito. Te avisaremos en cuanto Google la habilite. Mientras tanto, puedes ir dejando lista tu cuenta con los pasos de aquí abajo.
           </p>
+        <PasosAntesDeConectar
+          red="Google Business Profile"
+          extra={
+            <li style={{ marginBottom: 8 }}>
+              <strong>Comprueba que tu ficha está verificada por Google.</strong>{" "}
+              Una ficha sin verificar no puede recibir publicaciones. La
+              verificación la hace Google y puede tardar unos días.
+            </li>
+          }
+        />
         </div>
       ) : data.needsLocation ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
