@@ -12,7 +12,7 @@ import {
   publishInstagramCarousel,
   publishInstagramImage,
   publishInstagramStory,
-  generateSocialImageRaw,
+  getArticleOpenGraphImage,
   publishFacebookPagePost,
 } from "@auto-articulos/shared";
 import { put } from "@vercel/blob";
@@ -36,35 +36,6 @@ async function validateArticleUrl(url: string): Promise<void> {
     if (!res.ok) throw new Error(`La URL del artículo devuelve error ${res.status}. Verifica que el artículo siga publicado en tu blog.`);
   } catch (err) {
     throw new Error(`No se pudo validar la URL del artículo (${url}): ${err instanceof Error ? err.message : String(err)}. Verifica que el artículo siga publicado.`);
-  }
-}
-
-/**
- * Obtiene la imagen pública que el propio artículo declara para compartirse.
- * No generamos una imagen alternativa para LinkedIn: así la publicación usa
- * exactamente la imagen destacada/OG del artículo, igual que su vista previa.
- */
-async function getArticleOpenGraphImage(articleUrl: string): Promise<string | null> {
-  try {
-    const res = await fetch(articleUrl, {
-      redirect: "follow",
-      signal: AbortSignal.timeout(10000),
-      headers: { Accept: "text/html,application/xhtml+xml" },
-    });
-    if (!res.ok) return null;
-
-    const html = await res.text();
-    const match = html.match(
-      /<meta\s+[^>]*(?:property|name)=["']og:image["'][^>]*content=["']([^"']+)["'][^>]*>/i,
-    ) ?? html.match(
-      /<meta\s+[^>]*content=["']([^"']+)["'][^>]*(?:property|name)=["']og:image["'][^>]*>/i,
-    );
-    if (!match?.[1]) return null;
-
-    return new URL(match[1].replace(/&amp;/g, "&"), res.url).toString();
-  } catch (error) {
-    console.warn("No se pudo obtener og:image del artículo para LinkedIn:", error);
-    return null;
   }
 }
 
@@ -139,29 +110,6 @@ async function normalizeSocialImage(imageUrl: string, targetAspect = 3 / 4): Pro
 
 // ─── THREADS ──────────────────────────────────────────────────────────────
 
-async function generateAndHostThreadsImage(
-  titleId: string,
-  summary: string,
-  customImagePrompt?: string | null,
-  logoUrl?: string | null,
-  platform?: string | null,
-): Promise<string | null> {
-  const shouldIncludeLogo = logoUrl && Math.random() < 0.5;
-  const result = await generateSocialImageRaw(summary, customImagePrompt, undefined, shouldIncludeLogo ? logoUrl : null, platform);
-
-  if (!result) return null;
-
-  if (result.url) return result.url;
-
-  if (result.b64) {
-    const buffer = Buffer.from(result.b64, "base64");
-    const blob = await put(`threads/${titleId}.png`, buffer, { access: "public", contentType: "image/png" });
-    return blob.url;
-  }
-
-  return null;
-}
-
 async function processThreadsJob(job: {
   id: string;
   userId: string;
@@ -209,18 +157,8 @@ async function processThreadsJob(job: {
     finalPost = `${finalPost}\n\n${job.articleUrl}`;
   }
 
-  // Generar imagen como respaldo para propuestas creadas antes de este flujo.
-  let imageUrl: string | undefined = undefined;
-  if (!imageUrl && job.titleId) {
-    const [title, user] = await Promise.all([
-      prisma.title.findUnique({ where: { id: job.titleId } }),
-      prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true, businessLogoUrl: true } }),
-    ]);
-    if (title?.summary) {
-      const imageBasis = title.summary || job.articleTitle;
-      imageUrl = (await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt, user?.businessLogoUrl, "threads")) ?? undefined;
-    }
-  }
+  // Threads debe difundir la imagen destacada del artículo, no una imagen IA.
+  const imageUrl = (await getArticleOpenGraphImage(job.articleUrl)) ?? undefined;
 
   const result = await publishThread(accessToken, integration.threadsUserId, finalPost, imageUrl);
 
@@ -295,17 +233,8 @@ async function processTwitterJob(job: {
     finalPost = `${finalPost}\n\n${job.articleUrl}`;
   }
 
-  let imageUrl: string | undefined = undefined;
-  if (!imageUrl && job.titleId) {
-    const [title, user] = await Promise.all([
-      prisma.title.findUnique({ where: { id: job.titleId } }),
-      prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true, businessLogoUrl: true } }),
-    ]);
-    const imageBasis = title?.summary || job.articleTitle;
-    if (title?.summary) {
-      imageUrl = (await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt, user?.businessLogoUrl, "x")) ?? undefined;
-    }
-  }
+  // X debe difundir la imagen destacada del artículo, no una imagen IA.
+  const imageUrl = (await getArticleOpenGraphImage(job.articleUrl)) ?? undefined;
 
   const result = await publishTweet(accessToken, finalPost, imageUrl);
 

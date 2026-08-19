@@ -12,6 +12,7 @@ import {
 
 interface SocialOpportunity {
   id: string;
+  titleId: string | null;
   articleTitle: string;
   articleUrl: string;
   platform: string;
@@ -281,7 +282,7 @@ export default function OportunidadesRedesPage() {
       const res = await fetch("/api/social-opportunities/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ summary: opp.articleTitle, platform: opp.platform }),
+        body: JSON.stringify({ titleId: opp.titleId }),
       });
       const data = await res.json();
       setPreviewModal({
@@ -731,7 +732,7 @@ export default function OportunidadesRedesPage() {
             <div style={{ background: "#f5f5f7", borderRadius: 12, overflow: "hidden", minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
               {previewModal.loading ? (
                 <div className="muted" style={{ textAlign: "center", padding: 30, fontSize: 13 }}>
-                  Generando preview...
+                  Buscando la imagen del artículo...
                 </div>
               ) : previewModal.imageUrl || previewModal.imageBase64 ? (
                 <img
@@ -741,7 +742,7 @@ export default function OportunidadesRedesPage() {
                 />
               ) : (
                 <div style={{ color: "#ff3b30", textAlign: "center", padding: 30, fontSize: 13 }}>
-                  No se pudo generar el preview
+                  Este artículo no tiene una imagen destacada disponible.
                 </div>
               )}
             </div>
