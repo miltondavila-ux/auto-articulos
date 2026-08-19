@@ -30,7 +30,7 @@ const SEPARADOR: CSSProperties = {
 };
 
 const PARRAFO: CSSProperties = {
-  margin: "16px 0 0",
+  margin: "12px 0 0",
   fontSize: 17,
   lineHeight: "25px",
   color: "#1d1d1f",
@@ -95,18 +95,17 @@ export default function ComoFuncionaPage() {
       style={{
         background: "#ffffff",
         borderRadius: 18,
-        padding: "0 40px 72px",
+        padding: "0 clamp(20px, 4vw, 40px) clamp(36px, 5vw, 56px)",
         boxSizing: "border-box",
         width: "100%",
       }}
     >
-      <header style={{ padding: "72px 0 56px", textAlign: "center" }}>
+      <header style={{ padding: "clamp(36px, 6vw, 56px) 0 clamp(28px, 4vw, 40px)", textAlign: "center" }}>
         <h1
           style={{
             margin: "0 auto",
-            maxWidth: 700,
-            fontSize: 48,
-            lineHeight: "52px",
+            fontSize: "clamp(30px, 5vw, 46px)",
+            lineHeight: 1.08,
             fontWeight: 600,
             letterSpacing: "-0.003em",
             color: "#1d1d1f",
@@ -116,8 +115,8 @@ export default function ComoFuncionaPage() {
         </h1>
         <p
           style={{
-            margin: "24px auto 0",
-            maxWidth: 620,
+            margin: "18px auto 0",
+            maxWidth: 760,
             fontSize: 19,
             lineHeight: "27px",
             color: "#6e6e73",
@@ -131,7 +130,7 @@ export default function ComoFuncionaPage() {
 
       <hr style={SEPARADOR} />
 
-      <section style={{ padding: "48px 0 8px", maxWidth: 700 }}>
+      <section style={{ padding: "clamp(28px, 4vw, 40px) 0 4px" }}>
         <h2 style={TITULO_SECCION}>Cómo sucede</h2>
         <p style={{ ...PARRAFO, color: "#6e6e73" }}>
           Son tres pasos, en este orden. El primero se hace una sola vez; los
@@ -140,7 +139,7 @@ export default function ComoFuncionaPage() {
       </section>
 
       {PASOS.map((paso) => (
-        <section key={paso.numero} style={{ padding: "40px 0", maxWidth: 700 }}>
+        <section key={paso.numero} style={{ padding: "clamp(24px, 3vw, 32px) 0" }}>
           <p
             style={{
               margin: 0,
@@ -169,7 +168,7 @@ export default function ComoFuncionaPage() {
               {parrafo}
             </p>
           ))}
-          <p style={{ margin: "20px 0 0" }}>
+          <p style={{ margin: "14px 0 0" }}>
             <Link href={paso.accion.href} style={ENLACE}>
               {paso.accion.texto}
               <span aria-hidden="true">›</span>
@@ -180,7 +179,7 @@ export default function ComoFuncionaPage() {
 
       <hr style={SEPARADOR} />
 
-      <section style={{ padding: "48px 0 0", maxWidth: 700 }}>
+      <section style={{ padding: "clamp(28px, 4vw, 40px) 0 0" }}>
         <h2 style={TITULO_SECCION}>Para qué sirve todo esto</h2>
         <p style={PARRAFO}>Para posicionarte con autoridad en internet.</p>
         <p style={PARRAFO}>

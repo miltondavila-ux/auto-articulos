@@ -75,7 +75,8 @@ const pillQuiet: CSSProperties = {
 
 const stepCardStyle: CSSProperties = {
   ...sectionStyle,
-  padding: 28,
+  padding: "clamp(18px, 3vw, 28px)",
+  marginTop: 14,
 };
 
 /** Encabezado de paso: número en círculo, título y una línea de apoyo. */
@@ -89,7 +90,7 @@ function StepHeader({
   hint: string;
 }) {
   return (
-    <div style={{ display: "flex", gap: 14, alignItems: "flex-start", marginBottom: 20 }}>
+    <div style={{ display: "flex", gap: 14, alignItems: "flex-start", marginBottom: 16 }}>
       <div
         aria-hidden="true"
         style={{
@@ -550,22 +551,22 @@ export default function OportunidadesPage() {
           >
             Oportunidades
           </h1>
-          <div style={{ marginTop: 14, maxWidth: 720 }}>
-            <p style={{ margin: 0, fontSize: 16, lineHeight: 1.6, color: "#1d1d1f" }}>
+          <div style={{ marginTop: 12 }}>
+            <p style={{ margin: 0, fontSize: 16, lineHeight: 1.55, color: "#1d1d1f" }}>
               Aquí le pides al sistema que te invente títulos de artículos, pero
               no al azar: los saca de lo que <strong>Google ya te está
               mostrando</strong>. Tu Google Search Console sabe qué buscó la
               gente antes de llegar a tu página, y esa información es la que
               usamos.
             </p>
-            <p style={{ margin: "14px 0 0", fontSize: 16, lineHeight: 1.6, color: "#1d1d1f" }}>
+            <p style={{ margin: "10px 0 0", fontSize: 16, lineHeight: 1.55, color: "#1d1d1f" }}>
               Con eso se arman títulos de <strong>cola larga</strong>: búsquedas
               más específicas y menos peleadas, donde entrar es más fácil. Cada
               artículo que se posiciona atrae visitas nuevas, y esas visitas le
               dan más señales a Google sobre tu sitio. Es un efecto bola de
               nieve: empieza pequeño y va creciendo solo.
             </p>
-            <p style={{ margin: "14px 0 0", fontSize: 16, lineHeight: 1.6, color: "#6e6e73" }}>
+            <p style={{ margin: "10px 0 0", fontSize: 16, lineHeight: 1.55, color: "#6e6e73" }}>
               Son tres pasos. Pides el análisis, eliges cómo quieres que se
               escriban y revisas antes de publicar. Nada se publica sin que tú
               lo mandes.
