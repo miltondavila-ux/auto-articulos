@@ -46,6 +46,8 @@ test("normaliza un número local de Estados Unidos para botones y QR", () => {
   assert.match(qr, /href="https:\/\/wa\.me\/17866088613"/);
   assert.match(qr, /quickchart\.io\/chart\?cht=qr/);
   assert.match(qr, /chl=https:\/\/wa\.me\/17866088613/);
+  assert.match(qr, />WHATSAPP<\/span>/);
+  assert.match(qr, /margin-top:8px;line-height:1\.25/);
 });
 
 test("repara un marcador de WhatsApp doblemente codificado", () => {
@@ -70,10 +72,11 @@ test("descarta CTAs generados para usar solamente los botones oficiales", () => 
 });
 
 test("elimina etiquetas huérfanas de CTA generadas por el modelo", () => {
-  const cleaned = removeGeneratedContactLinks("<p>Whatsapp</p><p>Contenido útil.</p><p>Código QR</p>");
+  const cleaned = removeGeneratedContactLinks('<div class="visible-xs visible-sm">&nbsp;</div><p>Whatsapp</p><p>Contenido útil.</p><p>Código QR</p>');
 
   assert.equal(cleaned.includes("Whatsapp"), false);
   assert.equal(cleaned.includes("Código QR"), false);
+  assert.equal(cleaned.includes("visible-xs"), false);
   assert.match(cleaned, /Contenido útil/);
 });
 

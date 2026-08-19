@@ -94,7 +94,7 @@ export function normalizeContactPhone(
   return digits;
 }
 
-/** QR de contacto con el patrón que ya utiliza la plataforma. */
+/** QR de contacto con etiqueta legible y el patrón que ya utiliza la plataforma. */
 export function buildContactQrHtml(
   phone: string,
   country?: string | null,
@@ -103,7 +103,7 @@ export function buildContactQrHtml(
   if (!digits) return "";
 
   const whatsappUrl = `https://wa.me/${digits}`;
-  return `<div class="hidden-xs hidden-sm" style="text-align:left;"><a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer"><img alt="QR Code" src="https://quickchart.io/chart?cht=qr&amp;chl=${whatsappUrl}&amp;chs=140x140&amp;chld=M|0" style="border:0;" /></a></div>`;
+  return `<div class="hidden-xs hidden-sm" style="text-align:left;margin:20px 0;"><a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;flex-direction:column;align-items:center;text-decoration:none;"><img alt="QR Code" src="https://quickchart.io/chart?cht=qr&amp;chl=${whatsappUrl}&amp;chs=140x140&amp;chld=M|0" style="border:0;display:block;" /><span style="margin-top:8px;line-height:1.25;font-size:14px;font-weight:700;letter-spacing:0.04em;color:#1d1d1f;">WHATSAPP</span></a></div>`;
 }
 
 /** Los CTAs del modelo no son confiables: sólo conservamos los botones propios. */
@@ -115,7 +115,10 @@ export function removeGeneratedContactLinks(html: string): string {
     )
     // Al retirar un enlace defectuoso, el modelo a veces deja sólo el título
     // del CTA. No es contenido del artículo ni un contacto funcional.
-    .replace(/<p\b[^>]*>\s*(?:whats\s*app|c[oó]digo\s*qr|qr\s*code)\s*<\/p>/gi, "");
+    .replace(/<p\b[^>]*>\s*(?:whats\s*app|c[oó]digo\s*qr|qr\s*code)\s*<\/p>/gi, "")
+    // Si el enlace eliminado era el único hijo, tampoco dejamos la caja
+    // responsive vacía que el modelo había creado para ese CTA.
+    .replace(/<div\b[^>]*\b(?:visible-xs|visible-sm|hidden-xs|hidden-sm)[^>]*>\s*(?:&nbsp;)?\s*<\/div>/gi, "");
 }
 
 /** Inserta los CTA en dos pausas naturales del artículo, nunca juntos al final. */
