@@ -216,27 +216,43 @@ export async function POST(request: Request) {
     }
     const allCandidates = Array.from(candidateMap.values());
 
-    const activeOpportunities = await prisma.socialOpportunity.findMany({
+    const candidateIds = allCandidates.map((article) => article.id);
+    const candidatesByUrl = new Map(
+      allCandidates
+        .filter((article): article is ArticleCandidate & { articleUrl: string } => Boolean(article.articleUrl))
+        .map((article) => [article.articleUrl, article]),
+    );
+    // Una oportunidad previa ya es historial de distribución: publicada,
+    // descartada o fallida no debe volver a proponerse por accidente.
+    // También revisamos articleUrl para cubrir propuestas heredadas sin titleId.
+    const previousOpportunities = await prisma.socialOpportunity.findMany({
       where: {
         userId,
-        titleId: { in: allCandidates.map((article) => article.id) },
         platform: { in: integrations },
-        status: { in: ["pending", "queued", "processing"] },
+        OR: [
+          { titleId: { in: candidateIds } },
+          { articleUrl: { in: Array.from(candidatesByUrl.keys()) } },
+        ],
       },
-      select: { titleId: true, platform: true },
+      select: { titleId: true, articleUrl: true, platform: true },
     });
-    const activeKeys = new Set(
-      activeOpportunities.map((opportunity) => `${opportunity.titleId}:${opportunity.platform}`),
-    );
+    const usedKeys = new Set<string>();
+    for (const opportunity of previousOpportunities) {
+      if (opportunity.titleId) {
+        usedKeys.add(`${opportunity.titleId}:${opportunity.platform}`);
+      }
+      const article = candidatesByUrl.get(opportunity.articleUrl);
+      if (article) usedKeys.add(`${article.id}:${opportunity.platform}`);
+    }
     const candidates = allCandidates
       .filter((article) =>
-        integrations.some((platform) => !activeKeys.has(`${article.id}:${platform}`)),
+        integrations.some((platform) => !usedKeys.has(`${article.id}:${platform}`)),
       )
       .slice(0, 3);
 
     if (candidates.length === 0) {
       return NextResponse.json(
-        { error: "No hay artículos nuevos disponibles. Todos los artículos publicados ya tienen una oportunidad generada." },
+        { error: "No hay artículos nuevos disponibles. Los artículos candidatos ya fueron propuestos, publicados o descartados para esta red." },
         { status: 400 }
       );
     }
@@ -246,7 +262,7 @@ export async function POST(request: Request) {
     for (const article of candidates) {
       for (const platform of integrations) {
         const opportunityKey = `${article.id}:${platform}`;
-        if (activeKeys.has(opportunityKey)) continue;
+        if (usedKeys.has(opportunityKey)) continue;
 
         const copyText = await generateGPTCopy(
           platform,
@@ -266,12 +282,8 @@ export async function POST(request: Request) {
           },
         });
 
-        // La imagen la genera el worker (processNextOpportunityImage) en
-        // background para no agotar el timeout de Vercel Functions con la
-        // llamada a DALL-E. El usuario la ve aparecer automáticamente.
-
         createdOpportunities.push(opp);
-        activeKeys.add(opportunityKey);
+        usedKeys.add(opportunityKey);
       }
     }
 
@@ -281,14 +293,12 @@ export async function POST(request: Request) {
 
     if (createdOpportunities.length === 0) {
       return NextResponse.json(
-        { error: "Los artículos encontrados ya tienen propuestas para todas las redes y formatos conectados." },
+        { error: "Los artículos encontrados ya tienen historial de propuesta, publicación o descarte para las redes seleccionadas." },
         { status: 400 },
       );
     }
 
-    // Disparar al worker para que genere las imágenes en background y la UI
-    // se actualice automáticamente al refrescar. No esperamos la respuesta
-    // para no bloquear el handler de Vercel.
+    // Despachar el worker de forma no bloqueante para mantener la respuesta ágil.
     if (createdOpportunities.length > 0) {
       void triggerSocialWorkerNow().catch((err) => {
         console.error("[social-opportunities/generate] triggerSocialWorkerNow falló:", err);
