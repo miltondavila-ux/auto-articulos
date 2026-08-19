@@ -554,18 +554,34 @@ export default function OportunidadesPage() {
           </h1>
           <div style={{ marginTop: 12 }}>
             <p style={{ margin: 0, fontSize: 16, lineHeight: 1.55, color: "#1d1d1f" }}>
-              Aquí le pides al sistema que te invente títulos de artículos, pero
-              no al azar: los saca de lo que <strong>Google ya te está
-              mostrando</strong>. Tu Google Search Console sabe qué buscó la
-              gente antes de llegar a tu página, y esa información es la que
-              usamos.
+              Aquí el sistema te propone títulos de artículos. No se los
+              inventa: los deduce de <strong>lo que Google ya te está
+              mostrando</strong>. Tu Google Search Console guarda lo que
+              escribió la gente en el buscador antes de llegar a tu página, y
+              de ahí salen las propuestas: de búsquedas reales, hechas por
+              personas reales que ya llegaron a tu sitio.
             </p>
             <p style={{ margin: "10px 0 0", fontSize: 16, lineHeight: 1.55, color: "#1d1d1f" }}>
-              Con eso se arman títulos de <strong>cola larga</strong>: búsquedas
-              más específicas y menos peleadas, donde entrar es más fácil. Cada
-              artículo que se posiciona atrae visitas nuevas, y esas visitas le
-              dan más señales a Google sobre tu sitio. Es un efecto bola de
-              nieve: empieza pequeño y va creciendo solo.
+              Con eso se arman títulos de <strong>cola larga</strong>. Suena
+              técnico, pero es sencillo: en vez de pelear por una palabra corta
+              y muy disputada como &ldquo;seguros&rdquo;, donde compites contra
+              empresas enormes y no sales nunca, se apunta a la búsqueda larga y
+              concreta que hace una persona con una duda real, del estilo
+              &ldquo;cuánto cuesta un seguro dental para mayores de 60 en
+              Miami&rdquo;.
+            </p>
+            <p style={{ margin: "10px 0 0", fontSize: 16, lineHeight: 1.55, color: "#1d1d1f" }}>
+              Esas búsquedas las hace menos gente, pero casi nadie escribe sobre
+              ellas, así que es mucho más fácil aparecer de primero. Y quien
+              busca así ya sabe lo que quiere: llega más decidido. Juntas
+              muchas búsquedas pequeñas y acabas sumando más visitas que con una
+              grande, a la que de todos modos no ibas a llegar.
+            </p>
+            <p style={{ margin: "10px 0 0", fontSize: 16, lineHeight: 1.55, color: "#1d1d1f" }}>
+              Cada artículo que se posiciona atrae visitas nuevas, y esas
+              visitas le confirman a Google que tu sitio responde bien, lo que
+              hace que el siguiente artículo lo tenga más fácil. Es un efecto
+              bola de nieve: empieza pequeño y va creciendo solo.
             </p>
             <p style={{ margin: "10px 0 0", fontSize: 16, lineHeight: 1.55, color: "#1d1d1f" }}>
               Aquí el tema lo elige el sistema. Si prefieres decidirlo tú y

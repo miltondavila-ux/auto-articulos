@@ -107,9 +107,9 @@ Esta pantalla muestra el avance de la ejecución actual. Úsala para saber si lo
 
 Ruta: /dashboard/oportunidades
 
-En este módulo le pides al sistema que te cree títulos de artículos, pero no al azar: los saca de lo que Google ya te está mostrando. Google Search Console sabe qué buscó la gente antes de llegar a tu página, y esa información es la que se usa.
+En este módulo el sistema te propone títulos de artículos. No se los inventa: los deduce de lo que Google ya te está mostrando. Google Search Console guarda lo que escribió la gente en el buscador antes de llegar a tu página, y de ahí salen las propuestas: de búsquedas reales, hechas por personas reales que ya llegaron a tu sitio.
 
-Con eso se arman títulos de cola larga: búsquedas más específicas y menos peleadas, donde es más fácil entrar. Cada artículo que se posiciona atrae visitas nuevas, y esas visitas le dan más señales a Google sobre tu sitio. Es un efecto bola de nieve: empieza pequeño y va creciendo solo.
+Con eso se arman títulos de cola larga. Es más sencillo de lo que suena: en vez de pelear por una palabra corta y muy disputada como "seguros", donde compites contra empresas enormes, se apunta a la búsqueda larga y concreta de alguien con una duda real, del estilo "cuánto cuesta un seguro dental para mayores de 60 en Miami". Esas búsquedas las hace menos gente, pero casi nadie escribe sobre ellas, así que es mucho más fácil salir de primero, y quien busca así llega más decidido. Cada artículo que se posiciona atrae visitas nuevas, y esas visitas le dan más señales a Google sobre tu sitio. Es un efecto bola de nieve: empieza pequeño y va creciendo solo.
 
 La pantalla está separada en tres pasos.
 

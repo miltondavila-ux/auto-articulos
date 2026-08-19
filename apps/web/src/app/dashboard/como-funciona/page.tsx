@@ -101,11 +101,22 @@ const PASOS = [
         títulos que sabemos que la gente busca, en vez de temas inventados.
       </>,
       <>
-        Esos títulos son de <em>cola larga</em>: búsquedas largas y concretas,
-        del estilo &ldquo;cuánto cuesta un seguro dental en Miami&rdquo; en
-        lugar de &ldquo;seguros&rdquo;. Se pelean menos y por eso es más fácil
-        aparecer en ellas. Tú revisas la lista, borras lo que no te convenza y
-        publicas lo que quieras, de uno en uno o todo junto.
+        Esos títulos son de <em>cola larga</em>. Traducido: en vez de pelear
+        por una palabra corta y muy disputada como &ldquo;seguros&rdquo;, donde
+        compites contra empresas enormes y no apareces nunca, se apunta a la
+        búsqueda larga y concreta de alguien con una duda real, del estilo
+        &ldquo;cuánto cuesta un seguro dental para mayores de 60 en
+        Miami&rdquo;.
+      </>,
+      <>
+        Esas búsquedas las hace menos gente, pero casi nadie escribe sobre
+        ellas, así que es mucho más fácil salir de primero. Y quien busca así
+        llega más decidido, porque ya sabe lo que quiere. Muchas búsquedas
+        pequeñas juntas suman más que una grande a la que no ibas a llegar.
+      </>,
+      <>
+        Tú revisas la lista, borras lo que no te convenza y publicas lo que
+        quieras, de uno en uno o todo junto.
       </>,
       <>
         Mientras se escriben, el avance se ve en{" "}
