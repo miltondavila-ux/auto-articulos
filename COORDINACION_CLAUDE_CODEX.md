@@ -4678,7 +4678,7 @@ Auto Artículos.
 - **Importante:** el repositorio contiene muchos cambios locales ajenos y sin publicar. Este commit no los incluye.
 - **Pendiente para Claude o Milton:** publicar el commit con `git push origin main`. Vercel debería iniciar su despliegue conectado a Git; al finalizar, volver a abrir la URL anterior y confirmar que ya no responde 404.
 
-### 2026-08-18 — Claude: PROYECTO ACTIVO — Simplificación del UX (relevo de Codex)
+### 2026-08-18 — Claude: SIMPLIFICACIÓN DE INTERFAZ — inicio del proyecto (relevo de Codex)
 
 - **Agente:** Claude. **Estado del área:** RESERVADA (interfaz/UX del dashboard).
 - **Antecedente:** Milton relevó a Codex de este aspecto. Claude toma el
@@ -5522,3 +5522,220 @@ resultado de las pruebas y commit antes de liberar el turno.
   `apps/worker/src/businessProfilePublish.ts`; llamada `localPosts.create` en
   `packages/shared/src/google-business-profile.ts`. No se necesita rediseñar
   la integración: falta la autorización de Google y su prueba de aceptación.
+
+---
+
+# PROYECTO ACTIVO — SIMPLIFICACIÓN DE INTERFAZ
+
+> **Nombre confirmado por Milton el 19/8/2026: SIMPLIFICACIÓN DE INTERFAZ.**
+> Todo el trabajo descrito debajo pertenece a este proyecto. Cualquier entrega
+> nueva relacionada con la interfaz o la experiencia de uso se registra aquí,
+> bajo este nombre, para que se pueda identificar y ceder el testigo sin que
+> Milton tenga que explicar nada.
+
+## OBLIGATORIO — cómo se cede el testigo
+
+**Orden de Milton (19/8/2026):** él no debería tener que volver a explicar
+nada de esto. Cualquier programador (Claude, Codex, Antigravity o una persona)
+que tome este proyecto debe poder continuarlo leyendo **solo esta sección**.
+
+Por lo tanto, quien trabaje aquí está obligado a:
+
+1. **Anotar en este documento cada entrega antes de darla por cerrada:** qué se
+   cambió, en qué archivos, con qué commit, qué despliegue lo publicó y cómo se
+   verificó. Sin excepciones, aunque sea un cambio de una línea.
+2. **Anotar también lo que NO se hizo y por qué.** Un pendiente sin registrar es
+   un pendiente perdido.
+3. **Anotar las decisiones de criterio**, no solo el código. Si se eligió una
+   opción entre varias, que se lea el motivo.
+4. **Mantener actualizada la lista de "Estado actual" y "Pendientes"** de abajo.
+   Es lo primero que va a leer quien tome el relevo.
+
+## Cómo se trabaja en este proyecto (reglas ya probadas)
+
+- **Capitanía obligatoria antes de CUALQUIER push**, aunque no haya migración:
+  `scripts/migration-coordinator.sh status` → `claim` → trabajo → verificación →
+  `release`, y pegar reclamo y liberación aquí.
+- **Nunca se trabaja sobre el árbol de Milton.** Él tiene cambios sin commitear
+  de forma permanente. Se usa un worktree limpio creado desde `origin/main`, y
+  se copian o aplican solo las líneas propias.
+- **TRAMPA CONOCIDA del typecheck:** si en el worktree se enlaza el
+  `node_modules` del repo principal, `@auto-articulos/*` resuelve a los paquetes
+  del **repo principal** y se valida el código equivocado sin avisar. Hay que
+  crear un `node_modules` propio con enlaces a cada dependencia, pero con
+  `@auto-articulos/*` apuntando al worktree.
+- **Verificación mínima antes de publicar:** `npm --prefix apps/web run
+  typecheck` en verde, y después del push comprobar que el despliegue de Vercel
+  quedó en `Ready` y que el dominio de producción apunta a él.
+- **Segundo programador en paralelo:** hay otra persona trabajando en
+  `apps/worker`. Claude trabaja en `apps/web`. No cruzar áreas sin coordinar.
+- **`TO-DO.md` no se ejecuta por iniciativa propia.** Solo cuando Milton lo pide.
+  Al ejecutar un ítem, se mueve a "Hecho" con su commit.
+
+## Criterio visual y de redacción que Milton ya aprobó
+
+No hace falta volver a discutirlo; está validado con él:
+
+- **Referencia visual:** las páginas de soporte de Apple
+  (`communities.apple.com`). Valores medidos sobre esa página: fondo `#ffffff`
+  inmaculado, título 48/52 peso 600, texto 17/25 en `#1d1d1f`, separadores de
+  1px en `#d2d2d7`, enlaces `#0066cc`.
+- **Sin sombras en las pantallas.** Solo las conservan los elementos que flotan
+  por encima del contenido: modales, el asistente y los desplegables del menú.
+- **Sin emoticones.** Se conservan los signos tipográficos (✓ ✕ ➔ ● ○).
+- **Paleta cerrada:** blanco, grafito `#1d1d1f`, grises `#6e6e73` `#86868b`
+  `#d2d2d7` `#f5f5f7`, azul de enlace `#0066cc`, y los tres colores de estado
+  (rojo `#ff3b30`, naranja `#ff9500`, verde `#16803c`). Nada más. El azul no se
+  usa en botones: las acciones van en grafito.
+- **Aprovechar el ancho.** Nada de columnas de texto estranguladas dentro de
+  contenedores anchos. Rellenos con `clamp()` para que se adapten solos.
+- **Manual SIEMPRE en el mismo lote** que el cambio, nunca después.
+  (`apps/web/src/content/manual-usuario.ts`). Orden expresa de Milton.
+- **Cada módulo explica qué se hace en él**, arriba, en lenguaje para alguien
+  sin conocimiento previo. Componente `ModuleIntro`.
+- **Los nombres de módulo, en MAYÚSCULAS, negrita y enlazados** a su pantalla.
+  Componente `Modulo`, con registro central en `ModuleIntro.tsx`: nombre y ruta
+  salen de un solo sitio para que no haya enlaces rotos.
+- **Ninguna palabra técnica suelta.** Si aparece "cola larga" o "Search
+  Console", se explica en la misma frase o en la siguiente.
+
+## Estado actual del proyecto (19/8/2026)
+
+Todo lo siguiente está **publicado y verificado en producción**:
+
+| Entrega | Commit |
+|---|---|
+| Cómo Funciona activado (daba 404) y registrado como módulo | `d06241f`, `db0087d` |
+| Menú reordenado y agrupado bajo **Publicaciones** (desplegable) | `be55191`, `9559b67`, `0d228b1` |
+| Widget de estado de configuración eliminado | `8a6a139` |
+| Oportunidades: introducción y tres pasos | `08ad572`, `fb39b66` |
+| Marca blanca Tagcrush y contacto/soporte por servidor | `27fbaf3`, `79607f5` |
+| Cómo Funciona rehecho con el lenguaje de Apple Support | `a85654e`, `8af13bd`, `3b03662`, `13f3744` |
+| Fondo blanco, línea fina y 29 sombras fuera | `d873bd3`, `31a7aa6` |
+| Auditoría de color (156 valores) y 74 pictogramas fuera | `a70089d`, `6f383e7` |
+| Explicación en los 10 módulos, con nombres enlazados | `cd52668`, `b0fd632`, `e22c852` |
+| Bug de responsive en móvil (`100vh` → `100svh`) | `57981ac` |
+| Casillas que se estiraban a todo el ancho | `694f178` |
+| Fuga de marca blanca, cabecera duplicada y asistente fuera de vista | `0860b67` |
+| Límite de artículos: publica lo que cabe y avisa | `9eb3e17`, `d6ab7d9`, `e4a1e40` |
+| Auditoría de botones: 44px táctiles y 10 filas que se desbordaban | `9eb3e17` |
+| Gráfica de ritmo (meta vs. real) y portada a ancho completo | `63ec81d` |
+| Acceso por usuario en tres estados, Facebook y `ModuleGuard` | `25d5fa5`, `aabb47a` |
+| Días restantes de prueba y administradores fuera del filtro | `80ab05e` |
+
+### Decisiones de fondo que conviene conocer
+
+- **El acceso a Oportunidades Redes estaba clavado en el código** a un correo
+  concreto. Por eso Administración no podía dar acceso a nadie más. Se eliminó
+  y ahora manda el permiso real de la cuenta.
+- **`ModuleGuard` comparaba rutas por prefijo de texto**, así que
+  `/dashboard/oportunidades-redes` coincidía con el módulo `oportunidades`.
+  Ahora compara por segmento y gana el módulo más específico.
+- **Permiso por usuario en tres posturas:** heredar la configuración general,
+  dárselo a esta cuenta (pasa por encima del apagado global) o quitárselo. Se
+  guarda en la misma columna `disabledModules`, ahora como objeto JSON. **Es
+  compatible hacia atrás pero NO hacia adelante:** si se revirtiera el código,
+  los permisos por usuario se leerían como vacíos.
+- **Permisos y acceso a módulos se guardan con un solo botón.** Estaban
+  separados y la gente guardaba unos y perdía los otros sin enterarse.
+
+## PENDIENTES
+
+1. **Entrada en Actualizaciones** de todo lo publicado estos días. El hook
+   `post-commit` no puede generarla desde un worktree porque no tiene
+   `DATABASE_URL`, y escribir en la base de producción necesita autorización
+   expresa de Milton. **Bloqueado, esperando su permiso.**
+2. **Verificar con Rafael Zuzolo** que ya se le puede dar acceso a Oportunidades
+   Redes desde Administración. Es la prueba real del cambio de tres estados.
+3. **`platformContactName`** (Estee Soto / Milton Dávila) está en el registro de
+   servidores pero no se muestra en ninguna pantalla: no hay hoy un sitio donde
+   se enseñe una persona de contacto. **Falta decidir dónde.**
+4. **Orden de `SYSTEM_MODULES`** (panel de Administración) no coincide con el
+   orden nuevo del menú. Cosmético.
+5. **`/api/configuration-status`** quedó sin consumidores al eliminar el widget.
+   Es código muerto; no se borró porque Milton tenía cambios sin commitear ahí.
+6. **Ítem de `TO-DO.md` con formato distinto:** la explicación por módulo se
+   pedía como un icono "?" con ventanita flotante, y se hizo como párrafo fijo
+   porque Milton lo pidió así en la conversación. Su decisión si quiere cambiarlo.
+7. **Los archivos sin commitear del árbol de Milton** ya se publicaron casi
+   todos. Queda revisar si sobra algo antes de que él los descarte.
+
+## Cómo probar que algo quedó bien
+
+- **No basta con `curl` a una URL del panel:** el middleware redirige todo
+  `/dashboard/*` sin sesión, así que devuelve 307 tanto para una ruta real como
+  para una inventada. Para comprobar que una ruta existe, mirar el manifiesto de
+  rutas en el log del build de Vercel (`vercel inspect <url> --logs`).
+- **Para comprobar que un cambio llegó:** `git show origin/main:<archivo>` y
+  `vercel inspect https://auto-articulos-web.vercel.app` para confirmar a qué
+  despliegue apunta el dominio.
+
+### 2026-08-19 — SIMPLIFICACIÓN DE INTERFAZ: avisos que llevan a la solución
+
+- **Capitán:** Claude (reclamado y liberado; sin migración).
+- El aviso de Oportunidades Redes decía "conecta una red social en
+  Configuración" pero no enlazaba: había que buscar la pestaña a mano. Ahora
+  explica por qué no hay propuestas y lleva directo a
+  `/dashboard/configuracion?tab=social`.
+- **Criterio que queda para todo el proyecto:** ningún aviso manda a hacer algo
+  sin enlazar al sitio donde se hace.
+- Commit `f138efa`. Typecheck web exit 0. Despliegue `auto-articulos-bxq7iz1m2`
+  en `Ready`, dominio de producción apuntando ahí.
+
+### 2026-08-19 — SIMPLIFICACIÓN DE INTERFAZ: el acceso a un módulo abre su configuración
+
+- **Capitán:** Claude (reclamado y liberado; sin migración). Commit `42b9faa`.
+- **Petición de Milton:** "si yo le doy chance a una persona de que vea un
+  módulo que está prohibido para el resto, deben también verse las partes de la
+  configuración de ese módulo".
+- **Causa encontrada — el correo clavado estaba en TRES capas**, no solo en la
+  interfaz. Por eso ningún ajuste en Administración funcionaba:
+  1. `apps/web/src/lib/social-access.ts` → `canUseSocialModule`, que protege las
+     rutas de la API. **Esta era la decisiva:** aunque la pantalla mostrara los
+     conectores, el servidor habría rechazado la petición igual.
+  2. La condición de la pestaña de redes en Configuración.
+  3. Cada conector por separado: Threads, Instagram, Facebook Pages y LinkedIn.
+- **Ahora:** todo responde al permiso que asigna el administrador. Si la cuenta
+  tiene acceso al módulo `oportunidades-redes`, ve la pestaña y puede conectar
+  sus redes. Los administradores lo conservan siempre, para dar soporte.
+- **Criterio que queda para el proyecto:** dar acceso a un módulo implica dar
+  acceso a su configuración. Un permiso que no deja configurar no es un permiso.
+- **Aviso para quien siga:** si aparece otro comportamiento reservado a una
+  cuenta concreta, buscar el correo en el código antes de tocar la interfaz;
+  suele estar repetido en la capa de API, que es la que de verdad bloquea.
+
+### PENDIENTE (anotado por pedido de Milton, 15/8/2026 — NO ejecutar sin que lo pida)
+
+**1. Contradicción real detectada, sin arreglar todavía: "Conectado / verificadas"
+es falso.** Encontrado analizando la cuenta de Stefany Meza, que muestra al mismo
+tiempo un error rojo ("No se pudo iniciar sesión en https://10minuteswebsite.net")
+y el Paso 1 en verde diciendo "Credenciales de 10minutesWebsite guardadas y
+**verificadas** de forma segura".
+
+- **Causa:** `POST /api/credentials` NUNCA prueba las credenciales — cifra,
+  guarda y responde `ok` (ver `apps/web/src/app/api/credentials/route.ts`). El
+  `GET` devuelve `configured: true` solo porque existe una fila en la base. El
+  Paso 1 del wizard (`step1Done = credentialsConfigured`) se pone verde por
+  haber ESCRITO algo, no por haber ENTRADO. La palabra "verificadas" en el
+  texto es literalmente falsa.
+- **Aclaración importante para quien retome:** la validación real de
+  credenciales al guardar NUNCA se implementó en esta sesión, pese a que se
+  conversó. Lo que sí existe es la detección automática de servidor DURANTE la
+  sincronización de categorías (`fetchCategoriesDetectingServer`).
+- **Arreglo propuesto (pendiente de visto bueno de Milton):** que el Paso 1 no
+  se ponga verde hasta que un login real haya funcionado. Como solo el worker
+  puede hacer login de verdad (necesita Playwright), lo correcto es mostrar
+  "guardadas, pendientes de verificar" al guardar, y que se ponga verde solo
+  cuando una sincronización de categorías tenga éxito — esa ES la prueba real.
+- **Bug menor asociado:** cuando fallan los TRES servidores, el mensaje de error
+  nombra solo el primero (`throw firstError` en `categorySync.ts`), dando a
+  entender que solo se intentó uno. Debería decir que se probaron todos.
+
+**2. Mejora de interfaz pedida por Milton para el botón de obtener categorías:**
+que muestre una pantalla de progreso con ETAPAS, como la que ya existe cuando el
+sistema analiza Google Search Console buscando oportunidades. Hoy solo hay "un
+pegoste de imagen con un reloj" que no dice si la cosa está funcionando o no.
+Además pidió que haya un **LOG visible** que permita revisar dónde se quedó el
+sistema y cómo va. Referencia de lo que quiere: las etapas animadas del análisis
+de oportunidades (`apps/web/src/app/dashboard/oportunidades/page.tsx`,
+`analysisStages`). Orden explícita: **no romper nada de lo ya hecho.**
