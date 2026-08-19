@@ -130,10 +130,11 @@ export async function POST(request: NextRequest) {
    * publique lo que sí cabe y se le diga con claridad cuántos entraron,
    * cuántos quedaron fuera y cuándo volver.
    */
-  const cupos: { disponible: number; motivo: string }[] = [
+  const cupos: { disponible: number; tope: number; motivo: string }[] = [
     {
       disponible: user.maxTitlesPerBatch,
-      motivo: `tu máximo es de ${user.maxTitlesPerBatch} títulos por lote`,
+      tope: user.maxTitlesPerBatch,
+      motivo: "tu lote máximo",
     },
   ];
 
@@ -180,7 +181,8 @@ export async function POST(request: NextRequest) {
     });
     cupos.push({
       disponible: user.monthlyArticleLimit - publishedThisMonth,
-      motivo: `tu límite mensual es de ${user.monthlyArticleLimit} artículos`,
+      tope: user.monthlyArticleLimit,
+      motivo: "tu límite mensual",
     });
   }
   if (user.dailyArticleLimit !== null) {
@@ -195,7 +197,8 @@ export async function POST(request: NextRequest) {
     });
     cupos.push({
       disponible: user.dailyArticleLimit - publishedToday,
-      motivo: `tu límite diario es de ${user.dailyArticleLimit} artículos`,
+      tope: user.dailyArticleLimit,
+      motivo: "tu límite diario",
     });
   }
 
@@ -206,7 +209,7 @@ export async function POST(request: NextRequest) {
   if (permitidos === 0) {
     return NextResponse.json(
       {
-        error: `No puedes publicar más por ahora: ${cupoMasEstrecho.motivo} y ya lo alcanzaste. Vuelve mañana e inténtalo de nuevo.`,
+        error: `Has alcanzado ${cupoMasEstrecho.tope}, que es ${cupoMasEstrecho.motivo} asignado por el administrador de Auto Artículos. Regresa mañana y tendrás la cuota renovada. Ten en cuenta que ${cupoMasEstrecho.tope} cada día son ${cupoMasEstrecho.tope * 30} artículos al mes, más que suficiente para alcanzar tus objetivos.`,
       },
       { status: 403 },
     );
@@ -217,7 +220,7 @@ export async function POST(request: NextRequest) {
   const titulosAPublicar = titles.slice(0, permitidos);
   const avisoDeCupo =
     descartados.length > 0
-      ? `Se enviaron a publicar ${permitidos} de los ${titles.length} títulos porque ${cupoMasEstrecho.motivo}. Los ${descartados.length} restantes no se publicaron: vuelve mañana y envíalos de nuevo.`
+      ? `Seleccionaste ${titles.length} artículos y tu máximo es de ${cupoMasEstrecho.tope}. Se enviaron a publicar ${permitidos}. Los ${descartados.length} restantes quedaron escritos abajo: podrás publicarlos mañana, cuando se te renueve la cuota.`
       : null;
 
   const run = await prisma.run.create({

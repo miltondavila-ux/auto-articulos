@@ -47,6 +47,22 @@ export default function FloatingAssistant() {
 
   // Estados para posicionamiento de arrastre
   const [position, setPosition] = useState<{ right: number; bottom: number } | null>(null);
+
+  /*
+   * Permite abrir el asistente desde cualquier parte de la plataforma con una
+   * pregunta ya escrita, disparando el evento "auto-articulos:preguntar".
+   * Lo usan los círculos de ayuda que acompañan a los avisos: la persona pulsa
+   * y llega al chat con la pregunta puesta, en vez de tener que redactarla.
+   */
+  useEffect(() => {
+    function alPreguntar(evento: Event) {
+      const detalle = (evento as CustomEvent<{ pregunta?: string }>).detail;
+      setOpen(true);
+      if (detalle?.pregunta) setMessage(detalle.pregunta);
+    }
+    window.addEventListener("auto-articulos:preguntar", alPreguntar);
+    return () => window.removeEventListener("auto-articulos:preguntar", alPreguntar);
+  }, []);
   const [isDragging, setIsDragging] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);

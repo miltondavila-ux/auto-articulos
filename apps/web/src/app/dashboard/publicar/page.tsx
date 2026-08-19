@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import ModuleIntro, { IntroP, Modulo } from "@/components/ModuleIntro";
+import AvisoCupo from "@/components/AvisoCupo";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -395,6 +396,25 @@ export default function PublicarPage() {
             Desactivar indexación en buscadores para este lote (por defecto queda
             activada, como en la plataforma)
           </label>
+          {overLimit && (
+            <AvisoCupo
+              titulo={`Seleccionaste ${titleCount} artículos y tu máximo es de ${maxTitlesPerBatch}`}
+              pregunta={`Seleccioné ${titleCount} artículos pero mi máximo por lote es ${maxTitlesPerBatch}. ¿Qué pasa con los que no entran y cuándo puedo publicarlos?`}
+            >
+              <p style={{ margin: 0 }}>
+                Se publicarán <strong>{maxTitlesPerBatch}</strong> ahora, en cuanto
+                confirmes. Los <strong>{titleCount - maxTitlesPerBatch}</strong>{" "}
+                restantes no se pierden: quedan escritos en el cuadro de arriba y
+                podrás publicarlos mañana, cuando se te renueve la cuota.
+              </p>
+              <p style={{ margin: "10px 0 0", color: "#6e6e73", fontSize: 15 }}>
+                Ese máximo lo asigna el administrador de Auto Artículos. Aunque
+                parezca poco, {maxTitlesPerBatch} al día son{" "}
+                {maxTitlesPerBatch * 30} artículos al mes, de sobra para
+                posicionarte.
+              </p>
+            </AvisoCupo>
+          )}
           <button
             onClick={handleIniciar}
             disabled={
@@ -402,8 +422,7 @@ export default function PublicarPage() {
               hasActiveRun ||
               titlesText.trim().length === 0 ||
               !selectedCategoryId ||
-              !contentLanguage ||
-              overLimit
+              !contentLanguage
             }
             style={disabledStyle(
               buttonStyle,
@@ -411,15 +430,16 @@ export default function PublicarPage() {
                 hasActiveRun ||
                 titlesText.trim().length === 0 ||
                 !selectedCategoryId ||
-                !contentLanguage ||
-                overLimit,
+                !contentLanguage,
             )}
           >
             {hasActiveRun
               ? "Ejecución en curso..."
               : starting
                 ? "Iniciando..."
-                : "Iniciar"}
+                : overLimit
+                  ? `Confirmar y publicar ${maxTitlesPerBatch}`
+                  : "Iniciar"}
           </button>
           {!selectedCategoryId && !hasActiveRun && (
             <p style={{ fontSize: 13, color: "#6e6e73", marginTop: 8 }}>
