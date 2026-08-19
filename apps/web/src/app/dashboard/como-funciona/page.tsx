@@ -8,46 +8,56 @@ export const metadata: Metadata = {
     "Qué hace Auto Artículos, en qué orden ocurre y qué debes hacer tú en cada paso.",
 };
 
-// Explicación en texto, sin gráficas y sin emoticones (pedido de Milton,
-// 18/8/2026). La primera versión era texto suelto sobre el fondo del panel y
-// se veía desnuda; ahora usa las mismas tarjetas blancas que el resto de la
-// plataforma, con más aire y tipografía más grande.
+/*
+ * Estilo tomado de las páginas de soporte de Apple (communities.apple.com),
+ * que Milton dio como referencia el 18/8/2026. Valores medidos sobre esa
+ * página, no inventados:
+ *
+ *   fondo         #ffffff, inmaculado, sin tarjetas flotantes ni sombras
+ *   título        48px / 52px, peso 600, interletraje -0.003em, #1d1d1f
+ *   texto         17px / 25px, #1d1d1f
+ *   separadores   línea de 1px en #d2d2d7
+ *   enlaces       #0066cc
+ *
+ * La estructura se sostiene con líneas finas y espacio en blanco. Sin
+ * gráficas y sin emoticones, como pidió.
+ */
 
-const tarjeta: CSSProperties = {
-  background: "#ffffff",
-  border: "1px solid rgba(0, 0, 0, 0.07)",
-  borderRadius: 22,
-  boxShadow: "0 12px 38px rgba(0, 0, 0, 0.06)",
-  boxSizing: "border-box",
-  width: "100%",
-};
-
-const eyebrow: CSSProperties = {
+const SEPARADOR: CSSProperties = {
+  border: "none",
+  borderTop: "1px solid #d2d2d7",
   margin: 0,
-  fontSize: 12,
-  fontWeight: 600,
-  letterSpacing: "0.08em",
-  textTransform: "uppercase",
-  color: "#86868b",
 };
 
-const enlace: CSSProperties = {
+const PARRAFO: CSSProperties = {
+  margin: "16px 0 0",
+  fontSize: 17,
+  lineHeight: "25px",
+  color: "#1d1d1f",
+};
+
+const TITULO_SECCION: CSSProperties = {
+  margin: 0,
+  fontSize: 28,
+  lineHeight: "32px",
+  fontWeight: 600,
+  letterSpacing: "-0.003em",
+  color: "#1d1d1f",
+};
+
+const ENLACE: CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
-  gap: 6,
-  padding: "10px 20px",
-  borderRadius: 980,
-  border: "1px solid #d2d2d7",
-  background: "#ffffff",
-  color: "#1d1d1f",
-  fontSize: 14,
-  fontWeight: 500,
+  gap: 4,
+  fontSize: 17,
+  lineHeight: "25px",
+  color: "#0066cc",
   textDecoration: "none",
 };
 
 const PASOS = [
   {
-    numero: "01",
+    numero: 1,
     titulo: "Configura tu cuenta",
     cuerpo: [
       "Es lo primero, y lo único que no puede saltarse. Sin la configuración completa, el sistema no tiene con qué trabajar.",
@@ -56,7 +66,7 @@ const PASOS = [
     accion: { texto: "Ir a Configuración", href: "/dashboard/configuracion" },
   },
   {
-    numero: "02",
+    numero: 2,
     titulo: "Publica tus artículos",
     cuerpo: [
       "Aquí tienes dos caminos, y puedes usar los dos.",
@@ -66,7 +76,7 @@ const PASOS = [
     accion: { texto: "Ver Oportunidades SEO/AEO", href: "/dashboard/oportunidades" },
   },
   {
-    numero: "03",
+    numero: 3,
     titulo: "Lleva lo publicado a las redes",
     cuerpo: [
       "Con artículos ya publicados, Oportunidades para Redes Sociales te permite llevar los más relevantes a tus redes.",
@@ -83,36 +93,33 @@ export default function ComoFuncionaPage() {
   return (
     <div
       style={{
-        maxWidth: 860,
-        margin: "0 auto",
-        display: "flex",
-        flexDirection: "column",
-        gap: 20,
-        paddingBottom: 40,
+        background: "#ffffff",
+        borderRadius: 18,
+        padding: "0 40px 72px",
+        boxSizing: "border-box",
+        width: "100%",
       }}
     >
-      {/* El objetivo */}
-      <section style={{ ...tarjeta, padding: "64px 40px", textAlign: "center" }}>
-        <p style={eyebrow}>El objetivo</p>
+      <header style={{ padding: "72px 0 56px", textAlign: "center" }}>
         <h1
           style={{
-            margin: "16px auto 0",
-            maxWidth: 620,
-            fontSize: 42,
-            lineHeight: 1.1,
+            margin: "0 auto",
+            maxWidth: 700,
+            fontSize: 48,
+            lineHeight: "52px",
             fontWeight: 600,
-            letterSpacing: "-0.035em",
+            letterSpacing: "-0.003em",
             color: "#1d1d1f",
           }}
         >
-          Indexarte y posicionarte en tiempo récord.
+          Indexarte y posicionarte en tiempo récord
         </h1>
         <p
           style={{
-            margin: "22px auto 0",
-            maxWidth: 560,
+            margin: "24px auto 0",
+            maxWidth: 620,
             fontSize: 19,
-            lineHeight: 1.55,
+            lineHeight: "27px",
             color: "#6e6e73",
           }}
         >
@@ -120,124 +127,63 @@ export default function ComoFuncionaPage() {
           Con acceso, además, a un motor de publicación en redes sociales
           inteligente y equilibrado.
         </p>
-      </section>
+      </header>
 
-      {/* Cómo sucede */}
-      <section style={{ ...tarjeta, padding: "40px 40px 36px" }}>
-        <p style={eyebrow}>Cómo sucede</p>
-        <h2
-          style={{
-            margin: "14px 0 0",
-            fontSize: 28,
-            fontWeight: 600,
-            letterSpacing: "-0.025em",
-            color: "#1d1d1f",
-          }}
-        >
-          Tres pasos, en este orden.
-        </h2>
-        <p
-          style={{
-            margin: "12px 0 0",
-            fontSize: 17,
-            lineHeight: 1.6,
-            color: "#6e6e73",
-          }}
-        >
-          El primero se hace una sola vez. Los otros dos se repiten tantas veces
-          como quieras.
+      <hr style={SEPARADOR} />
+
+      <section style={{ padding: "48px 0 8px", maxWidth: 700 }}>
+        <h2 style={TITULO_SECCION}>Cómo sucede</h2>
+        <p style={{ ...PARRAFO, color: "#6e6e73" }}>
+          Son tres pasos, en este orden. El primero se hace una sola vez; los
+          otros dos se repiten tantas veces como quieras.
         </p>
       </section>
 
       {PASOS.map((paso) => (
-        <section key={paso.numero} style={{ ...tarjeta, padding: "40px" }}>
-          <div style={{ display: "flex", gap: 26, alignItems: "flex-start" }}>
-            <span
-              aria-hidden="true"
-              style={{
-                flexShrink: 0,
-                fontSize: 40,
-                fontWeight: 300,
-                letterSpacing: "-0.03em",
-                color: "#d2d2d7",
-                lineHeight: 1,
-                fontVariantNumeric: "tabular-nums",
-                paddingTop: 2,
-              }}
-            >
-              {paso.numero}
-            </span>
-            <div style={{ minWidth: 0 }}>
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: 24,
-                  fontWeight: 600,
-                  letterSpacing: "-0.025em",
-                  color: "#1d1d1f",
-                }}
-              >
-                {paso.titulo}
-              </h3>
-              {paso.cuerpo.map((parrafo) => (
-                <p
-                  key={parrafo.slice(0, 40)}
-                  style={{
-                    margin: "16px 0 0",
-                    fontSize: 17,
-                    lineHeight: 1.65,
-                    color: "#1d1d1f",
-                  }}
-                >
-                  {parrafo}
-                </p>
-              ))}
-              <p style={{ margin: "26px 0 0" }}>
-                <Link href={paso.accion.href} style={enlace}>
-                  {paso.accion.texto}
-                  <span aria-hidden="true" style={{ opacity: 0.5 }}>
-                    ›
-                  </span>
-                </Link>
-              </p>
-            </div>
-          </div>
+        <section key={paso.numero} style={{ padding: "40px 0", maxWidth: 700 }}>
+          <p
+            style={{
+              margin: 0,
+              fontSize: 14,
+              lineHeight: "20px",
+              fontWeight: 600,
+              color: "#6e6e73",
+            }}
+          >
+            Paso {paso.numero}
+          </p>
+          <h3
+            style={{
+              margin: "6px 0 0",
+              fontSize: 24,
+              lineHeight: "28px",
+              fontWeight: 600,
+              letterSpacing: "-0.003em",
+              color: "#1d1d1f",
+            }}
+          >
+            {paso.titulo}
+          </h3>
+          {paso.cuerpo.map((parrafo) => (
+            <p key={parrafo.slice(0, 40)} style={PARRAFO}>
+              {parrafo}
+            </p>
+          ))}
+          <p style={{ margin: "20px 0 0" }}>
+            <Link href={paso.accion.href} style={ENLACE}>
+              {paso.accion.texto}
+              <span aria-hidden="true">›</span>
+            </Link>
+          </p>
         </section>
       ))}
 
-      {/* Para qué sirve */}
-      <section
-        style={{
-          ...tarjeta,
-          background: "#1d1d1f",
-          border: "1px solid #1d1d1f",
-          padding: "64px 40px",
-          textAlign: "center",
-        }}
-      >
-        <p style={{ ...eyebrow, color: "#86868b" }}>Para qué sirve todo esto</p>
-        <p
-          style={{
-            margin: "16px auto 0",
-            maxWidth: 620,
-            fontSize: 32,
-            lineHeight: 1.25,
-            fontWeight: 600,
-            letterSpacing: "-0.03em",
-            color: "#f5f5f7",
-          }}
-        >
-          Para posicionarte con autoridad en internet.
-        </p>
-        <p
-          style={{
-            margin: "22px auto 0",
-            maxWidth: 600,
-            fontSize: 17,
-            lineHeight: 1.65,
-            color: "#a1a1a6",
-          }}
-        >
+      <hr style={SEPARADOR} />
+
+      <section style={{ padding: "48px 0 0", maxWidth: 700 }}>
+        <h2 style={TITULO_SECCION}>Para qué sirve todo esto</h2>
+        <p style={PARRAFO}>Para posicionarte con autoridad en internet.</p>
+        <p style={PARRAFO}>
           Aparecer en los resultados de la inteligencia artificial, de Google y
           de Bing es lo más importante que le puede pasar a tu negocio en
           internet. Es la diferencia entre que te encuentren y que no sepan que
