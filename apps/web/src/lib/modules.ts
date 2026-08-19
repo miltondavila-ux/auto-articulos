@@ -8,18 +8,22 @@ export interface SystemModule {
   description: string;
 }
 
+// El orden es el mismo que el del menú (ver DashboardNav), para que el panel
+// de Administración se lea igual que lo que ve la persona usuaria. Ya no
+// afecta a la seguridad: ModuleGuard elige la coincidencia más específica, no
+// la primera de la lista.
 export const SYSTEM_MODULES: SystemModule[] = [
+  {
+    id: "como-funciona",
+    label: "Cómo Funciona",
+    href: "/dashboard/como-funciona",
+    description: "Explicación visual del flujo de trabajo y automatización del sistema.",
+  },
   {
     id: "publicar",
     label: "Publicar",
     href: "/dashboard/publicar",
     description: "Generación y publicación de artículos individuales y en lote.",
-  },
-  {
-    id: "publicaciones-en-curso",
-    label: "Publicaciones en Curso",
-    href: "/dashboard/publicaciones-en-curso",
-    description: "Monitoreo en tiempo real de artículos y lotes en procesamiento.",
   },
   {
     id: "oportunidades",
@@ -34,16 +38,16 @@ export const SYSTEM_MODULES: SystemModule[] = [
     description: "Distribución de contenido e ideas para redes sociales.",
   },
   {
+    id: "publicaciones-en-curso",
+    label: "Publicaciones en Curso",
+    href: "/dashboard/publicaciones-en-curso",
+    description: "Monitoreo en tiempo real de artículos y lotes en procesamiento.",
+  },
+  {
     id: "historial",
     label: "Historial",
     href: "/dashboard/historial",
     description: "Historial completo de artículos publicados y eventos de log.",
-  },
-  {
-    id: "configuracion",
-    label: "Configuración",
-    href: "/dashboard/configuracion",
-    description: "Ajustes de cuenta, idioma, integraciones y llaves del sistema.",
   },
   {
     id: "actualizaciones",
@@ -52,10 +56,10 @@ export const SYSTEM_MODULES: SystemModule[] = [
     description: "Registro de novedades, cambios y mejoras visibles del sistema.",
   },
   {
-    id: "como-funciona",
-    label: "Cómo Funciona",
-    href: "/dashboard/como-funciona",
-    description: "Explicación visual del flujo de trabajo y automatización del sistema.",
+    id: "configuracion",
+    label: "Configuración",
+    href: "/dashboard/configuracion",
+    description: "Ajustes de cuenta, idioma, integraciones y llaves del sistema.",
   },
 ];
 
