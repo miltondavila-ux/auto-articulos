@@ -200,7 +200,7 @@ export default async function DashboardLayout({
           margin: "0 0 16px",
         }}
       >
-        📱 Esta aplicación funciona en el celular, pero se recomienda usarla
+        Esta aplicación funciona en el celular, pero se recomienda usarla
         desde una computadora para una mejor experiencia.
       </p>
       {blocked ? (

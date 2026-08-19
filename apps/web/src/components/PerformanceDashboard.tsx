@@ -48,7 +48,7 @@ function empathyMessage(stats: DashboardStats): {
   if (stats.streak >= 3) {
     return {
       color: "emerald",
-      title: `🔥 ¡${stats.streak} días seguidos publicando!`,
+      title: `¡${stats.streak} días seguidos publicando!`,
       text: "Excelente ritmo constante — así se construye posicionamiento a largo plazo.",
     };
   }

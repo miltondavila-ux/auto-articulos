@@ -622,7 +622,7 @@ export default function UsuariosPage() {
       label: "Artículos publicados",
       value: totalPublished.toLocaleString("es-US"),
       detail: "Suma de todas las cuentas",
-      color: "#5e5ce6",
+      color: "#1d1d1f",
     },
     {
       label: "Base de datos usada",
@@ -791,7 +791,7 @@ export default function UsuariosPage() {
                 display: "inline-flex",
                 padding: "2px 8px",
                 borderRadius: 999,
-                background: tab === t.id ? "#e8f2ff" : "#f5f5f7",
+                background: tab === t.id ? "#f5f5f7" : "#f5f5f7",
                 color: tab === t.id ? "#1d1d1f" : "#6e6e73",
                 fontSize: 10,
                 fontWeight: 600,
@@ -1539,9 +1539,9 @@ export default function UsuariosPage() {
           <h2 style={h2Style}>
             {editingPromptId ? "Editar estilo de redacción" : "Agregar nuevo estilo de redacción (Prompt)"}
           </h2>
-          <p style={{ fontSize: 13, color: "#6b7280" }}>
+          <p style={{ fontSize: 13, color: "#6e6e73" }}>
             Los prompts de redacción personalizados permiten a los usuarios elegir diferentes estilos de escritura al generar artículos.
-            Puedes usar placeholders como <code style={{ background: "#f1f1f1", padding: "2px 4px", borderRadius: 4 }}>{"{title}"}</code> o <code style={{ background: "#f1f1f1", padding: "2px 4px", borderRadius: 4 }}>{"{keyword}"}</code> en el texto del prompt, que serán reemplazados automáticamente con el tema del artículo.
+            Puedes usar placeholders como <code style={{ background: "#f5f5f7", padding: "2px 4px", borderRadius: 4 }}>{"{title}"}</code> o <code style={{ background: "#f5f5f7", padding: "2px 4px", borderRadius: 4 }}>{"{keyword}"}</code> en el texto del prompt, que serán reemplazados automáticamente con el tema del artículo.
           </p>
 
           <form onSubmit={handleSavePrompt} style={{ marginTop: 14 }}>
@@ -1599,8 +1599,8 @@ export default function UsuariosPage() {
                 padding: "10px 14px",
                 borderRadius: 8,
                 marginTop: 14,
-                background: promptBanner.type === "error" ? "#fdecec" : "#eafaf0",
-                color: promptBanner.type === "error" ? "#d64545" : "#1e8a4b",
+                background: promptBanner.type === "error" ? "#fff2f1" : "#eafaf0",
+                color: promptBanner.type === "error" ? "#d64545" : "#16803c",
                 fontSize: 13,
               }}
             >
@@ -1610,9 +1610,9 @@ export default function UsuariosPage() {
 
           <h2 style={{ ...h2Style, marginTop: 28 }}>Estilos de redacción registrados</h2>
           {loadingPrompts ? (
-            <p style={{ fontSize: 13, color: "#6b7280" }}>Cargando estilos...</p>
+            <p style={{ fontSize: 13, color: "#6e6e73" }}>Cargando estilos...</p>
           ) : prompts.length === 0 ? (
-            <p style={{ fontSize: 13, color: "#6b7280" }}>No hay estilos personalizados guardados. Todos los artículos se generarán con el flujo estándar.</p>
+            <p style={{ fontSize: 13, color: "#6e6e73" }}>No hay estilos personalizados guardados. Todos los artículos se generarán con el flujo estándar.</p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 14 }}>
               {prompts.map((p) => (
@@ -1627,7 +1627,7 @@ export default function UsuariosPage() {
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <strong style={{ fontSize: 15, color: "#16181d" }}>{p.name}</strong>
+                    <strong style={{ fontSize: 15, color: "#1d1d1f" }}>{p.name}</strong>
                     <div style={{ display: "flex", gap: 8 }}>
                       <button
                         onClick={() => {
@@ -1665,8 +1665,8 @@ export default function UsuariosPage() {
                   <pre
                     style={{
                       fontSize: 12,
-                      color: "#4b5563",
-                      background: "#f9fafb",
+                      color: "#6e6e73",
+                      background: "#f5f5f7",
                       padding: 10,
                       borderRadius: 6,
                       whiteSpace: "pre-wrap",
@@ -2101,7 +2101,7 @@ function UserCard({
                     : "Se registró desde Solicitar prueba; sin desbloquear, pierde el acceso al terminar los 7 días."
                 }
               >
-                🎁 PRUEBA
+                PRUEBA
                 {!user.trialUnlocked && user.trialStartedAt
                   ? ` · ${trialDaysRemaining(new Date(user.trialStartedAt))}d`
                   : ""}
@@ -2120,7 +2120,7 @@ function UserCard({
                 }}
                 title={`Dominio vinculado: ${user.connectedDomain}`}
               >
-                🌐 {user.connectedDomain}
+                {user.connectedDomain}
               </span>
             )}
             {user.hasImageCredits === false && (
@@ -2136,7 +2136,7 @@ function UserCard({
                 }}
                 title="Esta cuenta se quedó sin créditos de imagen en 10minutesWebsite."
               >
-                ⚠️ SIN CRÉDITOS IMAGEN
+                SIN CRÉDITOS IMAGEN
               </span>
             )}
           </div>
@@ -2193,13 +2193,13 @@ function UserCard({
 
           <Field label="Dominio Web Vinculado">
             <span style={{ fontSize: 13, color: user.connectedDomain ? "#1d1d1f" : "#6e6e73", wordBreak: "break-all" }}>
-              {user.connectedDomain ? `🌐 ${user.connectedDomain}` : "Sin dominio vinculado"}
+              {user.connectedDomain ? `${user.connectedDomain}` : "Sin dominio vinculado"}
             </span>
           </Field>
 
           <Field label="Cuenta 10minutesWebsite">
             <span style={{ fontSize: 13, color: user.tenMinutesUsername ? "#1d1d1f" : "#6e6e73", wordBreak: "break-all" }}>
-              {user.tenMinutesUsername ? `👤 ${user.tenMinutesUsername}` : "Sin credenciales guardadas"}
+              {user.tenMinutesUsername ? `${user.tenMinutesUsername}` : "Sin credenciales guardadas"}
             </span>
           </Field>
 
@@ -2245,7 +2245,7 @@ function UserCard({
                   checked={permInstagram}
                   onChange={(e) => setPermInstagram(e.target.checked)}
                   disabled={savingPermissions}
-                  style={{ accentColor: "#8134af", width: 16, height: 16 }}
+                  style={{ accentColor: "#1d1d1f", width: 16, height: 16 }}
                 />
                 Publicar en Instagram
               </label>
@@ -2255,7 +2255,7 @@ function UserCard({
                   checked={permLinkedIn}
                   onChange={(e) => setPermLinkedIn(e.target.checked)}
                   disabled={savingPermissions}
-                  style={{ accentColor: "#0077b5", width: 16, height: 16 }}
+                  style={{ accentColor: "#1d1d1f", width: 16, height: 16 }}
                 />
                 Publicar en LinkedIn
               </label>

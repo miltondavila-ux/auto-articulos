@@ -133,7 +133,7 @@ function TitleProgressRow({
                 : title.status === "error"
                   ? "#fff2f1"
                   : title.status === "processing"
-                    ? "#e8f2ff"
+                    ? "#f5f5f7"
                     : "#f5f5f7",
             color:
               title.status === "success"

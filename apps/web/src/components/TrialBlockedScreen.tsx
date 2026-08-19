@@ -15,14 +15,14 @@ export default function TrialBlockedScreen() {
         alignItems: "center",
         textAlign: "center",
         gap: 18,
-        background: "#0d214a",
+        background: "#1d1d1f",
         border: "1px solid rgba(77, 216, 232, 0.25)",
         borderRadius: 16,
         padding: "48px 24px",
         marginTop: 24,
       }}
     >
-      <h2 style={{ margin: 0, fontSize: 22, color: "#f2f5fb" }}>
+      <h2 style={{ margin: 0, fontSize: 22, color: "#f5f5f7" }}>
         Tu período de prueba terminó
       </h2>
       <p
@@ -31,7 +31,7 @@ export default function TrialBlockedScreen() {
           maxWidth: 480,
           fontSize: 14,
           lineHeight: 1.6,
-          color: "#a8b3c7",
+          color: "#86868b",
         }}
       >
         Esta plataforma está disponible únicamente para las personas
@@ -44,7 +44,7 @@ export default function TrialBlockedScreen() {
         target="_blank"
         rel="noopener noreferrer"
         style={{
-          background: "linear-gradient(135deg, #1d1d1f 0%, #1b3f9e 100%)",
+          background: "linear-gradient(135deg, #1d1d1f 0%, #1d1d1f 100%)",
           color: "#fff",
           fontWeight: 700,
           fontSize: 14,
@@ -63,7 +63,7 @@ export default function TrialBlockedScreen() {
         height={160}
         style={{ borderRadius: 8, background: "#fff", padding: 8 }}
       />
-      <p style={{ margin: 0, fontSize: 12, color: "#6b7a94" }}>
+      <p style={{ margin: 0, fontSize: 12, color: "#86868b" }}>
         Escanea el código o toca el botón para escribirle directamente.
       </p>
     </div>

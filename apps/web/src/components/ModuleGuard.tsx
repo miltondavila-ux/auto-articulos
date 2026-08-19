@@ -55,7 +55,7 @@ export default function ModuleGuard({ children }: { children: ReactNode }) {
           marginRight: "auto",
         }}
       >
-        <div style={{ fontSize: 40, marginBottom: 12 }}>🛠️</div>
+        <div style={{ fontSize: 40, marginBottom: 12 }}></div>
         <h2 style={{ fontSize: 22, color: "#1d1d1f", margin: "0 0 10px" }}>
           Módulo en mantenimiento
         </h2>

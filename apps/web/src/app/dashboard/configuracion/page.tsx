@@ -592,7 +592,7 @@ export default function ConfiguracionPage() {
     {
       id: "wizard",
       eyebrow: "Paso a Paso",
-      label: "🚀 Configuración Inicial",
+      label: "Configuración Inicial",
       description:
         "Guía paso a paso interactiva para conectar tu web, categorías, idioma y Google Search Console.",
       badge: credentialsConfigured && categories.length > 0 && contentLanguage ? "✓ Listo" : "Guiado",
@@ -600,7 +600,7 @@ export default function ConfiguracionPage() {
     {
       id: "integrations",
       eyebrow: "Buscadores",
-      label: "🔍 Indexación & SEO",
+      label: "Indexación & SEO",
       description:
         "Conecta Google Search Console y Bing Webmaster Tools para monitorear y mejorar la indexación de tus artículos.",
     },
@@ -609,7 +609,7 @@ export default function ConfiguracionPage() {
           {
             id: "social" as const,
             eyebrow: "Redes Sociales",
-            label: "📱 Publicación Automática",
+            label: "Publicación Automática",
             description:
               "Conecta Instagram, Threads y Google Business Profile para publicar tus artículos en redes sociales.",
           },
@@ -618,7 +618,7 @@ export default function ConfiguracionPage() {
     {
       id: "platform",
       eyebrow: productName,
-      label: "🔐 Cuenta & Contenido",
+      label: "Cuenta & Contenido",
       description:
         "Credenciales, categorías, idioma de redacción, firma y teléfono de contacto.",
       badge: credentialsConfigured ? "✓ Listo" : undefined,
@@ -626,7 +626,7 @@ export default function ConfiguracionPage() {
     {
       id: "mobile",
       eyebrow: "Dispositivos",
-      label: "📲 App Móvil",
+      label: "App Móvil",
       description:
         "Código QR e instrucciones para instalar Auto Artículos en tu celular.",
     },
@@ -868,7 +868,7 @@ export default function ConfiguracionPage() {
                     display: "inline-flex",
                     padding: "2px 8px",
                     borderRadius: 999,
-                    background: isActive ? "#e8f2ff" : "#f5f5f7",
+                    background: isActive ? "#f5f5f7" : "#f5f5f7",
                     color: isActive ? "#1d1d1f" : "#6e6e73",
                     fontSize: 11,
                     fontWeight: 600,
@@ -994,7 +994,7 @@ export default function ConfiguracionPage() {
                   gap: 4,
                 }}
               >
-                🔒 Cifrado AES-256-GCM
+                Cifrado AES-256-GCM
               </span>
             </div>
 
@@ -1255,7 +1255,7 @@ export default function ConfiguracionPage() {
                           boxShadow: "none",
                         }}
                       >
-                        📂 {c.name}
+                        {c.name}
                         {c.panel ? ` (${c.panel})` : ""}
                       </span>
                     ))}
@@ -1267,7 +1267,7 @@ export default function ConfiguracionPage() {
                       style={{
                         fontSize: 12,
                         fontWeight: 700,
-                        color: "#5e5ce6",
+                        color: "#1d1d1f",
                         letterSpacing: "0.04em",
                         textTransform: "uppercase",
                         marginBottom: 6,
@@ -1290,14 +1290,14 @@ export default function ConfiguracionPage() {
                             style={{
                               fontSize: 12,
                               fontWeight: 600,
-                              color: "#5e5ce6",
+                              color: "#1d1d1f",
                               background: "rgba(94, 92, 230, 0.08)",
                               border: "1px solid rgba(94, 92, 230, 0.25)",
                               padding: "5px 12px",
                               borderRadius: 20,
                             }}
                           >
-                            ⚡ {c.name}
+                            {c.name}
                             {c.panel ? ` (${c.panel})` : ""}
                           </span>
                         ))}
@@ -1331,7 +1331,7 @@ export default function ConfiguracionPage() {
                   borderRadius: 999,
                 }}
               >
-                🌐 {activeLangName}
+                {activeLangName}
               </span>
             </div>
 
@@ -1417,7 +1417,7 @@ export default function ConfiguracionPage() {
           {/* Estilo de Redacción por Defecto */}
           <section style={sectionStyle}>
             <h2 style={h2Style}>Estilo de redacción por defecto</h2>
-            <p style={{ fontSize: 13, color: "#64748b", marginBottom: 12 }}>
+            <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 12 }}>
               Selecciona el estilo de escritura que se usará por defecto para tus artículos. Puedes cambiarlo individualmente al publicar un lote o ejecutar una oportunidad.
             </p>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -1571,14 +1571,14 @@ export default function ConfiguracionPage() {
                 style={{
                   fontSize: 11,
                   fontWeight: 700,
-                  color: "#5e5ce6",
+                  color: "#1d1d1f",
                   background: "rgba(94, 92, 230, 0.08)",
                   padding: "4px 10px",
                   borderRadius: 999,
                   border: "1px solid rgba(94, 92, 230, 0.25)",
                 }}
               >
-                📸 Marca personal
+                Marca personal
               </span>
             </div>
 
@@ -1638,14 +1638,14 @@ export default function ConfiguracionPage() {
                 style={{
                   fontSize: 11,
                   fontWeight: 700,
-                  color: "#5e5ce6",
+                  color: "#1d1d1f",
                   background: "rgba(94, 92, 230, 0.08)",
                   padding: "4px 10px",
                   borderRadius: 999,
                   border: "1px solid rgba(94, 92, 230, 0.25)",
                 }}
               >
-                🎨 Personalización IA
+                Personalización IA
               </span>
             </div>
 
@@ -1766,7 +1766,7 @@ export default function ConfiguracionPage() {
                   textTransform: "uppercase",
                 }}
               >
-                📱 CÓDIGO QR DIRECTO
+                CÓDIGO QR DIRECTO
               </span>
               <h2 style={{ ...h2Style, marginTop: 10, fontSize: 18 }}>
                 Abre Auto Artículos en tu Celular
@@ -1798,7 +1798,7 @@ export default function ConfiguracionPage() {
             {/* PWA Instructions */}
             <div>
               <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 14px 0", color: "#1d1d1f" }}>
-                💡 ¿Cómo agregar a la pantalla de inicio?
+                ¿Cómo agregar a la pantalla de inicio?
               </h3>
 
               <div
@@ -1811,7 +1811,7 @@ export default function ConfiguracionPage() {
                 }}
               >
                 <p style={{ fontSize: 13, fontWeight: 700, margin: "0 0 4px 0", color: "#1d1d1f" }}>
-                  🍏 En iPhone / iPad (Safari):
+                  En iPhone / iPad (Safari):
                 </p>
                 <ol style={{ fontSize: 12, color: "#6e6e73", margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
                   <li>Abre el enlace en Safari desde el código QR.</li>
@@ -1829,7 +1829,7 @@ export default function ConfiguracionPage() {
                 }}
               >
                 <p style={{ fontSize: 13, fontWeight: 700, margin: "0 0 4px 0", color: "#1d1d1f" }}>
-                  🤖 En Android (Chrome):
+                  En Android (Chrome):
                 </p>
                 <ol style={{ fontSize: 12, color: "#6e6e73", margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
                   <li>Abre la página en Google Chrome.</li>
@@ -1852,7 +1852,7 @@ export default function ConfiguracionPage() {
             background: "rgba(255, 59, 48, 0.08)",
           }}
         >
-          <h2 style={{ ...h2Style, color: "#ff3b30" }}>⚙️ Herramientas de Administrador (Temporal)</h2>
+          <h2 style={{ ...h2Style, color: "#ff3b30" }}>⚙Herramientas de Administrador (Temporal)</h2>
           <p style={{ fontSize: 13, color: "#ff3b30", marginBottom: 12 }}>
             Repara hasta 20 artículos por lote, completando cada artículo antes de abrir el siguiente.
           </p>
@@ -1868,7 +1868,7 @@ export default function ConfiguracionPage() {
               fontWeight: 700,
             }}
           >
-            {triggeringFix ? "Iniciando lote..." : "🚀 Procesar siguiente lote de 20"}
+            {triggeringFix ? "Iniciando lote..." : "Procesar siguiente lote de 20"}
           </button>
           <button
             onClick={handleClearFixHistory}
@@ -1948,12 +1948,12 @@ export default function ConfiguracionPage() {
                   {fixStatus.logs && fixStatus.logs.length > 0 ? (
                     <div>
                       <h3 style={{ fontSize: 12, fontWeight: 700, color: "#ff3b30", margin: "0 0 6px 0" }}>
-                        📋 Consola de avance en tiempo real:
+                        Consola de avance en tiempo real:
                       </h3>
                       <div
                         style={{
-                          background: "#1e1e2e",
-                          color: "#cdd6f4",
+                          background: "#1d1d1f",
+                          color: "#f5f5f7",
                           fontFamily: "monospace",
                           fontSize: 11,
                           padding: 10,
@@ -1978,7 +1978,7 @@ export default function ConfiguracionPage() {
                 <div style={{ marginTop: 16, borderTop: "1px solid rgba(255, 59, 48, 0.08)", paddingTop: 16 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                     <h3 style={{ fontSize: 13, fontWeight: 700, color: "#ff3b30", margin: 0 }}>
-                      📋 Historial de Lotes Procesados
+                      Historial de Lotes Procesados
                     </h3>
                     <span style={{ fontSize: 11, fontWeight: 700, color: "#ff3b30", background: "rgba(255, 59, 48, 0.15)", padding: "2px 8px", borderRadius: 999 }}>
                       Total revisados: {fixStatus.history.reduce((acc, curr) => acc + (curr.totalReviewed || 0), 0)}
@@ -2063,7 +2063,7 @@ export default function ConfiguracionPage() {
                             )}
                             {batch.stopPoint ? (
                               <div style={{ color: "#ff3b30", marginTop: 6, fontSize: 11, fontWeight: 500 }}>
-                                🏁 Detenido: {batch.stopPoint}
+                                Detenido: {batch.stopPoint}
                               </div>
                             ) : null}
 
@@ -2071,12 +2071,12 @@ export default function ConfiguracionPage() {
                             {batch.logs && batch.logs.length > 0 ? (
                               <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px dashed rgba(255, 59, 48, 0.08)" }}>
                                 <div style={{ fontSize: 10, fontWeight: 700, color: "#ff3b30", marginBottom: 4 }}>
-                                  📋 Registro de avances (Log de la tanda):
+                                  Registro de avances (Log de la tanda):
                                 </div>
                                 <div
                                   style={{
-                                    background: "#1e1e2e",
-                                    color: "#cdd6f4",
+                                    background: "#1d1d1f",
+                                    color: "#f5f5f7",
                                     fontFamily: "monospace",
                                     fontSize: 10,
                                     padding: 8,
@@ -2125,7 +2125,7 @@ export default function ConfiguracionPage() {
             boxShadow: "none",
           }}
         >
-          {banner.type === "error" ? "⚠️ " : "✅ "}
+          {banner.type === "error" ? "" : ""}
           {banner.text}
         </div>
       )}

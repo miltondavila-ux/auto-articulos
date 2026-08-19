@@ -56,7 +56,7 @@ Ruta: /dashboard/configuracion
 
 Aquí preparas tu cuenta y personalizas el contenido.
 
-### 🚀 Configuración Inicial (Asistente Paso a Paso)
+### Configuración Inicial (Asistente Paso a Paso)
 
 Pestaña destacada en Configuración que te permite repasar o completar el asistente de 4 pasos en cualquier momento. Cuenta con un banner superior para abrirlo directamente.
 

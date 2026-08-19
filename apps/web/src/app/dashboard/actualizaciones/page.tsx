@@ -95,7 +95,7 @@ function TarjetaActualizacion({ item }: { item: { date: Date; title: string; cat
               fontSize: 11,
               fontWeight: 500,
               color: esNueva ? "#16803c" : "#1d1d1f",
-              background: esNueva ? "rgba(52, 199, 89, 0.1)" : "#e8f2ff",
+              background: esNueva ? "rgba(52, 199, 89, 0.1)" : "#f5f5f7",
             }}
           >
             {badgeTexto}

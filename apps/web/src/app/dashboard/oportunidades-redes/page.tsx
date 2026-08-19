@@ -661,7 +661,7 @@ export default function OportunidadesRedesPage() {
                     gap: 10,
                     padding: "8px 12px",
                     borderRadius: 10,
-                    background: skipModal.reason === reason ? "#e8f2ff" : "#ffffff",
+                    background: skipModal.reason === reason ? "#f5f5f7" : "#ffffff",
                     border: `1px solid ${skipModal.reason === reason ? "#1d1d1f" : "#e5e5ea"}`,
                     cursor: "pointer",
                     color: "#1d1d1f",

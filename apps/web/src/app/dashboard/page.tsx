@@ -168,7 +168,7 @@ export default function InicioPage() {
         >
           <div>
             <p style={{ margin: 0, fontSize: 17, fontWeight: 700, letterSpacing: "-0.01em" }}>
-              🎉 ¡Bienvenido! Tienes {TRIAL_DAYS} días de prueba gratuita.
+              ¡Bienvenido! Tienes {TRIAL_DAYS} días de prueba gratuita.
             </p>
             <p style={{ margin: "6px 0 0", fontSize: 13, opacity: 0.9 }}>
               Explora todo el sistema sin restricciones durante este período.
@@ -217,7 +217,7 @@ export default function InicioPage() {
                 boxShadow: "none",
               }}
             >
-              <span style={{ color: "#1e8a4b" }}>
+              <span style={{ color: "#16803c" }}>
                 ✓ Artículo publicado: <strong style={{ color: "#1d1d1f" }}>{n.text}</strong>
                 {n.url && (
                   <>
@@ -264,7 +264,7 @@ export default function InicioPage() {
             borderRadius: 12,
             background: "#f2faf4",
             border: "1px solid rgba(52, 199, 89, 0.3)",
-            color: "#1e8a4b",
+            color: "#16803c",
             fontSize: 13,
             boxShadow: "none",
           }}
