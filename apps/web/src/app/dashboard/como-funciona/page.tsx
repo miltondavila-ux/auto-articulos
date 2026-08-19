@@ -167,10 +167,10 @@ export default function ComoFuncionaPage() {
         width: "100%",
       }}
     >
-      <header style={{ padding: "clamp(36px, 6vw, 56px) 0 clamp(28px, 4vw, 40px)", textAlign: "center" }}>
+      <header style={{ padding: "clamp(32px, 5vw, 48px) 0 clamp(24px, 3vw, 32px)" }}>
         <h1
           style={{
-            margin: "0 auto",
+            margin: 0,
             fontSize: "clamp(30px, 5vw, 46px)",
             lineHeight: 1.08,
             fontWeight: 600,
@@ -183,8 +183,7 @@ export default function ComoFuncionaPage() {
         </h1>
         <p
           style={{
-            margin: "18px auto 0",
-            maxWidth: 760,
+            margin: "18px 0 0",
             fontSize: 19,
             lineHeight: "27px",
             color: "#6e6e73",
@@ -195,8 +194,7 @@ export default function ComoFuncionaPage() {
         </p>
         <p
           style={{
-            margin: "16px auto 0",
-            maxWidth: 760,
+            margin: "16px 0 0",
             fontSize: 17,
             lineHeight: "25px",
             color: "#1d1d1f",
@@ -211,8 +209,7 @@ export default function ComoFuncionaPage() {
         </p>
         <p
           style={{
-            margin: "16px auto 0",
-            maxWidth: 760,
+            margin: "16px 0 0",
             fontSize: 17,
             lineHeight: "25px",
             color: "#1d1d1f",
@@ -228,8 +225,7 @@ export default function ComoFuncionaPage() {
         </p>
         <p
           style={{
-            margin: "16px auto 0",
-            maxWidth: 760,
+            margin: "16px 0 0",
             fontSize: 17,
             lineHeight: "25px",
             color: "#6e6e73",
