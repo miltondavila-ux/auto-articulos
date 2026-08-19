@@ -4407,3 +4407,16 @@ Al tomar el turno, leer primero este bloque y los últimos commits de `main`; de
    (`apps/web/src/app/dashboard/oportunidades/page.tsx`, `analysisStages`):
    etapas que se van marcando, y un LOG que permita revisar dónde se quedó el
    sistema y cómo va. Orden explícita: **no romper nada de lo ya hecho.**
+### 2026-08-19 — Cierre de bloqueo y verificación final
+
+- El `main` actual contiene las correcciones de `19d88b5` y la organización de
+  interfaz de `23054ad`; no fueron revertidas.
+- El worker social corregido terminó correctamente en GitHub Actions, run
+  `32311239170`, con los tres shards en `trabajo=false` y `No había trabajo
+  pendiente`. No hay publicaciones sociales atascadas en la cola.
+- No se ejecutaron migraciones, no se cambiaron credenciales y no se alteraron
+  publicaciones existentes. La prueba funcional de LinkedIn queda para el
+  siguiente intento real del usuario: el resultado debe mostrar el ID devuelto
+  por LinkedIn o el error exacto, nunca un falso éxito.
+- **Capitanía liberada:** Codex. El siguiente programador debe reclamar antes
+  de modificar código o ejecutar migraciones.
