@@ -442,21 +442,44 @@ model OpportunityGroup {
   user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   category Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   titles   OpportunityTitle[]
+  clusters OpportunityCluster[]
 
   @@unique([userId, categoryId])
   @@index([userId, createdAt])
 }
 
 model OpportunityTitle {
-  id        String   @id @default(cuid())
-  groupId   String
-  text      String
-  rationale String?
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  groupId      String
+  clusterId    String?
+  text         String
+  rationale    String?
+  searchIntent String?
+  clusterRole  String?  // "pillar" | "support"
+  createdAt    DateTime @default(now())
 
-  group OpportunityGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  group   OpportunityGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  cluster OpportunityCluster? @relation(fields: [clusterId], references: [id], onDelete: SetNull)
 
   @@index([groupId])
+  @@index([clusterId])
+}
+
+// Un cluster organiza oportunidades de una misma categoría alrededor de una
+// intención concreta. Sus títulos conservan groupId para que los flujos
+// actuales de ejecución por categoría permanezcan intactos.
+model OpportunityCluster {
+  id            String   @id @default(cuid())
+  groupId       String
+  topic         String
+  rationale     String?
+  primaryIntent String?
+  createdAt     DateTime @default(now())
+
+  group  OpportunityGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  titles OpportunityTitle[]
+
+  @@index([groupId, createdAt])
 }
 
 enum CategorySyncStatus {

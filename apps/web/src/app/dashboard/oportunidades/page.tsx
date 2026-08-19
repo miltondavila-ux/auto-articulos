@@ -18,6 +18,9 @@ interface OpportunityTitle {
   id: string;
   text: string;
   rationale: string | null;
+  searchIntent: string | null;
+  clusterRole: string | null;
+  cluster: { topic: string; primaryIntent: string | null } | null;
 }
 
 interface OpportunityGroup {
@@ -948,6 +951,12 @@ export default function OportunidadesPage() {
                   <strong style={{ fontSize: 14, color: "#1d1d1f" }}>
                     {index + 1}. {title.text}
                   </strong>
+                  {title.cluster && (
+                    <div style={{ color: "#0071e3", fontSize: 12, marginTop: 3 }}>
+                      {title.clusterRole === "pillar" ? "Artículo pilar" : "Artículo satélite"} · {title.cluster.topic}
+                      {title.searchIntent ? ` · intención ${title.searchIntent}` : ""}
+                    </div>
+                  )}
                   {title.rationale && (
                     <div
                       style={{ color: "#6e6e73", fontSize: 12, marginTop: 3 }}
