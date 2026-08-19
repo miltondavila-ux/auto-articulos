@@ -168,6 +168,16 @@ export default function PublicarPage() {
         });
         return;
       }
+      // Si el cupo obligó a recortar el lote, NO se redirige: se muestra el
+      // aviso y los títulos que quedaron fuera vuelven al cuadro, listos para
+      // reenviarlos mañana sin tener que escribirlos otra vez.
+      if (typeof data.avisoDeCupo === "string" && data.avisoDeCupo) {
+        setBanner({ type: "info", text: data.avisoDeCupo });
+        setTitlesText(
+          Array.isArray(data.descartados) ? data.descartados.join("\n") : "",
+        );
+        return;
+      }
       router.push("/dashboard/publicaciones-en-curso");
     } finally {
       setStarting(false);

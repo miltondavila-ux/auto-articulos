@@ -154,7 +154,7 @@ function Pagination({
         {filteredCount !== totalCount &&
           ` · ${filteredCount.toLocaleString("es-US")} coinciden con el filtro`}
       </span>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
         <button
           onClick={() => onChange(page - 1)}
           disabled={page <= 1}
@@ -1336,7 +1336,7 @@ export default function UsuariosPage() {
             }}
           >
             <h2 style={h2Style}>Visibilidad global de módulos</h2>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
               <button
                 type="button"
                 onClick={loadGlobalModules}
@@ -1568,7 +1568,7 @@ export default function UsuariosPage() {
                   style={{ ...inputStyle, fontFamily: "inherit" }}
                 />
               </label>
-              <div style={{ display: "flex", gap: 10 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
                 <button
                   type="submit"
                   disabled={savingPrompt}
@@ -1628,7 +1628,7 @@ export default function UsuariosPage() {
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                     <strong style={{ fontSize: 15, color: "#1d1d1f" }}>{p.name}</strong>
-                    <div style={{ display: "flex", gap: 8 }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                       <button
                         onClick={() => {
                           setEditingPromptId(p.id);
@@ -2359,7 +2359,7 @@ function UserCard({
                 )}
               </div>
 
-              <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 4 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginTop: 4 }}>
                 <button
                   onClick={handleSavePermissions}
                   disabled={savingPermissions || !permissionsDirty}

@@ -112,6 +112,7 @@ function HistorialEjecuciones() {
         <div
           style={{
             display: "flex",
+            flexWrap: "wrap",
             justifyContent: "flex-end",
             gap: 8,
             marginBottom: 12,
@@ -119,7 +120,7 @@ function HistorialEjecuciones() {
         >
           {hasDeletableRuns &&
             (confirmingDelete ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 12, color: "#8a4b08" }}>
                   ¿Borrar historial? No se puede deshacer.
                 </span>
@@ -358,7 +359,7 @@ function HistorialRedes() {
             >
               {opportunities.length > 0 &&
                 (confirmingDelete ? (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
                     <span style={{ fontSize: 12, color: "#8a4b08" }}>
                       ¿Borrar todo? No se puede deshacer.
                     </span>
@@ -436,7 +437,7 @@ function HistorialRedes() {
                         flexWrap: "wrap",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
                         <span style={{ color: "#1d1d1f", fontWeight: 600 }}>
                           {new Date(opp.publishedAt || opp.createdAt).toLocaleString("es-US", {
                             day: "2-digit",

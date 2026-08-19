@@ -124,14 +124,18 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (titles.length > user.maxTitlesPerBatch) {
-    return NextResponse.json(
-      {
-        error: `Puedes publicar como máximo ${user.maxTitlesPerBatch} títulos por lote (pegaste ${titles.length}). Divide la lista en varios lotes más chicos.`,
-      },
-      { status: 400 },
-    );
-  }
+  /*
+   * Cupos. Antes, pasarse de cualquier límite rechazaba el lote entero y la
+   * persona se quedaba sin publicar nada. Pedido de Milton (19/8/2026): que se
+   * publique lo que sí cabe y se le diga con claridad cuántos entraron,
+   * cuántos quedaron fuera y cuándo volver.
+   */
+  const cupos: { disponible: number; motivo: string }[] = [
+    {
+      disponible: user.maxTitlesPerBatch,
+      motivo: `tu máximo es de ${user.maxTitlesPerBatch} títulos por lote`,
+    },
+  ];
 
   const credential = await prisma.credential.findUnique({
     where: { userId_platform: { userId, platform: "10minutesWebsite" } },
@@ -174,18 +178,10 @@ export async function POST(request: NextRequest) {
         run: { userId },
       },
     });
-    const remaining = user.monthlyArticleLimit - publishedThisMonth;
-    if (titles.length > remaining) {
-      return NextResponse.json(
-        {
-          error:
-            remaining <= 0
-              ? `Ya alcanzaste tu límite mensual de ${user.monthlyArticleLimit} artículos.`
-              : `Solo puedes publicar ${remaining} artículo(s) más este mes (límite mensual: ${user.monthlyArticleLimit}).`,
-        },
-        { status: 403 },
-      );
-    }
+    cupos.push({
+      disponible: user.monthlyArticleLimit - publishedThisMonth,
+      motivo: `tu límite mensual es de ${user.monthlyArticleLimit} artículos`,
+    });
   }
   if (user.dailyArticleLimit !== null) {
     const startOfDay = new Date();
@@ -197,19 +193,32 @@ export async function POST(request: NextRequest) {
         run: { userId },
       },
     });
-    const remainingToday = user.dailyArticleLimit - publishedToday;
-    if (titles.length > remainingToday) {
-      return NextResponse.json(
-        {
-          error:
-            remainingToday <= 0
-              ? `Ya alcanzaste tu límite diario de ${user.dailyArticleLimit} artículos. Intenta de nuevo mañana.`
-              : `Solo puedes publicar ${remainingToday} artículo(s) más hoy (límite diario: ${user.dailyArticleLimit}).`,
-        },
-        { status: 403 },
-      );
-    }
+    cupos.push({
+      disponible: user.dailyArticleLimit - publishedToday,
+      motivo: `tu límite diario es de ${user.dailyArticleLimit} artículos`,
+    });
   }
+
+  // Manda el cupo más estrecho de todos.
+  const cupoMasEstrecho = cupos.reduce((a, b) => (b.disponible < a.disponible ? b : a));
+  const permitidos = Math.max(0, Math.min(titles.length, cupoMasEstrecho.disponible));
+
+  if (permitidos === 0) {
+    return NextResponse.json(
+      {
+        error: `No puedes publicar más por ahora: ${cupoMasEstrecho.motivo} y ya lo alcanzaste. Vuelve mañana e inténtalo de nuevo.`,
+      },
+      { status: 403 },
+    );
+  }
+
+  // Lo que no cabe se deja fuera, pero se devuelve para poder decírselo.
+  const descartados = titles.slice(permitidos);
+  const titulosAPublicar = titles.slice(0, permitidos);
+  const avisoDeCupo =
+    descartados.length > 0
+      ? `Se enviaron a publicar ${permitidos} de los ${titles.length} títulos porque ${cupoMasEstrecho.motivo}. Los ${descartados.length} restantes no se publicaron: vuelve mañana y envíalos de nuevo.`
+      : null;
 
   const run = await prisma.run.create({
     data: {
@@ -229,7 +238,7 @@ export async function POST(request: NextRequest) {
           ? promptId.trim()
           : user.defaultPromptId,
       titles: {
-        create: titles.map((text: string, index: number) => ({
+        create: titulosAPublicar.map((text: string, index: number) => ({
           text,
           order: index,
         })),
@@ -240,7 +249,9 @@ export async function POST(request: NextRequest) {
 
   await triggerWorkerNow();
 
-  return NextResponse.json({ run });
+  // `avisoDeCupo` va con la respuesta correcta (no como error): la publicación
+  // sí ocurrió, solo que recortada. La pantalla lo muestra tal cual.
+  return NextResponse.json({ run, avisoDeCupo, descartados });
 }
 
 // Borra el historial del usuario (los Title/TitleEvent caen en cascada). Se

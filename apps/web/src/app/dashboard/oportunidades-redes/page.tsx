@@ -686,7 +686,7 @@ export default function OportunidadesRedesPage() {
               ))}
             </div>
 
-            <div style={{ display: "flex", gap: 8, marginTop: 18, justifyContent: "flex-end" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 18, justifyContent: "flex-end" }}>
               <button
                 onClick={() => setSkipModal(null)}
                 className="secondary"

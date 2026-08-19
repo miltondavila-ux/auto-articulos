@@ -332,3 +332,27 @@ input[type="radio"]:disabled {
   cursor: not-allowed;
   opacity: 0.5;
 }
+
+/*
+ * Objetivo táctil mínimo. En un dispositivo con dedo (pointer: coarse) ningún
+ * botón baja de 44px de alto: es la medida que recomienda Apple para que se
+ * pueda pulsar sin fallar. En escritorio no se toca nada, para que los botones
+ * pequeños de las tablas sigan siendo compactos.
+ */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  a.boton {
+    min-height: 44px;
+  }
+}
+
+/*
+ * Cualquier fila de botones se parte en varias líneas si no cabe, en vez de
+ * desbordarse fuera de la pantalla.
+ */
+.fila-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
