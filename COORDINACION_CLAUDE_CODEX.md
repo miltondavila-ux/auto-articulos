@@ -4349,3 +4349,61 @@ Al tomar el turno, leer primero este bloque y los últimos commits de `main`; de
   cambios de credenciales pendientes asociados a esta tarea.
 - Commit publicado: `19d88b5`. El siguiente programador debe reclamar una nueva
   área antes de modificar código o ejecutar migraciones.
+### Claude — El Paso 1 decía "verificadas" sin haber probado nada (15/8/2026)
+
+- **Capitán:** Claude — reclamado con `migration-coordinator.sh claim` antes de
+  tocar código, liberado al terminar. Sin migración (solo interfaz y worker).
+- **Disparador:** Milton detectó con la cuenta de **Stefany Meza** que la
+  pantalla mostraba a la vez un error rojo ("No se pudo iniciar sesión en
+  https://10minuteswebsite.net") y el Paso 1 en verde diciendo "Credenciales
+  guardadas y **verificadas** de forma segura". Su pregunta fue directa: si
+  falla el login, ¿por qué dice que la conexión fue exitosa?
+- **Causa:** guardar credenciales NUNCA las prueba. `POST /api/credentials`
+  cifra, guarda y responde `ok`; el `GET` devuelve `configured: true` solo
+  porque existe una fila en la base. El Paso 1 se ponía verde por haber
+  ESCRITO algo, no por haber ENTRADO — "verificadas" era literalmente falso.
+- **Aclaración honesta para el registro:** la validación real de credenciales
+  al guardar nunca se había implementado, pese a haberse conversado antes. Lo
+  que sí existía era la detección automática de servidor durante la
+  sincronización (`fetchCategoriesDetectingServer`).
+- **Arreglo (commit `63c71ca`):** se separa `step1Saved` (hay credenciales
+  guardadas → desbloquea el Paso 2; hace falta para poder intentar la
+  sincronización) de `step1Verified` (un login real funcionó, probado por una
+  sincronización exitosa). Solo el segundo pinta verde y cuenta para el
+  porcentaje. Estado intermedio honesto en ámbar: "Pendiente de verificar".
+  **Cuidado si alguien toca esto:** hacer que el verde dependa de la
+  sincronización Y que la sincronización dependa del verde deja al usuario
+  trabado sin poder avanzar nunca — por eso son dos variables y no una.
+- **Segundo defecto corregido en el mismo lote:** cuando fallaban los TRES
+  servidores, el error propagado era el del primero y nombraba un solo
+  dominio, dando a entender que solo se había intentado ahí y mandando a
+  revisar el servidor asignado — cuando el problema real era que las
+  credenciales no sirven en ninguno. Ahora los nombra todos.
+- **Manual actualizado** en el mismo lote (orden permanente de Milton).
+- **Verificaciones:** `tsc --noEmit` limpio en web y worker. El build de Next
+  no corre dentro del worktree aislado (no resuelve sus paquetes con
+  `node_modules` enlazado), así que la compilación real la hace Vercel antes
+  de promover: si fallara, el despliegue no entra y producción se queda como
+  está.
+- **Cómo se trabajó, para que se repita:** la otra conversación de Milton
+  tenía cambios SIN COMMITEAR en `OnboardingWizard.tsx`, el mismo archivo que
+  había que editar. En vez de tocar su árbol, se creó un worktree limpio desde
+  `origin/main` y se trabajó ahí; su trabajo quedó intacto. **Trampa que
+  mordió y se corrigió a mitad de camino:** enlazar `node_modules` del repo
+  principal y luego crear ahí dentro los enlaces de `@auto-articulos` reescribe
+  los del repo PRINCIPAL y le rompe el typecheck a la otra sesión. Hay que
+  darle al worktree su propio directorio `node_modules` con enlaces que
+  apunten a los paquetes DEL WORKTREE.
+
+#### PENDIENTES anotados por Milton en esta sesión (no ejecutar sin que lo pida)
+
+1. **Prioridad declarada:** la sincronización de categorías es un punto
+   neurálgico de la plataforma — es lo primero que hace un usuario nuevo, y si
+   se queda esperando sin señal clara, pierde la paciencia y no vuelve a
+   entrar. Cualquier trabajo futuro sobre ese flujo hereda esa prioridad.
+2. **Progreso por etapas + log visible al obtener categorías:** hoy solo hay
+   "un pegoste de imagen con un reloj" que no dice si la cosa está funcionando.
+   Milton quiere lo mismo que ya existe en el análisis de Google Search Console
+   (`apps/web/src/app/dashboard/oportunidades/page.tsx`, `analysisStages`):
+   etapas que se van marcando, y un LOG que permita revisar dónde se quedó el
+   sistema y cómo va. Orden explícita: **no romper nada de lo ya hecho.**

@@ -12,7 +12,7 @@ Este manual explica cómo usar la plataforma desde la perspectiva de una persona
 
 Cuando ingresas a tu cuenta por primera vez o aún no tienes artículos publicados, Inicio te muestra el **Asistente de Configuración Inicial Paso a Paso**. Este asistente te guía de forma secuencial por los 4 pasos esenciales:
 
-1. **Paso 1 (Cuenta de la plataforma):** Guarda tu usuario y contraseña de la plataforma. Si no recuerdas esa clave, puedes restablecerla o crear una nueva en segundos desde el enlace directo de recuperación de la plataforma incluido en el asistente.
+1. **Paso 1 (Cuenta de la plataforma):** Guarda tu usuario y contraseña de la plataforma. Si no recuerdas esa clave, puedes restablecerla o crear una nueva en segundos desde el enlace directo de recuperación de la plataforma incluido en el asistente. Al guardar, el paso queda en **"Pendiente de verificar"** (ámbar): tus datos se guardan cifrados, pero todavía no se ha comprobado que sirvan para entrar. Se vuelve verde solo cuando la sincronización del Paso 2 logra entrar de verdad a tu cuenta — esa es la única prueba real de que el usuario y la contraseña son correctos. Si el Paso 2 falla diciendo que no pudo iniciar sesión, revisa esas credenciales entrando a mano a tu plataforma y vuelve a guardarlas aquí.
 2. **Paso 2 (Sincronizar categorías):** Descarga en vivo las categorías reales de tu web para clasificar tus artículos.
 3. **Paso 3 (Idioma de redacción):** Confirma el idioma principal en el que la Inteligencia Artificial redactará tus contenidos.
 4. **Paso 4 (Google Search Console):** Abre Search Console en una pestaña contigua de tu navegador para comprobar que esté activo con la cuenta de Google dueña de tu web, y luego conéctalo mediante Google OAuth seleccionando tu sitio.
