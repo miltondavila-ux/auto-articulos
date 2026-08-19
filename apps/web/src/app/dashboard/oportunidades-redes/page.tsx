@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import ModuleIntro, { EnPrueba, IntroP, Modulo } from "@/components/ModuleIntro";
+import { EnPrueba, Modulo } from "@/components/ModuleIntro";
 import { useRouter } from "next/navigation";
 import {
   buttonStyle,
@@ -302,23 +302,6 @@ export default function OportunidadesRedesPage() {
 
   return (
     <div style={{ maxWidth: 1120, margin: "0 auto" }}>
-      <ModuleIntro titulo="Oportunidades para Redes Sociales">
-        <IntroP>
-          <strong style={{ fontWeight: 600 }}>Este módulo está en prueba</strong>
-          <EnPrueba />. Todavía no está disponible para todas las cuentas y se
-          está activando poco a poco. Puede que algo cambie de sitio o de
-          comportamiento mientras se termina de ajustar.
-        </IntroP>
-        <IntroP>
-          Un artículo publicado en tu web solo lo encuentra quien lo busca. En redes sociales lo ve gente que todavía no te estaba buscando, y cada visita que llega desde ahí es una señal más para Google de que tu contenido interesa.
-        </IntroP>
-        <IntroP>
-          Aquí el sistema toma artículos que ya publicaste desde <Modulo id="publicar" /> u <Modulo id="oportunidades" />, y prepara la publicación adaptada a cada red: el texto, la imagen y el formato que esa red necesita.
-        </IntroP>
-        <IntroP>
-          Tú revisas cada propuesta y decides cuál sale y a qué red. No se publica todo ni todo el tiempo: el sistema reparte las publicaciones a lo largo de los días para que tu presencia crezca sin parecer spam y sin que las redes te penalicen.
-        </IntroP>
-      </ModuleIntro>
       {/* Panel Superior */}
       <div
         className="panel"
@@ -351,8 +334,20 @@ export default function OportunidadesRedesPage() {
             >
               Oportunidades en Redes Sociales
             </h1>
-            <p className="lead-copy" style={{ margin: 0, maxWidth: 650 }}>
-              Genera y publica contenido optimizado para tus redes sociales a partir de tus artículos publicados y datos de búsqueda.
+            <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
+              <strong style={{ fontWeight: 600 }}>Este módulo está en prueba</strong>
+          <EnPrueba />. Todavía no está disponible para todas las cuentas y se
+          está activando poco a poco. Puede que algo cambie de sitio o de
+          comportamiento mientras se termina de ajustar.
+            </p>
+            <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
+              Un artículo publicado en tu web solo lo encuentra quien lo busca. En redes sociales lo ve gente que todavía no te estaba buscando, y cada visita que llega desde ahí es una señal más para Google de que tu contenido interesa.
+            </p>
+            <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
+              Aquí el sistema toma artículos que ya publicaste desde <Modulo id="publicar" /> u <Modulo id="oportunidades" />, y prepara la publicación adaptada a cada red: el texto, la imagen y el formato que esa red necesita.
+            </p>
+            <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
+              Tú revisas cada propuesta y decides cuál sale y a qué red. No se publica todo ni todo el tiempo: el sistema reparte las publicaciones a lo largo de los días para que tu presencia crezca sin parecer spam y sin que las redes te penalicen.
             </p>
           </div>
 

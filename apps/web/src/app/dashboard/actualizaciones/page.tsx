@@ -1,5 +1,4 @@
 import Link from "next/link";
-import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
 import { prisma } from "@auto-articulos/db";
 import { sectionStyle, h2Style } from "@/components/dashboard-ui";
 
@@ -46,19 +45,17 @@ export default async function ActualizacionesPage({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 1120, margin: "0 auto" }}>
-      <ModuleIntro titulo="Actualizaciones">
-        <IntroP>
-          Aquí se anota cada mejora y cada arreglo que se hace en la plataforma, con su fecha y una explicación de qué cambió y para qué sirve.
-        </IntroP>
-        <IntroP>
-          Míralo cuando notes algo distinto en una pantalla, o cuando aparezca una función que antes no estaba. En vez de tener que preguntar, aquí está escrito qué pasó.
-        </IntroP>
-      </ModuleIntro>
       <div className="panel" style={sectionStyle}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
           <div>
             <p className="eyebrow" style={{ margin: "0 0 4px" }}>Novedades del Sistema</p>
             <h1 style={{ ...h2Style, fontSize: 26, marginBottom: 6 }}>Registro de Actualizaciones</h1>
+            <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
+              Aquí se anota cada mejora y cada arreglo que se hace en la plataforma, con su fecha y una explicación de qué cambió y para qué sirve.
+            </p>
+            <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
+              Míralo cuando notes algo distinto en una pantalla, o cuando aparezca una función que antes no estaba. En vez de tener que preguntar, aquí está escrito qué pasó.
+            </p>
             <p className="lead-copy" style={{ margin: 0, maxWidth: 680 }}>
               Entérate de las nuevas herramientas incorporadas y los arreglos realizados en la plataforma, explicados de forma clara y sencilla.
             </p>
