@@ -114,7 +114,7 @@ export default function PerformanceDashboard() {
       <Callout title={msg.title} color={msg.color}>
         {msg.text}{" "}
         {msg.cta && (
-          <Link href={msg.cta.href} className="font-medium underline" style={{ color: "#0071e3" }}>
+          <Link href={msg.cta.href} className="font-medium underline" style={{ color: "#1d1d1f" }}>
             {msg.cta.label} →
           </Link>
         )}

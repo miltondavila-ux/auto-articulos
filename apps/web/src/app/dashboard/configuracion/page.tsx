@@ -570,7 +570,7 @@ export default function ConfiguracionPage() {
       ? "#ff3b30"
       : signaturePercent >= 80
         ? "#ff9500"
-        : "#0071e3";
+        : "#1d1d1f";
 
   const showSocialTab =
     isAdmin || userEmail.toLowerCase() === "lorenalvarez30@gmail.com";
@@ -743,7 +743,7 @@ export default function ConfiguracionPage() {
               <span style={{ color: "#6e6e73", fontWeight: 500 }}>
                 Categorías:
               </span>
-              <span style={{ color: "#0071e3", fontWeight: 600 }}>
+              <span style={{ color: "#1d1d1f", fontWeight: 600 }}>
                 {categories.length} sincronizadas
               </span>
             </div>
@@ -767,7 +767,7 @@ export default function ConfiguracionPage() {
             gap: 14,
             cursor: "pointer",
             background: "#ffffff",
-            border: "1px solid #0071e3",
+            border: "1px solid #1d1d1f",
             boxShadow: "none",
             transition: "transform 0.15s ease",
           }}
@@ -832,7 +832,7 @@ export default function ConfiguracionPage() {
                 cursor: "pointer",
                 borderRadius: 14,
                 border: isActive
-                  ? "1px solid #0071e3"
+                  ? "1px solid #1d1d1f"
                   : "1px solid #e5e5ea",
                 background: "#ffffff",
                 color: "#1d1d1f",
@@ -854,7 +854,7 @@ export default function ConfiguracionPage() {
                     padding: "2px 8px",
                     borderRadius: 999,
                     background: isActive ? "#e8f2ff" : "#f5f5f7",
-                    color: isActive ? "#0071e3" : "#6e6e73",
+                    color: isActive ? "#1d1d1f" : "#6e6e73",
                     fontSize: 11,
                     fontWeight: 600,
                     textTransform: "uppercase",
@@ -884,7 +884,7 @@ export default function ConfiguracionPage() {
                 style={{
                   fontSize: 14,
                   fontWeight: 600,
-                  color: isActive ? "#0071e3" : "#1d1d1f",
+                  color: isActive ? "#1d1d1f" : "#1d1d1f",
                   margin: "4px 0 4px",
                 }}
               >
@@ -1068,7 +1068,7 @@ export default function ConfiguracionPage() {
                   href={platformForgotPasswordUrl(platformDomain)}
                   target="_blank"
                   rel="noreferrer"
-                  style={{ color: "#0071e3", fontWeight: 600 }}
+                  style={{ color: "#0066cc", fontWeight: 600 }}
                 >
                   recupérala con tu correo aquí
                 </a>
@@ -1079,7 +1079,7 @@ export default function ConfiguracionPage() {
                       href={helpUrl}
                       target="_blank"
                       rel="noreferrer"
-                      style={{ color: "#0071e3", fontWeight: 600 }}
+                      style={{ color: "#0066cc", fontWeight: 600 }}
                     >
                       servicio al cliente de {productName}
                     </a>
@@ -1107,8 +1107,8 @@ export default function ConfiguracionPage() {
                 style={{
                   fontSize: 12,
                   fontWeight: 700,
-                  color: "#0071e3",
-                  background: "#e8f2ff",
+                  color: "#1d1d1f",
+                  background: "#f5f5f7",
                   padding: "4px 10px",
                   borderRadius: 999,
                 }}
@@ -1310,8 +1310,8 @@ export default function ConfiguracionPage() {
                 style={{
                   fontSize: 12,
                   fontWeight: 700,
-                  color: "#0071e3",
-                  background: "#e8f2ff",
+                  color: "#1d1d1f",
+                  background: "#f5f5f7",
                   padding: "4px 10px",
                   borderRadius: 999,
                 }}
@@ -1744,8 +1744,8 @@ export default function ConfiguracionPage() {
                   fontSize: 11,
                   fontWeight: 800,
                   letterSpacing: "0.06em",
-                  color: "#0071e3",
-                  background: "#e8f2ff",
+                  color: "#1d1d1f",
+                  background: "#f5f5f7",
                   padding: "4px 10px",
                   borderRadius: 999,
                   textTransform: "uppercase",
@@ -2036,7 +2036,7 @@ export default function ConfiguracionPage() {
                                       href={art.url}
                                       target="_blank"
                                       rel="noreferrer"
-                                      style={{ color: "#0071e3", textDecoration: "underline" }}
+                                      style={{ color: "#0066cc", textDecoration: "underline" }}
                                     >
                                       {art.title}
                                     </a>

@@ -199,7 +199,7 @@ export default function PreValidationGuard({
                     fontWeight: 600,
                     fontSize: 12,
                     background: step.ready ? "#e8f2ff" : "#f5f5f7",
-                    color: step.ready ? "#0071e3" : "#6e6e73",
+                    color: step.ready ? "#1d1d1f" : "#6e6e73",
                     flexShrink: 0,
                   }}
                 >

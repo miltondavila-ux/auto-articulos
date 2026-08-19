@@ -427,7 +427,7 @@ export default function OportunidadesRedesPage() {
               </span>
             </div>
             <div style={{ height: 6, borderRadius: 999, background: "rgba(0,0,0,0.06)", overflow: "hidden" }}>
-              <div style={{ width: `${progress}%`, height: "100%", background: "#0071e3", transition: "width 1s linear" }} />
+              <div style={{ width: `${progress}%`, height: "100%", background: "#1d1d1f", transition: "width 1s linear" }} />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 8, marginTop: 12 }}>
               {stages.map((stage, index) => (
@@ -500,8 +500,8 @@ export default function OportunidadesRedesPage() {
                               fontSize: 11,
                               fontWeight: 600,
                               textTransform: "uppercase",
-                              background: "#e8f2ff",
-                              color: "#0071e3",
+                              background: "#f5f5f7",
+                              color: "#1d1d1f",
                             }}
                           >
                             {opp.platform}
@@ -650,7 +650,7 @@ export default function OportunidadesRedesPage() {
                     padding: "8px 12px",
                     borderRadius: 10,
                     background: skipModal.reason === reason ? "#e8f2ff" : "#ffffff",
-                    border: `1px solid ${skipModal.reason === reason ? "#0071e3" : "#e5e5ea"}`,
+                    border: `1px solid ${skipModal.reason === reason ? "#1d1d1f" : "#e5e5ea"}`,
                     cursor: "pointer",
                     color: "#1d1d1f",
                     fontSize: 13,

@@ -206,7 +206,7 @@ export default function PublicarPage() {
             Ya hay una ejecución en curso.{" "}
             <Link
               href="/dashboard/publicaciones-en-curso"
-              style={{ color: "#0071e3", fontWeight: 500 }}
+              style={{ color: "#0066cc", fontWeight: 500 }}
             >
               Ver progreso en Publicaciones en Curso
             </Link>
@@ -264,7 +264,7 @@ export default function PublicarPage() {
           {categories.length === 0 && (
             <p style={{ fontSize: 13, color: "#6e6e73", marginTop: 8 }}>
               Sincroniza tus categorías desde{" "}
-              <Link href="/dashboard/configuracion?tab=platform#categories" style={{ color: "#0071e3", fontWeight: 500 }}>
+              <Link href="/dashboard/configuracion?tab=platform#categories" style={{ color: "#1d1d1f", fontWeight: 500 }}>
                 Configuración &gt; Categorías
               </Link>
               .

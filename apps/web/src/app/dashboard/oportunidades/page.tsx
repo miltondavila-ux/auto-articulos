@@ -755,7 +755,7 @@ export default function OportunidadesPage() {
                     <li>
                       <Link
                         href="/dashboard/configuracion?tab=integrations#google"
-                        style={{ color: "#0071e3", fontWeight: 600 }}
+                        style={{ color: "#0066cc", fontWeight: 600 }}
                       >
                         {!setupStatus.googleConnected
                           ? "Conectar Google Search Console"
@@ -767,7 +767,7 @@ export default function OportunidadesPage() {
                     <li>
                       <Link
                         href="/dashboard/configuracion?tab=platform#categories"
-                        style={{ color: "#0071e3", fontWeight: 600 }}
+                        style={{ color: "#0066cc", fontWeight: 600 }}
                       >
                         Sincronizar tus categorías
                       </Link>
@@ -777,7 +777,7 @@ export default function OportunidadesPage() {
                     <li>
                       <Link
                         href="/dashboard/configuracion?tab=platform#language"
-                        style={{ color: "#0071e3", fontWeight: 600 }}
+                        style={{ color: "#0066cc", fontWeight: 600 }}
                       >
                         Configurar tu idioma de redacción
                       </Link>

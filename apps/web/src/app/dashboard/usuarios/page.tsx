@@ -598,7 +598,7 @@ export default function UsuariosPage() {
       label: "Usuarios totales",
       value: users.length.toLocaleString("es-US"),
       detail: `${adminCount} con acceso administrativo`,
-      color: "#0071e3",
+      color: "#1d1d1f",
     },
     {
       label: "Activos ahora",
@@ -768,7 +768,7 @@ export default function UsuariosPage() {
               fontFamily: "inherit",
               cursor: "pointer",
               borderRadius: 14,
-              border: tab === t.id ? "1px solid #0071e3" : "1px solid #e5e5ea",
+              border: tab === t.id ? "1px solid #1d1d1f" : "1px solid #e5e5ea",
               background: "#ffffff",
               color: "#1d1d1f",
               boxShadow: "none",
@@ -780,7 +780,7 @@ export default function UsuariosPage() {
                 padding: "2px 8px",
                 borderRadius: 999,
                 background: tab === t.id ? "#e8f2ff" : "#f5f5f7",
-                color: tab === t.id ? "#0071e3" : "#6e6e73",
+                color: tab === t.id ? "#1d1d1f" : "#6e6e73",
                 fontSize: 10,
                 fontWeight: 600,
                 letterSpacing: "0.06em",
@@ -1046,7 +1046,7 @@ export default function UsuariosPage() {
                       height: "100%",
                       width: `${Math.min(100, usage.percentUsed * 100)}%`,
                       background:
-                        usage.percentUsed >= 0.8 ? "#ff3b30" : "#0071e3",
+                        usage.percentUsed >= 0.8 ? "#ff3b30" : "#1d1d1f",
                       transition: "width 0.4s ease",
                     }}
                   />
@@ -1066,7 +1066,7 @@ export default function UsuariosPage() {
                     style={{
                       border: "1px solid #e5e5ea",
                       borderRadius: 10,
-                      background: row.active ? "rgba(0, 113, 227, 0.06)" : "#fff",
+                      background: row.active ? "rgba(0, 0, 0, 0.06)" : "#fff",
                       color: "#1d1d1f",
                       overflow: "hidden",
                     }}
@@ -1099,7 +1099,7 @@ export default function UsuariosPage() {
                               fontWeight: 700,
                               padding: "2px 8px",
                               borderRadius: 999,
-                              background: "#0071e3",
+                              background: "#1d1d1f",
                               color: "#fff",
                             }}
                           >
@@ -1505,7 +1505,7 @@ export default function UsuariosPage() {
                       style={{
                         width: 18,
                         height: 18,
-                        accentColor: "#0071e3",
+                        accentColor: "#1d1d1f",
                         cursor: "pointer",
                       }}
                     />
@@ -1627,7 +1627,7 @@ export default function UsuariosPage() {
                         style={{
                           background: "none",
                           border: "none",
-                          color: "#0071e3",
+                          color: "#1d1d1f",
                           cursor: "pointer",
                           fontSize: 13,
                           fontWeight: 500,
@@ -2102,9 +2102,9 @@ function UserCard({
                   fontWeight: 600,
                   padding: "2px 7px",
                   borderRadius: 999,
-                  background: "#e8f2ff",
-                  color: "#0071e3",
-                  border: "1px solid rgba(0, 113, 227, 0.25)",
+                  background: "#f5f5f7",
+                  color: "#1d1d1f",
+                  border: "1px solid #d2d2d7",
                 }}
                 title={`Dominio vinculado: ${user.connectedDomain}`}
               >
@@ -2151,8 +2151,8 @@ function UserCard({
               fontWeight: 700,
               padding: "2px 8px",
               borderRadius: 999,
-              background: user.role === "admin" ? "rgba(0, 113, 227, 0.12)" : "#f5f5f7",
-              color: user.role === "admin" ? "#0071e3" : "#6e6e73",
+              background: user.role === "admin" ? "rgba(0, 0, 0, 0.12)" : "#f5f5f7",
+              color: user.role === "admin" ? "#1d1d1f" : "#6e6e73",
             }}
           >
             {user.role === "admin" ? "Administrador" : "Usuario"}
@@ -2329,9 +2329,9 @@ function UserCard({
                             ...secondaryButtonStyle,
                             padding: "4px 8px",
                             fontSize: 11,
-                            background: "#e8f2ff",
-                            color: "#0071e3",
-                            borderColor: "rgba(0, 113, 227, 0.25)",
+                            background: "#f5f5f7",
+                            color: "#1d1d1f",
+                            borderColor: "rgba(0, 0, 0, 0.25)",
                           },
                           savingPermissions,
                         )}
@@ -2394,7 +2394,7 @@ function UserCard({
                       }}
                       disabled={savingUserModules}
                       style={{
-                        accentColor: "#0071e3",
+                        accentColor: "#1d1d1f",
                         width: 16,
                         height: 16,
                       }}
@@ -2640,7 +2640,7 @@ function UserCard({
                 ...secondaryButtonStyle,
                 padding: "4px 10px",
                 fontSize: 12,
-                color: "#0071e3",
+                color: "#1d1d1f",
               },
               isCurrentUser || user.role === "admin" || impersonating,
             )}
@@ -2957,7 +2957,7 @@ function UserHistorial({ email }: { email: string }) {
                               href={title.articleUrl}
                               target="_blank"
                               rel="noreferrer"
-                              style={{ color: "#0071e3", fontWeight: 600 }}
+                              style={{ color: "#0066cc", fontWeight: 600 }}
                             >
                               Ver artículo
                             </a>

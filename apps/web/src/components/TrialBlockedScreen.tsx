@@ -44,7 +44,7 @@ export default function TrialBlockedScreen() {
         target="_blank"
         rel="noopener noreferrer"
         style={{
-          background: "linear-gradient(135deg, #2f5fdb 0%, #1b3f9e 100%)",
+          background: "linear-gradient(135deg, #1d1d1f 0%, #1b3f9e 100%)",
           color: "#fff",
           fontWeight: 700,
           fontSize: 14,

@@ -106,7 +106,7 @@ export default function PublicacionesEnCursoPage() {
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                     <div><strong>{item.articleTitle}</strong><div style={{ color: "#6e6e73", fontSize: 12, marginTop: 4 }}>{item.platform} · {item.progressStage ?? (item.status === "processing" ? "Publicando..." : "En cola")}</div></div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ color: item.status === "processing" ? "#0071e3" : "#8a4b08", fontSize: 12, fontWeight: 600 }}>{item.progressPercent}%</span>
+                      <span style={{ color: item.status === "processing" ? "#1d1d1f" : "#8a4b08", fontSize: 12, fontWeight: 600 }}>{item.progressPercent}%</span>
                       <button
                         type="button"
                         onClick={() => cancelSocialRun(item.id)}
@@ -118,10 +118,10 @@ export default function PublicacionesEnCursoPage() {
                     </div>
                   </div>
                   <div style={{ height: 5, background: "#f1f1f4", borderRadius: 999, overflow: "hidden", marginTop: 10 }}>
-                    <div style={{ height: "100%", width: `${Math.max(0, Math.min(100, item.progressPercent ?? 0))}%`, background: "#0071e3", transition: "width .4s ease" }} />
+                    <div style={{ height: "100%", width: `${Math.max(0, Math.min(100, item.progressPercent ?? 0))}%`, background: "#1d1d1f", transition: "width .4s ease" }} />
                   </div>
                   <details style={{ marginTop: 10, color: "#6e6e73", fontSize: 12 }}>
-                    <summary style={{ cursor: "pointer", color: "#0071e3", fontWeight: 600 }}>Ver etapas de la publicación</summary>
+                    <summary style={{ cursor: "pointer", color: "#1d1d1f", fontWeight: 600 }}>Ver etapas de la publicación</summary>
                     <div style={{ display: "grid", gap: 5, marginTop: 8, paddingLeft: 4 }}>
                       <div>{item.progressPercent >= 10 ? "✓" : "○"} Publicación encolada</div>
                       <div>{item.progressPercent >= 30 ? "✓" : "○"} Worker iniciado</div>

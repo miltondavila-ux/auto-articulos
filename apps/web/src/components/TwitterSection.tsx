@@ -166,7 +166,7 @@ export default function TwitterSection() {
                     disabled={saving}
                     style={{
                       ...secondaryButtonStyle,
-                      background: "#0071e3",
+                      background: "#1d1d1f",
                       color: "#ffffff",
                       border: "none",
                     }}

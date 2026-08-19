@@ -15,8 +15,8 @@ function filterButtonStyle(active: boolean) {
     borderRadius: 20,
     fontSize: 13,
     fontWeight: 500,
-    border: active ? "1px solid #0071e3" : "1px solid #d2d2d7",
-    background: active ? "#0071e3" : "#ffffff",
+    border: active ? "1px solid #1d1d1f" : "1px solid #d2d2d7",
+    background: active ? "#1d1d1f" : "#ffffff",
     color: active ? "#ffffff" : "#1d1d1f",
     textDecoration: "none",
     transition: "all 0.15s ease",
@@ -85,7 +85,7 @@ function TarjetaActualizacion({ item }: { item: { date: Date; title: string; cat
               borderRadius: 999,
               fontSize: 11,
               fontWeight: 500,
-              color: esNueva ? "#16803c" : "#0071e3",
+              color: esNueva ? "#16803c" : "#1d1d1f",
               background: esNueva ? "rgba(52, 199, 89, 0.1)" : "#e8f2ff",
             }}
           >

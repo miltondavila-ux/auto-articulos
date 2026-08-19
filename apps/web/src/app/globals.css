@@ -22,7 +22,10 @@
   --apple-surface-card: #ffffff;
   --apple-text-primary: #1d1d1f;
   --apple-text-secondary: #6e6e73;
-  --apple-accent: #0071e3;
+  /* El acento del sistema es grafito: Apple no colorea las acciones. */
+  --apple-accent: #1d1d1f;
+  /* El azul sobrevive SOLO en enlaces de texto, como en apple.com. */
+  --apple-link: #0066cc;
   --apple-border: rgba(0, 0, 0, 0.07);
 }
 
@@ -106,7 +109,7 @@ h3 {
 button {
   border: 0;
   border-radius: 10px;
-  background: #0071e3;
+  background: #1d1d1f;
   color: #ffffff;
   padding: 11px 16px;
   min-height: 44px;
@@ -122,19 +125,19 @@ button {
 }
 
 button:hover {
-  background: #0077ed;
+  background: #000000;
   transform: translateY(-1px);
 }
 
 button.secondary {
   background: #ffffff;
-  color: #0071e3;
+  color: #1d1d1f;
   border: 1px solid #d2d2d7;
 }
 
 button.secondary:hover {
   background: #f5f5f7;
-  color: #0071e3;
+  color: #1d1d1f;
 }
 
 button:disabled {
@@ -147,7 +150,7 @@ button:disabled {
   padding: 0;
   min-height: auto;
   background: transparent;
-  color: #0071e3;
+  color: #0066cc;
   font-size: 13px;
   font-weight: 500;
   border: none;
@@ -244,7 +247,7 @@ textarea {
 }
 
 .row a {
-  color: #0071e3;
+  color: #0066cc;
   text-decoration: none;
 }
 
@@ -264,8 +267,8 @@ textarea {
   display: inline-block;
   padding: 4px 10px;
   border-radius: 999px;
-  background: #e8f2ff;
-  color: #0071e3;
+  background: #f5f5f7;
+  color: #6e6e73;
   font-size: 11px;
   font-weight: 600;
   margin-bottom: 12px;

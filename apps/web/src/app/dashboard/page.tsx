@@ -137,7 +137,7 @@ export default function InicioPage() {
       {showTrialWelcome && (
         <div
           style={{
-            background: "linear-gradient(135deg, rgba(0, 113, 227, 0.9) 0%, rgba(0, 75, 153, 0.9) 100%)",
+            background: "linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 75, 153, 0.9) 100%)",
             backdropFilter: "blur(20px) saturate(180%)",
             WebkitBackdropFilter: "blur(20px) saturate(180%)",
             color: "#fff",
@@ -214,7 +214,7 @@ export default function InicioPage() {
                       href={n.url}
                       target="_blank"
                       rel="noreferrer"
-                      style={{ color: "#0071e3", textDecoration: "underline" }}
+                      style={{ color: "#0066cc", textDecoration: "underline" }}
                     >
                       Ver artículo
                     </a>
@@ -260,7 +260,7 @@ export default function InicioPage() {
           Hay una publicación en curso.{" "}
           <Link
             href="/dashboard/publicaciones-en-curso"
-            style={{ color: "#0071e3", fontWeight: 600, textDecoration: "underline" }}
+            style={{ color: "#0066cc", fontWeight: 600, textDecoration: "underline" }}
           >
             Ver progreso en Publicaciones en Curso
           </Link>

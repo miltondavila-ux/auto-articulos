@@ -434,7 +434,7 @@ function HistorialRedes() {
                           })}
                         </span>
                         <span className="muted">—</span>
-                        <span style={{ fontWeight: 600, color: "#0071e3", textTransform: "uppercase", fontSize: 11 }}>
+                        <span style={{ fontWeight: 600, color: "#1d1d1f", textTransform: "uppercase", fontSize: 11 }}>
                           {opp.platform}
                         </span>
                         <span className="muted">—</span>

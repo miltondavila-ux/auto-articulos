@@ -76,7 +76,7 @@ export default function ModuleGuard({ children }: { children: ReactNode }) {
           style={{
             display: "inline-block",
             padding: "10px 20px",
-            background: "#0071e3",
+            background: "#1d1d1f",
             color: "#ffffff",
             borderRadius: 10,
             fontSize: 14,

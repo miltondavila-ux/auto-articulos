@@ -141,7 +141,7 @@ function TitleProgressRow({
                 : title.status === "error"
                   ? "#ff3b30"
                   : title.status === "processing"
-                    ? "#0071e3"
+                    ? "#1d1d1f"
                     : "#6e6e73",
             flexShrink: 0,
           }}
@@ -179,7 +179,7 @@ function TitleProgressRow({
               style={{
                 height: "100%",
                 width: `${titlePercent}%`,
-                background: "#0071e3",
+                background: "#1d1d1f",
                 transition: "width 0.4s ease",
               }}
             />
@@ -509,7 +509,7 @@ export default function LiveProgress({
               width: 14,
               height: 14,
               border: "2px solid #d2d2d7",
-              borderTopColor: "#0071e3",
+              borderTopColor: "#1d1d1f",
               borderRadius: "50%",
               animation: "auto-articulos-spin 0.8s linear infinite",
               flexShrink: 0,
@@ -533,7 +533,7 @@ export default function LiveProgress({
           style={{
             height: "100%",
             width: `${percent}%`,
-            background: "#0071e3",
+            background: "#1d1d1f",
             transition: "width 0.4s ease",
           }}
         />
