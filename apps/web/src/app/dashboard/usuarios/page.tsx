@@ -20,7 +20,6 @@ import {
   statusLabel,
 } from "@/components/dashboard-ui";
 import type { RunStatus, TitleStatus } from "@/types/dashboard";
-import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
 import {
   normalizePlatformDomain,
   PLATFORM_DOMAIN_VALUES,
@@ -690,17 +689,6 @@ export default function UsuariosPage() {
 
   return (
     <div style={{ maxWidth: 1120, margin: "0 auto" }}>
-      <ModuleIntro titulo="Administración">
-        <IntroP>
-          Desde aquí gestionas las cuentas de la plataforma: crear usuarios, cambiar sus contraseñas, ver cuánto consume cada uno y decidir a qué módulos y a qué redes sociales tiene acceso.
-        </IntroP>
-        <IntroP>
-          El control de módulos tiene tres posturas por usuario: heredar lo que diga la configuración general, forzar que lo vea aunque esté oculto para todos, o forzar que no lo vea aunque esté visible.
-        </IntroP>
-        <IntroP>
-          También está aquí el modo de mantenimiento, que oculta la plataforma a todo el mundo menos a los administradores mientras se trabaja en ella.
-        </IntroP>
-      </ModuleIntro>
       <section
         className="panel"
         style={{
@@ -716,6 +704,15 @@ export default function UsuariosPage() {
         <h1 style={{ margin: "0 0 6px", fontSize: 26, fontWeight: 600, color: "#1d1d1f", letterSpacing: "-0.03em" }}>
           Administración
         </h1>
+        <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
+          Desde aquí gestionas las cuentas de la plataforma: crear usuarios, cambiar sus contraseñas, ver cuánto consume cada uno y decidir a qué módulos y a qué redes sociales tiene acceso.
+        </p>
+        <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
+          El control de módulos tiene tres posturas por usuario: heredar lo que diga la configuración general, forzar que lo vea aunque esté oculto para todos, o forzar que no lo vea aunque esté visible.
+        </p>
+        <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
+          También está aquí el modo de mantenimiento, que oculta la plataforma a todo el mundo menos a los administradores mientras se trabaja en ella.
+        </p>
         <p
           className="lead-copy"
           style={{

@@ -102,7 +102,7 @@ function HistorialEjecuciones() {
       >
         <div>
           <p className="eyebrow" style={{ margin: "0 0 2px" }}>Registro</p>
-          <h2 style={{ ...h2Style, margin: 0 }}>Historial de Ejecuciones</h2>
+          <h2 style={{ ...h2Style, margin: 0 }}>Artículos publicados</h2>
         </div>
         <span className="muted" style={{ fontSize: 13 }}>
           {runs.length} ejecución{runs.length !== 1 ? "es" : ""}
@@ -336,7 +336,7 @@ function HistorialRedes() {
       >
         <div>
           <p className="eyebrow" style={{ margin: "0 0 2px" }}>Redes Sociales</p>
-          <h2 style={{ ...h2Style, margin: 0 }}>Historial de Publicaciones en Redes</h2>
+          <h2 style={{ ...h2Style, margin: 0 }}>Publicaciones en redes sociales</h2>
         </div>
         {!loading && (
           <span className="muted" style={{ fontSize: 13 }}>
