@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
+import ModuleIntro, { IntroP, Modulo } from "@/components/ModuleIntro";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -194,10 +194,13 @@ export default function PublicarPage() {
       >
         <ModuleIntro titulo="Publicaciones propias">
           <IntroP>
-            Aquí decides tú el tema. Escribes tus propios títulos, hasta diez de una vez, eliges la categoría y el sistema los redacta y los publica en tu web.
+            Aquí decides tú el tema. Escribes tus propios títulos, hasta diez de una vez, eliges en qué sección de tu web va cada uno, y el sistema los redacta completos y los publica.
           </IntroP>
           <IntroP>
-            Úsalo cuando ya sabes de qué quieres escribir. Si prefieres que el sistema decida por ti, a partir de lo que la gente busca en Google, ese es el módulo de Oportunidades.
+            Úsalo cuando ya sabes de qué necesitas hablar. Si prefieres que sea el sistema quien elija los temas, a partir de lo que la gente busca de verdad en Google, ese es <Modulo id="oportunidades" />.
+          </IntroP>
+          <IntroP>
+            Una vez le des a publicar, el avance se ve en <Modulo id="publicaciones-en-curso" />.
           </IntroP>
         </ModuleIntro>
         {hasActiveRun && (

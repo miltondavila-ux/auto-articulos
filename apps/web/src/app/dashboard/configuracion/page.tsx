@@ -643,10 +643,13 @@ export default function ConfiguracionPage() {
           Este es el módulo que hay que dejar listo antes que nada: sin él, el sistema no puede publicar por ti.
         </IntroP>
         <IntroP>
-          Aquí guardas tu cuenta de la plataforma de publicación, sincronizas tus categorías, eliges el idioma en el que se escribirán tus artículos y conectas Google Search Console, que es de donde salen las oportunidades. También puedes conectar tus redes sociales y personalizar la firma, el teléfono y el estilo de las imágenes.
+          Aquí guardas la clave de tu plataforma de publicación para que el sistema pueda entrar a tu web, sincronizas las secciones donde irán los artículos, eliges el idioma en el que se escribirán y conectas Google Search Console, que es el registro de lo que la gente buscó antes de llegar a tu página.
         </IntroP>
         <IntroP>
-          Si es tu primera vez, usa el asistente paso a paso: te lleva por lo obligatorio sin que tengas que saber dónde está cada cosa.
+          También puedes conectar tus redes sociales y personalizar la firma de los artículos, tu teléfono de contacto y el estilo de las imágenes. Eso es opcional: se puede publicar sin ello.
+        </IntroP>
+        <IntroP>
+          Si es tu primera vez, usa el asistente paso a paso que hay en esta misma pantalla: te lleva por lo obligatorio sin que tengas que saber dónde está cada cosa.
         </IntroP>
       </ModuleIntro>
       {/* Hero Control Center Header */}

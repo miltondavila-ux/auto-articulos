@@ -48,10 +48,10 @@ export default async function ActualizacionesPage({
     <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 1120, margin: "0 auto" }}>
       <ModuleIntro titulo="Actualizaciones">
         <IntroP>
-          Aquí se anota cada mejora y cada arreglo que se hace en la plataforma, con la fecha y qué cambió.
+          Aquí se anota cada mejora y cada arreglo que se hace en la plataforma, con su fecha y una explicación de qué cambió y para qué sirve.
         </IntroP>
         <IntroP>
-          Míralo cuando notes algo distinto en una pantalla o cuando aparezca una función que antes no estaba: aquí se explica qué pasó y para qué sirve.
+          Míralo cuando notes algo distinto en una pantalla, o cuando aparezca una función que antes no estaba. En vez de tener que preguntar, aquí está escrito qué pasó.
         </IntroP>
       </ModuleIntro>
       <div className="panel" style={sectionStyle}>

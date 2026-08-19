@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
+import ModuleIntro, { IntroP, Modulo } from "@/components/ModuleIntro";
 import Link from "next/link";
 import type { RunRow } from "@/types/dashboard";
 import PerformanceDashboard from "@/components/PerformanceDashboard";
@@ -137,10 +137,13 @@ export default function InicioPage() {
     <div>
       <ModuleIntro titulo="Inicio">
         <IntroP>
-          Esta es tu pantalla de control. Aquí ves de un vistazo cómo va tu cuenta: cuántos artículos has publicado hoy y este mes, cuánto te queda de tu límite y el ritmo que llevas.
+          Esta es tu pantalla de control. Aquí ves de un vistazo cómo va tu cuenta: cuántos artículos se han publicado hoy y este mes, cuánto te queda de tu límite y el ritmo que llevas.
         </IntroP>
         <IntroP>
-          Si tu cuenta es nueva y todavía no has publicado nada, en lugar de las métricas verás el asistente de configuración, que te lleva de la mano por los cuatro pasos necesarios para empezar.
+          Si tu cuenta es nueva y todavía no hay artículos, en lugar de las métricas verás el asistente de configuración, que te pide una por una las cuatro cosas que el sistema necesita para poder publicar por ti. Cuando termines, el resto de la plataforma se desbloquea.
+        </IntroP>
+        <IntroP>
+          Si no sabes por dónde empezar, <Modulo id="como-funciona" /> lo explica entero en tres pasos.
         </IntroP>
       </ModuleIntro>
       {showTrialWelcome && (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
+import ModuleIntro, { IntroP, Modulo } from "@/components/ModuleIntro";
 import {
   sectionStyle,
   h2Style,
@@ -24,10 +24,13 @@ export default function HistorialPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <ModuleIntro titulo="Historial">
         <IntroP>
-          Todo lo que la plataforma ha publicado por ti queda registrado aquí: artículos y publicaciones en redes, con su fecha, su estado y el enlace a lo publicado.
+          Todo lo que la plataforma ha publicado por ti queda registrado aquí: artículos y publicaciones en redes, con su fecha, su estado y el enlace a lo que se publicó.
         </IntroP>
         <IntroP>
-          Sirve para dos cosas: comprobar que algo salió bien y encontrar rápido un artículo concreto cuando lo necesitas.
+          Sirve para dos cosas muy concretas: comprobar que algo salió bien de verdad, y encontrar rápido un artículo cuando lo necesitas para compartirlo o revisarlo.
+        </IntroP>
+        <IntroP>
+          Si un trabajo todavía no aparece aquí, es que sigue en marcha: míralo en <Modulo id="publicaciones-en-curso" />.
         </IntroP>
       </ModuleIntro>
       <HistorialEjecuciones />

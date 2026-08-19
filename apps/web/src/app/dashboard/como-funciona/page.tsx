@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { CSSProperties } from "react";
+import { Modulo } from "@/components/ModuleIntro";
 
 export const metadata: Metadata = {
   title: "Cómo funciona — Auto Artículos",
@@ -60,8 +61,20 @@ const PASOS = [
     numero: 1,
     titulo: "Configura tu cuenta",
     cuerpo: [
-      "Es lo primero, y lo único que no puede saltarse. Sin la configuración completa, el sistema no tiene con qué trabajar.",
-      "Si no estás seguro de haberlo dejado todo listo, entra en Configuración y revísalo. Es muy sencillo y se hace una sola vez. Si algo no te queda claro, abre la burbuja de ayuda que aparece en la esquina de la pantalla y pregunta: está en todas las pantallas.",
+      <>
+        Es lo primero, y lo único que no puede saltarse. La plataforma publica
+        artículos <em>dentro de tu página web</em>, así que necesita cuatro
+        cosas antes de poder trabajar: la clave de tu web para poder entrar, la
+        lista de secciones donde colocar cada artículo, el idioma en el que
+        quieres que se escriba, y el permiso de Google para leer tus datos.
+      </>,
+      <>
+        Todo eso se guarda una sola vez en <Modulo id="configuracion" />. Si es
+        tu primera vez, ahí mismo hay un asistente que te lo pide paso a paso,
+        sin que tengas que saber dónde está cada cosa. Si algo no te queda
+        claro, abre la burbuja de ayuda de la esquina y pregunta: está en todas
+        las pantallas y responde con tus propios datos.
+      </>,
     ],
     accion: { texto: "Ir a Configuración", href: "/dashboard/configuracion" },
   },
@@ -69,9 +82,36 @@ const PASOS = [
     numero: 2,
     titulo: "Publica tus artículos",
     cuerpo: [
-      "Aquí tienes dos caminos, y puedes usar los dos.",
-      "El primero es publicar tus propios artículos: colocas hasta diez títulos a la vez y el sistema los redacta y los publica por ti.",
-      "El segundo es dejarle el trabajo al sistema. En Oportunidades se comunica con Google Search Console y con Bing, mira qué está buscando de verdad la gente que llega a tu sitio, y decide qué te conviene publicar. Cuando la inteligencia artificial haya decidido, publicas tú: de uno en uno o por lotes.",
+      <>
+        Aquí tienes dos caminos, y puedes usar los dos. Cambian en una sola
+        cosa: quién elige el tema.
+      </>,
+      <>
+        En <Modulo id="publicar" /> eliges tú. Escribes hasta diez
+        títulos de una vez, dices en qué sección va cada uno, y el sistema los
+        redacta y los publica en tu web. Es lo que quieres cuando ya sabes de
+        qué necesitas hablar.
+      </>,
+      <>
+        En <Modulo id="oportunidades" /> elige el sistema. Google
+        guarda un registro de lo que escribió la gente en el buscador antes de
+        llegar a tu página; ese registro se llama Search Console y es el que se
+        conectó en el paso anterior. El sistema lo lee, junto con Bing, y
+        descubre qué está buscando de verdad tu público. Con eso te propone
+        títulos que sabemos que la gente busca, en vez de temas inventados.
+      </>,
+      <>
+        Esos títulos son de <em>cola larga</em>: búsquedas largas y concretas,
+        del estilo &ldquo;cuánto cuesta un seguro dental en Miami&rdquo; en
+        lugar de &ldquo;seguros&rdquo;. Se pelean menos y por eso es más fácil
+        aparecer en ellas. Tú revisas la lista, borras lo que no te convenza y
+        publicas lo que quieras, de uno en uno o todo junto.
+      </>,
+      <>
+        Mientras se escriben, el avance se ve en{" "}
+        <Modulo id="publicaciones-en-curso" />, y cuando terminan quedan
+        guardados en <Modulo id="historial" /> con su enlace.
+      </>,
     ],
     accion: { texto: "Ver Oportunidades SEO/AEO", href: "/dashboard/oportunidades" },
   },
@@ -79,8 +119,17 @@ const PASOS = [
     numero: 3,
     titulo: "Lleva lo publicado a las redes",
     cuerpo: [
-      "Con artículos ya publicados, Oportunidades para Redes Sociales te permite llevar los más relevantes a tus redes.",
-      "No se publica todo ni todo el tiempo. El sistema reparte y equilibra, para que tu presencia crezca sin parecer spam.",
+      <>
+        Un artículo en tu web solo lo encuentra quien lo busca. En redes
+        sociales lo ve gente que todavía no te estaba buscando, y cada visita
+        que llega desde ahí es una señal más de que tu contenido interesa.
+      </>,
+      <>
+        En <Modulo id="oportunidades-redes" /> el sistema toma
+        artículos que ya publicaste y prepara la publicación para cada red. Tú
+        revisas y decides cuál sale y dónde. No se publica todo ni todo el
+        tiempo: se reparte, para que tu presencia crezca sin parecer spam.
+      </>,
     ],
     accion: {
       texto: "Ver Oportunidades para Redes Sociales",
@@ -88,6 +137,7 @@ const PASOS = [
     },
   },
 ];
+
 
 export default function ComoFuncionaPage() {
   return (
@@ -122,9 +172,23 @@ export default function ComoFuncionaPage() {
             color: "#6e6e73",
           }}
         >
-          En Google Search Console, en Bing y en las inteligencias artificiales.
-          Con acceso, además, a un motor de publicación en redes sociales
-          inteligente y equilibrado.
+          En Google, en Bing y en las inteligencias artificiales. Con acceso,
+          además, a un motor de publicación en redes sociales inteligente y
+          equilibrado.
+        </p>
+        <p
+          style={{
+            margin: "16px auto 0",
+            maxWidth: 760,
+            fontSize: 17,
+            lineHeight: "25px",
+            color: "#6e6e73",
+          }}
+        >
+          Dicho en simple: esta plataforma escribe artículos y los publica
+          dentro de tu página web, uno detrás de otro, sobre los temas que la
+          gente está buscando de verdad. Cuantos más artículos útiles tengas,
+          más veces aparece tu web cuando alguien busca algo de lo tuyo.
         </p>
       </header>
 
@@ -163,8 +227,8 @@ export default function ComoFuncionaPage() {
           >
             {paso.titulo}
           </h3>
-          {paso.cuerpo.map((parrafo) => (
-            <p key={parrafo.slice(0, 40)} style={PARRAFO}>
+          {paso.cuerpo.map((parrafo, i) => (
+            <p key={i} style={PARRAFO}>
               {parrafo}
             </p>
           ))}
@@ -186,7 +250,21 @@ export default function ComoFuncionaPage() {
           Aparecer en los resultados de la inteligencia artificial, de Google y
           de Bing es lo más importante que le puede pasar a tu negocio en
           internet. Es la diferencia entre que te encuentren y que no sepan que
-          existes. Todo lo que hace esta plataforma va dirigido a eso.
+          existes.
+        </p>
+        <p style={PARRAFO}>
+          No pasa de un día para otro, y conviene decirlo claro: Google tarda en
+          leer y valorar cada artículo nuevo. Lo que sí ocurre es que se va
+          acumulando. Cada artículo que se posiciona atrae visitas, esas visitas
+          le confirman a Google que tu sitio responde bien, y eso hace que el
+          siguiente artículo lo tenga un poco más fácil. Es un efecto bola de
+          nieve: empieza pequeño y va creciendo solo, siempre que no se detenga.
+        </p>
+        <p style={PARRAFO}>
+          Por eso el trabajo real es sencillo: dejar la cuenta bien configurada
+          una vez, y después publicar de forma constante desde{" "}
+          <Modulo id="publicar" /> o{" "}
+          <Modulo id="oportunidades" />.
         </p>
       </section>
     </div>

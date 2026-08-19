@@ -13,6 +13,7 @@ import {
   sectionStyle,
 } from "@/components/dashboard-ui";
 import ImageCreditsModal from "@/components/ImageCreditsModal";
+import { Modulo } from "@/components/ModuleIntro";
 import PreValidationGuard from "@/components/PreValidationGuard";
 
 interface OpportunityTitle {
@@ -566,10 +567,15 @@ export default function OportunidadesPage() {
               dan más señales a Google sobre tu sitio. Es un efecto bola de
               nieve: empieza pequeño y va creciendo solo.
             </p>
+            <p style={{ margin: "10px 0 0", fontSize: 16, lineHeight: 1.55, color: "#1d1d1f" }}>
+              Aquí el tema lo elige el sistema. Si prefieres decidirlo tú y
+              escribir tus propios títulos, ese es <Modulo id="publicar" />.
+            </p>
             <p style={{ margin: "10px 0 0", fontSize: 16, lineHeight: 1.55, color: "#6e6e73" }}>
               Son tres pasos. Pides el análisis, eliges cómo quieres que se
               escriban y revisas antes de publicar. Nada se publica sin que tú
-              lo mandes.
+              lo mandes; el avance se ve luego en{" "}
+              <Modulo id="publicaciones-en-curso" />.
             </p>
           </div>
         </section>

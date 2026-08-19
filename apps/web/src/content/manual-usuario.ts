@@ -31,7 +31,9 @@ Inicio es tu centro de operaciones:
 
 ## Cada módulo se explica solo
 
-Al principio de cada pantalla hay un recuadro que empieza con "Antes de avanzar, lee esto". Ahí se explica en pocas líneas qué sucede en ese módulo, para qué sirve y qué se espera de ti. Si llegas a una pantalla y no sabes a qué viniste, esa es la respuesta corta; el manual y la burbuja de ayuda son la respuesta larga.
+Al principio de cada pantalla hay un recuadro que empieza con "Antes de avanzar, lee esto". Ahí se explica en pocas líneas qué sucede en ese módulo, para qué sirve y qué se espera de ti, en lenguaje llano y sin dar por supuesto ningún conocimiento previo.
+
+Dentro de esas explicaciones, el nombre de cualquier módulo aparece en MAYÚSCULAS y en negrita, y además es un enlace: al pulsarlo vas directo a esa pantalla. Así, si un texto te manda a otro módulo, no tienes que buscarlo en el menú.
 
 ## El menú
 

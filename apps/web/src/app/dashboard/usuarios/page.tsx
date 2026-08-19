@@ -111,10 +111,13 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
     <div>
       <ModuleIntro titulo="Administración">
         <IntroP>
-          Desde aquí gestionas las cuentas de la plataforma: crear usuarios, cambiar sus contraseñas, ver su consumo y decidir a qué módulos y a qué redes sociales tiene acceso cada uno.
+          Desde aquí gestionas las cuentas de la plataforma: crear usuarios, cambiar sus contraseñas, ver cuánto consume cada uno y decidir a qué módulos y a qué redes sociales tiene acceso.
         </IntroP>
         <IntroP>
-          También controlas la visibilidad global de los módulos y el modo de mantenimiento, que oculta la plataforma a todos menos a los administradores.
+          El control de módulos tiene tres posturas por usuario: heredar lo que diga la configuración general, forzar que lo vea aunque esté oculto para todos, o forzar que no lo vea aunque esté visible.
+        </IntroP>
+        <IntroP>
+          También está aquí el modo de mantenimiento, que oculta la plataforma a todo el mundo menos a los administradores mientras se trabaja en ella.
         </IntroP>
       </ModuleIntro>
       <div
