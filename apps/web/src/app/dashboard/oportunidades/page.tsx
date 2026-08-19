@@ -143,6 +143,14 @@ function formatDateTime(value: string | Date) {
   });
 }
 
+function friendlyRequestError(error: unknown, action: string): string {
+  const detail = error instanceof Error ? error.message : String(error);
+  if (/failed to fetch|networkerror|load failed/i.test(detail)) {
+    return `No se pudo comunicar con el servidor al ${action}. No podemos confirmar si la acción llegó a completarse; revisa Publicaciones en curso antes de intentarlo otra vez para evitar duplicados.`;
+  }
+  return detail || `No se pudo ${action}.`;
+}
+
 export default function OportunidadesPage() {
   const router = useRouter();
   const [groups, setGroups] = useState<OpportunityGroup[]>([]);
@@ -361,7 +369,7 @@ export default function OportunidadesPage() {
     } catch (error) {
       setMessage({
         kind: "error",
-        text: error instanceof Error ? error.message : String(error),
+        text: friendlyRequestError(error, "analizar las oportunidades"),
       });
     } finally {
       setAnalyzing(false);
@@ -395,26 +403,37 @@ export default function OportunidadesPage() {
     }
     setBusyId("__all__");
     setMessage(null);
-    const response = await fetch("/api/opportunities/execute-all", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ disableIndexing, contentLanguage, promptId: selectedPromptId || null }),
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      if (data.code === "NO_IMAGE_CREDITS") {
-        setShowImageCreditsModal(true);
+    try {
+      const response = await fetch("/api/opportunities/execute-all", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ disableIndexing, contentLanguage, promptId: selectedPromptId || null }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        if (data.code === "NO_IMAGE_CREDITS") {
+          setShowImageCreditsModal(true);
+        }
+        setMessage({
+          kind: "error",
+          text: data.error ?? "No se pudo publicar todas las categorías.",
+        });
+        await load().catch(() => {});
+        return;
       }
+      router.push("/dashboard/publicaciones-en-curso");
+      router.refresh();
+    } catch (error) {
       setMessage({
         kind: "error",
-        text: data.error ?? "No se pudo publicar todas las categorías.",
+        text: friendlyRequestError(error, "publicar las categorías"),
       });
-      await load();
+      // La solicitud pudo haberse completado en el servidor aunque el
+      // navegador perdiera la respuesta. Refrescamos antes de dejar reintentar.
+      await load().catch(() => {});
+    } finally {
       setBusyId(null);
-      return;
     }
-    router.push("/dashboard/publicaciones-en-curso");
-    router.refresh();
   }
 
   async function execute(type: "group" | "title", id: string) {
@@ -431,26 +450,34 @@ export default function OportunidadesPage() {
     }
     setBusyId(id);
     setMessage(null);
-    const response = await fetch("/api/opportunities/execute", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type, id, disableIndexing, contentLanguage, promptId: selectedPromptId || null }),
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      if (data.code === "NO_IMAGE_CREDITS") {
-        setShowImageCreditsModal(true);
+    try {
+      const response = await fetch("/api/opportunities/execute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, id, disableIndexing, contentLanguage, promptId: selectedPromptId || null }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        if (data.code === "NO_IMAGE_CREDITS") {
+          setShowImageCreditsModal(true);
+        }
+        setMessage({ kind: "error", text: data.error ?? "No se pudo ejecutar." });
+        // Si el servidor dice que ya no existe, la lista en pantalla está
+        // desactualizada (p. ej. otra pestaña ya la ejecutó/eliminó).
+        await load().catch(() => {});
+        return;
       }
-      setMessage({ kind: "error", text: data.error ?? "No se pudo ejecutar." });
-      // Si el servidor dice que ya no existe, la lista en pantalla está
-      // desactualizada (p. ej. otra pestaña ya la ejecutó/eliminó) —
-      // refrescamos para que no se sigan reintentando datos fantasma.
-      await load();
+      router.push("/dashboard/publicaciones-en-curso");
+      router.refresh();
+    } catch (error) {
+      setMessage({
+        kind: "error",
+        text: friendlyRequestError(error, "ejecutar esta oportunidad"),
+      });
+      await load().catch(() => {});
+    } finally {
       setBusyId(null);
-      return;
     }
-    router.push("/dashboard/publicaciones-en-curso");
-    router.refresh();
   }
 
   if (loading) {
