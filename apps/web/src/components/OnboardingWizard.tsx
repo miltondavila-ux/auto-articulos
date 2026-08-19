@@ -12,6 +12,9 @@ import {
   platformProductNameOrNeutral,
 } from "@auto-articulos/shared";
 import type { CategoryRow, LanguageRow, RunRow } from "@/types/dashboard";
+import CategorySyncProgress, {
+  type CategorySyncStatus,
+} from "@/components/CategorySyncProgress";
 
 interface OnboardingWizardProps {
   variant?: "standalone" | "embedded";
@@ -838,39 +841,15 @@ export default function OnboardingWizard({
                   }}
                 >
                   {syncingCategories || categorySyncInProgress ? (
-                    <div
-                      style={{
-                        background: "#ffffff",
-                        border: "2px solid #1d1d1f",
-                        borderRadius: 10,
-                        padding: "18px 20px",
-                        textAlign: "center",
-                        boxShadow: "none",
-                      }}
-                    >
-                      <div style={{ fontSize: 36, marginBottom: 8 }}>⏳</div>
-                      <h4 style={{ margin: "0 0 6px 0", fontSize: 16, color: "#1d1d1f", fontWeight: 800 }}>
-                        Conectando con tu sitio web de {productName}...
-                      </h4>
-                      <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#6e6e73", lineHeight: 1.5, maxWidth: 500, marginLeft: "auto", marginRight: "auto" }}>
-                        Nuestro robot está ingresando a tu cuenta para descargar automáticamente todas las categorías de tu web. Puede tardar <strong>unos minutos</strong> según la cola de trabajo; esta pantalla se actualiza sola cuando termine, no hace falta que hagas nada.
-                      </p>
-                      <div
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 8,
-                          background: "#f5f5f7",
-                          color: "#1d1d1f",
-                          padding: "8px 16px",
-                          borderRadius: 20,
-                          fontSize: 13,
-                          fontWeight: 700,
-                        }}
-                      >
-                        <span>Sincronización en curso... por favor no recargues la página</span>
-                      </div>
-                    </div>
+                    <CategorySyncProgress
+                      status={
+                        (lastSyncStatus as CategorySyncStatus | null) ??
+                        "pending"
+                      }
+                      categoriesCount={categories.length}
+                      errorMessage={lastSyncError}
+                      active={syncingCategories || categorySyncInProgress}
+                    />
                   ) : (
                     <>
                       <p style={{ margin: "0 0 10px 0", fontSize: 13, color: "#1d1d1f", fontWeight: 500 }}>

@@ -19,6 +19,9 @@ import TwitterSection from "@/components/TwitterSection";
 import LinkedInSection from "@/components/LinkedInSection";
 import PhotoLogoUploader from "@/components/PhotoLogoUploader";
 import OnboardingWizard from "@/components/OnboardingWizard";
+import CategorySyncProgress, {
+  type CategorySyncStatus,
+} from "@/components/CategorySyncProgress";
 import {
   DEFAULT_PLATFORM_DOMAIN,
   PLATFORM_SERVERS,
@@ -1190,42 +1193,16 @@ export default function ConfiguracionPage() {
               </p>
             )}
 
+            {/* Mismo componente que usa el asistente de Inicio, para que la
+                espera se vea y se explique igual en los dos sitios donde se
+                sincroniza (pedido de Milton, 15/8/2026). */}
             {syncInProgress && (
-              <p
-                style={{
-                  fontSize: 13,
-                  color: "#8a4b08",
-                  marginTop: 10,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  background: "#fff4e5",
-                  padding: "8px 12px",
-                  borderRadius: 8,
-                }}
-              >
-                <style>{`
-                  @keyframes auto-articulos-spin {
-                    to { transform: rotate(360deg); }
-                  }
-                `}</style>
-                <span
-                  aria-hidden
-                  style={{
-                    display: "inline-block",
-                    width: 14,
-                    height: 14,
-                    border: "2px solid #fff4e5",
-                    borderTopColor: "#8a4b08",
-                    borderRadius: "50%",
-                    animation: "auto-articulos-spin 0.8s linear infinite",
-                    flexShrink: 0,
-                  }}
-                />
-                {lastSyncStatus === "running"
-                  ? `Conectando con ${productName}...`
-                  : "En cola de sincronización. Esta pantalla se actualizará automáticamente."}
-              </p>
+              <CategorySyncProgress
+                status={(lastSyncStatus as CategorySyncStatus | null) ?? "pending"}
+                categoriesCount={categories.length}
+                errorMessage={lastSyncError}
+                active={syncInProgress}
+              />
             )}
 
             {lastSyncStatus === "error" && (
