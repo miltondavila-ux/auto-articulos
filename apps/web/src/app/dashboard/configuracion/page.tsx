@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, type FormEvent } from "react";
-import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
+import { useEffect, useRef, useState, useCallback, type FormEvent } from "react";
 import {
   sectionStyle,
   h2Style,
@@ -25,7 +24,7 @@ import {
   PLATFORM_SERVERS,
   platformForgotPasswordUrl,
   platformHelpUrl,
-  platformProductName,
+  platformProductNameOrNeutral,
 } from "@auto-articulos/shared";
 
 export default function ConfiguracionPage() {
@@ -53,12 +52,13 @@ export default function ConfiguracionPage() {
   );
   // Para marca blanca (tagcrush): decide si el texto dice "10minutesWebsite"
   // o un término genérico. Ver platform-servers.ts.
-  const [platformDomain, setPlatformDomain] = useState<string>(
-    DEFAULT_PLATFORM_DOMAIN,
-  );
+  // Vacío a propósito hasta que /api/me diga el servidor real: mientras
+  // tanto el texto usa el término genérico y nunca la marca equivocada.
+  const [platformDomain, setPlatformDomain] = useState<string>("");
+  const wizardRef = useRef<HTMLDivElement | null>(null);
   // Nombre de marca a mostrar y enlace de ayuda: genéricos en cuentas de
   // marca blanca (tagcrush) — ver platform-servers.ts.
-  const productName = platformProductName(platformDomain);
+  const productName = platformProductNameOrNeutral(platformDomain);
   const helpUrl = platformHelpUrl(platformDomain);
   const [savingLanguage, setSavingLanguage] = useState(false);
   const [articleSignature, setArticleSignature] = useState("");
@@ -565,6 +565,14 @@ export default function ConfiguracionPage() {
     100,
     Math.round((articleSignature.length / MAX_SIGNATURE_LEN) * 100),
   );
+  // La rejilla de pestañas es alta: al pulsar una, su contenido quedaba por
+  // debajo del borde de la pantalla y parecía que no pasaba nada. Reportado
+  // por Milton con el Asistente de Configuración Inicial.
+  useEffect(() => {
+    if (activeTab === "wizard" && wizardRef.current) {
+      wizardRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [activeTab]);
 
   const signatureBarColor =
     signaturePercent >= 95
@@ -638,20 +646,6 @@ export default function ConfiguracionPage() {
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-      <ModuleIntro titulo="Configuración">
-        <IntroP>
-          Este es el módulo que hay que dejar listo antes que nada: sin él, el sistema no puede publicar por ti.
-        </IntroP>
-        <IntroP>
-          Aquí guardas la clave de tu plataforma de publicación para que el sistema pueda entrar a tu web, sincronizas las secciones donde irán los artículos, eliges el idioma en el que se escribirán y conectas Google Search Console, que es el registro de lo que la gente buscó antes de llegar a tu página.
-        </IntroP>
-        <IntroP>
-          También puedes conectar tus redes sociales y personalizar la firma de los artículos, tu teléfono de contacto y el estilo de las imágenes. Eso es opcional: se puede publicar sin ello.
-        </IntroP>
-        <IntroP>
-          Si es tu primera vez, usa el asistente paso a paso que hay en esta misma pantalla: te lleva por lo obligatorio sin que tengas que saber dónde está cada cosa.
-        </IntroP>
-      </ModuleIntro>
       {/* Hero Control Center Header */}
       {/* Cabecera Apple Minimalista */}
       <div
@@ -696,8 +690,18 @@ export default function ConfiguracionPage() {
                 maxWidth: 650,
               }}
             >
-              Conecta tus buscadores y redes sociales, configura tu cuenta de
-               {productName}, personaliza el contenido de tus artículos y accede desde tu celular.
+              Este es el módulo que hay que dejar listo antes que nada: sin él, el sistema no puede publicar por ti. Aquí guardas la clave de tu cuenta de{" "}
+              {productName} para que el sistema pueda entrar a tu web, sincronizas las secciones donde irán los artículos, eliges el idioma en el que se escribirán y conectas Google Search Console, que es el registro de lo que la gente buscó antes de llegar a tu página.
+            </p>
+            <p
+              style={{
+                margin: "10px 0 0",
+                fontSize: 15,
+                lineHeight: 1.55,
+                color: "#6e6e73",
+              }}
+            >
+              Conectar tus redes sociales y personalizar la firma, el teléfono y el estilo de las imágenes es opcional. Si es tu primera vez, usa el asistente paso a paso: te lleva por lo obligatorio sin que tengas que saber dónde está cada cosa.
             </p>
           </div>
 
@@ -922,7 +926,7 @@ export default function ConfiguracionPage() {
 
       {/* Pestaña 0: Wizard — Configuración Inicial Paso a Paso */}
       {activeTab === "wizard" && (
-        <div>
+        <div ref={wizardRef}>
           <OnboardingWizard
             variant="standalone"
             onUpdated={() => {

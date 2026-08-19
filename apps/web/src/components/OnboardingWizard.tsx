@@ -8,9 +8,8 @@ import {
   secondaryButtonStyle,
 } from "./dashboard-ui";
 import {
-  DEFAULT_PLATFORM_DOMAIN,
   platformForgotPasswordUrl,
-  platformProductName,
+  platformProductNameOrNeutral,
 } from "@auto-articulos/shared";
 import type { CategoryRow, LanguageRow, RunRow } from "@/types/dashboard";
 
@@ -30,9 +29,9 @@ export default function OnboardingWizard({
   const [contentLanguage, setContentLanguage] = useState("");
   // Para marca blanca (tagcrush): decide si el texto dice "10minutesWebsite"
   // o un término genérico. Ver platform-servers.ts.
-  const [platformDomain, setPlatformDomain] = useState<string>(
-    DEFAULT_PLATFORM_DOMAIN,
-  );
+  // Vacío a propósito hasta que /api/me diga el servidor real: mientras
+  // tanto el texto usa el término genérico y nunca la marca equivocada.
+  const [platformDomain, setPlatformDomain] = useState<string>("");
   const [selectedLang, setSelectedLang] = useState("");
   const [googleData, setGoogleData] = useState<{
     connected: boolean;
@@ -430,7 +429,7 @@ export default function OnboardingWizard({
 
   // Nombre de marca a mostrar: "10minutesWebsite" para cuentas normales, un
   // término genérico para marca blanca (tagcrush) — ver platform-servers.ts.
-  const productName = platformProductName(platformDomain);
+  const productName = platformProductNameOrNeutral(platformDomain);
 
   const activeLangName =
     languages.find((l) => l.externalId === contentLanguage)?.name ||

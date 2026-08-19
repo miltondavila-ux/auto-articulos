@@ -132,6 +132,20 @@ export function platformProductName(value: unknown): string {
 }
 
 /**
+ * Igual que platformProductName, pero para cuando TODAVÍA no se sabe a qué
+ * servidor pertenece la cuenta.
+ *
+ * Las pantallas arrancaban su estado en el servidor por defecto, así que se
+ * dibujaban diciendo "10minutesWebsite" hasta que respondía /api/me: un
+ * usuario de tagcrush veía la marca ajena en ese instante, y de forma
+ * permanente si la llamada fallaba. Ante la duda se dice el término genérico:
+ * equivocarse hacia lo neutro no molesta a nadie, hacia la marca sí.
+ */
+export function platformProductNameOrNeutral(value: unknown): string {
+  return isPlatformDomain(value) ? platformProductName(value) : "tu plataforma";
+}
+
+/**
  * Enlace de ayuda/soporte del servidor correspondiente.
  *
  * Antes devolvía null para marca blanca porque no se conocía un soporte
