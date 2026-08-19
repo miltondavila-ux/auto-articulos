@@ -48,7 +48,7 @@ export default function ModuleGuard({ children }: { children: ReactNode }) {
           background: "#ffffff",
           borderRadius: 22,
           border: "1px solid rgba(0, 0, 0, 0.07)",
-          boxShadow: "0 12px 38px rgba(0, 0, 0, 0.06)",
+          boxShadow: "none",
           textAlign: "center",
           maxWidth: 600,
           marginLeft: "auto",

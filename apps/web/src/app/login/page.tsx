@@ -192,7 +192,7 @@ function LoginContent() {
               display: "flex",
               flexDirection: "column",
               gap: 14,
-              boxShadow: "0 12px 36px rgba(0, 0, 0, 0.06)",
+              boxShadow: "none",
               boxSizing: "border-box",
             }}
           >
@@ -209,7 +209,7 @@ function LoginContent() {
                   color: "#ffffff",
                   fontSize: 14,
                   fontWeight: 700,
-                  boxShadow: "0 2px 8px rgba(0, 113, 227, 0.3)",
+                  boxShadow: "none",
                 }}
               >
                 A
@@ -284,7 +284,7 @@ function LoginContent() {
               display: "flex",
               flexDirection: "column",
               gap: 12,
-              boxShadow: "0 12px 36px rgba(0, 0, 0, 0.06)",
+              boxShadow: "none",
               boxSizing: "border-box",
             }}
           >
@@ -419,7 +419,7 @@ const buttonStyle: CSSProperties = {
   fontWeight: 600,
   fontSize: 14,
   cursor: "pointer",
-  boxShadow: "0 2px 8px rgba(0, 113, 227, 0.25)",
+  boxShadow: "none",
   transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
   minHeight: 44,
 };

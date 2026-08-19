@@ -500,7 +500,7 @@ export default function OnboardingWizard({
           background: "rgba(255, 255, 255, 0.88)",
           borderRadius: 22,
           border: "1px solid rgba(0, 0, 0, 0.07)",
-          boxShadow: "0 12px 38px rgba(0, 0, 0, 0.06)",
+          boxShadow: "none",
           overflow: "hidden",
           padding: 0,
         }}
@@ -807,7 +807,7 @@ export default function OnboardingWizard({
                         borderRadius: 10,
                         padding: "18px 20px",
                         textAlign: "center",
-                        boxShadow: "0 4px 14px rgba(59, 130, 246, 0.15)",
+                        boxShadow: "none",
                       }}
                     >
                       <div style={{ fontSize: 36, marginBottom: 8 }}>⏳</div>
@@ -855,7 +855,7 @@ export default function OnboardingWizard({
                             display: "inline-flex",
                             alignItems: "center",
                             gap: 8,
-                            boxShadow: "0 4px 12px rgba(47, 95, 219, 0.25)",
+                            boxShadow: "none",
                           }}
                         >
                           ⚡ Sincronizar mis Categorías Ahora →
@@ -1109,7 +1109,7 @@ export default function OnboardingWizard({
                     borderRadius: 6,
                     fontWeight: 700,
                     fontSize: 13,
-                    boxShadow: "0 2px 6px rgba(220, 38, 38, 0.25)",
+                    boxShadow: "none",
                   }}
                 >
                   ▶️ Ver video: Cómo activar Google Search Console ↗
@@ -1185,7 +1185,7 @@ export default function OnboardingWizard({
                           display: "inline-flex",
                           alignItems: "center",
                           gap: 8,
-                          boxShadow: "0 4px 12px rgba(47, 95, 219, 0.25)",
+                          boxShadow: "none",
                         }}
                       >
                         🔗 Conectar Google Search Console con Google OAuth →
@@ -1387,7 +1387,7 @@ export default function OnboardingWizard({
                         display: "inline-flex",
                         alignItems: "center",
                         gap: 8,
-                        boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)",
+                        boxShadow: "none",
                       }}
                     >
                       🎯 Ir a Crear Oportunidades SEO →
@@ -1447,9 +1447,7 @@ function StepCard({
           ? "1px solid #0071e3"
           : "1px solid #e5e5ea",
         background: "#ffffff",
-        boxShadow: isActive
-          ? "0 4px 16px rgba(0, 113, 227, 0.08)"
-          : "none",
+        boxShadow: "none",
         opacity: isPending ? 0.65 : 1,
         padding: "18px 20px",
       }}

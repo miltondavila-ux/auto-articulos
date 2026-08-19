@@ -771,7 +771,7 @@ export default function UsuariosPage() {
               border: tab === t.id ? "1px solid #0071e3" : "1px solid #e5e5ea",
               background: "#ffffff",
               color: "#1d1d1f",
-              boxShadow: tab === t.id ? "0 4px 14px rgba(0, 113, 227, 0.1)" : "none",
+              boxShadow: "none",
             }}
           >
             <span
@@ -1419,7 +1419,7 @@ export default function UsuariosPage() {
                     border: isHidden
                       ? "1px solid rgba(255, 149, 0, 0.3)"
                       : "1px solid #e5e5ea",
-                    boxShadow: "0 2px 8px rgba(0, 9, 35, 0.04)",
+                    boxShadow: "none",
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
@@ -1611,7 +1611,7 @@ export default function UsuariosPage() {
                     borderRadius: 12,
                     border: "1px solid #e4e9f1",
                     background: "#ffffff",
-                    boxShadow: "0 2px 8px rgba(0, 9, 35, 0.04)",
+                    boxShadow: "none",
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>

@@ -51,7 +51,7 @@ export default function TrialBlockedScreen() {
           padding: "12px 28px",
           borderRadius: 10,
           textDecoration: "none",
-          boxShadow: "0 8px 20px rgba(47, 95, 219, 0.35)",
+          boxShadow: "none",
         }}
       >
         Conversar con Milton

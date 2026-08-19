@@ -90,7 +90,7 @@ export default async function DashboardLayout({
             padding: 12px 14px;
             margin-bottom: 12px;
             box-sizing: border-box;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            box-shadow: none;
           }
           table.responsive-table td {
             padding: 6px 0;

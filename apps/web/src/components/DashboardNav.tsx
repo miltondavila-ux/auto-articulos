@@ -159,7 +159,7 @@ export default function DashboardNav() {
     color: active ? "#1d1d1f" : "#6e6e73",
     background: active ? "#ffffff" : "transparent",
     borderRadius: 10,
-    boxShadow: active ? "0 1px 3px rgba(0, 0, 0, 0.08)" : "none",
+    boxShadow: "none",
     whiteSpace: "nowrap",
     flexShrink: 0,
     transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",

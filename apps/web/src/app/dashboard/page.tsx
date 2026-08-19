@@ -150,7 +150,7 @@ export default function InicioPage() {
             alignItems: "center",
             gap: 16,
             flexWrap: "wrap",
-            boxShadow: "0 12px 32px rgba(0, 113, 227, 0.35)",
+            boxShadow: "none",
             border: "1px solid rgba(255, 255, 255, 0.2)",
           }}
         >
@@ -202,7 +202,7 @@ export default function InicioPage() {
                 background: "#f2faf4",
                 border: "1px solid rgba(52, 199, 89, 0.3)",
                 fontSize: 13,
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.02)",
+                boxShadow: "none",
               }}
             >
               <span style={{ color: "#1e8a4b" }}>
@@ -254,7 +254,7 @@ export default function InicioPage() {
             border: "1px solid rgba(52, 199, 89, 0.3)",
             color: "#1e8a4b",
             fontSize: 13,
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.02)",
+            boxShadow: "none",
           }}
         >
           Hay una publicación en curso.{" "}

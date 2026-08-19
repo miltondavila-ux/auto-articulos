@@ -647,7 +647,7 @@ export default function ConfiguracionPage() {
           border: "1px solid rgba(0, 0, 0, 0.07)",
           padding: "24px 28px",
           marginBottom: 20,
-          boxShadow: "0 12px 38px rgba(0, 0, 0, 0.06)",
+          boxShadow: "none",
         }}
       >
         <div
@@ -768,7 +768,7 @@ export default function ConfiguracionPage() {
             cursor: "pointer",
             background: "#ffffff",
             border: "1px solid #0071e3",
-            boxShadow: "0 4px 16px rgba(0, 113, 227, 0.08)",
+            boxShadow: "none",
             transition: "transform 0.15s ease",
           }}
         >
@@ -836,9 +836,7 @@ export default function ConfiguracionPage() {
                   : "1px solid #e5e5ea",
                 background: "#ffffff",
                 color: "#1d1d1f",
-                boxShadow: isActive
-                  ? "0 4px 16px rgba(0, 113, 227, 0.08)"
-                  : "none",
+                boxShadow: "none",
                 transition: "all 0.15s ease",
               }}
             >
@@ -1239,7 +1237,7 @@ export default function ConfiguracionPage() {
                           border: "1px solid #e5e5ea",
                           padding: "5px 12px",
                           borderRadius: 20,
-                          boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
+                          boxShadow: "none",
                         }}
                       >
                         📂 {c.name}
@@ -1768,7 +1766,7 @@ export default function ConfiguracionPage() {
                   padding: 16,
                   borderRadius: 16,
                   display: "inline-block",
-                  boxShadow: "0 8px 24px rgba(15, 23, 42, 0.08)",
+                  boxShadow: "none",
                   border: "1px solid #e5e5ea",
                 }}
               >
@@ -1881,7 +1879,7 @@ export default function ConfiguracionPage() {
                 borderRadius: 8,
                 background: "#ffffff",
                 border: "1px solid rgba(255, 59, 48, 0.3)",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                boxShadow: "none",
               }}
             >
               {/* Área de trabajo activa (Visible solo cuando está en proceso o en cola) */}
@@ -2109,7 +2107,7 @@ export default function ConfiguracionPage() {
                 : "1px solid rgba(52, 199, 89, 0.25)",
             fontSize: 14,
             fontWeight: 600,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.03)",
+            boxShadow: "none",
           }}
         >
           {banner.type === "error" ? "⚠️ " : "✅ "}
