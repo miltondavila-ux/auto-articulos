@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ModuleIntro, { IntroP, Modulo } from "@/components/ModuleIntro";
+import ModuleIntro, { EnPrueba, IntroP, Modulo } from "@/components/ModuleIntro";
 import { useRouter } from "next/navigation";
 import {
   buttonStyle,
@@ -302,6 +302,12 @@ export default function OportunidadesRedesPage() {
   return (
     <div style={{ maxWidth: 1120, margin: "0 auto" }}>
       <ModuleIntro titulo="Oportunidades para Redes Sociales">
+        <IntroP>
+          <strong style={{ fontWeight: 600 }}>Este módulo está en prueba</strong>
+          <EnPrueba />. Todavía no está disponible para todas las cuentas y se
+          está activando poco a poco. Puede que algo cambie de sitio o de
+          comportamiento mientras se termina de ajustar.
+        </IntroP>
         <IntroP>
           Un artículo publicado en tu web solo lo encuentra quien lo busca. En redes sociales lo ve gente que todavía no te estaba buscando, y cada visita que llega desde ahí es una señal más para Google de que tu contenido interesa.
         </IntroP>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { Modulo } from "@/components/ModuleIntro";
+import { EnPrueba, Modulo } from "@/components/ModuleIntro";
 
 export const metadata: Metadata = {
   title: "Cómo funciona — Auto Artículos",
@@ -118,6 +118,7 @@ const PASOS = [
   {
     numero: 3,
     titulo: "Lleva lo publicado a las redes",
+    enPrueba: true,
     cuerpo: [
       <>
         Un artículo en tu web solo lo encuentra quien lo busca. En redes
@@ -129,6 +130,11 @@ const PASOS = [
         artículos que ya publicaste y prepara la publicación para cada red. Tú
         revisas y decides cuál sale y dónde. No se publica todo ni todo el
         tiempo: se reparte, para que tu presencia crezca sin parecer spam.
+      </>,
+      <>
+        Este paso todavía está en prueba y no está disponible para todas las
+        cuentas. Se está activando poco a poco, y si en tu menú no aparece
+        todavía, es por eso: no te falta nada por configurar.
       </>,
     ],
     accion: {
@@ -260,6 +266,7 @@ export default function ComoFuncionaPage() {
             }}
           >
             {paso.titulo}
+            {paso.enPrueba && <EnPrueba />}
           </h3>
           {paso.cuerpo.map((parrafo, i) => (
             <p key={i} style={PARRAFO}>

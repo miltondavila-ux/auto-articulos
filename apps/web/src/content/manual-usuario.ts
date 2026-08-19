@@ -123,6 +123,8 @@ Nada se publica sin que tú lo mandes. Las sugerencias ayudan a decidir, pero la
 
 ## Oportunidades Redes
 
+**Este módulo está en prueba.** Todavía no está disponible para todas las cuentas: se está activando poco a poco. Si no aparece en tu menú, no es que te falte algo por configurar.
+
 Ruta: /dashboard/oportunidades-redes
 
 Aquí puedes revisar propuestas de contenido para redes sociales. Las propuestas pendientes se pueden aprobar, editar o descartar explicando el motivo. Si algo falla, abre el detalle del error para ver qué ocurrió antes de intentarlo otra vez.

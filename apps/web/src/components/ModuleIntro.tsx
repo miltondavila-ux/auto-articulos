@@ -109,3 +109,33 @@ export function Modulo({ id }: { id: ModuloId }) {
     </Link>
   );
 }
+
+/**
+ * Distintivo "En prueba" para funciones que todavía no están disponibles para
+ * todas las cuentas. Pedido de Milton (19/8/2026) para Oportunidades para
+ * Redes Sociales, que hoy solo tienen los administradores y una cuenta de
+ * prueba. Va en gris: no es un aviso de error, es información.
+ */
+export function EnPrueba() {
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        verticalAlign: "middle",
+        marginLeft: 8,
+        padding: "3px 9px",
+        borderRadius: 980,
+        background: "#f5f5f7",
+        border: "1px solid #d2d2d7",
+        color: "#6e6e73",
+        fontSize: 11,
+        fontWeight: 600,
+        letterSpacing: "0.04em",
+        textTransform: "uppercase",
+        whiteSpace: "nowrap",
+      }}
+    >
+      En prueba
+    </span>
+  );
+}
