@@ -4342,3 +4342,10 @@ Al tomar el turno, leer primero este bloque y los últimos commits de `main`; de
 - **Verificación:** el build del worker debe ejecutarse antes de publicar. El
   typecheck web del árbol principal puede mostrar errores previos de otras áreas;
   no corregirlos dentro de este lote sin reclamarlos en coordinación.
+
+### Liberación de capitanía — 2026-08-19
+
+- Codex terminó este lote y libera la capitanía. No quedan migraciones Prisma ni
+  cambios de credenciales pendientes asociados a esta tarea.
+- Commit publicado: `19d88b5`. El siguiente programador debe reclamar una nueva
+  área antes de modificar código o ejecutar migraciones.
