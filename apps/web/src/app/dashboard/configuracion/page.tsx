@@ -984,7 +984,13 @@ export default function ConfiguracionPage() {
           {(allowThreadsPublishing || allowInstagramPublishing || allowFacebookPublishing || isAdmin || tieneModuloRedes) && (
             <ThreadsSection allowThreads={isAdmin || tieneModuloRedes || allowThreadsPublishing} allowInstagram={isAdmin || tieneModuloRedes || allowInstagramPublishing} allowFacebook={isAdmin || tieneModuloRedes || allowFacebookPublishing} isAdmin={isAdmin} />
           )}
-          <TwitterSection />
+          {/*
+            X (Twitter) oculto a pedido de Milton (19/8/2026): X cobra por
+            publicar mediante su API. El componente, sus rutas y los datos ya
+            guardados se conservan intactos; solo se deja de mostrar, para
+            poder reactivarlo borrando esta condición si algún día conviene.
+          */}
+          {false && <TwitterSection />}
           {(allowLinkedInPublishing || isAdmin || tieneModuloRedes) && (
             <LinkedInSection allowed={allowLinkedInPublishing || isAdmin || tieneModuloRedes} />
           )}

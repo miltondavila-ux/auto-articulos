@@ -299,46 +299,17 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
 
             <strong style={{ color: "#1d1d1f", fontSize: 14 }}>Conectar cuentas</strong>
             <p className="lead-copy" style={{ fontSize: 13, margin: "3px 0 12px" }}>
-              Tú autorizas directamente en Meta. Nosotros nunca vemos ni
-              guardamos tu contraseña.
+              Autorizas directamente en Meta; nunca vemos tu contraseña.
             </p>
 
             {allowInstagram && !instagramConnection?.connected && (
-              <div className="row" style={{ padding: 16, marginBottom: 14, fontSize: 13, display: "block" }}>
-                <strong style={{ color: "#1d1d1f", fontSize: 14 }}>
-                  Instagram y Facebook se conectan juntos
-                </strong>
-                <p style={{ margin: "6px 0 10px", color: "#6e6e73" }}>
-                  Son la misma autorización de Meta: con un solo permiso quedan
-                  conectados los dos. No busques un botón aparte para Facebook,
-                  no hace falta.
-                </p>
-                <strong style={{ color: "#1d1d1f", fontSize: 14 }}>
-                  Instagram necesita además tres cosas
-                </strong>
-                <p style={{ margin: "6px 0 10px", color: "#6e6e73" }}>
-                  Instagram no deja publicar desde fuera a las cuentas
-                  personales. Si te falta alguna de estas tres, la conexión
-                  fallará aunque hagas todo lo demás bien:
-                </p>
-                <ol style={{ margin: 0, paddingLeft: 20, color: "#1d1d1f", lineHeight: 1.6 }}>
-                  <li style={{ marginBottom: 6 }}>
-                    Que tu Instagram sea <strong>Profesional</strong> (Empresa o
-                    Creador). Se cambia gratis desde la app: Ajustes → Tipo de
-                    cuenta y herramientas.
-                  </li>
-                  <li style={{ marginBottom: 6 }}>
-                    Que esa cuenta esté <strong>vinculada a una Página de
-                    Facebook</strong>. No vale un perfil personal de Facebook:
-                    tiene que ser una Página.
-                  </li>
-                  <li>
-                    Que tengas acceso a esa Página desde{" "}
-                    <strong>Meta Business Suite</strong>, que es donde Meta
-                    gestiona los permisos.
-                  </li>
-                </ol>
-              </div>
+              <p style={{ fontSize: 13, color: "#6e6e73", margin: "0 0 12px", lineHeight: 1.55 }}>
+                Instagram y Facebook se conectan con un mismo permiso de Meta,
+                así que no busques un botón aparte. Instagram debe ser una
+                cuenta Profesional (Empresa o Creador), vinculada a una Página
+                de Facebook y accesible desde Meta Business Suite; con una
+                cuenta personal, Meta no permite publicar desde fuera.
+              </p>
             )}
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
