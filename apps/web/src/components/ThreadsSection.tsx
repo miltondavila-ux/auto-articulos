@@ -233,43 +233,111 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
 
   return (
     <section style={sectionStyle}>
-      <h2 style={{ ...h2Style, margin: 0 }}>Meta API</h2>
+      <h2 style={{ ...h2Style, margin: 0 }}>Instagram, Facebook y Threads</h2>
       <p className="lead-copy" style={{ fontSize: 13, margin: "4px 0 0" }}>
-        Credenciales e integraciones sociales de Meta (Instagram y Threads).
+        Conecta aquí tus cuentas para que el sistema pueda publicar en ellas.
       </p>
 
       {loading ? (
         <p className="muted" style={{ fontSize: 13, marginTop: 12 }}>Cargando configuración...</p>
       ) : (
         <>
-          {credentialBlock(
-            "meta",
-            "Meta Principal",
-            "Credenciales principales para Instagram y Facebook.",
-            metaSettings,
-          )}
-          {credentialBlock(
-            "threads",
-            "Threads API",
-            "Credenciales específicas del producto Threads.",
-            threadsSettings,
+          {/*
+            Credenciales de la plataforma, no de la persona usuaria: las
+            configura el administrador una sola vez para todo el sistema. A un
+            usuario normal no le sirven de nada y solo le hacen dudar de si
+            tiene que rellenar algo. Se muestran solo a administradores.
+          */}
+          {isAdmin && (
+            <>
+              {credentialBlock(
+                "meta",
+                "Meta Principal",
+                "Credenciales principales para Instagram y Facebook.",
+                metaSettings,
+              )}
+              {credentialBlock(
+                "threads",
+                "Threads API",
+                "Credenciales específicas del producto Threads.",
+                threadsSettings,
+              )}
+            </>
           )}
 
           {(allowThreads || allowInstagram || allowFacebook) && (
-          <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 18, paddingTop: 16 }}>
+          <div style={{ marginTop: 18 }}>
+            {/*
+              Instrucciones en pasos, no en requisitos sueltos. El primero es el
+              que más falla y nadie lo dice: si no tienes la sesión abierta, el
+              botón te lleva a una pantalla de inicio de sesión y la conexión se
+              queda a medias. Pedido de Milton (19/8/2026).
+            */}
+            <div className="row" style={{ padding: 16, marginBottom: 14, fontSize: 13, display: "block" }}>
+              <strong style={{ color: "#1d1d1f", fontSize: 14 }}>
+                Antes de pulsar el botón, haz esto
+              </strong>
+              <ol style={{ margin: "10px 0 0", paddingLeft: 20, color: "#1d1d1f", lineHeight: 1.6 }}>
+                <li style={{ marginBottom: 8 }}>
+                  <strong>Abre la red social y deja la sesión iniciada</strong>, en
+                  otra pestaña de este mismo navegador o en tu teléfono. Es el paso
+                  que más falla: si no has iniciado sesión, el botón te llevará a
+                  una pantalla de acceso y la conexión se queda a medias.
+                </li>
+                <li style={{ marginBottom: 8 }}>
+                  <strong>Comprueba que entras con la cuenta correcta.</strong> Si
+                  manejas varias, cierra las demás o usa una ventana privada: se
+                  conectará la que esté abierta en ese momento.
+                </li>
+                <li>
+                  <strong>Vuelve aquí y pulsa el botón.</strong> Se abrirá la
+                  pantalla de la red social para que autorices. Acepta y te
+                  devuelve solo a esta página.
+                </li>
+              </ol>
+            </div>
+
             <strong style={{ color: "#1d1d1f", fontSize: 14 }}>Conectar cuentas</strong>
             <p className="lead-copy" style={{ fontSize: 13, margin: "3px 0 12px" }}>
-              La autorización se realiza directamente en Meta de forma segura.
+              Tú autorizas directamente en Meta. Nosotros nunca vemos ni
+              guardamos tu contraseña.
             </p>
 
             {allowInstagram && !instagramConnection?.connected && (
-              <div className="row" style={{ padding: 14, marginBottom: 14, fontSize: 13 }}>
-                <strong style={{ color: "#1d1d1f" }}>Requisitos para conectar Instagram:</strong>
-                <ul style={{ margin: "6px 0 0", paddingLeft: 18, color: "#6e6e73" }}>
-                  <li>Tener una cuenta de Instagram Profesional (Business o Creator).</li>
-                  <li>Tener una Página de Facebook vinculada a esa cuenta.</li>
-                  <li>Tener acceso a Meta Business Suite.</li>
-                </ul>
+              <div className="row" style={{ padding: 16, marginBottom: 14, fontSize: 13, display: "block" }}>
+                <strong style={{ color: "#1d1d1f", fontSize: 14 }}>
+                  Instagram y Facebook se conectan juntos
+                </strong>
+                <p style={{ margin: "6px 0 10px", color: "#6e6e73" }}>
+                  Son la misma autorización de Meta: con un solo permiso quedan
+                  conectados los dos. No busques un botón aparte para Facebook,
+                  no hace falta.
+                </p>
+                <strong style={{ color: "#1d1d1f", fontSize: 14 }}>
+                  Instagram necesita además tres cosas
+                </strong>
+                <p style={{ margin: "6px 0 10px", color: "#6e6e73" }}>
+                  Instagram no deja publicar desde fuera a las cuentas
+                  personales. Si te falta alguna de estas tres, la conexión
+                  fallará aunque hagas todo lo demás bien:
+                </p>
+                <ol style={{ margin: 0, paddingLeft: 20, color: "#1d1d1f", lineHeight: 1.6 }}>
+                  <li style={{ marginBottom: 6 }}>
+                    Que tu Instagram sea <strong>Profesional</strong> (Empresa o
+                    Creador). Se cambia gratis desde la app: Ajustes → Tipo de
+                    cuenta y herramientas.
+                  </li>
+                  <li style={{ marginBottom: 6 }}>
+                    Que esa cuenta esté <strong>vinculada a una Página de
+                    Facebook</strong>. No vale un perfil personal de Facebook:
+                    tiene que ser una Página.
+                  </li>
+                  <li>
+                    Que tengas acceso a esa Página desde{" "}
+                    <strong>Meta Business Suite</strong>, que es donde Meta
+                    gestiona los permisos.
+                  </li>
+                </ol>
               </div>
             )}
 
@@ -293,42 +361,39 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
                 </a>
               ))}
 
-              {allowInstagram && (instagramConnection?.connected ? (
-                <button
-                  onClick={() => disconnect("facebook")}
-                  disabled={disconnecting === "facebook"}
-                  className="secondary"
-                  style={disabledStyle(secondaryButtonStyle, disconnecting === "facebook")}
-                >
-                  {disconnecting === "meta" ? "Desconectando..." : `Desconectar Instagram${instagramConnection.instagramUsername ? ` (@${instagramConnection.instagramUsername})` : ""}`}
-                </button>
-              ) : (
-                <a
-                  href="/api/search-integrations/instagram/connect"
-                  className="secondary"
-                  style={{ ...secondaryButtonStyle, textDecoration: "none", display: "inline-flex" }}
-                >
-                  Conectar Instagram
-                </a>
-              ))}
-              {isAdmin && (facebookPageConnection?.connected ? (
-                <button
-                  onClick={() => disconnect("facebook")}
-                  disabled={disconnecting === "facebook"}
-                  className="secondary"
-                  style={disabledStyle(secondaryButtonStyle, disconnecting === "facebook")}
-                >
-                  {`Facebook Page conectada${facebookPageConnection.facebookPageName ? ` (${facebookPageConnection.facebookPageName})` : ""}`}
-                </button>
-              ) : (
-                <a
-                  href="/api/search-integrations/instagram/connect"
-                  className="secondary"
-                  style={{ ...secondaryButtonStyle, textDecoration: "none", display: "inline-flex" }}
-                >
-                  Conectar Facebook Page
-                </a>
-              ))}
+              {/*
+                Un solo botón para Instagram y Facebook: los dos salían del
+                MISMO permiso de Meta y apuntaban a la misma dirección, así que
+                dos botones hacían pensar que eran dos conexiones distintas. El
+                de Facebook además solo lo veían los administradores.
+              */}
+              {(allowInstagram || allowFacebook) &&
+                (instagramConnection?.connected || facebookPageConnection?.connected ? (
+                  <button
+                    onClick={() => disconnect("facebook")}
+                    disabled={disconnecting === "facebook"}
+                    className="secondary"
+                    style={disabledStyle(secondaryButtonStyle, disconnecting === "facebook")}
+                  >
+                    {disconnecting === "facebook"
+                      ? "Desconectando..."
+                      : `Desconectar Instagram y Facebook${
+                          instagramConnection?.instagramUsername
+                            ? ` (@${instagramConnection.instagramUsername})`
+                            : facebookPageConnection?.facebookPageName
+                              ? ` (${facebookPageConnection.facebookPageName})`
+                              : ""
+                        }`}
+                  </button>
+                ) : (
+                  <a
+                    href="/api/search-integrations/instagram/connect"
+                    className="secondary"
+                    style={{ ...secondaryButtonStyle, textDecoration: "none", display: "inline-flex" }}
+                  >
+                    Conectar Instagram y Facebook
+                  </a>
+                ))}
             </div>
           </div>
           )}
