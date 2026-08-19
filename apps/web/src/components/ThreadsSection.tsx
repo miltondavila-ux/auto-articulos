@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import PasosAntesDeConectar from "@/components/PasosAntesDeConectar";
 import {
   disabledStyle,
   h2Style,
@@ -267,35 +268,7 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
 
           {(allowThreads || allowInstagram || allowFacebook) && (
           <div style={{ marginTop: 18 }}>
-            {/*
-              Instrucciones en pasos, no en requisitos sueltos. El primero es el
-              que más falla y nadie lo dice: si no tienes la sesión abierta, el
-              botón te lleva a una pantalla de inicio de sesión y la conexión se
-              queda a medias. Pedido de Milton (19/8/2026).
-            */}
-            <div style={{ padding: 16, marginBottom: 14, fontSize: 13, border: "1px solid #d2d2d7", borderRadius: 14, background: "#ffffff" }}>
-              <strong style={{ color: "#1d1d1f", fontSize: 14 }}>
-                Antes de pulsar el botón, haz esto
-              </strong>
-              <ol style={{ margin: "10px 0 0", paddingLeft: 20, color: "#1d1d1f", lineHeight: 1.6 }}>
-                <li style={{ marginBottom: 8 }}>
-                  <strong>Abre la red social y deja la sesión iniciada</strong>, en
-                  otra pestaña de este mismo navegador o en tu teléfono. Es el paso
-                  que más falla: si no has iniciado sesión, el botón te llevará a
-                  una pantalla de acceso y la conexión se queda a medias.
-                </li>
-                <li style={{ marginBottom: 8 }}>
-                  <strong>Comprueba que entras con la cuenta correcta.</strong> Si
-                  manejas varias, cierra las demás o usa una ventana privada: se
-                  conectará la que esté abierta en ese momento.
-                </li>
-                <li>
-                  <strong>Vuelve aquí y pulsa el botón.</strong> Se abrirá la
-                  pantalla de la red social para que autorices. Acepta y te
-                  devuelve solo a esta página.
-                </li>
-              </ol>
-            </div>
+            <PasosAntesDeConectar red="Instagram, Facebook o Threads" />
 
             <strong style={{ color: "#1d1d1f", fontSize: 14 }}>Conectar cuentas</strong>
             <p className="lead-copy" style={{ fontSize: 13, margin: "3px 0 12px" }}>

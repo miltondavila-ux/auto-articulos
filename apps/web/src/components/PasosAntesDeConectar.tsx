@@ -38,11 +38,11 @@ export default function PasosAntesDeConectar({
         }}
       >
         <li style={{ marginBottom: 8 }}>
-          <strong>Abre {red} y deja la sesión iniciada</strong>, en otra pestaña
-          de este mismo navegador — o en tu teléfono, si estás haciéndolo desde
-          el móvil. Es el paso que más falla: si no has iniciado sesión, el
-          botón te llevará a una pantalla de acceso y la conexión no se
-          completará.
+          <strong>Primero que todo: abre {red} en otra pestaña</strong> de este
+          mismo navegador, o en la app de tu teléfono si estás desde el móvil, y
+          deja la sesión iniciada. Es el paso que más falla: sin sesión abierta,
+          el botón te lleva a una pantalla de acceso y la conexión no se
+          completa.
         </li>
         <li style={{ marginBottom: 8 }}>
           <strong>Comprueba que es la cuenta correcta.</strong> Si manejas
