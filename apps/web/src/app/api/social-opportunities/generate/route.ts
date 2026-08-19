@@ -6,8 +6,11 @@ import { triggerSocialWorkerNow } from "@/lib/trigger-worker";
 import {
   decryptSecret,
   getGoogleAccessToken,
+  getBingPageQueryStats,
+  getBingPageStats,
   queryGoogleSearchAnalytics,
 } from "@auto-articulos/shared";
+import { getBingTokenForIntegration } from "@/lib/bing-token";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
@@ -20,6 +23,8 @@ type ArticleCandidate = {
   articleUrl: string | null;
   searchQueries?: string[];
 };
+
+type PublishedArticleCandidate = ArticleCandidate & { articleUrl: string };
 
 const formulas = [
   `Fórmula: Historia personal / Anécdota cercana.
@@ -148,7 +153,7 @@ async function selectArticlesWithGSC(userId: string): Promise<ArticleCandidate[]
     });
     const articlesByUrl = new Map(
       articles
-        .filter((article): article is ArticleCandidate & { articleUrl: string } => Boolean(article.articleUrl))
+        .filter((article): article is PublishedArticleCandidate => Boolean(article.articleUrl))
         .map((article) => [article.articleUrl, article]),
     );
     if (articlesByUrl.size === 0) return [];
@@ -227,6 +232,103 @@ async function selectArticlesWithoutGSC(userId: string): Promise<ArticleCandidat
   });
 }
 
+function normalizedArticleUrl(value: string) {
+  try {
+    const url = new URL(value);
+    const pathname = url.pathname === "/" ? "/" : url.pathname.replace(/\/+$/, "");
+    return `${url.origin}${pathname}`;
+  } catch {
+    return value;
+  }
+}
+
+async function selectArticlesWithBing(userId: string): Promise<ArticleCandidate[]> {
+  const integration = await prisma.searchIntegration.findUnique({
+    where: { userId_provider: { userId, provider: "bing" } },
+  });
+  if (!integration?.siteUrl) return [];
+
+  try {
+    const accessToken = await getBingTokenForIntegration(integration);
+    const articles = await prisma.title.findMany({
+      where: { run: { userId }, status: "success", articleUrl: { not: null } },
+      select: { id: true, finalTitle: true, text: true, summary: true, articleUrl: true },
+    });
+    const articlesByUrl = new Map(
+      articles
+        .filter((article): article is PublishedArticleCandidate => Boolean(article.articleUrl))
+        .map((article) => [normalizedArticleUrl(article.articleUrl), article]),
+    );
+    if (articlesByUrl.size === 0) return [];
+
+    const pageStats = await getBingPageStats(accessToken, integration.siteUrl);
+    const matchingPages = pageStats
+      .map((stat) => ({ stat, article: articlesByUrl.get(normalizedArticleUrl(stat.Query)) }))
+      .filter((item): item is { stat: typeof item.stat; article: PublishedArticleCandidate } => Boolean(item.article))
+      .sort((a, b) => b.stat.Impressions - a.stat.Impressions)
+      // Limita las llamadas para proteger cuotas y tiempos de respuesta.
+      .slice(0, 12);
+
+    const candidates: Array<{ article: ArticleCandidate; score: number; searchQueries: string[] }> = [];
+    for (const { stat, article } of matchingPages) {
+      const queryStats = await getBingPageQueryStats(accessToken, integration.siteUrl, stat.Query);
+      const queries = queryStats
+        .filter((item) => item.Query)
+        .sort((a, b) => b.Impressions - a.Impressions);
+      const queryImpressions = queries.reduce((sum, item) => sum + item.Impressions, 0);
+      const queryClicks = queries.reduce((sum, item) => sum + item.Clicks, 0);
+      const impressions = queryImpressions || stat.Impressions;
+      const clicks = queryClicks || stat.Clicks;
+      const position = stat.AvgImpressionPosition ?? stat.AvgClickPosition ?? 100;
+      const ctr = clicks / Math.max(impressions, 1);
+      const longTailCount = queries.filter((item) => item.Query.trim().split(/\s+/).length >= 3).length;
+      const score =
+        Math.log10(impressions + 1) * 20 +
+        (position >= 4 && position <= 20 ? 18 : position >= 2 && position < 4 ? 8 : position <= 40 ? 5 : 0) +
+        (impressions >= 20 && ctr < 0.05 ? 12 : 0) +
+        Math.min(longTailCount, 3) * 5;
+      candidates.push({
+        article,
+        score,
+        searchQueries: queries.slice(0, 3).map((item) => item.Query),
+      });
+    }
+
+    return candidates
+      .sort((a, b) => b.score - a.score)
+      .map(({ article, searchQueries }) => ({ ...article, searchQueries }));
+  } catch (error) {
+    // Bing es una fuente adicional: una conexión vencida o una respuesta sin
+    // datos no debe impedir que las oportunidades sigan funcionando con Google.
+    console.warn("[social-opportunities/generate] Bing no aportó señales:", error);
+    return [];
+  }
+}
+
+function mergeSearchCandidates(
+  googleCandidates: ArticleCandidate[],
+  bingCandidates: ArticleCandidate[],
+): ArticleCandidate[] {
+  const merged = new Map<string, { article: ArticleCandidate; score: number; queries: Set<string> }>();
+  const add = (candidate: ArticleCandidate, rank: number) => {
+    const current = merged.get(candidate.id) ?? {
+      article: candidate,
+      score: 0,
+      queries: new Set<string>(),
+    };
+    // Cada buscador aporta su propia clasificación; coincidir en ambos suma
+    // evidencia, sin comparar directamente sus volúmenes absolutos.
+    current.score += Math.max(1, 100 - rank);
+    for (const query of candidate.searchQueries ?? []) current.queries.add(query);
+    merged.set(candidate.id, current);
+  };
+  googleCandidates.forEach(add);
+  bingCandidates.forEach(add);
+  return Array.from(merged.values())
+    .sort((a, b) => b.score - a.score)
+    .map(({ article, queries }) => ({ ...article, searchQueries: Array.from(queries).slice(0, 3) }));
+}
+
 async function getConnectedNetworks(userId: string) {
   const [threads, twitter, linkedin, instagram, facebookPage] = await Promise.all([
     prisma.threadsIntegration.findUnique({ where: { userId }, select: { id: true } }),
@@ -288,11 +390,15 @@ export async function POST(request: Request) {
       );
     }
 
-    const gscCandidates = await selectArticlesWithGSC(userId);
+    const [gscCandidates, bingCandidates] = await Promise.all([
+      selectArticlesWithGSC(userId),
+      selectArticlesWithBing(userId),
+    ]);
+    const searchCandidates = mergeSearchCandidates(gscCandidates, bingCandidates);
     // Solo recurrimos a artículos recientes si no hay evidencia GSC asociada a
-    // artículos publicados. Cuando sí existe, las señales de búsqueda mandan.
-    const allCandidates = gscCandidates.length > 0
-      ? gscCandidates
+    // artículos publicados. Cuando algún buscador sí aporta evidencia, manda.
+    const allCandidates = searchCandidates.length > 0
+      ? searchCandidates
       : await selectArticlesWithoutGSC(userId);
 
     const candidateIds = allCandidates.map((article) => article.id);
@@ -382,7 +488,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({
-      message: `Se generaron ${createdOpportunities.length} nuevas propuestas usando ${gscCandidates.length > 0 ? "consultas, tendencia y rendimiento de Google Search Console" : "artículos publicados recientes (sin señales de Search Console asociadas)"}.`,
+      message: `Se generaron ${createdOpportunities.length} nuevas propuestas usando ${gscCandidates.length > 0 && bingCandidates.length > 0 ? "señales de Google Search Console y Bing Webmaster" : gscCandidates.length > 0 ? "consultas, tendencia y rendimiento de Google Search Console" : bingCandidates.length > 0 ? "consultas y rendimiento de Bing Webmaster" : "artículos publicados recientes (sin señales de buscadores asociadas)"}.`,
       count: createdOpportunities.length,
     });
   } catch (unexpected) {
