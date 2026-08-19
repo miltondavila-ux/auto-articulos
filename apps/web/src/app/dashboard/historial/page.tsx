@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
+import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
 import {
   sectionStyle,
   h2Style,
@@ -21,6 +22,14 @@ import GoogleIndexingStatus from "@/components/GoogleIndexingStatus";
 export default function HistorialPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <ModuleIntro titulo="Historial">
+        <IntroP>
+          Todo lo que la plataforma ha publicado por ti queda registrado aquí: artículos y publicaciones en redes, con su fecha, su estado y el enlace a lo publicado.
+        </IntroP>
+        <IntroP>
+          Sirve para dos cosas: comprobar que algo salió bien y encontrar rápido un artículo concreto cuando lo necesitas.
+        </IntroP>
+      </ModuleIntro>
       <HistorialEjecuciones />
       <HistorialRedes />
     </div>

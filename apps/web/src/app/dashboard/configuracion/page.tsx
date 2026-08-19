@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, type FormEvent } from "react";
+import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
 import {
   sectionStyle,
   h2Style,
@@ -637,6 +638,17 @@ export default function ConfiguracionPage() {
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+      <ModuleIntro titulo="Configuración">
+        <IntroP>
+          Este es el módulo que hay que dejar listo antes que nada: sin él, el sistema no puede publicar por ti.
+        </IntroP>
+        <IntroP>
+          Aquí guardas tu cuenta de la plataforma de publicación, sincronizas tus categorías, eliges el idioma en el que se escribirán tus artículos y conectas Google Search Console, que es de donde salen las oportunidades. También puedes conectar tus redes sociales y personalizar la firma, el teléfono y el estilo de las imágenes.
+        </IntroP>
+        <IntroP>
+          Si es tu primera vez, usa el asistente paso a paso: te lleva por lo obligatorio sin que tengas que saber dónde está cada cosa.
+        </IntroP>
+      </ModuleIntro>
       {/* Hero Control Center Header */}
       {/* Cabecera Apple Minimalista */}
       <div

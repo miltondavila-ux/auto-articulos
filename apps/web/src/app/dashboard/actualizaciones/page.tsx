@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
 import { prisma } from "@auto-articulos/db";
 import { sectionStyle, h2Style } from "@/components/dashboard-ui";
 
@@ -45,6 +46,14 @@ export default async function ActualizacionesPage({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 1120, margin: "0 auto" }}>
+      <ModuleIntro titulo="Actualizaciones">
+        <IntroP>
+          Aquí se anota cada mejora y cada arreglo que se hace en la plataforma, con la fecha y qué cambió.
+        </IntroP>
+        <IntroP>
+          Míralo cuando notes algo distinto en una pantalla o cuando aparezca una función que antes no estaba: aquí se explica qué pasó y para qué sirve.
+        </IntroP>
+      </ModuleIntro>
       <div className="panel" style={sectionStyle}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
           <div>

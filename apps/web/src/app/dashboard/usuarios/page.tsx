@@ -20,6 +20,7 @@ import {
   statusLabel,
 } from "@/components/dashboard-ui";
 import type { RunStatus, TitleStatus } from "@/types/dashboard";
+import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
 import {
   normalizePlatformDomain,
   PLATFORM_DOMAIN_VALUES,
@@ -108,6 +109,14 @@ const PAGE_SIZE = 10;
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
+      <ModuleIntro titulo="Administración">
+        <IntroP>
+          Desde aquí gestionas las cuentas de la plataforma: crear usuarios, cambiar sus contraseñas, ver su consumo y decidir a qué módulos y a qué redes sociales tiene acceso cada uno.
+        </IntroP>
+        <IntroP>
+          También controlas la visibilidad global de los módulos y el modo de mantenimiento, que oculta la plataforma a todos menos a los administradores.
+        </IntroP>
+      </ModuleIntro>
       <div
         style={{
           fontSize: 11,

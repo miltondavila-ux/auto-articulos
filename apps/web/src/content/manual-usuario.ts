@@ -29,6 +29,10 @@ Inicio es tu centro de operaciones:
 - **Para cuentas con artículos publicados:** Muestra el panel de métricas de rendimiento (artículos publicados hoy, en el mes, límites y gráfico de actividad).
 - Desde el menú superior tienes acceso a: Cómo Funciona, Publicaciones, Historial, Actualizaciones y Configuración.
 
+## Cada módulo se explica solo
+
+Al principio de cada pantalla hay un recuadro que empieza con "Antes de avanzar, lee esto". Ahí se explica en pocas líneas qué sucede en ese módulo, para qué sirve y qué se espera de ti. Si llegas a una pantalla y no sabes a qué viniste, esa es la respuesta corta; el manual y la burbuja de ayuda son la respuesta larga.
+
 ## El menú
 
 El menú superior tiene, en este orden: **Inicio**, **Cómo Funciona**, **Publicaciones**, **Historial**, **Actualizaciones** y **Configuración**. Los administradores ven además **Administración**.

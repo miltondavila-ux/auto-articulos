@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
 import Link from "next/link";
 import { sectionStyle, h2Style, buttonStyle } from "@/components/dashboard-ui";
 import type { RunRow } from "@/types/dashboard";
@@ -88,6 +89,14 @@ export default function PublicacionesEnCursoPage() {
 
   return (
     <div>
+      <ModuleIntro titulo="Publicaciones en Curso">
+        <IntroP>
+          Esta pantalla es la sala de espera. Aquí ves lo que se está publicando ahora mismo, tanto artículos como publicaciones en redes sociales, con su avance y la etapa en la que va cada uno.
+        </IntroP>
+        <IntroP>
+          No tienes que hacer nada aquí: el trabajo ocurre solo. Puedes cerrar la página y volver cuando quieras. Si algo se queda atascado o te arrepientes, puedes cancelarlo desde aquí.
+        </IntroP>
+      </ModuleIntro>
       {activeRuns.length > 0 || socialRuns.length > 0 ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {activeRuns.map((run) => (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
 import { useRouter } from "next/navigation";
 import {
   buttonStyle,
@@ -300,6 +301,14 @@ export default function OportunidadesRedesPage() {
 
   return (
     <div style={{ maxWidth: 1120, margin: "0 auto" }}>
+      <ModuleIntro titulo="Oportunidades para Redes Sociales">
+        <IntroP>
+          Un artículo publicado en tu web solo lo encuentra quien busca. En redes sociales lo ve gente que todavía no te buscaba, y cada visita que llega desde ahí le dice a Google que tu contenido interesa.
+        </IntroP>
+        <IntroP>
+          Aquí el sistema toma tus artículos ya publicados y te propone llevarlos a tus redes. Tú revisas cada propuesta y decides cuál sale y a qué red. No se publica nada sin que tú lo mandes.
+        </IntroP>
+      </ModuleIntro>
       {/* Panel Superior */}
       <div
         className="panel"

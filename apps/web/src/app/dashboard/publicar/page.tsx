@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -191,6 +192,14 @@ export default function PublicarPage() {
         platformDomain={platformDomain}
         onOpenImageCreditsModal={() => setShowImageCreditsModal(true)}
       >
+        <ModuleIntro titulo="Publicaciones propias">
+          <IntroP>
+            Aquí decides tú el tema. Escribes tus propios títulos, hasta diez de una vez, eliges la categoría y el sistema los redacta y los publica en tu web.
+          </IntroP>
+          <IntroP>
+            Úsalo cuando ya sabes de qué quieres escribir. Si prefieres que el sistema decida por ti, a partir de lo que la gente busca en Google, ese es el módulo de Oportunidades.
+          </IntroP>
+        </ModuleIntro>
         {hasActiveRun && (
           <div
             style={{
