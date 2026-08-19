@@ -421,6 +421,13 @@ export default function OportunidadesPage() {
         await load().catch(() => {});
         return;
       }
+      // Si el cupo obligó a recortar el lote, no se salta de pantalla: si no,
+      // la persona nunca se entera de que quedaron categorías sin publicar.
+      if (typeof data.avisoDeCupo === "string" && data.avisoDeCupo) {
+        setMessage({ kind: "info", text: data.avisoDeCupo });
+        await load().catch(() => {});
+        return;
+      }
       router.push("/dashboard/publicaciones-en-curso");
       router.refresh();
     } catch (error) {

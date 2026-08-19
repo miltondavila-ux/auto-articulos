@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const groups = await prisma.opportunityGroup.findMany({
+  let groups = await prisma.opportunityGroup.findMany({
     where: { userId },
     include: { titles: { orderBy: { createdAt: "asc" } } },
   });
@@ -106,15 +106,38 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const totalTitles = groups.reduce((sum, g) => sum + g.titles.length, 0);
-  if (totalTitles > user.maxTitlesPerBatch) {
+
+  /*
+   * Cupo. Antes, pasarse del máximo por lote rechazaba TODO y la persona se
+   * quedaba sin publicar nada. Pedido de Milton (19/8/2026): publicar lo que
+   * cabe y avisar. Se recorta por categorías completas, no partiéndolas: una
+   * categoría a medias dejaría oportunidades sueltas sin su contexto.
+   */
+  const gruposQueCaben: typeof groups = [];
+  let acumulado = 0;
+  for (const grupo of groups) {
+    if (acumulado + grupo.titles.length > user.maxTitlesPerBatch) break;
+    gruposQueCaben.push(grupo);
+    acumulado += grupo.titles.length;
+  }
+
+  if (gruposQueCaben.length === 0) {
+    const primera = groups[0];
     return NextResponse.json(
       {
-        error: `Tienes ${totalTitles} títulos en ${groups.length} categorías, más de tu máximo de ${user.maxTitlesPerBatch} por lote. No se publicó ninguna. Publica categoría por categoría con "Ejecutar categoría", elimina algunos títulos primero, o pide al administrador que aumente tu máximo.`,
+        error: `Tu máximo es de ${user.maxTitlesPerBatch} títulos por lote y la primera categoría ya tiene ${primera.titles.length}. Elimina algunos títulos de esa categoría, o pide al administrador que aumente tu máximo.`,
       },
       { status: 400 },
     );
   }
+
+  const gruposFuera = groups.length - gruposQueCaben.length;
+  const avisoDeCupo =
+    gruposFuera > 0
+      ? `Se enviaron a publicar ${acumulado} títulos de ${gruposQueCaben.length} categoría(s), porque tu máximo es de ${user.maxTitlesPerBatch} por lote. Las otras ${gruposFuera} categoría(s) quedaron pendientes: vuelve mañana y publícalas de nuevo.`
+      : null;
+
+  groups = gruposQueCaben;
 
   const normalizedContentLanguage =
     typeof contentLanguage === "string" && contentLanguage.trim()
@@ -153,5 +176,5 @@ export async function POST(request: NextRequest) {
   });
 
   await triggerWorkerNow();
-  return NextResponse.json({ ok: true, runIds });
+  return NextResponse.json({ ok: true, runIds, avisoDeCupo });
 }
