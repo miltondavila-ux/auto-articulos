@@ -409,7 +409,27 @@ export default function OnboardingWizard({
   // EVALUACIÓN SECUENCIAL ESTRICTA
   // Un paso SOLO está completado si los anteriores también lo están
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  const step1Done = credentialsConfigured;
+  // OJO con la diferencia entre estas dos, es la corrección de un defecto real
+  // (cuenta de Stefany Meza, 15/8/2026): la pantalla mostraba el Paso 1 en
+  // verde diciendo "credenciales verificadas" AL MISMO TIEMPO que un error
+  // rojo de "no se pudo iniciar sesión". Guardar credenciales NUNCA las
+  // prueba — POST /api/credentials cifra y guarda, nada más — así que
+  // `credentialsConfigured` solo significa "hay una fila guardada", jamás
+  // significó "el login funciona".
+  //
+  // `step1Saved` sigue siendo lo que DESBLOQUEA el Paso 2: hay que poder
+  // intentar sincronizar para poder probar las credenciales (si el verde
+  // dependiera de la sincronización y la sincronización del verde, nadie
+  // podría avanzar nunca).
+  //
+  // `step1Verified` es lo único que pinta verde: la ÚNICA prueba real de que
+  // el usuario y la contraseña sirven es que un login de verdad haya
+  // funcionado, y eso solo ocurre cuando una sincronización de categorías
+  // termina bien (el worker es quien abre el navegador y entra al sitio).
+  const step1Saved = credentialsConfigured;
+  const step1Verified =
+    step1Saved && (lastSyncStatus === "success" || categories.length > 0);
+  const step1Done = step1Saved;
   const step2Done = step1Done && categories.length > 0;
   const step3Done = step1Done && step2Done && Boolean(contentLanguage);
   const step4Done = step1Done && step2Done && step3Done && Boolean(googleData?.connected && googleData?.siteUrl);
@@ -423,7 +443,9 @@ export default function OnboardingWizard({
   else if (step1Done && step2Done && step3Done && step4Done) activeStep = 5;
 
   const totalCoreSteps = 4;
-  const completedCoreSteps = [step1Done, step2Done, step3Done, step4Done].filter(Boolean).length;
+  // El progreso cuenta el Paso 1 solo si está VERIFICADO de verdad: si no, el
+  // porcentaje también estaría mintiendo.
+  const completedCoreSteps = [step1Verified, step2Done, step3Done, step4Done].filter(Boolean).length;
   const allCoreDone = completedCoreSteps === totalCoreSteps;
   const progressPercent = Math.round((completedCoreSteps / totalCoreSteps) * 100);
 
@@ -573,9 +595,15 @@ export default function OnboardingWizard({
             stepNumber={1}
             title={`Conectar tu cuenta de ${productName}`}
             subtitle={`Ingresa el usuario y contraseña con los que entras a tu plataforma de ${productName}.`}
-            isDone={step1Done}
+            isDone={step1Verified}
             isActive={activeStep === 1}
-            badgeText={step1Done ? "Conectado" : "Paso 1 en curso"}
+            badgeText={
+              step1Verified
+                ? "Conectado"
+                : step1Saved
+                  ? "Pendiente de verificar"
+                  : "Paso 1 en curso"
+            }
           >
             {step1Done && !editingCreds ? (
               <div
@@ -587,13 +615,24 @@ export default function OnboardingWizard({
                   gap: 12,
                   marginTop: 10,
                   padding: "10px 14px",
-                  background: "rgba(52, 199, 89, 0.1)",
+                  background: step1Verified
+                    ? "rgba(52, 199, 89, 0.1)"
+                    : "rgba(255, 149, 0, 0.1)",
                   borderRadius: 8,
-                  border: "1px solid rgba(52, 199, 89, 0.25)",
+                  border: step1Verified
+                    ? "1px solid rgba(52, 199, 89, 0.25)"
+                    : "1px solid rgba(255, 149, 0, 0.35)",
                 }}
               >
-                <div style={{ fontSize: 13, color: "#16803c" }}>
-                  Credenciales de {productName} guardadas y verificadas de forma segura.
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: step1Verified ? "#16803c" : "#8a5a00",
+                  }}
+                >
+                  {step1Verified
+                    ? `Credenciales de ${productName} verificadas: la conexión con tu cuenta funciona.`
+                    : `Credenciales de ${productName} guardadas de forma segura, pendientes de verificar. Se comprobarán al sincronizar tus categorías en el Paso 2.`}
                 </div>
                 <button
                   type="button"
