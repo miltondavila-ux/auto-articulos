@@ -4320,3 +4320,25 @@ npx prisma generate --schema=packages/db/prisma/schema.prisma
 ```
 
 Al tomar el turno, leer primero este bloque y los últimos commits de `main`; después actualizar esta sección con cualquier decisión o bloqueo nuevo.
+
+### 2026-08-19 — Correcciones solicitadas: LinkedIn, Meta, Facebook y duplicados
+
+- **Capitán:** Codex. No se ejecutaron migraciones ni se tocaron credenciales.
+- **Privacidad:** solo el rol administrador real puede ver/editar los App ID y
+  App Secret globales de Meta y Threads. Lorena conserva el uso de sus OAuth,
+  pero no el editor de credenciales del sistema.
+- **LinkedIn:** la respuesta 2xx ahora debe incluir `X-RestLi-Id` (o un ID JSON)
+  para marcar la oportunidad como publicada; si falta, queda error explícito y
+  no se muestra un falso éxito.
+- **Facebook Pages:** se valida `/me?fields=id,name` con el token guardado y se
+  exige que coincida con la Página seleccionada; las fotos se envían con
+  `published=true` y se exige un ID devuelto por Meta. La leyenda “Publicado por
+  AUTO ARTÍCULOS” puede ser atribución de la aplicación de Meta, no el nombre
+  de la Página, y no se cambia desde el caption.
+- **Oportunidades:** el historial completo (publicadas, descartadas, fallidas y
+  pendientes) bloquea la repetición por artículo + red. Todas las variantes de
+  Instagram se consideran un único canal para no volver a proponer el mismo
+  artículo con otro formato.
+- **Verificación:** el build del worker debe ejecutarse antes de publicar. El
+  typecheck web del árbol principal puede mostrar errores previos de otras áreas;
+  no corregirlos dentro de este lote sin reclamarlos en coordinación.

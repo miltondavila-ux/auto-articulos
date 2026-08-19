@@ -216,21 +216,32 @@ export async function POST(request: Request) {
     }
     const allCandidates = Array.from(candidateMap.values());
 
-    const activeOpportunities = await prisma.socialOpportunity.findMany({
+    // El historial completo evita que una oportunidad ya publicada,
+    // descartada o fallida vuelva a aparecer. Instagram tiene varios formatos,
+    // pero todos cuentan como el mismo canal para esta regla.
+    const previousOpportunities = await prisma.socialOpportunity.findMany({
       where: {
         userId,
-        titleId: { in: allCandidates.map((article) => article.id) },
-        platform: { in: integrations },
-        status: { in: ["pending", "queued", "processing"] },
+        OR: [
+          { titleId: { in: allCandidates.map((article) => article.id) } },
+          { articleUrl: { in: allCandidates.map((article) => article.articleUrl).filter((url): url is string => Boolean(url)) } },
+        ],
       },
-      select: { titleId: true, platform: true },
+      select: { titleId: true, articleUrl: true, platform: true },
     });
-    const activeKeys = new Set(
-      activeOpportunities.map((opportunity) => `${opportunity.titleId}:${opportunity.platform}`),
-    );
+    const candidateByUrl = new Map(allCandidates.filter((article) => article.articleUrl).map((article) => [article.articleUrl!, article]));
+    const normalizePlatform = (platform: string) => platform.startsWith("instagram-") ? "instagram" : platform;
+    const activeKeys = new Set<string>();
+    for (const opportunity of previousOpportunities) {
+      const platform = normalizePlatform(opportunity.platform);
+      if (opportunity.titleId) activeKeys.add(`${opportunity.titleId}:${platform}`);
+      const article = candidateByUrl.get(opportunity.articleUrl);
+      if (article) activeKeys.add(`${article.id}:${platform}`);
+    }
+    const normalizedIntegrations = integrations.map(normalizePlatform);
     const candidates = allCandidates
       .filter((article) =>
-        integrations.some((platform) => !activeKeys.has(`${article.id}:${platform}`)),
+        normalizedIntegrations.some((platform) => !activeKeys.has(`${article.id}:${platform}`)),
       )
       .slice(0, 3);
 
@@ -245,7 +256,7 @@ export async function POST(request: Request) {
 
     for (const article of candidates) {
       for (const platform of integrations) {
-        const opportunityKey = `${article.id}:${platform}`;
+        const opportunityKey = `${article.id}:${normalizePlatform(platform)}`;
         if (activeKeys.has(opportunityKey)) continue;
 
         const copyText = await generateGPTCopy(

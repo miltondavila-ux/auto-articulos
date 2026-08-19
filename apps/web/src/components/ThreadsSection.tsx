@@ -189,7 +189,7 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
           </span>
         </div>
 
-        {settings?.isAdmin && !isEditing && (
+        {isAdmin && settings?.isAdmin && !isEditing && (
           <div style={{ marginTop: 12 }}>
             {settings.configured && (
               <p className="muted" style={{ fontSize: 13, marginBottom: 8 }}>App ID: {settings.appId}</p>
@@ -200,7 +200,7 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
           </div>
         )}
 
-        {settings?.isAdmin && isEditing && (
+        {isAdmin && settings?.isAdmin && isEditing && (
           <div style={{ display: "grid", gap: 12, marginTop: 14 }}>
             <label style={{ color: "#1d1d1f", fontSize: 12, fontWeight: 500 }}>
               App ID
