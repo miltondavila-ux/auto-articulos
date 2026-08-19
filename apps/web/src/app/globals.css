@@ -176,7 +176,7 @@ button:disabled {
 }
 
 /* Controles de Formulario */
-input, textarea, select {
+input:not([type="checkbox"]):not([type="radio"]), textarea, select {
   width: 100%;
   border: 1px solid #d2d2d7;
   border-radius: 11px;
@@ -193,7 +193,7 @@ input:not([type="checkbox"]):not([type="radio"]), select {
   min-height: 44px;
 }
 
-input:focus, textarea:focus, select:focus {
+input:not([type="checkbox"]):not([type="radio"]):focus, textarea:focus, select:focus {
   border-color: #0071e3;
   box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15) !important;
 }
@@ -308,4 +308,27 @@ textarea {
 .pantalla-completa {
   min-height: 100vh;
   min-height: 100svh;
+}
+
+/*
+ * Casillas y botones de opción. Antes heredaban la regla de los campos de
+ * texto (width: 100%) y se estiraban a todo lo ancho, dejando la etiqueta
+ * separada al otro extremo. Reportado por Milton el 19/8/2026 en Publicar.
+ */
+input[type="checkbox"],
+input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  min-height: 0;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  accent-color: #1d1d1f;
+  cursor: pointer;
+}
+
+input[type="checkbox"]:disabled,
+input[type="radio"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
