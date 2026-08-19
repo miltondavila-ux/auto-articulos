@@ -81,6 +81,7 @@ export default function ConfiguracionPage() {
   const [userEmail, setUserEmail] = useState("");
   const [allowInstagramPublishing, setAllowInstagramPublishing] = useState(false);
   const [allowFacebookPublishing, setAllowFacebookPublishing] = useState(false);
+  const [modulosDeshabilitados, setModulosDeshabilitados] = useState<string[]>([]);
   const [allowLinkedInPublishing, setAllowLinkedInPublishing] = useState(false);
   const [allowThreadsPublishing, setAllowThreadsPublishing] = useState(false);
   const [triggeringFix, setTriggeringFix] = useState(false);
@@ -177,6 +178,9 @@ export default function ConfiguracionPage() {
         setIsAdmin(data.role === "admin");
         setUserEmail(data.email ?? "");
         setAllowInstagramPublishing(data.allowInstagramPublishing ?? false);
+        if (Array.isArray(data.disabledModules)) {
+          setModulosDeshabilitados(data.disabledModules);
+        }
         setAllowFacebookPublishing(data.allowFacebookPublishing ?? false);
         setAllowLinkedInPublishing(data.allowLinkedInPublishing ?? false);
         setAllowThreadsPublishing(data.allowThreadsPublishing ?? false);
@@ -581,8 +585,27 @@ export default function ConfiguracionPage() {
         ? "#ff9500"
         : "#1d1d1f";
 
+  /*
+   * La pestaña de redes sociales se muestra si el administrador le dio a esta
+   * cuenta permiso para publicar en alguna red. Antes dependía de un correo
+   * escrito en el código, así que dar el permiso desde Administración no
+   * servía de nada: la pestaña seguía sin aparecer.
+   */
+  /*
+   * Si el administrador le da a esta cuenta acceso al módulo de redes —aunque
+   * esté apagado para todos los demás—, aquí debe poder configurarlo. Antes
+   * podía ver el módulo pero no sus conexiones, así que el acceso no servía
+   * de nada.
+   */
+  const tieneModuloRedes = !modulosDeshabilitados.includes("oportunidades-redes");
+
   const showSocialTab =
-    isAdmin || userEmail.toLowerCase() === "lorenalvarez30@gmail.com";
+    isAdmin ||
+    tieneModuloRedes ||
+    allowThreadsPublishing ||
+    allowInstagramPublishing ||
+    allowFacebookPublishing ||
+    allowLinkedInPublishing;
 
   useEffect(() => {
     if (activeTab === "social" && !showSocialTab) {
@@ -958,11 +981,13 @@ export default function ConfiguracionPage() {
           style={{ display: "flex", flexDirection: "column", gap: 16 }}
         >
           <BusinessProfileSection />
-          {(allowThreadsPublishing || allowInstagramPublishing || allowFacebookPublishing || isAdmin || userEmail.toLowerCase() === "lorenalvarez30@gmail.com") && (
-            <ThreadsSection allowThreads={isAdmin || userEmail.toLowerCase() === "lorenalvarez30@gmail.com" || allowThreadsPublishing} allowInstagram={isAdmin || userEmail.toLowerCase() === "lorenalvarez30@gmail.com" || allowInstagramPublishing} allowFacebook={isAdmin || userEmail.toLowerCase() === "lorenalvarez30@gmail.com" || allowFacebookPublishing} isAdmin={isAdmin || userEmail.toLowerCase() === "lorenalvarez30@gmail.com"} />
+          {(allowThreadsPublishing || allowInstagramPublishing || allowFacebookPublishing || isAdmin || tieneModuloRedes) && (
+            <ThreadsSection allowThreads={isAdmin || tieneModuloRedes || allowThreadsPublishing} allowInstagram={isAdmin || tieneModuloRedes || allowInstagramPublishing} allowFacebook={isAdmin || tieneModuloRedes || allowFacebookPublishing} isAdmin={isAdmin} />
           )}
           <TwitterSection />
-          {(allowLinkedInPublishing || isAdmin || userEmail.toLowerCase() === "lorenalvarez30@gmail.com") && <LinkedInSection allowed={allowLinkedInPublishing || isAdmin || userEmail.toLowerCase() === "lorenalvarez30@gmail.com"} />}
+          {(allowLinkedInPublishing || isAdmin || tieneModuloRedes) && (
+            <LinkedInSection allowed={allowLinkedInPublishing || isAdmin || tieneModuloRedes} />
+          )}
         </div>
       )}
 
