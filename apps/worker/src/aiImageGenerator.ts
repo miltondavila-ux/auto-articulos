@@ -221,6 +221,7 @@ function buildGeneratePrompt(decision: CreativeDecision): string {
     `Overall creative direction: ${DIRECTION_TAGS[decision.directionTag]}.`,
     `Typography style for the headline: ${TEXT_TAGS[decision.textTag]}.`,
     `Overlay this short headline text, in Spanish, large and perfectly legible, well composed within the frame: "${decision.message}"`,
+    "CRITICAL: the headline text must be fully contained within the frame with generous margin on all four sides (at least 8% padding) — never let any letter or word get cropped, cut off, or run past the edge of the image. Wrap it onto multiple shorter lines if needed to keep it fully inside the frame.",
     decision.hasPeople
       ? "CRITICAL: never place the headline text over anyone's face, eyes or head — pick empty negative space instead (sky, blank wall, out-of-focus background, upper or lower third of the frame) so every face stays fully visible."
       : "Place the headline text in a well-composed area with clean negative space.",
@@ -254,6 +255,24 @@ async function circularAvatar(img: Buffer, diameter: number): Promise<Buffer> {
 }
 
 /**
+ * Muchos logos se suben con un fondo blanco/casi blanco sólido en vez de
+ * transparente de verdad — pedido explícito de Milton: el logo debe verse
+ * SIEMPRE sobre fondo transparente, nunca con una placa blanca fea detrás.
+ * Vuelve transparente cualquier píxel casi blanco (umbral alto: el logo en
+ * sí casi nunca usa blanco puro extensivamente).
+ */
+async function removeNearWhiteBackground(png: Buffer, threshold = 245): Promise<Buffer> {
+  const { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const { width, height, channels } = info;
+  for (let i = 0; i < data.length; i += channels) {
+    if (data[i] >= threshold && data[i + 1] >= threshold && data[i + 2] >= threshold) {
+      data[i + 3] = 0;
+    }
+  }
+  return sharp(data, { raw: { width, height, channels } }).png().toBuffer();
+}
+
+/**
  * Compone el logo y/o la foto de perfil REALES sobre la imagen generada, con
  * código determinístico — nunca se le piden a la IA, para que conserven su
  * identidad exacta (pedido explícito: el logo no debe rediseñarse).
@@ -269,8 +288,9 @@ async function compositeRealAssets(
   const padding = Math.round(width * 0.05);
 
   if (logoPng) {
+    const logoTransparent = await removeNearWhiteBackground(logoPng);
     const logoMaxWidth = Math.round(width * 0.32);
-    const logoResized = await sharp(logoPng)
+    const logoResized = await sharp(logoTransparent)
       .resize({ width: logoMaxWidth, height: Math.round(height * 0.12), fit: "inside" })
       .toBuffer();
     const meta = await sharp(logoResized).metadata();
