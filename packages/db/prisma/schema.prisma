@@ -88,6 +88,15 @@ model User {
   // activarlo por usuario. Default: false (nadie tiene acceso).
   allowThreadsPublishing            Boolean   @default(false)
   allowFacebookPublishing           Boolean   @default(false)
+  // Control de acceso al generador de imágenes con IA para redes sociales
+  // (20/8/2026, "Creador de Imágenes para Redes Sociales"). Solo el admin
+  // puede activarlo por usuario — es un upsell, no un reemplazo forzado.
+  // Default: false = se sigue usando la imagen OG del artículo tal cual,
+  // exactamente como hoy. En true, Instagram Story y Reel-image generan la
+  // imagen con IA (partiendo de la OG + logo/foto del usuario) en vez de
+  // usar la OG sin tocar. No afecta Carrusel/Infografía (ya generan imagen
+  // propia, no usan la OG).
+  aiImageGenerationEnabled          Boolean   @default(false)
   // Foto de perfil del usuario y logo de su negocio/marca.
   // Se usan como elementos visuales en las publicaciones de redes sociales
   // (carruseles, reels, infografías). Subidas como URLs de Vercel Blob.

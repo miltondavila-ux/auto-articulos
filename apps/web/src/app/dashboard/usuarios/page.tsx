@@ -46,6 +46,7 @@ interface UserRow {
   allowLinkedInPublishing: boolean;
   allowThreadsPublishing: boolean;
   allowFacebookPublishing: boolean;
+  aiImageGenerationEnabled: boolean;
   numeroCuenta?: number;
   moduleOverrides?: Record<string, "inherit" | "enabled" | "disabled">;
   profilePhotoUrl: string | null;
@@ -1750,6 +1751,9 @@ function UserCard({
   const [permFacebook, setPermFacebook] = useState(
     Boolean(user.allowFacebookPublishing),
   );
+  const [permAiImageGeneration, setPermAiImageGeneration] = useState(
+    Boolean(user.aiImageGenerationEnabled),
+  );
   // Sistema de prueba gratuita (13/8/2026): estado de prueba y desbloqueo manual.
   const [permIsTrialSignup, setPermIsTrialSignup] = useState(
     Boolean(user.isTrialSignup),
@@ -1784,6 +1788,7 @@ function UserCard({
     setPermLinkedIn(Boolean(user.allowLinkedInPublishing));
     setPermThreads(Boolean(user.allowThreadsPublishing));
     setPermFacebook(Boolean(user.allowFacebookPublishing));
+    setPermAiImageGeneration(Boolean(user.aiImageGenerationEnabled));
     setPermIsTrialSignup(Boolean(user.isTrialSignup));
     setPermTrialUnlocked(Boolean(user.trialUnlocked));
     setPermImageCredits(user.hasImageCredits !== false);
@@ -1795,6 +1800,7 @@ function UserCard({
     permLinkedIn !== Boolean(user.allowLinkedInPublishing) ||
     permThreads !== Boolean(user.allowThreadsPublishing) ||
     permFacebook !== Boolean(user.allowFacebookPublishing) ||
+    permAiImageGeneration !== Boolean(user.aiImageGenerationEnabled) ||
     permIsTrialSignup !== Boolean(user.isTrialSignup) ||
     permTrialUnlocked !== Boolean(user.trialUnlocked) ||
     permImageCredits !== (user.hasImageCredits !== false);
@@ -1985,6 +1991,7 @@ function UserCard({
           allowLinkedInPublishing: permLinkedIn,
           allowThreadsPublishing: permThreads,
           allowFacebookPublishing: permFacebook,
+          aiImageGenerationEnabled: permAiImageGeneration,
           isTrialSignup: permIsTrialSignup,
           trialUnlocked: permTrialUnlocked,
           hasImageCredits: permImageCredits,
@@ -2321,6 +2328,16 @@ function UserCard({
                   style={{ accentColor: "#1d1d1f", width: 16, height: 16 }}
                 />
                 Publicar en Facebook Pages
+              </label>
+              <label style={permissionLabelStyle}>
+                <input
+                  type="checkbox"
+                  checked={permAiImageGeneration}
+                  onChange={(e) => setPermAiImageGeneration(e.target.checked)}
+                  disabled={savingPermissions}
+                  style={{ accentColor: "#1d1d1f", width: 16, height: 16 }}
+                />
+                Generador de imágenes con IA (Instagram Story/Reel)
               </label>
               <label style={permissionLabelStyle}>
                 <input

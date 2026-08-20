@@ -17,6 +17,7 @@ import {
 } from "@auto-articulos/shared";
 import { put } from "@vercel/blob";
 import sharp from "sharp";
+import { generateAiInstagramImage } from "./aiImageGenerator";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
@@ -553,7 +554,16 @@ async function processInstagramJob(job: {
   const format = job.platform.replace("instagram-", "") as "carousel" | "reel-image" | "story" | "infografia";
   const [title, user] = await Promise.all([
     job.titleId ? prisma.title.findUnique({ where: { id: job.titleId } }) : Promise.resolve(null),
-    prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true, infographicPrompt: true } }),
+    prisma.user.findUnique({
+      where: { id: job.userId },
+      select: {
+        imagePrompt: true,
+        infographicPrompt: true,
+        aiImageGenerationEnabled: true,
+        businessLogoUrl: true,
+        profilePhotoUrl: true,
+      },
+    }),
   ]);
   const summary = title?.summary || job.articleTitle || "";
   const finalPost = job.suggestedText.includes("[ENLACE]")
@@ -593,9 +603,28 @@ async function processInstagramJob(job: {
 
     case "reel-image": {
       const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
-      const imageUrl = sourceImage ? await normalizeSocialImage(sourceImage, 9 / 16) : null;
-      console.log(`[Instagram ${format}] adapted article image: ${imageUrl?.substring(0, 80)}`);
-      if (!imageUrl) throw new Error("No se pudo generar la imagen estilo Reel.");
+      let imageUrl: string | null = null;
+      if (sourceImage && user?.aiImageGenerationEnabled) {
+        // Opción 2 del "Creador de Imágenes para Redes Sociales": generador
+        // IA aparte, partiendo de la OG. Sin fallback a la OG sin tocar si
+        // falla — se cancela la oportunidad (regla explícita, por costo).
+        imageUrl = await generateAiInstagramImage({
+          articleTitle: job.articleTitle,
+          articleSummary: summary,
+          ogImageUrl: sourceImage,
+          format: "reel-image",
+          businessLogoUrl: user.businessLogoUrl,
+          profilePhotoUrl: user.profilePhotoUrl,
+          pathPrefix: `instagram/ai/reel-image/${job.titleId || job.id}`,
+        });
+        console.log(`[Instagram ${format}] AI image: ${imageUrl?.substring(0, 80)}`);
+        if (!imageUrl) throw new Error("No se pudo generar la imagen con IA para Reel.");
+      } else {
+        // Opción 1 (default, sin cambios): imagen OG tal cual.
+        imageUrl = sourceImage ? await normalizeSocialImage(sourceImage, 9 / 16) : null;
+        console.log(`[Instagram ${format}] adapted article image: ${imageUrl?.substring(0, 80)}`);
+        if (!imageUrl) throw new Error("No se pudo generar la imagen estilo Reel.");
+      }
       result = await publishInstagramImage(
         accessToken,
         integration.instagramBusinessAccountId,
@@ -607,8 +636,22 @@ async function processInstagramJob(job: {
 
     case "story": {
       const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
-      const imageUrl = sourceImage ? await normalizeSocialImage(sourceImage, 9 / 16) : null;
-      if (!imageUrl) throw new Error("No se pudo adaptar la imagen del artículo para Stories.");
+      let imageUrl: string | null = null;
+      if (sourceImage && user?.aiImageGenerationEnabled) {
+        imageUrl = await generateAiInstagramImage({
+          articleTitle: job.articleTitle,
+          articleSummary: summary,
+          ogImageUrl: sourceImage,
+          format: "story",
+          businessLogoUrl: user.businessLogoUrl,
+          profilePhotoUrl: user.profilePhotoUrl,
+          pathPrefix: `instagram/ai/story/${job.titleId || job.id}`,
+        });
+        if (!imageUrl) throw new Error("No se pudo generar la imagen con IA para Stories.");
+      } else {
+        imageUrl = sourceImage ? await normalizeSocialImage(sourceImage, 9 / 16) : null;
+        if (!imageUrl) throw new Error("No se pudo adaptar la imagen del artículo para Stories.");
+      }
       result = await publishInstagramStory(
         accessToken,
         integration.instagramBusinessAccountId,

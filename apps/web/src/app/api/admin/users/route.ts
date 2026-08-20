@@ -80,6 +80,7 @@ export async function GET() {
         allowLinkedInPublishing: true,
         allowThreadsPublishing: true,
         allowFacebookPublishing: true,
+        aiImageGenerationEnabled: true,
         profilePhotoUrl: true,
         businessLogoUrl: true,
         opportunitiesDisclosureAcceptedAt: true,
@@ -191,6 +192,7 @@ export async function PATCH(request: NextRequest) {
     allowLinkedInPublishing,
     allowThreadsPublishing,
     allowFacebookPublishing,
+    aiImageGenerationEnabled,
     profilePhotoUrl,
     businessLogoUrl,
     isTrialSignup,
@@ -220,6 +222,7 @@ export async function PATCH(request: NextRequest) {
     allowLinkedInPublishing?: boolean;
     allowThreadsPublishing?: boolean;
     allowFacebookPublishing?: boolean;
+    aiImageGenerationEnabled?: boolean;
     profilePhotoUrl?: string | null;
     businessLogoUrl?: string | null;
     isTrialSignup?: boolean;
@@ -340,6 +343,10 @@ export async function PATCH(request: NextRequest) {
     data.allowFacebookPublishing = Boolean(allowFacebookPublishing);
   }
 
+  if ("aiImageGenerationEnabled" in body) {
+    data.aiImageGenerationEnabled = Boolean(aiImageGenerationEnabled);
+  }
+
   if ("moduleOverrides" in body) {
     if (!moduleOverrides || typeof moduleOverrides !== "object" || Array.isArray(moduleOverrides)) {
       return NextResponse.json(
@@ -434,6 +441,7 @@ export async function PATCH(request: NextRequest) {
         allowLinkedInPublishing: true,
         allowThreadsPublishing: true,
         allowFacebookPublishing: true,
+        aiImageGenerationEnabled: true,
         createdAt: true,
         isTrialSignup: true,
         trialStartedAt: true,
