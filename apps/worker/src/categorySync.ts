@@ -83,9 +83,9 @@ async function fetchCategoriesDetectingServer(
  * en este momento), para no abrir una segunda sesión contra la misma cuenta
  * de 10minutesWebsite en paralelo.
  */
-export async function processNextCategorySync(): Promise<boolean> {
+export async function processNextCategorySync(filterUserId?: string): Promise<boolean> {
   const candidates = await prisma.categorySyncJob.findMany({
-    where: { status: "pending" },
+    where: { status: "pending", ...(filterUserId ? { userId: filterUserId } : {}) },
     orderBy: { createdAt: "asc" },
     take: 20,
   });

@@ -705,9 +705,9 @@ async function processInstagramJob(job: {
 
 // ─── PROCESADOR PRINCIPAL ─────────────────────────────────────────────────
 
-export async function processNextSocialPublish(): Promise<boolean> {
+export async function processNextSocialPublish(filterUserId?: string): Promise<boolean> {
   const job = await prisma.socialOpportunity.findFirst({
-    where: { status: "queued" },
+    where: { status: "queued", ...(filterUserId ? { userId: filterUserId } : {}) },
     orderBy: { createdAt: "asc" },
   });
 

@@ -25,9 +25,9 @@ async function markTitleError(titleId: string, message: string) {
  * por otro lane, para que distintos usuarios avancen en paralelo sin que dos
  * lanes abran sesión en la MISMA cuenta de 10minutesWebsite al mismo tiempo.
  */
-export async function processNext(): Promise<boolean> {
+export async function processNext(filterUserId?: string): Promise<boolean> {
   const candidates = await prisma.run.findMany({
-    where: { status: "running" },
+    where: { status: "running", ...(filterUserId ? { userId: filterUserId } : {}) },
     orderBy: { createdAt: "asc" },
     include: {
       category: true,
