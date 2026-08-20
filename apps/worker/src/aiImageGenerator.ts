@@ -3,13 +3,17 @@
 // existían (socialPublish.ts, businessProfilePublish.ts) — no los toca ni
 // los reemplaza, por decisión explícita de Milton.
 //
-// Parte SIEMPRE de la imagen OG real del artículo (edición, no generación
-// desde cero — regla explícita, repetida varias veces por Milton: "no debes
-// generar una composición desconectada de la fotografía original") y usa el
-// logo/foto del usuario de forma variable, no siempre. Una sola generación
-// por oportunidad: si algo falla en cualquier paso, devuelve null y quien
-// llama debe cancelar la oportunidad — no hay reintento ni regeneración
-// gratuita (decisión explícita, por costo).
+// Regla explícita de Milton (20/8/2026): la imagen OG se ANALIZA, nunca se
+// copia ni se edita píxel a píxel. La IA genera una imagen NUEVA, informada
+// por ese análisis (personas, pose, colores, fondo, mood) — no una edición
+// de la foto original. El logo y la foto de perfil del usuario, cuando se
+// usan, se componen encima con código determinístico (sharp), no se le
+// piden a la IA — así conservan su identidad exacta sin que el modelo los
+// "redibuje" aproximados.
+//
+// Una sola generación por oportunidad: si algo falla en cualquier paso,
+// devuelve null y quien llama debe cancelar la oportunidad — no hay
+// reintento ni regeneración gratuita (decisión explícita, por costo).
 //
 // El motor de decisión (ANALIZAR → DECIDIR → CONSTRUIR EL PROMPT VISUAL →
 // CREAR LA IMAGEN) traduce el prompt original de Milton (ver
@@ -27,16 +31,16 @@ import { put } from "@vercel/blob";
 
 const OPENAI_IMAGE_API_KEY = process.env.OPENAI_IMAGE_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
-const OPENAI_EDIT_URL = "https://api.openai.com/v1/images/edits";
+const OPENAI_GENERATE_URL = "https://api.openai.com/v1/images/generations";
 
 export type AiImageFormat = "story" | "reel-image";
 
 // Tamaño que se le pide a gpt-image-1 (solo soporta 1024x1024, 1024x1536,
 // 1536x1024) y tamaño final real de Instagram Story/Reel al que se recorta
 // después con sharp. Cuando este módulo cubra más redes, este mapa crece.
-const FORMAT_TARGET: Record<AiImageFormat, { editSize: "1024x1536"; width: number; height: number }> = {
-  story: { editSize: "1024x1536", width: 1080, height: 1920 },
-  "reel-image": { editSize: "1024x1536", width: 1080, height: 1920 },
+const FORMAT_TARGET: Record<AiImageFormat, { genSize: "1024x1536"; width: number; height: number }> = {
+  story: { genSize: "1024x1536", width: 1080, height: 1920 },
+  "reel-image": { genSize: "1024x1536", width: 1080, height: 1920 },
 };
 
 // ─── ETIQUETAS DEL PROMPT ORIGINAL DE MILTON ──────────────────────────────
@@ -46,30 +50,30 @@ const FORMAT_TARGET: Record<AiImageFormat, { editSize: "1024x1536"; width: numbe
 // entra al prompt visual final.
 
 const BACKGROUND_TAGS = {
-  backgroundenhance: "Subtly enhance the existing background — richer color, better light — without changing what it is.",
-  backgroundrefine: "Refine and clean up the existing background: remove clutter and distractions, keep its identity.",
-  backgroundreplace: "Replace the background with a new one that better fits the story, since the original doesn't help.",
-  backgroundblur: "Add a soft depth-of-field blur to the background so the subject stands out.",
-  backgrounddepth: "Add cinematic depth and layering to the background.",
-  backgroundcinematic: "Give the background a cinematic, moody, professionally lit look.",
-  backgroundluxury: "Give the background a luxury, upscale, premium feel.",
-  backgroundstudio: "Replace the background with a clean professional studio backdrop.",
-  backgroundclean: "Simplify the background to something clean and minimal so nothing competes with the subject.",
-  backgroundmatch: "Keep the background as-is — it already fits the story, just polish it slightly.",
+  backgroundenhance: "a rich, well-lit version of a background like the one in the reference scene",
+  backgroundrefine: "a clean, uncluttered version of a background like the one in the reference scene",
+  backgroundreplace: "a completely new background that fits the story better than the reference scene",
+  backgroundblur: "a background with soft depth-of-field blur so the subject stands out",
+  backgrounddepth: "a background with cinematic depth and layering",
+  backgroundcinematic: "a cinematic, moody, professionally lit background",
+  backgroundluxury: "a luxury, upscale, premium-feeling background",
+  backgroundstudio: "a clean professional studio backdrop",
+  backgroundclean: "a simple, minimal background so nothing competes with the subject",
+  backgroundmatch: "a background that matches the mood of the reference scene, lightly polished",
 } as const;
 
 const RETOUCH_TAGS = {
-  beautyretouch: "Gentle, professional beauty retouch — polished but real.",
-  naturalretouch: "Very light, natural retouch — barely noticeable.",
-  skinrefine: "Refine skin texture subtly, keep visible pores and natural texture.",
-  skinsmooth: "Smooth minor skin imperfections without losing texture.",
-  complexionrefine: "Even out skin tone slightly.",
-  faceenhance: "Subtle, tasteful enhancement of facial clarity and lighting.",
-  bodyretouch: "Very subtle, respectful body retouch — no reshaping.",
-  bodyrefine: "Minor natural refinement, nothing exaggerated.",
-  stretchmarksoften: "Very subtle softening, nothing artificial.",
-  beautypolish: "Overall light polish — professional campaign look.",
-  none: "Do not retouch skin or body at all — leave people exactly as photographed.",
+  beautyretouch: "polished but real, professional beauty look",
+  naturalretouch: "very natural, barely retouched look",
+  skinrefine: "refined skin texture, keeping natural texture and pores",
+  skinsmooth: "smooth, healthy-looking skin without losing texture",
+  complexionrefine: "even, natural skin tone",
+  faceenhance: "subtle, tasteful facial clarity and lighting",
+  bodyretouch: "respectful, natural body presentation, no reshaping",
+  bodyrefine: "minor natural refinement, nothing exaggerated",
+  stretchmarksoften: "soft, natural skin, nothing artificial",
+  beautypolish: "an overall light, professional campaign polish",
+  none: "completely natural, unretouched people",
 } as const;
 
 const DIRECTION_TAGS = {
@@ -98,31 +102,19 @@ const TEXT_TAGS = {
   socialheadline: "casual, friendly social-media-native typography",
 } as const;
 
-const BRAND_TAGS = {
-  brandidentity: "make it feel authentically part of this brand's identity",
-  brandcolors: "echo the brand's colors from the logo elsewhere in the composition",
-  brandstyle: "match the brand's visual style and personality from the logo",
-  brandguidelines: "respect the brand's implied guidelines (formality, tone) from the logo",
-  brandconsistency: "keep it consistent with how this brand would present itself",
-  logoplacement: "place the logo in the most natural, unobtrusive corner for this format",
-  brandlayout: "let the layout itself reflect the brand's personality",
-  visualidentity: "reinforce the brand's overall visual identity",
-  brandpresence: "give the brand a confident but tasteful presence in the image",
-} as const;
-
 type BackgroundTag = keyof typeof BACKGROUND_TAGS;
 type RetouchTag = keyof typeof RETOUCH_TAGS;
 type DirectionTag = keyof typeof DIRECTION_TAGS;
 type TextTag = keyof typeof TEXT_TAGS;
-type BrandTag = keyof typeof BRAND_TAGS;
 
 interface CreativeDecision {
   message: string;
+  sceneDescription: string;
+  hasPeople: boolean;
   backgroundTag: BackgroundTag;
   retouchTag: RetouchTag;
   directionTag: DirectionTag;
   textTag: TextTag;
-  brandTags: BrandTag[];
 }
 
 async function fetchImageAsPng(url: string): Promise<Buffer | null> {
@@ -140,16 +132,15 @@ async function fetchImageAsPng(url: string): Promise<Buffer | null> {
  * ANALIZAR → DECIDIR, en una sola llamada de visión (barata: gpt-4o-mini).
  * Analiza a fondo la imagen OG (personas, pose, encuadre, fondo, espacio
  * para texto, calidad — igual que el "ANÁLISIS PROFUNDO DE LA IMAGEN OG"
- * del prompt original) junto con el artículo, y decide una etiqueta de cada
- * categoría (fondo, retoque, dirección creativa, tipografía, marca) más el
- * mensaje corto — exactamente el mismo criterio del prompt original, solo
- * que en JSON en vez de una lista de etiquetas en texto.
+ * del prompt original) junto con el artículo, y decide el mensaje, una
+ * descripción de escena en texto (para inspirar la generación, NUNCA para
+ * copiar la foto), y una etiqueta de cada categoría — mismo criterio del
+ * prompt original, en JSON.
  */
 async function decideCreativeDirection(
   articleTitle: string,
   articleSummary: string,
   ogImagePng: Buffer,
-  hasLogo: boolean,
 ): Promise<CreativeDecision | null> {
   if (!OPENAI_IMAGE_API_KEY) return null;
   try {
@@ -164,7 +155,7 @@ async function decideCreativeDirection(
           {
             role: "system",
             content:
-              "Eres un director creativo profesional de publicaciones para redes sociales. Analizas a fondo una foto real (personas, rasgos, pose, encuadre, iluminación, colores, fondo, espacio disponible para texto, calidad, elementos que deben mantenerse y elementos que pueden mejorarse) junto con el artículo que la acompaña, y decides con criterio profesional cómo convertirla en una pieza de campaña — sin generar una composición desconectada de la foto original, siempre partiendo de ella. Respondes ÚNICAMENTE JSON válido.",
+              "Eres un director creativo profesional de publicaciones para redes sociales. Analizas a fondo una foto real (personas, rasgos, pose, encuadre, iluminación, colores, fondo, elementos que deben mantenerse y elementos que pueden mejorarse) junto con el artículo que la acompaña. Tu trabajo es ANALIZARLA para inspirar una imagen NUEVA — nunca copiarla ni describirla para reproducirla literalmente. Respondes ÚNICAMENTE JSON válido.",
           },
           {
             role: "user",
@@ -172,15 +163,15 @@ async function decideCreativeDirection(
               {
                 type: "text",
                 text:
-                  `Título del artículo: ${articleTitle}\nResumen: ${articleSummary}\n` +
-                  `¿Hay logo de marca disponible para usar?: ${hasLogo ? "sí" : "no"}\n\n` +
+                  `Título del artículo: ${articleTitle}\nResumen: ${articleSummary}\n\n` +
                   `Analiza la foto adjunta a fondo y decide JSON con exactamente estas claves:\n\n` +
                   `"message": frase corta y poderosa en español, 3 a 9 palabras, humana y emocional, conectada con la necesidad o beneficio real del lector. No copies el título literal.\n\n` +
+                  `"hasPeople": true si la foto tiene personas, false si no.\n\n` +
+                  `"sceneDescription": en inglés, 2-3 frases describiendo la ESCENA que inspirará la imagen nueva (tipo de persona/ambiente/objetos si aplica, mood, paleta de color) — es inspiración para generar algo nuevo, NO una descripción para reproducir la foto literalmente.\n\n` +
                   `"backgroundTag": elige UNA de estas claves según si el fondo de la foto ayuda a contar la historia (consérvalo/mejóralo) o no (reemplázalo): ${Object.keys(BACKGROUND_TAGS).join(", ")}.\n\n` +
-                  `"retouchTag": elige UNA. Si NO hay personas en la foto, usa "none". Si hay personas, elige el retoque que mejora la presentación SIN cambiar identidad/edad/proporciones, nunca "plástico": ${Object.keys(RETOUCH_TAGS).join(", ")}.\n\n` +
+                  `"retouchTag": elige UNA. Si hasPeople es false, usa "none". Si hay personas, elige el retoque que mejora la presentación sin cambiar identidad, nunca "plástico": ${Object.keys(RETOUCH_TAGS).join(", ")}.\n\n` +
                   `"directionTag": elige UNA dirección creativa según el contenido del artículo y la foto: ${Object.keys(DIRECTION_TAGS).join(", ")}.\n\n` +
-                  `"textTag": elige UNA según red social (Instagram), tema, audiencia, emoción, la foto en sí, jerarquía y espacio disponible para el texto que viste en la foto: ${Object.keys(TEXT_TAGS).join(", ")}.\n\n` +
-                  `"brandTags": arreglo de 0 a 3 claves, SOLO si hay logo disponible (si no hay logo, arreglo vacío []), de las que aporten valor real: ${Object.keys(BRAND_TAGS).join(", ")}.`,
+                  `"textTag": elige UNA según red social (Instagram), tema, audiencia, emoción, jerarquía y espacio disponible: ${Object.keys(TEXT_TAGS).join(", ")}.`,
               },
               {
                 type: "image_url",
@@ -200,55 +191,111 @@ async function decideCreativeDirection(
     const parsed = JSON.parse(raw) as Partial<CreativeDecision>;
 
     if (!parsed.message?.trim()) return null;
+    if (!parsed.sceneDescription?.trim()) return null;
+    if (typeof parsed.hasPeople !== "boolean") return null;
     if (!parsed.backgroundTag || !(parsed.backgroundTag in BACKGROUND_TAGS)) return null;
     if (!parsed.retouchTag || !(parsed.retouchTag in RETOUCH_TAGS)) return null;
     if (!parsed.directionTag || !(parsed.directionTag in DIRECTION_TAGS)) return null;
     if (!parsed.textTag || !(parsed.textTag in TEXT_TAGS)) return null;
-    const brandTags = Array.isArray(parsed.brandTags)
-      ? parsed.brandTags.filter((t): t is BrandTag => typeof t === "string" && t in BRAND_TAGS)
-      : [];
 
     return {
       message: parsed.message.trim(),
+      sceneDescription: parsed.sceneDescription.trim(),
+      hasPeople: parsed.hasPeople,
       backgroundTag: parsed.backgroundTag,
       retouchTag: parsed.retouchTag,
       directionTag: parsed.directionTag,
       textTag: parsed.textTag,
-      brandTags,
     };
   } catch {
     return null;
   }
 }
 
-function buildEditPrompt(decision: CreativeDecision, includesExtraRefs: boolean): string {
-  const brandPhrases = decision.brandTags.map((t) => BRAND_TAGS[t]);
+function buildGeneratePrompt(decision: CreativeDecision): string {
   return [
-    "Edit this photo into a finished, professional social media campaign image ready to publish on Instagram — start from this exact photo, never a disconnected new composition.",
-    BACKGROUND_TAGS[decision.backgroundTag],
-    RETOUCH_TAGS[decision.retouchTag],
+    "Create a brand-new, finished, professional social media campaign photo ready to publish on Instagram — photorealistic, not an illustration.",
+    `Scene inspiration (reinterpret freely, do not copy any specific existing photo): ${decision.sceneDescription}`,
+    `Background: ${BACKGROUND_TAGS[decision.backgroundTag]}.`,
+    decision.hasPeople ? `People in the scene should look: ${RETOUCH_TAGS[decision.retouchTag]}.` : "",
     `Overall creative direction: ${DIRECTION_TAGS[decision.directionTag]}.`,
     `Typography style for the headline: ${TEXT_TAGS[decision.textTag]}.`,
-    includesExtraRefs
-      ? "Additional reference images are provided (brand logo and/or a person's photo) — incorporate them naturally and tastefully only where it visually fits, without forcing them into the composition."
-      : "",
-    brandPhrases.length > 0 ? brandPhrases.join(" ") : "",
     `Overlay this short headline text, in Spanish, large and perfectly legible, well composed within the frame: "${decision.message}"`,
-    "CRITICAL: never place the headline text over anyone's face, eyes or head — pick empty negative space instead (sky, blank wall, out-of-focus background, upper or lower third of the frame) so every face in the photo stays fully visible and unobstructed.",
-    "Keep any real people from the base photo clearly recognizable — do not change their identity, age or proportions.",
-    "If a logo reference image is included, preserve its exact colors and shape — do not redesign it, place it small and naturally, respecting brand identity.",
-    "Vertical full-bleed composition, no black bars, no added watermarks besides the provided logo.",
-    "Before finishing, this must feel like it would stop someone mid-scroll, connect with a real human need, represent the article correctly, and look finished and ready to publish — not a draft.",
+    decision.hasPeople
+      ? "CRITICAL: never place the headline text over anyone's face, eyes or head — pick empty negative space instead (sky, blank wall, out-of-focus background, upper or lower third of the frame) so every face stays fully visible."
+      : "Place the headline text in a well-composed area with clean negative space.",
+    "Leave clean, uncluttered empty space in a bottom corner (roughly the size of a small logo) for a brand logo to be added afterward — do not draw any logo or brand text yourself.",
+    "Vertical full-bleed composition, no black bars, no watermarks, no added text besides the headline.",
+    "Before finishing, this must feel like it would stop someone mid-scroll, connect with a real human need, and look finished and ready to publish — not a draft.",
   ]
     .filter(Boolean)
     .join(" ")
     .slice(0, 4000);
 }
 
+/** Recorta `img` en círculo y le agrega un borde blanco — para la foto de perfil. */
+async function circularAvatar(img: Buffer, diameter: number): Promise<Buffer> {
+  const resized = await sharp(img).resize(diameter, diameter, { fit: "cover" }).toBuffer();
+  const mask = Buffer.from(
+    `<svg width="${diameter}" height="${diameter}"><circle cx="${diameter / 2}" cy="${diameter / 2}" r="${diameter / 2}" fill="#fff"/></svg>`,
+  );
+  const circled = await sharp(resized)
+    .composite([{ input: mask, blend: "dest-in" }])
+    .png()
+    .toBuffer();
+  const borderSize = diameter + 10;
+  const border = Buffer.from(
+    `<svg width="${borderSize}" height="${borderSize}"><circle cx="${borderSize / 2}" cy="${borderSize / 2}" r="${borderSize / 2}" fill="#fff"/></svg>`,
+  );
+  return sharp(border)
+    .composite([{ input: circled, top: 5, left: 5 }])
+    .png()
+    .toBuffer();
+}
+
 /**
- * Genera la imagen de Instagram Story/Reel-image con IA, partiendo de la
- * imagen OG del artículo. Devuelve null si CUALQUIER paso falla — quien
- * llama debe cancelar la oportunidad, no publicar sin imagen ni reintentar.
+ * Compone el logo y/o la foto de perfil REALES sobre la imagen generada, con
+ * código determinístico — nunca se le piden a la IA, para que conserven su
+ * identidad exacta (pedido explícito: el logo no debe rediseñarse).
+ */
+async function compositeRealAssets(
+  base: Buffer,
+  width: number,
+  height: number,
+  logoPng: Buffer | null,
+  photoPng: Buffer | null,
+): Promise<Buffer> {
+  const composites: { input: Buffer; left: number; top: number }[] = [];
+  const padding = Math.round(width * 0.05);
+
+  if (logoPng) {
+    const logoMaxWidth = Math.round(width * 0.32);
+    const logoResized = await sharp(logoPng)
+      .resize({ width: logoMaxWidth, height: Math.round(height * 0.12), fit: "inside" })
+      .toBuffer();
+    const meta = await sharp(logoResized).metadata();
+    composites.push({
+      input: logoResized,
+      left: Math.max(padding, width - (meta.width ?? logoMaxWidth) - padding),
+      top: Math.max(padding, height - (meta.height ?? 60) - padding),
+    });
+  }
+
+  if (photoPng) {
+    const diameter = Math.round(width * 0.22);
+    const avatar = await circularAvatar(photoPng, diameter);
+    composites.push({ input: avatar, left: padding, top: height - diameter - padding - 10 });
+  }
+
+  if (composites.length === 0) return base;
+  return sharp(base).composite(composites).toBuffer();
+}
+
+/**
+ * Genera la imagen de Instagram Story/Reel-image con IA, ANALIZANDO (no
+ * copiando) la imagen OG del artículo. Devuelve null si CUALQUIER paso
+ * falla — quien llama debe cancelar la oportunidad, no publicar sin imagen
+ * ni reintentar.
  */
 export async function generateAiInstagramImage(params: {
   articleTitle: string;
@@ -266,50 +313,31 @@ export async function generateAiInstagramImage(params: {
   const ogPng = await fetchImageAsPng(params.ogImageUrl);
   if (!ogPng) return null;
 
+  const decision = await decideCreativeDirection(params.articleTitle, params.articleSummary, ogPng);
+  if (!decision) return null;
+
   // Decisión aleatoria e independiente entre sí: no siempre se usan, para
   // que las imágenes no se vean todas iguales (pedido explícito de Milton).
   const useLogo = Boolean(params.businessLogoUrl) && Math.random() < 0.6;
   const usePhoto = Boolean(params.profilePhotoUrl) && Math.random() < 0.3;
 
-  const decision = await decideCreativeDirection(
-    params.articleTitle,
-    params.articleSummary,
-    ogPng,
-    useLogo,
-  );
-  if (!decision) return null;
+  const [logoPng, photoPng] = await Promise.all([
+    useLogo && params.businessLogoUrl ? fetchImageAsPng(params.businessLogoUrl) : Promise.resolve(null),
+    usePhoto && params.profilePhotoUrl ? fetchImageAsPng(params.profilePhotoUrl) : Promise.resolve(null),
+  ]);
 
-  const refImages: Buffer[] = [ogPng];
-  if (useLogo && params.businessLogoUrl) {
-    const logoPng = await fetchImageAsPng(params.businessLogoUrl);
-    if (logoPng) refImages.push(logoPng);
-  }
-  if (usePhoto && params.profilePhotoUrl) {
-    const photoPng = await fetchImageAsPng(params.profilePhotoUrl);
-    if (photoPng) refImages.push(photoPng);
-  }
-
-  const prompt = buildEditPrompt(decision, refImages.length > 1);
+  const prompt = buildGeneratePrompt(decision);
 
   try {
-    const form = new FormData();
-    form.append("model", "gpt-image-1");
-    form.append("prompt", prompt);
-    form.append("size", target.editSize);
-    form.append("n", "1");
-    refImages.forEach((buf, i) => {
-      form.append("image[]", new Blob([new Uint8Array(buf)], { type: "image/png" }), `ref${i}.png`);
-    });
-
-    const res = await fetch(OPENAI_EDIT_URL, {
+    const res = await fetch(OPENAI_GENERATE_URL, {
       method: "POST",
-      headers: { Authorization: `Bearer ${OPENAI_IMAGE_API_KEY}` },
-      body: form,
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_IMAGE_API_KEY}` },
+      body: JSON.stringify({ model: "gpt-image-1", prompt, size: target.genSize, n: 1 }),
       signal: AbortSignal.timeout(90000),
     });
     if (!res.ok) {
       const errText = await res.text().catch(() => "");
-      console.warn(`[AI Image] OpenAI images/edits falló: ${res.status} ${errText.slice(0, 300)}`);
+      console.warn(`[AI Image] OpenAI images/generations falló: ${res.status} ${errText.slice(0, 300)}`);
       return null;
     }
     const data = (await res.json()) as { data?: { b64_json?: string }[] };
@@ -317,13 +345,16 @@ export async function generateAiInstagramImage(params: {
     if (!b64) return null;
 
     const rawOutput = Buffer.from(b64, "base64");
+    const resized = await sharp(rawOutput)
+      .resize(target.width, target.height, { fit: "cover", position: "attention" })
+      .toBuffer();
+
+    const withAssets = await compositeRealAssets(resized, target.width, target.height, logoPng, photoPng);
+
     // JPEG en vez de PNG: gpt-image-1 devuelve PNG pesado (varios MB para una
     // foto), e Instagram tarda en procesar el media proporcionalmente a su
     // peso. JPEG calidad 90 pesa una fracción de eso sin pérdida visible.
-    const finalBuffer = await sharp(rawOutput)
-      .resize(target.width, target.height, { fit: "cover", position: "attention" })
-      .jpeg({ quality: 90 })
-      .toBuffer();
+    const finalBuffer = await sharp(withAssets).jpeg({ quality: 90 }).toBuffer();
 
     const blob = await put(`${params.pathPrefix}/${Date.now()}.jpg`, finalBuffer, {
       access: "public",
@@ -337,7 +368,7 @@ export async function generateAiInstagramImage(params: {
     console.log(
       `[AI Image] Generada: ${blob.url} (${(finalBuffer.length / 1024).toFixed(0)}KB) — ` +
         `tags: ${decision.backgroundTag}/${decision.retouchTag}/${decision.directionTag}/${decision.textTag}` +
-        (decision.brandTags.length ? `/${decision.brandTags.join(",")}` : ""),
+        `${logoPng ? " +logo" : ""}${photoPng ? " +foto" : ""}`,
     );
     return blob.url;
   } catch (err) {
