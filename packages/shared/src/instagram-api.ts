@@ -297,7 +297,13 @@ export async function publishInstagramStory(
   });
   if (!containerRes.ok) throw new Error(`Error al crear la Historia de Instagram: ${await containerRes.text()}`);
   const { id: creationId } = (await containerRes.json()) as { id: string };
-  await pollMediaContainerStatus(accessToken, creationId);
+  // 120s en vez del default de 60s: confirmado en vivo (20/8/2026, cuenta de
+  // Lorena) que Instagram tarda más de 60s en procesar el media de una
+  // Story incluso con un JPEG de 300KB — no es cuestión de peso de archivo.
+  // El historial de Stories previo a esto (17/8/2026) también fallaba
+  // siempre por este mismo timeout, con o sin imagen de IA, así que dar más
+  // margen no arriesga nada que ya funcionara.
+  await pollMediaContainerStatus(accessToken, creationId, 120);
   return publishMediaContainer(accessToken, instagramBusinessAccountId, creationId);
 }
 
