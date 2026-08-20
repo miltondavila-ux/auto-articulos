@@ -175,20 +175,26 @@ export async function generateAiInstagramImage(params: {
     if (!b64) return null;
 
     const rawOutput = Buffer.from(b64, "base64");
+    // JPEG en vez de PNG: gpt-image-1 devuelve PNG pesado (varios MB para una
+    // foto), e Instagram tarda en procesar el media proporcionalmente a su
+    // peso — con PNG llegó a agotar el tiempo de espera de
+    // pollMediaContainerStatus (60s) al publicar. JPEG calidad 90 pesa una
+    // fracción de eso sin pérdida visible para una publicación de redes.
     const finalBuffer = await sharp(rawOutput)
       .resize(target.width, target.height, { fit: "cover", position: "attention" })
-      .png()
+      .jpeg({ quality: 90 })
       .toBuffer();
 
-    const blob = await put(`${params.pathPrefix}/${Date.now()}.png`, finalBuffer, {
+    const blob = await put(`${params.pathPrefix}/${Date.now()}.jpg`, finalBuffer, {
       access: "public",
-      contentType: "image/png",
+      contentType: "image/jpeg",
       addRandomSuffix: false,
     });
 
     const checkRes = await fetch(blob.url, { method: "HEAD" });
     if (!checkRes.ok) return null;
 
+    console.log(`[AI Image] Generada: ${blob.url} (${(finalBuffer.length / 1024).toFixed(0)}KB)`);
     return blob.url;
   } catch (err) {
     console.warn("[AI Image] Fallo generando imagen con IA:", err);
