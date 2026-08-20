@@ -99,6 +99,7 @@ function buildEditPrompt(direction: string, message: string, includesExtraRefs: 
       ? "Additional reference images are provided (brand logo and/or a person's photo) — incorporate them naturally and tastefully only where it visually fits, without forcing them into the composition."
       : "",
     `Overlay this short headline text, in Spanish, large and perfectly legible, well composed within the frame: "${message}"`,
+    "CRITICAL: never place the headline text over anyone's face, eyes or head — pick empty negative space instead (sky, blank wall, out-of-focus background, upper or lower third of the frame) so every face in the photo stays fully visible and unobstructed.",
     "Keep any real people from the base photo clearly recognizable — do not change their identity, age or proportions. Retouch subtly, never plastic-looking skin.",
     "If a logo reference image is included, preserve its exact colors and shape — do not redesign it, place it small and naturally, respecting brand identity.",
     "Vertical full-bleed composition, no black bars, no added watermarks besides the provided logo.",
