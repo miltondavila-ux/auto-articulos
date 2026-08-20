@@ -70,7 +70,13 @@ export default function PublicarPage() {
       }
       if (catRes.ok) {
         const catData = await catRes.json().catch(() => ({}));
-        setCategories(catData.categories ?? []);
+        const cats: CategoryRow[] = catData.categories ?? [];
+        setCategories(cats);
+        const regularCount = cats.filter((c) => !c.isSequence).length;
+        const sequenceCount = cats.filter((c) => c.isSequence).length;
+        if (regularCount === 0 && sequenceCount > 0) {
+          setUseSequenceCategory(true);
+        }
       }
       if (runsRes.ok) {
         const runsData = await runsRes.json().catch(() => ({}));
