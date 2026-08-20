@@ -303,21 +303,35 @@ const CHATGPT_MODAL_TITLE_TEXTS = [
   "Generador de artículos usando Inteligencia Artificial",
   "AI Article Generator",
   "Article Generator using Artificial Intelligence",
+  "Gerador de artigos usando Inteligência Artificial",
 ];
 const TEXT_USAR_CHATGPT = bilingual("Usar ChatGPT", "Use ChatGPT");
 const TEXT_CHATGPT_MODAL_TITLE = bilingual(...CHATGPT_MODAL_TITLE_TEXTS);
-const TEXT_GENERAR = bilingual("Generar", "Generate");
-const TEXT_USAR_CONTENIDO = bilingual("Usar contenido", "Use content");
-const TEXT_GUARDAR_CAMBIOS = bilingual("Guardar cambios", "Save changes");
-const TEXT_GENERAR_IMAGEN = bilingual("Generar imagen", "Generate image");
+const TEXT_GENERAR = bilingual("Generar", "Generate", "Gerar");
+const TEXT_USAR_CONTENIDO = bilingual("Usar contenido", "Use content", "Usar conteúdo");
+const TEXT_GUARDAR_CAMBIOS = bilingual(
+  "Guardar cambios",
+  "Save changes",
+  "Guardar alterações",
+  "Salvar alterações",
+  "Gravar alterações",
+);
+const TEXT_GENERAR_IMAGEN = bilingual("Generar imagen", "Generate image", "Gerar imagem", "Gerar imagens");
 const TEXT_CREACION_IMAGENES = bilingual(
   "Creación de imágenes con inteligencia artificial",
   "Image creation with artificial intelligence",
   "AI image creation",
+  "Criação de imagens com inteligência artificial",
+  "Criação de imagens por Inteligência Artificial",
+  "Criação de imagens por IA",
+  "Criação de imagens",
 );
 const TEXT_AVISO_IMAGENES_IA = bilingual(
   "Generación de imágenes mediante IA",
   "AI image generation",
+  "Geração de imagens por IA",
+  "Geração de imagens mediante IA",
+  "Geração de imagem por inteligência artificial",
 );
 
 /**
