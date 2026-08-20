@@ -256,6 +256,8 @@ interface SocialOpportunity {
   titleId: string | null;
   createdAt: string;
   publishedAt: string | null;
+  startedAt: string | null;
+  finishedAt: string | null;
 }
 
 function HistorialRedes() {
@@ -439,7 +441,7 @@ function HistorialRedes() {
                     >
                       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
                         <span style={{ color: "#1d1d1f", fontWeight: 600 }}>
-                          {new Date(opp.publishedAt || opp.createdAt).toLocaleString("es-US", {
+                          {new Date(opp.publishedAt || opp.finishedAt || opp.createdAt).toLocaleString("es-US", {
                             day: "2-digit",
                             month: "2-digit",
                             hour: "2-digit",
@@ -519,15 +521,38 @@ function HistorialRedes() {
                           {loadingSocialEvent === opp.titleId && !socialEvents[opp.titleId] && (
                             <p className="muted" style={{ fontSize: 12, marginTop: 6 }}>Cargando...</p>
                           )}
-                          {socialEvents[opp.titleId] && (
-                            <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: "#6e6e73", fontSize: 12 }}>
-                              {socialEvents[opp.titleId].map((e) => (
-                                <li key={e.id} style={{ marginBottom: 3 }}>
-                                  <span>{new Date(e.createdAt).toLocaleTimeString()}</span> — {e.message}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
+                          {socialEvents[opp.titleId] && (() => {
+                            // El artículo puede tener eventos de otras publicaciones (otra red,
+                            // sitemap, etc.) mezclados en el mismo título — nos quedamos solo con
+                            // los que ocurrieron durante ESTE intento de publicación específico
+                            // (con un margen de 2s por si el evento se registró justo al borde).
+                            const start = opp.startedAt ? new Date(opp.startedAt).getTime() - 2000 : null;
+                            const end = start
+                              ? (opp.finishedAt ? new Date(opp.finishedAt).getTime() : Date.now()) + 2000
+                              : null;
+                            const filtered = start !== null && end !== null
+                              ? socialEvents[opp.titleId].filter((e) => {
+                                  const t = new Date(e.createdAt).getTime();
+                                  return t >= start && t <= end;
+                                })
+                              : [];
+                            if (filtered.length === 0) {
+                              return (
+                                <p className="muted" style={{ fontSize: 12, marginTop: 6 }}>
+                                  Sin eventos registrados para este intento de publicación.
+                                </p>
+                              );
+                            }
+                            return (
+                              <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: "#6e6e73", fontSize: 12 }}>
+                                {filtered.map((e) => (
+                                  <li key={e.id} style={{ marginBottom: 3 }}>
+                                    <span>{new Date(e.createdAt).toLocaleTimeString()}</span> — {e.message}
+                                  </li>
+                                ))}
+                              </ul>
+                            );
+                          })()}
                         </details>
                       )}
                     </div>
