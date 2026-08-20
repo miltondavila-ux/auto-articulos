@@ -537,14 +537,21 @@ async function pollMediaContainerStatus(
     await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
 
     try {
+      // "error_message" NO es un campo válido en este objeto de status para
+      // Instagram (Graph API responde 400 "Tried accessing nonexisting
+      // field" al pedirlo) — confirmado en vivo el 20/8/2026. Pedirlo hacía
+      // que TODAS las consultas de estado fallaran con 400, así que nunca se
+      // llegaba a leer status_code y siempre se agotaba el tiempo de espera,
+      // sin importar qué tan rápido terminara Instagram de verdad. Esto
+      // afectaba a los 4 tipos de publicación de Instagram (story, reel,
+      // carousel, imagen), no solo a este generador de imágenes con IA.
       const statusRes = await fetch(
-        `${GRAPH_API_URL}/${creationId}?fields=status_code,error_message,id&access_token=${accessToken}`
+        `${GRAPH_API_URL}/${creationId}?fields=status_code,id&access_token=${accessToken}`
       );
 
       if (statusRes.ok) {
         const statusData = (await statusRes.json()) as {
           status_code: string;
-          error_message?: string;
         };
 
         console.log(`[Instagram Poll] creation_id=${creationId} status=${statusData.status_code} attempt=${attempts}/${maxAttempts}`);
@@ -552,9 +559,7 @@ async function pollMediaContainerStatus(
         if (statusData.status_code === "FINISHED") {
           finished = true;
         } else if (statusData.status_code === "ERROR") {
-          throw new Error(
-            `El procesamiento del media en Instagram falló: ${statusData.error_message || "Error desconocido"}`
-          );
+          throw new Error(`El procesamiento del media en Instagram falló (creation_id: ${creationId}).`);
         }
       } else {
         const errText = await statusRes.text();
