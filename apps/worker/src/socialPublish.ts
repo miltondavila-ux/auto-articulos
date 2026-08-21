@@ -67,7 +67,18 @@ async function validateArticleUrl(url: string): Promise<void> {
   if (!url) throw new Error("La oportunidad no tiene URL de artículo.");
 
   try {
-    const res = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(10000) });
+    const res = await fetch(url, {
+      redirect: "follow",
+      signal: AbortSignal.timeout(10000),
+      // Algunos hostings bloquean o frenan pedidos sin User-Agent de
+      // navegador (los tratan como bots) — el worker corre desde GitHub
+      // Actions sin este header por defecto.
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+      },
+    });
     if (!res.ok) throw new Error(`La URL del artículo devuelve error ${res.status}. Verifica que el artículo siga publicado en tu blog.`);
   } catch (err) {
     throw new Error(`No se pudo validar la URL del artículo (${url}): ${err instanceof Error ? err.message : String(err)}. Verifica que el artículo siga publicado.`);
