@@ -284,8 +284,21 @@ export async function POST(request: Request) {
       .slice(0, 3);
 
     if (candidates.length === 0) {
+      // El mensaje viejo ("no hay artículos nuevos disponibles") sonaba a
+      // que no había nada para publicar, cuando en realidad puede haber
+      // decenas de propuestas pendientes sin publicar todavía — el sistema
+      // solo evita generar MÁS mientras esas no se resuelvan. Milton lo
+      // reportó como confuso (21/8/2026): aclarar con el número real.
+      const pendingCount = await prisma.socialOpportunity.count({
+        where: { userId, status: "pending" },
+      });
       return NextResponse.json(
-        { error: "No hay artículos nuevos disponibles. Todos los artículos publicados ya tienen una oportunidad generada." },
+        {
+          error:
+            pendingCount > 0
+              ? `Ya tenés ${pendingCount} propuesta${pendingCount === 1 ? "" : "s"} pendiente${pendingCount === 1 ? "" : "s"} sin publicar — no se generan más hasta que se publiquen o se descarten. Revisá la lista de "Propuestas Pendientes" más abajo.`
+              : "No hay artículos nuevos disponibles. Todos los artículos publicados ya tienen una oportunidad generada.",
+        },
         { status: 400 }
       );
     }
