@@ -223,20 +223,18 @@ async function decideCreativeDirection(
 
 /**
  * Toma el visualPrompt que armó el propio modelo (siguiendo el prompt de
- * Milton, incluido el tamaño y estilo del texto — eso ya NO lo decide este
- * código) y le agrega SOLO restricciones de CONTENCIÓN, no de estilo: que
- * el texto no quede cortado, que no tape el rostro, que quede espacio para
- * el logo real. Ninguna de estas dice nada sobre tamaño de letra — eso es
- * 100% criterio del prompt de Milton. Pedido explícito de Milton
- * (20/8/2026): "elimina cualquier cosa que interfiera con mi prompt de
- * imágenes" — antes este código inyectaba el texto aparte con su propia
- * redacción y sugería un tamaño "cómodamente legible", que empujaba hacia
- * texto más grande de lo que el prompt de Milton pedía.
+ * Milton — incluida la regla de que el texto no se corta, que ya viene
+ * exigida ahí) y le agrega SOLO lo que su prompt no puede cubrir porque
+ * depende de decisiones de este código: que no tape el rostro, y que quede
+ * espacio para el logo real (el logo ya no se le pide a la IA, se pega
+ * después). Pedido explícito de Milton (20/8/2026): quitar la instrucción
+ * de "no cortar el texto" que este código agregaba aparte — su propio
+ * prompt ya lo exige, y una segunda instrucción paralela diciendo lo mismo
+ * puede terminar compitiendo en vez de reforzar.
  */
 function buildEditPrompt(decision: CreativeDecision, hasLogo: boolean, hasPhotoRef: boolean): string {
   return [
     decision.visualPrompt,
-    "CONTAINMENT ONLY (not a style preference): whatever text you place must stay fully within the central 84% of the canvas width and 88% of the canvas height (margin on all sides) — no letter, stroke or serif crossing into that margin, nothing cut off at any edge. If it doesn't fit, wrap it into more lines or reduce it — the size and style themselves are entirely your own creative decision, not dictated here.",
     decision.hasPeople
       ? "ABSOLUTE RULE: the face is the highest-priority zone in the whole image — never cover eyes, nose, mouth or expression with text or anything else. Use empty/negative space instead."
       : "",
