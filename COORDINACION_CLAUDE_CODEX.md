@@ -4498,3 +4498,97 @@ de PromptBox). Sin migraciones nuevas en esta tanda de commits; el campo
 - **Pendiente:** confirmar con una prueba real limpia que el ajuste de
   margen de la Caja 3 resuelve el corte de texto. Sin eso, no dar por cerrado
   este ciclo de pruebas.
+
+### 2026-08-21 (continuación, misma tarde) — Se agotaron los ajustes de
+prompt/calidad con OpenAI: 9/9 pruebas reales fallidas. Pivote a fal.ai/
+Ideogram V3 como proveedor alternativo para la Caja 6
+
+**Capitán de migración:** Claude (mismo lote, sin migraciones nuevas en esta
+tanda — solo código y workflows).
+
+- **Ajuste de margen de la Caja 3 (hecho por Milton en el admin) NO resolvió
+  el problema.** Prueba real siguiente (calidad "medium") volvió a fallar,
+  esta vez por texto encima del logo + tamaño excesivo + corte de borde en
+  distintos intentos — confirma que el cuello de botella no es un solo
+  parámetro ajustable, es una limitación real de `gpt-image-1-mini` para
+  cumplir TODAS las restricciones de layout de texto a la vez.
+- **Prueba puntual con calidad "high"** ($0.052/imagen, 3.5x el costo de
+  "medium"): también falló (7/7 acumuladas) — un rechazo fue además un
+  **falso positivo del Inspector** ("no se usó el logo original", algo
+  estructuralmente imposible porque el logo real se compone siempre por
+  código, nunca lo dibuja la IA). Confirma que parte del ruido viene del
+  propio Inspector como revisor visual, no solo de la generación.
+- **Relajado el estándar de aprobación de la Caja 7 (Inspector)** — a
+  pedido de Milton, hecho por él en el admin siguiendo instrucciones que le
+  di: las reglas de "rechazo automático" por un solo error tipográfico
+  menor, por texto cerca (no encima) del borde, y por cuestionar la
+  identidad del logo (estructuralmente garantizada por código) se
+  suavizaron. Ayudó parcialmente pero no resolvió el problema de fondo.
+- **Volver a probar "low"** confirmó que SÍ importa la calidad para
+  fidelidad de texto: reaparecieron errores graves ("Desoubre", "tamilia")
+  mucho peores que los de "high". Se dejó en "medium" como punto medio.
+  **Total: 9/9 pruebas reales fallidas con OpenAI en los 3 niveles.**
+- **Pivote: se agregó fal.ai (Ideogram V3 Remix) como proveedor alternativo
+  para la Caja 6**, sin tocar ninguna otra caja — exactamente el
+  requisito original de Milton ("la arquitectura debe permitir cambiar de
+  proveedor... sin tocar las cajas anteriores"). Commits `c5948d6`
+  (adaptador `generateImageBufferOpenAI`/`generateImageBufferFal` +
+  `IMAGE_PROVIDER` env var), `d473e75` (expuesto como variable de repo de
+  GitHub Actions, no hace falta redeploy para cambiar de proveedor),
+  `2287be0` (los errores del proveedor ahora se imprimen en los logs de
+  GitHub Actions, no solo en la BD — encontramos el motivo real del primer
+  fallo, `fal.ai HTTP 403 User is locked. Reason: TOP_UP`, directo desde
+  `gh run view --log`), `651e6b9` (rendering_speed a TURBO, el más barato;
+  `MAX_RETRIES` bajado de 2 a 0 temporalmente para pruebas de bajo costo
+  mientras se valida fal.ai; log del gasto estimado acumulado por intento).
+- **Por qué Ideogram y no otra cosa:** investigación de mercado (no
+  benchmark propio) ubica a Ideogram V3/V4 como líder específico en
+  fidelidad de texto incrustado — el 100% de los rechazos de hoy fueron por
+  texto/logo, nunca por composición o fotografía. Se descartó FLUX Schnell
+  (su modo image-to-image "Redux" no acepta prompt de texto en absoluto,
+  inservible para nuestro caso) y Magnific (es un mejorador de
+  detalle/upscaler, no un especialista en texto — podría incluso
+  distorsionar letras existentes).
+- **fal.ai vs API directa de Ideogram:** mismo precio (a veces fal.ai un
+  centavo más barato), pero fal.ai acepta la foto OG directo por URL
+  pública (la API directa de Ideogram pide subir el archivo binario) y el
+  endpoint directo está marcado "legacy" en su propia documentación. Se
+  eligió fal.ai.
+- **Validación gratuita fuera del pipeline:** Milton probó 2 prompts en el
+  plan gratis de `ideogram.ai` (sin foto de referencia, solo describiendo
+  la escena) simulando los dos casos que más fallaron con OpenAI —
+  headline solo y headline+texto de apoyo. Las 8 imágenes generadas (4
+  variantes × 2 pruebas) salieron con el texto en español perfecto: sin
+  cortes, acentos y "¿" correctos, sin palabras inventadas. Señal fuerte a
+  favor de Ideogram, aunque no reemplaza una prueba real en el pipeline
+  completo (con foto real + logo + Inspector).
+- **Modelo de negocio calculado con Milton** (fuera del alcance de código,
+  para referencia futura): con Ideogram TURBO, costo por imagen publicada
+  estimado entre $0.055 (optimista) y $0.116 (pesimista) por imagen,
+  incluyendo las 7 cajas de texto (`gpt-4o-mini`) + la Caja 6. Estructura
+  de precios que se está considerando: suscripción de $25/mes con 25
+  imágenes incluidas + add-on de $12 para llegar a 60 imágenes/mes — deja
+  margen de 66-84% en el add-on incluso en el escenario pesimista. A 300
+  usuarios, el costo de imágenes nunca supera ~12% del ingreso en ningún
+  escenario probado. Con OpenAI (dato real, no proyección) el análogo
+  sería vender un feature con ~0% de tasa de éxito real — no es un
+  problema de margen, es que el producto no entrega lo prometido.
+- **BLOQUEADO ahora mismo:** la cuenta de fal.ai de Milton quedó marcada
+  `User is locked. Reason: TOP_UP.` en la primera llamada real, pese a
+  cargar $25 de saldo (confirmado en su panel: plan "Pay as you go",
+  balance $25.00, uso $0.00 — el saldo está ahí pero el bloqueo no se
+  levantó). Contactó soporte de fal.ai, le dijeron que esperara ~30
+  minutos. **Pendiente reintentar la prueba real cuando se destrabe.**
+- **Se descartó explorar:** Canva Enterprise (ya se había descartado
+  antes), suscripciones de consumidor de Ideogram (Plus/Pro/Team en
+  `ideogram.ai/pricing`) — son para uso manual desde el sitio web, no dan
+  acceso a la API de desarrollador que necesita el pipeline automático; y
+  el modelo "P-Image Ideogram" ($0.003-0.015, mucho más barato) — es
+  solo texto-a-imagen, no acepta imagen de referencia, inservible para
+  nuestro caso.
+- **IMPORTANTE — estado actual de seguridad:** `MAX_RETRIES = 0` está
+  puesto a propósito en `promptBoxPipeline.ts` para minimizar gasto durante
+  esta validación. **Subir de nuevo a 2 (o el valor que corresponda) una
+  vez confirmado que fal.ai funciona bien**, antes de considerar esto listo
+  para más que pruebas puntuales — con 0 reintentos, cualquier rechazo del
+  Inspector cancela la oportunidad sin oportunidad de corregirse.
