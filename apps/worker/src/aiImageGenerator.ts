@@ -3,15 +3,17 @@
 // existían (socialPublish.ts, businessProfilePublish.ts) — no los toca ni
 // los reemplaza, por decisión explícita de Milton.
 //
-// Traduce el prompt v2 de Milton (20/8/2026, "motor inteligente de dirección
-// creativa"): la imagen OG se le pasa DIRECTO a la IA (no hace falta
-// describirla en texto, eso sería redundante — "no debe describir
-// nuevamente mediante texto aquello que ya puede comprender visualmente").
-// El string de instrucción debe ser CORTO — solo indica QUÉ transformar, no
-// vuelve a describir lo que la imagen ya muestra. "Transformar sin
-// destruir": puede mejorar background/luz/composición, pero no genera una
-// composición desconectada de la fotografía original. El logo, cuando
-// existe, es OBLIGATORIO usarlo (nunca se omite por comodidad).
+// Traduce el prompt v3 de Milton (20/8/2026, "Director Creativo Senior"): la
+// imagen OG se le pasa DIRECTO a la IA como materia prima principal (no hace
+// falta describirla en texto — "no debe describir nuevamente mediante texto
+// aquello que ya puede comprender visualmente"). El string de instrucción
+// debe ser CORTO — solo indica QUÉ transformar, no vuelve a describir lo que
+// la imagen ya muestra. "Conserva lo bueno, mejora lo débil, transforma lo
+// necesario, agrega solo lo que aporte" — no genera una composición
+// desconectada de la fotografía original, y no todo necesita cambiar (no
+// todo fondo, no todo retoque, no todo texto grande). El logo, cuando
+// existe, es OBLIGATORIO usarlo (nunca se omite por comodidad), completo y
+// sin rediseñar. El texto nunca se corta ni tapa el rostro — regla absoluta.
 //
 // Una sola generación por oportunidad: si algo falla en cualquier paso,
 // devuelve null y quien llama debe cancelar la oportunidad — no hay
@@ -111,11 +113,34 @@ const BRAND_TAGS = {
   brandpresence: "brand presence",
 } as const;
 
+// Cómo se compone la pieza alrededor de lo que ya hay en la foto (prompt
+// v3, sección 12 "COMPOSICIÓN").
+const COMPOSITION_TAGS = {
+  subjectawarelayout: "layout designed around the person/face",
+  sceneawarelayout: "layout that respects the scene's real geometry and architecture",
+  subjectcentered: "subject centered as the dominant element",
+  environmentfirst: "environment/setting dominates over the subject",
+  layeredcomposition: "layered composition with real depth",
+  visualbreathing: "keep deliberate empty space — not everything needs to be filled",
+} as const;
+
+// Cómo se relaciona el texto con la fotografía (prompt v3, sección 17
+// "ESTRATEGIAS DE TEXTO SOBRE IMAGEN").
+const TEXT_STRATEGY_TAGS = {
+  editorialoverlay: "editorial overlay: the photo stays the protagonist, the headline integrates without crushing it",
+  narrativeoverlay: "narrative overlay: the message can unfold across a couple of blocks in the frame",
+  minimaloverlay: "minimal overlay: the photo is already strong, barely touch it with text",
+  naturaltextzone: "use a natural zone the photo already offers (light, dark, blur, negative space) — don't invent an artificial one",
+  floatingcard: "place the message on a small floating card/container over the photo, sized to its content only",
+} as const;
+
 type BackgroundTag = keyof typeof BACKGROUND_TAGS;
 type RetouchTag = keyof typeof RETOUCH_TAGS;
 type DirectionTag = keyof typeof DIRECTION_TAGS;
 type TextTag = keyof typeof TEXT_TAGS;
 type BrandTag = keyof typeof BRAND_TAGS;
+type CompositionTag = keyof typeof COMPOSITION_TAGS;
+type TextStrategyTag = keyof typeof TEXT_STRATEGY_TAGS;
 
 interface CreativeDecision {
   message: string;
@@ -124,6 +149,8 @@ interface CreativeDecision {
   retouchTag: RetouchTag;
   directionTag: DirectionTag;
   textTag: TextTag;
+  compositionTag: CompositionTag;
+  textStrategyTag: TextStrategyTag;
   brandTags: BrandTag[];
 }
 
@@ -165,7 +192,7 @@ async function decideCreativeDirection(
           {
             role: "system",
             content:
-              "Eres un motor de dirección creativa para publicaciones de redes sociales. Ves una foto real y un artículo. El artículo es el cerebro conceptual (busca la necesidad humana detrás del tema, no la lectura superficial); la foto ya contiene toda la información visual, no hace falta describirla. Decides qué transformar, no qué repetir. Respondes ÚNICAMENTE JSON válido.",
+              "Eres un Director Creativo Senior de publicaciones para redes sociales. Ves una foto real y un artículo. El artículo es el cerebro conceptual (busca la necesidad humana detrás del tema, no la lectura superficial); la foto ya contiene toda la información visual, no hace falta describirla. La imagen OG es la materia prima principal: no se recrea desde cero lo que ya está bien resuelto, se transforma con criterio. Conserva lo bueno, mejora lo débil, transforma lo necesario, agrega solo lo que aporte — no todo necesita cambiar de fondo, ni retoque, ni texto grande. Decides qué transformar, no qué repetir. Respondes ÚNICAMENTE JSON válido.",
           },
           {
             role: "user",
@@ -181,6 +208,8 @@ async function decideCreativeDirection(
                   `"retouchTag": UNA clave. "none" si hasPeople es false: ${Object.keys(RETOUCH_TAGS).join(", ")}.\n\n` +
                   `"directionTag": UNA clave, la que mejor combine artículo + foto (no repitas siempre la misma): ${Object.keys(DIRECTION_TAGS).join(", ")}.\n\n` +
                   `"textTag": UNA clave, según Instagram Story, el tema, la emoción y el espacio que ves en la foto: ${Object.keys(TEXT_TAGS).join(", ")}.\n\n` +
+                  `"compositionTag": UNA clave, cómo se organiza la pieza alrededor de lo que ya hay en la foto: ${Object.keys(COMPOSITION_TAGS).join(", ")}.\n\n` +
+                  `"textStrategyTag": UNA clave, cómo se relaciona el texto con la fotografía — si la foto ya es fuerte, prefiere "minimaloverlay" o "naturaltextzone" en vez de inventar una zona nueva: ${Object.keys(TEXT_STRATEGY_TAGS).join(", ")}.\n\n` +
                   `"brandTags": arreglo de 0 a 2 claves, solo si hay logo (si no hay logo, []): ${Object.keys(BRAND_TAGS).join(", ")}.`,
               },
               {
@@ -206,6 +235,8 @@ async function decideCreativeDirection(
     if (!parsed.retouchTag || !(parsed.retouchTag in RETOUCH_TAGS)) return null;
     if (!parsed.directionTag || !(parsed.directionTag in DIRECTION_TAGS)) return null;
     if (!parsed.textTag || !(parsed.textTag in TEXT_TAGS)) return null;
+    if (!parsed.compositionTag || !(parsed.compositionTag in COMPOSITION_TAGS)) return null;
+    if (!parsed.textStrategyTag || !(parsed.textStrategyTag in TEXT_STRATEGY_TAGS)) return null;
     const brandTags = Array.isArray(parsed.brandTags)
       ? parsed.brandTags.filter((t): t is BrandTag => typeof t === "string" && t in BRAND_TAGS)
       : [];
@@ -217,6 +248,8 @@ async function decideCreativeDirection(
       retouchTag: parsed.retouchTag,
       directionTag: parsed.directionTag,
       textTag: parsed.textTag,
+      compositionTag: parsed.compositionTag,
+      textStrategyTag: parsed.textStrategyTag,
       brandTags,
     };
   } catch {
@@ -236,26 +269,30 @@ async function decideCreativeDirection(
 function buildEditPrompt(decision: CreativeDecision, hasLogo: boolean, hasPhotoRef: boolean): string {
   const tags = [
     DIRECTION_TAGS[decision.directionTag],
+    COMPOSITION_TAGS[decision.compositionTag],
     BACKGROUND_TAGS[decision.backgroundTag],
     decision.hasPeople ? RETOUCH_TAGS[decision.retouchTag] : "",
+    TEXT_STRATEGY_TAGS[decision.textStrategyTag],
     TEXT_TAGS[decision.textTag],
     ...decision.brandTags.map((t) => BRAND_TAGS[t]),
   ].filter(Boolean);
 
   return [
-    "Transform this photo into a finished Instagram Story campaign image — start from this exact photo, improve it, never a disconnected new composition.",
+    "Transform this photo into a finished Instagram Story campaign image, as a senior creative director would — start from this exact photo, improve it, never a disconnected new composition. Don't recreate what already works; transform what's weak.",
     `Apply: ${tags.join("; ")}.`,
     `Headline text (Spanish, large, legible): "${decision.message}"`,
-    "Text must stay fully inside the frame with margin on all sides — never cut off letters or words, wrap to more lines if needed.",
-    decision.hasPeople ? "Never cover any face, eyes or mouth with the text — use empty space instead." : "",
-    "Keep any real people fully recognizable — same identity, age, proportions.",
+    "ABSOLUTE RULE: no letter, word, number or URL may ever be cut off or run past the edge — every bit of text fully inside the frame, with real margin and optical breathing room on all four sides. Reduce size or wrap lines before ever cropping text.",
+    decision.hasPeople
+      ? "ABSOLUTE RULE: the face is the highest-priority zone in the whole image — never cover eyes, nose, mouth or expression with text or anything else. Use empty/negative space instead."
+      : "",
+    "Keep any real people fully recognizable — same identity, age, proportions. Not every photo needs retouching or a different background — only change what genuinely needs it.",
     hasLogo
-      ? "A brand logo reference image is included — use it, integrate it naturally in a clean spot, on its own transparent/matching background, never redesigned, deformed, cropped or hidden."
+      ? "A brand logo reference image is included — it MUST be used, complete and legible, inside a safe zone, never redesigned, deformed, cropped or hidden."
       : "",
     hasPhotoRef
       ? "A person reference photo is also included — incorporate them naturally and tastefully where it fits."
       : "",
-    "Vertical full-bleed, no black bars, professional and ready to publish.",
+    "Vertical full-bleed, no black bars. A powerful photo should not be over-designed. This must look like a professionally art-directed piece, not a photo with big text slapped on top.",
   ]
     .filter(Boolean)
     .join(" ")
@@ -352,7 +389,7 @@ export async function generateAiInstagramImage(params: {
 
     console.log(
       `[AI Image] Generada: ${blob.url} (${(finalBuffer.length / 1024).toFixed(0)}KB) — ` +
-        `tags: ${decision.backgroundTag}/${decision.retouchTag}/${decision.directionTag}/${decision.textTag}` +
+        `tags: ${decision.directionTag}/${decision.compositionTag}/${decision.backgroundTag}/${decision.retouchTag}/${decision.textStrategyTag}/${decision.textTag}` +
         `${decision.brandTags.length ? `/${decision.brandTags.join(",")}` : ""}` +
         `${logoPng ? " +logo" : ""}${photoPng ? " +foto" : ""}`,
     );
