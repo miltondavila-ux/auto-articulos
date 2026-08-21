@@ -166,6 +166,48 @@ async function fetchImageAsPng(url: string): Promise<Buffer | null> {
 }
 
 /**
+ * Muchos logos se suben con fondo blanco/casi blanco sólido en vez de
+ * transparente de verdad. Vuelve transparente cualquier píxel casi blanco
+ * (umbral alto: el logo en sí casi nunca usa blanco puro extensivamente).
+ */
+async function removeNearWhiteBackground(png: Buffer, threshold = 245): Promise<Buffer> {
+  const { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const { width, height, channels } = info;
+  for (let i = 0; i < data.length; i += channels) {
+    if (data[i] >= threshold && data[i + 1] >= threshold && data[i + 2] >= threshold) {
+      data[i + 3] = 0;
+    }
+  }
+  return sharp(data, { raw: { width, height, channels } }).png().toBuffer();
+}
+
+/**
+ * Pega el logo REAL sobre la imagen ya generada, con código determinístico
+ * — nunca se le pide a la IA que lo dibuje. Probado en vivo el 20/8/2026:
+ * pedirle al modelo que incorpore el logo como imagen de referencia lo
+ * cortaba/deformaba de forma repetida pese a instrucciones explícitas. Esto
+ * garantiza matemáticamente que nunca se corte, deforme ni rediseñe.
+ */
+async function compositeLogo(base: Buffer, width: number, height: number, logoPng: Buffer): Promise<Buffer> {
+  const logoTransparent = await removeNearWhiteBackground(logoPng);
+  const padding = Math.round(width * 0.06);
+  const logoMaxWidth = Math.round(width * 0.34);
+  const logoResized = await sharp(logoTransparent)
+    .resize({ width: logoMaxWidth, height: Math.round(height * 0.1), fit: "inside" })
+    .toBuffer();
+  const meta = await sharp(logoResized).metadata();
+  return sharp(base)
+    .composite([
+      {
+        input: logoResized,
+        left: Math.max(padding, width - (meta.width ?? logoMaxWidth) - padding),
+        top: Math.max(padding, height - (meta.height ?? 60) - padding),
+      },
+    ])
+    .toBuffer();
+}
+
+/**
  * ANALIZAR → INTERPRETAR → SELECCIONAR STRINGS, en una sola llamada de
  * visión barata (gpt-4o-mini). Ve la foto OG real y decide el mensaje (la
  * necesidad humana detrás del artículo, no el título literal) y una
@@ -280,14 +322,14 @@ function buildEditPrompt(decision: CreativeDecision, hasLogo: boolean, hasPhotoR
   return [
     "Transform this photo into a finished Instagram Story campaign image, as a senior creative director would — start from this exact photo, improve it, never a disconnected new composition. Don't recreate what already works; transform what's weak.",
     `Apply: ${tags.join("; ")}.`,
-    `Headline text (Spanish, large, legible): "${decision.message}"`,
-    "ABSOLUTE RULE: no letter, word, number or URL may ever be cut off or run past the edge — every bit of text fully inside the frame, with real margin and optical breathing room on all four sides. Reduce size or wrap lines before ever cropping text.",
+    `Headline text (Spanish): "${decision.message}"`,
+    "TEXT SAFE ZONE, NON-NEGOTIABLE: the headline must fit entirely within the central 84% of the canvas width and 88% of the canvas height (an 8% empty margin on left/right, 6% on top/bottom, with nothing — no letter, stroke or serif — crossing into that margin). If the phrase is too long to fit at a comfortably readable size inside that safe zone, make the font smaller and/or break it into 2-3 shorter lines — never let it run past the safe zone, never shrink it to the point of being illegible either.",
     decision.hasPeople
       ? "ABSOLUTE RULE: the face is the highest-priority zone in the whole image — never cover eyes, nose, mouth or expression with text or anything else. Use empty/negative space instead."
       : "",
     "Keep any real people fully recognizable — same identity, age, proportions. Not every photo needs retouching or a different background — only change what genuinely needs it.",
     hasLogo
-      ? "A brand logo reference image is included — it MUST be used, complete and legible, inside a safe zone, never redesigned, deformed, cropped or hidden."
+      ? "Leave a clean, empty, uncluttered rectangular area in the bottom-right corner (roughly the bottom-right 30% width x 10% height of the frame) with nothing important there — no text, no busy detail, no headline text overlapping it. A real logo will be placed there afterward by separate exact compositing, so do not draw, sketch or invent any logo or brand text yourself in that corner."
       : "",
     hasPhotoRef
       ? "A person reference photo is also included — incorporate them naturally and tastefully where it fits."
@@ -337,7 +379,11 @@ export async function generateAiInstagramImage(params: {
   );
   if (!decision) return null;
 
-  const refImages = [ogPng, logoPng, photoPng].filter((b): b is Buffer => b !== null);
+  // El logo NUNCA se le pasa a la IA como referencia a dibujar (probado en
+  // vivo: lo cortaba/deformaba pese a instrucciones explícitas) — se pega
+  // aparte, después, con código exacto. Solo la OG y la foto de perfil
+  // (cuando aplica) van como referencias reales al modelo.
+  const refImages = [ogPng, photoPng].filter((b): b is Buffer => b !== null);
   const prompt = buildEditPrompt(decision, Boolean(logoPng), Boolean(photoPng));
 
   try {
@@ -370,13 +416,15 @@ export async function generateAiInstagramImage(params: {
     if (!b64) return null;
 
     const rawOutput = Buffer.from(b64, "base64");
+    const resized = await sharp(rawOutput)
+      .resize(target.width, target.height, { fit: "cover", position: "attention" })
+      .toBuffer();
+    const withLogo = logoPng ? await compositeLogo(resized, target.width, target.height, logoPng) : resized;
+
     // JPEG en vez de PNG: gpt-image-1-mini devuelve PNG pesado, e Instagram
     // tarda en procesar el media proporcionalmente a su peso. JPEG calidad
     // 90 pesa una fracción de eso sin pérdida visible.
-    const finalBuffer = await sharp(rawOutput)
-      .resize(target.width, target.height, { fit: "cover", position: "attention" })
-      .jpeg({ quality: 90 })
-      .toBuffer();
+    const finalBuffer = await sharp(withLogo).jpeg({ quality: 90 }).toBuffer();
 
     const blob = await put(`${params.pathPrefix}/${Date.now()}.jpg`, finalBuffer, {
       access: "public",
