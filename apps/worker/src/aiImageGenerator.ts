@@ -26,6 +26,8 @@
 
 import sharp from "sharp";
 import { put } from "@vercel/blob";
+import { prisma } from "@auto-articulos/db";
+import { decryptSecret } from "@auto-articulos/shared";
 
 const OPENAI_IMAGE_API_KEY = process.env.OPENAI_IMAGE_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
@@ -154,6 +156,31 @@ interface CreativeDecision {
   brandTags: BrandTag[];
 }
 
+// Mismo key que apps/web/src/lib/ai-image-prompt.ts — Milton pidió (20/8/2026)
+// poder editar el prompt del director creativo desde el panel de admin
+// (pestaña "Prompts") sin depender de un redeploy de código. Guardado
+// global (no por usuario) en SystemSetting, igual que otras settings
+// globales del sistema.
+const AI_IMAGE_PROMPT_KEY = "ai_social_image_prompt";
+
+const DEFAULT_SYSTEM_PROMPT =
+  "Eres un Director Creativo Senior de publicaciones para redes sociales. Ves una foto real y un artículo. El artículo es el cerebro conceptual (busca la necesidad humana detrás del tema, no la lectura superficial); la foto ya contiene toda la información visual, no hace falta describirla. La imagen OG es la materia prima principal: no se recrea desde cero lo que ya está bien resuelto, se transforma con criterio. Conserva lo bueno, mejora lo débil, transforma lo necesario, agrega solo lo que aporte — no todo necesita cambiar de fondo, ni retoque, ni texto grande. Decides qué transformar, no qué repetir. Respondes ÚNICAMENTE JSON válido.";
+
+async function getCustomSystemPrompt(): Promise<string | null> {
+  try {
+    const setting = await prisma.systemSetting.findUnique({ where: { key: AI_IMAGE_PROMPT_KEY } });
+    if (!setting?.encryptedValue) return null;
+    try {
+      const decrypted = decryptSecret(setting.encryptedValue);
+      return decrypted.trim() || null;
+    } catch {
+      return setting.encryptedValue.trim() || null;
+    }
+  } catch {
+    return null;
+  }
+}
+
 async function fetchImageAsPng(url: string): Promise<Buffer | null> {
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
@@ -224,6 +251,7 @@ async function decideCreativeDirection(
   if (!OPENAI_IMAGE_API_KEY) return null;
   try {
     const ogBase64 = ogImagePng.toString("base64");
+    const customPrompt = await getCustomSystemPrompt();
     const res = await fetch(OPENAI_CHAT_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_IMAGE_API_KEY}` },
@@ -233,8 +261,7 @@ async function decideCreativeDirection(
         messages: [
           {
             role: "system",
-            content:
-              "Eres un Director Creativo Senior de publicaciones para redes sociales. Ves una foto real y un artículo. El artículo es el cerebro conceptual (busca la necesidad humana detrás del tema, no la lectura superficial); la foto ya contiene toda la información visual, no hace falta describirla. La imagen OG es la materia prima principal: no se recrea desde cero lo que ya está bien resuelto, se transforma con criterio. Conserva lo bueno, mejora lo débil, transforma lo necesario, agrega solo lo que aporte — no todo necesita cambiar de fondo, ni retoque, ni texto grande. Decides qué transformar, no qué repetir. Respondes ÚNICAMENTE JSON válido.",
+            content: customPrompt || DEFAULT_SYSTEM_PROMPT,
           },
           {
             role: "user",

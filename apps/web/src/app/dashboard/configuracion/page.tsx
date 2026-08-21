@@ -71,10 +71,6 @@ export default function ConfiguracionPage() {
   const [savingPrompt, setSavingPrompt] = useState(false);
   const [phone, setPhone] = useState("");
   const [savingPhone, setSavingPhone] = useState(false);
-  const [imagePrompt, setImagePrompt] = useState("");
-  const [savingImagePrompt, setSavingImagePrompt] = useState(false);
-  const [infographicPrompt, setInfographicPrompt] = useState("");
-  const [savingInfographicPrompt, setSavingInfographicPrompt] = useState(false);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const [businessLogoUrl, setBusinessLogoUrl] = useState<string | null>(null);
   const [uploadingProfilePhoto, setUploadingProfilePhoto] = useState(false);
@@ -174,8 +170,6 @@ export default function ConfiguracionPage() {
        setArticleSignature(data.articleSignature ?? "");
        setDefaultPromptId(data.defaultPromptId ?? "");
        setPhone(data.phone ?? "");
-       setImagePrompt(data.imagePrompt ?? "");
-       setInfographicPrompt(data.infographicPrompt ?? "");
        setProfilePhotoUrl(data.profilePhotoUrl ?? null);
        setBusinessLogoUrl(data.businessLogoUrl ?? null);
         setIsAdmin(data.role === "admin");
@@ -379,54 +373,6 @@ export default function ConfiguracionPage() {
       setBanner({ type: "info", text: "Número de teléfono guardado con éxito." });
     } finally {
       setSavingPhone(false);
-    }
-  }
-
-  async function handleSaveImagePrompt() {
-    setSavingImagePrompt(true);
-    setBanner(null);
-    try {
-      const res = await fetch("/api/me", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imagePrompt: imagePrompt.trim() || null }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setBanner({
-          type: "error",
-          text: data.error ?? "Error al guardar el prompt de imagen",
-        });
-        return;
-      }
-      setImagePrompt(data.imagePrompt ?? "");
-      setBanner({ type: "info", text: "Prompt de imagen guardado con éxito." });
-    } finally {
-      setSavingImagePrompt(false);
-    }
-  }
-
-  async function handleSaveInfographicPrompt() {
-    setSavingInfographicPrompt(true);
-    setBanner(null);
-    try {
-      const res = await fetch("/api/me", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ infographicPrompt: infographicPrompt.trim() || null }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setBanner({
-          type: "error",
-          text: data.error ?? "Error al guardar el prompt de infografía",
-        });
-        return;
-      }
-      setInfographicPrompt(data.infographicPrompt ?? "");
-      setBanner({ type: "info", text: "Prompt de infografía guardado con éxito." });
-    } finally {
-      setSavingInfographicPrompt(false);
     }
   }
 
@@ -1632,120 +1578,6 @@ export default function ConfiguracionPage() {
             />
           </section>
 
-          {/* Prompts Personalizados para Imágenes (solo admins) */}
-          {isAdmin && (
-          <section style={sectionStyle}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: 8,
-                marginBottom: 6,
-              }}
-            >
-              <h2 style={{ ...h2Style, margin: 0 }}>Prompts de Imágenes</h2>
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "#1d1d1f",
-                  background: "rgba(94, 92, 230, 0.08)",
-                  padding: "4px 10px",
-                  borderRadius: 999,
-                  border: "1px solid rgba(94, 92, 230, 0.25)",
-                }}
-              >
-                Personalización IA
-              </span>
-            </div>
-
-            <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 14 }}>
-              Personaliza los prompts que la IA usa para generar imágenes de artículos y publicaciones de redes sociales. Si dejas el campo vacío, se usará el prompt por defecto del sistema.
-            </p>
-
-            {/* Image Prompt */}
-            <div style={{ marginBottom: 20 }}>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: "#1d1d1f",
-                  marginBottom: 6,
-                }}
-              >
-                Prompt para Imágenes de Artículos y Redes
-              </label>
-              <p style={{ fontSize: 12, color: "#6e6e73", marginBottom: 8 }}>
-                Este prompt se usa como base para generar imágenes de artículos ({productName}) y publicaciones de Threads, Instagram Reels y Carruseles. El sistema agregará automáticamente el resumen del artículo al final.
-              </p>
-              <textarea
-                value={imagePrompt}
-                onChange={(e) => setImagePrompt(e.target.value)}
-                placeholder='Ej: "Crea una imagen hiperrealista donde haya humanos y tomando en cuenta este texto:"'
-                rows={3}
-                style={{
-                  ...inputStyle,
-                  width: "100%",
-                  resize: "vertical",
-                  fontFamily: "inherit",
-                  lineHeight: 1.5,
-                }}
-              />
-              <div style={{ marginTop: 8 }}>
-                <button
-                  onClick={handleSaveImagePrompt}
-                  disabled={savingImagePrompt}
-                  style={disabledStyle(secondaryButtonStyle, savingImagePrompt)}
-                >
-                  {savingImagePrompt ? "Guardando..." : "Guardar prompt de imagen"}
-                </button>
-              </div>
-            </div>
-
-            {/* Infographic Prompt */}
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: "#1d1d1f",
-                  marginBottom: 6,
-                }}
-              >
-                Prompt para Infografías de Instagram
-              </label>
-              <p style={{ fontSize: 12, color: "#6e6e73", marginBottom: 8 }}>
-                Este prompt define el estilo visual de las infografías que se publican en Instagram. Se combina con el prompt base de imagen para generar el resultado final.
-              </p>
-              <textarea
-                value={infographicPrompt}
-                onChange={(e) => setInfographicPrompt(e.target.value)}
-                placeholder='Ej: "Estilo infografía profesional con datos, números, iconos y gráficos minimalistas. Fondo claro con acentos de color."'
-                rows={3}
-                style={{
-                  ...inputStyle,
-                  width: "100%",
-                  resize: "vertical",
-                  fontFamily: "inherit",
-                  lineHeight: 1.5,
-                }}
-              />
-              <div style={{ marginTop: 8 }}>
-                <button
-                  onClick={handleSaveInfographicPrompt}
-                  disabled={savingInfographicPrompt}
-                  style={disabledStyle(secondaryButtonStyle, savingInfographicPrompt)}
-                >
-                  {savingInfographicPrompt ? "Guardando..." : "Guardar prompt de infografía"}
-                </button>
-              </div>
-            </div>
-          </section>
-          )}
         </div>
       )}
 

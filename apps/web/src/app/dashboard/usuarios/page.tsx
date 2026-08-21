@@ -264,6 +264,51 @@ export default function UsuariosPage() {
   const [editingPromptId, setEditingPromptId] = useState<string | null>(null);
   const [savingPrompt, setSavingPrompt] = useState(false);
   const [promptBanner, setPromptBanner] = useState<{ type: "error" | "info"; text: string } | null>(null);
+  // Prompt del generador de imágenes con IA para redes sociales (20/8/2026):
+  // global, no por usuario — Milton lo edita directo desde acá en vez de
+  // pedir un redeploy cada vez que quiere ajustar el texto.
+  const [aiImagePrompt, setAiImagePrompt] = useState("");
+  const [loadingAiImagePrompt, setLoadingAiImagePrompt] = useState(false);
+  const [savingAiImagePrompt, setSavingAiImagePrompt] = useState(false);
+  const [aiImagePromptBanner, setAiImagePromptBanner] = useState<{ type: "error" | "info"; text: string } | null>(null);
+
+  async function loadAiImagePrompt() {
+    setLoadingAiImagePrompt(true);
+    try {
+      const res = await fetch("/api/admin/ai-image-prompt");
+      if (res.ok) {
+        const data = await res.json();
+        setAiImagePrompt(data.prompt ?? "");
+      }
+    } catch (e) {
+      console.error("Error al cargar el prompt de imágenes IA", e);
+    } finally {
+      setLoadingAiImagePrompt(false);
+    }
+  }
+
+  async function handleSaveAiImagePrompt() {
+    setSavingAiImagePrompt(true);
+    setAiImagePromptBanner(null);
+    try {
+      const res = await fetch("/api/admin/ai-image-prompt", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: aiImagePrompt }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAiImagePromptBanner({ type: "error", text: data.error ?? "Error al guardar el prompt" });
+        return;
+      }
+      setAiImagePromptBanner({ type: "info", text: "Prompt de imágenes con IA guardado con éxito" });
+      setAiImagePrompt(data.prompt ?? "");
+    } catch (e: any) {
+      setAiImagePromptBanner({ type: "error", text: e.message || "Error al conectar con el servidor" });
+    } finally {
+      setSavingAiImagePrompt(false);
+    }
+  }
 
   async function loadPrompts() {
     setLoadingPrompts(true);
@@ -460,6 +505,7 @@ export default function UsuariosPage() {
   useEffect(() => {
     if (tab === "prompts") {
       loadPrompts();
+      loadAiImagePrompt();
     }
   }, [tab]);
 
@@ -672,9 +718,9 @@ export default function UsuariosPage() {
     },
     {
       id: "prompts",
-      label: "Prompts de redacción",
-      description: "Crea y edita estilos de escritura personalizados para artículos.",
-      eyebrow: "Estilos de escritura",
+      label: "Prompts",
+      description: "Estilos de redacción de artículos y el prompt del generador de imágenes con IA para redes sociales.",
+      eyebrow: "Redacción e imágenes",
     },
   ];
 
@@ -1546,6 +1592,7 @@ export default function UsuariosPage() {
       )}
 
       {tab === "prompts" && (
+        <>
         <section id="administracion-contenido" style={sectionStyle}>
           <h2 style={h2Style}>
             {editingPromptId ? "Editar estilo de redacción" : "Agregar nuevo estilo de redacción (Prompt)"}
@@ -1694,6 +1741,60 @@ export default function UsuariosPage() {
             </div>
           )}
         </section>
+
+        <section style={sectionStyle}>
+          <h2 style={h2Style}>Prompt del generador de imágenes con IA (redes sociales)</h2>
+          <p style={{ fontSize: 13, color: "#6e6e73" }}>
+            Este prompt es global — aplica a todas las cuentas, no por usuario. Define el criterio
+            que usa la IA para transformar la imagen OG del artículo en la imagen final de
+            Instagram Story/Reel (fondo, retoque, composición, tipografía, marca). Si lo dejas
+            vacío, se usa el prompt por defecto del sistema.
+          </p>
+          {loadingAiImagePrompt ? (
+            <p style={{ fontSize: 13, color: "#6e6e73" }}>Cargando...</p>
+          ) : (
+            <>
+              <textarea
+                value={aiImagePrompt}
+                onChange={(e) => setAiImagePrompt(e.target.value)}
+                placeholder="Ej: Eres un Director Creativo Senior especializado en transformar artículos, imágenes OG y recursos de marca en publicaciones visuales de alto impacto..."
+                rows={20}
+                style={{
+                  ...inputStyle,
+                  width: "100%",
+                  resize: "vertical",
+                  fontFamily: "inherit",
+                  lineHeight: 1.5,
+                  marginTop: 12,
+                }}
+              />
+              <div style={{ marginTop: 12 }}>
+                <button
+                  onClick={handleSaveAiImagePrompt}
+                  disabled={savingAiImagePrompt}
+                  style={disabledStyle(buttonStyle, savingAiImagePrompt)}
+                >
+                  {savingAiImagePrompt ? "Guardando..." : "Guardar prompt de imágenes IA"}
+                </button>
+              </div>
+              {aiImagePromptBanner && (
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: 8,
+                    marginTop: 14,
+                    background: aiImagePromptBanner.type === "error" ? "#fdecec" : "#eafaf0",
+                    color: aiImagePromptBanner.type === "error" ? "#d64545" : "#16803c",
+                    fontSize: 13,
+                  }}
+                >
+                  {aiImagePromptBanner.text}
+                </div>
+              )}
+            </>
+          )}
+        </section>
+        </>
       )}
     </div>
   );
