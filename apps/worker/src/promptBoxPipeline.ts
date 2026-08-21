@@ -64,7 +64,10 @@ async function generateImageBufferOpenAI(prompt: string, refImages: Buffer[]): P
     body: form,
     signal: AbortSignal.timeout(90000),
   });
-  if (!res.ok) return null;
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(`OpenAI HTTP ${res.status}: ${errText.slice(0, 500)}`);
+  }
   const data = (await res.json()) as { data?: { b64_json?: string }[] };
   const b64 = data.data?.[0]?.b64_json;
   return b64 ? Buffer.from(b64, "base64") : null;
@@ -83,10 +86,13 @@ async function generateImageBufferFal(prompt: string, ogImageUrl: string, format
     }),
     signal: AbortSignal.timeout(90000),
   });
-  if (!res.ok) return null;
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(`fal.ai HTTP ${res.status}: ${errText.slice(0, 500)}`);
+  }
   const data = (await res.json()) as { images?: { url?: string }[] };
   const resultUrl = data.images?.[0]?.url;
-  if (!resultUrl) return null;
+  if (!resultUrl) throw new Error(`fal.ai: respuesta sin imagen: ${JSON.stringify(data).slice(0, 500)}`);
   const imgRes = await fetch(resultUrl, { signal: AbortSignal.timeout(30000) });
   if (!imgRes.ok) return null;
   return Buffer.from(await imgRes.arrayBuffer());
@@ -431,7 +437,9 @@ export async function runPromptBoxPipeline(params: {
         await recordExecution(box6.id, currentPrompt, generatedImageUrl, modelLabel, genStart, generatedImageUrl ? null : "No se generó imagen");
       }
     } catch (err) {
-      if (box6) await recordExecution(box6.id, currentPrompt, null, modelLabel, genStart, err instanceof Error ? err.message : String(err));
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.error(`[PromptBoxPipeline] intento ${attempt}/${MAX_RETRIES} — error del proveedor (${modelLabel}): ${errMsg}`);
+      if (box6) await recordExecution(box6.id, currentPrompt, null, modelLabel, genStart, errMsg);
     }
 
     if (!generatedImageUrl) break; // sin imagen, no hay nada que inspeccionar
