@@ -87,7 +87,7 @@ async function getCustomSystemPrompt(): Promise<string | null> {
   }
 }
 
-async function fetchImageAsPng(url: string): Promise<Buffer | null> {
+export async function fetchImageAsPng(url: string): Promise<Buffer | null> {
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
     if (!res.ok) return null;
@@ -103,7 +103,7 @@ async function fetchImageAsPng(url: string): Promise<Buffer | null> {
  * transparente de verdad. Vuelve transparente cualquier píxel casi blanco
  * (umbral alto: el logo en sí casi nunca usa blanco puro extensivamente).
  */
-async function removeNearWhiteBackground(png: Buffer, threshold = 245): Promise<Buffer> {
+export async function removeNearWhiteBackground(png: Buffer, threshold = 245): Promise<Buffer> {
   const { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const { width, height, channels } = info;
   for (let i = 0; i < data.length; i += channels) {
@@ -121,7 +121,7 @@ async function removeNearWhiteBackground(png: Buffer, threshold = 245): Promise<
  * cortaba/deformaba de forma repetida pese a instrucciones explícitas. Esto
  * garantiza matemáticamente que nunca se corte, deforme ni rediseñe.
  */
-async function compositeLogo(base: Buffer, width: number, height: number, logoPng: Buffer): Promise<Buffer> {
+export async function compositeLogo(base: Buffer, width: number, height: number, logoPng: Buffer): Promise<Buffer> {
   const logoTransparent = await removeNearWhiteBackground(logoPng);
   const padding = Math.round(width * 0.06);
   const logoMaxWidth = Math.round(width * 0.34);

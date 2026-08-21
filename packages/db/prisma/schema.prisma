@@ -97,6 +97,12 @@ model User {
   // usar la OG sin tocar. No afecta Carrusel/Infografía (ya generan imagen
   // propia, no usan la OG).
   aiImageGenerationEnabled          Boolean   @default(false)
+  // Usar el pipeline nuevo de "Cajas de Imágenes IA" (PromptBox, 8 cajas
+  // encadenadas y editables desde el admin) en vez del generador de un
+  // solo prompt de arriba. Solo tiene efecto si aiImageGenerationEnabled
+  // también está activo. Default false — en pruebas, solo para la cuenta
+  // de Lorena por ahora. Ver MASTER_BLUEPRINT_CREADOR_DE_IMAGENES.md.
+  usePromptBoxPipeline               Boolean   @default(false)
   // Foto de perfil del usuario y logo de su negocio/marca.
   // Se usan como elementos visuales en las publicaciones de redes sociales
   // (carruseles, reels, infografías). Subidas como URLs de Vercel Blob.
