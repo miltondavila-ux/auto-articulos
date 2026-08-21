@@ -105,11 +105,11 @@ async function generateImageBufferFal(
   return Buffer.from(await imgRes.arrayBuffer());
 }
 
-const FORMAT_TARGET: Record<Format, { editSize: "1024x1536"; width: number; height: number; label: string }> = {
-  story: { editSize: "1024x1536", width: 1080, height: 1920, label: "Instagram Story" },
-  "reel-image": { editSize: "1024x1536", width: 1080, height: 1920, label: "Instagram Reel cover" },
-  post: { editSize: "1024x1536", width: 1080, height: 1350, label: "Instagram feed post" },
-  "facebook-story": { editSize: "1024x1536", width: 1080, height: 1920, label: "Facebook Story" },
+const FORMAT_TARGET: Record<Format, { width: number; height: number; label: string }> = {
+  story: { width: 1080, height: 1920, label: "Instagram Story" },
+  "reel-image": { width: 1080, height: 1920, label: "Instagram Reel cover" },
+  post: { width: 1080, height: 1350, label: "Instagram feed post" },
+  "facebook-story": { width: 1080, height: 1920, label: "Facebook Story" },
 };
 
 interface PromptBoxRow {
@@ -147,13 +147,13 @@ async function recordExecution(
 async function runTextBox(
   box: PromptBoxRow,
   userText: string,
-  imageBase64?: string,
+  imagesBase64?: (string | null | undefined)[],
 ): Promise<string | null> {
   if (!OPENAI_IMAGE_API_KEY) return null;
   const started = Date.now();
   const userContent: Array<Record<string, unknown>> = [{ type: "text", text: userText }];
-  if (imageBase64) {
-    userContent.push({ type: "image_url", image_url: { url: `data:image/png;base64,${imageBase64}` } });
+  for (const img of imagesBase64 ?? []) {
+    if (img) userContent.push({ type: "image_url", image_url: { url: `data:image/png;base64,${img}` } });
   }
   try {
     const res = await fetch(OPENAI_CHAT_URL, {
@@ -343,6 +343,7 @@ export async function runPromptBoxPipeline(params: {
   const usePhoto = Boolean(params.profilePhotoUrl) && Math.random() < 0.3;
   const photoPng = usePhoto && params.profilePhotoUrl ? await fetchImageAsPng(params.profilePhotoUrl) : null;
   const hasLogo = Boolean(logoPng);
+  const logoBase64 = logoPng ? logoPng.toString("base64") : null;
 
   const baseContext =
     `Red social y formato: Instagram, ${target.label}.\n` +
@@ -357,22 +358,27 @@ export async function runPromptBoxPipeline(params: {
     boxOutputs["content-analyst"] = await runTextBox(box1, baseContext);
   }
 
-  // CAJA 2 — Director Creativo (ve la imagen OG)
+  // CAJA 2 — Director Creativo (su propio prompt pide imagen OG Y logo del
+  // usuario — antes solo veía la OG). Auditoría 21/8/2026.
   const box2 = bySlug.get("creative-director");
   if (box2) {
     boxOutputs["creative-director"] = await runTextBox(
       box2,
-      `${baseContext}\n\nSalida de la Caja 1 (Analista de Contenido):\n${boxOutputs["content-analyst"] || "(no disponible)"}\n\nAquí está la imagen OG del artículo.`,
-      ogBase64,
+      `${baseContext}\n\nSalida de la Caja 1 (Analista de Contenido):\n${boxOutputs["content-analyst"] || "(no disponible)"}\n\nSe adjuntan ${logoBase64 ? "2 imágenes: 1) la imagen OG del artículo; 2) el logo original del usuario" : "1 imagen: la imagen OG del artículo"}.`,
+      [ogBase64, logoBase64],
     );
   }
 
-  // CAJA 3 — Diseñador de Composición
+  // CAJA 3 — Diseñador de Composición (su propio prompt pide explícitamente
+  // "la imagen OG suministrada" y "el logo original del usuario" — antes
+  // solo recibía texto, decidiendo dónde va cada cosa sin ver la foto
+  // real. Auditoría 21/8/2026.
   const box3 = bySlug.get("composition-designer");
   if (box3) {
     boxOutputs["composition-designer"] = await runTextBox(
       box3,
-      `${baseContext}\n\nSalida de la Caja 1:\n${boxOutputs["content-analyst"] || "(no disponible)"}\n\nSalida de la Caja 2 (Director Creativo):\n${boxOutputs["creative-director"] || "(no disponible)"}`,
+      `${baseContext}\n\nSalida de la Caja 1:\n${boxOutputs["content-analyst"] || "(no disponible)"}\n\nSalida de la Caja 2 (Director Creativo):\n${boxOutputs["creative-director"] || "(no disponible)"}\n\nSe adjuntan ${logoBase64 ? "2 imágenes: 1) la imagen OG del artículo; 2) el logo original del usuario" : "1 imagen: la imagen OG del artículo"}.`,
+      [ogBase64, logoBase64],
     );
   }
 
@@ -385,14 +391,16 @@ export async function runPromptBoxPipeline(params: {
     );
   }
 
-  // CAJA 5 — Constructor del Prompt Visual (ve la imagen OG otra vez)
+  // CAJA 5 — Constructor del Prompt Visual (su propio prompt lista, entre
+  // sus "RECURSOS VISUALES", tanto la imagen OG como el logo original —
+  // antes solo veía la OG). Auditoría 21/8/2026.
   const box5 = bySlug.get("visual-prompt-builder");
   let visualPrompt: string | null = null;
   if (box5) {
     visualPrompt = await runTextBox(
       box5,
-      `${baseContext}\n\nSalida de la Caja 1:\n${boxOutputs["content-analyst"] || "(no disponible)"}\n\nSalida de la Caja 2:\n${boxOutputs["creative-director"] || "(no disponible)"}\n\nSalida de la Caja 3:\n${boxOutputs["composition-designer"] || "(no disponible)"}\n\nSalida de la Caja 4 (texto exacto):\n${boxOutputs["visual-text-editor"] || "(no disponible)"}\n\nAquí está la imagen OG del artículo, tu recurso principal.`,
-      ogBase64,
+      `${baseContext}\n\nSalida de la Caja 1:\n${boxOutputs["content-analyst"] || "(no disponible)"}\n\nSalida de la Caja 2:\n${boxOutputs["creative-director"] || "(no disponible)"}\n\nSalida de la Caja 3:\n${boxOutputs["composition-designer"] || "(no disponible)"}\n\nSalida de la Caja 4 (texto exacto):\n${boxOutputs["visual-text-editor"] || "(no disponible)"}\n\nSe adjuntan ${logoBase64 ? "2 imágenes: 1) la imagen OG del artículo, tu recurso principal; 2) el logo original del usuario" : "1 imagen: la imagen OG del artículo, tu recurso principal"}.`,
+      [ogBase64, logoBase64],
     );
     boxOutputs["visual-prompt-builder"] = visualPrompt;
   }
@@ -404,6 +412,13 @@ export async function runPromptBoxPipeline(params: {
   const box7 = bySlug.get("quality-inspector");
   const box8 = bySlug.get("auto-corrector");
 
+  // La foto de perfil (cuando se decide usarla) solo llega a OpenAI vía
+  // refImages — Ideogram Remix en fal.ai solo acepta UNA imagen de
+  // referencia (image_url), así que con IMAGE_PROVIDER="fal" esta foto se
+  // ignora. Tampoco se le informa a las Cajas 1-5 que existe esta opción
+  // (a diferencia del generador viejo). Caso de baja probabilidad (30%,
+  // solo con usuarios que tienen foto de perfil configurada) — no es la
+  // causa de los fallos vistos hasta ahora, queda documentado.
   const refImages = [ogPng, photoPng].filter((b): b is Buffer => b !== null);
   // Restricción técnica no negociable (no de estilo): un logo real se
   // compone de forma determinística DESPUÉS con sharp — si el modelo dibuja
@@ -467,10 +482,20 @@ export async function runPromptBoxPipeline(params: {
       break;
     }
 
+    // El propio prompt de la Caja 7 (Inspector) pide explícitamente poder
+    // comparar contra la imagen OG original, el logo real, y los
+    // resultados de las Cajas 2/3/5 (modelo conceptual, composición
+    // esperada, márgenes) — antes solo recibía la imagen generada y el
+    // texto de la Caja 4, así que estaba juzgando sin las referencias que
+    // su propio prompt asume que va a tener. Auditoría 21/8/2026.
+    const generatedBase64 = (await fetchImageAsPng(generatedImageUrl))?.toString("base64") ?? null;
+    const inspectorImages = [ogBase64, logoBase64, generatedBase64].filter(
+      (img): img is string => Boolean(img),
+    );
     const inspectorRaw = await runTextBox(
       box7,
-      `${baseContext}\n\nMensaje/texto que debía llevar la imagen (según Caja 4):\n${boxOutputs["visual-text-editor"] || "(no disponible)"}\n\n¿Hay logo esperado?: ${hasLogo ? "sí" : "no"}\n\nAquí está la imagen generada para inspeccionar.`,
-      (await fetchImageAsPng(generatedImageUrl))?.toString("base64"),
+      `${baseContext}\n\nSalida de la Caja 2 (Director Creativo — modelo conceptual y dirección):\n${boxOutputs["creative-director"] || "(no disponible)"}\n\nSalida de la Caja 3 (Diseñador de Composición — composición, márgenes y áreas esperadas):\n${boxOutputs["composition-designer"] || "(no disponible)"}\n\nMensaje/texto que debía llevar la imagen, LOCKED_COPY (según Caja 4):\n${boxOutputs["visual-text-editor"] || "(no disponible)"}\n\n¿Hay logo esperado?: ${hasLogo ? "sí" : "no"}\n\nSe adjuntan ${inspectorImages.length} imágenes en este orden: 1) la imagen OG original del artículo (para comparar fidelidad); ${logoBase64 ? "2) el archivo original del logo del usuario (para comparar identidad y proporciones); 3) " : "2) "}la imagen final generada, la que debes inspeccionar.`,
+      inspectorImages,
     );
     boxOutputs["quality-inspector"] = inspectorRaw;
     if (!inspectorRaw) break;
@@ -484,9 +509,14 @@ export async function runPromptBoxPipeline(params: {
 
     if (attempt >= MAX_RETRIES || !box8) break;
 
+    // El propio prompt de la Caja 8 (Corrector) espera ver la imagen
+    // generada que se está corrigiendo y el número de intento actual —
+    // antes no recibía ninguna imagen, solo la descripción textual del
+    // Inspector. Auditoría 21/8/2026.
     const correctedPrompt = await runTextBox(
       box8,
-      `Prompt anterior usado para generar la imagen:\n${currentPrompt}\n\nProblemas encontrados por el Inspector de Calidad:\n${verdict.problems}\n\nConstruye un nuevo prompt corregido, cambiando solo lo necesario para resolver esos problemas.`,
+      `Intento actual: ${attempt + 1} de ${MAX_RETRIES + 1} (MAX_RETRIES=${MAX_RETRIES}).\n\nPrompt anterior usado para generar la imagen:\n${currentPrompt}\n\nProblemas encontrados por el Inspector de Calidad:\n${verdict.problems}\n\nSe adjunta la imagen generada que fue rechazada, para que la veas antes de corregir.\n\nConstruye un nuevo prompt corregido, cambiando solo lo necesario para resolver esos problemas.`,
+      [generatedBase64],
     );
     boxOutputs["auto-corrector"] = correctedPrompt;
     if (!correctedPrompt) break;
