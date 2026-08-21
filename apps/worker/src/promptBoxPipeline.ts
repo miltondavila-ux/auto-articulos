@@ -149,14 +149,66 @@ function extractVisualPrompt(raw: string): string {
   return raw;
 }
 
+/**
+ * El veredicto real puede venir anidado a cualquier profundidad (p.ej.
+ * `quality_inspection.status`, no `status` en la raíz) — busca cualquier
+ * campo "status" con "approved"/"rejected" o "publish_ready" booleano en
+ * cualquier nivel, en vez de asumir una posición fija.
+ */
+function findApprovalSignal(value: unknown, depth = 0): boolean | null {
+  if (depth > 5 || value == null || typeof value !== "object") return null;
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findApprovalSignal(item, depth + 1);
+      if (found !== null) return found;
+    }
+    return null;
+  }
+  const obj = value as Record<string, unknown>;
+  for (const [key, val] of Object.entries(obj)) {
+    if (/^status$/i.test(key) && typeof val === "string") {
+      const lower = val.toLowerCase();
+      if (lower.includes("approv")) return true;
+      if (lower.includes("reject")) return false;
+    }
+    if (/publish_?ready/i.test(key) && typeof val === "boolean") return val;
+  }
+  for (const val of Object.values(obj)) {
+    const found = findApprovalSignal(val, depth + 1);
+    if (found !== null) return found;
+  }
+  return null;
+}
+
+/** Convierte un ítem de "problems"/"corrections" a texto legible, sea string u objeto. */
+function stringifyIssue(item: unknown): string {
+  if (typeof item === "string") return item;
+  if (item && typeof item === "object") {
+    const obj = item as Record<string, unknown>;
+    const text = obj.description ?? obj.instruction ?? obj.message ?? obj.text ?? obj.reason ?? obj.problem;
+    if (typeof text === "string") return text;
+    return JSON.stringify(item);
+  }
+  return String(item);
+}
+
+function extractIssueList(value: unknown): string {
+  if (Array.isArray(value)) return value.map(stringifyIssue).filter(Boolean).join("; ");
+  if (typeof value === "string") return value;
+  return "";
+}
+
 /** Intenta leer "approved"/"rejected" del texto del Inspector, sea JSON estricto o no. */
 function parseInspectorVerdict(raw: string): { approved: boolean; problems: string } {
   try {
     const parsed = JSON.parse(raw);
-    const status = String(parsed.status || "").toLowerCase();
-    const problems = Array.isArray(parsed.problems) ? parsed.problems.join("; ") : String(parsed.problems || "");
-    const corrections = Array.isArray(parsed.corrections) ? parsed.corrections.join("; ") : String(parsed.corrections || "");
-    return { approved: status.includes("approv"), problems: [problems, corrections].filter(Boolean).join(" | ") };
+    const approvalSignal = findApprovalSignal(parsed);
+    const problems = extractIssueList((parsed as Record<string, unknown>)?.problems);
+    const corrections = extractIssueList((parsed as Record<string, unknown>)?.corrections);
+    return {
+      approved: approvalSignal === true,
+      problems: [problems, corrections].filter(Boolean).join(" | ") || "(sin detalle)",
+    };
   } catch {
     const lower = raw.toLowerCase();
     return { approved: lower.includes("approved") && !lower.includes("rejected"), problems: raw.slice(0, 500) };
