@@ -4420,3 +4420,81 @@ Al tomar el turno, leer primero este bloque y los últimos commits de `main`; de
   por LinkedIn o el error exacto, nunca un falso éxito.
 - **Capitanía liberada:** Codex. El siguiente programador debe reclamar antes
   de modificar código o ejecutar migraciones.
+
+### 2026-08-21 — Motor de ejecución del pipeline de Cajas de Imágenes IA:
+conectado, probado en vivo y con 3 bugs reales corregidos
+
+**Nota:** esta sesión de Claude trabaja aislada en el worktree
+`creador-imagenes-ia` y no tiene acceso de escritura al árbol principal, así
+que esta entrada se agrega desde ahí y llega a `main` por el mismo push que
+el código. Si el árbol principal tenía anotaciones más recientes hechas
+directamente ahí (sesiones no aisladas en worktree), revisar con `git log`
+que no se hayan perdido — este commit no las toca, solo agrega al final.
+
+**Capitán de migración:** Claude (mismo lote que `ea110da` — infraestructura
+de PromptBox). Sin migraciones nuevas en esta tanda de commits; el campo
+`usePromptBoxPipeline` y las tablas `PromptBox`/`PromptBoxExecution`/
+`CreativeGenerationHistory` ya estaban aplicados en producción desde antes.
+
+- **Motor de ejecución conectado (`f6ddbb0`).** `apps/worker/src/
+  promptBoxPipeline.ts` corre las 8 cajas en orden real contra
+  `gpt-4o-mini`/`gpt-image-1-mini`, con el ciclo Generador→Inspector→
+  Corrector (MAX_RETRIES=2). `socialPublish.ts` enruta Instagram
+  post/reel-image/story y Facebook story al pipeline nuevo solo si
+  `usePromptBoxPipeline` está activo (además de `aiImageGenerationEnabled`).
+  El generador viejo de un solo prompt sigue siendo el default, sin tocar.
+- **Checkbox de admin (`bed7f40`).** Sin esto no había forma de activar el
+  pipeline nuevo para nadie — se agregó junto al de "Generador de imágenes
+  con IA" en Accesos a usuarios.
+- **Primera prueba real (Lorena, instagram-post) reveló 3 bugs de código
+  reales, todos corregidos hoy:**
+  1. `5dba75a` — el pipeline publicaba la imagen aunque el Inspector la
+     hubiera rechazado (`aprobado=false imagen=sí` se usaba igual). Ahora
+     cancela la oportunidad como el generador viejo cuando falla del todo.
+  2. `8a1365f` — el prompt final que se le mandaba a la API de imágenes era
+     el JSON CRUDO completo de las Cajas 5/8 (llaves, `next_action`,
+     `preserve`, todo), no el texto limpio del campo `generation_prompt`/
+     `corrected_generation_prompt` escondido adentro. Fix genérico
+     (`findPromptField`) que busca cualquier campo `*prompt*` con texto
+     largo, sin necesitar conocer el schema exacto de cada caja.
+  3. `529f316` — el veredicto del Inspector NUNCA podía leerse como
+     aprobado: el código buscaba `parsed.status` en la raíz del JSON, pero
+     el schema real de Milton anida el status en
+     `quality_inspection.status`. El pipeline estaba matemáticamente
+     condenado a rechazar todo, sin importar la calidad real de la imagen.
+  4. `b7b707a` — `max_tokens: 1200` en las llamadas a gpt-4o-mini se quedaba
+     corto para el JSON detallado de la Caja 8, truncándolo a mitad y
+     rompiendo el fix del punto 2 en los reintentos. Subido a 3000, más un
+     respaldo por regex para casos igual de truncados.
+- **`9cb4f04`** — calidad de imagen subida de "low" a "medium" solo en este
+  pipeline (el generador viejo se queda en "low"), a pedido de Milton, tras
+  ver que "low" producía errores de letra en el texto renderizado
+  repetidamente.
+- **Ajuste de contenido (no de código) hecho por Milton directamente en el
+  admin:** el margen de seguridad de texto de la Caja 3 "Diseñador de
+  Composición" se subió de una referencia blanda de 7%–10% a un piso firme
+  de 12%–15% (18% cuando hay headline + texto de apoyo), tras ver 3 pruebas
+  reales seguidas con texto cortado — casi siempre en piezas con dos bloques
+  de texto en vez de uno. No verificado todavía si resolvió el patrón.
+- **Estado de las pruebas reales al momento de escribir esto:** varias
+  corridas con calidad "medium" post-bugfixes, resultados mixtos — una
+  rechazada por inconsistencia menor del propio Inspector (un punto final,
+  ruido normal del modelo, no bug), otra rechazada por corte de texto real
+  en un post con headline+supporting text (motivó el ajuste de margen de
+  arriba). Pendiente confirmar si la próxima corrida ya pasa.
+- **Costo estimado (verificado con precios reales de OpenAI, agosto 2026):**
+  ~$0.03 por imagen aprobada al primer intento, ~$0.07 si agota los 3
+  intentos. Aviso encontrado de paso: `gpt-image-1-mini` está anunciado para
+  discontinuarse el 1/12/2026 según fuentes de terceros — confirmar en la
+  documentación oficial de OpenAI antes de invertir mucho más en afinar este
+  pipeline.
+- **Explorado y descartado (no ejecutar):** integración con Canva Autofill
+  API como alternativa — confirmado en la documentación oficial de Canva que
+  requiere que el usuario final sea miembro de una organización Canva
+  Enterprise, inviable para el perfil de usuario típico de la plataforma.
+  Alternativas más baratas (APITemplate.io, Placid, Templated.io) existen
+  pero invierten el modelo de costos: las paga la plataforma, no el usuario
+  final — decisión de Milton: seguir con el pipeline propio por ahora.
+- **Pendiente:** confirmar con una prueba real limpia que el ajuste de
+  margen de la Caja 3 resuelve el corte de texto. Sin eso, no dar por cerrado
+  este ciclo de pruebas.
