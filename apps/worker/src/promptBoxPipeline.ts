@@ -24,9 +24,73 @@ const OPENAI_IMAGE_API_KEY = process.env.OPENAI_IMAGE_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
 const OPENAI_EDIT_URL = "https://api.openai.com/v1/images/edits";
 
+const FAL_API_KEY = process.env.FAL_API_KEY;
+const FAL_IDEOGRAM_REMIX_URL = "https://fal.run/fal-ai/ideogram/v3/remix";
+
+// Adaptador de proveedor para la Caja 6 (pedido explícito de Milton: "la
+// arquitectura debe permitir cambiar de proveedor... sin tocar las cajas
+// anteriores"). "openai" (default) usa gpt-image-1-mini; "fal" usa Ideogram
+// V3 Remix vía fal.ai, conocido por mejor fidelidad de texto incrustado —
+// prueba puntual del 21/8/2026 tras 9/9 pruebas reales fallidas con OpenAI.
+const IMAGE_PROVIDER = (process.env.IMAGE_PROVIDER || "openai").toLowerCase();
+
 const MAX_RETRIES = 2;
 
 type Format = "story" | "reel-image" | "post" | "facebook-story";
+
+// Ideogram no acepta dimensiones exactas en píxeles, solo estas categorías;
+// el resize/crop con sharp que ya hacemos después ajusta al tamaño final
+// exacto de todos modos, igual que con el "1024x1536" fijo de OpenAI.
+const FAL_IMAGE_SIZE: Record<Format, string> = {
+  story: "portrait_16_9",
+  "reel-image": "portrait_16_9",
+  post: "portrait_4_3",
+  "facebook-story": "portrait_16_9",
+};
+
+async function generateImageBufferOpenAI(prompt: string, refImages: Buffer[]): Promise<Buffer | null> {
+  const form = new FormData();
+  form.append("model", "gpt-image-1-mini");
+  form.append("prompt", prompt.slice(0, 4000));
+  form.append("size", "1024x1536");
+  form.append("quality", "medium");
+  form.append("n", "1");
+  refImages.forEach((buf, i) => {
+    form.append("image[]", new Blob([new Uint8Array(buf)], { type: "image/png" }), `ref${i}.png`);
+  });
+  const res = await fetch(OPENAI_EDIT_URL, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${OPENAI_IMAGE_API_KEY}` },
+    body: form,
+    signal: AbortSignal.timeout(90000),
+  });
+  if (!res.ok) return null;
+  const data = (await res.json()) as { data?: { b64_json?: string }[] };
+  const b64 = data.data?.[0]?.b64_json;
+  return b64 ? Buffer.from(b64, "base64") : null;
+}
+
+async function generateImageBufferFal(prompt: string, ogImageUrl: string, format: Format): Promise<Buffer | null> {
+  if (!FAL_API_KEY) return null;
+  const res = await fetch(FAL_IDEOGRAM_REMIX_URL, {
+    method: "POST",
+    headers: { Authorization: `Key ${FAL_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      prompt: prompt.slice(0, 4000),
+      image_url: ogImageUrl,
+      image_size: FAL_IMAGE_SIZE[format],
+      rendering_speed: "BALANCED",
+    }),
+    signal: AbortSignal.timeout(90000),
+  });
+  if (!res.ok) return null;
+  const data = (await res.json()) as { images?: { url?: string }[] };
+  const resultUrl = data.images?.[0]?.url;
+  if (!resultUrl) return null;
+  const imgRes = await fetch(resultUrl, { signal: AbortSignal.timeout(30000) });
+  if (!imgRes.ok) return null;
+  return Buffer.from(await imgRes.arrayBuffer());
+}
 
 const FORMAT_TARGET: Record<Format, { editSize: "1024x1536"; width: number; height: number; label: string }> = {
   story: { editSize: "1024x1536", width: 1080, height: 1920, label: "Instagram Story" },
@@ -345,52 +409,29 @@ export async function runPromptBoxPipeline(params: {
     const genStart = Date.now();
     let generatedImageUrl: string | null = null;
     console.log(`[PromptBoxPipeline] intento ${attempt}/${MAX_RETRIES} — prompt final (${currentPrompt.length} chars): ${currentPrompt.slice(0, 1500)}`);
+    const modelLabel = IMAGE_PROVIDER === "fal" ? "fal-ai/ideogram-v3-remix" : "gpt-image-1-mini";
     try {
-      const form = new FormData();
-      form.append("model", "gpt-image-1-mini");
-      form.append("prompt", currentPrompt.slice(0, 4000));
-      form.append("size", target.editSize);
-      // De vuelta a "medium" (21/8/2026): con "low" la prueba #8 volvió a
-      // mostrar errores tipográficos GRAVES ("Desoubre", "tamilia") —
-      // mucho peores que los de "high" (que solo tuvo problemas de tamaño
-      // y un falso rechazo de logo, con el texto bien escrito). La
-      // fidelidad del texto SÍ depende de la calidad; el ajuste de la
-      // Caja 7 (Inspector, tolerar solo errores mínimos que no cambian el
-      // significado) es un problema aparte y ya está corregido ahí.
-      // "medium" es el punto medio de costo razonable.
-      form.append("quality", "medium");
-      form.append("n", "1");
-      refImages.forEach((buf, i) => {
-        form.append("image[]", new Blob([new Uint8Array(buf)], { type: "image/png" }), `ref${i}.png`);
-      });
-      const res = await fetch(OPENAI_EDIT_URL, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${OPENAI_IMAGE_API_KEY}` },
-        body: form,
-        signal: AbortSignal.timeout(90000),
-      });
-      if (res.ok) {
-        const data = (await res.json()) as { data?: { b64_json?: string }[] };
-        const b64 = data.data?.[0]?.b64_json;
-        if (b64) {
-          const raw = Buffer.from(b64, "base64");
-          const resized = await sharp(raw).resize(target.width, target.height, { fit: "cover", position: "attention" }).toBuffer();
-          const withLogo = logoPng ? await compositeLogo(resized, target.width, target.height, logoPng) : resized;
-          const finalBuffer = await sharp(withLogo).jpeg({ quality: 90 }).toBuffer();
-          const blob = await put(`${params.pathPrefix}/${Date.now()}-attempt${attempt}.jpg`, finalBuffer, {
-            access: "public",
-            contentType: "image/jpeg",
-            addRandomSuffix: false,
-          });
-          const checkRes = await fetch(blob.url, { method: "HEAD" });
-          if (checkRes.ok) generatedImageUrl = blob.url;
-        }
+      const raw =
+        IMAGE_PROVIDER === "fal"
+          ? await generateImageBufferFal(currentPrompt, params.ogImageUrl, params.format)
+          : await generateImageBufferOpenAI(currentPrompt, refImages);
+      if (raw) {
+        const resized = await sharp(raw).resize(target.width, target.height, { fit: "cover", position: "attention" }).toBuffer();
+        const withLogo = logoPng ? await compositeLogo(resized, target.width, target.height, logoPng) : resized;
+        const finalBuffer = await sharp(withLogo).jpeg({ quality: 90 }).toBuffer();
+        const blob = await put(`${params.pathPrefix}/${Date.now()}-attempt${attempt}.jpg`, finalBuffer, {
+          access: "public",
+          contentType: "image/jpeg",
+          addRandomSuffix: false,
+        });
+        const checkRes = await fetch(blob.url, { method: "HEAD" });
+        if (checkRes.ok) generatedImageUrl = blob.url;
       }
       if (box6) {
-        await recordExecution(box6.id, currentPrompt, generatedImageUrl, "gpt-image-1-mini", genStart, generatedImageUrl ? null : "No se generó imagen");
+        await recordExecution(box6.id, currentPrompt, generatedImageUrl, modelLabel, genStart, generatedImageUrl ? null : "No se generó imagen");
       }
     } catch (err) {
-      if (box6) await recordExecution(box6.id, currentPrompt, null, "gpt-image-1-mini", genStart, err instanceof Error ? err.message : String(err));
+      if (box6) await recordExecution(box6.id, currentPrompt, null, modelLabel, genStart, err instanceof Error ? err.message : String(err));
     }
 
     if (!generatedImageUrl) break; // sin imagen, no hay nada que inspeccionar
