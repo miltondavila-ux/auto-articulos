@@ -47,6 +47,7 @@ interface UserRow {
   allowThreadsPublishing: boolean;
   allowFacebookPublishing: boolean;
   aiImageGenerationEnabled: boolean;
+  usePromptBoxPipeline: boolean;
   numeroCuenta?: number;
   moduleOverrides?: Record<string, "inherit" | "enabled" | "disabled">;
   profilePhotoUrl: string | null;
@@ -2103,6 +2104,9 @@ function UserCard({
   const [permAiImageGeneration, setPermAiImageGeneration] = useState(
     Boolean(user.aiImageGenerationEnabled),
   );
+  const [permUsePromptBoxPipeline, setPermUsePromptBoxPipeline] = useState(
+    Boolean(user.usePromptBoxPipeline),
+  );
   // Sistema de prueba gratuita (13/8/2026): estado de prueba y desbloqueo manual.
   const [permIsTrialSignup, setPermIsTrialSignup] = useState(
     Boolean(user.isTrialSignup),
@@ -2138,6 +2142,7 @@ function UserCard({
     setPermThreads(Boolean(user.allowThreadsPublishing));
     setPermFacebook(Boolean(user.allowFacebookPublishing));
     setPermAiImageGeneration(Boolean(user.aiImageGenerationEnabled));
+    setPermUsePromptBoxPipeline(Boolean(user.usePromptBoxPipeline));
     setPermIsTrialSignup(Boolean(user.isTrialSignup));
     setPermTrialUnlocked(Boolean(user.trialUnlocked));
     setPermImageCredits(user.hasImageCredits !== false);
@@ -2150,6 +2155,7 @@ function UserCard({
     permThreads !== Boolean(user.allowThreadsPublishing) ||
     permFacebook !== Boolean(user.allowFacebookPublishing) ||
     permAiImageGeneration !== Boolean(user.aiImageGenerationEnabled) ||
+    permUsePromptBoxPipeline !== Boolean(user.usePromptBoxPipeline) ||
     permIsTrialSignup !== Boolean(user.isTrialSignup) ||
     permTrialUnlocked !== Boolean(user.trialUnlocked) ||
     permImageCredits !== (user.hasImageCredits !== false);
@@ -2341,6 +2347,7 @@ function UserCard({
           allowThreadsPublishing: permThreads,
           allowFacebookPublishing: permFacebook,
           aiImageGenerationEnabled: permAiImageGeneration,
+          usePromptBoxPipeline: permUsePromptBoxPipeline,
           isTrialSignup: permIsTrialSignup,
           trialUnlocked: permTrialUnlocked,
           hasImageCredits: permImageCredits,
@@ -2687,6 +2694,17 @@ function UserCard({
                   style={{ accentColor: "#1d1d1f", width: 16, height: 16 }}
                 />
                 Generador de imágenes con IA (Instagram Story/Reel)
+              </label>
+              <label style={permissionLabelStyle}>
+                <input
+                  type="checkbox"
+                  checked={permUsePromptBoxPipeline}
+                  onChange={(e) => setPermUsePromptBoxPipeline(e.target.checked)}
+                  disabled={savingPermissions}
+                  style={{ accentColor: "#1d1d1f", width: 16, height: 16 }}
+                />
+                Usar pipeline nuevo de "Cajas de Imágenes IA" (experimental —
+                requiere también el generador de imágenes con IA arriba)
               </label>
               <label style={permissionLabelStyle}>
                 <input
