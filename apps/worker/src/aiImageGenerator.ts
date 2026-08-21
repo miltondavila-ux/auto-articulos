@@ -174,7 +174,7 @@ async function decideCreativeDirection(
               "\n\nRespondes ÚNICAMENTE JSON válido con estas claves exactas — nada de markdown, nada de texto fuera del JSON:\n" +
               '"message": el texto/mensaje corto que decidiste para la publicación (lo que en tu metodología llamas "Texto").\n' +
               '"tagString": la secuencia corta de etiquetas que ensamblaste internamente (lo que en tu metodología es el "string"), como texto plano, ej. "/premiumeditorial /backgroundluxury /complexionrefine /advertisingtext /instagram /instagramstory /brandidentity /uselogo".\n' +
-              '"visualPrompt": la instrucción visual FINAL, completa y lista para aplicar sobre la imagen OG adjunta — en inglés, la que de verdad va a usar el editor de imágenes para transformarla. Aplica ahí tu string y tu criterio completo: qué conservar de la foto, qué transformar, cómo tratar el fondo/retoque/tipografía, cómo integrar la marca. No la recortes ni la simplifiques por brevedad — esta es tu entrega real, el string y el texto son solo tu razonamiento interno.\n' +
+              '"visualPrompt": la instrucción visual FINAL, completa y lista para aplicar sobre la imagen OG adjunta — en inglés, la que de verdad va a usar el editor de imágenes para transformarla. Aplica ahí tu string y tu criterio completo: qué conservar de la foto, qué transformar, cómo tratar el fondo/retoque, y CÓMO debe verse el texto (tamaño, tipografía, ubicación) según tu propio criterio — incluye ahí mismo, citado textualmente, el mensaje exacto que va escrito en la imagen. No la recortes ni la simplifiques por brevedad — esta es tu entrega real, el string y el texto son solo tu razonamiento interno.\n' +
               '"hasPeople": true/false, si la foto adjunta tiene personas.',
           },
           {
@@ -223,17 +223,20 @@ async function decideCreativeDirection(
 
 /**
  * Toma el visualPrompt que armó el propio modelo (siguiendo el prompt de
- * Milton) y le agrega SOLO las restricciones técnicas no negociables que no
- * son decisión creativa — margen de seguridad del texto, protección del
- * rostro, espacio reservado para el logo real. Estas van SIEMPRE, para
- * cualquier prompt que Milton escriba, porque son límites de la API/del
- * resultado final, no criterio editorial.
+ * Milton, incluido el tamaño y estilo del texto — eso ya NO lo decide este
+ * código) y le agrega SOLO restricciones de CONTENCIÓN, no de estilo: que
+ * el texto no quede cortado, que no tape el rostro, que quede espacio para
+ * el logo real. Ninguna de estas dice nada sobre tamaño de letra — eso es
+ * 100% criterio del prompt de Milton. Pedido explícito de Milton
+ * (20/8/2026): "elimina cualquier cosa que interfiera con mi prompt de
+ * imágenes" — antes este código inyectaba el texto aparte con su propia
+ * redacción y sugería un tamaño "cómodamente legible", que empujaba hacia
+ * texto más grande de lo que el prompt de Milton pedía.
  */
 function buildEditPrompt(decision: CreativeDecision, hasLogo: boolean, hasPhotoRef: boolean): string {
   return [
     decision.visualPrompt,
-    `Headline text (Spanish): "${decision.message}"`,
-    "TEXT SAFE ZONE, NON-NEGOTIABLE: the headline must fit entirely within the central 84% of the canvas width and 88% of the canvas height (an 8% empty margin on left/right, 6% on top/bottom, with nothing — no letter, stroke or serif — crossing into that margin). If the phrase is too long to fit at a comfortably readable size inside that safe zone, make the font smaller and/or break it into 2-3 shorter lines — never let it run past the safe zone, never shrink it to the point of being illegible either.",
+    "CONTAINMENT ONLY (not a style preference): whatever text you place must stay fully within the central 84% of the canvas width and 88% of the canvas height (margin on all sides) — no letter, stroke or serif crossing into that margin, nothing cut off at any edge. If it doesn't fit, wrap it into more lines or reduce it — the size and style themselves are entirely your own creative decision, not dictated here.",
     decision.hasPeople
       ? "ABSOLUTE RULE: the face is the highest-priority zone in the whole image — never cover eyes, nose, mouth or expression with text or anything else. Use empty/negative space instead."
       : "",
