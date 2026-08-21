@@ -107,6 +107,48 @@ async function runTextBox(
   }
 }
 
+/**
+ * Las Cajas 5 y 8 devuelven un objeto JSON rico (no solo el texto del
+ * prompt), con el prompt de generación real escondido en un campo interno
+ * (`generation_prompt`, `corrected_generation_prompt`, etc. — el nombre
+ * exacto varía). Buscar cualquier campo cuyo nombre contenga "prompt" con
+ * un valor de texto suficientemente largo evita mandarle a la API de
+ * imágenes el JSON completo (llaves, "next_action", "preserve", etc.) como
+ * si fuera el prompt en sí — eso es lo que generaba texto cortado: la
+ * instrucción real quedaba diluida en ruido estructural.
+ */
+function findPromptField(value: unknown, depth = 0): string | null {
+  if (depth > 5 || value == null || typeof value !== "object") return null;
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findPromptField(item, depth + 1);
+      if (found) return found;
+    }
+    return null;
+  }
+  for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+    if (typeof val === "string" && /prompt/i.test(key) && val.trim().length > 60) {
+      return val.trim();
+    }
+  }
+  for (const val of Object.values(value as Record<string, unknown>)) {
+    const found = findPromptField(val, depth + 1);
+    if (found) return found;
+  }
+  return null;
+}
+
+function extractVisualPrompt(raw: string): string {
+  try {
+    const parsed = JSON.parse(raw);
+    const found = findPromptField(parsed);
+    if (found) return found;
+  } catch {
+    // No era JSON — se asume que ya es el texto del prompt.
+  }
+  return raw;
+}
+
 /** Intenta leer "approved"/"rejected" del texto del Inspector, sea JSON estricto o no. */
 function parseInspectorVerdict(raw: string): { approved: boolean; problems: string } {
   try {
@@ -222,13 +264,14 @@ export async function runPromptBoxPipeline(params: {
   const logoConstraint = hasLogo
     ? " Leave a clean, empty, uncluttered rectangular area in the bottom-right corner (roughly the bottom-right 30% width x 10% height of the frame) with nothing important there — no text, no busy detail, no headline text overlapping it. A real logo will be placed there afterward by separate exact compositing, so do not draw, sketch or invent any logo or brand text yourself in that corner."
     : "";
-  let currentPrompt = visualPrompt + logoConstraint;
+  let currentPrompt = extractVisualPrompt(visualPrompt) + logoConstraint;
   let imageUrl: string | null = null;
   let approved = false;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     const genStart = Date.now();
     let generatedImageUrl: string | null = null;
+    console.log(`[PromptBoxPipeline] intento ${attempt}/${MAX_RETRIES} — prompt final (${currentPrompt.length} chars): ${currentPrompt.slice(0, 1500)}`);
     try {
       const form = new FormData();
       form.append("model", "gpt-image-1-mini");
@@ -287,6 +330,7 @@ export async function runPromptBoxPipeline(params: {
     if (!inspectorRaw) break;
 
     const verdict = parseInspectorVerdict(inspectorRaw);
+    console.log(`[PromptBoxPipeline] intento ${attempt}/${MAX_RETRIES} — inspector aprobado=${verdict.approved} problemas: ${verdict.problems.slice(0, 500)}`);
     if (verdict.approved) {
       approved = true;
       break;
@@ -302,7 +346,7 @@ export async function runPromptBoxPipeline(params: {
     if (!correctedPrompt) break;
     // La restricción del logo se reaplica siempre: el Corrector no tiene por
     // qué preservarla palabra por palabra en su reescritura.
-    currentPrompt = correctedPrompt + logoConstraint;
+    currentPrompt = extractVisualPrompt(correctedPrompt) + logoConstraint;
   }
 
   return { imageUrl, approved, boxOutputs };
