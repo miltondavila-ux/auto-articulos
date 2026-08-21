@@ -34,12 +34,11 @@ const FAL_IDEOGRAM_REMIX_URL = "https://fal.run/fal-ai/ideogram/v3/remix";
 // prueba puntual del 21/8/2026 tras 9/9 pruebas reales fallidas con OpenAI.
 const IMAGE_PROVIDER = (process.env.IMAGE_PROVIDER || "openai").toLowerCase();
 
-// Bajado de 2 a 0 (21/8/2026, pedido de Milton) mientras se valida fal.ai
-// con dinero real: cada intento cuesta, y no tiene sentido pagar por 2
-// rondas más de corrección hasta confirmar que la primera pasada de
-// Ideogram ya es lo bastante buena por sí sola. Subir de nuevo a 2 (o el
-// valor que corresponda) una vez validado en la práctica.
-const MAX_RETRIES = 0;
+// Vuelto a 2 (21/8/2026): confirmado que la cuenta de fal.ai funciona y el
+// costo por intento es bajo (~$0.03 en TURBO) — vuelve al diseño original
+// con margen de autocorrección en vez de cancelar directo al primer
+// rechazo del Inspector.
+const MAX_RETRIES = 2;
 
 type Format = "story" | "reel-image" | "post" | "facebook-story";
 
