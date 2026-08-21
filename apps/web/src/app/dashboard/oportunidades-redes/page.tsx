@@ -399,7 +399,7 @@ export default function OportunidadesRedesPage() {
                 className="secondary"
                 style={disabledStyle({ ...secondaryButtonStyle, padding: "9px 14px", fontSize: 13 }, generating || loading)}
               >
-                {generatingNetwork === "facebook-page" ? "Analizando..." : "Facebook Pages"}
+                {generatingNetwork === "facebook-page" ? "Analizando..." : "Facebook"}
               </button>
             )}
             {pendingList.length > 0 && (
