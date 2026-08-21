@@ -88,7 +88,10 @@ async function runTextBox(
           { role: "system", content: box.systemPrompt },
           { role: "user", content: userContent },
         ],
-        max_tokens: 1200,
+        // Las cajas devuelven JSON rico y detallado (varios cientos de
+        // tokens); 1200 se quedaba corto y truncaba el JSON a la mitad,
+        // dejándolo inválido para JSON.parse.
+        max_tokens: 3000,
       }),
       signal: AbortSignal.timeout(30000),
     });
@@ -138,13 +141,31 @@ function findPromptField(value: unknown, depth = 0): string | null {
   return null;
 }
 
+/**
+ * Respaldo cuando el JSON llega inválido (p.ej. truncado a mitad de
+ * generación): busca directamente con regex un campo "...prompt": "..."
+ * y decodifica sus escapes reutilizando JSON.parse sobre el string aislado.
+ * Sirve mientras ese campo específico haya terminado de generarse antes
+ * del corte, aunque el resto del JSON no haya cerrado bien.
+ */
+function extractPromptFieldViaRegex(raw: string): string | null {
+  const match = raw.match(/"[a-zA-Z_]*prompt[a-zA-Z_]*"\s*:\s*"((?:[^"\\]|\\.)*)"/i);
+  if (!match) return null;
+  try {
+    return JSON.parse(`"${match[1]}"`);
+  } catch {
+    return match[1];
+  }
+}
+
 function extractVisualPrompt(raw: string): string {
   try {
     const parsed = JSON.parse(raw);
     const found = findPromptField(parsed);
     if (found) return found;
   } catch {
-    // No era JSON — se asume que ya es el texto del prompt.
+    const viaRegex = extractPromptFieldViaRegex(raw);
+    if (viaRegex && viaRegex.trim().length > 60) return viaRegex.trim();
   }
   return raw;
 }
