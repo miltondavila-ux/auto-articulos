@@ -14,10 +14,11 @@ import {
   publishInstagramStory,
   generateSocialImageRaw,
   publishFacebookPagePost,
+  publishFacebookPageStory,
 } from "@auto-articulos/shared";
 import { put } from "@vercel/blob";
 import sharp from "sharp";
-import { generateAiInstagramImage } from "./aiImageGenerator";
+import { generateAiSocialImage } from "./aiImageGenerator";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
@@ -443,6 +444,59 @@ async function processFacebookPageJob(job: {
   return true;
 }
 
+/**
+ * Historia (Story) estática de Facebook Page (20/8/2026, pedido de
+ * Milton). Mismo patrón OG-vs-IA que Instagram Story: opción 1 (OG tal
+ * cual, default) u opción 2 (generador IA) según aiImageGenerationEnabled.
+ * La API de Historias de Facebook no acepta caption — igual que Instagram
+ * Story, el texto de la oportunidad no se usa para publicar, solo la
+ * imagen.
+ */
+async function processFacebookStoryJob(job: {
+  id: string; userId: string; titleId: string | null; articleUrl: string; articleTitle: string; suggestedText: string;
+}): Promise<boolean> {
+  const integration = await prisma.facebookPageIntegration.findUnique({ where: { userId: job.userId } });
+  if (!integration) throw new Error("Facebook Pages no está configurado en tu cuenta.");
+  if (integration.expiresAt <= new Date()) throw new Error("La autorización de Facebook Pages expiró. Vuelve a conectar Meta en Configuración.");
+
+  await validateArticleUrl(job.articleUrl);
+
+  const [title, user] = await Promise.all([
+    job.titleId ? prisma.title.findUnique({ where: { id: job.titleId } }) : Promise.resolve(null),
+    prisma.user.findUnique({
+      where: { id: job.userId },
+      select: { aiImageGenerationEnabled: true, businessLogoUrl: true, profilePhotoUrl: true },
+    }),
+  ]);
+  const summary = title?.summary || job.articleTitle || "";
+
+  const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
+  let imageUrl: string | null = null;
+  if (sourceImage && user?.aiImageGenerationEnabled) {
+    imageUrl = await generateAiSocialImage({
+      articleTitle: job.articleTitle,
+      articleSummary: summary,
+      ogImageUrl: sourceImage,
+      format: "facebook-story",
+      businessLogoUrl: user.businessLogoUrl,
+      profilePhotoUrl: user.profilePhotoUrl,
+      pathPrefix: `facebook/ai/story/${job.titleId || job.id}`,
+    });
+    if (!imageUrl) throw new Error("No se pudo generar la imagen con IA para la Historia de Facebook.");
+  } else {
+    imageUrl = sourceImage ? await normalizeSocialImage(sourceImage, 9 / 16) : null;
+    if (!imageUrl) throw new Error("No se pudo adaptar la imagen del artículo para la Historia de Facebook.");
+  }
+
+  const result = await publishFacebookPageStory(
+    decryptSecret(integration.accessTokenEncrypted), integration.facebookPageId, imageUrl,
+  );
+
+  await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: result.permalink || result.postId, publishedAt: new Date(), errorLog: null } });
+  if (job.titleId) await prisma.titleEvent.create({ data: { titleId: job.titleId, message: `Historia publicada en Facebook Page (${integration.facebookPageName || integration.facebookPageId}) - ID: ${result.postId}` } });
+  return true;
+}
+
 // ─── INSTAGRAM ────────────────────────────────────────────────────────────
 
 async function generateInstagramImage(
@@ -616,7 +670,7 @@ async function processInstagramJob(job: {
         // Opción 2 del "Creador de Imágenes para Redes Sociales": generador
         // IA aparte, partiendo de la OG. Sin fallback a la OG sin tocar si
         // falla — se cancela la oportunidad (regla explícita, por costo).
-        imageUrl = await generateAiInstagramImage({
+        imageUrl = await generateAiSocialImage({
           articleTitle: job.articleTitle,
           articleSummary: summary,
           ogImageUrl: sourceImage,
@@ -646,7 +700,7 @@ async function processInstagramJob(job: {
       const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
       let imageUrl: string | null = null;
       if (sourceImage && user?.aiImageGenerationEnabled) {
-        imageUrl = await generateAiInstagramImage({
+        imageUrl = await generateAiSocialImage({
           articleTitle: job.articleTitle,
           articleSummary: summary,
           ogImageUrl: sourceImage,
@@ -676,7 +730,7 @@ async function processInstagramJob(job: {
       const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
       let imageUrl: string | null = null;
       if (sourceImage && user?.aiImageGenerationEnabled) {
-        imageUrl = await generateAiInstagramImage({
+        imageUrl = await generateAiSocialImage({
           articleTitle: job.articleTitle,
           articleSummary: summary,
           ogImageUrl: sourceImage,
@@ -789,6 +843,8 @@ export async function processNextSocialPublish(filterUserId?: string): Promise<b
       published = await processLinkedInJob(job);
     } else if (job.platform === "facebook-page") {
       published = await processFacebookPageJob(job);
+    } else if (job.platform === "facebook-story") {
+      published = await processFacebookStoryJob(job);
     } else if (job.platform.startsWith("instagram-")) {
       published = await processInstagramJob(job);
     } else {

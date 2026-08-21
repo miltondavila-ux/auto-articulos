@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
       "x",
       "linkedin",
       "facebook-page",
+      "facebook-story",
       "instagram-carousel",
       "instagram-reel-image",
       "instagram-story",
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (opp.platform === "facebook-page") {
+    if (opp.platform.startsWith("facebook-")) {
       const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
       if (user?.role !== "admin") {
         return NextResponse.json({ error: "Facebook Pages está disponible solo para usuarios administradores." }, { status: 403 });
@@ -92,6 +93,8 @@ export async function POST(request: NextRequest) {
         ? "Publicación encolada. El sistema publicará en LinkedIn en segundo plano."
         : opp.platform === "facebook-page"
         ? "Publicación encolada. El sistema publicará en Facebook Pages en segundo plano."
+        : opp.platform === "facebook-story"
+        ? "Publicación encolada. El sistema generará la imagen y publicará la Historia en Facebook en segundo plano."
         : "Publicación encolada. El sistema generará la imagen y publicará en Threads en segundo plano.",
     });
   } catch {

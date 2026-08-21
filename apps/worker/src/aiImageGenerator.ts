@@ -33,23 +33,26 @@ const OPENAI_IMAGE_API_KEY = process.env.OPENAI_IMAGE_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
 const OPENAI_EDIT_URL = "https://api.openai.com/v1/images/edits";
 
-export type AiImageFormat = "story" | "reel-image" | "post";
+export type AiImageFormat = "story" | "reel-image" | "post" | "facebook-story";
 
 // Tamaño que se le pide a gpt-image-1-mini (solo soporta 1024x1024,
 // 1024x1536, 1536x1024) y tamaño final real al que se recorta después con
 // sharp. "post" usa 4:5 (1080x1350), el formato de feed que más espacio
-// ocupa en pantalla — recomendado hoy por Instagram. Cuando este módulo
-// cubra más redes, este mapa crece.
+// ocupa en pantalla — recomendado hoy por Instagram. "facebook-story" es
+// igual de vertical que la Historia de Instagram (9:16). Cuando este
+// módulo cubra más redes, este mapa crece.
 const FORMAT_TARGET: Record<AiImageFormat, { editSize: "1024x1536"; width: number; height: number }> = {
   story: { editSize: "1024x1536", width: 1080, height: 1920 },
   "reel-image": { editSize: "1024x1536", width: 1080, height: 1920 },
   post: { editSize: "1024x1536", width: 1080, height: 1350 },
+  "facebook-story": { editSize: "1024x1536", width: 1080, height: 1920 },
 };
 
 const FORMAT_LABEL: Record<AiImageFormat, string> = {
   story: "Instagram Story",
   "reel-image": "Instagram Reel cover",
   post: "Instagram feed post",
+  "facebook-story": "Facebook Story",
 };
 
 interface CreativeDecision {
@@ -247,12 +250,12 @@ function buildEditPrompt(decision: CreativeDecision, hasLogo: boolean, hasPhotoR
 }
 
 /**
- * Genera la imagen de Instagram Story/Reel/Post con IA, transformando (no
- * copiando ni generando desconectado) la imagen OG del artículo. Devuelve
- * null si CUALQUIER paso falla — quien llama debe cancelar la oportunidad,
- * no publicar sin imagen ni reintentar.
+ * Genera la imagen (Instagram Story/Reel/Post o Facebook Story) con IA,
+ * transformando (no copiando ni generando desconectado) la imagen OG del
+ * artículo. Devuelve null si CUALQUIER paso falla — quien llama debe
+ * cancelar la oportunidad, no publicar sin imagen ni reintentar.
  */
-export async function generateAiInstagramImage(params: {
+export async function generateAiSocialImage(params: {
   articleTitle: string;
   articleSummary: string;
   ogImageUrl: string;

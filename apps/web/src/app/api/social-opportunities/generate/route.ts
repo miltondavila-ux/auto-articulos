@@ -207,6 +207,7 @@ export async function POST(request: Request) {
     }
     if (requestedNetworks.includes("facebook-page") && connected.facebookPage) {
       integrations.push("facebook-page");
+      integrations.push("facebook-story");
     }
     if (requestedNetworks.includes("instagram") && connected.instagram) {
       const user = await prisma.user.findUnique({
