@@ -260,6 +260,13 @@ export async function POST(request: Request) {
     const previousOpportunities = await prisma.socialOpportunity.findMany({
       where: {
         userId,
+        // "skipped" (botón Descartar) no debe bloquear el artículo para
+        // siempre — descartar una idea significa "no esta, dame otra
+        // después", no "este artículo ya no puede tener oportunidades
+        // nunca más". Reportado por Milton (21/8/2026): tras descartar 52
+        // propuestas en lote para "empezar de cero", seguía sin poder
+        // generar nuevas porque estas igual contaban como "ya usado".
+        status: { not: "skipped" },
         OR: [
           { titleId: { in: allCandidates.map((article) => article.id) } },
           { articleUrl: { in: allCandidates.map((article) => article.articleUrl).filter((url): url is string => Boolean(url)) } },
