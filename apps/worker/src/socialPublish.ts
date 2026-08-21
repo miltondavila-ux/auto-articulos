@@ -566,9 +566,17 @@ async function processInstagramJob(job: {
     }),
   ]);
   const summary = title?.summary || job.articleTitle || "";
+  // Instagram no vuelve clicable ninguna URL dentro del caption — para
+  // post/reel-image/carousel/infografia el texto ya trae hashtags en vez de
+  // enlace (generate/route.ts), así que NO se le pega la URL cruda al final
+  // como con las demás redes (pedido explícito de Milton, 20/8/2026).
+  // "story" no tiene caption visible en Instagram, da igual — se deja como
+  // estaba por si algún registro viejo aún trae [ENLACE].
   const finalPost = job.suggestedText.includes("[ENLACE]")
     ? job.suggestedText.replace("[ENLACE]", job.articleUrl)
-    : `${job.suggestedText}\n\n${job.articleUrl}`;
+    : format === "story"
+    ? `${job.suggestedText}\n\n${job.articleUrl}`
+    : job.suggestedText;
 
   let result;
 

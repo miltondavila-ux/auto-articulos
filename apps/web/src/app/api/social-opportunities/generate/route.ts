@@ -38,24 +38,29 @@ async function generateGPTCopy(
   finalTitle: string,
   summary: string
 ): Promise<string> {
+  // "instagram-story" NO tiene caption visible en Instagram (publishInstagramStory
+  // no manda texto, solo la imagen) — este texto queda solo de registro interno,
+  // por eso sigue el estilo corto genérico. Post/Reel-image/Carousel/Infografía sí
+  // muestran el caption debajo de la imagen y merecen su propio estilo — pedido
+  // explícito de Milton (20/8/2026), antes usaban el mismo molde casual de Threads.
+  // Instagram tampoco vuelve clicable ninguna URL en el caption: usan hashtags,
+  // no enlace — otro pedido explícito de Milton.
+  const isInstagramFeedCaption =
+    platform === "instagram-post" ||
+    platform === "instagram-reel-image" ||
+    platform === "instagram-carousel" ||
+    platform === "instagram-infografia";
+  const fallbackText = isInstagramFeedCaption
+    ? `${finalTitle}\n\n${summary}`
+    : `${finalTitle}\n\n${summary}\n\nLeer más: [ENLACE]`;
   if (!OPENAI_API_KEY) {
-    return `${finalTitle}\n\n${summary}\n\nLeer más: [ENLACE]`;
+    return fallbackText;
   }
   const selectedFormula = formulas[Math.floor(Math.random() * formulas.length)];
   // LinkedIn permite hasta 3000 caracteres y funciona mejor con posts más
   // elaborados; Threads/X son de formato corto (límites reales 500/280).
   const isLinkedIn = platform === "linkedin";
   const isFacebookPage = platform === "facebook-page";
-  // "instagram-story" NO tiene caption visible en Instagram (publishInstagramStory
-  // no manda texto, solo la imagen) — este texto queda solo de registro interno,
-  // por eso sigue el estilo corto genérico. Post/Reel-image/Carousel/Infografía sí
-  // muestran el caption debajo de la imagen y merecen su propio estilo — pedido
-  // explícito de Milton (20/8/2026), antes usaban el mismo molde casual de Threads.
-  const isInstagramFeedCaption =
-    platform === "instagram-post" ||
-    platform === "instagram-reel-image" ||
-    platform === "instagram-carousel" ||
-    platform === "instagram-infografia";
   const charLimit = isLinkedIn ? 1300 : isFacebookPage ? 700 : isInstagramFeedCaption ? 1000 : 360;
   const maxTokens = isLinkedIn ? 700 : isFacebookPage ? 450 : isInstagramFeedCaption ? 550 : 300;
   const styleNote = isLinkedIn
@@ -84,8 +89,10 @@ async function generateGPTCopy(
               `${selectedFormula}\n\n` +
               `REGLAS CRÍTICAS:\n` +
               `- El texto debe ser menor a ${charLimit} caracteres.\n` +
-              `- No uses hashtags (#) ni formato markdown.\n` +
-              `- NO escribas la URL del artículo directamente. Escribe la palabra exacta "[ENLACE]" (en mayúsculas y con corchetes) al final, integrada en tu frase de cierre (Ej: "Te lo explico con peras y manzanas aquí: [ENLACE]").\n\n` +
+              (isInstagramFeedCaption
+                ? `- Instagram no muestra enlaces clicables en el caption — NUNCA escribas una URL ni la palabra "[ENLACE]". En vez de eso, termina con al menos 5 hashtags reales, en español, sacados de palabras clave del tema y contenido del artículo (no genéricos como #instagram) — sin espacios dentro de cada hashtag, separados entre sí por un espacio, en su propia línea al final.\n\n`
+                : `- No uses hashtags (#) ni formato markdown.\n` +
+                  `- NO escribas la URL del artículo directamente. Escribe la palabra exacta "[ENLACE]" (en mayúsculas y con corchetes) al final, integrada en tu frase de cierre (Ej: "Te lo explico con peras y manzanas aquí: [ENLACE]").\n\n`) +
               `Datos:\n` +
               `- Título del artículo: ${finalTitle}\n` +
               `- Resumen: ${summary}`,
@@ -96,9 +103,9 @@ async function generateGPTCopy(
       }),
     });
     const data = (await response.json()) as any;
-    return data.choices?.[0]?.message?.content?.trim() ?? `${finalTitle}\n\nLeer más: [ENLACE]`;
+    return data.choices?.[0]?.message?.content?.trim() ?? fallbackText;
   } catch {
-    return `${finalTitle}\n\nLeer más: [ENLACE]`;
+    return fallbackText;
   }
 }
 
