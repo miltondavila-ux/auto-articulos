@@ -299,13 +299,10 @@ export async function generateAiInstagramImage(params: {
     form.append("prompt", prompt);
     form.append("size", target.editSize);
     // Calidad explícita (pedido de Milton por costo, 20/8/2026): "auto"
-    // default puede cobrar como "high" ($0.25). Probando "low" a pedido de
-    // Milton: gpt-image-1-mini + low queda en ~$0.005/imagen (vs $0.015 en
-    // medium) — 3x más barato. Riesgo real: la nitidez del texto y el logo
-    // ya venían siendo el punto más frágil del resultado, y "low" puede
-    // empeorarlo. Si la legibilidad se nota peor en las pruebas, subir de
-    // vuelta a "medium" en esta misma línea.
-    form.append("quality", "low");
+    // default puede cobrar como "high" ($0.25). Se probó "low" (~$0.005) y
+    // Milton pidió volver a "medium" (~$0.015/imagen) — mejor punto medio
+    // de nitidez de texto/logo para el costo.
+    form.append("quality", "medium");
     form.append("n", "1");
     refImages.forEach((buf, i) => {
       form.append("image[]", new Blob([new Uint8Array(buf)], { type: "image/png" }), `ref${i}.png`);
