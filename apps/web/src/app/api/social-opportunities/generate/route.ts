@@ -234,7 +234,20 @@ export async function POST(request: Request) {
     for (const article of [...gscCandidates, ...recentCandidates]) {
       candidateMap.set(article.id, article);
     }
-    const allCandidates = Array.from(candidateMap.values());
+    // Dedupe también por URL real, no solo por id de artículo — pedido
+    // explícito de Milton (20/8/2026), tras confirmar el mismo artículo
+    // publicado varias veces en Threads/Facebook/LinkedIn. Si existen dos
+    // registros de Title distintos apuntando a la misma articleUrl (título
+    // duplicado), antes se trataban como dos artículos "distintos" y cada
+    // uno recibía su propia oportunidad — mismo enlace, misma imagen OG,
+    // texto diferente. Ahora solo sobrevive un candidato por URL real.
+    const seenUrls = new Set<string>();
+    const allCandidates = Array.from(candidateMap.values()).filter((article) => {
+      if (!article.articleUrl) return true;
+      if (seenUrls.has(article.articleUrl)) return false;
+      seenUrls.add(article.articleUrl);
+      return true;
+    });
 
     // El historial completo evita que una oportunidad ya publicada,
     // descartada o fallida vuelva a aparecer. Cada formato de Instagram
