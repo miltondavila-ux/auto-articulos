@@ -350,14 +350,15 @@ export async function runPromptBoxPipeline(params: {
       form.append("model", "gpt-image-1-mini");
       form.append("prompt", currentPrompt.slice(0, 4000));
       form.append("size", target.editSize);
-      // De vuelta a "low" (21/8/2026): se probaron low/medium/high y las
-      // 7 pruebas reales fallaron por igual en las tres — confirmado que
-      // el cuello de botella no es la calidad de generación, es el
-      // estándar de aprobación del Inspector (Caja 7), demasiado estricto
-      // (rechazo automático por un solo error menor de texto, o por
-      // recorte apenas cercano al borde). Se vuelve al más barato mientras
-      // se ajusta el Inspector.
-      form.append("quality", "low");
+      // De vuelta a "medium" (21/8/2026): con "low" la prueba #8 volvió a
+      // mostrar errores tipográficos GRAVES ("Desoubre", "tamilia") —
+      // mucho peores que los de "high" (que solo tuvo problemas de tamaño
+      // y un falso rechazo de logo, con el texto bien escrito). La
+      // fidelidad del texto SÍ depende de la calidad; el ajuste de la
+      // Caja 7 (Inspector, tolerar solo errores mínimos que no cambian el
+      // significado) es un problema aparte y ya está corregido ahí.
+      // "medium" es el punto medio de costo razonable.
+      form.append("quality", "medium");
       form.append("n", "1");
       refImages.forEach((buf, i) => {
         form.append("image[]", new Blob([new Uint8Array(buf)], { type: "image/png" }), `ref${i}.png`);
