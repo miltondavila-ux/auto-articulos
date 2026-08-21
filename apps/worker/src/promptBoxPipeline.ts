@@ -34,7 +34,12 @@ const FAL_IDEOGRAM_REMIX_URL = "https://fal.run/fal-ai/ideogram/v3/remix";
 // prueba puntual del 21/8/2026 tras 9/9 pruebas reales fallidas con OpenAI.
 const IMAGE_PROVIDER = (process.env.IMAGE_PROVIDER || "openai").toLowerCase();
 
-const MAX_RETRIES = 2;
+// Bajado de 2 a 0 (21/8/2026, pedido de Milton) mientras se valida fal.ai
+// con dinero real: cada intento cuesta, y no tiene sentido pagar por 2
+// rondas más de corrección hasta confirmar que la primera pasada de
+// Ideogram ya es lo bastante buena por sí sola. Subir de nuevo a 2 (o el
+// valor que corresponda) una vez validado en la práctica.
+const MAX_RETRIES = 0;
 
 type Format = "story" | "reel-image" | "post" | "facebook-story";
 
@@ -82,7 +87,10 @@ async function generateImageBufferFal(prompt: string, ogImageUrl: string, format
       prompt: prompt.slice(0, 4000),
       image_url: ogImageUrl,
       image_size: FAL_IMAGE_SIZE[format],
-      rendering_speed: "BALANCED",
+      // TURBO = ~$0.03/intento (el más barato) — punto de partida acordado
+      // con Milton para la primera prueba real, antes de considerar
+      // BALANCED ($0.06) o QUALITY ($0.09) si hiciera falta más fidelidad.
+      rendering_speed: "TURBO",
     }),
     signal: AbortSignal.timeout(90000),
   });
@@ -411,6 +419,13 @@ export async function runPromptBoxPipeline(params: {
   let imageUrl: string | null = null;
   let approved = false;
 
+  // Costo estimado por intento de generación de imagen (pedido de Milton:
+  // poder ver cuánto se va gastando). Es un estimado fijo según el nivel
+  // configurado, no un número real devuelto por la API — fal.ai no
+  // devuelve el costo exacto en la respuesta.
+  const IMAGE_COST_PER_ATTEMPT = IMAGE_PROVIDER === "fal" ? 0.03 : 0.015; // fal TURBO vs OpenAI medium
+  let estimatedImageSpend = 0;
+
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     const genStart = Date.now();
     let generatedImageUrl: string | null = null;
@@ -421,6 +436,8 @@ export async function runPromptBoxPipeline(params: {
         IMAGE_PROVIDER === "fal"
           ? await generateImageBufferFal(currentPrompt, params.ogImageUrl, params.format)
           : await generateImageBufferOpenAI(currentPrompt, refImages);
+      estimatedImageSpend += IMAGE_COST_PER_ATTEMPT;
+      console.log(`[PromptBoxPipeline] gasto estimado en generación de imagen hasta ahora: ~$${estimatedImageSpend.toFixed(3)} (${modelLabel})`);
       if (raw) {
         const resized = await sharp(raw).resize(target.width, target.height, { fit: "cover", position: "attention" }).toBuffer();
         const withLogo = logoPng ? await compositeLogo(resized, target.width, target.height, logoPng) : resized;
