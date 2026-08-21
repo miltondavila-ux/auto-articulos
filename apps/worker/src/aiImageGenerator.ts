@@ -3,26 +3,26 @@
 // existían (socialPublish.ts, businessProfilePublish.ts) — no los toca ni
 // los reemplaza, por decisión explícita de Milton.
 //
-// Traduce el prompt v3 de Milton (20/8/2026, "Director Creativo Senior"): la
-// imagen OG se le pasa DIRECTO a la IA como materia prima principal (no hace
-// falta describirla en texto — "no debe describir nuevamente mediante texto
-// aquello que ya puede comprender visualmente"). El string de instrucción
-// debe ser CORTO — solo indica QUÉ transformar, no vuelve a describir lo que
-// la imagen ya muestra. "Conserva lo bueno, mejora lo débil, transforma lo
-// necesario, agrega solo lo que aporte" — no genera una composición
-// desconectada de la fotografía original, y no todo necesita cambiar (no
-// todo fondo, no todo retoque, no todo texto grande). El logo, cuando
-// existe, es OBLIGATORIO usarlo (nunca se omite por comodidad), completo y
-// sin rediseñar. El texto nunca se corta ni tapa el rostro — regla absoluta.
+// El prompt del director creativo lo edita Milton desde el panel de admin
+// (pestaña "Prompts", ver getCustomSystemPrompt más abajo) y CONTROLA de
+// verdad la imagen final: el propio modelo de decisión arma la instrucción
+// visual que se usa para editar la imagen (campo "visualPrompt"), siguiendo
+// la metodología que Milton describe en su prompt — no una traducción fija
+// de etiquetas hardcodeadas en este archivo. Antes (20/8/2026, primera
+// versión) el prompt de Milton solo influía una decisión intermedia y el
+// texto real que recibía el generador de imagen lo armaba este código por
+// completo, ignorándolo — Milton lo notó y pidió la corrección.
 //
-// Una sola generación por oportunidad: si algo falla en cualquier paso,
-// devuelve null y quien llama debe cancelar la oportunidad — no hay
-// reintento ni regeneración gratuita (decisión explícita, por costo).
+// La imagen OG se le pasa DIRECTO a la IA como materia prima principal (no
+// hace falta describirla en texto). Una sola generación por oportunidad: si
+// algo falla en cualquier paso, devuelve null y quien llama debe cancelar la
+// oportunidad — no hay reintento ni regeneración gratuita (decisión
+// explícita, por costo).
 //
 // Usa una API key de OpenAI SEPARADA (OPENAI_IMAGE_API_KEY) de la que ya
-// usa el resto de la plataforma, para poder medir/facturar este módulo
-// aparte. Modelo gpt-image-1-mini + calidad "medium" explícita (pedido de
-// Milton por costo, 20/8/2026): ~$0.015/imagen en vez de hasta $0.25.
+// usa el resto de la plataforma. Modelo gpt-image-1-mini + calidad "medium"
+// explícita (pedido de Milton por costo, 20/8/2026): ~$0.015/imagen en vez
+// de hasta $0.25.
 
 import sharp from "sharp";
 import { put } from "@vercel/blob";
@@ -52,116 +52,11 @@ const FORMAT_LABEL: Record<AiImageFormat, string> = {
   post: "Instagram feed post",
 };
 
-// ─── ETIQUETAS DEL PROMPT DE MILTON ───────────────────────────────────────
-// Frases CORTAS en inglés — el string debe ser una receta compacta, no una
-// descripción larga ("economía de tokens": ahorra redundancia, no
-// inteligencia). El modelo de decisión elige la CLAVE; acá se traduce a la
-// frase corta que entra al string final.
-
-const BACKGROUND_TAGS = {
-  backgroundenhance: "enhance the background",
-  backgroundrefine: "refine and clean the background",
-  backgroundreplace: "replace the background, it doesn't serve the story",
-  backgroundblur: "blur the background for depth separation",
-  backgrounddepth: "add cinematic depth to the background",
-  backgroundcinematic: "cinematic background treatment",
-  backgroundluxury: "luxury background treatment",
-  backgroundstudio: "studio background treatment",
-  backgroundclean: "clean, minimal background",
-  backgroundmatch: "keep the background, just polish it",
-} as const;
-
-const RETOUCH_TAGS = {
-  beautyretouch: "beauty retouch",
-  naturalretouch: "natural retouch",
-  skinrefine: "skin refine",
-  skinsmooth: "skin smooth",
-  complexionrefine: "complexion refine",
-  faceenhance: "face enhance",
-  bodyretouch: "body retouch",
-  bodyrefine: "body refine",
-  stretchmarksoften: "soften stretch marks",
-  beautypolish: "beauty polish",
-  none: "no retouch, leave people exactly as photographed",
-} as const;
-
-const DIRECTION_TAGS = {
-  premiumshowcase: "premium showcase style",
-  cinematicportrait: "cinematic portrait style",
-  editorialportrait: "editorial portrait style",
-  luxuryportrait: "luxury portrait style",
-  fashioneditorial: "fashion editorial style",
-  studioportrait: "studio portrait style",
-  lifestyleportrait: "lifestyle portrait style",
-  magazineportrait: "magazine portrait style",
-  softcinematic: "soft cinematic style",
-  premiumeditorial: "premium editorial style",
-} as const;
-
-const TEXT_TAGS = {
-  headlineposter: "headline poster typography",
-  luxurytypography: "luxury typography",
-  editorialtext: "editorial typography",
-  boldheadline: "bold headline typography",
-  premiumheadline: "premium headline typography",
-  cinematictext: "cinematic typography",
-  magazinecover: "magazine cover typography",
-  advertisingtext: "advertising typography",
-  minimaltypography: "minimal typography",
-  socialheadline: "social headline typography",
-} as const;
-
-const BRAND_TAGS = {
-  brandidentity: "brand identity",
-  brandcolors: "brand colors",
-  brandstyle: "brand style",
-  brandguidelines: "brand guidelines",
-  brandconsistency: "brand consistency",
-  logoplacement: "natural logo placement",
-  brandlayout: "brand-driven layout",
-  visualidentity: "visual identity",
-  brandpresence: "brand presence",
-} as const;
-
-// Cómo se compone la pieza alrededor de lo que ya hay en la foto (prompt
-// v3, sección 12 "COMPOSICIÓN").
-const COMPOSITION_TAGS = {
-  subjectawarelayout: "layout designed around the person/face",
-  sceneawarelayout: "layout that respects the scene's real geometry and architecture",
-  subjectcentered: "subject centered as the dominant element",
-  environmentfirst: "environment/setting dominates over the subject",
-  layeredcomposition: "layered composition with real depth",
-  visualbreathing: "keep deliberate empty space — not everything needs to be filled",
-} as const;
-
-// Cómo se relaciona el texto con la fotografía (prompt v3, sección 17
-// "ESTRATEGIAS DE TEXTO SOBRE IMAGEN").
-const TEXT_STRATEGY_TAGS = {
-  editorialoverlay: "editorial overlay: the photo stays the protagonist, the headline integrates without crushing it",
-  narrativeoverlay: "narrative overlay: the message can unfold across a couple of blocks in the frame",
-  minimaloverlay: "minimal overlay: the photo is already strong, barely touch it with text",
-  naturaltextzone: "use a natural zone the photo already offers (light, dark, blur, negative space) — don't invent an artificial one",
-  floatingcard: "place the message on a small floating card/container over the photo, sized to its content only",
-} as const;
-
-type BackgroundTag = keyof typeof BACKGROUND_TAGS;
-type RetouchTag = keyof typeof RETOUCH_TAGS;
-type DirectionTag = keyof typeof DIRECTION_TAGS;
-type TextTag = keyof typeof TEXT_TAGS;
-type BrandTag = keyof typeof BRAND_TAGS;
-type CompositionTag = keyof typeof COMPOSITION_TAGS;
-type TextStrategyTag = keyof typeof TEXT_STRATEGY_TAGS;
-
 interface CreativeDecision {
   message: string;
   hasPeople: boolean;
-  backgroundTag: BackgroundTag;
-  retouchTag: RetouchTag;
-  directionTag: DirectionTag;
-  textTag: TextTag;
-  compositionTag: CompositionTag;
-  textStrategyTag: TextStrategyTag;
-  brandTags: BrandTag[];
+  visualPrompt: string;
+  tagString: string;
 }
 
 // Mismo key que apps/web/src/lib/ai-image-prompt.ts — Milton pidió (20/8/2026)
@@ -172,7 +67,7 @@ interface CreativeDecision {
 const AI_IMAGE_PROMPT_KEY = "ai_social_image_prompt";
 
 const DEFAULT_SYSTEM_PROMPT =
-  "Eres un Director Creativo Senior de publicaciones para redes sociales. Ves una foto real y un artículo. El artículo es el cerebro conceptual (busca la necesidad humana detrás del tema, no la lectura superficial); la foto ya contiene toda la información visual, no hace falta describirla. La imagen OG es la materia prima principal: no se recrea desde cero lo que ya está bien resuelto, se transforma con criterio. Conserva lo bueno, mejora lo débil, transforma lo necesario, agrega solo lo que aporte — no todo necesita cambiar de fondo, ni retoque, ni texto grande. Decides qué transformar, no qué repetir. Respondes ÚNICAMENTE JSON válido.";
+  "Eres un Director Creativo Senior de publicaciones para redes sociales. Ves una foto real y un artículo. El artículo es el cerebro conceptual (busca la necesidad humana detrás del tema, no la lectura superficial); la foto ya contiene toda la información visual, no hace falta describirla. La imagen OG es la materia prima principal: no se recrea desde cero lo que ya está bien resuelto, se transforma con criterio. Conserva lo bueno, mejora lo débil, transforma lo necesario, agrega solo lo que aporte — no todo necesita cambiar de fondo, ni retoque, ni texto grande. Decides qué transformar, no qué repetir.";
 
 async function getCustomSystemPrompt(): Promise<string | null> {
   try {
@@ -243,12 +138,13 @@ async function compositeLogo(base: Buffer, width: number, height: number, logoPn
 }
 
 /**
- * ANALIZAR → INTERPRETAR → SELECCIONAR STRINGS, en una sola llamada de
- * visión barata (gpt-4o-mini). Ve la foto OG real y decide el mensaje (la
- * necesidad humana detrás del artículo, no el título literal) y una
- * etiqueta corta por categoría — el artículo es "el cerebro conceptual", la
- * foto ya aporta toda la información visual, así que no hace falta
- * describirla de nuevo.
+ * ANALIZAR → DECIDIR → CONSTRUIR EL PROMPT VISUAL, en una sola llamada de
+ * visión barata (gpt-4o-mini), con el prompt de Milton (editable en el
+ * panel admin) como system message. El propio modelo arma "visualPrompt"
+ * — la instrucción lista para usar en la edición de imagen, siguiendo la
+ * metodología completa que Milton describe (no una traducción fija de
+ * etiquetas de este código). Así su prompt controla de verdad el resultado
+ * final, no solo una decisión intermedia.
  */
 async function decideCreativeDirection(
   articleTitle: string,
@@ -270,7 +166,13 @@ async function decideCreativeDirection(
         messages: [
           {
             role: "system",
-            content: customPrompt || DEFAULT_SYSTEM_PROMPT,
+            content:
+              (customPrompt || DEFAULT_SYSTEM_PROMPT) +
+              "\n\nRespondes ÚNICAMENTE JSON válido con estas claves exactas — nada de markdown, nada de texto fuera del JSON:\n" +
+              '"message": el texto/mensaje corto que decidiste para la publicación (lo que en tu metodología llamas "Texto").\n' +
+              '"tagString": la secuencia corta de etiquetas que ensamblaste internamente (lo que en tu metodología es el "string"), como texto plano, ej. "/premiumeditorial /backgroundluxury /complexionrefine /advertisingtext /instagram /instagramstory /brandidentity /uselogo".\n' +
+              '"visualPrompt": la instrucción visual FINAL, completa y lista para aplicar sobre la imagen OG adjunta — en inglés, la que de verdad va a usar el editor de imágenes para transformarla. Aplica ahí tu string y tu criterio completo: qué conservar de la foto, qué transformar, cómo tratar el fondo/retoque/tipografía, cómo integrar la marca. No la recortes ni la simplifiques por brevedad — esta es tu entrega real, el string y el texto son solo tu razonamiento interno.\n' +
+              '"hasPeople": true/false, si la foto adjunta tiene personas.',
           },
           {
             role: "user",
@@ -278,17 +180,11 @@ async function decideCreativeDirection(
               {
                 type: "text",
                 text:
-                  `Título: ${articleTitle}\nResumen: ${articleSummary}\n¿Hay logo disponible?: ${hasLogo ? "sí" : "no"}\n\n` +
-                  `JSON con exactamente estas claves:\n\n` +
-                  `"message": frase corta en español, 3 a 9 palabras, basada en la necesidad humana real detrás del artículo (no el título literal). Ej: "Elegir bien también es cuidarte".\n\n` +
-                  `"hasPeople": true/false, si la foto tiene personas.\n\n` +
-                  `"backgroundTag": UNA clave. Si el fondo ya ayuda a contar la historia, consérvalo/mejóralo; solo reemplázalo si de verdad perjudica: ${Object.keys(BACKGROUND_TAGS).join(", ")}.\n\n` +
-                  `"retouchTag": UNA clave. "none" si hasPeople es false: ${Object.keys(RETOUCH_TAGS).join(", ")}.\n\n` +
-                  `"directionTag": UNA clave, la que mejor combine artículo + foto (no repitas siempre la misma): ${Object.keys(DIRECTION_TAGS).join(", ")}.\n\n` +
-                  `"textTag": UNA clave, según ${formatLabel}, el tema, la emoción y el espacio que ves en la foto: ${Object.keys(TEXT_TAGS).join(", ")}.\n\n` +
-                  `"compositionTag": UNA clave, cómo se organiza la pieza alrededor de lo que ya hay en la foto: ${Object.keys(COMPOSITION_TAGS).join(", ")}.\n\n` +
-                  `"textStrategyTag": UNA clave, cómo se relaciona el texto con la fotografía — si la foto ya es fuerte, prefiere "minimaloverlay" o "naturaltextzone" en vez de inventar una zona nueva: ${Object.keys(TEXT_STRATEGY_TAGS).join(", ")}.\n\n` +
-                  `"brandTags": arreglo de 0 a 2 claves, solo si hay logo (si no hay logo, []): ${Object.keys(BRAND_TAGS).join(", ")}.`,
+                  `Red social y formato: Instagram, ${formatLabel}.\n` +
+                  `Título del artículo: ${articleTitle}\n` +
+                  `Resumen del artículo: ${articleSummary}\n` +
+                  `¿Hay logo de marca disponible?: ${hasLogo ? "sí" : "no"}\n\n` +
+                  `Aquí está la imagen OG del artículo. Analízala y aplica tu metodología completa.`,
               },
               {
                 type: "image_url",
@@ -297,7 +193,7 @@ async function decideCreativeDirection(
             ],
           },
         ],
-        max_tokens: 400,
+        max_tokens: 900,
       }),
       signal: AbortSignal.timeout(30000),
     });
@@ -308,27 +204,14 @@ async function decideCreativeDirection(
     const parsed = JSON.parse(raw) as Partial<CreativeDecision>;
 
     if (!parsed.message?.trim()) return null;
+    if (!parsed.visualPrompt?.trim()) return null;
     if (typeof parsed.hasPeople !== "boolean") return null;
-    if (!parsed.backgroundTag || !(parsed.backgroundTag in BACKGROUND_TAGS)) return null;
-    if (!parsed.retouchTag || !(parsed.retouchTag in RETOUCH_TAGS)) return null;
-    if (!parsed.directionTag || !(parsed.directionTag in DIRECTION_TAGS)) return null;
-    if (!parsed.textTag || !(parsed.textTag in TEXT_TAGS)) return null;
-    if (!parsed.compositionTag || !(parsed.compositionTag in COMPOSITION_TAGS)) return null;
-    if (!parsed.textStrategyTag || !(parsed.textStrategyTag in TEXT_STRATEGY_TAGS)) return null;
-    const brandTags = Array.isArray(parsed.brandTags)
-      ? parsed.brandTags.filter((t): t is BrandTag => typeof t === "string" && t in BRAND_TAGS)
-      : [];
 
     return {
       message: parsed.message.trim(),
       hasPeople: parsed.hasPeople,
-      backgroundTag: parsed.backgroundTag,
-      retouchTag: parsed.retouchTag,
-      directionTag: parsed.directionTag,
-      textTag: parsed.textTag,
-      compositionTag: parsed.compositionTag,
-      textStrategyTag: parsed.textStrategyTag,
-      brandTags,
+      visualPrompt: parsed.visualPrompt.trim(),
+      tagString: parsed.tagString?.trim() || "",
     };
   } catch {
     return null;
@@ -336,41 +219,27 @@ async function decideCreativeDirection(
 }
 
 /**
- * Ensambla el string final — corto, tipo receta, "/premiumeditorial
- * /backgroundluxury /complexionrefine /advertisingtext /instagram
- * /instagramstory /brandidentity /uselogo" del prompt de Milton, traducido
- * a instrucciones cortas en inglés más las reglas críticas no negociables
- * (texto dentro del cuadro, nunca sobre el rostro, logo nunca oculto ni
- * rediseñado). NO vuelve a describir la foto — la foto va como imagen de
- * referencia real en el mismo request.
+ * Toma el visualPrompt que armó el propio modelo (siguiendo el prompt de
+ * Milton) y le agrega SOLO las restricciones técnicas no negociables que no
+ * son decisión creativa — margen de seguridad del texto, protección del
+ * rostro, espacio reservado para el logo real. Estas van SIEMPRE, para
+ * cualquier prompt que Milton escriba, porque son límites de la API/del
+ * resultado final, no criterio editorial.
  */
-function buildEditPrompt(decision: CreativeDecision, hasLogo: boolean, hasPhotoRef: boolean, formatLabel: string): string {
-  const tags = [
-    DIRECTION_TAGS[decision.directionTag],
-    COMPOSITION_TAGS[decision.compositionTag],
-    BACKGROUND_TAGS[decision.backgroundTag],
-    decision.hasPeople ? RETOUCH_TAGS[decision.retouchTag] : "",
-    TEXT_STRATEGY_TAGS[decision.textStrategyTag],
-    TEXT_TAGS[decision.textTag],
-    ...decision.brandTags.map((t) => BRAND_TAGS[t]),
-  ].filter(Boolean);
-
+function buildEditPrompt(decision: CreativeDecision, hasLogo: boolean, hasPhotoRef: boolean): string {
   return [
-    `Transform this photo into a finished ${formatLabel} campaign image, as a senior creative director would — start from this exact photo, improve it, never a disconnected new composition. Don't recreate what already works; transform what's weak.`,
-    `Apply: ${tags.join("; ")}.`,
+    decision.visualPrompt,
     `Headline text (Spanish): "${decision.message}"`,
     "TEXT SAFE ZONE, NON-NEGOTIABLE: the headline must fit entirely within the central 84% of the canvas width and 88% of the canvas height (an 8% empty margin on left/right, 6% on top/bottom, with nothing — no letter, stroke or serif — crossing into that margin). If the phrase is too long to fit at a comfortably readable size inside that safe zone, make the font smaller and/or break it into 2-3 shorter lines — never let it run past the safe zone, never shrink it to the point of being illegible either.",
     decision.hasPeople
       ? "ABSOLUTE RULE: the face is the highest-priority zone in the whole image — never cover eyes, nose, mouth or expression with text or anything else. Use empty/negative space instead."
       : "",
-    "Keep any real people fully recognizable — same identity, age, proportions. Not every photo needs retouching or a different background — only change what genuinely needs it.",
     hasLogo
       ? "Leave a clean, empty, uncluttered rectangular area in the bottom-right corner (roughly the bottom-right 30% width x 10% height of the frame) with nothing important there — no text, no busy detail, no headline text overlapping it. A real logo will be placed there afterward by separate exact compositing, so do not draw, sketch or invent any logo or brand text yourself in that corner."
       : "",
     hasPhotoRef
       ? "A person reference photo is also included — incorporate them naturally and tastefully where it fits."
       : "",
-    "Vertical full-bleed, no black bars. A powerful photo should not be over-designed. This must look like a professionally art-directed piece, not a photo with big text slapped on top.",
   ]
     .filter(Boolean)
     .join(" ")
@@ -378,7 +247,7 @@ function buildEditPrompt(decision: CreativeDecision, hasLogo: boolean, hasPhotoR
 }
 
 /**
- * Genera la imagen de Instagram Story/Reel-image con IA, transformando (no
+ * Genera la imagen de Instagram Story/Reel/Post con IA, transformando (no
  * copiando ni generando desconectado) la imagen OG del artículo. Devuelve
  * null si CUALQUIER paso falla — quien llama debe cancelar la oportunidad,
  * no publicar sin imagen ni reintentar.
@@ -422,17 +291,21 @@ export async function generateAiInstagramImage(params: {
   // aparte, después, con código exacto. Solo la OG y la foto de perfil
   // (cuando aplica) van como referencias reales al modelo.
   const refImages = [ogPng, photoPng].filter((b): b is Buffer => b !== null);
-  const prompt = buildEditPrompt(decision, Boolean(logoPng), Boolean(photoPng), formatLabel);
+  const prompt = buildEditPrompt(decision, Boolean(logoPng), Boolean(photoPng));
 
   try {
     const form = new FormData();
     form.append("model", "gpt-image-1-mini");
     form.append("prompt", prompt);
     form.append("size", target.editSize);
-    // Calidad explícita (pedido de Milton por costo, 20/8/2026): "medium" en
-    // vez del default "auto" (puede cobrar como "high"). Con
-    // gpt-image-1-mini + medium queda en ~$0.015/imagen.
-    form.append("quality", "medium");
+    // Calidad explícita (pedido de Milton por costo, 20/8/2026): "auto"
+    // default puede cobrar como "high" ($0.25). Probando "low" a pedido de
+    // Milton: gpt-image-1-mini + low queda en ~$0.005/imagen (vs $0.015 en
+    // medium) — 3x más barato. Riesgo real: la nitidez del texto y el logo
+    // ya venían siendo el punto más frágil del resultado, y "low" puede
+    // empeorarlo. Si la legibilidad se nota peor en las pruebas, subir de
+    // vuelta a "medium" en esta misma línea.
+    form.append("quality", "low");
     form.append("n", "1");
     refImages.forEach((buf, i) => {
       form.append("image[]", new Blob([new Uint8Array(buf)], { type: "image/png" }), `ref${i}.png`);
@@ -475,8 +348,7 @@ export async function generateAiInstagramImage(params: {
 
     console.log(
       `[AI Image] Generada: ${blob.url} (${(finalBuffer.length / 1024).toFixed(0)}KB) — ` +
-        `tags: ${decision.directionTag}/${decision.compositionTag}/${decision.backgroundTag}/${decision.retouchTag}/${decision.textStrategyTag}/${decision.textTag}` +
-        `${decision.brandTags.length ? `/${decision.brandTags.join(",")}` : ""}` +
+        `string: ${decision.tagString || "(sin tagString)"}` +
         `${logoPng ? " +logo" : ""}${photoPng ? " +foto" : ""}`,
     );
     return blob.url;
