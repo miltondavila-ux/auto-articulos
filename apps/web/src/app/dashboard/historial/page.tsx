@@ -88,7 +88,7 @@ function HistorialEjecuciones() {
   }, [runs]);
 
   return (
-    <details open={true} className="panel" style={sectionStyle}>
+    <details className="panel" style={sectionStyle}>
       <summary
         style={{
           cursor: "pointer",
@@ -206,7 +206,6 @@ function CategoryGroup({
 
   return (
     <details
-      open={true}
       className="row"
       style={{
         marginBottom: 10,
