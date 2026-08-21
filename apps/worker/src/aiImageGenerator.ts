@@ -305,10 +305,11 @@ export async function generateAiSocialImage(params: {
     form.append("prompt", prompt);
     form.append("size", target.editSize);
     // Calidad explícita (pedido de Milton por costo, 20/8/2026): "auto"
-    // default puede cobrar como "high" ($0.25). Se probó "low" (~$0.005) y
-    // Milton pidió volver a "medium" (~$0.015/imagen) — mejor punto medio
-    // de nitidez de texto/logo para el costo.
-    form.append("quality", "medium");
+    // default puede cobrar como "high" ($0.25). Ya se probaron "low"
+    // (~$0.005) y "medium" (~$0.015) — de vuelta a "low" a pedido de
+    // Milton, ahora que el texto ya no fuerza tamaño grande (el prompt de
+    // Milton controla eso), puede ya alcanzar con menos calidad.
+    form.append("quality", "low");
     form.append("n", "1");
     refImages.forEach((buf, i) => {
       form.append("image[]", new Blob([new Uint8Array(buf)], { type: "image/png" }), `ref${i}.png`);
