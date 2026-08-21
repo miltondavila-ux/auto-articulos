@@ -42,16 +42,6 @@ const MAX_RETRIES = 2;
 
 type Format = "story" | "reel-image" | "post" | "facebook-story";
 
-// Ideogram no acepta dimensiones exactas en píxeles, solo estas categorías;
-// el resize/crop con sharp que ya hacemos después ajusta al tamaño final
-// exacto de todos modos, igual que con el "1024x1536" fijo de OpenAI.
-const FAL_IMAGE_SIZE: Record<Format, string> = {
-  story: "portrait_16_9",
-  "reel-image": "portrait_16_9",
-  post: "portrait_4_3",
-  "facebook-story": "portrait_16_9",
-};
-
 async function generateImageBufferOpenAI(prompt: string, refImages: Buffer[]): Promise<Buffer | null> {
   const form = new FormData();
   form.append("model", "gpt-image-1-mini");
@@ -77,7 +67,12 @@ async function generateImageBufferOpenAI(prompt: string, refImages: Buffer[]): P
   return b64 ? Buffer.from(b64, "base64") : null;
 }
 
-async function generateImageBufferFal(prompt: string, ogImageUrl: string, format: Format): Promise<Buffer | null> {
+async function generateImageBufferFal(
+  prompt: string,
+  ogImageUrl: string,
+  width: number,
+  height: number,
+): Promise<Buffer | null> {
   if (!FAL_API_KEY) return null;
   const res = await fetch(FAL_IDEOGRAM_REMIX_URL, {
     method: "POST",
@@ -85,7 +80,12 @@ async function generateImageBufferFal(prompt: string, ogImageUrl: string, format
     body: JSON.stringify({
       prompt: prompt.slice(0, 4000),
       image_url: ogImageUrl,
-      image_size: FAL_IMAGE_SIZE[format],
+      // Ancho/alto EXACTOS en píxeles (21/8/2026, auditoría tras detectar
+      // que el recorte automático de después — sharp fit:"cover" — podía
+      // cortar texto ubicado cerca de un borde lateral cuando el tamaño
+      // generado no coincidía con el tamaño final de Instagram. Pedir el
+      // tamaño exacto acá elimina la necesidad de recortar nada después.
+      image_size: { width, height },
       // TURBO = ~$0.03/intento (el más barato) — punto de partida acordado
       // con Milton para la primera prueba real, antes de considerar
       // BALANCED ($0.06) o QUALITY ($0.09) si hiciera falta más fidelidad.
@@ -433,7 +433,7 @@ export async function runPromptBoxPipeline(params: {
     try {
       const raw =
         IMAGE_PROVIDER === "fal"
-          ? await generateImageBufferFal(currentPrompt, params.ogImageUrl, params.format)
+          ? await generateImageBufferFal(currentPrompt, params.ogImageUrl, target.width, target.height)
           : await generateImageBufferOpenAI(currentPrompt, refImages);
       estimatedImageSpend += IMAGE_COST_PER_ATTEMPT;
       console.log(`[PromptBoxPipeline] gasto estimado en generación de imagen hasta ahora: ~$${estimatedImageSpend.toFixed(3)} (${modelLabel})`);
