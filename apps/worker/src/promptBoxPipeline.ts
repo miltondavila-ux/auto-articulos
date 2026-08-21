@@ -350,15 +350,14 @@ export async function runPromptBoxPipeline(params: {
       form.append("model", "gpt-image-1-mini");
       form.append("prompt", currentPrompt.slice(0, 4000));
       form.append("size", target.editSize);
-      // "high" en vez de "medium" (21/8/2026, prueba de Milton): 6 de 6
-      // pruebas reales fallaron, el 100% por problemas de texto/logo
-      // (letra mal escrita, tamaño excedido, superposición, corte de
-      // borde) — ni una sola vez por composición o fotografía. Eso apunta
-      // directo a fidelidad de renderizado, que es lo que controla
-      // "quality". 3.5x más caro que "medium" (~$0.052 vs ~$0.015 por
-      // intento) — solo afecta este pipeline nuevo; el generador viejo se
-      // queda en "low".
-      form.append("quality", "high");
+      // De vuelta a "low" (21/8/2026): se probaron low/medium/high y las
+      // 7 pruebas reales fallaron por igual en las tres — confirmado que
+      // el cuello de botella no es la calidad de generación, es el
+      // estándar de aprobación del Inspector (Caja 7), demasiado estricto
+      // (rechazo automático por un solo error menor de texto, o por
+      // recorte apenas cercano al borde). Se vuelve al más barato mientras
+      // se ajusta el Inspector.
+      form.append("quality", "low");
       form.append("n", "1");
       refImages.forEach((buf, i) => {
         form.append("image[]", new Blob([new Uint8Array(buf)], { type: "image/png" }), `ref${i}.png`);
