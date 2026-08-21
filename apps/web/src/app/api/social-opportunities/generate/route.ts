@@ -196,6 +196,7 @@ export async function POST(request: Request) {
       });
       if (user?.allowInstagramPublishing) {
         integrations.push("instagram-story");
+        integrations.push("instagram-post");
       }
     }
 

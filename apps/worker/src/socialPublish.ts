@@ -551,7 +551,7 @@ async function processInstagramJob(job: {
 
   await validateArticleUrl(job.articleUrl);
 
-  const format = job.platform.replace("instagram-", "") as "carousel" | "reel-image" | "story" | "infografia";
+  const format = job.platform.replace("instagram-", "") as "carousel" | "reel-image" | "story" | "infografia" | "post";
   const [title, user] = await Promise.all([
     job.titleId ? prisma.title.findUnique({ where: { id: job.titleId } }) : Promise.resolve(null),
     prisma.user.findUnique({
@@ -656,6 +656,37 @@ async function processInstagramJob(job: {
         accessToken,
         integration.instagramBusinessAccountId,
         imageUrl,
+      );
+      break;
+    }
+
+    case "post": {
+      // Post normal de feed (20/8/2026, pedido de Milton): igual patrón que
+      // Story/Reel-image — opción 1 (OG tal cual, default) u opción 2
+      // (generador IA) según aiImageGenerationEnabled. 4:5 vertical, el
+      // formato de feed que más espacio ocupa en pantalla hoy en Instagram.
+      const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
+      let imageUrl: string | null = null;
+      if (sourceImage && user?.aiImageGenerationEnabled) {
+        imageUrl = await generateAiInstagramImage({
+          articleTitle: job.articleTitle,
+          articleSummary: summary,
+          ogImageUrl: sourceImage,
+          format: "post",
+          businessLogoUrl: user.businessLogoUrl,
+          profilePhotoUrl: user.profilePhotoUrl,
+          pathPrefix: `instagram/ai/post/${job.titleId || job.id}`,
+        });
+        if (!imageUrl) throw new Error("No se pudo generar la imagen con IA para el post.");
+      } else {
+        imageUrl = sourceImage ? await normalizeSocialImage(sourceImage, 4 / 5) : null;
+        if (!imageUrl) throw new Error("No se pudo adaptar la imagen del artículo para el post.");
+      }
+      result = await publishInstagramImage(
+        accessToken,
+        integration.instagramBusinessAccountId,
+        imageUrl,
+        finalPost,
       );
       break;
     }

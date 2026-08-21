@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
       "instagram-reel-image",
       "instagram-story",
       "instagram-infografia",
+      "instagram-post",
     ];
     if (!supported.includes(opp.platform)) {
       return NextResponse.json(

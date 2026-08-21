@@ -33,15 +33,23 @@ const OPENAI_IMAGE_API_KEY = process.env.OPENAI_IMAGE_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
 const OPENAI_EDIT_URL = "https://api.openai.com/v1/images/edits";
 
-export type AiImageFormat = "story" | "reel-image";
+export type AiImageFormat = "story" | "reel-image" | "post";
 
 // Tamaño que se le pide a gpt-image-1-mini (solo soporta 1024x1024,
-// 1024x1536, 1536x1024) y tamaño final real de Instagram Story/Reel al que
-// se recorta después con sharp. Cuando este módulo cubra más redes, este
-// mapa crece.
+// 1024x1536, 1536x1024) y tamaño final real al que se recorta después con
+// sharp. "post" usa 4:5 (1080x1350), el formato de feed que más espacio
+// ocupa en pantalla — recomendado hoy por Instagram. Cuando este módulo
+// cubra más redes, este mapa crece.
 const FORMAT_TARGET: Record<AiImageFormat, { editSize: "1024x1536"; width: number; height: number }> = {
   story: { editSize: "1024x1536", width: 1080, height: 1920 },
   "reel-image": { editSize: "1024x1536", width: 1080, height: 1920 },
+  post: { editSize: "1024x1536", width: 1080, height: 1350 },
+};
+
+const FORMAT_LABEL: Record<AiImageFormat, string> = {
+  story: "Instagram Story",
+  "reel-image": "Instagram Reel cover",
+  post: "Instagram feed post",
 };
 
 // ─── ETIQUETAS DEL PROMPT DE MILTON ───────────────────────────────────────
@@ -247,6 +255,7 @@ async function decideCreativeDirection(
   articleSummary: string,
   ogImagePng: Buffer,
   hasLogo: boolean,
+  formatLabel: string,
 ): Promise<CreativeDecision | null> {
   if (!OPENAI_IMAGE_API_KEY) return null;
   try {
@@ -276,7 +285,7 @@ async function decideCreativeDirection(
                   `"backgroundTag": UNA clave. Si el fondo ya ayuda a contar la historia, consérvalo/mejóralo; solo reemplázalo si de verdad perjudica: ${Object.keys(BACKGROUND_TAGS).join(", ")}.\n\n` +
                   `"retouchTag": UNA clave. "none" si hasPeople es false: ${Object.keys(RETOUCH_TAGS).join(", ")}.\n\n` +
                   `"directionTag": UNA clave, la que mejor combine artículo + foto (no repitas siempre la misma): ${Object.keys(DIRECTION_TAGS).join(", ")}.\n\n` +
-                  `"textTag": UNA clave, según Instagram Story, el tema, la emoción y el espacio que ves en la foto: ${Object.keys(TEXT_TAGS).join(", ")}.\n\n` +
+                  `"textTag": UNA clave, según ${formatLabel}, el tema, la emoción y el espacio que ves en la foto: ${Object.keys(TEXT_TAGS).join(", ")}.\n\n` +
                   `"compositionTag": UNA clave, cómo se organiza la pieza alrededor de lo que ya hay en la foto: ${Object.keys(COMPOSITION_TAGS).join(", ")}.\n\n` +
                   `"textStrategyTag": UNA clave, cómo se relaciona el texto con la fotografía — si la foto ya es fuerte, prefiere "minimaloverlay" o "naturaltextzone" en vez de inventar una zona nueva: ${Object.keys(TEXT_STRATEGY_TAGS).join(", ")}.\n\n` +
                   `"brandTags": arreglo de 0 a 2 claves, solo si hay logo (si no hay logo, []): ${Object.keys(BRAND_TAGS).join(", ")}.`,
@@ -335,7 +344,7 @@ async function decideCreativeDirection(
  * rediseñado). NO vuelve a describir la foto — la foto va como imagen de
  * referencia real en el mismo request.
  */
-function buildEditPrompt(decision: CreativeDecision, hasLogo: boolean, hasPhotoRef: boolean): string {
+function buildEditPrompt(decision: CreativeDecision, hasLogo: boolean, hasPhotoRef: boolean, formatLabel: string): string {
   const tags = [
     DIRECTION_TAGS[decision.directionTag],
     COMPOSITION_TAGS[decision.compositionTag],
@@ -347,7 +356,7 @@ function buildEditPrompt(decision: CreativeDecision, hasLogo: boolean, hasPhotoR
   ].filter(Boolean);
 
   return [
-    "Transform this photo into a finished Instagram Story campaign image, as a senior creative director would — start from this exact photo, improve it, never a disconnected new composition. Don't recreate what already works; transform what's weak.",
+    `Transform this photo into a finished ${formatLabel} campaign image, as a senior creative director would — start from this exact photo, improve it, never a disconnected new composition. Don't recreate what already works; transform what's weak.`,
     `Apply: ${tags.join("; ")}.`,
     `Headline text (Spanish): "${decision.message}"`,
     "TEXT SAFE ZONE, NON-NEGOTIABLE: the headline must fit entirely within the central 84% of the canvas width and 88% of the canvas height (an 8% empty margin on left/right, 6% on top/bottom, with nothing — no letter, stroke or serif — crossing into that margin). If the phrase is too long to fit at a comfortably readable size inside that safe zone, make the font smaller and/or break it into 2-3 shorter lines — never let it run past the safe zone, never shrink it to the point of being illegible either.",
@@ -386,6 +395,7 @@ export async function generateAiInstagramImage(params: {
   if (!OPENAI_IMAGE_API_KEY) return null;
 
   const target = FORMAT_TARGET[params.format];
+  const formatLabel = FORMAT_LABEL[params.format];
 
   const ogPng = await fetchImageAsPng(params.ogImageUrl);
   if (!ogPng) return null;
@@ -403,6 +413,7 @@ export async function generateAiInstagramImage(params: {
     params.articleSummary,
     ogPng,
     Boolean(logoPng),
+    formatLabel,
   );
   if (!decision) return null;
 
@@ -411,7 +422,7 @@ export async function generateAiInstagramImage(params: {
   // aparte, después, con código exacto. Solo la OG y la foto de perfil
   // (cuando aplica) van como referencias reales al modelo.
   const refImages = [ogPng, photoPng].filter((b): b is Buffer => b !== null);
-  const prompt = buildEditPrompt(decision, Boolean(logoPng), Boolean(photoPng));
+  const prompt = buildEditPrompt(decision, Boolean(logoPng), Boolean(photoPng), formatLabel);
 
   try {
     const form = new FormData();
