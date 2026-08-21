@@ -483,7 +483,11 @@ export async function runPromptBoxPipeline(params: {
           ? await generateImageBufferFal(currentPrompt, params.ogImageUrl, target.width, target.height)
           : await generateImageBufferOpenAI(currentPrompt, refImages);
       estimatedImageSpend += IMAGE_COST_PER_ATTEMPT;
-      console.log(`[PromptBoxPipeline] gasto estimado en generación de imagen hasta ahora: ~$${estimatedImageSpend.toFixed(3)} (${modelLabel})`);
+      // Ojo: esto es SOLO el costo de la Caja 6 (generación de imagen) — no
+      // incluye el costo de las llamadas de texto/visión de las Cajas
+      // 1-5,7,8 en gpt-4o-mini, que también consumen dinero real y no se
+      // miden acá. El costo total real del pipeline es mayor a este número.
+      console.log(`[PromptBoxPipeline] gasto estimado SOLO en generación de imagen (Caja 6, no incluye Cajas de texto/visión) hasta ahora: ~$${estimatedImageSpend.toFixed(3)} (${modelLabel})`);
       if (raw) {
         const resized = await sharp(raw).resize(target.width, target.height, { fit: "cover", position: "attention" }).toBuffer();
         const withLogo = logoPng ? await compositeLogo(resized, target.width, target.height, logoPng) : resized;
