@@ -46,12 +46,24 @@ async function generateGPTCopy(
   // elaborados; Threads/X son de formato corto (límites reales 500/280).
   const isLinkedIn = platform === "linkedin";
   const isFacebookPage = platform === "facebook-page";
-  const charLimit = isLinkedIn ? 1300 : isFacebookPage ? 700 : 360;
-  const maxTokens = isLinkedIn ? 700 : isFacebookPage ? 450 : 300;
+  // "instagram-story" NO tiene caption visible en Instagram (publishInstagramStory
+  // no manda texto, solo la imagen) — este texto queda solo de registro interno,
+  // por eso sigue el estilo corto genérico. Post/Reel-image/Carousel/Infografía sí
+  // muestran el caption debajo de la imagen y merecen su propio estilo — pedido
+  // explícito de Milton (20/8/2026), antes usaban el mismo molde casual de Threads.
+  const isInstagramFeedCaption =
+    platform === "instagram-post" ||
+    platform === "instagram-reel-image" ||
+    platform === "instagram-carousel" ||
+    platform === "instagram-infografia";
+  const charLimit = isLinkedIn ? 1300 : isFacebookPage ? 700 : isInstagramFeedCaption ? 1000 : 360;
+  const maxTokens = isLinkedIn ? 700 : isFacebookPage ? 450 : isInstagramFeedCaption ? 550 : 300;
   const styleNote = isLinkedIn
     ? "Tono profesional pero cercano (LinkedIn), con más contexto y valor. Puedes usar párrafos cortos separados por saltos de línea."
     : isFacebookPage
     ? "Tono cálido y útil de Facebook Page: presenta el beneficio del artículo, usa uno o dos párrafos breves y una invitación clara a leerlo. Debe ser diferente a Threads y LinkedIn."
+    : isInstagramFeedCaption
+    ? "Caption real de Instagram: la primera línea es lo único visible antes del \"más\" (unos 125 caracteres), así que debe ser un gancho que detenga el scroll por sí solo. Después, párrafos cortos con saltos de línea entre cada uno (no un bloque de texto). Cierra con una invitación clara a leer el artículo."
     : "Tono súper casual y directo, como un mensaje rápido a un amigo.";
   try {
     const response = await fetch(OPENAI_CHAT_URL, {
@@ -218,8 +230,12 @@ export async function POST(request: Request) {
     const allCandidates = Array.from(candidateMap.values());
 
     // El historial completo evita que una oportunidad ya publicada,
-    // descartada o fallida vuelva a aparecer. Instagram tiene varios formatos,
-    // pero todos cuentan como el mismo canal para esta regla.
+    // descartada o fallida vuelva a aparecer. Cada formato de Instagram
+    // (story/post/reel-image/carousel/infografia) cuenta como su propio
+    // canal — pedido explícito de Milton (20/8/2026): antes se colapsaban
+    // todos como un único "instagram", así que un artículo que ya tenía una
+    // Story nunca podía ofrecerse también como Post. Ahora es igual que
+    // LinkedIn/Threads/Facebook: cada plataforma se rastrea por separado.
     const previousOpportunities = await prisma.socialOpportunity.findMany({
       where: {
         userId,
@@ -231,7 +247,7 @@ export async function POST(request: Request) {
       select: { titleId: true, articleUrl: true, platform: true },
     });
     const candidateByUrl = new Map(allCandidates.filter((article) => article.articleUrl).map((article) => [article.articleUrl!, article]));
-    const normalizePlatform = (platform: string) => platform.startsWith("instagram-") ? "instagram" : platform;
+    const normalizePlatform = (platform: string) => platform;
     const activeKeys = new Set<string>();
     for (const opportunity of previousOpportunities) {
       const platform = normalizePlatform(opportunity.platform);
