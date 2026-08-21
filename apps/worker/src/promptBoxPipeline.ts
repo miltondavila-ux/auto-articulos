@@ -235,14 +235,46 @@ function extractPromptFieldViaRegex(raw: string): string | null {
   }
 }
 
-function extractVisualPrompt(raw: string): string {
+/**
+ * Respaldo de última instancia cuando ningún campo del JSON coincide con
+ * /prompt/i en el nombre — busca el string más largo en todo el árbol,
+ * asumiendo que el texto de generación real es, con mucha probabilidad,
+ * el bloque de texto más extenso del objeto, sin importar cómo se llame
+ * el campo esa vez (el nombre exacto puede variar según cómo redacte
+ * cada respuesta el modelo).
+ */
+function findLongestString(value: unknown, depth = 0): string | null {
+  if (depth > 5 || value == null) return null;
+  if (typeof value === "string") return value.trim().length > 60 ? value.trim() : null;
+  if (Array.isArray(value)) {
+    let best: string | null = null;
+    for (const item of value) {
+      const found = findLongestString(item, depth + 1);
+      if (found && (!best || found.length > best.length)) best = found;
+    }
+    return best;
+  }
+  if (typeof value === "object") {
+    let best: string | null = null;
+    for (const val of Object.values(value as Record<string, unknown>)) {
+      const found = findLongestString(val, depth + 1);
+      if (found && (!best || found.length > best.length)) best = found;
+    }
+    return best;
+  }
+  return null;
+}
+
+function extractVisualPrompt(raw: string, debugLabel: string): string {
   try {
     const parsed = JSON.parse(raw);
-    const found = findPromptField(parsed);
+    const found = findPromptField(parsed) ?? findLongestString(parsed);
     if (found) return found;
+    console.warn(`[PromptBoxPipeline] ${debugLabel}: JSON válido pero no se encontró ningún campo de texto usable — output completo: ${raw.slice(0, 3000)}`);
   } catch {
     const viaRegex = extractPromptFieldViaRegex(raw);
     if (viaRegex && viaRegex.trim().length > 60) return viaRegex.trim();
+    console.warn(`[PromptBoxPipeline] ${debugLabel}: no era JSON válido ni se pudo rescatar por regex — output completo: ${raw.slice(0, 3000)}`);
   }
   return raw;
 }
@@ -429,7 +461,7 @@ export async function runPromptBoxPipeline(params: {
   const logoConstraint = hasLogo
     ? " Leave a clean, empty, uncluttered rectangular area in the bottom-right corner (roughly the bottom-right 30% width x 10% height of the frame) with nothing important there — no text, no busy detail, no headline text overlapping it. A real logo will be placed there afterward by separate exact compositing, so do not draw, sketch or invent any logo or brand text yourself in that corner."
     : "";
-  let currentPrompt = extractVisualPrompt(visualPrompt) + logoConstraint;
+  let currentPrompt = extractVisualPrompt(visualPrompt, "Caja 5") + logoConstraint;
   let imageUrl: string | null = null;
   let approved = false;
 
@@ -522,7 +554,7 @@ export async function runPromptBoxPipeline(params: {
     if (!correctedPrompt) break;
     // La restricción del logo se reaplica siempre: el Corrector no tiene por
     // qué preservarla palabra por palabra en su reescritura.
-    currentPrompt = extractVisualPrompt(correctedPrompt) + logoConstraint;
+    currentPrompt = extractVisualPrompt(correctedPrompt, `Caja 8 (intento ${attempt})`) + logoConstraint;
   }
 
   return { imageUrl, approved, boxOutputs };
