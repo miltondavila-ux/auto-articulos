@@ -213,7 +213,16 @@ export async function runPromptBoxPipeline(params: {
   const box8 = bySlug.get("auto-corrector");
 
   const refImages = [ogPng, photoPng].filter((b): b is Buffer => b !== null);
-  let currentPrompt = visualPrompt;
+  // Restricción técnica no negociable (no de estilo): un logo real se
+  // compone de forma determinística DESPUÉS con sharp — si el modelo dibuja
+  // su propio logo/insignia en esa misma zona, quedan dos logos superpuestos.
+  // Esto no depende del prompt de Milton; depende de que el compositing
+  // ocurre en código, así que la restricción va aparte, igual que en
+  // aiImageGenerator.ts.
+  const logoConstraint = hasLogo
+    ? " Leave a clean, empty, uncluttered rectangular area in the bottom-right corner (roughly the bottom-right 30% width x 10% height of the frame) with nothing important there — no text, no busy detail, no headline text overlapping it. A real logo will be placed there afterward by separate exact compositing, so do not draw, sketch or invent any logo or brand text yourself in that corner."
+    : "";
+  let currentPrompt = visualPrompt + logoConstraint;
   let imageUrl: string | null = null;
   let approved = false;
 
@@ -291,7 +300,9 @@ export async function runPromptBoxPipeline(params: {
     );
     boxOutputs["auto-corrector"] = correctedPrompt;
     if (!correctedPrompt) break;
-    currentPrompt = correctedPrompt;
+    // La restricción del logo se reaplica siempre: el Corrector no tiene por
+    // qué preservarla palabra por palabra en su reescritura.
+    currentPrompt = correctedPrompt + logoConstraint;
   }
 
   return { imageUrl, approved, boxOutputs };

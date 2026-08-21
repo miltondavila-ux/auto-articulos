@@ -43,6 +43,11 @@ async function generateSocialImageWithSelectedEngine(params: {
     console.log(
       `[PromptBoxPipeline] aprobado=${result.approved} imagen=${result.imageUrl ? "sí" : "no"} — cajas: ${Object.keys(result.boxOutputs).join(", ")}`,
     );
+    // No publicar una imagen que el Inspector de Calidad rechazó, aunque
+    // técnicamente exista un archivo generado — se agotaron los reintentos
+    // sin aprobación, así que el llamador debe cancelar la oportunidad, no
+    // publicar algo con defectos ya detectados.
+    if (!result.approved) return null;
     return result.imageUrl;
   }
   return generateAiSocialImage(params);
