@@ -206,7 +206,7 @@ Aquí conectas Google Business Profile, Threads, Instagram, X y LinkedIn. Las re
 
 Ruta: /dashboard/configuracion?tab=platform
 
-Guarda las credenciales de la plataforma, sincroniza categorías e idiomas y elige el idioma habitual. También puedes definir la firma de los artículos, teléfono de contacto, foto de perfil, logo y las instrucciones de estilo para imágenes e infografías. Estos últimos campos son opcionales y se aplican a los contenidos nuevos; no modifican artículos ya publicados.
+Guarda las credenciales de la plataforma, sincroniza categorías e idiomas y elige el idioma habitual. También puedes definir la firma de los artículos, teléfono de contacto, foto de perfil y logo. La foto y el logo se usan cuando el generador de imágenes con IA para redes sociales está activo en tu cuenta (lo activa el administrador).
 
 ### Estado de configuración
 
@@ -232,6 +232,8 @@ Ruta: /dashboard/oportunidades-redes
 
 Este módulo propone textos para publicar en las redes que tengas conectadas. Puede usar datos de Google Search Console cuando está conectado; si no, trabaja con artículos recientes. Revisa cada propuesta, edítala si quieres, guarda los cambios y luego apruébala o descártala explicando el motivo. Antes de publicar, puedes revisar una vista previa cuando esté disponible.
 
+Para Instagram puedes proponer Story, Post (imagen normal de feed), Reel-image, Carrusel e Infografía. Para Facebook Page, además del post normal, también hay Historia (Story). Si tu cuenta tiene activado el generador de imágenes con IA (lo activa el administrador), la imagen de Story/Post/Historia se genera a partir de la imagen del artículo, tu logo y tu foto de perfil en vez de usar la imagen del artículo tal cual.
+
 ## Interfaz y Diseño Estilo Apple
 
 La plataforma cuenta con un diseño minimalista y limpio en blanco impecable, siguiendo los estándares de Apple Human Interface Guidelines (HIG):
@@ -253,6 +255,7 @@ Solo los administradores tienen acceso a este módulo:
 - **Orden alfabético A-Z:** La lista de usuarios se organiza de forma clara y ordenada alfabéticamente por nombre.
 - **Filtros por Tipo de Cuenta:** Permite filtrar instantáneamente entre *Todos los tipos*, *Usuarios comunes*, *Administradores* y usuarios en periodo de *Free Trial (Prueba Gratuita)*, combinándose con la barra de búsqueda en tiempo real.
 - **Visibilidad de Módulos:** Permite ocultar o activar módulos específicos de forma individual por usuario o de manera global para mantenimiento.
+- **Prompts:** además de los estilos de redacción de artículos, incluye el prompt del generador de imágenes con IA para redes sociales — es global (aplica a todas las cuentas), se edita ahí mismo y no necesita ningún cambio de código para actualizarse.
 
 ## Problemas frecuentes
 
