@@ -198,21 +198,32 @@ async function runTextBox(
  * instrucción real quedaba diluida en ruido estructural.
  */
 function findPromptField(value: unknown, depth = 0): string | null {
+  return findFieldByPattern(value, /prompt/i, 60, depth);
+}
+
+/**
+ * Busca el primer campo string cuyo NOMBRE coincida con el patrón dado, en
+ * cualquier profundidad del objeto — genérico, reutilizado tanto para
+ * ubicar el prompt de generación (findPromptField) como para extraer datos
+ * puntuales de las cajas (modelo conceptual, composición, etc. para
+ * CreativeGenerationHistory).
+ */
+function findFieldByPattern(value: unknown, keyPattern: RegExp, minLength = 1, depth = 0): string | null {
   if (depth > 5 || value == null || typeof value !== "object") return null;
   if (Array.isArray(value)) {
     for (const item of value) {
-      const found = findPromptField(item, depth + 1);
+      const found = findFieldByPattern(item, keyPattern, minLength, depth + 1);
       if (found) return found;
     }
     return null;
   }
   for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
-    if (typeof val === "string" && /prompt/i.test(key) && val.trim().length > 60) {
+    if (typeof val === "string" && keyPattern.test(key) && val.trim().length >= minLength) {
       return val.trim();
     }
   }
   for (const val of Object.values(value as Record<string, unknown>)) {
-    const found = findPromptField(val, depth + 1);
+    const found = findFieldByPattern(val, keyPattern, minLength, depth + 1);
     if (found) return found;
   }
   return null;
@@ -352,6 +363,7 @@ export interface PipelineResult {
 }
 
 export async function runPromptBoxPipeline(params: {
+  userId: string;
   articleTitle: string;
   articleSummary: string;
   ogImageUrl: string;
@@ -366,6 +378,26 @@ export async function runPromptBoxPipeline(params: {
   const target = FORMAT_TARGET[params.format];
   const boxes = await prisma.promptBox.findMany({ where: { isActive: true }, orderBy: { executionOrder: "asc" } });
   const bySlug = new Map(boxes.map((b) => [b.slug, b]));
+
+  // Historial reciente para la Caja 2 (Director Creativo) — su propio
+  // prompt tiene una sección "DIVERSIDAD CREATIVA" que pide explícitamente
+  // revisar publicaciones recientes para no repetir el mismo modelo
+  // conceptual/composición. Existía la tabla desde que se armó la
+  // infraestructura pero nunca se leía ni se escribía. Auditoría 21/8/2026.
+  const recentHistory = await prisma.creativeGenerationHistory.findMany({
+    where: { userId: params.userId },
+    orderBy: { createdAt: "desc" },
+    take: 5,
+  });
+  const historyText =
+    recentHistory.length > 0
+      ? recentHistory
+          .map(
+            (h, i) =>
+              `${i + 1}. Modelo conceptual: ${h.conceptualModel || "?"} | Composición: ${h.composition || "?"} | Headline: "${h.headlineText || "?"}"`,
+          )
+          .join("\n")
+      : "(sin historial reciente todavía)";
 
   const ogPng = await fetchImageAsPng(params.ogImageUrl);
   if (!ogPng) return { imageUrl: null, approved: false, boxOutputs };
@@ -391,12 +423,14 @@ export async function runPromptBoxPipeline(params: {
   }
 
   // CAJA 2 — Director Creativo (su propio prompt pide imagen OG Y logo del
-  // usuario — antes solo veía la OG). Auditoría 21/8/2026.
+  // usuario — antes solo veía la OG — y también pide historial reciente
+  // para variar el modelo conceptual, antes nunca se le mandaba).
+  // Auditoría 21/8/2026.
   const box2 = bySlug.get("creative-director");
   if (box2) {
     boxOutputs["creative-director"] = await runTextBox(
       box2,
-      `${baseContext}\n\nSalida de la Caja 1 (Analista de Contenido):\n${boxOutputs["content-analyst"] || "(no disponible)"}\n\nSe adjuntan ${logoBase64 ? "2 imágenes: 1) la imagen OG del artículo; 2) el logo original del usuario" : "1 imagen: la imagen OG del artículo"}.`,
+      `${baseContext}\n\nSalida de la Caja 1 (Analista de Contenido):\n${boxOutputs["content-analyst"] || "(no disponible)"}\n\nHistorial reciente de publicaciones de este usuario (para evitar repetir el mismo modelo conceptual/composición):\n${historyText}\n\nSe adjuntan ${logoBase64 ? "2 imágenes: 1) la imagen OG del artículo; 2) el logo original del usuario" : "1 imagen: la imagen OG del artículo"}.`,
       [ogBase64, logoBase64],
     );
   }
@@ -559,6 +593,31 @@ export async function runPromptBoxPipeline(params: {
     // La restricción del logo se reaplica siempre: el Corrector no tiene por
     // qué preservarla palabra por palabra en su reescritura.
     currentPrompt = extractVisualPrompt(correctedPrompt, `Caja 8 (intento ${attempt})`) + logoConstraint;
+  }
+
+  // Registrar la decisión creativa aprobada para que futuras corridas de
+  // este usuario (vía la Caja 2, arriba) puedan evitar repetir el mismo
+  // modelo conceptual/composición. Solo se registra si se aprobó de
+  // verdad — no tiene sentido "aprender" de intentos rechazados.
+  if (approved) {
+    try {
+      const box2Parsed = boxOutputs["creative-director"] ? JSON.parse(boxOutputs["creative-director"]) : null;
+      const box3Parsed = boxOutputs["composition-designer"] ? JSON.parse(boxOutputs["composition-designer"]) : null;
+      const box4Parsed = boxOutputs["visual-text-editor"] ? JSON.parse(boxOutputs["visual-text-editor"]) : null;
+      await prisma.creativeGenerationHistory.create({
+        data: {
+          userId: params.userId,
+          conceptualModel: box2Parsed ? findFieldByPattern(box2Parsed, /^conceptual_model$/i) : null,
+          composition: box3Parsed ? findFieldByPattern(box3Parsed, /^layout$/i) : null,
+          headlineText: box4Parsed ? findFieldByPattern(box4Parsed, /^headline$/i) : null,
+          textPosition: box3Parsed ? findFieldByPattern(box3Parsed, /^text_safe_area$/i) : null,
+          logoPosition: box3Parsed ? findFieldByPattern(box3Parsed, /^logo_safe_area$/i) : null,
+          publicationType: `instagram-${params.format}`,
+        },
+      });
+    } catch (err) {
+      console.warn("[PromptBoxPipeline] no se pudo guardar CreativeGenerationHistory:", err);
+    }
   }
 
   return { imageUrl, approved, boxOutputs };

@@ -29,6 +29,7 @@ import { runPromptBoxPipeline } from "./promptBoxPipeline";
  * pipeline nuevo sin tocar ni arriesgar el generador que ya funciona.
  */
 async function generateSocialImageWithSelectedEngine(params: {
+  userId: string;
   articleTitle: string;
   articleSummary: string;
   ogImageUrl: string;
@@ -518,6 +519,7 @@ async function processFacebookStoryJob(job: {
   let imageUrl: string | null = null;
   if (sourceImage && user?.aiImageGenerationEnabled) {
     imageUrl = await generateSocialImageWithSelectedEngine({
+      userId: job.userId,
       articleTitle: job.articleTitle,
       articleSummary: summary,
       ogImageUrl: sourceImage,
@@ -717,6 +719,7 @@ async function processInstagramJob(job: {
         // IA aparte, partiendo de la OG. Sin fallback a la OG sin tocar si
         // falla — se cancela la oportunidad (regla explícita, por costo).
         imageUrl = await generateSocialImageWithSelectedEngine({
+          userId: job.userId,
           articleTitle: job.articleTitle,
           articleSummary: summary,
           ogImageUrl: sourceImage,
@@ -748,6 +751,7 @@ async function processInstagramJob(job: {
       let imageUrl: string | null = null;
       if (sourceImage && user?.aiImageGenerationEnabled) {
         imageUrl = await generateSocialImageWithSelectedEngine({
+          userId: job.userId,
           articleTitle: job.articleTitle,
           articleSummary: summary,
           ogImageUrl: sourceImage,
@@ -779,6 +783,7 @@ async function processInstagramJob(job: {
       let imageUrl: string | null = null;
       if (sourceImage && user?.aiImageGenerationEnabled) {
         imageUrl = await generateSocialImageWithSelectedEngine({
+          userId: job.userId,
           articleTitle: job.articleTitle,
           articleSummary: summary,
           ogImageUrl: sourceImage,
