@@ -4794,3 +4794,29 @@ generador viejo con un prompt más simple
   lote:** Claude. Sin migraciones. Pendiente: falta la prueba real en
   producción para confirmar que funciona igual de bien que la prueba
   manual de Milton.
+
+### 2026-08-22 (continuación) — Primera prueba real: prompt simple OK, pero gpt-image-1-mini corrompe el texto → se cablea fal.ai
+
+- **Capitán de migración:** Claude — revisará y aplicará el lote completo.
+  Motivo: cablear fal.ai/Ideogram en aiImageGenerator.ts, sin
+  migraciones. Nadie más ejecuta Prisma hasta su liberación.
+- **Prueba real en producción (cuenta de Lorena, formato post):** la Caja
+  de Director Creativo con el nuevo prompt simple funcionó exactamente
+  como se diseñó — devolvió una línea limpia de etiquetas + texto
+  correcto ("Descubre los gastos deducibles en seguros de salud."). El
+  problema fue el modelo de imagen: `gpt-image-1-mini` corrompió el texto
+  al renderizarlo ("geate° deaucibles... saud") pese a recibir un prompt
+  corto y limpio — confirma que la corrupción de texto es una limitación
+  del modelo, no de la complejidad del prompt (misma falla vista 9/9
+  veces en el pipeline de 8 cajas).
+- **`aiImageGenerator.ts` nunca usó fal.ai** — siempre llamó directo a
+  OpenAI `images/edits`. El switch a fal.ai que se armó antes solo vivía
+  dentro de `promptBoxPipeline.ts` (pausado). Se duplica acá el mismo
+  adaptador (`generateImageBufferFal`, mismo código que en
+  promptBoxPipeline.ts) — a propósito SIN importar de ese archivo, porque
+  está pendiente de borrado seguro y este generador no debe depender de
+  código que puede desaparecer. `IMAGE_PROVIDER` (ya en `fal` como
+  variable de repo de GitHub Actions) decide el proveedor; `gpt-4o-mini`
+  para decidir mensaje/etiquetas no cambia, solo la generación de imagen
+  en sí.
+- Typecheck limpio en worker y web.

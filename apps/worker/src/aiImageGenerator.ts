@@ -24,9 +24,13 @@
 // explícita, por costo).
 //
 // Usa una API key de OpenAI SEPARADA (OPENAI_IMAGE_API_KEY) de la que ya
-// usa el resto de la plataforma. Modelo gpt-image-1-mini + calidad "medium"
-// explícita (pedido de Milton por costo, 20/8/2026): ~$0.015/imagen en vez
-// de hasta $0.25.
+// usa el resto de la plataforma — pero solo para decidir el mensaje/
+// etiquetas (gpt-4o-mini, siempre). La generación de la imagen en sí usa
+// el proveedor de IMAGE_PROVIDER (22/8/2026): "openai" (default) llama a
+// gpt-image-1-mini vía images/edits (~$0.005-0.015/imagen); "fal" usa
+// Ideogram V3 Remix vía fal.ai (~$0.03/imagen, TURBO) — adoptado porque
+// gpt-image-1-mini corrompe letras en español incluso con prompts cortos
+// y limpios, confirmado en vivo el 22/8/2026.
 
 import sharp from "sharp";
 import { put } from "@vercel/blob";
@@ -36,6 +40,48 @@ import { decryptSecret } from "@auto-articulos/shared";
 const OPENAI_IMAGE_API_KEY = process.env.OPENAI_IMAGE_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
 const OPENAI_EDIT_URL = "https://api.openai.com/v1/images/edits";
+
+// Mismo adaptador de proveedor que ya existía en promptBoxPipeline.ts —
+// duplicado acá a propósito, sin importar de ese archivo, porque ese
+// pipeline está pausado y pendiente de borrado seguro (ver COORDINACION
+// 22/8/2026); este archivo no debe depender de código que puede
+// desaparecer. Confirmado en vivo (22/8/2026, cuenta de Lorena) que
+// gpt-image-1-mini corrompe letras en español incluso con un prompt
+// corto y limpio — la misma falla de texto que llevó a adoptar fal.ai/
+// Ideogram en el pipeline de 8 cajas, así que se activa acá también.
+const FAL_API_KEY = process.env.FAL_API_KEY;
+const FAL_IDEOGRAM_REMIX_URL = "https://fal.run/fal-ai/ideogram/v3/remix";
+const IMAGE_PROVIDER = (process.env.IMAGE_PROVIDER || "openai").toLowerCase();
+
+async function generateImageBufferFal(
+  prompt: string,
+  ogImageUrl: string,
+  width: number,
+  height: number,
+): Promise<Buffer | null> {
+  if (!FAL_API_KEY) return null;
+  const res = await fetch(FAL_IDEOGRAM_REMIX_URL, {
+    method: "POST",
+    headers: { Authorization: `Key ${FAL_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      prompt: prompt.slice(0, 4000),
+      image_url: ogImageUrl,
+      image_size: { width, height },
+      rendering_speed: "TURBO",
+    }),
+    signal: AbortSignal.timeout(90000),
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(`fal.ai HTTP ${res.status}: ${errText.slice(0, 500)}`);
+  }
+  const data = (await res.json()) as { images?: { url?: string }[] };
+  const resultUrl = data.images?.[0]?.url;
+  if (!resultUrl) throw new Error(`fal.ai: respuesta sin imagen: ${JSON.stringify(data).slice(0, 500)}`);
+  const imgRes = await fetch(resultUrl, { signal: AbortSignal.timeout(30000) });
+  if (!imgRes.ok) return null;
+  return Buffer.from(await imgRes.arrayBuffer());
+}
 
 export type AiImageFormat = "story" | "reel-image" | "post" | "facebook-story";
 
@@ -315,43 +361,54 @@ export async function generateAiSocialImage(params: {
   const prompt = buildEditPrompt(decision, Boolean(logoPng), Boolean(photoPng));
 
   try {
-    const form = new FormData();
-    form.append("model", "gpt-image-1-mini");
-    form.append("prompt", prompt);
-    form.append("size", target.editSize);
-    // Calidad explícita (pedido de Milton por costo, 20/8/2026): "auto"
-    // default puede cobrar como "high" ($0.25). Ya se probaron "low"
-    // (~$0.005) y "medium" (~$0.015) — de vuelta a "low" a pedido de
-    // Milton, ahora que el texto ya no fuerza tamaño grande (el prompt de
-    // Milton controla eso), puede ya alcanzar con menos calidad.
-    form.append("quality", "low");
-    form.append("n", "1");
-    refImages.forEach((buf, i) => {
-      form.append("image[]", new Blob([new Uint8Array(buf)], { type: "image/png" }), `ref${i}.png`);
-    });
+    // Proveedor de la Caja de generación de imagen — mismo switch que
+    // promptBoxPipeline.ts (env var IMAGE_PROVIDER, ya configurada en los
+    // 3 workflows). "fal" usa Ideogram V3 Remix, con mejor fidelidad de
+    // texto en español confirmada tanto en el pipeline de 8 cajas como en
+    // una prueba real de este mismo generador (22/8/2026, gpt-image-1-mini
+    // corrompió letras pese a un prompt corto y limpio).
+    let rawOutput: Buffer | null;
+    if (IMAGE_PROVIDER === "fal") {
+      rawOutput = await generateImageBufferFal(prompt, params.ogImageUrl, target.width, target.height);
+    } else {
+      const form = new FormData();
+      form.append("model", "gpt-image-1-mini");
+      form.append("prompt", prompt);
+      form.append("size", target.editSize);
+      // Calidad explícita (pedido de Milton por costo, 20/8/2026): "auto"
+      // default puede cobrar como "high" ($0.25). Ya se probaron "low"
+      // (~$0.005) y "medium" (~$0.015) — de vuelta a "low" a pedido de
+      // Milton, ahora que el texto ya no fuerza tamaño grande (el prompt de
+      // Milton controla eso), puede ya alcanzar con menos calidad.
+      form.append("quality", "low");
+      form.append("n", "1");
+      refImages.forEach((buf, i) => {
+        form.append("image[]", new Blob([new Uint8Array(buf)], { type: "image/png" }), `ref${i}.png`);
+      });
 
-    const res = await fetch(OPENAI_EDIT_URL, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${OPENAI_IMAGE_API_KEY}` },
-      body: form,
-      signal: AbortSignal.timeout(90000),
-    });
-    if (!res.ok) {
-      const errText = await res.text().catch(() => "");
-      console.warn(`[AI Image] OpenAI images/edits falló: ${res.status} ${errText.slice(0, 300)}`);
-      return null;
+      const res = await fetch(OPENAI_EDIT_URL, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENAI_IMAGE_API_KEY}` },
+        body: form,
+        signal: AbortSignal.timeout(90000),
+      });
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        console.warn(`[AI Image] OpenAI images/edits falló: ${res.status} ${errText.slice(0, 300)}`);
+        return null;
+      }
+      const data = (await res.json()) as { data?: { b64_json?: string }[] };
+      const b64 = data.data?.[0]?.b64_json;
+      rawOutput = b64 ? Buffer.from(b64, "base64") : null;
     }
-    const data = (await res.json()) as { data?: { b64_json?: string }[] };
-    const b64 = data.data?.[0]?.b64_json;
-    if (!b64) return null;
+    if (!rawOutput) return null;
 
-    const rawOutput = Buffer.from(b64, "base64");
     const resized = await sharp(rawOutput)
       .resize(target.width, target.height, { fit: "cover", position: "attention" })
       .toBuffer();
     const withLogo = logoPng ? await compositeLogo(resized, target.width, target.height, logoPng) : resized;
 
-    // JPEG en vez de PNG: gpt-image-1-mini devuelve PNG pesado, e Instagram
+    // JPEG en vez de PNG: los generadores devuelven PNG pesado, e Instagram
     // tarda en procesar el media proporcionalmente a su peso. JPEG calidad
     // 90 pesa una fracción de eso sin pérdida visible.
     const finalBuffer = await sharp(withLogo).jpeg({ quality: 90 }).toBuffer();
@@ -366,7 +423,7 @@ export async function generateAiSocialImage(params: {
     if (!checkRes.ok) return null;
 
     console.log(
-      `[AI Image] Generada: ${blob.url} (${(finalBuffer.length / 1024).toFixed(0)}KB) — ` +
+      `[AI Image] Generada con ${IMAGE_PROVIDER === "fal" ? "fal-ai/ideogram-v3-remix" : "gpt-image-1-mini"}: ${blob.url} (${(finalBuffer.length / 1024).toFixed(0)}KB) — ` +
         `etiquetas: ${decision.tagString} — texto: "${decision.message}"` +
         `${logoPng ? " +logo" : ""}${photoPng ? " +foto" : ""}`,
     );
