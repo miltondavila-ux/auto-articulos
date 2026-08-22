@@ -410,7 +410,11 @@ export async function runPromptBoxPipeline(params: {
   const logoBase64 = logoPng ? logoPng.toString("base64") : null;
 
   const baseContext =
-    `Red social y formato: Instagram, ${target.label}.\n` +
+    // target.label ya incluye la red social correcta ("Instagram Story",
+    // "Facebook Story", etc.) — antes decía "Instagram" hardcodeado acá
+    // ADEMÁS del label, contradiciéndolo para Facebook Story ("Instagram,
+    // Facebook Story"). Auditoría 21/8/2026.
+    `Red social y formato: ${target.label}.\n` +
     `Título del artículo: ${params.articleTitle}\n` +
     `Contenido/resumen del artículo: ${params.articleSummary}\n` +
     `¿Hay logo de marca disponible?: ${hasLogo ? "sí" : "no"}\n` +
@@ -612,7 +616,7 @@ export async function runPromptBoxPipeline(params: {
           headlineText: box4Parsed ? findFieldByPattern(box4Parsed, /^headline$/i) : null,
           textPosition: box3Parsed ? findFieldByPattern(box3Parsed, /^text_safe_area$/i) : null,
           logoPosition: box3Parsed ? findFieldByPattern(box3Parsed, /^logo_safe_area$/i) : null,
-          publicationType: `instagram-${params.format}`,
+          publicationType: params.format === "facebook-story" ? "facebook-story" : `instagram-${params.format}`,
         },
       });
     } catch (err) {
