@@ -274,6 +274,18 @@ async function processRunTitle(
     // await notifyThreads(nextTitle.id, run.userId); // Desactivado por solicitud: las publicaciones a redes ahora se controlan desde el módulo de Oportunidades Redes.
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    // El cuerpo real de la respuesta del servidor (capturado en
+    // generateImage()) llega tal cual lo mandó PHP, con las tildes escapadas
+    // como "é" en vez del carácter real — un response.text() nunca las
+    // decodifica. Bug confirmado el 21/8/2026: el mensaje real del sitio
+    // ("Se han agotado los créditos de tu imagen...") no matcheaba NUNCA
+    // el string con tilde literal de abajo, así que el popup de "sin
+    // créditos" nunca se disparaba para el caso real (solo para la
+    // suposición del fallback sin datos de red). Se normaliza antes de
+    // buscar la señal.
+    const normalizedMessage = message.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) =>
+      String.fromCharCode(parseInt(hex, 16)),
+    );
     const [fresh, freshRun] = await Promise.all([
       prisma.title.findUniqueOrThrow({ where: { id: nextTitle.id } }),
       prisma.run.findUniqueOrThrow({ where: { id: run.id } }),
@@ -292,8 +304,9 @@ async function processRunTitle(
       // puede modificar como máximo 20 artículos. El siguiente lote requiere
       // una nueva orden y retomará los pendientes de forma idempotente.
     } else if (
-      message.includes("acabado los tokens/créditos") ||
-      message.includes("créditos de la cuenta")
+      normalizedMessage.includes("acabado los tokens/créditos") ||
+      normalizedMessage.includes("créditos de la cuenta") ||
+      /agotado los cr[ée]ditos/i.test(normalizedMessage)
     ) {
       await prisma.user.update({
         where: { id: run.userId },
