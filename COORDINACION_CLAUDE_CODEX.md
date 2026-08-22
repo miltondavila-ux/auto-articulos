@@ -4592,3 +4592,76 @@ tanda — solo código y workflows).
   vez confirmado que fal.ai funciona bien**, antes de considerar esto listo
   para más que pruebas puntuales — con 0 reintentos, cualquier rechazo del
   Inspector cancela la oportunidad sin oportunidad de corregirse.
+
+### 2026-08-21 (continuación) — fal.ai confirmado funcionando; auditoría
+profunda de código sin más pruebas reales, a pedido explícito de Milton
+
+**Capitán de migración:** Claude (sin migraciones nuevas — solo código y un
+archivo de coordinación).
+
+- **fal.ai desbloqueado y funcionando**: confirmado con gasto real
+  (~$0.030, TURBO). `MAX_RETRIES` vuelto a 2 (diseño original con margen de
+  autocorrección).
+- **Milton pidió auditorías repetidas en vez de más pruebas pagas**
+  ("Ok quiero que hagas auditorias hasta que no consigas mas nada que
+  arreglar... si dos auditorias salen perfectas entonces ya paras" /
+  "Audita al 100% completamente en tres rondas"). Metodología aplicada:
+  releer el `systemPrompt` real de cada Caja (guardado por Milton en el
+  admin) y comparar contra qué le manda de verdad `promptBoxPipeline.ts`,
+  en vez de seguir gastando en pruebas reales para encontrar bugs.
+- **Hallazgos reales encontrados y corregidos, todos commiteados y
+  pusheados a `main`:**
+  1. Las Cajas 2, 3 y 5 (Director Creativo, Diseñador de Composición,
+     Constructor del Prompt Visual) tomaban decisiones sin ver la imagen
+     OG y/o el logo, pese a que sus propios prompts lo piden
+     explícitamente — ahora reciben ambas imágenes.
+  2. La Caja 7 (Inspector de Calidad) solo veía la imagen generada; su
+     propio prompt exige poder comparar contra la OG, el logo y las
+     decisiones de las Cajas 2/3/4 — ahora recibe las 3 imágenes (OG,
+     logo, generada) más el texto completo de esas 3 cajas.
+  3. La Caja 8 (Corrector) corregía sin ver la imagen rechazada ni saber
+     en qué intento iba, pese a que su prompt pide ambas cosas — ahora
+     recibe la imagen y el número de intento.
+  4. `CreativeGenerationHistory` existía en el esquema desde que se armó
+     la infraestructura pero nunca se leía ni se escribía — ahora la Caja
+     2 lee las últimas 5 publicaciones del usuario (para variar el modelo
+     conceptual, como pide su prompt) y se escribe un registro nuevo cada
+     vez que se aprueba una imagen.
+  5. **Bug de producción real, no solo del pipeline nuevo:** tanto
+     `promptBoxPipeline.ts` como el generador que YA está en producción
+     (`aiImageGenerator.ts`) tenían "Instagram" hardcodeado en el texto que
+     reciben las cajas/el modelo de decisión, ADEMÁS del label correcto —
+     para Facebook Story el texto decía literalmente "Instagram, Facebook
+     Story", contradiciendo la red real. Corregido en ambos archivos.
+  6. `is_ai_generated` en la API de Instagram: `publishInstagramImage`
+     mandaba siempre `"true"` a Meta sin importar si la imagen publicada
+     era la foto OG real sin tocar (Opción 1, sin IA) o una imagen
+     generada (Opción 2) — fotos reales quedaban mal etiquetadas ante Meta
+     como generadas por IA. `publishInstagramStory` nunca mandaba el
+     parámetro, así que Historias SÍ generadas por IA nunca quedaban
+     etiquetadas. Corregido: ambas funciones ahora reciben
+     `isAiGenerated: boolean` y los 4 call sites en `socialPublish.ts`
+     (reel-image, story, post, infografia) pasan el valor real según el
+     camino tomado. `publishInstagramCarousel` se revisó y quedó igual
+     (siempre `"true"` es correcto ahí — el carrusel no tiene camino sin
+     IA). `publishInstagramReel` (video) no tiene ningún call site real,
+     código muerto, no se tocó.
+  7. Texto desactualizado en el panel admin ("Cajas de Imágenes IA")
+     que decía que las cajas "todavía usan texto de relleno" pese a que
+     Milton ya había llenado los 8 prompts reales — corregido.
+  8. `worker.yml` le faltaba `IMAGE_PROVIDER` (ya lo tenían
+     `social-worker.yml` y `worker-test.yml`) — agregado por consistencia.
+- **Tres rondas de auditoría completadas** sobre
+  `promptBoxPipeline.ts`, `aiImageGenerator.ts`, `socialPublish.ts`,
+  `packages/shared/src/instagram-api.ts`, el esquema de
+  `CreativeGenerationHistory` y los 3 workflows de GitHub Actions — la
+  primera ronda encontró y corrigió el bug de `is_ai_generated` (arriba);
+  las dos rondas siguientes no encontraron nada nuevo.
+- **Pendiente, fuera de este lote:** el flujo de Threads/X/LinkedIn
+  (`generateSocialImageRaw`, otro generador de imágenes totalmente aparte)
+  no se auditó — no es parte del "Creador de Imágenes para Redes Sociales"
+  de hoy, sería otro alcance si Milton lo pide.
+- **Aún no se hizo ninguna prueba real desde que arrancó esta ronda de
+  auditorías** — decisión explícita de Milton de esperar a que la
+  auditoría esté satisfactoriamente completa antes de gastar dinero real
+  de nuevo.
