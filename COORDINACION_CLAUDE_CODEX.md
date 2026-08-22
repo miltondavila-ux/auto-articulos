@@ -4889,3 +4889,29 @@ generador viejo con un prompt más simple
   Claude. Resultado: `expand_prompt=false` y `style=DESIGN` agregados a
   fal.ai, sin migraciones, typecheck limpio, pusheado `9969cea`.
   Pendiente: prueba real.
+
+### 2026-08-22 (continuación) — Corrección de rumbo de Milton: CERO capas de código encima del prompt del admin
+
+- **Capitán de migración:** Claude — revisará y aplicará el lote completo.
+  Motivo: prompt de fal.ai sin capa de código encima; logo como material
+  de referencia. Nadie más ejecuta Prisma hasta su liberación.
+- **Milton corrigió el rumbo con fuerza:** el intento anterior traducía
+  `TEXT: mensaje` a una frase en inglés parafraseada por código antes de
+  mandarla a fal.ai — eso ya no se parecía a su prueba manual validada.
+  Regla explícita: "cuando tu colocas orden sobre orden se daña todo" —
+  **todo ajuste de instrucción va en el prompt del admin, nunca en
+  código**. El código solo transporta datos (imágenes, URLs), nunca
+  reescribe ni agrega texto de instrucción encima de lo que decide el
+  prompt.
+- **Revertido:** `buildEditPrompt()` para el proveedor `fal` ahora
+  devuelve `decision.visualLine` SIN NINGÚN cambio — ni paráfrasis del
+  texto, ni frase de protección de rostro, ni frase de espacio del logo.
+  El camino OpenAI no se tocó (sigue con sus dos frases técnicas
+  estables, eso no estaba en discusión).
+- **Logo:** por pedido de Milton, ya no se resuelve con texto ni se
+  compone después por código para este proveedor — se manda como
+  material de referencia real (`image_urls` de Ideogram, documentado como
+  "style reference", no como objeto exacto a calcar) y el propio modelo
+  decide cómo usarlo. `compositeLogo()` se salta cuando `IMAGE_PROVIDER
+  === "fal"` para no terminar con dos logos superpuestos.
+- Typecheck limpio en worker y web.

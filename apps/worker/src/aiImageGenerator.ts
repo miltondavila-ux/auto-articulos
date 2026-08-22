@@ -58,26 +58,35 @@ async function generateImageBufferFal(
   ogImageUrl: string,
   width: number,
   height: number,
+  logoUrl?: string | null,
 ): Promise<Buffer | null> {
   if (!FAL_API_KEY) return null;
+  const body: Record<string, unknown> = {
+    prompt: prompt.slice(0, 4000),
+    image_url: ogImageUrl,
+    image_size: { width, height },
+    rendering_speed: "TURBO",
+    // Ambos confirmados en la documentación oficial de fal.ai/Ideogram
+    // (22/8/2026), tras una prueba real donde el texto salió minúsculo y
+    // deformado: "expand_prompt" (MagicPrompt) reescribe el prompt antes
+    // de generar — puede estar distorsionando el texto exacto entre
+    // comillas — así que se apaga para tener control literal. "style:
+    // DESIGN" es el preset que Ideogram documenta específicamente para
+    // tipografía/elementos de diseño (por defecto no usa ninguno).
+    expand_prompt: false,
+    style: "DESIGN",
+  };
+  // Pedido explícito de Milton (22/8/2026): en vez de reservarle espacio al
+  // logo con una frase de texto aparte y pegarlo después con código, se le
+  // manda el logo real como material de referencia (fal.ai lo trata como
+  // "style reference", no como objeto exacto a calcar) y el propio modelo
+  // decide cómo incorporarlo. Por eso este archivo YA NO compone el logo
+  // con compositeLogo() cuando el proveedor es fal — ver generateAiSocialImage.
+  if (logoUrl) body.image_urls = [logoUrl];
   const res = await fetch(FAL_IDEOGRAM_REMIX_URL, {
     method: "POST",
     headers: { Authorization: `Key ${FAL_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      prompt: prompt.slice(0, 4000),
-      image_url: ogImageUrl,
-      image_size: { width, height },
-      rendering_speed: "TURBO",
-      // Ambos confirmados en la documentación oficial de fal.ai/Ideogram
-      // (22/8/2026), tras una prueba real donde el texto salió minúsculo y
-      // deformado: "expand_prompt" (MagicPrompt) reescribe el prompt antes
-      // de generar — puede estar distorsionando el texto exacto entre
-      // comillas — así que se apaga para tener control literal. "style:
-      // DESIGN" es el preset que Ideogram documenta específicamente para
-      // tipografía/elementos de diseño (por defecto no usa ninguno).
-      expand_prompt: false,
-      style: "DESIGN",
-    }),
+    body: JSON.stringify(body),
     signal: AbortSignal.timeout(90000),
   });
   if (!res.ok) {
@@ -292,23 +301,21 @@ async function decideCreativeDirection(
 }
 
 /**
- * Toma la línea que armó el propio modelo ("/tag /tag ... TEXT: mensaje")
- * y le agrega SOLO lo que el prompt de Milton no puede cubrir porque
- * depende de decisiones de este código: que no tape el rostro, y que
- * quede espacio para el logo real (el logo ya no se le pide a la IA, se
- * pega después). Estas dos frases son estables — siempre las mismas,
- * nunca cambian entre corridas — así que no son la clase de "exceso de
- * instrucciones" que Milton identificó como causa del problema en el
- * pipeline de 8 cajas.
+ * Toma la línea que armó el propio modelo ("/tag /tag ... TEXT: mensaje").
  *
- * Prueba real 22/8/2026 (cuenta de Lorena): con fal.ai/Ideogram, la línea
- * cruda "/tag /tag ... TEXT: mensaje" tal cual NO renderizó ningún texto
- * — Ideogram es un modelo de difusión directo sin capa de lenguaje que
- * reinterprete atajos (a diferencia de gpt-image-1-mini, que al menos lo
- * intentó, aunque mal). Para ese proveedor se traduce el bloque "TEXT:
- * mensaje" a una instrucción explícita en inglés natural con el texto
- * entre comillas — el formato que Ideogram sí reconoce para renderizar
- * texto exacto — conservando las etiquetas como palabras clave de estilo.
+ * Camino OpenAI: le agrega SOLO lo que el prompt de Milton no puede
+ * cubrir porque depende de decisiones de este código — que no tape el
+ * rostro, y que quede espacio para el logo real (que se pega después con
+ * compositeLogo). Frases estables, siempre las mismas.
+ *
+ * Camino fal.ai/Ideogram (pedido explícito de Milton, 22/8/2026): CERO
+ * capas encima del prompt del admin — se manda `decision.visualLine` tal
+ * cual lo devolvió el modelo, sin agregar, traducir ni reescribir nada
+ * desde código. Si Ideogram necesita otro formato de texto, ese ajuste va
+ * en el prompt del admin, no acá. El logo tampoco se resuelve con una
+ * frase de texto ni se compone después por código: se manda como
+ * material de referencia (`image_urls` en generateImageBufferFal) y el
+ * propio modelo decide cómo incorporarlo.
  */
 function buildEditPrompt(
   decision: CreativeDecision,
@@ -316,12 +323,11 @@ function buildEditPrompt(
   hasPhotoRef: boolean,
   provider: "openai" | "fal",
 ): string {
-  const visualInstruction =
-    provider === "fal"
-      ? `${decision.tagString}. Render the following text clearly and exactly as written, in bold legible typography, with no spelling changes: "${decision.message}"`
-      : decision.visualLine;
+  if (provider === "fal") {
+    return decision.visualLine;
+  }
   return [
-    visualInstruction,
+    decision.visualLine,
     "ABSOLUTE RULE: if the photo contains a person, the face is the highest-priority zone in the whole image — never cover eyes, nose, mouth or expression with text or anything else. Use empty/negative space instead.",
     hasLogo
       ? "Leave a clean, empty, uncluttered rectangular area in the bottom-right corner (roughly the bottom-right 30% width x 10% height of the frame) with nothing important there — no text, no busy detail, no headline text overlapping it. A real logo will be placed there afterward by separate exact compositing, so do not draw, sketch or invent any logo or brand text yourself in that corner."
@@ -375,10 +381,13 @@ export async function generateAiSocialImage(params: {
   );
   if (!decision) return null;
 
-  // El logo NUNCA se le pasa a la IA como referencia a dibujar (probado en
-  // vivo: lo cortaba/deformaba pese a instrucciones explícitas) — se pega
-  // aparte, después, con código exacto. Solo la OG y la foto de perfil
-  // (cuando aplica) van como referencias reales al modelo.
+  // Camino OpenAI: el logo NUNCA se le pasa a la IA como referencia a
+  // dibujar (probado en vivo: lo cortaba/deformaba pese a instrucciones
+  // explícitas) — se pega aparte, después, con código exacto. Solo la OG
+  // y la foto de perfil (cuando aplica) van como referencias reales.
+  // Camino fal.ai: distinto a propósito (pedido de Milton) — el logo SÍ
+  // se manda como material de referencia dentro de generateImageBufferFal,
+  // y el modelo decide cómo usarlo.
   const refImages = [ogPng, photoPng].filter((b): b is Buffer => b !== null);
   const prompt = buildEditPrompt(decision, Boolean(logoPng), Boolean(photoPng), IMAGE_PROVIDER === "fal" ? "fal" : "openai");
 
@@ -391,7 +400,7 @@ export async function generateAiSocialImage(params: {
     // corrompió letras pese a un prompt corto y limpio).
     let rawOutput: Buffer | null;
     if (IMAGE_PROVIDER === "fal") {
-      rawOutput = await generateImageBufferFal(prompt, params.ogImageUrl, target.width, target.height);
+      rawOutput = await generateImageBufferFal(prompt, params.ogImageUrl, target.width, target.height, params.businessLogoUrl);
     } else {
       const form = new FormData();
       form.append("model", "gpt-image-1-mini");
@@ -428,7 +437,11 @@ export async function generateAiSocialImage(params: {
     const resized = await sharp(rawOutput)
       .resize(target.width, target.height, { fit: "cover", position: "attention" })
       .toBuffer();
-    const withLogo = logoPng ? await compositeLogo(resized, target.width, target.height, logoPng) : resized;
+    // Con fal.ai el logo ya se le mandó al modelo como material de
+    // referencia (generateImageBufferFal) — no se vuelve a pegar por
+    // código encima, para no terminar con dos logos superpuestos.
+    const withLogo =
+      logoPng && IMAGE_PROVIDER !== "fal" ? await compositeLogo(resized, target.width, target.height, logoPng) : resized;
 
     // JPEG en vez de PNG: los generadores devuelven PNG pesado, e Instagram
     // tarda en procesar el media proporcionalmente a su peso. JPEG calidad
