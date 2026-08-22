@@ -183,7 +183,12 @@ async function decideCreativeDirection(
               {
                 type: "text",
                 text:
-                  `Red social y formato: Instagram, ${formatLabel}.\n` +
+                  // formatLabel ya incluye la red social correcta ("Instagram
+                  // Story", "Facebook Story", etc.) — antes decía "Instagram"
+                  // hardcodeado ADEMÁS del label, contradiciéndolo para
+                  // Facebook Story ("Instagram, Facebook Story"). Mismo bug
+                  // encontrado y corregido en promptBoxPipeline.ts, 21/8/2026.
+                  `Red social y formato: ${formatLabel}.\n` +
                   `Título del artículo: ${articleTitle}\n` +
                   `Resumen del artículo: ${articleSummary}\n` +
                   `¿Hay logo de marca disponible?: ${hasLogo ? "sí" : "no"}\n\n` +
