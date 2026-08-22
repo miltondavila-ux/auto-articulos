@@ -62,13 +62,14 @@ async function main() {
       "WORKER_TEST_USER_EMAIL no está configurada. Este worker de pruebas nunca corre sin un usuario específico (para no tocar la cola de un cliente real).",
     );
   }
+  const articleUrl = process.env.WORKER_TEST_ARTICLE_URL?.trim() || undefined;
 
   const user = await prisma.user.findUnique({ where: { email }, select: { id: true, email: true } });
   if (!user) {
     throw new Error(`No existe ningún usuario con el correo "${email}".`);
   }
 
-  console.log(`[TEST] Procesando SOLO el trabajo pendiente de: ${user.email} (${user.id})`);
+  console.log(`[TEST] Procesando SOLO el trabajo pendiente de: ${user.email} (${user.id})${articleUrl ? ` y del artículo ${articleUrl}` : ""}`);
 
   const deadline = Date.now() + BUDGET_MS;
 
@@ -77,7 +78,7 @@ async function main() {
     runLane("idiomas", () => processNextLanguageSync(user.id), deadline),
     runLane("perfil de negocio", () => processNextBusinessProfilePost(user.id), deadline),
     runLane("títulos", () => processNext(user.id), deadline),
-    runLane("redes sociales", () => processNextSocialPublish(user.id), deadline),
+    runLane("redes sociales", () => processNextSocialPublish(user.id, articleUrl), deadline),
   ]);
   const didAnyWork = results.some(Boolean);
 

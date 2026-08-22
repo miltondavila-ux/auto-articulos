@@ -16,6 +16,9 @@ on:
       user_email:
         description: "Correo del usuario a probar (ej. la cuenta de Lorena Álvarez)"
         required: true
+      article_url:
+        description: "URL exacta del artículo a procesar (opcional; limita la prueba a este artículo)"
+        required: false
 
 concurrency:
   group: auto-articulos-worker-test
@@ -28,6 +31,7 @@ jobs:
     env:
       WORKER_MODE: all
       WORKER_TEST_USER_EMAIL: ${{ github.event.inputs.user_email }}
+      WORKER_TEST_ARTICLE_URL: ${{ github.event.inputs.article_url }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DIRECT_URL: ${{ secrets.DATABASE_URL }}
       CREDENTIALS_ENCRYPTION_KEY: ${{ secrets.CREDENTIALS_ENCRYPTION_KEY }}

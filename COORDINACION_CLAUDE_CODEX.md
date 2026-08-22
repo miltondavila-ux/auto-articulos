@@ -5129,6 +5129,11 @@ quien retome, sin depender del chat:
   las publicaciones de Instagram y Facebook Story, y el historial muestra
   el enlace "Abrir imagen OG original". Migración nueva:
   `20260822210000_add_social_opportunity_og_image_url`.
+- **Filtro de prueba por artículo (22/8/2026):** el worker de pruebas ahora
+  acepta `article_url` y procesa únicamente la oportunidad encolada con esa
+  URL, además del filtro obligatorio por usuario. Esto permite probar el
+  artículo del deducible sin publicar accidentalmente otra oportunidad
+  pendiente de Lorena. No requiere migración.
 - **Modelo de negocio de Milton, por si hace falta para cálculos**: $25
   fijo (24 publicaciones incluidas) + $12 adicionales (hasta 60
   publicaciones totales) = $37/mes por 60 publicaciones. El costo de
