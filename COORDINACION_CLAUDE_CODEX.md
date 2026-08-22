@@ -5044,3 +5044,94 @@ generador viejo con un prompt más simple
   arriba en Supabase** — si publica antes, el `update` final de
   `SocialOpportunity` fallaría al intentar escribir `aiImagePrompt` en
   una columna que todavía no existe.
+- **CONFIRMADO 22/8/2026, misma tarde: Milton corrió el SQL en Supabase.**
+  Las columnas `imageUrl` y `aiImagePrompt` ya existen en la base real.
+  Desbloqueado, ya no hace falta ninguna acción antes de la próxima
+  prueba.
+
+## TRASPASO — Milton continúa con Codex (22/8/2026, tarde)
+
+Sin capitán activo (`migration-coordinator.sh status` limpio). Resumen
+completo del estado del "Creador de Imágenes para Redes Sociales" para
+quien retome, sin depender del chat:
+
+**Arquitectura actual (activa hoy):**
+- El pipeline experimental de 8 cajas (`promptBoxPipeline.ts`) está
+  **PAUSADO** — Milton decidió NO seguir usándolo tras comparar sus
+  resultados contra una prueba manual en ChatGPT Images con un prompt
+  mucho más corto. Sigue en el código, `usePromptBoxPipeline` se apagó
+  para la cuenta de Lorena. **PENDIENTE, NO EJECUTAR sin que Milton lo
+  pida:** borrado seguro completo de ese experimento (código, UI de
+  admin, modelos Prisma `PromptBox`/`PromptBoxExecution`/
+  `CreativeGenerationHistory`/`User.usePromptBoxPipeline`) — ver la
+  entrada de más arriba fechada "Pivote: se pausa el experimento de 8
+  cajas" para el detalle completo.
+- El generador que SÍ está en uso hoy es el viejo, simplificado:
+  `apps/worker/src/aiImageGenerator.ts`. Ya no arma un `visualPrompt` de
+  párrafo largo — una sola llamada a `gpt-4o-mini` (`decideCreativeDirection`)
+  decide el mensaje y arma un string de etiquetas cerrado + el texto
+  exacto, en una sola línea de salida. El prompt de esa caja se edita en
+  el panel de admin, pestaña "Prompts" (mismo lugar de siempre,
+  `AI_IMAGE_PROMPT_KEY` en `SystemSetting`).
+- **Regla de oro que Milton exigió con fuerza durante la tarde: CERO
+  capas de código sobre el prompt del admin.** El código nunca debe
+  traducir, parafrasear ni agregarle texto de instrucción a lo que
+  decide el modelo — solo transporta datos (imágenes, URLs). Si algo del
+  prompt no funciona bien con un proveedor, el ajuste va en el PROMPT del
+  admin (vía su GPT de prompts), nunca en código. Única excepción
+  aceptada: dos frases técnicas ESTABLES (protección de rostro, espacio
+  reservado del logo) que solo se agregan en el camino OpenAI, porque son
+  necesarias por cómo compone el logo el código después — no son
+  "instrucciones creativas".
+- **Tres proveedores de imagen intercambiables** vía `IMAGE_PROVIDER`
+  (env var / variable de repo de GitHub Actions, sin redeploy):
+  - `openai` — `gpt-image-1-mini` directo. Corrompe texto en español
+    incluso con prompts cortos (confirmado en vivo, 22/8/2026).
+  - `fal` — Ideogram V3 Remix vía fal.ai. Falló de 3 formas distintas en
+    pruebas reales del día: sin texto, texto minúsculo/deforme, imagen
+    sin relación con la OG ni el mensaje. Requiere `expand_prompt:false`
+    (si no, MagicPrompt reescribe el prompt) y NO puede combinarse
+    `style:"DESIGN"` con `image_urls` (error 422 de la API si se
+    combinan) — el código ya maneja esto (`style` solo se manda sin logo).
+  - **`nano` — Nano Banana (Gemini de Google) vía fal.ai. ES EL ACTIVO
+    AHORA MISMO** (`IMAGE_PROVIDER=nano`, cambiado hoy). Arquitectura de
+    LLM multimodal nativo, más parecida a ChatGPT Images que a un modelo
+    de difusión puro — hipótesis de Milton es que por eso el prompt de
+    etiquetas podría funcionarle mejor que a Ideogram. **Aún NO se probó
+    en vivo** — la prueba fue interrumpida por el trabajo de guardar
+    prompt/imagen en el histórico (ver abajo). Endpoint
+    `fal-ai/nano-banana/edit`, acepta OG + logo juntos en `image_urls`,
+    usa preset de `aspect_ratio` (no ancho/alto exacto).
+- **El prompt del admin (Director Creativo) fue reescrito varias veces
+  hoy** — la versión vigente ya incorpora: salida de una sola línea
+  `/etiqueta /etiqueta ... with high-contrast [estilo] text that reads:
+  "mensaje"` (sin la palabra "Ideogram" en ningún lado, a propósito —
+  arquitectura intercambiable de proveedor); máximo 6 palabras de texto;
+  descripción tipográfica por adjetivos, nunca nombres de fuente; regla
+  de alto contraste; y un paso de comparación interna de 2-3
+  combinaciones de etiquetas antes de elegir la de mayor impacto visual
+  (pedido explícito de Milton: "la selección de etiquetas es el pilar
+  fundamental"). El parser en `decideCreativeDirection()` reconoce este
+  formato nuevo (`text that reads: "..."`) con respaldo al formato viejo
+  (`TEXT: ...`).
+- **Histórico (`/dashboard/historial`) ahora muestra la imagen generada y
+  el prompt exacto usado** por cada publicación — pedido explícito de
+  Milton para no tener que reconstruir esto desde los logs de GitHub
+  Actions cada vez. Migración ya aplicada en Supabase (confirmado por
+  Milton). Ver commit `0d6960d` para el detalle completo.
+- **Modelo de negocio de Milton, por si hace falta para cálculos**: $25
+  fijo (24 publicaciones incluidas) + $12 adicionales (hasta 60
+  publicaciones totales) = $37/mes por 60 publicaciones. El costo de
+  imagen (entre $0.011 y $0.041/imagen según proveedor) es irrelevante
+  frente a ese ingreso — margen nunca baja de ~93% en el peor caso. La
+  decisión de proveedor debe ser 100% por confiabilidad, no por precio.
+
+**Siguiente paso pendiente, apenas se retome:** correr una prueba real
+con Nano Banana (`IMAGE_PROVIDER=nano`, ya activo) para el prompt vigente
+del admin, y revisar el resultado en `/dashboard/historial` (imagen +
+prompt exacto ya deberían aparecer ahí). Si Nano Banana también falla,
+las alternativas ya investigadas y descartadas por ahora son: `gpt-image-1`
+completo (se descontinúa el 23/10/2026, no conviene), `gpt-image-1.5`
+(reemplazo vigente de OpenAI, sin probar todavía), Recraft V3 y FLUX
+Kontext (similares en precio, sin ventaja clara sobre las opciones ya
+probadas).
