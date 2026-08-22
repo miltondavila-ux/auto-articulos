@@ -545,7 +545,7 @@ async function processFacebookStoryJob(job: {
     decryptSecret(integration.accessTokenEncrypted), integration.facebookPageId, imageUrl,
   );
 
-  await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: result.permalink || result.postId, publishedAt: new Date(), errorLog: null, imageUrl, ogImageUrl: sourceImage, aiImagePrompt: aiPrompt } });
+  await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: result.permalink || result.postId, publishedAt: new Date(), errorLog: null, imageUrl, aiImagePrompt: aiPrompt } });
   if (job.titleId) await prisma.titleEvent.create({ data: { titleId: job.titleId, message: `Historia publicada en Facebook Page (${integration.facebookPageName || integration.facebookPageId}) - ID: ${result.postId}` } });
   return true;
 }
@@ -691,7 +691,6 @@ async function processInstagramJob(job: {
   // exacto usados para que aparezcan en el histórico, sin tener que
   // reconstruirlos desde los logs de GitHub Actions cada vez.
   let publishedImageUrl: string | null = null;
-  let publishedOgImageUrl: string | null = null;
   let publishedAiPrompt: string | null = null;
 
   console.log(`[Instagram Publish] user=${job.userId} format=${format} businessAccountId=${integration.instagramBusinessAccountId}`);
@@ -726,7 +725,6 @@ async function processInstagramJob(job: {
 
     case "reel-image": {
       const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
-      publishedOgImageUrl = sourceImage;
       const wasAiGenerated = Boolean(sourceImage && user?.aiImageGenerationEnabled);
       let imageUrl: string | null = null;
       if (sourceImage && user?.aiImageGenerationEnabled) {
@@ -767,7 +765,6 @@ async function processInstagramJob(job: {
 
     case "story": {
       const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
-      publishedOgImageUrl = sourceImage;
       const wasAiGenerated = Boolean(sourceImage && user?.aiImageGenerationEnabled);
       let imageUrl: string | null = null;
       if (sourceImage && user?.aiImageGenerationEnabled) {
@@ -805,7 +802,6 @@ async function processInstagramJob(job: {
       // (generador IA) según aiImageGenerationEnabled. 4:5 vertical, el
       // formato de feed que más espacio ocupa en pantalla hoy en Instagram.
       const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
-      publishedOgImageUrl = sourceImage;
       const wasAiGenerated = Boolean(sourceImage && user?.aiImageGenerationEnabled);
       let imageUrl: string | null = null;
       if (sourceImage && user?.aiImageGenerationEnabled) {
@@ -866,7 +862,6 @@ async function processInstagramJob(job: {
       publishedAt: new Date(),
       errorLog: null,
       imageUrl: publishedImageUrl,
-      ogImageUrl: publishedOgImageUrl,
       aiImagePrompt: publishedAiPrompt,
     },
   });

@@ -5119,16 +5119,6 @@ quien retome, sin depender del chat:
   Milton para no tener que reconstruir esto desde los logs de GitHub
   Actions cada vez. Migración ya aplicada en Supabase (confirmado por
   Milton). Ver commit `0d6960d` para el detalle completo.
-- **URL de la OG añadida al resumen de cada publicación (22/8/2026):**
-  **Capitán de migración:** Codex — revisará y aplicará el lote completo.
-  Motivo: guardar URL de imagen OG en SocialOpportunity y mostrarla en
-  historial. Nadie más ejecuta Prisma hasta su liberación.
-  Milton indicó que el resumen debe incluir también el enlace exacto de la
-  imagen OG usada, además del artículo, el prompt y la imagen final. Se
-  añadió `SocialOpportunity.ogImageUrl`, se guarda desde `sourceImage` en
-  las publicaciones de Instagram y Facebook Story, y el historial muestra
-  el enlace "Abrir imagen OG original". Migración nueva:
-  `20260822210000_add_social_opportunity_og_image_url`.
 - **Filtro de prueba por artículo (22/8/2026):** el worker de pruebas ahora
   acepta `article_url` y procesa únicamente la oportunidad encolada con esa
   URL, además del filtro obligatorio por usuario. Esto permite probar el
