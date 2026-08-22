@@ -1896,7 +1896,7 @@ export default function UsuariosPage() {
             cada caja alimenta a la siguiente (Analista → Director Creativo → Diseñador de
             Composición → Editor de Texto → Constructor del Prompt Visual → Generador de Imagen →
             Inspector de Calidad → Corrector Automático). Edita el prompt de cada caja por separado
-            y guárdalo — todavía usan texto de relleno hasta que los perfecciones aquí.
+            y guárdalo — cada caja usa exactamente el texto que dejes acá.
           </p>
 
           {loadingPromptBoxes ? (
