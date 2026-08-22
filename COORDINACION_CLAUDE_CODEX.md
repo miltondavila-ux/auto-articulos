@@ -4964,3 +4964,35 @@ generador viejo con un prompt más simple
   documentado en el comentario del código. Typecheck limpio. **Capitán de
   migración liberó el lote:** Claude. Sin migraciones, pusheado
   `2b4a540`. Pendiente: prueba real.
+
+### 2026-08-22 (continuación) — Sexta prueba: imagen sin relación con la OG ni el mensaje → se agrega Nano Banana como tercer proveedor
+
+- **Capitán de migración:** Claude — revisará y aplicará el lote completo.
+  Motivo: agregar Nano Banana como tercer proveedor de imagen, sin
+  migraciones. Nadie más ejecuta Prisma hasta su liberación.
+- **Prueba real (formato story):** con el conflicto style/image_urls ya
+  resuelto, Ideogram generó una imagen completamente ajena — ignoró la
+  foto OG y el mensaje decidido ("No cambies sin saber"), y en su lugar
+  mostró letras sueltas sobre fichas tipo scrabble sin relación con nada.
+  Tercera falla distinta de Ideogram en el día (sin texto → texto
+  minúsculo/deforme → imagen alucinada). Se hicieron las cuentas de
+  negocio con Milton: el costo de imagen es insignificante frente a su
+  modelo de precios ($25 + $12 = $37/mes por 60 publicaciones), ningún
+  proveedor evaluado da pérdida — la decisión debe ser 100% por
+  confiabilidad, no por precio.
+- **Se agrega Nano Banana (Gemini, vía fal.ai) como tercer proveedor** —
+  `IMAGE_PROVIDER=nano`. A diferencia de Ideogram (difusión pura), Nano
+  Banana es un modelo nativo de LLM multimodal, arquitectura más parecida
+  a ChatGPT Images (donde el prompt de etiquetas de Milton sí funcionó en
+  su prueba manual). Su endpoint `fal-ai/nano-banana/edit` acepta varias
+  imágenes en `image_urls` de forma nativa — ahí van juntas la OG y el
+  logo, mismo mecanismo de "el modelo decide cómo usarlas" pero es el
+  caso de uso nativo del endpoint, no un uso secundario como en Ideogram.
+  No usa `image_size` exacto sino un preset de `aspect_ratio` (9:16, 4:5,
+  etc.), mapeado desde las dimensiones reales de cada formato.
+- Se agregó `generateImageBufferNanoBanana()`, se extendió `buildEditPrompt`
+  y la selección de proveedor a `"openai" | "fal" | "nano"` — mismo
+  principio de CERO capas de código sobre el prompt del admin que ya
+  regía para fal.ai/Ideogram. Se cambió la variable de repo
+  `IMAGE_PROVIDER` de `fal` a `nano` (no hace falta redeploy). Typecheck
+  limpio en worker y web.

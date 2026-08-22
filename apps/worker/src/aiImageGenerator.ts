@@ -108,6 +108,63 @@ async function generateImageBufferFal(
   return Buffer.from(await imgRes.arrayBuffer());
 }
 
+// Tercer proveedor (22/8/2026, pedido de Milton tras 3 fallas distintas de
+// Ideogram en pruebas reales): Nano Banana (Gemini de Google) vía fal.ai.
+// A diferencia de Ideogram (difusión pura, sin capa de lenguaje), Nano
+// Banana es un modelo nativo de LLM multimodal — arquitectura más parecida
+// a ChatGPT Images (donde el prompt de etiquetas SÍ funcionó bien en la
+// prueba manual de Milton) que a un modelo de difusión clásico. Su endpoint
+// de edición acepta varias imágenes de referencia a la vez, así que el OG y
+// el logo van juntos en `image_urls` — mismo mecanismo de "el modelo decide
+// cómo usarlas" que se le pidió a Ideogram, pero es el caso de uso nativo
+// de este endpoint, no un uso secundario ("style reference").
+const FAL_NANO_BANANA_EDIT_URL = "https://fal.run/fal-ai/nano-banana/edit";
+
+async function generateImageBufferNanoBanana(
+  prompt: string,
+  ogImageUrl: string,
+  width: number,
+  height: number,
+  logoUrl?: string | null,
+): Promise<Buffer | null> {
+  if (!FAL_API_KEY) return null;
+  const imageUrls = [ogImageUrl];
+  if (logoUrl) imageUrls.push(logoUrl);
+  // Nano Banana no acepta ancho/alto exactos como Ideogram, solo un preset
+  // de relación de aspecto — se mapea desde las dimensiones reales del
+  // formato (FORMAT_TARGET más abajo solo usa 9:16 y 4:5 hoy).
+  const ratio = width / height;
+  const aspectRatio =
+    Math.abs(ratio - 1) < 0.02
+      ? "1:1"
+      : Math.abs(ratio - 9 / 16) < 0.02
+        ? "9:16"
+        : Math.abs(ratio - 4 / 5) < 0.02
+          ? "4:5"
+          : "auto";
+  const res = await fetch(FAL_NANO_BANANA_EDIT_URL, {
+    method: "POST",
+    headers: { Authorization: `Key ${FAL_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      prompt: prompt.slice(0, 4000),
+      image_urls: imageUrls,
+      aspect_ratio: aspectRatio,
+      output_format: "jpeg",
+    }),
+    signal: AbortSignal.timeout(90000),
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(`fal.ai (nano-banana) HTTP ${res.status}: ${errText.slice(0, 500)}`);
+  }
+  const data = (await res.json()) as { images?: { url?: string }[] };
+  const resultUrl = data.images?.[0]?.url;
+  if (!resultUrl) throw new Error(`fal.ai (nano-banana): respuesta sin imagen: ${JSON.stringify(data).slice(0, 500)}`);
+  const imgRes = await fetch(resultUrl, { signal: AbortSignal.timeout(30000) });
+  if (!imgRes.ok) return null;
+  return Buffer.from(await imgRes.arrayBuffer());
+}
+
 export type AiImageFormat = "story" | "reel-image" | "post" | "facebook-story";
 
 // Tamaño que se le pide a gpt-image-1-mini (solo soporta 1024x1024,
@@ -321,22 +378,22 @@ async function decideCreativeDirection(
  * rostro, y que quede espacio para el logo real (que se pega después con
  * compositeLogo). Frases estables, siempre las mismas.
  *
- * Camino fal.ai/Ideogram (pedido explícito de Milton, 22/8/2026): CERO
- * capas encima del prompt del admin — se manda `decision.visualLine` tal
- * cual lo devolvió el modelo, sin agregar, traducir ni reescribir nada
- * desde código. Si Ideogram necesita otro formato de texto, ese ajuste va
- * en el prompt del admin, no acá. El logo tampoco se resuelve con una
- * frase de texto ni se compone después por código: se manda como
- * material de referencia (`image_urls` en generateImageBufferFal) y el
+ * Caminos fal.ai/Ideogram y fal.ai/Nano Banana (pedido explícito de
+ * Milton, 22/8/2026): CERO capas encima del prompt del admin — se manda
+ * `decision.visualLine` tal cual lo devolvió el modelo, sin agregar,
+ * traducir ni reescribir nada desde código. Si el proveedor necesita otro
+ * formato de texto, ese ajuste va en el prompt del admin, no acá. El logo
+ * tampoco se resuelve con una frase de texto ni se compone después por
+ * código: se manda como material de referencia (`image_urls`) y el
  * propio modelo decide cómo incorporarlo.
  */
 function buildEditPrompt(
   decision: CreativeDecision,
   hasLogo: boolean,
   hasPhotoRef: boolean,
-  provider: "openai" | "fal",
+  provider: "openai" | "fal" | "nano",
 ): string {
-  if (provider === "fal") {
+  if (provider === "fal" || provider === "nano") {
     return decision.visualLine;
   }
   return [
@@ -398,22 +455,29 @@ export async function generateAiSocialImage(params: {
   // dibujar (probado en vivo: lo cortaba/deformaba pese a instrucciones
   // explícitas) — se pega aparte, después, con código exacto. Solo la OG
   // y la foto de perfil (cuando aplica) van como referencias reales.
-  // Camino fal.ai: distinto a propósito (pedido de Milton) — el logo SÍ
-  // se manda como material de referencia dentro de generateImageBufferFal,
-  // y el modelo decide cómo usarlo.
+  // Caminos fal.ai/Nano Banana: distinto a propósito (pedido de Milton) —
+  // el logo SÍ se manda como material de referencia, y el modelo decide
+  // cómo usarlo.
   const refImages = [ogPng, photoPng].filter((b): b is Buffer => b !== null);
-  const prompt = buildEditPrompt(decision, Boolean(logoPng), Boolean(photoPng), IMAGE_PROVIDER === "fal" ? "fal" : "openai");
+  const providerLabel: "openai" | "fal" | "nano" =
+    IMAGE_PROVIDER === "fal" ? "fal" : IMAGE_PROVIDER === "nano" ? "nano" : "openai";
+  const prompt = buildEditPrompt(decision, Boolean(logoPng), Boolean(photoPng), providerLabel);
 
   try {
     // Proveedor de la Caja de generación de imagen — mismo switch que
     // promptBoxPipeline.ts (env var IMAGE_PROVIDER, ya configurada en los
-    // 3 workflows). "fal" usa Ideogram V3 Remix, con mejor fidelidad de
-    // texto en español confirmada tanto en el pipeline de 8 cajas como en
-    // una prueba real de este mismo generador (22/8/2026, gpt-image-1-mini
-    // corrompió letras pese a un prompt corto y limpio).
+    // 3 workflows). "fal" usa Ideogram V3 Remix; "nano" usa Nano Banana
+    // (Gemini) — agregado 22/8/2026 tras 3 fallas distintas de Ideogram en
+    // pruebas reales (sin texto, texto deforme, imagen sin relación con la
+    // OG). Nano Banana es un modelo nativo de LLM multimodal, arquitectura
+    // más parecida a ChatGPT Images (donde el prompt de etiquetas sí
+    // funcionó en la prueba manual de Milton) que a un modelo de difusión
+    // puro como Ideogram.
     let rawOutput: Buffer | null;
-    if (IMAGE_PROVIDER === "fal") {
+    if (providerLabel === "fal") {
       rawOutput = await generateImageBufferFal(prompt, params.ogImageUrl, target.width, target.height, params.businessLogoUrl);
+    } else if (providerLabel === "nano") {
+      rawOutput = await generateImageBufferNanoBanana(prompt, params.ogImageUrl, target.width, target.height, params.businessLogoUrl);
     } else {
       const form = new FormData();
       form.append("model", "gpt-image-1-mini");
@@ -450,11 +514,11 @@ export async function generateAiSocialImage(params: {
     const resized = await sharp(rawOutput)
       .resize(target.width, target.height, { fit: "cover", position: "attention" })
       .toBuffer();
-    // Con fal.ai el logo ya se le mandó al modelo como material de
-    // referencia (generateImageBufferFal) — no se vuelve a pegar por
-    // código encima, para no terminar con dos logos superpuestos.
+    // Con fal.ai/Nano Banana el logo ya se le mandó al modelo como material
+    // de referencia — no se vuelve a pegar por código encima, para no
+    // terminar con dos logos superpuestos.
     const withLogo =
-      logoPng && IMAGE_PROVIDER !== "fal" ? await compositeLogo(resized, target.width, target.height, logoPng) : resized;
+      logoPng && providerLabel === "openai" ? await compositeLogo(resized, target.width, target.height, logoPng) : resized;
 
     // JPEG en vez de PNG: los generadores devuelven PNG pesado, e Instagram
     // tarda en procesar el media proporcionalmente a su peso. JPEG calidad
@@ -471,7 +535,7 @@ export async function generateAiSocialImage(params: {
     if (!checkRes.ok) return null;
 
     console.log(
-      `[AI Image] Generada con ${IMAGE_PROVIDER === "fal" ? "fal-ai/ideogram-v3-remix" : "gpt-image-1-mini"}: ${blob.url} (${(finalBuffer.length / 1024).toFixed(0)}KB) — ` +
+      `[AI Image] Generada con ${providerLabel === "fal" ? "fal-ai/ideogram-v3-remix" : providerLabel === "nano" ? "fal-ai/nano-banana" : "gpt-image-1-mini"}: ${blob.url} (${(finalBuffer.length / 1024).toFixed(0)}KB) — ` +
         `etiquetas: ${decision.tagString} — texto: "${decision.message}"` +
         `${logoPng ? " +logo" : ""}${photoPng ? " +foto" : ""}`,
     );
