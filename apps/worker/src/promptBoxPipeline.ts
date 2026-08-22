@@ -230,6 +230,34 @@ function findFieldByPattern(value: unknown, keyPattern: RegExp, minLength = 1, d
 }
 
 /**
+ * Igual que findFieldByPattern pero para valores numéricos — usado para
+ * extraer los límites medibles de headline (`headline_max_canvas_height_percent`,
+ * `new_target_max_canvas_height_percent`, etc.) que las Cajas 5/7/8 acordaron
+ * usar como "fuente de verdad" compartida en vez de instrucciones cualitativas
+ * ("headline pequeño/mediano") — rediseño de Milton 22/8/2026 para que
+ * Generador e Inspector "hablen el mismo idioma numérico" y dejen de
+ * rechazarse en un loop sin converger.
+ */
+function findNumberByPattern(value: unknown, keyPattern: RegExp, depth = 0): number | null {
+  if (depth > 5 || value == null || typeof value !== "object") return null;
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findNumberByPattern(item, keyPattern, depth + 1);
+      if (found !== null) return found;
+    }
+    return null;
+  }
+  for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+    if (typeof val === "number" && keyPattern.test(key)) return val;
+  }
+  for (const val of Object.values(value as Record<string, unknown>)) {
+    const found = findNumberByPattern(val, keyPattern, depth + 1);
+    if (found !== null) return found;
+  }
+  return null;
+}
+
+/**
  * Respaldo cuando el JSON llega inválido (p.ej. truncado a mitad de
  * generación): busca directamente con regex un campo "...prompt": "..."
  * y decodifica sus escapes reutilizando JSON.parse sobre el string aislado.
@@ -476,6 +504,24 @@ export async function runPromptBoxPipeline(params: {
   }
   if (!visualPrompt) return { imageUrl: null, approved: false, boxOutputs };
 
+  // Límite medible de headline que las Cajas 5/7/8 acordaron usar como
+  // "fuente de verdad" compartida (rediseño de Milton 22/8/2026, en vez de
+  // instrucciones cualitativas tipo "headline pequeño/mediano" que
+  // generaban un loop de rechazos sin converger). Arranca con el valor que
+  // decidió la Caja 5 y se actualiza con el de la Caja 8 después de cada
+  // corrección — así la Caja 7 siempre evalúa contra el límite REAL usado
+  // para generar la imagen que está inspeccionando, no contra un supuesto.
+  let headlineHeightPercent: number | null = null;
+  let headlineWidthPercent: number | null = null;
+  try {
+    const box5Parsed = JSON.parse(visualPrompt);
+    headlineHeightPercent = findNumberByPattern(box5Parsed, /^headline_max_canvas_height_percent$/i);
+    headlineWidthPercent = findNumberByPattern(box5Parsed, /^headline_max_canvas_width_percent$/i);
+  } catch {
+    // visualPrompt no llegó como JSON válido esta vez — Caja 7 usará su
+    // propia escalera estándar (12/9/7.5%) según el número de intento.
+  }
+
   // CAJA 6 — Generador de Imagen (no razona, solo ejecuta) + CAJA 7 — Inspector
   // + CAJA 8 — Corrector, con reintento hasta MAX_RETRIES.
   const box6 = bySlug.get("image-generator");
@@ -562,13 +608,23 @@ export async function runPromptBoxPipeline(params: {
     // esperada, márgenes) — antes solo recibía la imagen generada y el
     // texto de la Caja 4, así que estaba juzgando sin las referencias que
     // su propio prompt asume que va a tener. Auditoría 21/8/2026.
+    //
+    // Rediseño de Milton 22/8/2026: la Caja 7 ahora exige explícitamente
+    // el número de intento y el límite medible de headline REALMENTE usado
+    // para generar esta imagen (de la Caja 5 en el intento original, o de
+    // la corrección de la Caja 8 en reintentos) — sin esto no tiene con
+    // qué comparar y cae de vuelta en juicios cualitativos.
     const generatedBase64 = (await fetchImageAsPng(generatedImageUrl))?.toString("base64") ?? null;
     const inspectorImages = [ogBase64, logoBase64, generatedBase64].filter(
       (img): img is string => Boolean(img),
     );
+    const headlineLimitText =
+      headlineHeightPercent != null
+        ? `headline_max_canvas_height_percent=${headlineHeightPercent}, headline_max_canvas_width_percent=${headlineWidthPercent ?? "(no especificado)"}.`
+        : "no se pudo extraer un valor numérico explícito esta vez — usa la escalera estándar del sistema según el número de intento (12% / 9% / 7.5%).";
     const inspectorRaw = await runTextBox(
       box7,
-      `${baseContext}\n\nSalida de la Caja 2 (Director Creativo — modelo conceptual y dirección):\n${boxOutputs["creative-director"] || "(no disponible)"}\n\nSalida de la Caja 3 (Diseñador de Composición — composición, márgenes y áreas esperadas):\n${boxOutputs["composition-designer"] || "(no disponible)"}\n\nMensaje/texto que debía llevar la imagen, LOCKED_COPY (según Caja 4):\n${boxOutputs["visual-text-editor"] || "(no disponible)"}\n\n¿Hay logo esperado?: ${hasLogo ? "sí" : "no"}\n\nSe adjuntan ${inspectorImages.length} imágenes en este orden: 1) la imagen OG original del artículo (para comparar fidelidad); ${logoBase64 ? "2) el archivo original del logo del usuario (para comparar identidad y proporciones); 3) " : "2) "}la imagen final generada, la que debes inspeccionar.`,
+      `${baseContext}\n\nNúmero de intento actual (1=generación original, 2=primer reintento, 3=segundo reintento): ${attempt + 1}.\n\nLímite de headline REALMENTE usado para generar esta imagen (fuente de verdad): ${headlineLimitText}\n\nSalida de la Caja 2 (Director Creativo — modelo conceptual y dirección):\n${boxOutputs["creative-director"] || "(no disponible)"}\n\nSalida de la Caja 3 (Diseñador de Composición — composición, márgenes y áreas esperadas):\n${boxOutputs["composition-designer"] || "(no disponible)"}\n\nSalida de la Caja 5 (Constructor del Prompt Visual — LOCKED_COPY, concepto, composición y typography_constraints):\n${boxOutputs["visual-prompt-builder"] || "(no disponible)"}${attempt > 0 ? `\n\nCorrección aplicada por la Caja 8 que generó esta imagen (contiene el nuevo límite usado):\n${boxOutputs["auto-corrector"] || "(no disponible)"}` : ""}\n\nMensaje/texto que debía llevar la imagen, LOCKED_COPY (según Caja 4):\n${boxOutputs["visual-text-editor"] || "(no disponible)"}\n\n¿Hay logo esperado?: ${hasLogo ? "sí" : "no"}\n\nSe adjuntan ${inspectorImages.length} imágenes en este orden: 1) la imagen OG original del artículo (para comparar fidelidad); ${logoBase64 ? "2) el archivo original del logo del usuario (para comparar identidad y proporciones); 3) " : "2) "}la imagen final generada, la que debes inspeccionar.`,
       inspectorImages,
     );
     boxOutputs["quality-inspector"] = inspectorRaw;
@@ -587,13 +643,36 @@ export async function runPromptBoxPipeline(params: {
     // generada que se está corrigiendo y el número de intento actual —
     // antes no recibía ninguna imagen, solo la descripción textual del
     // Inspector. Auditoría 21/8/2026.
+    //
+    // Rediseño de Milton 22/8/2026: la Caja 8 ahora exige explícitamente la
+    // salida completa de la Caja 5 (LOCKED_COPY, concepto, composición,
+    // typography_constraints) y el JSON completo de la Caja 7 (incluido
+    // `headline_measurement` con el límite configurado real) — antes solo
+    // recibía el texto de "problemas" ya resumido por mi código, perdiendo
+    // el valor numérico exacto que necesita para calcular el siguiente
+    // target absoluto (12% → 9% → 7.5%).
     const correctedPrompt = await runTextBox(
       box8,
-      `Intento actual: ${attempt + 1} de ${MAX_RETRIES + 1} (MAX_RETRIES=${MAX_RETRIES}).\n\nPrompt anterior usado para generar la imagen:\n${currentPrompt}\n\nProblemas encontrados por el Inspector de Calidad:\n${verdict.problems}\n\nSe adjunta la imagen generada que fue rechazada, para que la veas antes de corregir.\n\nConstruye un nuevo prompt corregido, cambiando solo lo necesario para resolver esos problemas.`,
+      `Intento actual: ${attempt + 1} de ${MAX_RETRIES + 1} (MAX_RETRIES=${MAX_RETRIES}).\n\nModelo/proveedor usado para generar la imagen rechazada: ${modelLabel}.\n\nPrompt anterior usado para generar la imagen:\n${currentPrompt}\n\nSalida completa de la Caja 5 (Constructor del Prompt Visual — LOCKED_COPY, concepto, composición, typography_constraints):\n${boxOutputs["visual-prompt-builder"] || "(no disponible)"}\n\nSalida completa de la Caja 7 (Inspector de Calidad, JSON con quality_inspection, headline_measurement, scores, problems, corrections, preserve, next_action):\n${inspectorRaw}\n\nSe adjunta la imagen generada que fue rechazada, para que la veas antes de corregir.\n\nConstruye un nuevo prompt corregido, cambiando solo lo necesario para resolver esos problemas.`,
       [generatedBase64],
     );
     boxOutputs["auto-corrector"] = correctedPrompt;
     if (!correctedPrompt) break;
+    // Actualiza el límite medible de headline con el nuevo target que haya
+    // decidido la Caja 8, para que la Caja 7 lo reciba como "fuente de
+    // verdad" en el siguiente intento. Si la Caja 8 no corrigió headline
+    // (`required: false` o el campo no viene), se conserva el valor anterior.
+    try {
+      const box8Parsed = JSON.parse(correctedPrompt);
+      const newHeight = findNumberByPattern(box8Parsed, /^new_target_max_canvas_height_percent$/i);
+      const newWidth = findNumberByPattern(box8Parsed, /^headline_max_canvas_width_percent$/i);
+      if (newHeight != null) headlineHeightPercent = newHeight;
+      if (newWidth != null) headlineWidthPercent = newWidth;
+    } catch {
+      // No era JSON válido esta vez — se conserva el límite anterior;
+      // extractVisualPrompt ya tiene su propio respaldo por regex para
+      // rescatar el texto del prompt en sí.
+    }
     // La restricción del logo se reaplica siempre: el Corrector no tiene por
     // qué preservarla palabra por palabra en su reescritura.
     currentPrompt = extractVisualPrompt(correctedPrompt, `Caja 8 (intento ${attempt})`) + logoConstraint;
