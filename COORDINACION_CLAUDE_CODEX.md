@@ -4946,3 +4946,19 @@ generador viejo con un prompt más simple
   modificación al contenido del prompt.
 - Typecheck limpio en worker. **Capitán de migración liberó el lote:**
   Claude. Sin migraciones, pusheado `093518e`. Pendiente: prueba real.
+
+### 2026-08-22 (continuación) — Quinta prueba: fal.ai rechazó la llamada, error 422 (style + image_urls incompatibles)
+
+- **Capitán de migración:** Claude — revisará y aplicará el lote completo.
+  Motivo: arreglar conflicto style/image_urls en fal.ai (error 422), sin
+  migraciones. Nadie más ejecuta Prisma hasta su liberación.
+- **Prueba real (formato story):** falló ANTES de generar nada — fal.ai
+  devolvió HTTP 422: `"style" cannot be "DESIGN" when "image_urls" are
+  provided`. No se pudo detectar en el análisis de la documentación
+  porque no está en el texto general del schema, es una restricción de
+  validación cruzada entre parámetros.
+- **Fix:** `generateImageBufferFal()` ahora solo manda `style: "DESIGN"`
+  cuando NO hay logo (no se envía `image_urls`); con logo, se omite
+  `style` (usa el default de fal.ai) para no perder la funcionalidad más
+  reciente que pidió Milton (logo como material de referencia). Trade-off
+  documentado en el comentario del código. Typecheck limpio.

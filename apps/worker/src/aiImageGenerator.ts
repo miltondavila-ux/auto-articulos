@@ -66,15 +66,12 @@ async function generateImageBufferFal(
     image_url: ogImageUrl,
     image_size: { width, height },
     rendering_speed: "TURBO",
-    // Ambos confirmados en la documentación oficial de fal.ai/Ideogram
-    // (22/8/2026), tras una prueba real donde el texto salió minúsculo y
-    // deformado: "expand_prompt" (MagicPrompt) reescribe el prompt antes
-    // de generar — puede estar distorsionando el texto exacto entre
-    // comillas — así que se apaga para tener control literal. "style:
-    // DESIGN" es el preset que Ideogram documenta específicamente para
-    // tipografía/elementos de diseño (por defecto no usa ninguno).
+    // Confirmado en la documentación oficial de fal.ai/Ideogram (22/8/2026),
+    // tras una prueba real donde el texto salió minúsculo y deformado:
+    // "expand_prompt" (MagicPrompt) reescribe el prompt antes de generar —
+    // puede estar distorsionando el texto exacto entre comillas — así que
+    // se apaga para tener control literal.
     expand_prompt: false,
-    style: "DESIGN",
   };
   // Pedido explícito de Milton (22/8/2026): en vez de reservarle espacio al
   // logo con una frase de texto aparte y pegarlo después con código, se le
@@ -82,7 +79,17 @@ async function generateImageBufferFal(
   // "style reference", no como objeto exacto a calcar) y el propio modelo
   // decide cómo incorporarlo. Por eso este archivo YA NO compone el logo
   // con compositeLogo() cuando el proveedor es fal — ver generateAiSocialImage.
-  if (logoUrl) body.image_urls = [logoUrl];
+  //
+  // "style: DESIGN" (el preset que Ideogram documenta para tipografía) solo
+  // se manda cuando NO hay logo — la API de fal.ai la rechaza con error 422
+  // cuando también se envían `image_urls`: "`style` cannot be 'DESIGN' when
+  // `image_urls` are provided." Confirmado en vivo el 22/8/2026 (falló la
+  // generación completa). Con logo, se deja sin `style` (default de fal.ai).
+  if (logoUrl) {
+    body.image_urls = [logoUrl];
+  } else {
+    body.style = "DESIGN";
+  }
   const res = await fetch(FAL_IDEOGRAM_REMIX_URL, {
     method: "POST",
     headers: { Authorization: `Key ${FAL_API_KEY}`, "Content-Type": "application/json" },
