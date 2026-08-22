@@ -417,6 +417,14 @@ function buildEditPrompt(
  * artículo. Devuelve null si CUALQUIER paso falla — quien llama debe
  * cancelar la oportunidad, no publicar sin imagen ni reintentar.
  */
+export interface AiImageResult {
+  imageUrl: string;
+  // Prompt exacto (línea cruda, sin modificar) que se le mandó al
+  // generador de imagen — pedido explícito de Milton (22/8/2026) para
+  // poder verlo en el histórico sin reconstruirlo desde los logs.
+  prompt: string;
+}
+
 export async function generateAiSocialImage(params: {
   articleTitle: string;
   articleSummary: string;
@@ -425,7 +433,7 @@ export async function generateAiSocialImage(params: {
   businessLogoUrl?: string | null;
   profilePhotoUrl?: string | null;
   pathPrefix: string;
-}): Promise<string | null> {
+}): Promise<AiImageResult | null> {
   if (!OPENAI_IMAGE_API_KEY) return null;
 
   const target = FORMAT_TARGET[params.format];
@@ -539,7 +547,7 @@ export async function generateAiSocialImage(params: {
         `etiquetas: ${decision.tagString} — texto: "${decision.message}"` +
         `${logoPng ? " +logo" : ""}${photoPng ? " +foto" : ""}`,
     );
-    return blob.url;
+    return { imageUrl: blob.url, prompt };
   } catch (err) {
     console.warn("[AI Image] Fallo generando imagen con IA:", err);
     return null;

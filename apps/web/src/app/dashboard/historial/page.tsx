@@ -257,6 +257,11 @@ interface SocialOpportunity {
   publishedAt: string | null;
   startedAt: string | null;
   finishedAt: string | null;
+  // Imagen y prompt exactos usados cuando la publicación usó el generador
+  // de imágenes con IA — pedido explícito de Milton (22/8/2026) para ver
+  // esto en el histórico sin tener que revisar los logs de GitHub Actions.
+  imageUrl: string | null;
+  aiImagePrompt: string | null;
 }
 
 function HistorialRedes() {
@@ -492,6 +497,48 @@ function HistorialRedes() {
                           </a>
                         )}
                       </div>
+                      {opp.imageUrl && (
+                        <div style={{ marginTop: 12 }}>
+                          <p style={{ margin: "0 0 6px 0", color: "#1d1d1f", fontSize: 13, fontWeight: 500 }}>
+                            Imagen generada con IA:
+                          </p>
+                          <img
+                            src={opp.imageUrl}
+                            alt="Imagen generada con IA"
+                            style={{ maxWidth: 220, borderRadius: 8, border: "1px solid #e5e5ea", display: "block" }}
+                          />
+                          <a
+                            href={opp.imageUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="link-button"
+                            style={{ display: "inline-block", marginTop: 6, fontSize: 12 }}
+                          >
+                            Abrir imagen en tamaño completo &rarr;
+                          </a>
+                          {opp.aiImagePrompt && (
+                            <>
+                              <p style={{ margin: "10px 0 6px 0", color: "#1d1d1f", fontSize: 13, fontWeight: 500 }}>
+                                Prompt exacto usado:
+                              </p>
+                              <div
+                                style={{
+                                  padding: 10,
+                                  background: "#f5f5f7",
+                                  borderRadius: 8,
+                                  fontSize: 12,
+                                  color: "#6e6e73",
+                                  fontFamily: "monospace",
+                                  whiteSpace: "pre-wrap",
+                                  wordBreak: "break-word",
+                                }}
+                              >
+                                {opp.aiImagePrompt}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
                       {opp.errorLog && (
                         <div
                           style={{

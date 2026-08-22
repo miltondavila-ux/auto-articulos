@@ -4997,3 +4997,46 @@ generador viejo con un prompt más simple
   `IMAGE_PROVIDER` de `fal` a `nano` (no hace falta redeploy). Typecheck
   limpio en worker y web. **Capitán de migración liberó el lote:**
   Claude. Sin migraciones, pusheado `2349b0b`. Pendiente: prueba real.
+
+### 2026-08-22 (continuación) — Guardar prompt/imagen de IA en SocialOpportunity y mostrarlo en el histórico
+
+- **Capitán de migración:** Claude — revisará y aplicará el lote completo.
+  Motivo: guardar prompt de imagen y URL en SocialOpportunity, mostrarlo
+  en historial. **Nadie más ejecuta Prisma hasta su liberación.**
+- Milton pidió que cada prueba deje registro permanente y visible en
+  `/dashboard/historial` de: el prompt exacto usado, la URL de la imagen
+  generada, y el artículo (ya existía). Antes había que reconstruir el
+  prompt manualmente desde los logs de GitHub Actions cada vez.
+- **Bug preexistente encontrado de paso:** la columna `imageUrl` existe en
+  la tabla real desde la migración `20260811000000` (creada ahí con
+  `ADD COLUMN IF NOT EXISTS`), pero JAMÁS se declaró en `schema.prisma` —
+  Prisma Client no podía leerla ni escribirla pese a existir en la base.
+- **Migración nueva** `20260822200000_add_social_opportunity_ai_image_prompt`:
+  agrega `aiImagePrompt TEXT` (columna nueva) y re-agrega `imageUrl TEXT`
+  de forma idempotente (`IF NOT EXISTS`, no rompe nada si ya existe).
+  **SQL para que Milton la aplique en Supabase:**
+  ```sql
+  ALTER TABLE "SocialOpportunity" ADD COLUMN IF NOT EXISTS "imageUrl" TEXT;
+  ALTER TABLE "SocialOpportunity" ADD COLUMN IF NOT EXISTS "aiImagePrompt" TEXT;
+  ```
+- **Código:** `aiImageGenerator.ts` — `generateAiSocialImage()` ahora
+  devuelve `{ imageUrl, prompt } | null` (antes solo `string | null`).
+  `socialPublish.ts` — `generateSocialImageWithSelectedEngine()` propaga
+  ese objeto; los 5 puntos de publicación de Instagram/Facebook Story
+  (reel-image, story, post, infografia, carousel, facebook-story) guardan
+  `imageUrl`/`aiImagePrompt` en el `update` final de `SocialOpportunity`.
+- **Bonus, mismo archivo:** se corrigió el bug cosmético de `formatLabel`
+  detectado antes hoy (solo distinguía "Carrusel"/"Reel-image", todo lo
+  demás se logueaba como "Infografía") — ahora distingue Story y Post
+  también.
+- **Web:** `historial/page.tsx` — nuevo bloque que muestra la imagen
+  generada (miniatura + link a tamaño completo) y el prompt exacto usado,
+  dentro del panel expandible de cada publicación, solo cuando
+  `imageUrl` existe.
+- `npx prisma generate` corrido localmente (no toca la base real).
+  Typecheck limpio en worker y web.
+- **PENDIENTE — Milton debe correr el SQL de arriba en Supabase** antes de
+  la próxima prueba real, si no las columnas nuevas quedarán `null`
+  siempre (Prisma Client fallaría al intentar escribir en una columna que
+  no existe en la base — hay que confirmar esto se corrió antes de
+  publicar de nuevo).

@@ -18,7 +18,7 @@ import {
 } from "@auto-articulos/shared";
 import { put } from "@vercel/blob";
 import sharp from "sharp";
-import { generateAiSocialImage, AiImageFormat } from "./aiImageGenerator";
+import { generateAiSocialImage, AiImageFormat, AiImageResult } from "./aiImageGenerator";
 import { runPromptBoxPipeline } from "./promptBoxPipeline";
 
 /**
@@ -27,6 +27,9 @@ import { runPromptBoxPipeline } from "./promptBoxPipeline";
  * (promptBoxPipeline.ts, en pruebas) según `usePromptBoxPipeline` del
  * usuario — pedido explícito de Milton (20/8/2026) para poder probar el
  * pipeline nuevo sin tocar ni arriesgar el generador que ya funciona.
+ *
+ * Devuelve también el prompt exacto usado (pedido de Milton, 22/8/2026)
+ * para guardarlo en SocialOpportunity y mostrarlo en el histórico.
  */
 async function generateSocialImageWithSelectedEngine(params: {
   userId: string;
@@ -38,7 +41,7 @@ async function generateSocialImageWithSelectedEngine(params: {
   profilePhotoUrl?: string | null;
   pathPrefix: string;
   usePromptBoxPipeline: boolean;
-}): Promise<string | null> {
+}): Promise<AiImageResult | null> {
   if (params.usePromptBoxPipeline) {
     const result = await runPromptBoxPipeline(params);
     console.log(
@@ -48,8 +51,8 @@ async function generateSocialImageWithSelectedEngine(params: {
     // técnicamente exista un archivo generado — se agotaron los reintentos
     // sin aprobación, así que el llamador debe cancelar la oportunidad, no
     // publicar algo con defectos ya detectados.
-    if (!result.approved) return null;
-    return result.imageUrl;
+    if (!result.approved || !result.imageUrl) return null;
+    return { imageUrl: result.imageUrl, prompt: result.boxOutputs["visual-prompt-builder"] || "" };
   }
   return generateAiSocialImage(params);
 }
@@ -517,8 +520,9 @@ async function processFacebookStoryJob(job: {
 
   const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
   let imageUrl: string | null = null;
+  let aiPrompt: string | null = null;
   if (sourceImage && user?.aiImageGenerationEnabled) {
-    imageUrl = await generateSocialImageWithSelectedEngine({
+    const generated = await generateSocialImageWithSelectedEngine({
       userId: job.userId,
       articleTitle: job.articleTitle,
       articleSummary: summary,
@@ -529,6 +533,8 @@ async function processFacebookStoryJob(job: {
       pathPrefix: `facebook/ai/story/${job.titleId || job.id}`,
       usePromptBoxPipeline: Boolean(user.usePromptBoxPipeline),
     });
+    imageUrl = generated?.imageUrl ?? null;
+    aiPrompt = generated?.prompt ?? null;
     if (!imageUrl) throw new Error("No se pudo generar la imagen con IA para la Historia de Facebook.");
   } else {
     imageUrl = sourceImage ? await normalizeSocialImage(sourceImage, 9 / 16) : null;
@@ -539,7 +545,7 @@ async function processFacebookStoryJob(job: {
     decryptSecret(integration.accessTokenEncrypted), integration.facebookPageId, imageUrl,
   );
 
-  await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: result.permalink || result.postId, publishedAt: new Date(), errorLog: null } });
+  await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: result.permalink || result.postId, publishedAt: new Date(), errorLog: null, imageUrl, aiImagePrompt: aiPrompt } });
   if (job.titleId) await prisma.titleEvent.create({ data: { titleId: job.titleId, message: `Historia publicada en Facebook Page (${integration.facebookPageName || integration.facebookPageId}) - ID: ${result.postId}` } });
   return true;
 }
@@ -681,6 +687,11 @@ async function processInstagramJob(job: {
     : job.suggestedText;
 
   let result;
+  // Pedido explícito de Milton (22/8/2026): guardar la imagen y el prompt
+  // exacto usados para que aparezcan en el histórico, sin tener que
+  // reconstruirlos desde los logs de GitHub Actions cada vez.
+  let publishedImageUrl: string | null = null;
+  let publishedAiPrompt: string | null = null;
 
   console.log(`[Instagram Publish] user=${job.userId} format=${format} businessAccountId=${integration.instagramBusinessAccountId}`);
 
@@ -702,6 +713,7 @@ async function processInstagramJob(job: {
       if (imageUrls.length < 2) {
         throw new Error(`No se pudieron generar suficientes imágenes para el carrusel (solo ${imageUrls.length}).`);
       }
+      publishedImageUrl = imageUrls[0];
       result = await publishInstagramCarousel(
         accessToken,
         integration.instagramBusinessAccountId,
@@ -719,7 +731,7 @@ async function processInstagramJob(job: {
         // Opción 2 del "Creador de Imágenes para Redes Sociales": generador
         // IA aparte, partiendo de la OG. Sin fallback a la OG sin tocar si
         // falla — se cancela la oportunidad (regla explícita, por costo).
-        imageUrl = await generateSocialImageWithSelectedEngine({
+        const generated = await generateSocialImageWithSelectedEngine({
           userId: job.userId,
           articleTitle: job.articleTitle,
           articleSummary: summary,
@@ -730,6 +742,8 @@ async function processInstagramJob(job: {
           pathPrefix: `instagram/ai/reel-image/${job.titleId || job.id}`,
           usePromptBoxPipeline: Boolean(user.usePromptBoxPipeline),
         });
+        imageUrl = generated?.imageUrl ?? null;
+        publishedAiPrompt = generated?.prompt ?? null;
         console.log(`[Instagram ${format}] AI image: ${imageUrl?.substring(0, 80)}`);
         if (!imageUrl) throw new Error("No se pudo generar la imagen con IA para Reel.");
       } else {
@@ -738,6 +752,7 @@ async function processInstagramJob(job: {
         console.log(`[Instagram ${format}] adapted article image: ${imageUrl?.substring(0, 80)}`);
         if (!imageUrl) throw new Error("No se pudo generar la imagen estilo Reel.");
       }
+      publishedImageUrl = imageUrl;
       result = await publishInstagramImage(
         accessToken,
         integration.instagramBusinessAccountId,
@@ -753,7 +768,7 @@ async function processInstagramJob(job: {
       const wasAiGenerated = Boolean(sourceImage && user?.aiImageGenerationEnabled);
       let imageUrl: string | null = null;
       if (sourceImage && user?.aiImageGenerationEnabled) {
-        imageUrl = await generateSocialImageWithSelectedEngine({
+        const generated = await generateSocialImageWithSelectedEngine({
           userId: job.userId,
           articleTitle: job.articleTitle,
           articleSummary: summary,
@@ -764,11 +779,14 @@ async function processInstagramJob(job: {
           pathPrefix: `instagram/ai/story/${job.titleId || job.id}`,
           usePromptBoxPipeline: Boolean(user.usePromptBoxPipeline),
         });
+        imageUrl = generated?.imageUrl ?? null;
+        publishedAiPrompt = generated?.prompt ?? null;
         if (!imageUrl) throw new Error("No se pudo generar la imagen con IA para Stories.");
       } else {
         imageUrl = sourceImage ? await normalizeSocialImage(sourceImage, 9 / 16) : null;
         if (!imageUrl) throw new Error("No se pudo adaptar la imagen del artículo para Stories.");
       }
+      publishedImageUrl = imageUrl;
       result = await publishInstagramStory(
         accessToken,
         integration.instagramBusinessAccountId,
@@ -787,7 +805,7 @@ async function processInstagramJob(job: {
       const wasAiGenerated = Boolean(sourceImage && user?.aiImageGenerationEnabled);
       let imageUrl: string | null = null;
       if (sourceImage && user?.aiImageGenerationEnabled) {
-        imageUrl = await generateSocialImageWithSelectedEngine({
+        const generated = await generateSocialImageWithSelectedEngine({
           userId: job.userId,
           articleTitle: job.articleTitle,
           articleSummary: summary,
@@ -798,11 +816,14 @@ async function processInstagramJob(job: {
           pathPrefix: `instagram/ai/post/${job.titleId || job.id}`,
           usePromptBoxPipeline: Boolean(user.usePromptBoxPipeline),
         });
+        imageUrl = generated?.imageUrl ?? null;
+        publishedAiPrompt = generated?.prompt ?? null;
         if (!imageUrl) throw new Error("No se pudo generar la imagen con IA para el post.");
       } else {
         imageUrl = sourceImage ? await normalizeSocialImage(sourceImage, 4 / 5) : null;
         if (!imageUrl) throw new Error("No se pudo adaptar la imagen del artículo para el post.");
       }
+      publishedImageUrl = imageUrl;
       result = await publishInstagramImage(
         accessToken,
         integration.instagramBusinessAccountId,
@@ -817,6 +838,7 @@ async function processInstagramJob(job: {
       const imageUrl = await generateInstagramImage(job.titleId || job.id, summary, "infografia", undefined, user?.imagePrompt, user?.infographicPrompt);
       console.log(`[Instagram Infografia] generated image: ${imageUrl?.substring(0, 80)}`);
       if (!imageUrl) throw new Error("No se pudo generar la infografía.");
+      publishedImageUrl = imageUrl;
       // La infografía no tiene camino sin IA — siempre se genera con IA.
       result = await publishInstagramImage(
         accessToken,
@@ -839,10 +861,25 @@ async function processInstagramJob(job: {
       postId: result.permalink || result.postId,
       publishedAt: new Date(),
       errorLog: null,
+      imageUrl: publishedImageUrl,
+      aiImagePrompt: publishedAiPrompt,
     },
   });
 
-  const formatLabel = format === "carousel" ? "Carrusel" : format === "reel-image" ? "Reel-image" : "Infografía";
+  // Bug preexistente (no de hoy) encontrado en auditoría 22/8/2026: solo
+  // distinguía "Carrusel"/"Reel-image", cualquier otro formato (incluidos
+  // "story" y "post") se etiquetaba "Infografía" en el log, aunque el
+  // postId/estado guardados siempre fueron correctos.
+  const formatLabel =
+    format === "carousel"
+      ? "Carrusel"
+      : format === "reel-image"
+        ? "Reel-image"
+        : format === "story"
+          ? "Story"
+          : format === "post"
+            ? "Post"
+            : "Infografía";
 
   console.log(`Publicado en Instagram (${formatLabel}): ${job.id} — postId: ${result.postId}`);
 

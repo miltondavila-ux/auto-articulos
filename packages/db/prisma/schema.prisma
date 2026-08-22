@@ -649,6 +649,17 @@ model SocialOpportunity {
   postId        String?
   errorLog      String?   @db.Text
   skipReason    String?
+  // Columna real en la base desde la migración 20260811000000 pero nunca
+  // declarada en este schema — Prisma Client no podía leerla ni escribirla
+  // pese a existir en la tabla. Corregido 22/8/2026 al agregar el guardado
+  // del prompt/imagen de IA que pidió Milton.
+  imageUrl      String?
+  // Prompt EXACTO que se le mandó al generador de imagen (línea cruda del
+  // Director Creativo, sin modificar) — para que Milton pueda ver en el
+  // histórico qué se usó realmente en cada publicación, sin tener que
+  // reconstruirlo desde los logs de GitHub Actions. Pedido explícito de
+  // Milton, 22/8/2026.
+  aiImagePrompt String?   @db.Text
   createdAt     DateTime  @default(now())
   publishedAt   DateTime?
 
