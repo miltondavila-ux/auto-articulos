@@ -68,6 +68,15 @@ async function generateImageBufferFal(
       image_url: ogImageUrl,
       image_size: { width, height },
       rendering_speed: "TURBO",
+      // Ambos confirmados en la documentación oficial de fal.ai/Ideogram
+      // (22/8/2026), tras una prueba real donde el texto salió minúsculo y
+      // deformado: "expand_prompt" (MagicPrompt) reescribe el prompt antes
+      // de generar — puede estar distorsionando el texto exacto entre
+      // comillas — así que se apaga para tener control literal. "style:
+      // DESIGN" es el preset que Ideogram documenta específicamente para
+      // tipografía/elementos de diseño (por defecto no usa ninguno).
+      expand_prompt: false,
+      style: "DESIGN",
     }),
     signal: AbortSignal.timeout(90000),
   });

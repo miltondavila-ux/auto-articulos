@@ -4856,3 +4856,33 @@ generador viejo con un prompt más simple
   `TEXT:` a instrucción natural para fal.ai, sin migraciones, typecheck
   limpio worker+web, pusheado `f97c946`. Pendiente: prueba real para
   confirmar que Ideogram ahora sí renderiza el texto.
+
+### 2026-08-22 (continuación) — Tercera prueba: texto salió pero minúsculo y deformado → ajustes de parámetros de Ideogram según su documentación oficial
+
+- **Capitán de migración:** Claude — revisará y aplicará el lote completo.
+  Motivo: ajustar `expand_prompt` y `style` para fal.ai/Ideogram, sin
+  migraciones. Nadie más ejecuta Prisma hasta su liberación.
+- **Prueba real:** con el texto traducido a instrucción natural, Ideogram
+  SÍ intentó renderizar texto esta vez, pero salió minúsculo, mal ubicado
+  y con letras deformadas — mejor que "nada de texto" pero todavía no
+  usable.
+- **Investigación en la documentación oficial de fal.ai/Ideogram** (schema
+  OpenAPI + guías de prompting de Ideogram V3): se encontraron dos
+  parámetros que no se estaban enviando:
+  - `expand_prompt` (MagicPrompt) viene en `true` por defecto — Ideogram
+    reescribe el prompt automáticamente antes de generar, lo que
+    probablemente distorsionaba el texto exacto entre comillas. Se apaga
+    (`false`) para control literal.
+  - `style: "DESIGN"` — preset documentado específicamente para
+    tipografía/elementos de diseño, no se estaba usando (default: ninguno).
+  - Dato de contenido (no de código, anotado para Milton): Ideogram
+    recomienda 6 palabras o menos por texto para renderizado confiable;
+    la regla actual del prompt permite hasta 9.
+- **Se investigaron alternativas de modelo dentro de fal.ai** (pedido de
+  Milton): Ideogram V3 TURBO ($0.03/imagen) ya es de las opciones más
+  baratas que también destacan en fidelidad de texto — Recraft V3 es
+  similar en precisión (~90%) pero más caro ($0.04), FLUX Kontext/Nano
+  Banana 2 cuestan más ($0.04-0.06+) y ninguna fuente los destaca
+  específicamente por texto como a Ideogram. Recomendación: no cambiar
+  de modelo todavía, agotar primero el ajuste de parámetros de Ideogram.
+- Typecheck limpio en worker.
