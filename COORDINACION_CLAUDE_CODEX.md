@@ -4781,3 +4781,16 @@ generador viejo con un prompt más simple
   línea. Hay que quitar eso, parsear el nuevo formato (separar por
   `TEXT:`), y decidir qué pasa con la instrucción técnica del espacio del
   logo (`buildEditPrompt` hoy le agrega una frase en inglés aparte).
+- **Hecho, commit `2ba2322`, pusheado a `main`.** `decideCreativeDirection()`
+  ya no pide `response_format: json_object` ni le agrega su propia
+  instrucción de JSON al prompt de Milton — el nuevo prompt (catálogo
+  cerrado de etiquetas) dicta su propio formato de salida y el código
+  solo separa por `TEXT:`. `buildEditPrompt()` usa esa línea tal cual;
+  las dos frases técnicas fijas (protección de rostro, espacio del logo)
+  se mantienen porque son estables entre corridas, no la clase de exceso
+  de instrucciones que causó el problema en el pipeline de 8 cajas.
+  `max_tokens` bajado de 900 a 300 (la salida nueva es mucho más corta).
+  Typecheck limpio en worker y web. **Capitán de migración liberó el
+  lote:** Claude. Sin migraciones. Pendiente: falta la prueba real en
+  producción para confirmar que funciona igual de bien que la prueba
+  manual de Milton.
