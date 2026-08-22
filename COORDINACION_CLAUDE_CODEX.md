@@ -4819,4 +4819,8 @@ generador viejo con un prompt más simple
   variable de repo de GitHub Actions) decide el proveedor; `gpt-4o-mini`
   para decidir mensaje/etiquetas no cambia, solo la generación de imagen
   en sí.
-- Typecheck limpio en worker y web.
+- Typecheck limpio en worker y web. **Capitán de migración liberó el
+  lote:** Claude. Resultado: fal.ai/Ideogram cableado en
+  aiImageGenerator.ts, sin migraciones, typecheck limpio worker+web,
+  pusheado `5c4b38f`. Pendiente: prueba real para confirmar que Ideogram
+  resuelve el texto corrupto que dio gpt-image-1-mini.
