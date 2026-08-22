@@ -4824,3 +4824,31 @@ generador viejo con un prompt más simple
   aiImageGenerator.ts, sin migraciones, typecheck limpio worker+web,
   pusheado `5c4b38f`. Pendiente: prueba real para confirmar que Ideogram
   resuelve el texto corrupto que dio gpt-image-1-mini.
+
+### 2026-08-22 (continuación) — Segunda prueba real: Ideogram no renderizó NINGÚN texto → traducir tag+TEXT a inglés natural
+
+- **Capitán de migración:** Claude — revisará y aplicará el lote completo.
+  Motivo: traducir tag+TEXT a instrucción natural para fal.ai, sin
+  migraciones. Nadie más ejecuta Prisma hasta su liberación.
+- **Prueba real (cuenta de Lorena, otra oportunidad de post):** con
+  fal.ai/Ideogram la imagen salió limpia y profesional (foto + logo bien
+  compuesto) pero **sin ningún texto** — Milton confirmó viendo la imagen
+  publicada. Causa: Ideogram es un modelo de difusión directo, sin capa
+  de lenguaje que reinterprete el formato abreviado `/tag /tag ... TEXT:
+  mensaje` — a diferencia de gpt-image-1-mini (que sí lo intentó, aunque
+  corrompiendo letras), Ideogram simplemente no reconoció "TEXT:" como
+  instrucción de renderizado.
+- **Fix:** `buildEditPrompt()` ahora recibe el proveedor; para "fal"
+  traduce el bloque `TEXT: mensaje` a una instrucción explícita en inglés
+  natural con el texto entre comillas (`Render the following text
+  clearly and exactly as written... "mensaje"`), conservando las
+  etiquetas como palabras clave de estilo. El camino de OpenAI no se
+  toca, sigue usando la línea cruda tal cual (ya la interpretaba,
+  aunque con errores de ortografía distintos). Typecheck limpio en
+  worker y web.
+- **Nota aparte, no bloqueante:** se detectó un bug cosmético
+  preexistente (no de hoy) en `socialPublish.ts` línea ~844 —
+  `formatLabel` en el log de éxito solo distingue "Carrusel"/"Reel-image",
+  cualquier otro formato (incluido "post" y "story") se loguea como
+  "Infografía". No afecta el estado real ni el `postId`, solo confunde
+  al leer logs. Queda pendiente, no urgente.

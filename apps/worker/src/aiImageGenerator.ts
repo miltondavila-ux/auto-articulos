@@ -284,22 +284,35 @@ async function decideCreativeDirection(
 
 /**
  * Toma la línea que armó el propio modelo ("/tag /tag ... TEXT: mensaje")
- * TAL CUAL, sin expandirla ni reescribirla, y le agrega SOLO lo que el
- * prompt de Milton no puede cubrir porque depende de decisiones de este
- * código: que no tape el rostro, y que quede espacio para el logo real (el
- * logo ya no se le pide a la IA, se pega después). Estas dos frases son
- * estables — siempre las mismas, nunca cambian entre corridas — así que no
- * son la clase de "exceso de instrucciones" que Milton identificó como
- * causa del problema en el pipeline de 8 cajas (ahí el texto crecía y se
- * contradecía entre cajas encadenadas; acá es una sola llamada con dos
- * frases fijas de seguridad técnica). Rediseño 22/8/2026: antes hasPeople
- * decidía si agregar la protección de rostro; ahora esa frase va siempre
- * (es inofensiva cuando no hay rostro) porque el nuevo formato de salida
- * ya no incluye esa señal.
+ * y le agrega SOLO lo que el prompt de Milton no puede cubrir porque
+ * depende de decisiones de este código: que no tape el rostro, y que
+ * quede espacio para el logo real (el logo ya no se le pide a la IA, se
+ * pega después). Estas dos frases son estables — siempre las mismas,
+ * nunca cambian entre corridas — así que no son la clase de "exceso de
+ * instrucciones" que Milton identificó como causa del problema en el
+ * pipeline de 8 cajas.
+ *
+ * Prueba real 22/8/2026 (cuenta de Lorena): con fal.ai/Ideogram, la línea
+ * cruda "/tag /tag ... TEXT: mensaje" tal cual NO renderizó ningún texto
+ * — Ideogram es un modelo de difusión directo sin capa de lenguaje que
+ * reinterprete atajos (a diferencia de gpt-image-1-mini, que al menos lo
+ * intentó, aunque mal). Para ese proveedor se traduce el bloque "TEXT:
+ * mensaje" a una instrucción explícita en inglés natural con el texto
+ * entre comillas — el formato que Ideogram sí reconoce para renderizar
+ * texto exacto — conservando las etiquetas como palabras clave de estilo.
  */
-function buildEditPrompt(decision: CreativeDecision, hasLogo: boolean, hasPhotoRef: boolean): string {
+function buildEditPrompt(
+  decision: CreativeDecision,
+  hasLogo: boolean,
+  hasPhotoRef: boolean,
+  provider: "openai" | "fal",
+): string {
+  const visualInstruction =
+    provider === "fal"
+      ? `${decision.tagString}. Render the following text clearly and exactly as written, in bold legible typography, with no spelling changes: "${decision.message}"`
+      : decision.visualLine;
   return [
-    decision.visualLine,
+    visualInstruction,
     "ABSOLUTE RULE: if the photo contains a person, the face is the highest-priority zone in the whole image — never cover eyes, nose, mouth or expression with text or anything else. Use empty/negative space instead.",
     hasLogo
       ? "Leave a clean, empty, uncluttered rectangular area in the bottom-right corner (roughly the bottom-right 30% width x 10% height of the frame) with nothing important there — no text, no busy detail, no headline text overlapping it. A real logo will be placed there afterward by separate exact compositing, so do not draw, sketch or invent any logo or brand text yourself in that corner."
@@ -358,7 +371,7 @@ export async function generateAiSocialImage(params: {
   // aparte, después, con código exacto. Solo la OG y la foto de perfil
   // (cuando aplica) van como referencias reales al modelo.
   const refImages = [ogPng, photoPng].filter((b): b is Buffer => b !== null);
-  const prompt = buildEditPrompt(decision, Boolean(logoPng), Boolean(photoPng));
+  const prompt = buildEditPrompt(decision, Boolean(logoPng), Boolean(photoPng), IMAGE_PROVIDER === "fal" ? "fal" : "openai");
 
   try {
     // Proveedor de la Caja de generación de imagen — mismo switch que
