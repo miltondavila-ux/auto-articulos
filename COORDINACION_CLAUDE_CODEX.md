@@ -4961,4 +4961,6 @@ generador viejo con un prompt más simple
   cuando NO hay logo (no se envía `image_urls`); con logo, se omite
   `style` (usa el default de fal.ai) para no perder la funcionalidad más
   reciente que pidió Milton (logo como material de referencia). Trade-off
-  documentado en el comentario del código. Typecheck limpio.
+  documentado en el comentario del código. Typecheck limpio. **Capitán de
+  migración liberó el lote:** Claude. Sin migraciones, pusheado
+  `2b4a540`. Pendiente: prueba real.
