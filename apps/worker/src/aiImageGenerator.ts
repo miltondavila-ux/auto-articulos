@@ -285,10 +285,16 @@ async function decideCreativeDirection(
     const raw = data.choices?.[0]?.message?.content?.trim();
     if (!raw) return null;
 
-    // Formato esperado: "/tag /tag ... TEXT: mensaje exacto" — se separa
-    // por el primer "TEXT:" (sin importar mayúsculas/espacios). Si el
-    // modelo no lo respeta, se descarta en vez de adivinar.
-    const match = raw.match(/^(.*?)\s*TEXT:\s*(.+)$/is);
+    // Formato del prompt del admin (22/8/2026): "/tag /tag ... with
+    // high-contrast [estilo] text that reads: "mensaje exacto"" — el
+    // mensaje va citado, no después de "TEXT:". Se intenta ese patrón
+    // primero; si el prompt vuelve a usar el formato viejo ("TEXT:
+    // mensaje"), sigue funcionando como respaldo. Comillas rectas o
+    // tipográficas, ambas válidas. Si ninguno matchea, se descarta en vez
+    // de adivinar.
+    const quotedMatch = raw.match(/^(.*?)text that reads:\s*["“]([^"”]+)["”]/is);
+    const legacyMatch = quotedMatch ? null : raw.match(/^(.*?)\s*TEXT:\s*(.+)$/is);
+    const match = quotedMatch || legacyMatch;
     if (!match) return null;
     const tagString = match[1].trim();
     const message = match[2].trim();

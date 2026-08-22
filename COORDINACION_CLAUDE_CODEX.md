@@ -4920,3 +4920,28 @@ generador viejo con un prompt más simple
   técnicas de prompting para renderizado de texto que Milton pueda usar
   para ajustar el prompt del admin (pedido explícito, no implementar en
   código).
+
+### 2026-08-22 (continuación) — Milton actualizó el prompt del admin; ajuste de parseo en código
+
+- **Capitán de migración:** Claude — revisará y aplicará el lote completo.
+  Motivo: arreglar el parseo del nuevo formato de salida del prompt
+  (`text that reads`), sin migraciones. Nadie más ejecuta Prisma hasta su
+  liberación.
+- Milton actualizó el prompt de la Caja de Director Creativo con los
+  hallazgos de la documentación de Ideogram (máximo 6 palabras, texto
+  citado dentro de una frase, adjetivos tipográficos en vez de nombres de
+  fuente, alto contraste) y un paso nuevo de comparación interna entre
+  2-3 combinaciones de etiquetas antes de elegir la de mayor impacto
+  visual — pedido explícito de Milton tras notar que el prompt anterior
+  elegía la primera combinación válida en vez de buscar la más
+  impactante.
+- **Bug real detectado antes de probar:** el formato de salida cambió de
+  `TEXT: mensaje` a `... text that reads: "mensaje"` (mensaje citado, sin
+  la palabra `TEXT:`). El parser en `decideCreativeDirection()` buscaba
+  literalmente `TEXT:` — con el prompt nuevo nunca iba a matchear y la
+  generación de imagen habría fallado siempre, en silencio. Se actualizó
+  el regex para reconocer el nuevo patrón (con respaldo al formato viejo
+  por si acaso). Verificado contra un ejemplo real del prompt: parsea
+  correctamente. Esto es una corrección de lectura de datos, no una
+  modificación al contenido del prompt.
+- Typecheck limpio en worker.
