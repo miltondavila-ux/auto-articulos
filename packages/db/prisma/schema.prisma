@@ -654,6 +654,8 @@ model SocialOpportunity {
   // pese a existir en la tabla. Corregido 22/8/2026 al agregar el guardado
   // del prompt/imagen de IA que pidió Milton.
   imageUrl      String?
+  // URL exacta de la imagen OG original usada como referencia visual.
+  ogImageUrl    String?
   // Prompt EXACTO que se le mandó al generador de imagen (línea cruda del
   // Director Creativo, sin modificar) — para que Milton pueda ver en el
   // histórico qué se usó realmente en cada publicación, sin tener que

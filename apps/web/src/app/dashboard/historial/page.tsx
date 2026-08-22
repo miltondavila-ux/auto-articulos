@@ -261,6 +261,7 @@ interface SocialOpportunity {
   // de imágenes con IA — pedido explícito de Milton (22/8/2026) para ver
   // esto en el histórico sin tener que revisar los logs de GitHub Actions.
   imageUrl: string | null;
+  ogImageUrl: string | null;
   aiImagePrompt: string | null;
 }
 
@@ -537,6 +538,16 @@ function HistorialRedes() {
                               </div>
                             </>
                           )}
+                        </div>
+                      )}
+                      {opp.ogImageUrl && (
+                        <div style={{ marginTop: 12 }}>
+                          <p style={{ margin: "0 0 6px 0", color: "#1d1d1f", fontSize: 13, fontWeight: 500 }}>
+                            Imagen OG utilizada:
+                          </p>
+                          <a href={opp.ogImageUrl} target="_blank" rel="noreferrer" className="link-button" style={{ fontSize: 12 }}>
+                            Abrir imagen OG original &rarr;
+                          </a>
                         </div>
                       )}
                       {opp.errorLog && (
