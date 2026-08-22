@@ -4914,4 +4914,9 @@ generador viejo con un prompt más simple
   "style reference", no como objeto exacto a calcar) y el propio modelo
   decide cómo usarlo. `compositeLogo()` se salta cuando `IMAGE_PROVIDER
   === "fal"` para no terminar con dos logos superpuestos.
-- Typecheck limpio en worker y web.
+- Typecheck limpio en worker y web. **Capitán de migración liberó el
+  lote:** Claude. Sin migraciones, pusheado `91a5ec1`. Pendiente: prueba
+  real, y buscar en foros/documentación de la comunidad de Ideogram
+  técnicas de prompting para renderizado de texto que Milton pueda usar
+  para ajustar el prompt del admin (pedido explícito, no implementar en
+  código).
