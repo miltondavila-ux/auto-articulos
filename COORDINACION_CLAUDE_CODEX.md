@@ -4944,4 +4944,5 @@ generador viejo con un prompt más simple
   por si acaso). Verificado contra un ejemplo real del prompt: parsea
   correctamente. Esto es una corrección de lectura de datos, no una
   modificación al contenido del prompt.
-- Typecheck limpio en worker.
+- Typecheck limpio en worker. **Capitán de migración liberó el lote:**
+  Claude. Sin migraciones, pusheado `093518e`. Pendiente: prueba real.
