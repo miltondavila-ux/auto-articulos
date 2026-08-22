@@ -4766,3 +4766,18 @@ generador viejo con un prompt más simple
   `IMAGE_PROVIDER` de los 3 workflows si no se vuelven a usar. Milton fue
   explícito: **no tocar nada de esto todavía**, solo dejarlo anotado como
   pendiente hasta que el nuevo prompt simple esté validado en producción.
+
+### 2026-08-22 (continuación) — Simplificando aiImageGenerator.ts al formato de una línea
+
+- **Capitán de migración:** Claude — revisará y aplicará el lote completo.
+  Motivo: simplificar aiImageGenerator.ts al formato de una línea (tags +
+  TEXT), sin migraciones. Nadie más ejecuta Prisma hasta su liberación.
+- Milton ya tiene el nuevo prompt de sistema (catálogo cerrado de
+  etiquetas + salida de una sola línea `/tag /tag ... TEXT: mensaje`),
+  escrito por su GPT de prompts. Contenido aprobado tal cual.
+- Pendiente: el código de `decideCreativeDirection()` hoy fuerza
+  `response_format: json_object` y le agrega su propia instrucción de
+  "responde solo JSON" al prompt — incompatible con la salida de una sola
+  línea. Hay que quitar eso, parsear el nuevo formato (separar por
+  `TEXT:`), y decidir qué pasa con la instrucción técnica del espacio del
+  logo (`buildEditPrompt` hoy le agrega una frase en inglés aparte).
