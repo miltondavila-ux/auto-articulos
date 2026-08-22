@@ -26,6 +26,7 @@ const OPENAI_EDIT_URL = "https://api.openai.com/v1/images/edits";
 
 const FAL_API_KEY = process.env.FAL_API_KEY;
 const FAL_IDEOGRAM_REMIX_URL = "https://fal.run/fal-ai/ideogram/v3/remix";
+const FAL_GPT_IMAGE_2_EDIT_URL = "https://fal.run/openai/gpt-image-2/edit";
 
 // Adaptador de proveedor para la Caja 6 (pedido explícito de Milton: "la
 // arquitectura debe permitir cambiar de proveedor... sin tocar las cajas
@@ -100,6 +101,43 @@ async function generateImageBufferFal(
   const data = (await res.json()) as { images?: { url?: string }[] };
   const resultUrl = data.images?.[0]?.url;
   if (!resultUrl) throw new Error(`fal.ai: respuesta sin imagen: ${JSON.stringify(data).slice(0, 500)}`);
+  const imgRes = await fetch(resultUrl, { signal: AbortSignal.timeout(30000) });
+  if (!imgRes.ok) return null;
+  return Buffer.from(await imgRes.arrayBuffer());
+}
+
+async function generateImageBufferGptImage2(
+  prompt: string,
+  ogImageUrl: string,
+  width: number,
+  height: number,
+  logoImageUrl?: string | null,
+): Promise<Buffer | null> {
+  if (!FAL_API_KEY) return null;
+  const imageUrls = [ogImageUrl];
+  if (logoImageUrl) imageUrls.push(logoImageUrl);
+  const apiWidth = Math.ceil(width / 16) * 16;
+  const apiHeight = Math.ceil(height / 16) * 16;
+  const res = await fetch(FAL_GPT_IMAGE_2_EDIT_URL, {
+    method: "POST",
+    headers: { Authorization: `Key ${FAL_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      prompt: prompt.slice(0, 4000),
+      image_urls: imageUrls,
+      image_size: { width: apiWidth, height: apiHeight },
+      quality: "medium",
+      num_images: 1,
+      output_format: "jpeg",
+    }),
+    signal: AbortSignal.timeout(120000),
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(`fal.ai (gpt-image-2) HTTP ${res.status}: ${errText.slice(0, 500)}`);
+  }
+  const data = (await res.json()) as { images?: { url?: string }[] };
+  const resultUrl = data.images?.[0]?.url;
+  if (!resultUrl) throw new Error(`fal.ai (gpt-image-2): respuesta sin imagen: ${JSON.stringify(data).slice(0, 500)}`);
   const imgRes = await fetch(resultUrl, { signal: AbortSignal.timeout(30000) });
   if (!imgRes.ok) return null;
   return Buffer.from(await imgRes.arrayBuffer());
@@ -553,18 +591,25 @@ export async function runPromptBoxPipeline(params: {
   // poder ver cuánto se va gastando). Es un estimado fijo según el nivel
   // configurado, no un número real devuelto por la API — fal.ai no
   // devuelve el costo exacto en la respuesta.
-  const IMAGE_COST_PER_ATTEMPT = IMAGE_PROVIDER === "fal" ? 0.03 : 0.015; // fal TURBO vs OpenAI medium
+  const IMAGE_COST_PER_ATTEMPT = IMAGE_PROVIDER === "fal" ? 0.03 : IMAGE_PROVIDER === "gpt-image-2" || IMAGE_PROVIDER === "gpt2" ? 0.054 : 0.015;
   let estimatedImageSpend = 0;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     const genStart = Date.now();
     let generatedImageUrl: string | null = null;
     console.log(`[PromptBoxPipeline] intento ${attempt}/${MAX_RETRIES} — prompt final (${currentPrompt.length} chars): ${currentPrompt.slice(0, 1500)}`);
-    const modelLabel = IMAGE_PROVIDER === "fal" ? "fal-ai/ideogram-v3-remix" : "gpt-image-1-mini";
+    const modelLabel =
+      IMAGE_PROVIDER === "fal"
+        ? "fal-ai/ideogram-v3-remix"
+        : IMAGE_PROVIDER === "gpt-image-2" || IMAGE_PROVIDER === "gpt2"
+          ? "openai/gpt-image-2/edit"
+          : "gpt-image-1-mini";
     try {
       const raw =
         IMAGE_PROVIDER === "fal"
           ? await generateImageBufferFal(currentPrompt, params.ogImageUrl, target.width, target.height)
+          : IMAGE_PROVIDER === "gpt-image-2" || IMAGE_PROVIDER === "gpt2"
+            ? await generateImageBufferGptImage2(currentPrompt, params.ogImageUrl, target.width, target.height, params.businessLogoUrl)
           : await generateImageBufferOpenAI(currentPrompt, refImages);
       estimatedImageSpend += IMAGE_COST_PER_ATTEMPT;
       // Ojo: esto es SOLO el costo de la Caja 6 (generación de imagen) — no

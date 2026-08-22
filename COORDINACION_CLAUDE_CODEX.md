@@ -5124,6 +5124,9 @@ quien retome, sin depender del chat:
   URL, además del filtro obligatorio por usuario. Esto permite probar el
   artículo del deducible sin publicar accidentalmente otra oportunidad
   pendiente de Lorena. No requiere migración.
+- **Capitán de migración liberó el lote:** Codex. Resultado: revertida la
+  columna `ogImageUrl`; no queda migración pendiente. El filtro seguro por
+  `article_url` permanece sin migración.
 - **Modelo de negocio de Milton, por si hace falta para cálculos**: $25
   fijo (24 publicaciones incluidas) + $12 adicionales (hasta 60
   publicaciones totales) = $37/mes por 60 publicaciones. El costo de
@@ -5131,9 +5134,18 @@ quien retome, sin depender del chat:
   frente a ese ingreso — margen nunca baja de ~93% en el peor caso. La
   decisión de proveedor debe ser 100% por confiabilidad, no por precio.
 
-**Siguiente paso pendiente, apenas se retome:** correr una prueba real
-con Nano Banana (`IMAGE_PROVIDER=nano`, ya activo) para el prompt vigente
-del admin, y revisar el resultado en `/dashboard/historial` (imagen +
+**Cambio de proveedor GPT Image 2 (22/8/2026):** se agregó el adaptador
+`openai/gpt-image-2/edit` vía fal.ai en el generador activo y en el pipeline
+de 8 cajas, seleccionado mediante `IMAGE_PROVIDER=gpt-image-2` (también
+acepta `gpt2`). Envía la OG y el logo como referencias, usa calidad
+`medium` y dimensiones compatibles con múltiplos de 16. El costo estimado
+de la imagen es $0.054 por intento para el tamaño vertical equivalente;
+el costo total del flujo incluye además las llamadas de análisis de texto.
+La prueba queda pendiente después de actualizar la variable de repositorio.
+
+**Siguiente paso pendiente, apenas se retome:** actualizar la variable de
+repositorio a `IMAGE_PROVIDER=gpt-image-2`, correr una prueba real con el
+prompt vigente del admin, y revisar el resultado en `/dashboard/historial` (imagen +
 prompt exacto ya deberían aparecer ahí). Si Nano Banana también falla,
 las alternativas ya investigadas y descartadas por ahora son: `gpt-image-1`
 completo (se descontinúa el 23/10/2026, no conviene), `gpt-image-1.5`

@@ -51,6 +51,7 @@ const OPENAI_EDIT_URL = "https://api.openai.com/v1/images/edits";
 // Ideogram en el pipeline de 8 cajas, así que se activa acá también.
 const FAL_API_KEY = process.env.FAL_API_KEY;
 const FAL_IDEOGRAM_REMIX_URL = "https://fal.run/fal-ai/ideogram/v3/remix";
+const FAL_GPT_IMAGE_2_EDIT_URL = "https://fal.run/openai/gpt-image-2/edit";
 const IMAGE_PROVIDER = (process.env.IMAGE_PROVIDER || "openai").toLowerCase();
 
 async function generateImageBufferFal(
@@ -160,6 +161,46 @@ async function generateImageBufferNanoBanana(
   const data = (await res.json()) as { images?: { url?: string }[] };
   const resultUrl = data.images?.[0]?.url;
   if (!resultUrl) throw new Error(`fal.ai (nano-banana): respuesta sin imagen: ${JSON.stringify(data).slice(0, 500)}`);
+  const imgRes = await fetch(resultUrl, { signal: AbortSignal.timeout(30000) });
+  if (!imgRes.ok) return null;
+  return Buffer.from(await imgRes.arrayBuffer());
+}
+
+async function generateImageBufferGptImage2(
+  prompt: string,
+  ogImageUrl: string,
+  width: number,
+  height: number,
+  logoUrl?: string | null,
+): Promise<Buffer | null> {
+  if (!FAL_API_KEY) return null;
+  const imageUrls = [ogImageUrl];
+  if (logoUrl) imageUrls.push(logoUrl);
+  // GPT Image 2 requires custom dimensions to be multiples of 16. Keep the
+  // requested social ratio while leaving only a minimal final normalization
+  // crop for the platform's exact dimensions.
+  const apiWidth = Math.ceil(width / 16) * 16;
+  const apiHeight = Math.ceil(height / 16) * 16;
+  const res = await fetch(FAL_GPT_IMAGE_2_EDIT_URL, {
+    method: "POST",
+    headers: { Authorization: `Key ${FAL_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      prompt: prompt.slice(0, 4000),
+      image_urls: imageUrls,
+      image_size: { width: apiWidth, height: apiHeight },
+      quality: "medium",
+      num_images: 1,
+      output_format: "jpeg",
+    }),
+    signal: AbortSignal.timeout(120000),
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(`fal.ai (gpt-image-2) HTTP ${res.status}: ${errText.slice(0, 500)}`);
+  }
+  const data = (await res.json()) as { images?: { url?: string }[] };
+  const resultUrl = data.images?.[0]?.url;
+  if (!resultUrl) throw new Error(`fal.ai (gpt-image-2): respuesta sin imagen: ${JSON.stringify(data).slice(0, 500)}`);
   const imgRes = await fetch(resultUrl, { signal: AbortSignal.timeout(30000) });
   if (!imgRes.ok) return null;
   return Buffer.from(await imgRes.arrayBuffer());
@@ -391,9 +432,9 @@ function buildEditPrompt(
   decision: CreativeDecision,
   hasLogo: boolean,
   hasPhotoRef: boolean,
-  provider: "openai" | "fal" | "nano",
+  provider: "openai" | "fal" | "nano" | "gpt-image-2",
 ): string {
-  if (provider === "fal" || provider === "nano") {
+  if (provider === "fal" || provider === "nano" || provider === "gpt-image-2") {
     return decision.visualLine;
   }
   return [
@@ -467,8 +508,14 @@ export async function generateAiSocialImage(params: {
   // el logo SÍ se manda como material de referencia, y el modelo decide
   // cómo usarlo.
   const refImages = [ogPng, photoPng].filter((b): b is Buffer => b !== null);
-  const providerLabel: "openai" | "fal" | "nano" =
-    IMAGE_PROVIDER === "fal" ? "fal" : IMAGE_PROVIDER === "nano" ? "nano" : "openai";
+  const providerLabel: "openai" | "fal" | "nano" | "gpt-image-2" =
+    IMAGE_PROVIDER === "fal"
+      ? "fal"
+      : IMAGE_PROVIDER === "nano"
+        ? "nano"
+        : IMAGE_PROVIDER === "gpt-image-2" || IMAGE_PROVIDER === "gpt2"
+          ? "gpt-image-2"
+          : "openai";
   const prompt = buildEditPrompt(decision, Boolean(logoPng), Boolean(photoPng), providerLabel);
 
   try {
@@ -486,6 +533,8 @@ export async function generateAiSocialImage(params: {
       rawOutput = await generateImageBufferFal(prompt, params.ogImageUrl, target.width, target.height, params.businessLogoUrl);
     } else if (providerLabel === "nano") {
       rawOutput = await generateImageBufferNanoBanana(prompt, params.ogImageUrl, target.width, target.height, params.businessLogoUrl);
+    } else if (providerLabel === "gpt-image-2") {
+      rawOutput = await generateImageBufferGptImage2(prompt, params.ogImageUrl, target.width, target.height, params.businessLogoUrl);
     } else {
       const form = new FormData();
       form.append("model", "gpt-image-1-mini");
@@ -542,8 +591,16 @@ export async function generateAiSocialImage(params: {
     const checkRes = await fetch(blob.url, { method: "HEAD" });
     if (!checkRes.ok) return null;
 
+    const modelLabel =
+      providerLabel === "fal"
+        ? "fal-ai/ideogram-v3-remix"
+        : providerLabel === "nano"
+          ? "fal-ai/nano-banana"
+          : providerLabel === "gpt-image-2"
+            ? "openai/gpt-image-2/edit"
+            : "gpt-image-1-mini";
     console.log(
-      `[AI Image] Generada con ${providerLabel === "fal" ? "fal-ai/ideogram-v3-remix" : providerLabel === "nano" ? "fal-ai/nano-banana" : "gpt-image-1-mini"}: ${blob.url} (${(finalBuffer.length / 1024).toFixed(0)}KB) — ` +
+      `[AI Image] Generada con ${modelLabel}: ${blob.url} (${(finalBuffer.length / 1024).toFixed(0)}KB) — ` +
         `etiquetas: ${decision.tagString} — texto: "${decision.message}"` +
         `${logoPng ? " +logo" : ""}${photoPng ? " +foto" : ""}`,
     );
