@@ -4885,4 +4885,7 @@ generador viejo con un prompt más simple
   Banana 2 cuestan más ($0.04-0.06+) y ninguna fuente los destaca
   específicamente por texto como a Ideogram. Recomendación: no cambiar
   de modelo todavía, agotar primero el ajuste de parámetros de Ideogram.
-- Typecheck limpio en worker.
+- Typecheck limpio en worker. **Capitán de migración liberó el lote:**
+  Claude. Resultado: `expand_prompt=false` y `style=DESIGN` agregados a
+  fal.ai, sin migraciones, typecheck limpio, pusheado `9969cea`.
+  Pendiente: prueba real.
