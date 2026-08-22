@@ -5039,4 +5039,8 @@ generador viejo con un prompt más simple
   la próxima prueba real, si no las columnas nuevas quedarán `null`
   siempre (Prisma Client fallaría al intentar escribir en una columna que
   no existe en la base — hay que confirmar esto se corrió antes de
-  publicar de nuevo).
+  publicar de nuevo). **Capitán de migración liberó el lote:** Claude.
+  Código pusheado `0d6960d`. **BLOQUEADO hasta que Milton corra el SQL de
+  arriba en Supabase** — si publica antes, el `update` final de
+  `SocialOpportunity` fallaría al intentar escribir `aiImagePrompt` en
+  una columna que todavía no existe.
