@@ -1,0 +1,29 @@
+name: Diagnóstico - Estado en base (Mauricio Medina)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  diagnosticar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DIRECT_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Generar cliente de Prisma
+        run: npx prisma generate --schema=packages/db/prisma/schema.prisma
+
+      - name: Ejecutar diagnóstico (solo lectura, no toca el navegador)
+        working-directory: apps/worker
+        run: npx tsx src/diagnose-mauricio-status.ts
