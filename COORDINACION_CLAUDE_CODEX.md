@@ -4995,4 +4995,5 @@ generador viejo con un prompt más simple
   principio de CERO capas de código sobre el prompt del admin que ya
   regía para fal.ai/Ideogram. Se cambió la variable de repo
   `IMAGE_PROVIDER` de `fal` a `nano` (no hace falta redeploy). Typecheck
-  limpio en worker y web.
+  limpio en worker y web. **Capitán de migración liberó el lote:**
+  Claude. Sin migraciones, pusheado `2349b0b`. Pendiente: prueba real.
