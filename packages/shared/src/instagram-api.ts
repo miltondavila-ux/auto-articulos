@@ -239,9 +239,16 @@ export async function publishInstagramImage(
   accessToken: string,
   instagramBusinessAccountId: string,
   imageUrl: string,
-  caption: string
+  caption: string,
+  // Requerido a propósito (no opcional/default) para forzar a cada llamador
+  // a decidir explícitamente — antes quedaba hardcodeado en "true" siempre,
+  // incluso cuando la imagen era la foto OG del artículo sin tocar (Opción
+  // 1, sin IA involucrada). Eso etiquetaba ante Meta como "generado por IA"
+  // contenido que en realidad era una foto real, solo recortada. Auditoría
+  // 21/8/2026.
+  isAiGenerated: boolean,
 ): Promise<InstagramPublishResult> {
-  console.log(`[Instagram API] publishImage: businessAccountId=${instagramBusinessAccountId} imageUrl=${imageUrl.substring(0, 100)}`);
+  console.log(`[Instagram API] publishImage: businessAccountId=${instagramBusinessAccountId} imageUrl=${imageUrl.substring(0, 100)} isAiGenerated=${isAiGenerated}`);
   const maxCaption = 2200;
   const safeCaption = caption.length > maxCaption
     ? caption.substring(0, maxCaption - 3) + "..."
@@ -251,7 +258,7 @@ export async function publishInstagramImage(
     media_type: "IMAGE",
     image_url: imageUrl,
     caption: safeCaption,
-    is_ai_generated: "true",
+    is_ai_generated: isAiGenerated ? "true" : "false",
     access_token: accessToken,
   });
 
@@ -284,10 +291,15 @@ export async function publishInstagramStory(
   accessToken: string,
   instagramBusinessAccountId: string,
   imageUrl: string,
+  // Antes esta función nunca enviaba is_ai_generated, por lo que ninguna
+  // Historia quedaba etiquetada como generada por IA ante Meta aunque sí lo
+  // fuera. Auditoría 21/8/2026, mismo hallazgo que en publishInstagramImage.
+  isAiGenerated: boolean,
 ): Promise<InstagramPublishResult> {
   const containerParams = new URLSearchParams({
     media_type: "STORIES",
     image_url: imageUrl,
+    is_ai_generated: isAiGenerated ? "true" : "false",
     access_token: accessToken,
   });
   const containerRes = await fetch(`${GRAPH_API_URL}/${instagramBusinessAccountId}/media`, {

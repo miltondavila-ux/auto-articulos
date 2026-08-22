@@ -713,6 +713,7 @@ async function processInstagramJob(job: {
 
     case "reel-image": {
       const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
+      const wasAiGenerated = Boolean(sourceImage && user?.aiImageGenerationEnabled);
       let imageUrl: string | null = null;
       if (sourceImage && user?.aiImageGenerationEnabled) {
         // Opción 2 del "Creador de Imágenes para Redes Sociales": generador
@@ -742,12 +743,14 @@ async function processInstagramJob(job: {
         integration.instagramBusinessAccountId,
         imageUrl,
         finalPost,
+        wasAiGenerated,
       );
       break;
     }
 
     case "story": {
       const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
+      const wasAiGenerated = Boolean(sourceImage && user?.aiImageGenerationEnabled);
       let imageUrl: string | null = null;
       if (sourceImage && user?.aiImageGenerationEnabled) {
         imageUrl = await generateSocialImageWithSelectedEngine({
@@ -770,6 +773,7 @@ async function processInstagramJob(job: {
         accessToken,
         integration.instagramBusinessAccountId,
         imageUrl,
+        wasAiGenerated,
       );
       break;
     }
@@ -780,6 +784,7 @@ async function processInstagramJob(job: {
       // (generador IA) según aiImageGenerationEnabled. 4:5 vertical, el
       // formato de feed que más espacio ocupa en pantalla hoy en Instagram.
       const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
+      const wasAiGenerated = Boolean(sourceImage && user?.aiImageGenerationEnabled);
       let imageUrl: string | null = null;
       if (sourceImage && user?.aiImageGenerationEnabled) {
         imageUrl = await generateSocialImageWithSelectedEngine({
@@ -803,6 +808,7 @@ async function processInstagramJob(job: {
         integration.instagramBusinessAccountId,
         imageUrl,
         finalPost,
+        wasAiGenerated,
       );
       break;
     }
@@ -811,11 +817,13 @@ async function processInstagramJob(job: {
       const imageUrl = await generateInstagramImage(job.titleId || job.id, summary, "infografia", undefined, user?.imagePrompt, user?.infographicPrompt);
       console.log(`[Instagram Infografia] generated image: ${imageUrl?.substring(0, 80)}`);
       if (!imageUrl) throw new Error("No se pudo generar la infografía.");
+      // La infografía no tiene camino sin IA — siempre se genera con IA.
       result = await publishInstagramImage(
         accessToken,
         integration.instagramBusinessAccountId,
         imageUrl,
         finalPost,
+        true,
       );
       break;
     }
