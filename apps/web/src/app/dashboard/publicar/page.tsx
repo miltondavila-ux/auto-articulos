@@ -18,6 +18,9 @@ import PreValidationGuard from "@/components/PreValidationGuard";
 import type { CategoryRow } from "@/types/dashboard";
 
 const DEFAULT_MAX_TITLES_PER_BATCH = 20;
+// null = sin límite (el administrador lo dejó abierto para esta cuenta).
+const DEFAULT_DAILY_ARTICLE_LIMIT: number | null = 20;
+const DEFAULT_MONTHLY_ARTICLE_LIMIT: number | null = 300;
 
 export default function PublicarPage() {
   const router = useRouter();
@@ -37,6 +40,12 @@ export default function PublicarPage() {
   const [disableIndexing, setDisableIndexing] = useState(false);
   const [maxTitlesPerBatch, setMaxTitlesPerBatch] = useState(
     DEFAULT_MAX_TITLES_PER_BATCH,
+  );
+  const [dailyArticleLimit, setDailyArticleLimit] = useState(
+    DEFAULT_DAILY_ARTICLE_LIMIT,
+  );
+  const [monthlyArticleLimit, setMonthlyArticleLimit] = useState(
+    DEFAULT_MONTHLY_ARTICLE_LIMIT,
   );
   // Idioma de ESTE lote (pedido del usuario, 7/8/2026: el idioma es del
   // artículo, no del usuario). Arranca en el configurado del usuario, así que
@@ -92,6 +101,12 @@ export default function PublicarPage() {
         if (typeof meData.maxTitlesPerBatch === "number" && meData.maxTitlesPerBatch >= 1) {
           setMaxTitlesPerBatch(meData.maxTitlesPerBatch);
         }
+        if (meData.dailyArticleLimit === null || typeof meData.dailyArticleLimit === "number") {
+          setDailyArticleLimit(meData.dailyArticleLimit);
+        }
+        if (meData.monthlyArticleLimit === null || typeof meData.monthlyArticleLimit === "number") {
+          setMonthlyArticleLimit(meData.monthlyArticleLimit);
+        }
         if (typeof meData.contentLanguage === "string") {
           setContentLanguage(meData.contentLanguage);
         }
@@ -137,6 +152,18 @@ export default function PublicarPage() {
     .map((line) => line.trim())
     .filter((line) => line.length > 0).length;
   const overLimit = titleCount > maxTitlesPerBatch;
+
+  const cuotaContextoPartes: string[] = [];
+  if (dailyArticleLimit !== null) {
+    cuotaContextoPartes.push(`tu límite diario es de ${dailyArticleLimit} artículos`);
+  }
+  if (monthlyArticleLimit !== null) {
+    cuotaContextoPartes.push(`tu límite mensual es de ${monthlyArticleLimit}`);
+  }
+  const cuotaContextoTexto =
+    cuotaContextoPartes.length > 0
+      ? `Aunque parezca poco, ${cuotaContextoPartes.join(" y ")}, de sobra para posicionarte.`
+      : "";
 
   async function handleIniciar() {
     if (!hasImageCredits) {
@@ -347,7 +374,15 @@ export default function PublicarPage() {
           <p style={{ fontSize: 13, color: "#6e6e73", margin: "0 0 12px" }}>
             Pega un título por línea. Puedes publicar como máximo{" "}
             <strong>{maxTitlesPerBatch}</strong> por lote (si tienes más,
-            divídelos en varios lotes).
+            divídelos en varios lotes).{" "}
+            {dailyArticleLimit === null
+              ? "No tienes límite diario de artículos."
+              : (
+                  <>
+                    Tu límite diario es de <strong>{dailyArticleLimit}</strong>{" "}
+                    artículos.
+                  </>
+                )}
           </p>
           <textarea
             value={titlesText}
@@ -414,10 +449,8 @@ export default function PublicarPage() {
                 podrás publicarlos mañana, cuando se te renueve la cuota.
               </p>
               <p style={{ margin: "10px 0 0", color: "#6e6e73", fontSize: 15 }}>
-                Ese máximo lo asigna el administrador de Auto Artículos. Aunque
-                parezca poco, {maxTitlesPerBatch} al día son{" "}
-                {maxTitlesPerBatch * 30} artículos al mes, de sobra para
-                posicionarte.
+                Ese máximo lo asigna el administrador de Auto Artículos.{" "}
+                {cuotaContextoTexto}
               </p>
             </AvisoCupo>
           )}

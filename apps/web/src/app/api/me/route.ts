@@ -34,6 +34,8 @@ export async function GET() {
         ? { id: actingAdmin.id, email: actingAdmin.email, name: displayName(actingAdmin) }
         : null,
       maxTitlesPerBatch: user.maxTitlesPerBatch,
+      dailyArticleLimit: user.dailyArticleLimit,
+      monthlyArticleLimit: user.monthlyArticleLimit,
       // Servidor donde vive su cuenta de la plataforma. La interfaz lo usa
       // para enlazar al sitio correcto (por ejemplo, recuperar contraseña):
       // desde que hay más de un servidor, un enlace fijo a

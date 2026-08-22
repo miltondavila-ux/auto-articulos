@@ -23,6 +23,8 @@ export async function getCurrentUser() {
       lastName: true,
       role: true,
       maxTitlesPerBatch: true,
+      dailyArticleLimit: true,
+      monthlyArticleLimit: true,
       platformDomain: true,
       contentLanguage: true,
       articleSignature: true,

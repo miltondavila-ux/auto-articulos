@@ -207,9 +207,13 @@ export async function POST(request: NextRequest) {
   const permitidos = Math.max(0, Math.min(titles.length, cupoMasEstrecho.disponible));
 
   if (permitidos === 0) {
+    const contextoMensual =
+      user.monthlyArticleLimit !== null
+        ? ` Tu límite mensual es de ${user.monthlyArticleLimit} artículos.`
+        : "";
     return NextResponse.json(
       {
-        error: `Has alcanzado ${cupoMasEstrecho.tope}, que es ${cupoMasEstrecho.motivo} asignado por el administrador de Auto Artículos. Regresa mañana y tendrás la cuota renovada. Ten en cuenta que ${cupoMasEstrecho.tope} cada día son ${cupoMasEstrecho.tope * 30} artículos al mes, más que suficiente para alcanzar tus objetivos.`,
+        error: `Has alcanzado ${cupoMasEstrecho.tope}, que es ${cupoMasEstrecho.motivo} asignado por el administrador de Auto Artículos. Regresa mañana y tendrás la cuota renovada.${contextoMensual}`,
       },
       { status: 403 },
     );
