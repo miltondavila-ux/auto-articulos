@@ -4665,3 +4665,61 @@ archivo de coordinación).
   auditorías** — decisión explícita de Milton de esperar a que la
   auditoría esté satisfactoriamente completa antes de gastar dinero real
   de nuevo.
+
+### 2026-08-21 — Claude-4: capitanía ocupada, dejo mi fix pendiente sin publicar
+
+- **Tarea de esta sesión:** en `apps/worker/src/queue.ts`, la detección de
+  "créditos de imagen agotados" (mensaje real del sitio: *"Se han agotado
+  los créditos de tu imagen. Solicita más créditos pulsando el botón."*,
+  HTTP 500 de `response_image_chatgpt.php`) nunca coincidía con el patrón
+  buscado — el mensaje real llega con las tildes escapadas (`créditos`,
+  no `créditos`) y el código solo comparaba contra el texto de una SUPOSICIÓN
+  de fallback, nunca contra el mensaje real del servidor. Por eso el usuario
+  reportaba (otra vez) que el popup "Créditos de imagen agotados"
+  (`ImageCreditsModal.tsx`) nunca aparecía pese al error real y repetido.
+  Arreglado: se normalizan los escapes `\uXXXX` antes de comparar y se agregó
+  un patrón (`/agotado los cr[ée]ditos/i`) que sí matchea el mensaje real.
+  Cambio de un solo archivo, **sin migraciones**.
+- **Pedí la capitanía y me la negaron** (correcto): `migration-coordinator.sh
+  claim` falló porque sigue activa a nombre `Claude` (PromptBox, migración
+  pendiente de aplicar en producción por Milton en Supabase — ver nota de
+  Claude-2 arriba sobre por qué esa capitanía NO debe liberarse todavía).
+- **Numeración:** `Claude-2` y `Claude-3` ya estaban tomados hoy por otras
+  sesiones (ver arriba). Esta sesión se numera **Claude-4**.
+- **Decisión, siguiendo instrucción explícita de Milton** ("si otro la
+  tiene, déjalo pendiente"): **no publiqué nada.** El fix de `queue.ts`
+  queda solo en el árbol de trabajo local, sin commit ni push, a la espera
+  de que `Claude` (PromptBox) libere la capitanía. No toqué el lock ni el
+  árbol de esa sesión.
+
+### 2026-08-22 — Claude-4: fix de créditos de imagen publicado, sin tocar la capitanía
+
+- **Publicado `b2e61f6`** en `origin/main`: fix de detección de "créditos de
+  imagen agotados" en `apps/worker/src/queue.ts` (ver más arriba, sesión de
+  ayer). **Un solo archivo, sin migraciones.**
+- **Sobre la capitanía de PromptBox (a nombre `Claude`, reclamada
+  2026-08-21T19:27:29Z):** Milton pidió inicialmente crear una acción para
+  quitársela a quien "no la soltó". Antes de tocar nada se verificó
+  `origin/main` y apareció actividad **real y reciente** bajo esa capitanía
+  (commits hasta hace minutos, ej. `14fb40b`, `7d783b9`) — **no es un lock
+  huérfano**, es una sesión activa (worktree local
+  `.claude/worktrees/creador-imagenes-ia`) que sigue trabajando y
+  legítimamente no la libera porque la migración de PromptBox sigue
+  pendiente de aplicar en Supabase. Milton confirmó: no forzar nada que no
+  se conozca, publicar solo lo propio. **La capitanía de `Claude`
+  (PromptBox) queda intacta, sin tocarla.**
+- **Cómo se publicó sin pisar nada:** el árbol local de Milton (`main`) está
+  fuertemente divergido de `origin/main` (cientos de commits de diferencia
+  en ambos sentidos — no es seguro ramificar ni resolver ahí). En vez de
+  eso: worktree temporal (`git worktree add --detach origin/main`) +
+  `npm install` + `prisma generate` propios (nunca el `node_modules`
+  compartido de Milton, que además tenía sus symlinks `@auto-articulos/*`
+  apuntando a OTRO worktree de otra sesión — exactamente la trampa que
+  advierte el protocolo). Se aplicó el mismo parche que ya estaba probado
+  contra la sección `catch` de `queue.ts`, idéntica en origin. Typecheck
+  limpio. `git add` solo de `queue.ts`, commit, `git fetch` + `rebase
+  origin/main` dos veces (el otro session seguía pusheando en tiempo real)
+  hasta lograr push fast-forward. Worktree temporal eliminado al terminar.
+- **Numeración:** `Claude-2` y `Claude-3` ya estaban tomados por otras
+  sesiones el 21/8. Esta sesión sigue siendo `Claude-4` (numerada ayer,
+  cuando se le negó la capitanía por primera vez).
