@@ -4723,3 +4723,46 @@ archivo de coordinación).
 - **Numeración:** `Claude-2` y `Claude-3` ya estaban tomados por otras
   sesiones el 21/8. Esta sesión sigue siendo `Claude-4` (numerada ayer,
   cuando se le negó la capitanía por primera vez).
+
+### 2026-08-22 — Pivote: se pausa el experimento de 8 cajas, se vuelve al
+generador viejo con un prompt más simple
+
+- **Se cableó el límite medible de headline entre Cajas 5/7/8** (commit
+  `14fb40b`) y se probó en vivo dos veces más: el primer salto (12%→9%)
+  funcionó exactamente como se diseñó, pero el segundo (9%→7.5%) falló —
+  la Caja 8 devolvió el mismo prompt sin bajar el límite. Costo real de la
+  última prueba: ~$0.090 (3 intentos, fal.ai TURBO).
+- **Milton comparó el resultado contra una prueba manual en ChatGPT
+  Images**: misma imagen OG, mismo logo, pero un prompt MUCHO más corto
+  (tags tipo `/premiumeditorial /backgroundcinematic /complexionrefine
+  /magazinecover /instagram /instagramstorysize /brandidentity /uselogo` +
+  `TEXT: <mensaje exacto>`) — resultado notablemente mejor que cualquier
+  intento del pipeline de 8 cajas. Conclusión de Milton: el exceso de
+  instrucciones en los prompts de las 8 cajas (1200-1700+ caracteres, con
+  varias secciones y restricciones simultáneas) está dañando el
+  resultado, no ayudándolo.
+- **Evidencia de código que respalda esa conclusión**, encontrada al
+  revisar el prompt real de la segunda corrección fallida: el texto
+  `"Leave a clean, empty, uncluttered rectangular area..."` aparece
+  DUPLICADO en el mismo prompt — `promptBoxPipeline.ts` se lo agrega
+  siempre al final (`+ logoConstraint`) sin revisar si la Caja 8 ya había
+  escrito algo parecido en su propia corrección. Bug real, no arreglado
+  todavía (queda documentado, no bloqueante ya que se pausa el pipeline).
+- **DECISIÓN DE MILTON: pausar el experimento de las 8 cajas.** Volver a
+  usar el generador viejo (`aiImageGenerator.ts`, ya en producción) con un
+  prompt más simple tipo tags + texto exacto — el mismo mecanismo de
+  `tagString` que ya existe en ese archivo, pero usándolo como la
+  instrucción REAL que recibe el generador de imagen, no como
+  "razonamiento interno" descartable (que es como está diseñado hoy: el
+  system prompt actual le pide a GPT expandir el `tagString` en un
+  `visualPrompt` largo y detallado antes de usarlo — exactamente el patrón
+  que Milton acaba de demostrar que no funciona bien).
+- **PENDIENTE (no ejecutar todavía, solo cuando Milton confirme que el
+  prompt simple nuevo funciona en vivo):** borrar de forma segura el
+  experimento de las 8 cajas — código (`promptBoxPipeline.ts`, su uso en
+  `socialPublish.ts`), UI de admin ("Cajas de Imágenes IA"), modelos
+  Prisma (`PromptBox`, `PromptBoxExecution`, `CreativeGenerationHistory`,
+  `User.usePromptBoxPipeline`) y las variables `FAL_API_KEY`/
+  `IMAGE_PROVIDER` de los 3 workflows si no se vuelven a usar. Milton fue
+  explícito: **no tocar nada de esto todavía**, solo dejarlo anotado como
+  pendiente hasta que el nuevo prompt simple esté validado en producción.
