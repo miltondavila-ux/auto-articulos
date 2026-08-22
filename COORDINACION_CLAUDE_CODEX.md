@@ -4852,3 +4852,7 @@ generador viejo con un prompt más simple
   cualquier otro formato (incluido "post" y "story") se loguea como
   "Infografía". No afecta el estado real ni el `postId`, solo confunde
   al leer logs. Queda pendiente, no urgente.
+- **Capitán de migración liberó el lote:** Claude. Resultado: traducido
+  `TEXT:` a instrucción natural para fal.ai, sin migraciones, typecheck
+  limpio worker+web, pusheado `f97c946`. Pendiente: prueba real para
+  confirmar que Ideogram ahora sí renderiza el texto.
