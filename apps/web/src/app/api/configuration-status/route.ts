@@ -13,6 +13,9 @@ interface ConfigurationCheck {
   actionLabel: string;
 }
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   const userId = await getCurrentUserId();
 

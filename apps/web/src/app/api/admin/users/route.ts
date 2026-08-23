@@ -24,6 +24,9 @@ interface PublishedCountRow {
 const MAX_POSTGRES_INT = 2_147_483_647;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 function isValidMaxTitlesPerBatch(value: unknown): value is number {
   return (
     typeof value === "number" &&
