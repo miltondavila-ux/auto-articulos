@@ -26,12 +26,19 @@ export default function BusinessProfileSection() {
   } | null>(null);
   const [selected, setSelected] = useState("");
   const [saving, setSaving] = useState(false);
+  const [loadingLocations, setLoadingLocations] = useState(false);
   const [message, setMessage] = useState("");
 
   async function load() {
-    const res = await fetch("/api/business-profile");
-    const value = await res.json();
-    setData(value);
+    if (loadingLocations) return;
+    setLoadingLocations(true);
+    try {
+      const res = await fetch("/api/business-profile");
+      const value = await res.json();
+      setData(value);
+    } finally {
+      setLoadingLocations(false);
+    }
   }
 
   useEffect(() => {
@@ -126,8 +133,14 @@ export default function BusinessProfileSection() {
                 No pudimos cargar fichas todavía. Reintenta la búsqueda o conecta otra cuenta de Google.
               </p>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <button type="button" onClick={load} className="secondary" style={secondaryButtonStyle}>
-                  Reintentar búsqueda
+                <button
+                  type="button"
+                  onClick={load}
+                  disabled={loadingLocations}
+                  className="secondary"
+                  style={{ ...secondaryButtonStyle, opacity: loadingLocations ? 0.55 : 1 }}
+                >
+                  {loadingLocations ? "Buscando fichas..." : "Reintentar búsqueda"}
                 </button>
                 <button type="button" onClick={() => { window.location.href = "/api/business-profile/connect"; }} className="secondary" style={secondaryButtonStyle}>
                   Conectar otra cuenta
