@@ -5227,3 +5227,10 @@ probadas).
 - **Pedido aparte, mismo commit:** todo el texto de Cómo Funciona se puso en negro (`#1d1d1f`) — se quitaron los grises (`#6e6e73`) del eyebrow "El objetivo", los subtítulos del encabezado, la etiqueta "Paso N" y la intro de "Cómo sucede".
 - **Verificación:** `npm run typecheck --workspace=@auto-articulos/web` limpio. `grep "ComoFuncionaCTA"` confirmó cero referencias antes de borrar el archivo.
 - **Estado del área:** Completado y publicado en `main`. Área LIBERADA.
+
+### 2026-08-23 (cont. 8) — Claude: explicar Google, Bing y Google Search Console (Paso 1)
+
+- Milton preguntó directamente: ¿qué es Google?, ¿qué es Google Search Console?, ¿qué es Bing?, ¿por qué importa tanto tener conectado Search Console? Confirma que el criterio "lector en cero" aplica también a estos conceptos, no solo a "indexar"/"posicionar"/"SEO-AEO" (ya cubiertos en entradas anteriores del mismo día).
+- Se agregaron dos párrafos nuevos en el Paso 1 ("Configura tu cuenta"), justo donde ya se mencionaba "el permiso de Google para leer tus datos": definen Google, Bing y Google Search Console en una frase cada uno, y explican el motivo real de conectarlo — sin eso, Oportunidades no tiene de dónde sacar títulos reales — commit `4801306`.
+- **Verificación:** `npm run typecheck --workspace=@auto-articulos/web` limpio.
+- **Estado del área:** Completado y publicado en `main`. Área LIBERADA.
