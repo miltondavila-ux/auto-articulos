@@ -209,7 +209,20 @@ async function getArticleBodyMarkdown(articleUrl: string): Promise<string> {
     .replace(/<\/(p|div|section|blockquote|ul|ol|figure)>/gi, "\n\n")
     .replace(/<(p|div|section|blockquote|ul|ol|figure)\b[^>]*>/gi, "\n\n")
     .replace(/<[^>]+>/g, "");
-  markdown = decodeHtmlEntities(markdown).replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+ markdown = decodeHtmlEntities(markdown).replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  markdown = decodeHtmlEntities(markdown)
+    // Nunca enviar cajas de código provenientes del HTML del sitio de origen.
+    .replace(/```[\s\S]*?```/g, "")
+    // Ni los separadores vacíos que el editor original deja como guiones.
+    .replace(/^\s*-\s*$/gm, "")
+    // Eliminar widgets/pie de página que el sitio inserta después del artículo.
+    .replace(/\n(?:Más sobre nuestros servicios|Tambi[ée]n podr[íi]a gustarte|TU PR[ÓO]XIMO GRAN PASO)\b[\s\S]*$/i, "")
+    .replace(/\nSeguros de Salud y Vida\nSeguros de Salud y Vida es una firma[\s\S]*$/i, "")
+    // "Whatsapp" queda como texto suelto cuando el botón no tiene etiqueta.
+    .replace(/^Whatsapp\s*$/gim, "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
   if (markdown.length < 80) throw new Error("El artículo publicado no devolvió un cuerpo de contenido válido.");
   return markdown;
 }
