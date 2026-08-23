@@ -206,8 +206,10 @@ export default function ComoFuncionaPage() {
             color: "#6e6e73",
           }}
         >
-          Indexarte y posicionarte en tiempo récord. No dentro de un año:
-          desde la primera semana de trabajo constante.
+          Esto es lo que obtienes: el sistema escribe y publica artículos
+          dentro de tu propia página web, sobre lo que tu público ya está
+          buscando de verdad — para que te encuentren en el buscador, en las
+          respuestas de la inteligencia artificial y en tus redes sociales.
         </p>
         <p
           style={{
@@ -248,45 +250,19 @@ export default function ComoFuncionaPage() {
             color: "#6e6e73",
           }}
         >
-          Dicho en simple: esta plataforma escribe artículos sobre lo que tu
-          público busca de verdad y los publica dentro de tu página web, uno
-          detrás de otro. Cuantos más artículos útiles tengas, más veces te
-          encuentran — en el buscador, en la inteligencia artificial y en las
-          redes.
+          Hay que decirlo claro: no pasa de un día para otro. Google tarda en
+          leer y valorar cada artículo nuevo, pero lo que consigues se va
+          acumulando — cada artículo que se posiciona atrae visitas, esas
+          visitas le confirman a Google que tu sitio responde bien, y eso le
+          facilita el camino al siguiente. Empieza pequeño y crece solo,
+          mientras no se detenga.
         </p>
       </header>
 
       <hr style={SEPARADOR} />
 
-      <section style={{ padding: "clamp(28px, 4vw, 40px) 0 0" }}>
-        <h2 style={TITULO_SECCION}>Para qué sirve todo esto</h2>
-        <p style={PARRAFO}>Para posicionarte con autoridad en internet.</p>
-        <p style={PARRAFO}>
-          Aparecer en los resultados de la inteligencia artificial, de Google y
-          de Bing es lo más importante que le puede pasar a tu negocio en
-          internet. Es la diferencia entre que te encuentren y que no sepan que
-          existes.
-        </p>
-        <p style={PARRAFO}>
-          No pasa de un día para otro, y conviene decirlo claro: Google tarda en
-          leer y valorar cada artículo nuevo. Lo que sí ocurre es que se va
-          acumulando. Cada artículo que se posiciona atrae visitas, esas visitas
-          le confirman a Google que tu sitio responde bien, y eso hace que el
-          siguiente artículo lo tenga un poco más fácil. Es un efecto bola de
-          nieve: empieza pequeño y va creciendo solo, siempre que no se detenga.
-        </p>
-        <p style={PARRAFO}>
-          Por eso el trabajo real es sencillo: dejar la cuenta bien configurada
-          una vez, y después publicar de forma constante desde{" "}
-          <Modulo id="publicar" /> o{" "}
-          <Modulo id="oportunidades" />.
-        </p>
-      </section>
-
-      <hr style={SEPARADOR} />
-
       <section style={{ padding: "clamp(28px, 4vw, 40px) 0 4px" }}>
-        <h2 style={TITULO_SECCION}>Cómo sucede</h2>
+        <h2 style={TITULO_SECCION}>Cómo lograrlo</h2>
         <p style={{ ...PARRAFO, color: "#6e6e73" }}>
           Son tres pasos, en este orden. El primero se hace una sola vez; los
           otros dos se repiten tantas veces como quieras.
@@ -332,6 +308,18 @@ export default function ComoFuncionaPage() {
           </p>
         </section>
       ))}
+
+      <hr style={SEPARADOR} />
+
+      <section style={{ padding: "clamp(28px, 4vw, 40px) 0 0" }}>
+        <h2 style={TITULO_SECCION}>En resumen</h2>
+        <p style={PARRAFO}>
+          El trabajo real es sencillo: deja la cuenta bien configurada una
+          vez, y después publica de forma constante desde{" "}
+          <Modulo id="publicar" /> o <Modulo id="oportunidades" />. Eso es lo
+          único que depende de ti — el resto lo hace el sistema.
+        </p>
+      </section>
     </div>
   );
 }
