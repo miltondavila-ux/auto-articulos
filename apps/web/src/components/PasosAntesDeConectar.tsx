@@ -15,6 +15,29 @@ export default function PasosAntesDeConectar({
   red: string;
   extra?: ReactNode;
 }) {
+  const isMeta = red.includes("Instagram") || red.includes("Facebook") || red.includes("Threads");
+  const accountUrl = red.includes("LinkedIn")
+    ? "https://www.linkedin.com/signup"
+    : red.includes("X")
+      ? "https://x.com/i/flow/signup"
+      : red.includes("Pinterest")
+        ? "https://www.pinterest.com/business/create/"
+        : red.includes("Tumblr")
+          ? "https://www.tumblr.com/register"
+          : isMeta
+            ? "https://www.facebook.com/r.php"
+            : null;
+  const recoveryUrl = red.includes("LinkedIn")
+    ? "https://www.linkedin.com/uas/request-password-reset"
+    : red.includes("X")
+      ? "https://twitter.com/account/begin_password_reset"
+      : red.includes("Pinterest")
+        ? "https://www.pinterest.com/password/reset/"
+        : red.includes("Tumblr")
+          ? "https://www.tumblr.com/forgot_password"
+          : isMeta
+            ? "https://www.facebook.com/login/identify/"
+            : null;
   return (
     <div
       style={{
@@ -43,6 +66,11 @@ export default function PasosAntesDeConectar({
           deja la sesión iniciada. Es el paso que más falla: sin sesión abierta,
           el botón te lleva a una pantalla de acceso y la conexión no se
           completa.
+        </li>
+        <li style={{ marginBottom: 8 }}>
+          <strong>Si todavía no tienes cuenta, créala primero.</strong>{" "}
+          {accountUrl ? <a href={accountUrl} target="_blank" rel="noreferrer">Pulsa aquí para abrir la página oficial de registro</a> : "Busca el botón Crear cuenta dentro de la red."}
+          {recoveryUrl && <>. Si olvidaste la contraseña, <a href={recoveryUrl} target="_blank" rel="noreferrer">abre aquí la recuperación oficial</a>.</>}
         </li>
         <li style={{ marginBottom: 8 }}>
           <strong>Comprueba que es la cuenta correcta.</strong> Si manejas
