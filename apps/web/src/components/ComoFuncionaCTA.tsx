@@ -58,6 +58,14 @@ export default function ComoFuncionaCTA() {
   // botón equivocado que cambia de texto o de destino frente a la persona.
   if (listo === null) return null;
 
+  // Grafito (#1d1d1f), no azul: el proyecto reserva el azul para enlaces de
+  // texto (ver ENLACE en esta misma página, y el comentario de pillPrimary
+  // en dashboard/oportunidades/page.tsx) y usa grafito para botones de
+  // acción rellenos — es el mismo lenguaje visual de Apple.com/Apple
+  // Support, donde el color no carga la jerarquía, la tipografía sí. Por lo
+  // mismo, sin mayúsculas: Apple casi nunca usa texto en versalitas en
+  // botones, así que el texto queda en frase normal, tal como se pidió
+  // ("Comienza aquí" / "Configura aquí").
   return (
     <Link
       href={listo ? "/dashboard/oportunidades" : "/dashboard/configuracion"}
@@ -67,13 +75,11 @@ export default function ComoFuncionaCTA() {
         gap: 6,
         padding: "11px 20px",
         borderRadius: 980,
-        fontSize: 13,
-        fontWeight: 600,
-        letterSpacing: "0.02em",
-        textTransform: "uppercase",
+        fontSize: 15,
+        fontWeight: 500,
         textDecoration: "none",
         color: "#ffffff",
-        background: listo ? "#0071e3" : "#ff9500",
+        background: "#1d1d1f",
       }}
     >
       {listo ? "Comienza aquí" : "Configura aquí"}
