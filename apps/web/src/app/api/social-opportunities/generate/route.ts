@@ -256,8 +256,13 @@ export async function POST(request: Request) {
     }
 
     if (integrations.length === 0) {
+      console.warn("[social-opportunities/generate] red solicitada sin conexión efectiva", {
+        requestedNetworks,
+        connected,
+        userId,
+      });
       return NextResponse.json(
-        { error: "La red seleccionada no está conectada en tu configuración." },
+        { error: `La red seleccionada (${requestedNetworks.join(", ") || "desconocida"}) no está conectada en tu configuración. Recarga la página y vuelve a intentarlo; si sigue apareciendo, revisa la tarjeta de esa red en Configuración.` },
         { status: 400 }
       );
     }

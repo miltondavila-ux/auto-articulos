@@ -74,7 +74,23 @@ Puedes conectar Google Search Console y Bing Webmaster. Selecciona la propiedad 
 
 ### Redes sociales
 
-Desde Configuración puedes vincular los servicios disponibles, como Google Business Profile, Threads, X, LinkedIn e Instagram. Algunas redes pueden requerir que el administrador habilite tu permiso de publicación. Conectar una red no obliga a publicar en ella: sirve para que puedas utilizarla cuando corresponda.
+Desde Configuración puedes vincular los servicios disponibles, como Google Business Profile, Threads, X, LinkedIn, Instagram, Pinterest, Tumblr, Bluesky, Mastodon y DEV.to. Algunas redes pueden requerir que el administrador habilite tu permiso de publicación. Conectar una red no obliga a publicar en ella: sirve para que puedas utilizarla cuando corresponda.
+
+### Cómo conectar cada red social, explicado para cualquier persona
+
+Si una red no aparece, primero pide al administrador que active el permiso correspondiente para tu usuario. Después sigue únicamente las instrucciones de esa red. Nunca escribas aquí tu contraseña de la red: cuando una conexión use OAuth, se abrirá la red para que autorices; cuando use una credencial manual, debes copiar solo el dato que se indica.
+
+**Threads, Instagram, Facebook, LinkedIn, Pinterest y Tumblr:** abre la red en otra pestaña con la cuenta correcta iniciada, vuelve a Auto Artículos y pulsa el botón de conexión. Sigue las pantallas de autorización y acepta los permisos. Si hay varias cuentas abiertas, cierra las que no quieras conectar. Pinterest puede pedirte elegir un tablero; Tumblr puede pedirte elegir un blog. LinkedIn conecta el perfil que autorices. Instagram debe ser una cuenta profesional asociada a Facebook.
+
+**X (Twitter):** el administrador configura primero el Client ID y Client Secret de la aplicación de X. Luego abre X con la cuenta correcta iniciada, vuelve a Auto Artículos y pulsa “Conectar X (Twitter)”. Acepta los permisos y espera a volver a Auto Artículos. No copies aquí tu contraseña.
+
+**Bluesky:** entra en Bluesky y ve a Configuración → Privacidad y seguridad → Contraseñas de aplicación → Crear nueva App Password. Ponle “Auto Artículos”, copia la App Password y escribe tu usuario completo, por ejemplo “nombre.bsky.social”. En Auto Artículos pega ambos datos. No uses la contraseña principal de Bluesky.
+
+**Mastodon:** entra en la instancia donde vive tu cuenta, por ejemplo “https://mastodon.social”. Ve a Preferencias → Desarrollo → Nueva aplicación. Usa el nombre “Auto Artículos”, el sitio web “https://auto-articulos-web.vercel.app” y la URI “urn:ietf:wg:oauth:2.0:oob”. Marca “profile”, “write:statuses” y “write:media”; no marques permisos de administración. Guarda la aplicación y copia el **Access Token**, no el Client Key ni el Client Secret. En Auto Artículos pega la URL de tu instancia y el Access Token.
+
+**DEV.to:** entra en DEV.to → Settings → Extensions → API Keys. Crea una clave con un nombre como “Auto Artículos”, copia la API key y pégala en la configuración de tu cuenta. Cada usuario debe conectar su propia cuenta de DEV.to; no se comparte la clave del administrador.
+
+**Si aparece un error:** revisa primero que el permiso esté activado por el administrador, que estés usando la cuenta correcta y que no hayas copiado espacios al principio o al final. En Bluesky debe ser una App Password. En Mastodon debe ser el Access Token de usuario y la URL debe ser la instancia donde está la cuenta. Si sigue fallando, copia el mensaje exacto del aviso y envíalo al administrador; no envíes contraseñas ni tokens.
 
 ### Personalización del contenido
 
@@ -200,7 +216,7 @@ Abre Bing Webmaster Tools con tu sesión iniciada, vuelve a Auto Artículos y pu
 
 Ruta: /dashboard/configuracion?tab=social
 
-Aquí conectas Google Business Profile, Threads, Instagram, X y LinkedIn. Las redes son opcionales: solo conéctalas si quieres publicar allí. Instagram necesita una cuenta profesional vinculada a una página de Facebook. Algunas redes requieren que el administrador active tu permiso; si ves un aviso de que no está disponible, pide acceso al administrador. Puedes desconectar una red desde el mismo lugar.
+Aquí conectas Google Business Profile y las redes sociales. Las redes son opcionales: solo conéctalas si quieres publicar allí. Cada tarjeta te explica los pasos antes de pedirte datos. Instagram necesita una cuenta profesional vinculada a una página de Facebook. Algunas redes requieren que el administrador active tu permiso; si ves un aviso de que no está disponible, pide acceso al administrador. Puedes desconectar una red desde el mismo lugar.
 
 ### Cuenta y contenido
 
