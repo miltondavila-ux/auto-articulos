@@ -101,7 +101,7 @@ async function validateArticleUrl(url: string): Promise<void> {
  * No generamos una imagen alternativa para LinkedIn: así la publicación usa
  * exactamente la imagen destacada/OG del artículo, igual que su vista previa.
  */
-async function getArticleOpenGraphImage(articleUrl: string): Promise<string | null> {
+export async function getArticleOpenGraphImage(articleUrl: string): Promise<string | null> {
   try {
     const res = await fetch(articleUrl, {
       redirect: "follow",
@@ -135,7 +135,7 @@ function decodeHtmlEntities(value: string): string {
     .replace(/&gt;/gi, ">");
 }
 
-function deriveDevToTags(title: string, summary: string, category: string | null): string[] {
+export function deriveDevToTags(title: string, summary: string, category: string | null): string[] {
   const stopWords = new Set(["para", "como", "qué", "que", "una", "uno", "los", "las", "del", "con", "por", "sobre", "desde", "este", "esta", "sus", "más", "cómo"]);
   const values = [category || "", title, summary].join(" ")
     .toLocaleLowerCase("es")
@@ -166,8 +166,24 @@ function extractDivByClass(html: string, className: string): string | null {
   return null;
 }
 
+function extractDivById(html: string, id: string): string | null {
+  const opening = new RegExp(`<div\\b[^>]*id=["']${id}["'][^>]*>`, "i").exec(html);
+  if (!opening) return null;
+  const bodyStart = opening.index + opening[0].length;
+  const tags = /<\/?div\b[^>]*>/gi;
+  tags.lastIndex = bodyStart;
+  let depth = 1;
+  let match: RegExpExecArray | null;
+  while ((match = tags.exec(html))) {
+    if (/^<\s*\/div/i.test(match[0])) depth -= 1;
+    else depth += 1;
+    if (depth === 0) return html.slice(bodyStart, match.index);
+  }
+  return null;
+}
+
 /** Lee el cuerpo real del artículo publicado y lo adapta al Markdown de DEV.to. */
-async function getArticleBodyMarkdown(articleUrl: string): Promise<string> {
+export async function getArticleBodyMarkdown(articleUrl: string): Promise<string> {
   const response = await fetch(articleUrl, {
     redirect: "follow",
     signal: AbortSignal.timeout(15000),
@@ -179,6 +195,7 @@ async function getArticleBodyMarkdown(articleUrl: string): Promise<string> {
   if (!response.ok) throw new Error(`No se pudo leer el contenido del artículo (${response.status}).`);
   const html = await response.text();
   const container = extractDivByClass(html, "crayons-article__body")
+    || extractDivById(html, "seo-readmore-container")
     || html.match(/<article\b[^>]*>([\s\S]*?)<\/article>/i)?.[1]
     || html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i)?.[1]
     || html.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i)?.[1]
@@ -192,6 +209,7 @@ async function getArticleBodyMarkdown(articleUrl: string): Promise<string> {
     .replace(/<h2\b[^>]*>[\s\S]*?TU PR[ÓO]XIMO GRAN PASO[\s\S]*$/i, "")
     // Son separadores vacíos que el sitio original usa para sus componentes.
     .replace(/<p>\s*-\s*<\/p>/gi, "")
+    .replace(/<div\b[^>]*id=["']seo-readmore-fade["'][^>]*>[\s\S]*?<\/div>/gi, "")
     // El generador original dejó una etiqueta HTML visible como bloque de código.
     // Quitamos solamente el bloque <pre>, sin cortar el contenido que viene después.
     .replace(/<pre\b[^>]*>[\s\S]*?<\/pre>/gi, "")

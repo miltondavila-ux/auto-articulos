@@ -1,6 +1,6 @@
 const DEVTO_API = "https://dev.to/api";
 
-export type DevToArticle = { url?: string; path?: string; user?: { username?: string } };
+export type DevToArticle = { id?: number; url?: string; path?: string; user?: { username?: string }; canonical_url?: string };
 
 async function devToRequest<T>(path: string, apiKey: string, init: RequestInit = {}): Promise<T> {
   const response = await fetch(`${DEVTO_API}${path}`, {
@@ -26,6 +26,34 @@ export async function createDevToArticle(apiKey: string, article: {
 }) {
   return devToRequest<DevToArticle>("/articles", apiKey, {
     method: "POST",
+    body: JSON.stringify({ article: {
+      title: article.title,
+      body_markdown: article.bodyMarkdown,
+      published: true,
+      canonical_url: article.canonicalUrl,
+      description: article.description || undefined,
+      main_image: article.mainImage || undefined,
+      tags: (article.tags || []).slice(0, 4).join(","),
+      series: article.series || undefined,
+    } }),
+  });
+}
+
+export async function getDevToArticleByPath(apiKey: string, username: string, slug: string) {
+  return devToRequest<DevToArticle & { title?: string }>(`/articles/${encodeURIComponent(username)}/${encodeURIComponent(slug)}`, apiKey, { method: "GET" });
+}
+
+export async function updateDevToArticle(apiKey: string, id: number, article: {
+  title: string;
+  bodyMarkdown: string;
+  canonicalUrl: string;
+  description?: string | null;
+  mainImage?: string | null;
+  tags?: string[];
+  series?: string | null;
+}) {
+  return devToRequest<DevToArticle>(`/articles/${id}`, apiKey, {
+    method: "PUT",
     body: JSON.stringify({ article: {
       title: article.title,
       body_markdown: article.bodyMarkdown,
