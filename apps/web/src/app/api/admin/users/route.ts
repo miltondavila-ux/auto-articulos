@@ -45,9 +45,6 @@ function isValidArticleLimit(value: unknown): value is number {
   );
 }
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 export async function GET() {
   let currentUserId: string;
   try {
