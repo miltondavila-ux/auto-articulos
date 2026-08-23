@@ -576,14 +576,14 @@ async function processBlueskyJob(job: {
 async function processDevToJob(job: {
   id: string; userId: string; titleId: string | null; articleUrl: string; articleTitle: string; suggestedText: string;
 }): Promise<boolean> {
-  const setting = await prisma.systemSetting.findUnique({ where: { key: "devto_api_key" } });
-  if (!setting) throw new Error("DEV.to no está configurado por administración.");
+  const integration = await prisma.devToIntegration.findUnique({ where: { userId: job.userId } });
+  if (!integration) throw new Error("DEV.to no está configurado en tu cuenta.");
   await validateArticleUrl(job.articleUrl);
   const title = job.titleId ? await prisma.title.findUnique({ where: { id: job.titleId }, select: { text: true, summary: true, finalTitle: true } }) : null;
   const rawBody = title?.text || job.suggestedText;
   const bodyMarkdown = rawBody.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").trim();
   const imageUrl = await getArticleOpenGraphImage(job.articleUrl);
-  const result = await createDevToArticle(decryptSecret(setting.encryptedValue), {
+  const result = await createDevToArticle(decryptSecret(integration.encryptedApiKey), {
     title: title?.finalTitle || job.articleTitle,
     bodyMarkdown,
     canonicalUrl: job.articleUrl,

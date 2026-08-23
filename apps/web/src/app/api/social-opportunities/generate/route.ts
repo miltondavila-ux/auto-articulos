@@ -177,7 +177,7 @@ async function getConnectedNetworks(userId: string) {
     prisma.pinterestIntegration.findUnique({ where: { userId }, select: { id: true, boardId: true, expiresAt: true } }),
     prisma.tumblrIntegration.findUnique({ where: { userId }, select: { id: true, expiresAt: true } }),
     prisma.blueskyIntegration.findUnique({ where: { userId }, select: { id: true } }),
-    prisma.systemSetting.findUnique({ where: { key: "devto_api_key" }, select: { key: true } }),
+    prisma.devToIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.user.findUnique({ where: { id: userId }, select: { role: true, allowPinterestPublishing: true, allowTumblrPublishing: true, allowBlueskyPublishing: true, allowDevToPublishing: true } }),
   ]);
   return {

@@ -967,7 +967,7 @@ export default function ConfiguracionPage() {
             <BlueskySection allowed={allowBlueskyPublishing || isAdmin || tieneModuloRedes} />
           )}
           {(allowDevToPublishing || isAdmin || tieneModuloRedes) && (
-            <DevToSection allowed={allowDevToPublishing || isAdmin || tieneModuloRedes} isAdmin={isAdmin} />
+            <DevToSection allowed={allowDevToPublishing || isAdmin || tieneModuloRedes} />
           )}
         </div>
       )}
