@@ -83,6 +83,7 @@ export async function GET() {
         allowPinterestPublishing: true,
         allowTumblrPublishing: true,
         allowBlueskyPublishing: true,
+        allowMastodonPublishing: true,
         allowDevToPublishing: true,
         aiImageGenerationEnabled: true,
         usePromptBoxPipeline: true,
@@ -199,6 +200,7 @@ export async function PATCH(request: NextRequest) {
     allowFacebookPublishing,
     allowPinterestPublishing,
     allowBlueskyPublishing,
+    allowMastodonPublishing,
     allowDevToPublishing,
     aiImageGenerationEnabled,
     usePromptBoxPipeline,
@@ -234,6 +236,7 @@ export async function PATCH(request: NextRequest) {
     allowPinterestPublishing?: boolean;
     allowTumblrPublishing?: boolean;
     allowBlueskyPublishing?: boolean;
+    allowMastodonPublishing?: boolean;
     allowDevToPublishing?: boolean;
     aiImageGenerationEnabled?: boolean;
     usePromptBoxPipeline?: boolean;
@@ -369,6 +372,9 @@ export async function PATCH(request: NextRequest) {
   }
   if ("allowBlueskyPublishing" in body) {
     data.allowBlueskyPublishing = Boolean(allowBlueskyPublishing);
+  }
+  if ("allowMastodonPublishing" in body) {
+    data.allowMastodonPublishing = Boolean(allowMastodonPublishing);
   }
 
   if ("aiImageGenerationEnabled" in body) {

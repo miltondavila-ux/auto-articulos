@@ -49,6 +49,7 @@ interface UserRow {
   allowPinterestPublishing: boolean;
   allowTumblrPublishing: boolean;
   allowBlueskyPublishing: boolean;
+  allowMastodonPublishing: boolean;
   allowDevToPublishing: boolean;
   aiImageGenerationEnabled: boolean;
   usePromptBoxPipeline: boolean;
@@ -2112,6 +2113,7 @@ function UserCard({
     Boolean(user.allowTumblrPublishing),
   );
   const [permBluesky, setPermBluesky] = useState(Boolean(user.allowBlueskyPublishing));
+  const [permMastodon, setPermMastodon] = useState(Boolean(user.allowMastodonPublishing));
   const [permDevTo, setPermDevTo] = useState(Boolean(user.allowDevToPublishing));
   const [permAiImageGeneration, setPermAiImageGeneration] = useState(
     Boolean(user.aiImageGenerationEnabled),
@@ -2156,6 +2158,7 @@ function UserCard({
     setPermPinterest(Boolean(user.allowPinterestPublishing));
     setPermTumblr(Boolean(user.allowTumblrPublishing));
     setPermBluesky(Boolean(user.allowBlueskyPublishing));
+    setPermMastodon(Boolean(user.allowMastodonPublishing));
     setPermDevTo(Boolean(user.allowDevToPublishing));
     setPermAiImageGeneration(Boolean(user.aiImageGenerationEnabled));
     setPermUsePromptBoxPipeline(Boolean(user.usePromptBoxPipeline));
@@ -2173,6 +2176,7 @@ function UserCard({
     permPinterest !== Boolean(user.allowPinterestPublishing) ||
     permTumblr !== Boolean(user.allowTumblrPublishing) ||
     permBluesky !== Boolean(user.allowBlueskyPublishing) ||
+    permMastodon !== Boolean(user.allowMastodonPublishing) ||
     permDevTo !== Boolean(user.allowDevToPublishing) ||
     permAiImageGeneration !== Boolean(user.aiImageGenerationEnabled) ||
     permUsePromptBoxPipeline !== Boolean(user.usePromptBoxPipeline) ||
@@ -2369,6 +2373,7 @@ function UserCard({
           allowPinterestPublishing: permPinterest,
           allowTumblrPublishing: permTumblr,
           allowBlueskyPublishing: permBluesky,
+          allowMastodonPublishing: permMastodon,
           allowDevToPublishing: permDevTo,
           aiImageGenerationEnabled: permAiImageGeneration,
           usePromptBoxPipeline: permUsePromptBoxPipeline,
@@ -2732,6 +2737,10 @@ function UserCard({
               <label style={permissionLabelStyle}>
                 <input type="checkbox" checked={permBluesky} onChange={(e) => setPermBluesky(e.target.checked)} disabled={savingPermissions} style={{ accentColor: "#1d1d1f", width: 16, height: 16 }} />
                 Conectar y publicar en Bluesky
+              </label>
+              <label style={permissionLabelStyle}>
+                <input type="checkbox" checked={permMastodon} onChange={(e) => setPermMastodon(e.target.checked)} disabled={savingPermissions} style={{ accentColor: "#1d1d1f", width: 16, height: 16 }} />
+                Conectar y publicar en Mastodon
               </label>
               <label style={permissionLabelStyle}>
                 <input type="checkbox" checked={permDevTo} onChange={(e) => setPermDevTo(e.target.checked)} disabled={savingPermissions} style={{ accentColor: "#1d1d1f", width: 16, height: 16 }} />

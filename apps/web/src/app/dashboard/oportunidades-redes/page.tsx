@@ -52,8 +52,8 @@ export default function OportunidadesRedesPage() {
   const [opportunities, setOpportunities] = useState<SocialOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [generatingNetwork, setGeneratingNetwork] = useState<"threads" | "x" | "linkedin" | "instagram" | "facebook-page" | "pinterest" | "tumblr" | "bluesky" | "devto" | null>(null);
-  const [connectedNetworks, setConnectedNetworks] = useState({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false, bluesky: false, devto: false });
+  const [generatingNetwork, setGeneratingNetwork] = useState<"threads" | "x" | "linkedin" | "instagram" | "facebook-page" | "pinterest" | "tumblr" | "bluesky" | "mastodon" | "devto" | null>(null);
+  const [connectedNetworks, setConnectedNetworks] = useState({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false, bluesky: false, mastodon: false, devto: false });
   const [generateSeconds, setGenerateSeconds] = useState(0);
   const [usedGsc, setUsedGsc] = useState(false);
   const [publishingId, setPublishingId] = useState<string | null>(null);
@@ -117,11 +117,12 @@ export default function OportunidadesRedesPage() {
           pinterest: Boolean(data.pinterest),
           tumblr: Boolean(data.tumblr),
           bluesky: Boolean(data.bluesky),
+          mastodon: Boolean(data.mastodon),
           devto: Boolean(data.devto),
         });
       }
     } catch {
-      setConnectedNetworks({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false, bluesky: false, devto: false });
+      setConnectedNetworks({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false, bluesky: false, mastodon: false, devto: false });
     }
   }
 
@@ -133,7 +134,7 @@ export default function OportunidadesRedesPage() {
   const progress = Math.min(92, 8 + generateSeconds * 4);
   const elapsed = `${Math.floor(generateSeconds / 60)}:${String(generateSeconds % 60).padStart(2, "0")}`;
 
-  async function handleGenerate(network: "threads" | "x" | "linkedin" | "instagram" | "facebook-page" | "pinterest" | "tumblr" | "bluesky" | "devto") {
+  async function handleGenerate(network: "threads" | "x" | "linkedin" | "instagram" | "facebook-page" | "pinterest" | "tumblr" | "bluesky" | "mastodon" | "devto") {
     setGenerating(true);
     setGeneratingNetwork(network);
     setMessage(null);
@@ -426,6 +427,11 @@ export default function OportunidadesRedesPage() {
                 {generatingNetwork === "bluesky" ? "Analizando..." : "Bluesky"}
               </button>
             )}
+            {connectedNetworks.mastodon && (
+              <button onClick={() => handleGenerate("mastodon")} disabled={Boolean(generatingNetwork)} className="secondary">
+                {generatingNetwork === "mastodon" ? "Analizando..." : "Mastodon"}
+              </button>
+            )}
             {connectedNetworks.devto && (
               <button onClick={() => handleGenerate("devto")} disabled={Boolean(generatingNetwork)} className="secondary">
                 {generatingNetwork === "devto" ? "Analizando..." : "DEV.to"}
@@ -443,7 +449,7 @@ export default function OportunidadesRedesPage() {
           </div>
         </div>
 
-        {!connectedNetworks.threads && !connectedNetworks.x && !connectedNetworks.linkedin && !connectedNetworks.instagram && !connectedNetworks.facebookPage && !connectedNetworks.pinterest && !connectedNetworks.tumblr && !connectedNetworks.bluesky && !connectedNetworks.devto && !loading && (
+        {!connectedNetworks.threads && !connectedNetworks.x && !connectedNetworks.linkedin && !connectedNetworks.instagram && !connectedNetworks.facebookPage && !connectedNetworks.pinterest && !connectedNetworks.tumblr && !connectedNetworks.bluesky && !connectedNetworks.mastodon && !connectedNetworks.devto && !loading && (
           <div className="notice" style={{ marginTop: 14 }}>
             <p style={{ margin: 0 }}>
               Todavía no tienes ninguna red social conectada, así que no hay

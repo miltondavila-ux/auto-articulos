@@ -20,6 +20,8 @@ import {
   createBlueskySession,
   createBlueskyPost,
   getBlueskyPostUrl,
+  createMastodonMedia,
+  createMastodonStatus,
   createDevToArticle,
   getDevToArticleUrl,
 } from "@auto-articulos/shared";
@@ -691,6 +693,27 @@ async function processBlueskyJob(job: {
   return true;
 }
 
+// ─── MASTODON ─────────────────────────────────────────────────────────────
+
+async function processMastodonJob(job: { id: string; userId: string; titleId: string | null; articleUrl: string; articleTitle: string; suggestedText: string }): Promise<boolean> {
+  const integration = await prisma.mastodonIntegration.findUnique({ where: { userId: job.userId } });
+  if (!integration) throw new Error("Mastodon no está configurado en tu cuenta.");
+  await validateArticleUrl(job.articleUrl);
+  const imageUrl = await getArticleOpenGraphImage(job.articleUrl);
+  const token = decryptSecret(integration.accessTokenEncrypted);
+  const text = job.suggestedText.includes("[ENLACE]") ? job.suggestedText.replace("[ENLACE]", job.articleUrl) : `${job.suggestedText}\n\n${job.articleUrl}`;
+  let mediaId: string | undefined;
+  if (imageUrl) {
+    const image = await fetch(imageUrl, { signal: AbortSignal.timeout(15000) });
+    if (image.ok) mediaId = (await createMastodonMedia(integration.instanceUrl, token, new Uint8Array(await image.arrayBuffer()), image.headers.get("content-type") || "image/jpeg", job.articleTitle)).id;
+  }
+  const result = await createMastodonStatus(integration.instanceUrl, token, text, mediaId);
+  const postUrl = result.url || result.uri || `${integration.instanceUrl}/@${integration.username}/${result.id}`;
+  await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: postUrl, publishedAt: new Date(), errorLog: null } });
+  if (job.titleId) await prisma.titleEvent.create({ data: { titleId: job.titleId, message: `Publicado exitosamente en Mastodon (@${integration.username || "cuenta"}).` } });
+  return true;
+}
+
 // ─── DEV.TO ───────────────────────────────────────────────────────────────
 
 async function processDevToJob(job: {
@@ -1202,6 +1225,8 @@ export async function processNextSocialPublish(filterUserId?: string, filterArti
       published = await processTumblrJob(job);
     } else if (job.platform === "bluesky") {
       published = await processBlueskyJob(job);
+    } else if (job.platform === "mastodon") {
+      published = await processMastodonJob(job);
     } else if (job.platform === "devto") {
       published = await processDevToJob(job);
     } else if (job.platform === "facebook-page") {
