@@ -101,6 +101,25 @@ module.exports = {
         /^(bg|text|border|ring|fill|stroke)-(tremor|dark-tremor)-(brand|background|border|ring|content)(-.*)?$/,
       variants: ["hover", "ui-selected"],
     },
+    // Bug real (23/8/2026): el gráfico "Tu ritmo" de Inicio no dibujaba
+    // ninguna línea pese a tener datos. Causa: los componentes de Tremor
+    // (LineChart, Badge, ProgressBar, Callout...) arman sus clases de color
+    // con template literals en tiempo de ejecución — ver getColorClassNames
+    // en @tremor/react/dist/lib/utils.js, que devuelve cosas como
+    // `stroke-${color}-${shade}` — así que Tailwind nunca ve el nombre de
+    // clase completo en el código fuente y las purga en el build de
+    // producción. El safelist de arriba solo cubre la paleta personalizada
+    // "tremor-*" (el fondo/borde de las tarjetas), no la paleta estándar de
+    // Tailwind que se usa para las SERIES de datos (colors={["neutral",
+    // "gray"]} en LineChart, color="emerald"/"blue"/"amber" en Badge y
+    // Callout, color="blue"/"red" en ProgressBar). Verificado con
+    // `npx tailwindcss` antes y después: sin esta regla, stroke-neutral-500
+    // no existe en el CSS compilado.
+    {
+      pattern:
+        /^(bg|text|border|ring|fill|stroke)-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(50|100|200|300|400|500|600|700|800|900|950)$/,
+      variants: ["hover", "dark", "ui-selected"],
+    },
   ],
   plugins: [],
 };

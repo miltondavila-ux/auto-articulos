@@ -258,7 +258,7 @@ export default function InicioPage() {
               acá, no en Cómo Funciona — solo tiene sentido una vez que el
               asistente de configuración ya desapareció y esta pantalla
               muestra el panel de rendimiento en su lugar. */}
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginTop: 20, marginBottom: 20 }}>
             <Link
               href="/dashboard/oportunidades"
               style={{
