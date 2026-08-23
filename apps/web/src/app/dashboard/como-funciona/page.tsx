@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { EnPrueba, Modulo } from "@/components/ModuleIntro";
-import ComoFuncionaCTA from "@/components/ComoFuncionaCTA";
 
 export const metadata: Metadata = {
   title: "Cómo funciona — Auto Artículos",
@@ -176,9 +175,6 @@ export default function ComoFuncionaPage() {
       }}
     >
       <header style={{ padding: "clamp(32px, 5vw, 48px) 0 clamp(24px, 3vw, 32px)" }}>
-        <div style={{ marginBottom: 20 }}>
-          <ComoFuncionaCTA />
-        </div>
         <p
           style={{
             margin: "0 0 24px",
@@ -202,7 +198,7 @@ export default function ComoFuncionaPage() {
             fontWeight: 600,
             letterSpacing: "0.02em",
             textTransform: "uppercase",
-            color: "#6e6e73",
+            color: "#1d1d1f",
           }}
         >
           El objetivo
@@ -225,7 +221,7 @@ export default function ComoFuncionaPage() {
             margin: "18px 0 0",
             fontSize: 19,
             lineHeight: "27px",
-            color: "#6e6e73",
+            color: "#1d1d1f",
           }}
         >
           Dos palabras que vas a ver seguido aquí, explicadas simple: que
@@ -271,7 +267,7 @@ export default function ComoFuncionaPage() {
             margin: "16px 0 0",
             fontSize: 17,
             lineHeight: "25px",
-            color: "#6e6e73",
+            color: "#1d1d1f",
           }}
         >
           Hay que ser honesto con los tiempos: Google tarda en leer y valorar
@@ -300,7 +296,7 @@ export default function ComoFuncionaPage() {
 
       <section style={{ padding: "clamp(28px, 4vw, 40px) 0 4px" }}>
         <h2 style={TITULO_SECCION}>Cómo sucede</h2>
-        <p style={{ ...PARRAFO, color: "#6e6e73" }}>
+        <p style={PARRAFO}>
           Son tres pasos, en este orden. El primero se hace una sola vez; los
           otros dos se repiten tantas veces como quieras.
         </p>
@@ -314,7 +310,7 @@ export default function ComoFuncionaPage() {
               fontSize: 14,
               lineHeight: "20px",
               fontWeight: 600,
-              color: "#6e6e73",
+              color: "#1d1d1f",
             }}
           >
             Paso {paso.numero}

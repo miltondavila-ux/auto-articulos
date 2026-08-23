@@ -470,6 +470,56 @@ export default function OnboardingWizard({
 
   return (
     <div style={{ marginBottom: 24 }}>
+      {/* Invitación a leer "Cómo Funciona" antes de empezar. Pedido explícito
+          del usuario (23/8/2026): quien recién llega debe poder entender el
+          panorama completo antes de meterse en los 4 pasos, y volver aquí
+          sin fricción — por eso el enlace manda de vuelta a /dashboard, que
+          es exactamente donde vive este asistente mientras la cuenta no esté
+          configurada del todo: no hay nada que "perder" al ir y volver. */}
+      <div
+        style={{
+          marginBottom: 16,
+          padding: "14px 18px",
+          borderRadius: 12,
+          background: "#f5f5f7",
+          border: "1px solid #e5e5ea",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 12,
+        }}
+      >
+        <div style={{ fontSize: 13, color: "#1d1d1f", lineHeight: 1.5 }}>
+          <strong>¿Primera vez aquí?</strong> Antes de completar estos pasos,
+          te recomendamos leer{" "}
+          <Link
+            href="/dashboard/como-funciona"
+            style={{ color: "#0066cc", fontWeight: 600, textDecoration: "underline" }}
+          >
+            Cómo Funciona
+          </Link>{" "}
+          — toma un par de minutos y te explica todo el panorama. Cuando
+          termines, vuelve a Inicio para seguir aquí mismo, exactamente donde
+          lo dejaste.
+        </div>
+        <Link
+          href="/dashboard/como-funciona"
+          style={{
+            background: "#1d1d1f",
+            color: "#fff",
+            textDecoration: "none",
+            padding: "8px 16px",
+            borderRadius: 8,
+            fontSize: 13,
+            fontWeight: 600,
+            whiteSpace: "nowrap",
+          }}
+        >
+          Leer Cómo Funciona →
+        </Link>
+      </div>
+
       {/* Mensajes de feedback */}
       {message && (
         <div
