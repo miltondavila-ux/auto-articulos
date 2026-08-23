@@ -11,21 +11,20 @@ export interface BusinessAccount {
 export async function listBusinessAccounts(
   accessToken: string,
 ): Promise<BusinessAccount[]> {
-  const response = await fetch(`${ACCOUNT_MGMT_API}/accounts`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  const data = (await response.json()) as {
-    accounts?: BusinessAccount[];
-    error?: { message?: string };
-  };
-  if (!response.ok) {
-    throw new Error(
-      data.error?.message ?? "No se pudieron listar las cuentas de Google Business Profile.",
-    );
-  }
-  return data.accounts ?? [];
+  const accounts: BusinessAccount[] = [];
+  let pageToken: string | undefined;
+  do {
+    const url = new URL(ACCOUNT_MGMT_API + "/accounts");
+    url.searchParams.set("pageSize", "20");
+    if (pageToken) url.searchParams.set("pageToken", pageToken);
+    const response = await fetch(url, { headers: { Authorization: "Bearer " + accessToken } });
+    const data = (await response.json()) as { accounts?: BusinessAccount[]; nextPageToken?: string; error?: { message?: string } };
+    if (!response.ok) throw new Error(data.error?.message ?? "No se pudieron listar las cuentas de Google Business Profile.");
+    accounts.push(...(data.accounts ?? []));
+    pageToken = data.nextPageToken;
+  } while (pageToken);
+  return accounts;
 }
-
 export interface BusinessLocation {
   name: string; // "accounts/123/locations/456"
   title: string;
@@ -35,22 +34,21 @@ export async function listBusinessLocations(
   accessToken: string,
   accountName: string,
 ): Promise<BusinessLocation[]> {
-  const response = await fetch(
-    `${BUSINESS_INFO_API}/${accountName}/locations?readMask=name,title`,
-    { headers: { Authorization: `Bearer ${accessToken}` } },
-  );
-  const data = (await response.json()) as {
-    locations?: BusinessLocation[];
-    error?: { message?: string };
-  };
-  if (!response.ok) {
-    throw new Error(
-      data.error?.message ?? "No se pudieron listar las ubicaciones de Google Business Profile.",
-    );
-  }
-  return data.locations ?? [];
+  const locations: BusinessLocation[] = [];
+  let pageToken: string | undefined;
+  do {
+    const url = new URL(BUSINESS_INFO_API + "/" + accountName + "/locations");
+    url.searchParams.set("readMask", "name,title");
+    url.searchParams.set("pageSize", "100");
+    if (pageToken) url.searchParams.set("pageToken", pageToken);
+    const response = await fetch(url, { headers: { Authorization: "Bearer " + accessToken } });
+    const data = (await response.json()) as { locations?: BusinessLocation[]; nextPageToken?: string; error?: { message?: string } };
+    if (!response.ok) throw new Error(data.error?.message ?? "No se pudieron listar las ubicaciones de Google Business Profile.");
+    locations.push(...(data.locations ?? []));
+    pageToken = data.nextPageToken;
+  } while (pageToken);
+  return locations;
 }
-
 export interface CreateLocalPostInput {
   summary: string;
   ctaUrl: string;
