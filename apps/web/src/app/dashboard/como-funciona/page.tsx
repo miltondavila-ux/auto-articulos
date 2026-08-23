@@ -182,8 +182,9 @@ export default function ComoFuncionaPage() {
             color: "#1d1d1f",
           }}
         >
-          Que te encuentren. En Google, en Bing y dentro de la
-          inteligencia artificial.
+          Escribimos y publicamos artículos en tu web para que te
+          encuentren: en Google, en Bing y dentro de la inteligencia
+          artificial.
         </h1>
         <p
           style={{
