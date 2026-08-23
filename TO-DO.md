@@ -155,6 +155,45 @@ HANDOFF, solo alimenta ideas hacia él).
   comentando al usuario qué artículo debe cambiar y cómo cambiarlo. Debe
   dejar un histórico de los cambios realizados.
 
+- **(23/8/2026)** Integración con el API de Google Analytics (alimenta el
+  "Módulo de Mejoramiento Continuo" agregado este mismo día: Search Console
+  ve lo que Google propone, Analytics ve lo que la gente realmente hace).
+  Dividido en acciones pequeñas para poder ejecutarlo por partes:
+  1. Conectar la cuenta de Google Analytics del usuario (OAuth), similar al
+     flujo ya existente de conexión con Google Search Console.
+  2. Traer por artículo el comportamiento real de los visitantes: páginas
+     vistas, tiempo en página, tasa de rebote, clics en botones/CTAs.
+  3. Cruzar esos datos de Analytics con los de Search Console (impresiones,
+     posición) para ubicar artículos con mucho tráfico potencial pero bajo
+     rendimiento real.
+  4. Usar ese cruce como fuente de datos del Módulo de Mejoramiento
+     Continuo, para que sepa qué artículos priorizar y por qué.
+
+- **(23/8/2026)** Integración con Microsoft Clarity. Dividido en acciones
+  pequeñas:
+  1. Conectar la cuenta/proyecto de Microsoft Clarity del usuario.
+  2. Traer los datos de mapas de calor y grabaciones de sesión relevantes
+     por artículo (dónde hace clic la gente, dónde abandona).
+  3. Sumar esos datos como otra fuente de información del Módulo de
+     Mejoramiento Continuo, junto con Analytics y Search Console.
+
+- **(23/8/2026)** Culminar las integraciones pendientes con otras redes
+  sociales y plataformas de microblogging (esto completa/detalla el ítem
+  del 9/8/2026 "Redes sociales a conectar para envío automático", que ya
+  lista las mismas redes — al ejecutar, revisar ambos ítems juntos). Ir
+  red por red como acciones independientes y pequeñas, sin necesidad de
+  completarlas todas de una vez:
+  1. Threads
+  2. X
+  3. LinkedIn
+  4. Instagram (dos acciones separadas: publicaciones normales y carruseles)
+  5. Facebook (tres acciones separadas: Página, Grupos y Perfil personal)
+  6. Bluesky
+  7. Mastodon
+  8. Pinterest
+  9. Tumblr
+  10. Reddit (fase eventual, no prioritaria)
+
 ## Hecho
 
 - **(16/8/2026)** Asistente Flotante Arrastrable (Drag-and-Drop) en `FloatingAssistant`:
