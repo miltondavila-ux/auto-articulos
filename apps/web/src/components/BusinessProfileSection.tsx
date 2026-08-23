@@ -22,6 +22,7 @@ type BusinessProfileData = {
   locationTitle?: string;
   locations?: LocationOption[];
   locationsLoaded?: boolean;
+  retryAfterSeconds?: number;
   error?: string;
 };
 
