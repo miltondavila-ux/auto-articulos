@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
       "facebook-story",
       "pinterest",
       "tumblr",
+      "bluesky",
       "instagram-carousel",
       "instagram-reel-image",
       "instagram-story",
@@ -107,6 +108,8 @@ export async function POST(request: NextRequest) {
         ? "Publicación encolada. El sistema publicará el Pin en Pinterest en segundo plano."
         : opp.platform === "tumblr"
         ? "Publicación encolada. El sistema publicará el post en Tumblr en segundo plano."
+        : opp.platform === "bluesky"
+        ? "Publicación encolada. El sistema publicará en Bluesky en segundo plano."
         : "Publicación encolada. El sistema generará la imagen y publicará en Threads en segundo plano.",
     });
   } catch {

@@ -168,7 +168,7 @@ async function selectArticlesWithoutGSC(userId: string): Promise<ArticleCandidat
 }
 
 async function getConnectedNetworks(userId: string) {
-  const [threads, twitter, linkedin, instagram, facebookPage, pinterest, tumblr, user] = await Promise.all([
+  const [threads, twitter, linkedin, instagram, facebookPage, pinterest, tumblr, bluesky, user] = await Promise.all([
     prisma.threadsIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.twitterIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.linkedInIntegration.findUnique({ where: { userId }, select: { id: true } }),
@@ -176,7 +176,8 @@ async function getConnectedNetworks(userId: string) {
     prisma.facebookPageIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.pinterestIntegration.findUnique({ where: { userId }, select: { id: true, boardId: true, expiresAt: true } }),
     prisma.tumblrIntegration.findUnique({ where: { userId }, select: { id: true, expiresAt: true } }),
-    prisma.user.findUnique({ where: { id: userId }, select: { role: true, allowPinterestPublishing: true, allowTumblrPublishing: true } }),
+    prisma.blueskyIntegration.findUnique({ where: { userId }, select: { id: true } }),
+    prisma.user.findUnique({ where: { id: userId }, select: { role: true, allowPinterestPublishing: true, allowTumblrPublishing: true, allowBlueskyPublishing: true } }),
   ]);
   return {
     threads: Boolean(threads),
@@ -186,6 +187,7 @@ async function getConnectedNetworks(userId: string) {
     facebookPage: Boolean(facebookPage),
     pinterest: Boolean(user?.role === "admin" || user?.allowPinterestPublishing) && Boolean(pinterest && pinterest.boardId && (!pinterest.expiresAt || pinterest.expiresAt > new Date())),
     tumblr: Boolean(user?.role === "admin" || user?.allowTumblrPublishing) && Boolean(tumblr && (!tumblr.expiresAt || tumblr.expiresAt > new Date())),
+    bluesky: Boolean(user?.role === "admin" || user?.allowBlueskyPublishing) && Boolean(bluesky),
   };
 }
 
@@ -206,8 +208,8 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({})) as { networks?: string[] };
     const connected = await getConnectedNetworks(userId);
     const requestedNetworks = Array.isArray(body.networks)
-      ? body.networks.filter((network) => network === "threads" || network === "x" || network === "linkedin" || network === "instagram" || network === "facebook-page" || network === "pinterest" || network === "tumblr")
-      : ["threads", "x", "linkedin", "instagram", "facebook-page", "pinterest", "tumblr"];
+      ? body.networks.filter((network) => network === "threads" || network === "x" || network === "linkedin" || network === "instagram" || network === "facebook-page" || network === "pinterest" || network === "tumblr" || network === "bluesky")
+      : ["threads", "x", "linkedin", "instagram", "facebook-page", "pinterest", "tumblr", "bluesky"];
 
     const integrations: string[] = [];
     if (requestedNetworks.includes("threads") && connected.threads) {
@@ -228,6 +230,9 @@ export async function POST(request: Request) {
     }
     if (requestedNetworks.includes("tumblr") && connected.tumblr) {
       integrations.push("tumblr");
+    }
+    if (requestedNetworks.includes("bluesky") && connected.bluesky) {
+      integrations.push("bluesky");
     }
     if (requestedNetworks.includes("instagram") && connected.instagram) {
       const user = await prisma.user.findUnique({

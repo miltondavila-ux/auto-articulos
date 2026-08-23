@@ -48,6 +48,7 @@ interface UserRow {
   allowFacebookPublishing: boolean;
   allowPinterestPublishing: boolean;
   allowTumblrPublishing: boolean;
+  allowBlueskyPublishing: boolean;
   aiImageGenerationEnabled: boolean;
   usePromptBoxPipeline: boolean;
   numeroCuenta?: number;
@@ -2109,6 +2110,7 @@ function UserCard({
   const [permTumblr, setPermTumblr] = useState(
     Boolean(user.allowTumblrPublishing),
   );
+  const [permBluesky, setPermBluesky] = useState(Boolean(user.allowBlueskyPublishing));
   const [permAiImageGeneration, setPermAiImageGeneration] = useState(
     Boolean(user.aiImageGenerationEnabled),
   );
@@ -2151,6 +2153,7 @@ function UserCard({
     setPermFacebook(Boolean(user.allowFacebookPublishing));
     setPermPinterest(Boolean(user.allowPinterestPublishing));
     setPermTumblr(Boolean(user.allowTumblrPublishing));
+    setPermBluesky(Boolean(user.allowBlueskyPublishing));
     setPermAiImageGeneration(Boolean(user.aiImageGenerationEnabled));
     setPermUsePromptBoxPipeline(Boolean(user.usePromptBoxPipeline));
     setPermIsTrialSignup(Boolean(user.isTrialSignup));
@@ -2166,6 +2169,7 @@ function UserCard({
     permFacebook !== Boolean(user.allowFacebookPublishing) ||
     permPinterest !== Boolean(user.allowPinterestPublishing) ||
     permTumblr !== Boolean(user.allowTumblrPublishing) ||
+    permBluesky !== Boolean(user.allowBlueskyPublishing) ||
     permAiImageGeneration !== Boolean(user.aiImageGenerationEnabled) ||
     permUsePromptBoxPipeline !== Boolean(user.usePromptBoxPipeline) ||
     permIsTrialSignup !== Boolean(user.isTrialSignup) ||
@@ -2360,6 +2364,7 @@ function UserCard({
           allowFacebookPublishing: permFacebook,
           allowPinterestPublishing: permPinterest,
           allowTumblrPublishing: permTumblr,
+          allowBlueskyPublishing: permBluesky,
           aiImageGenerationEnabled: permAiImageGeneration,
           usePromptBoxPipeline: permUsePromptBoxPipeline,
           isTrialSignup: permIsTrialSignup,
@@ -2718,6 +2723,10 @@ function UserCard({
                   style={{ accentColor: "#36465d", width: 16, height: 16 }}
                 />
                 Conectar y publicar en Tumblr
+              </label>
+              <label style={permissionLabelStyle}>
+                <input type="checkbox" checked={permBluesky} onChange={(e) => setPermBluesky(e.target.checked)} disabled={savingPermissions} style={{ accentColor: "#1d1d1f", width: 16, height: 16 }} />
+                Conectar y publicar en Bluesky
               </label>
               <label style={permissionLabelStyle}>
                 <input

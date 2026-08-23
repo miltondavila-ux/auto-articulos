@@ -17,6 +17,9 @@ import {
   publishFacebookPageStory,
   createPinterestPin,
   createTumblrPhotoPost,
+  createBlueskySession,
+  createBlueskyPost,
+  getBlueskyPostUrl,
 } from "@auto-articulos/shared";
 import { put } from "@vercel/blob";
 import sharp from "sharp";
@@ -547,6 +550,25 @@ async function processTumblrJob(job: {
   return true;
 }
 
+// ─── BLUESKY ───────────────────────────────────────────────────────────────
+
+async function processBlueskyJob(job: {
+  id: string; userId: string; titleId: string | null; articleUrl: string; articleTitle: string; suggestedText: string;
+}): Promise<boolean> {
+  const integration = await prisma.blueskyIntegration.findUnique({ where: { userId: job.userId } });
+  if (!integration) throw new Error("Bluesky no está configurado en tu cuenta.");
+  await validateArticleUrl(job.articleUrl);
+  const text = job.suggestedText.includes("[ENLACE]") ? job.suggestedText.replace("[ENLACE]", job.articleUrl) : `${job.suggestedText}\n\n${job.articleUrl}`;
+  const imageUrl = await getArticleOpenGraphImage(job.articleUrl);
+  const session = await createBlueskySession(integration.handle, decryptSecret(integration.encryptedAppPassword));
+  const result = await createBlueskyPost(session, text, imageUrl);
+  const rkey = result.uri.split("/").pop() || result.cid;
+  const postUrl = getBlueskyPostUrl(session.handle || integration.handle, rkey);
+  await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: postUrl, publishedAt: new Date(), errorLog: null } });
+  if (job.titleId) await prisma.titleEvent.create({ data: { titleId: job.titleId, message: `Publicado exitosamente en Bluesky (@${session.handle || integration.handle})${imageUrl ? " (con imagen)" : ""}.` } });
+  return true;
+}
+
 // ─── FACEBOOK PAGES ───────────────────────────────────────────────────────
 
 async function processFacebookPageJob(job: {
@@ -1027,6 +1049,8 @@ export async function processNextSocialPublish(filterUserId?: string, filterArti
       published = await processPinterestJob(job);
     } else if (job.platform === "tumblr") {
       published = await processTumblrJob(job);
+    } else if (job.platform === "bluesky") {
+      published = await processBlueskyJob(job);
     } else if (job.platform === "facebook-page") {
       published = await processFacebookPageJob(job);
     } else if (job.platform === "facebook-story") {

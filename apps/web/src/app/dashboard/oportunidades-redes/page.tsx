@@ -52,8 +52,8 @@ export default function OportunidadesRedesPage() {
   const [opportunities, setOpportunities] = useState<SocialOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [generatingNetwork, setGeneratingNetwork] = useState<"threads" | "x" | "linkedin" | "instagram" | "facebook-page" | "pinterest" | "tumblr" | null>(null);
-  const [connectedNetworks, setConnectedNetworks] = useState({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false });
+  const [generatingNetwork, setGeneratingNetwork] = useState<"threads" | "x" | "linkedin" | "instagram" | "facebook-page" | "pinterest" | "tumblr" | "bluesky" | null>(null);
+  const [connectedNetworks, setConnectedNetworks] = useState({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false, bluesky: false });
   const [generateSeconds, setGenerateSeconds] = useState(0);
   const [usedGsc, setUsedGsc] = useState(false);
   const [publishingId, setPublishingId] = useState<string | null>(null);
@@ -116,10 +116,11 @@ export default function OportunidadesRedesPage() {
           facebookPage: Boolean(data.facebookPage),
           pinterest: Boolean(data.pinterest),
           tumblr: Boolean(data.tumblr),
+          bluesky: Boolean(data.bluesky),
         });
       }
     } catch {
-      setConnectedNetworks({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false });
+      setConnectedNetworks({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false, bluesky: false });
     }
   }
 
@@ -131,7 +132,7 @@ export default function OportunidadesRedesPage() {
   const progress = Math.min(92, 8 + generateSeconds * 4);
   const elapsed = `${Math.floor(generateSeconds / 60)}:${String(generateSeconds % 60).padStart(2, "0")}`;
 
-  async function handleGenerate(network: "threads" | "x" | "linkedin" | "instagram" | "facebook-page" | "pinterest" | "tumblr") {
+  async function handleGenerate(network: "threads" | "x" | "linkedin" | "instagram" | "facebook-page" | "pinterest" | "tumblr" | "bluesky") {
     setGenerating(true);
     setGeneratingNetwork(network);
     setMessage(null);
@@ -419,6 +420,11 @@ export default function OportunidadesRedesPage() {
                 {generatingNetwork === "tumblr" ? "Analizando..." : "Tumblr"}
               </button>
             )}
+            {connectedNetworks.bluesky && (
+              <button onClick={() => handleGenerate("bluesky")} disabled={Boolean(generatingNetwork)} className="secondary">
+                {generatingNetwork === "bluesky" ? "Analizando..." : "Bluesky"}
+              </button>
+            )}
             {pendingList.length > 0 && (
               <button
                 onClick={handlePublishAll}
@@ -431,7 +437,7 @@ export default function OportunidadesRedesPage() {
           </div>
         </div>
 
-        {!connectedNetworks.threads && !connectedNetworks.x && !connectedNetworks.linkedin && !connectedNetworks.instagram && !connectedNetworks.facebookPage && !connectedNetworks.pinterest && !connectedNetworks.tumblr && !loading && (
+        {!connectedNetworks.threads && !connectedNetworks.x && !connectedNetworks.linkedin && !connectedNetworks.instagram && !connectedNetworks.facebookPage && !connectedNetworks.pinterest && !connectedNetworks.tumblr && !connectedNetworks.bluesky && !loading && (
           <div className="notice" style={{ marginTop: 14 }}>
             <p style={{ margin: 0 }}>
               Todavía no tienes ninguna red social conectada, así que no hay
