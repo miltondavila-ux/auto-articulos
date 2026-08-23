@@ -32,6 +32,7 @@ export async function GET() {
     linkedinIntegration,
     pinterestIntegration,
     tumblrIntegration,
+    devToIntegration,
   ] = await Promise.all([
     // 1. Credenciales 10minutesWebsite
     prisma.credential.findUnique({
@@ -55,6 +56,7 @@ export async function GET() {
         role: true,
         allowPinterestPublishing: true,
         allowTumblrPublishing: true,
+        allowDevToPublishing: true,
       },
     }),
     // 4. Google Search Console
@@ -94,6 +96,10 @@ export async function GET() {
     prisma.tumblrIntegration.findUnique({
       where: { userId },
       select: { expiresAt: true },
+    }),
+    prisma.devToIntegration.findUnique({
+      where: { userId },
+      select: { username: true },
     }),
   ]);
 
@@ -222,6 +228,16 @@ export async function GET() {
       description: "Publica automáticamente tus artículos con imagen, texto y enlace en Tumblr.",
       actionUrl: "/dashboard/configuracion?tab=social",
       actionLabel: "Conectar Tumblr",
+    },
+    {
+      id: "devto",
+      label: "DEV.to",
+      configured: Boolean((user?.role === "admin" || user?.allowDevToPublishing) && devToIntegration),
+      required: false,
+      section: "social",
+      description: "Publica una versión adaptada del artículo con enlace canónico en DEV.to.",
+      actionUrl: "/dashboard/configuracion?tab=social",
+      actionLabel: "Conectar DEV.to",
     },
 
     // ━━━ CONTENIDO ━━━

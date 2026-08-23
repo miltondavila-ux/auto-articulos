@@ -27,7 +27,7 @@ export async function canUseSocialModule(userId: string): Promise<boolean> {
   return !deshabilitados.includes("oportunidades-redes");
 }
 
-export type SocialPublishNetwork = "instagram" | "linkedin" | "threads" | "facebook" | "pinterest" | "tumblr" | "bluesky";
+export type SocialPublishNetwork = "instagram" | "linkedin" | "threads" | "facebook" | "pinterest" | "tumblr" | "bluesky" | "devto";
 
 /** Permiso individual de la red; los administradores siempre tienen acceso. */
 export async function canPublishToNetwork(
@@ -45,6 +45,7 @@ export async function canPublishToNetwork(
       allowPinterestPublishing: true,
       allowTumblrPublishing: true,
       allowBlueskyPublishing: true,
+      allowDevToPublishing: true,
     },
   });
   if (!user) return false;
@@ -57,6 +58,7 @@ export async function canPublishToNetwork(
     pinterest: user.allowPinterestPublishing,
     tumblr: user.allowTumblrPublishing,
     bluesky: user.allowBlueskyPublishing,
+    devto: user.allowDevToPublishing,
   };
   return permissions[network];
 }

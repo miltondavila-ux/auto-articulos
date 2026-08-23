@@ -56,6 +56,7 @@ export async function GET() {
       allowLinkedInPublishing: user.allowLinkedInPublishing,
       allowThreadsPublishing: user.allowThreadsPublishing,
       allowBlueskyPublishing: user.allowBlueskyPublishing,
+      allowDevToPublishing: user.allowDevToPublishing,
       hasImageCredits: user.hasImageCredits,
       disabledModules,
       userDisabledModules,

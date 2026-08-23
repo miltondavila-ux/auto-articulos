@@ -49,6 +49,7 @@ interface UserRow {
   allowPinterestPublishing: boolean;
   allowTumblrPublishing: boolean;
   allowBlueskyPublishing: boolean;
+  allowDevToPublishing: boolean;
   aiImageGenerationEnabled: boolean;
   usePromptBoxPipeline: boolean;
   numeroCuenta?: number;
@@ -2111,6 +2112,7 @@ function UserCard({
     Boolean(user.allowTumblrPublishing),
   );
   const [permBluesky, setPermBluesky] = useState(Boolean(user.allowBlueskyPublishing));
+  const [permDevTo, setPermDevTo] = useState(Boolean(user.allowDevToPublishing));
   const [permAiImageGeneration, setPermAiImageGeneration] = useState(
     Boolean(user.aiImageGenerationEnabled),
   );
@@ -2154,6 +2156,7 @@ function UserCard({
     setPermPinterest(Boolean(user.allowPinterestPublishing));
     setPermTumblr(Boolean(user.allowTumblrPublishing));
     setPermBluesky(Boolean(user.allowBlueskyPublishing));
+    setPermDevTo(Boolean(user.allowDevToPublishing));
     setPermAiImageGeneration(Boolean(user.aiImageGenerationEnabled));
     setPermUsePromptBoxPipeline(Boolean(user.usePromptBoxPipeline));
     setPermIsTrialSignup(Boolean(user.isTrialSignup));
@@ -2170,6 +2173,7 @@ function UserCard({
     permPinterest !== Boolean(user.allowPinterestPublishing) ||
     permTumblr !== Boolean(user.allowTumblrPublishing) ||
     permBluesky !== Boolean(user.allowBlueskyPublishing) ||
+    permDevTo !== Boolean(user.allowDevToPublishing) ||
     permAiImageGeneration !== Boolean(user.aiImageGenerationEnabled) ||
     permUsePromptBoxPipeline !== Boolean(user.usePromptBoxPipeline) ||
     permIsTrialSignup !== Boolean(user.isTrialSignup) ||
@@ -2365,6 +2369,7 @@ function UserCard({
           allowPinterestPublishing: permPinterest,
           allowTumblrPublishing: permTumblr,
           allowBlueskyPublishing: permBluesky,
+          allowDevToPublishing: permDevTo,
           aiImageGenerationEnabled: permAiImageGeneration,
           usePromptBoxPipeline: permUsePromptBoxPipeline,
           isTrialSignup: permIsTrialSignup,
@@ -2727,6 +2732,10 @@ function UserCard({
               <label style={permissionLabelStyle}>
                 <input type="checkbox" checked={permBluesky} onChange={(e) => setPermBluesky(e.target.checked)} disabled={savingPermissions} style={{ accentColor: "#1d1d1f", width: 16, height: 16 }} />
                 Conectar y publicar en Bluesky
+              </label>
+              <label style={permissionLabelStyle}>
+                <input type="checkbox" checked={permDevTo} onChange={(e) => setPermDevTo(e.target.checked)} disabled={savingPermissions} style={{ accentColor: "#1d1d1f", width: 16, height: 16 }} />
+                Conectar y publicar artículos en DEV.to
               </label>
               <label style={permissionLabelStyle}>
                 <input

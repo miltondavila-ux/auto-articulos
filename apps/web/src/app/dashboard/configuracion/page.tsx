@@ -20,6 +20,7 @@ import LinkedInSection from "@/components/LinkedInSection";
 import PinterestSection from "@/components/PinterestSection";
 import TumblrSection from "@/components/TumblrSection";
 import BlueskySection from "@/components/BlueskySection";
+import DevToSection from "@/components/DevToSection";
 import PhotoLogoUploader from "@/components/PhotoLogoUploader";
 import OnboardingWizard from "@/components/OnboardingWizard";
 import CategorySyncProgress, {
@@ -89,6 +90,7 @@ export default function ConfiguracionPage() {
   const [allowPinterestPublishing, setAllowPinterestPublishing] = useState(false);
   const [allowTumblrPublishing, setAllowTumblrPublishing] = useState(false);
   const [allowBlueskyPublishing, setAllowBlueskyPublishing] = useState(false);
+  const [allowDevToPublishing, setAllowDevToPublishing] = useState(false);
   const [triggeringFix, setTriggeringFix] = useState(false);
   const [clearingFixHistory, setClearingFixHistory] = useState(false);
   const [fixStatus, setFixStatus] = useState<{
@@ -190,6 +192,7 @@ export default function ConfiguracionPage() {
         setAllowPinterestPublishing(data.allowPinterestPublishing ?? false);
         setAllowTumblrPublishing(data.allowTumblrPublishing ?? false);
         setAllowBlueskyPublishing(data.allowBlueskyPublishing ?? false);
+        setAllowDevToPublishing(data.allowDevToPublishing ?? false);
         if (typeof data.platformBaseUrl === "string" && data.platformBaseUrl) {
           setPlatformBase(data.platformBaseUrl);
         }
@@ -962,6 +965,9 @@ export default function ConfiguracionPage() {
           )}
           {(allowBlueskyPublishing || isAdmin || tieneModuloRedes) && (
             <BlueskySection allowed={allowBlueskyPublishing || isAdmin || tieneModuloRedes} />
+          )}
+          {(allowDevToPublishing || isAdmin || tieneModuloRedes) && (
+            <DevToSection allowed={allowDevToPublishing || isAdmin || tieneModuloRedes} />
           )}
         </div>
       )}

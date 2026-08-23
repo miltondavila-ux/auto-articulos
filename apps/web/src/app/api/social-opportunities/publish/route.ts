@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
       "pinterest",
       "tumblr",
       "bluesky",
+      "devto",
       "instagram-carousel",
       "instagram-reel-image",
       "instagram-story",
@@ -76,9 +77,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (opp.platform === "pinterest" || opp.platform === "tumblr") {
-      const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true, allowPinterestPublishing: true, allowTumblrPublishing: true } });
-      const allowed = opp.platform === "pinterest" ? user?.role === "admin" || user?.allowPinterestPublishing : user?.role === "admin" || user?.allowTumblrPublishing;
+    if (opp.platform === "pinterest" || opp.platform === "tumblr" || opp.platform === "bluesky" || opp.platform === "devto") {
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true, allowPinterestPublishing: true, allowTumblrPublishing: true, allowBlueskyPublishing: true, allowDevToPublishing: true } });
+      const allowed = opp.platform === "pinterest" ? user?.role === "admin" || user?.allowPinterestPublishing : opp.platform === "tumblr" ? user?.role === "admin" || user?.allowTumblrPublishing : opp.platform === "bluesky" ? user?.role === "admin" || user?.allowBlueskyPublishing : user?.role === "admin" || user?.allowDevToPublishing;
       if (!allowed) return NextResponse.json({ error: `No tienes permiso para publicar en ${opp.platform}. Contacta al administrador.` }, { status: 403 });
     }
 
@@ -110,6 +111,8 @@ export async function POST(request: NextRequest) {
         ? "Publicación encolada. El sistema publicará el post en Tumblr en segundo plano."
         : opp.platform === "bluesky"
         ? "Publicación encolada. El sistema publicará en Bluesky en segundo plano."
+        : opp.platform === "devto"
+        ? "Publicación encolada. El sistema adaptará y publicará el artículo en DEV.to en segundo plano."
         : "Publicación encolada. El sistema generará la imagen y publicará en Threads en segundo plano.",
     });
   } catch {

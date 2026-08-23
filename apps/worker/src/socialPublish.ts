@@ -20,6 +20,8 @@ import {
   createBlueskySession,
   createBlueskyPost,
   getBlueskyPostUrl,
+  createDevToArticle,
+  getDevToArticleUrl,
 } from "@auto-articulos/shared";
 import { put } from "@vercel/blob";
 import sharp from "sharp";
@@ -569,6 +571,32 @@ async function processBlueskyJob(job: {
   return true;
 }
 
+// ─── DEV.TO ───────────────────────────────────────────────────────────────
+
+async function processDevToJob(job: {
+  id: string; userId: string; titleId: string | null; articleUrl: string; articleTitle: string; suggestedText: string;
+}): Promise<boolean> {
+  const integration = await prisma.devToIntegration.findUnique({ where: { userId: job.userId } });
+  if (!integration) throw new Error("DEV.to no está configurado en tu cuenta.");
+  await validateArticleUrl(job.articleUrl);
+  const title = job.titleId ? await prisma.title.findUnique({ where: { id: job.titleId }, select: { text: true, summary: true, finalTitle: true } }) : null;
+  const rawBody = title?.text || job.suggestedText;
+  const bodyMarkdown = rawBody.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").trim();
+  const imageUrl = await getArticleOpenGraphImage(job.articleUrl);
+  const result = await createDevToArticle(decryptSecret(integration.encryptedApiKey), {
+    title: title?.finalTitle || job.articleTitle,
+    bodyMarkdown,
+    canonicalUrl: job.articleUrl,
+    description: title?.summary || job.articleTitle,
+    mainImage: imageUrl,
+  });
+  const postUrl = getDevToArticleUrl(result);
+  if (!postUrl) throw new Error("DEV.to no devolvió la URL del artículo publicado.");
+  await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: postUrl, publishedAt: new Date(), errorLog: null } });
+  if (job.titleId) await prisma.titleEvent.create({ data: { titleId: job.titleId, message: `Artículo adaptado publicado exitosamente en DEV.to${imageUrl ? " (con imagen y canonical URL)" : " (con canonical URL)"}.` } });
+  return true;
+}
+
 // ─── FACEBOOK PAGES ───────────────────────────────────────────────────────
 
 async function processFacebookPageJob(job: {
@@ -1051,6 +1079,8 @@ export async function processNextSocialPublish(filterUserId?: string, filterArti
       published = await processTumblrJob(job);
     } else if (job.platform === "bluesky") {
       published = await processBlueskyJob(job);
+    } else if (job.platform === "devto") {
+      published = await processDevToJob(job);
     } else if (job.platform === "facebook-page") {
       published = await processFacebookPageJob(job);
     } else if (job.platform === "facebook-story") {
