@@ -221,8 +221,12 @@ export default function ComoFuncionaPage() {
             color: "#6e6e73",
           }}
         >
-          Indexarte y posicionarte en tiempo récord. No dentro de un año:
-          desde la primera semana de trabajo constante.
+          Dos palabras que vas a ver seguido aquí, explicadas simple: que
+          Google &ldquo;te indexe&rdquo; significa que ya leyó tu página y la
+          guardó en su lista; que &ldquo;te posiciones&rdquo; significa que
+          apareces arriba en esa lista, no enterrado varias páginas más
+          abajo. Con este sistema, las dos cosas pasan rápido: no dentro de
+          un año, desde la primera semana de trabajo constante.
         </p>
         <p
           style={{
