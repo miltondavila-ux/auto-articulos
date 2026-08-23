@@ -5152,3 +5152,16 @@ completo (se descontinúa el 23/10/2026, no conviene), `gpt-image-1.5`
 (reemplazo vigente de OpenAI, sin probar todavía), Recraft V3 y FLUX
 Kontext (similares en precio, sin ventaja clara sobre las opciones ya
 probadas).
+
+### 2026-08-23 — Claude: Botón de arranque en "Cómo Funciona" y botón rojo Ferrari en Oportunidades
+
+- **Agente:** Claude (sesión `bu3fbo`).
+- **Tarea:** Milton pidió dos cosas concretas:
+  1. En `/dashboard/como-funciona`, un botón arriba del título que diga **"Comienza aquí"** si la cuenta ya tiene todo lo necesario configurado (lleva a Oportunidades) o **"Configura aquí"** si le falta algo (lleva a Configuración).
+  2. En Oportunidades, el botón que fuerza un nuevo análisis cuando el último no encontró nada (`canForce` / "Analizar de todas formas ahora") debe verse en **rojo Ferrari**.
+- **Archivos:**
+  - `apps/web/src/components/ComoFuncionaCTA.tsx` (nuevo, cliente): decide "listo"/"falta algo" con el **mismo criterio ya establecido** en `dashboard/page.tsx` → `checkWizardStatus` (credenciales guardadas, al menos 1 categoría, `contentLanguage` definido, Google Search Console conectado con `siteUrl`). Se reutilizó a propósito ese criterio en vez de inventar uno nuevo: si difiriera, alguien podría ver "Comienza aquí" en Cómo Funciona y el asistente de configuración en Inicio al mismo tiempo, lo cual sería peor que el problema original.
+  - `apps/web/src/app/dashboard/como-funciona/page.tsx`: se importa y coloca `<ComoFuncionaCTA />` justo arriba del `<h1>` del encabezado (sigue siendo un server component; el botón es el único pedazo cliente).
+  - `apps/web/src/app/dashboard/oportunidades/page.tsx`: se agregó `pillDanger` (`#ff2800`, sin borde, texto blanco) y se aplicó al botón "Analizar de todas formas ahora", que solo se muestra dentro del bloque `canForce` (cuando `noNewOpportunities` es cierto) — exactamente el caso que Milton describió.
+- **Verificación:** `npx prisma generate` + `npm run typecheck --workspace=@auto-articulos/web` limpio, código de salida 0. `git status` sin cambios accidentales en otros archivos.
+- **Estado del área:** Completado y publicado directo en `main` (commit `80d6c76`). Área LIBERADA.
