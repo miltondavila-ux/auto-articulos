@@ -7,11 +7,29 @@ export async function GET() {
   try {
     const userId = await getCurrentUserId();
     if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Módulo reservado a administradores y Lorena." }, { status: 403 });
-    const opportunities = await prisma.socialOpportunity.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
+    const [opportunities, tumblrIntegration] = await Promise.all([
+      prisma.socialOpportunity.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.tumblrIntegration.findUnique({ where: { userId }, select: { blogIdentifier: true } }),
+    ]);
+    const history = opportunities.map((opportunity) => {
+      if (
+        opportunity.status === "published" &&
+        opportunity.platform === "tumblr" &&
+        opportunity.postId &&
+        !/^https?:\/\//i.test(opportunity.postId) &&
+        tumblrIntegration?.blogIdentifier
+      ) {
+        return {
+          ...opportunity,
+          postId: `https://${tumblrIntegration.blogIdentifier}.tumblr.com/post/${opportunity.postId}`,
+        };
+      }
+      return opportunity;
     });
-    return NextResponse.json({ opportunities });
+    return NextResponse.json({ opportunities: history });
   } catch {
     return NextResponse.json({ error: "Error al obtener propuestas" }, { status: 500 });
   }
