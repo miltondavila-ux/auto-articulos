@@ -94,12 +94,19 @@ const PASOS = [
         qué necesitas hablar.
       </>,
       <>
-        En <Modulo id="oportunidades" /> elige el sistema. Google
-        guarda un registro de lo que escribió la gente en el buscador antes de
-        llegar a tu página; ese registro se llama Search Console y es el que se
-        conectó en el paso anterior. El sistema lo lee, junto con Bing, y
-        descubre qué está buscando de verdad tu público. Con eso te propone
-        títulos que sabemos que la gente busca, en vez de temas inventados.
+        En <Modulo id="oportunidades" /> elige el sistema. Vas a ver esas
+        siglas seguido, así que de una vez: <em>SEO</em> es que te encuentren
+        en buscadores como Google o Bing, y <em>AEO</em> es lo mismo pero
+        dentro de una inteligencia artificial — las mismas dos cosas de las
+        que veníamos hablando, solo que así se llaman en la jerga del rubro.
+      </>,
+      <>
+        Google guarda un registro de lo que escribió la gente en el buscador
+        antes de llegar a tu página; ese registro se llama Search Console y es
+        el que se conectó en el paso anterior. El sistema lo lee, junto con
+        Bing, y descubre qué está buscando de verdad tu público. Con eso te
+        propone títulos que sabemos que la gente busca, en vez de temas
+        inventados.
       </>,
       <>
         Esos títulos son de <em>cola larga</em>. Traducido: en vez de pelear
