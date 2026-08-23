@@ -5234,3 +5234,11 @@ probadas).
 - Se agregaron dos párrafos nuevos en el Paso 1 ("Configura tu cuenta"), justo donde ya se mencionaba "el permiso de Google para leer tus datos": definen Google, Bing y Google Search Console en una frase cada uno, y explican el motivo real de conectarlo — sin eso, Oportunidades no tiene de dónde sacar títulos reales — commit `4801306`.
 - **Verificación:** `npm run typecheck --workspace=@auto-articulos/web` limpio.
 - **Estado del área:** Completado y publicado en `main`. Área LIBERADA.
+
+### 2026-08-23 (cont. 9) — Claude: negritas en frases clave a lo largo de Cómo Funciona
+
+- Milton pidió resaltar en negrita frases/palabras relevantes a lo largo de todo el texto, para que se pueda escanear la idea central sin leer todo.
+- Se agregaron 17 `<strong>` puntuales (uno o dos por párrafo, no más, para no saturar): la pregunta gancho de apertura, las definiciones de "indexar"/"posicionar", la frase clave sobre por qué importa Google Search Console, el "no existes" de la IA, el insight de redes sociales, el efecto acumulativo, la acción concreta del usuario ("Tu parte es simple..."), y el punto fuerte de cada uno de los 3 pasos y del cierre "En resumen" — commit `e119fcf`.
+- No se agregó ni quitó ninguna frase de contenido: solo énfasis visual sobre el texto ya aprobado en entradas anteriores del mismo día.
+- **Verificación:** `npm run typecheck --workspace=@auto-articulos/web` limpio.
+- **Estado del área:** Completado y publicado en `main`. Área LIBERADA.
