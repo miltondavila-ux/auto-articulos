@@ -8,6 +8,8 @@ import {
 } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
 
+const LOCATION_LOOKUP_COOLDOWN_MS = 60_000;
+
 async function integrationFor(userId: string) {
   return prisma.businessProfileIntegration.findUnique({ where: { userId } });
 }
@@ -34,6 +36,21 @@ export async function GET(request: NextRequest) {
       locations: [],
       locationsLoaded: false,
     });
+  }
+
+  const now = new Date();
+  const elapsedMs = now.getTime() - integration.updatedAt.getTime();
+  const retryAfterSeconds = Math.max(1, Math.ceil((LOCATION_LOOKUP_COOLDOWN_MS - elapsedMs) / 1000));
+  if (elapsedMs < LOCATION_LOOKUP_COOLDOWN_MS) {
+    return NextResponse.json({ connected: true, needsLocation: true, locations: [], locationsLoaded: false, retryAfterSeconds });
+  }
+
+  const claimed = await prisma.businessProfileIntegration.updateMany({
+    where: { userId, updatedAt: { lt: new Date(now.getTime() - LOCATION_LOOKUP_COOLDOWN_MS) } },
+    data: { updatedAt: now },
+  });
+  if (claimed.count === 0) {
+    return NextResponse.json({ connected: true, needsLocation: true, locations: [], locationsLoaded: false, retryAfterSeconds: 60 });
   }
 
   try {
