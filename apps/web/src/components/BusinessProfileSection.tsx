@@ -105,11 +105,11 @@ export default function BusinessProfileSection() {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <p style={{ fontSize: 13, color: "#8a4b08", margin: 0 }}>
-                {data.locationsLoaded ? "No encontramos fichas administradas por esta cuenta de Google." : "Tu cuenta está conectada. Busca las fichas disponibles para elegir dónde publicar."}
+                {data.retryAfterSeconds ? `Google está preparando la consulta. Podrás buscar fichas en ${data.retryAfterSeconds} segundos.` : data.locationsLoaded ? "No encontramos fichas administradas por esta cuenta de Google." : "Tu cuenta está conectada. Busca las fichas disponibles para elegir dónde publicar."}
               </p>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button type="button" onClick={() => void load(true)} disabled={loadingLocations} className="secondary" style={{ ...secondaryButtonStyle, opacity: loadingLocations ? 0.55 : 1 }}>
-                  {loadingLocations ? "Buscando fichas..." : "Buscar fichas disponibles"}
+                  {loadingLocations ? "Buscando fichas..." : data.retryAfterSeconds ? "Espera para buscar fichas" : "Buscar fichas disponibles"}
                 </button>
                 <button type="button" onClick={() => { window.location.href = "/api/business-profile/connect"; }} className="secondary" style={secondaryButtonStyle}>
                   Conectar otra cuenta
