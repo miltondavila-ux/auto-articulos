@@ -135,6 +135,17 @@ function decodeHtmlEntities(value: string): string {
     .replace(/&gt;/gi, ">");
 }
 
+function deriveDevToTags(title: string, summary: string, category: string | null): string[] {
+  const stopWords = new Set(["para", "como", "qué", "que", "una", "uno", "los", "las", "del", "con", "por", "sobre", "desde", "este", "esta", "sus", "más", "cómo"]);
+  const values = [category || "", title, summary].join(" ")
+    .toLocaleLowerCase("es")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .split(/[^a-z0-9]+/)
+    .filter((word: string) => word.length >= 4 && !stopWords.has(word));
+  return Array.from(new Set(values)).slice(0, 4);
+}
+
 function stripHtml(value: string): string {
   return decodeHtmlEntities(value.replace(/<[^>]*>/g, "")).replace(/\s+/g, " ").trim();
 }
@@ -158,8 +169,21 @@ async function getArticleBodyMarkdown(articleUrl: string): Promise<string> {
   let markdown = container
     .replace(/<!--[\s\S]*?-->/g, "")
     .replace(/<(script|style|nav|header|footer|aside|form)\b[^>]*>[\s\S]*?<\/\1>/gi, "")
+    // El sitio de origen inyecta bloques de navegación, redes y enlaces
+    // relacionados dentro del article. No forman parte del contenido editorial.
+    .replace(/<h4\b[^>]*>[\s\S]*?Tambi[ée]n podr[íi]a gustarte[\s\S]*$/i, "")
+    .replace(/<h2\b[^>]*>[\s\S]*?TU PR[ÓO]XIMO GRAN PASO[\s\S]*$/i, "")
+    // Son separadores vacíos que el sitio original usa para sus componentes.
+    .replace(/<p>\s*-\s*<\/p>/gi, "")
+    // El generador original dejó una etiqueta HTML visible como bloque de código.
+    .replace(/<div\b[^>]*class=["'][^"']*highlight[^"']*["'][^>]*>[\s\S]*?(?=<p\b|<h[1-6]\b)/gi, "")
+    // DEV.to ya muestra el título arriba; no lo repetimos en el cuerpo.
+    .replace(/<h1\b[^>]*>[\s\S]*?<\/h1>\s*<p\b[^>]*>\s*Seguros de Salud y Vida\s*<\/p>\s*<p\b[^>]*>\s*[ÚU]ltima actualizaci[óo]n:[\s\S]*?<\/p>/i, "")
     .replace(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi, (_match, level: string, content: string) => `\n\n${"#".repeat(Number(level))} ${stripHtml(content)}\n\n`)
-    .replace(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, (_match, href: string, content: string) => `[${stripHtml(content)}](${decodeHtmlEntities(href)})`)
+    .replace(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, (_match, href: string, content: string) => {
+      const label = stripHtml(content);
+      return label ? `[${label}](${decodeHtmlEntities(href)})` : "";
+    })
     .replace(/<img\b[^>]*alt=["']([^"']*)["'][^>]*src=["']([^"']+)["'][^>]*\/?>/gi, (_match, alt: string, src: string) => `![${decodeHtmlEntities(alt)}](${decodeHtmlEntities(src)})`)
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<li\b[^>]*>([\s\S]*?)<\/li>/gi, (_match, content: string) => `\n- ${stripHtml(content)}\n`)
@@ -625,15 +649,19 @@ async function processDevToJob(job: {
   const integration = await prisma.devToIntegration.findUnique({ where: { userId: job.userId } });
   if (!integration) throw new Error("DEV.to no está configurado en tu cuenta.");
   await validateArticleUrl(job.articleUrl);
-  const title = job.titleId ? await prisma.title.findUnique({ where: { id: job.titleId }, select: { summary: true, finalTitle: true } }) : null;
+  const title = job.titleId ? await prisma.title.findUnique({ where: { id: job.titleId }, select: { summary: true, finalTitle: true, run: { select: { category: { select: { name: true } } } } } }) : null;
+  const articleTitle = title?.finalTitle || job.articleTitle;
+  const articleSummary = title?.summary || job.articleTitle;
   const bodyMarkdown = await getArticleBodyMarkdown(job.articleUrl);
   const imageUrl = await getArticleOpenGraphImage(job.articleUrl);
   const result = await createDevToArticle(decryptSecret(integration.encryptedApiKey), {
-    title: title?.finalTitle || job.articleTitle,
+    title: articleTitle,
     bodyMarkdown,
     canonicalUrl: job.articleUrl,
-    description: title?.summary || job.articleTitle,
+    description: articleSummary,
     mainImage: imageUrl,
+    tags: deriveDevToTags(articleTitle, articleSummary, title?.run.category.name || null),
+    series: title?.run.category.name || null,
   });
   const postUrl = getDevToArticleUrl(result);
   if (!postUrl) throw new Error("DEV.to no devolvió la URL del artículo publicado.");

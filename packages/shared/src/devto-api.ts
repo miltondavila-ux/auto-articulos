@@ -22,6 +22,7 @@ export async function createDevToArticle(apiKey: string, article: {
   description?: string | null;
   mainImage?: string | null;
   tags?: string[];
+  series?: string | null;
 }) {
   return devToRequest<DevToArticle>("/articles", apiKey, {
     method: "POST",
@@ -32,7 +33,8 @@ export async function createDevToArticle(apiKey: string, article: {
       canonical_url: article.canonicalUrl,
       description: article.description || undefined,
       main_image: article.mainImage || undefined,
-      tags: (article.tags || []).slice(0, 4),
+      tags: (article.tags || []).slice(0, 4).join(","),
+      series: article.series || undefined,
     } }),
   });
 }
