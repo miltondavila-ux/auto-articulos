@@ -12,7 +12,7 @@ async function integrationFor(userId: string) {
   return prisma.businessProfileIntegration.findUnique({ where: { userId } });
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const userId = await getCurrentUserId();
   const integration = await integrationFor(userId);
   if (!integration) return NextResponse.json({ connected: false });
@@ -25,30 +25,39 @@ export async function GET() {
     });
   }
 
-  // Conectado pero sin ubicación elegida todavía: se le muestran al usuario
-  // todas las ubicaciones reales de todas sus cuentas para que elija una,
-  // igual que se hace con las categorías/idiomas de 10minutesWebsite.
+  // Abrir Configuración no debe gastar cuota de Google. Las fichas se piden
+  // únicamente cuando el usuario pulsa Buscar fichas disponibles.
+  if (request.nextUrl.searchParams.get("locations") !== "1") {
+    return NextResponse.json({
+      connected: true,
+      needsLocation: true,
+      locations: [],
+      locationsLoaded: false,
+    });
+  }
+
   try {
     const accessToken = await getGoogleAccessToken(
       decryptSecret(integration.encryptedRefreshToken),
     );
     const accounts = await listBusinessAccounts(accessToken);
-    const locations = (
-      await Promise.all(
-        accounts.map(async (account) => {
-          const accountLocations = await listBusinessLocations(
-            accessToken,
-            account.name,
-          );
-          return accountLocations.map((location) => ({
-            accountName: account.name,
-            locationName: location.name,
-            locationTitle: location.title,
-          }));
-        }),
-      )
-    ).flat();
-    return NextResponse.json({ connected: true, needsLocation: true, locations });
+    const locations: { accountName: string; locationName: string; locationTitle: string }[] = [];
+    for (const account of accounts) {
+      const accountLocations = await listBusinessLocations(accessToken, account.name);
+      locations.push(
+        ...accountLocations.map((location) => ({
+          accountName: account.name,
+          locationName: location.name,
+          locationTitle: location.title,
+        })),
+      );
+    }
+    return NextResponse.json({
+      connected: true,
+      needsLocation: true,
+      locations,
+      locationsLoaded: true,
+    });
   } catch (error) {
     const message =
       error instanceof Error
@@ -58,6 +67,7 @@ export async function GET() {
       connected: true,
       needsLocation: true,
       locations: [],
+      locationsLoaded: true,
       error: message,
     });
   }
