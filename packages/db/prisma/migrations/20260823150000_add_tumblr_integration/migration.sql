@@ -20,3 +20,16 @@ DO $$ BEGIN
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
+
+INSERT INTO "ProductUpdate" ("id", "date", "title", "category", "summary", "example", "modulePath", "sourceCommit")
+VALUES (
+  'tumblr-integration-20260823',
+  '2026-08-23T00:00:00.000Z',
+  'Integración de Tumblr preparada',
+  'nuevas-herramientas',
+  'Se agregó la conexión de Tumblr con permiso por usuario, OAuth2, selección de blog y publicación automática de artículos con imagen OG. La conexión queda lista para configurar las credenciales de la aplicación.',
+  'En Configuración → Redes Sociales aparecerá Tumblr para ingresar el Consumer Key y Consumer Secret, conectar la cuenta y seleccionar el blog.',
+  '/dashboard/configuracion',
+  'b04b0e9'
+)
+ON CONFLICT ("sourceCommit") DO NOTHING;
