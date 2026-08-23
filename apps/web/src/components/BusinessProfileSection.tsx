@@ -73,19 +73,16 @@ export default function BusinessProfileSection() {
         <div>
           <button
             type="button"
-            disabled
-            title="Todavía no disponible"
-            className="secondary"
-            style={{
-              ...secondaryButtonStyle,
-              opacity: 0.45,
-              cursor: "not-allowed",
+            onClick={() => {
+              window.location.href = "/api/business-profile/connect";
             }}
+            className="secondary"
+            style={secondaryButtonStyle}
           >
             Conectar Google Business Profile
           </button>
           <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>
-            Esta función está EN ESPERA DE APROBACIÓN POR PARTE DE GOOGLE. Todavía no se puede usar: el botón está desactivado a propósito. Te avisaremos en cuanto Google la habilite. Mientras tanto, puedes ir dejando lista tu cuenta con los pasos de aquí abajo.
+            Conecta la cuenta de Google que administra tu Perfil de Negocio.
           </p>
         <PasosAntesDeConectar
           red="Google Business Profile"
