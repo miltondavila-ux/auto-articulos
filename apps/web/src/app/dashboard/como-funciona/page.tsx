@@ -258,6 +258,33 @@ export default function ComoFuncionaPage() {
 
       <hr style={SEPARADOR} />
 
+      <section style={{ padding: "clamp(28px, 4vw, 40px) 0 0" }}>
+        <h2 style={TITULO_SECCION}>Para qué sirve todo esto</h2>
+        <p style={PARRAFO}>Para posicionarte con autoridad en internet.</p>
+        <p style={PARRAFO}>
+          Aparecer en los resultados de la inteligencia artificial, de Google y
+          de Bing es lo más importante que le puede pasar a tu negocio en
+          internet. Es la diferencia entre que te encuentren y que no sepan que
+          existes.
+        </p>
+        <p style={PARRAFO}>
+          No pasa de un día para otro, y conviene decirlo claro: Google tarda en
+          leer y valorar cada artículo nuevo. Lo que sí ocurre es que se va
+          acumulando. Cada artículo que se posiciona atrae visitas, esas visitas
+          le confirman a Google que tu sitio responde bien, y eso hace que el
+          siguiente artículo lo tenga un poco más fácil. Es un efecto bola de
+          nieve: empieza pequeño y va creciendo solo, siempre que no se detenga.
+        </p>
+        <p style={PARRAFO}>
+          Por eso el trabajo real es sencillo: dejar la cuenta bien configurada
+          una vez, y después publicar de forma constante desde{" "}
+          <Modulo id="publicar" /> o{" "}
+          <Modulo id="oportunidades" />.
+        </p>
+      </section>
+
+      <hr style={SEPARADOR} />
+
       <section style={{ padding: "clamp(28px, 4vw, 40px) 0 4px" }}>
         <h2 style={TITULO_SECCION}>Cómo sucede</h2>
         <p style={{ ...PARRAFO, color: "#6e6e73" }}>
@@ -305,33 +332,6 @@ export default function ComoFuncionaPage() {
           </p>
         </section>
       ))}
-
-      <hr style={SEPARADOR} />
-
-      <section style={{ padding: "clamp(28px, 4vw, 40px) 0 0" }}>
-        <h2 style={TITULO_SECCION}>Para qué sirve todo esto</h2>
-        <p style={PARRAFO}>Para posicionarte con autoridad en internet.</p>
-        <p style={PARRAFO}>
-          Aparecer en los resultados de la inteligencia artificial, de Google y
-          de Bing es lo más importante que le puede pasar a tu negocio en
-          internet. Es la diferencia entre que te encuentren y que no sepan que
-          existes.
-        </p>
-        <p style={PARRAFO}>
-          No pasa de un día para otro, y conviene decirlo claro: Google tarda en
-          leer y valorar cada artículo nuevo. Lo que sí ocurre es que se va
-          acumulando. Cada artículo que se posiciona atrae visitas, esas visitas
-          le confirman a Google que tu sitio responde bien, y eso hace que el
-          siguiente artículo lo tenga un poco más fácil. Es un efecto bola de
-          nieve: empieza pequeño y va creciendo solo, siempre que no se detenga.
-        </p>
-        <p style={PARRAFO}>
-          Por eso el trabajo real es sencillo: dejar la cuenta bien configurada
-          una vez, y después publicar de forma constante desde{" "}
-          <Modulo id="publicar" /> o{" "}
-          <Modulo id="oportunidades" />.
-        </p>
-      </section>
     </div>
   );
 }
