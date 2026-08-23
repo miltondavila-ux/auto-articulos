@@ -47,6 +47,7 @@ interface UserRow {
   allowThreadsPublishing: boolean;
   allowFacebookPublishing: boolean;
   allowPinterestPublishing: boolean;
+  allowTumblrPublishing: boolean;
   aiImageGenerationEnabled: boolean;
   usePromptBoxPipeline: boolean;
   numeroCuenta?: number;
@@ -2105,6 +2106,9 @@ function UserCard({
   const [permPinterest, setPermPinterest] = useState(
     Boolean(user.allowPinterestPublishing),
   );
+  const [permTumblr, setPermTumblr] = useState(
+    Boolean(user.allowTumblrPublishing),
+  );
   const [permAiImageGeneration, setPermAiImageGeneration] = useState(
     Boolean(user.aiImageGenerationEnabled),
   );
@@ -2146,6 +2150,7 @@ function UserCard({
     setPermThreads(Boolean(user.allowThreadsPublishing));
     setPermFacebook(Boolean(user.allowFacebookPublishing));
     setPermPinterest(Boolean(user.allowPinterestPublishing));
+    setPermTumblr(Boolean(user.allowTumblrPublishing));
     setPermAiImageGeneration(Boolean(user.aiImageGenerationEnabled));
     setPermUsePromptBoxPipeline(Boolean(user.usePromptBoxPipeline));
     setPermIsTrialSignup(Boolean(user.isTrialSignup));
@@ -2160,6 +2165,7 @@ function UserCard({
     permThreads !== Boolean(user.allowThreadsPublishing) ||
     permFacebook !== Boolean(user.allowFacebookPublishing) ||
     permPinterest !== Boolean(user.allowPinterestPublishing) ||
+    permTumblr !== Boolean(user.allowTumblrPublishing) ||
     permAiImageGeneration !== Boolean(user.aiImageGenerationEnabled) ||
     permUsePromptBoxPipeline !== Boolean(user.usePromptBoxPipeline) ||
     permIsTrialSignup !== Boolean(user.isTrialSignup) ||
@@ -2353,6 +2359,7 @@ function UserCard({
           allowThreadsPublishing: permThreads,
           allowFacebookPublishing: permFacebook,
           allowPinterestPublishing: permPinterest,
+          allowTumblrPublishing: permTumblr,
           aiImageGenerationEnabled: permAiImageGeneration,
           usePromptBoxPipeline: permUsePromptBoxPipeline,
           isTrialSignup: permIsTrialSignup,
@@ -2701,6 +2708,16 @@ function UserCard({
                   style={{ accentColor: "#e60023", width: 16, height: 16 }}
                 />
                 Conectar y publicar en Pinterest
+              </label>
+              <label style={permissionLabelStyle}>
+                <input
+                  type="checkbox"
+                  checked={permTumblr}
+                  onChange={(e) => setPermTumblr(e.target.checked)}
+                  disabled={savingPermissions}
+                  style={{ accentColor: "#36465d", width: 16, height: 16 }}
+                />
+                Conectar y publicar en Tumblr
               </label>
               <label style={permissionLabelStyle}>
                 <input

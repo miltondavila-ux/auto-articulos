@@ -91,6 +91,9 @@ model User {
   // Control de acceso a publicación en Pinterest. Solo el admin puede
   // activarlo por usuario. Default: false (nadie tiene acceso).
   allowPinterestPublishing          Boolean   @default(false)
+  // Control de acceso a publicación en Tumblr. Solo el admin puede
+  // activarlo por usuario. Default: false (nadie tiene acceso).
+  allowTumblrPublishing              Boolean   @default(false)
   // Control de acceso al generador de imágenes con IA para redes sociales
   // (20/8/2026, "Creador de Imágenes para Redes Sociales"). Solo el admin
   // puede activarlo por usuario — es un upsell, no un reemplazo forzado.
@@ -156,6 +159,7 @@ model User {
   instagramIntegration       InstagramIntegration?
   facebookPageIntegration   FacebookPageIntegration?
   pinterestIntegration      PinterestIntegration?
+  tumblrIntegration         TumblrIntegration?
   socialOpportunities        SocialOpportunity[]
   oauthAuthorizationCodes    OAuthAuthorizationCode[]
   oauthAccessTokens          OAuthAccessToken[]
@@ -329,6 +333,21 @@ model PinterestIntegration {
   expiresAt            DateTime?
   boardId              String?
   boardName            String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Conexión OAuth2 con Tumblr para publicar posts con imagen y enlace.
+model TumblrIntegration {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  blogIdentifier       String
+  blogTitle            String?
+  accessTokenEncrypted String
+  refreshTokenEncrypted String?
+  expiresAt            DateTime?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
@@ -642,7 +661,7 @@ model SocialOpportunity {
   titleId       String?
   articleUrl    String
   articleTitle  String
-  platform      String // "threads" | "linkedin" | "x" | "instagram" | "facebook"
+  platform      String // "threads" | "linkedin" | "x" | "instagram" | "facebook" | "pinterest" | "tumblr"
   suggestedText String    @db.Text
   status        String    @default("pending") // "pending" | "published" | "skipped"
   progressPercent Int       @default(0)

@@ -18,6 +18,7 @@ import ThreadsSection from "@/components/ThreadsSection";
 import TwitterSection from "@/components/TwitterSection";
 import LinkedInSection from "@/components/LinkedInSection";
 import PinterestSection from "@/components/PinterestSection";
+import TumblrSection from "@/components/TumblrSection";
 import PhotoLogoUploader from "@/components/PhotoLogoUploader";
 import OnboardingWizard from "@/components/OnboardingWizard";
 import CategorySyncProgress, {
@@ -85,6 +86,7 @@ export default function ConfiguracionPage() {
   const [allowLinkedInPublishing, setAllowLinkedInPublishing] = useState(false);
   const [allowThreadsPublishing, setAllowThreadsPublishing] = useState(false);
   const [allowPinterestPublishing, setAllowPinterestPublishing] = useState(false);
+  const [allowTumblrPublishing, setAllowTumblrPublishing] = useState(false);
   const [triggeringFix, setTriggeringFix] = useState(false);
   const [clearingFixHistory, setClearingFixHistory] = useState(false);
   const [fixStatus, setFixStatus] = useState<{
@@ -184,6 +186,7 @@ export default function ConfiguracionPage() {
         setAllowLinkedInPublishing(data.allowLinkedInPublishing ?? false);
         setAllowThreadsPublishing(data.allowThreadsPublishing ?? false);
         setAllowPinterestPublishing(data.allowPinterestPublishing ?? false);
+        setAllowTumblrPublishing(data.allowTumblrPublishing ?? false);
         if (typeof data.platformBaseUrl === "string" && data.platformBaseUrl) {
           setPlatformBase(data.platformBaseUrl);
         }
@@ -559,6 +562,7 @@ export default function ConfiguracionPage() {
     allowFacebookPublishing ||
     allowLinkedInPublishing ||
     allowPinterestPublishing;
+    allowTumblrPublishing;
 
   useEffect(() => {
     if (activeTab === "social" && !showSocialTab) {
@@ -949,6 +953,9 @@ export default function ConfiguracionPage() {
           )}
           {(allowPinterestPublishing || isAdmin || tieneModuloRedes) && (
             <PinterestSection allowed={allowPinterestPublishing || isAdmin || tieneModuloRedes} />
+          )}
+          {(allowTumblrPublishing || isAdmin || tieneModuloRedes) && (
+            <TumblrSection allowed={allowTumblrPublishing || isAdmin || tieneModuloRedes} />
           )}
         </div>
       )}

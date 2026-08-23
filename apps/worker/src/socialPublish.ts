@@ -16,6 +16,7 @@ import {
   publishFacebookPagePost,
   publishFacebookPageStory,
   createPinterestPin,
+  createTumblrPhotoPost,
 } from "@auto-articulos/shared";
 import { put } from "@vercel/blob";
 import sharp from "sharp";
@@ -516,6 +517,31 @@ async function processPinterestJob(job: {
   return true;
 }
 
+// ─── TUMBLR ────────────────────────────────────────────────────────────────
+
+async function processTumblrJob(job: {
+  id: string;
+  userId: string;
+  titleId: string | null;
+  articleUrl: string;
+  articleTitle: string;
+  suggestedText: string;
+}): Promise<boolean> {
+  const integration = await prisma.tumblrIntegration.findUnique({ where: { userId: job.userId } });
+  if (!integration) throw new Error("Tumblr no está configurado en tu cuenta.");
+  if (integration.expiresAt && integration.expiresAt <= new Date()) throw new Error("La autorización de Tumblr expiró. Debes volver a conectar la cuenta.");
+  await validateArticleUrl(job.articleUrl);
+  const imageUrl = await getArticleOpenGraphImage(job.articleUrl);
+  if (!imageUrl) throw new Error("El artículo no tiene una imagen OG pública para Tumblr.");
+  const caption = job.suggestedText.includes("[ENLACE]") ? job.suggestedText.replace("[ENLACE]", "") : job.suggestedText;
+  const result = await createTumblrPhotoPost(decryptSecret(integration.accessTokenEncrypted), integration.blogIdentifier, { caption, link: job.articleUrl, imageUrl });
+  const postId = String(result.response?.id || "");
+  await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: result.response?.post_url || postId, publishedAt: new Date(), errorLog: null } });
+  console.log(`Publicado en Tumblr: ${job.id} — postId: ${postId}`);
+  if (job.titleId) await prisma.titleEvent.create({ data: { titleId: job.titleId, message: `Publicado exitosamente en Tumblr (${integration.blogTitle || integration.blogIdentifier}) - ID: ${postId}` } });
+  return true;
+}
+
 // ─── FACEBOOK PAGES ───────────────────────────────────────────────────────
 
 async function processFacebookPageJob(job: {
@@ -994,6 +1020,8 @@ export async function processNextSocialPublish(filterUserId?: string, filterArti
       published = await processLinkedInJob(job);
     } else if (job.platform === "pinterest") {
       published = await processPinterestJob(job);
+    } else if (job.platform === "tumblr") {
+      published = await processTumblrJob(job);
     } else if (job.platform === "facebook-page") {
       published = await processFacebookPageJob(job);
     } else if (job.platform === "facebook-story") {

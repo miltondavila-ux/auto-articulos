@@ -40,6 +40,8 @@ export async function POST(request: NextRequest) {
       "linkedin",
       "facebook-page",
       "facebook-story",
+      "pinterest",
+      "tumblr",
       "instagram-carousel",
       "instagram-reel-image",
       "instagram-story",
@@ -73,6 +75,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    if (opp.platform === "pinterest" || opp.platform === "tumblr") {
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true, allowPinterestPublishing: true, allowTumblrPublishing: true } });
+      const allowed = opp.platform === "pinterest" ? user?.role === "admin" || user?.allowPinterestPublishing : user?.role === "admin" || user?.allowTumblrPublishing;
+      if (!allowed) return NextResponse.json({ error: `No tienes permiso para publicar en ${opp.platform}. Contacta al administrador.` }, { status: 403 });
+    }
+
     await prisma.socialOpportunity.update({
       where: { id },
       data: { status: "queued", progressPercent: 1, progressStage: "En cola, esperando al worker", errorLog: null },
@@ -95,6 +103,10 @@ export async function POST(request: NextRequest) {
         ? "Publicación encolada. El sistema publicará en Facebook Pages en segundo plano."
         : opp.platform === "facebook-story"
         ? "Publicación encolada. El sistema generará la imagen y publicará la Historia en Facebook en segundo plano."
+        : opp.platform === "pinterest"
+        ? "Publicación encolada. El sistema publicará el Pin en Pinterest en segundo plano."
+        : opp.platform === "tumblr"
+        ? "Publicación encolada. El sistema publicará el post en Tumblr en segundo plano."
         : "Publicación encolada. El sistema generará la imagen y publicará en Threads en segundo plano.",
     });
   } catch {

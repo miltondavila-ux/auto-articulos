@@ -31,6 +31,7 @@ export async function GET() {
     twitterIntegration,
     linkedinIntegration,
     pinterestIntegration,
+    tumblrIntegration,
   ] = await Promise.all([
     // 1. Credenciales 10minutesWebsite
     prisma.credential.findUnique({
@@ -53,6 +54,7 @@ export async function GET() {
         hasImageCredits: true,
         role: true,
         allowPinterestPublishing: true,
+        allowTumblrPublishing: true,
       },
     }),
     // 4. Google Search Console
@@ -88,6 +90,10 @@ export async function GET() {
     prisma.pinterestIntegration.findUnique({
       where: { userId },
       select: { expiresAt: true, boardId: true },
+    }),
+    prisma.tumblrIntegration.findUnique({
+      where: { userId },
+      select: { expiresAt: true },
     }),
   ]);
 
@@ -206,6 +212,16 @@ export async function GET() {
       description: "Publica automáticamente tus artículos como Pins con imagen y enlace al artículo.",
       actionUrl: "/dashboard/configuracion?tab=social",
       actionLabel: "Conectar Pinterest",
+    },
+    {
+      id: "tumblr",
+      label: "Tumblr",
+      configured: Boolean((user?.role === "admin" || user?.allowTumblrPublishing) && tumblrIntegration && (!tumblrIntegration.expiresAt || tumblrIntegration.expiresAt > new Date())),
+      required: false,
+      section: "social",
+      description: "Publica automáticamente tus artículos con imagen, texto y enlace en Tumblr.",
+      actionUrl: "/dashboard/configuracion?tab=social",
+      actionLabel: "Conectar Tumblr",
     },
 
     // ━━━ CONTENIDO ━━━

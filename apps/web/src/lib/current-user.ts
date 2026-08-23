@@ -46,6 +46,7 @@ export async function getCurrentUser() {
       allowThreadsPublishing: true,
       allowFacebookPublishing: true,
       allowPinterestPublishing: true,
+      allowTumblrPublishing: true,
     },
   });
 }
