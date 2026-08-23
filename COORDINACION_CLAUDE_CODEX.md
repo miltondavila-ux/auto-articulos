@@ -5198,3 +5198,10 @@ probadas).
 - Se agregó un párrafo nuevo justo antes del eyebrow "El objetivo" (19px, sin negrita, tono narrativo en segunda persona), sin tocar ni reordenar nada del texto ya aprobado en las entradas anteriores — commit `52efa5e`.
 - **Verificación:** `npm run typecheck --workspace=@auto-articulos/web` limpio; diff de solo 15 líneas agregadas, nada eliminado ni movido.
 - **Estado del área:** Completado y publicado en `main`. Área LIBERADA.
+
+### 2026-08-23 (cont. 5) — Claude: explicar "indexar"/"posicionar" en lenguaje simple
+
+- Milton: la página usaba "indexación" y "posicionamiento" sin explicarlos — el lector debe asumirse en CERO conocimiento técnico.
+- Se reescribió la primera aparición de ambos términos (el subtítulo justo debajo del `<h1>`) para definirlos en una frase simple antes de seguir usándolos en el resto de la página (las repeticiones posteriores de "indexado"/"posiciona" ya quedan cubiertas por esa definición temprana) — commit `b5c0a43`.
+- **Verificación:** `npm run typecheck --workspace=@auto-articulos/web` limpio.
+- **Estado del área:** Completado y publicado en `main`. Área LIBERADA.
