@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { EnPrueba, Modulo } from "@/components/ModuleIntro";
+import ComoFuncionaCTA from "@/components/ComoFuncionaCTA";
 
 export const metadata: Metadata = {
   title: "Cómo funciona — Auto Artículos",
@@ -168,6 +169,9 @@ export default function ComoFuncionaPage() {
       }}
     >
       <header style={{ padding: "clamp(32px, 5vw, 48px) 0 clamp(24px, 3vw, 32px)" }}>
+        <div style={{ marginBottom: 20 }}>
+          <ComoFuncionaCTA />
+        </div>
         <h1
           style={{
             margin: 0,

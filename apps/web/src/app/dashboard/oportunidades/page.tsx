@@ -66,6 +66,18 @@ const pillSecondary: CSSProperties = {
   justifyContent: "center",
 };
 
+// Pedido explícito del usuario (23/8/2026): el botón para forzar un nuevo
+// análisis solo aparece cuando el último no encontró ninguna oportunidad
+// nueva (ver `canForce` más abajo), así que debe destacar como una acción
+// fuera de lo normal — rojo Ferrari en vez del gris neutro del resto de la
+// botonera.
+const pillDanger: CSSProperties = {
+  ...pillSecondary,
+  border: "none",
+  background: "#ff2800",
+  color: "#ffffff",
+};
+
 const pillQuiet: CSSProperties = {
   ...pillSecondary,
   padding: "7px 15px",
@@ -1011,7 +1023,7 @@ export default function OportunidadesPage() {
                   <button
                     onClick={() => analyze(true)}
                     disabled={analyzing}
-                    style={disabledStyle({ ...pillSecondary }, analyzing)}
+                    style={disabledStyle({ ...pillDanger }, analyzing)}
                   >
                     Analizar de todas formas ahora
                   </button>
