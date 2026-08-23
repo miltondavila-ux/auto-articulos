@@ -125,6 +125,52 @@ async function getArticleOpenGraphImage(articleUrl: string): Promise<string | nu
   }
 }
 
+function decodeHtmlEntities(value: string): string {
+  return value
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">");
+}
+
+function stripHtml(value: string): string {
+  return decodeHtmlEntities(value.replace(/<[^>]*>/g, "")).replace(/\s+/g, " ").trim();
+}
+
+/** Lee el cuerpo real del artículo publicado y lo adapta al Markdown de DEV.to. */
+async function getArticleBodyMarkdown(articleUrl: string): Promise<string> {
+  const response = await fetch(articleUrl, {
+    redirect: "follow",
+    signal: AbortSignal.timeout(15000),
+    headers: {
+      "User-Agent": "Mozilla/5.0 (compatible; AutoArticulos/1.0)",
+      Accept: "text/html,application/xhtml+xml",
+    },
+  });
+  if (!response.ok) throw new Error(`No se pudo leer el contenido del artículo (${response.status}).`);
+  const html = await response.text();
+  const container = html.match(/<article\b[^>]*>([\s\S]*?)<\/article>/i)?.[1]
+    || html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i)?.[1]
+    || html.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i)?.[1]
+    || html;
+  let markdown = container
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<(script|style|nav|header|footer|aside|form)\b[^>]*>[\s\S]*?<\/\1>/gi, "")
+    .replace(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi, (_match, level: string, content: string) => `\n\n${"#".repeat(Number(level))} ${stripHtml(content)}\n\n`)
+    .replace(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, (_match, href: string, content: string) => `[${stripHtml(content)}](${decodeHtmlEntities(href)})`)
+    .replace(/<img\b[^>]*alt=["']([^"']*)["'][^>]*src=["']([^"']+)["'][^>]*\/?>/gi, (_match, alt: string, src: string) => `![${decodeHtmlEntities(alt)}](${decodeHtmlEntities(src)})`)
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<li\b[^>]*>([\s\S]*?)<\/li>/gi, (_match, content: string) => `\n- ${stripHtml(content)}\n`)
+    .replace(/<\/(p|div|section|blockquote|ul|ol|figure)>/gi, "\n\n")
+    .replace(/<(p|div|section|blockquote|ul|ol|figure)\b[^>]*>/gi, "\n\n")
+    .replace(/<[^>]+>/g, "");
+  markdown = decodeHtmlEntities(markdown).replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  if (markdown.length < 80) throw new Error("El artículo publicado no devolvió un cuerpo de contenido válido.");
+  return markdown;
+}
+
 /** Quita barras negras incorporadas en la imagen OG antes de subirla a redes. */
 async function normalizeSocialImage(imageUrl: string, targetAspect = 3 / 4): Promise<string> {
   try {
@@ -579,9 +625,8 @@ async function processDevToJob(job: {
   const integration = await prisma.devToIntegration.findUnique({ where: { userId: job.userId } });
   if (!integration) throw new Error("DEV.to no está configurado en tu cuenta.");
   await validateArticleUrl(job.articleUrl);
-  const title = job.titleId ? await prisma.title.findUnique({ where: { id: job.titleId }, select: { text: true, summary: true, finalTitle: true } }) : null;
-  const rawBody = title?.text || job.suggestedText;
-  const bodyMarkdown = rawBody.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").trim();
+  const title = job.titleId ? await prisma.title.findUnique({ where: { id: job.titleId }, select: { summary: true, finalTitle: true } }) : null;
+  const bodyMarkdown = await getArticleBodyMarkdown(job.articleUrl);
   const imageUrl = await getArticleOpenGraphImage(job.articleUrl);
   const result = await createDevToArticle(decryptSecret(integration.encryptedApiKey), {
     title: title?.finalTitle || job.articleTitle,
