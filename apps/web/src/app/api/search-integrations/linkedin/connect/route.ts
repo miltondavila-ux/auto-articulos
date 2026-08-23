@@ -4,7 +4,7 @@ import { getLinkedInAuthUrl } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
 import { getStoredLinkedInAppCredentials } from "@/lib/linkedin-app-config";
 
-export const LINKEDIN_STATE_COOKIE = "linkedin_oauth_state";
+import { LINKEDIN_STATE_COOKIE } from "./constants";
 
 export async function GET(request: Request) {
   await getCurrentUserId();

@@ -5,7 +5,7 @@ import { getCurrentUserId } from "@/lib/current-user";
 import { canPublishToNetwork } from "@/lib/social-access";
 import { getStoredTumblrAppCredentials } from "@/lib/tumblr-app-config";
 
-export const TUMBLR_STATE_COOKIE = "tumblr_oauth_state";
+import { TUMBLR_STATE_COOKIE } from "./constants";
 
 export async function GET(request: Request) {
   const userId = await getCurrentUserId();

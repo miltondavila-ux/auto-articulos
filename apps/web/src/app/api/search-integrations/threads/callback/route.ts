@@ -4,7 +4,7 @@ import { prisma } from "@auto-articulos/db";
 import { encryptSecret, exchangeCodeForThreadsTokens } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
 import { getStoredThreadsAppCredentials } from "@/lib/threads-app-config";
-import { THREADS_STATE_COOKIE } from "../connect/route";
+import { THREADS_STATE_COOKIE } from "../connect/constants";
 
 export async function GET(request: NextRequest) {
   const userId = await getCurrentUserId();

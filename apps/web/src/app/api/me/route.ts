@@ -15,7 +15,7 @@ export const revalidate = 0;
 
 // Un poco más del doble del texto de ejemplo que dio el usuario (340
 // caracteres) — pedido explícito, 6/8/2026.
-export const MAX_ARTICLE_SIGNATURE_LEN = 700;
+const MAX_ARTICLE_SIGNATURE_LEN = 700;
 
 export async function GET() {
   const user = await getCurrentUser();

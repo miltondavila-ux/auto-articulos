@@ -5,7 +5,7 @@ import { encryptSecret, exchangeCodeForTumblrToken, getTumblrBlogs } from "@auto
 import { getCurrentUserId } from "@/lib/current-user";
 import { canPublishToNetwork } from "@/lib/social-access";
 import { getStoredTumblrAppCredentials } from "@/lib/tumblr-app-config";
-import { TUMBLR_STATE_COOKIE } from "../connect/route";
+import { TUMBLR_STATE_COOKIE } from "../connect/constants";
 
 export async function GET(request: NextRequest) {
   const userId = await getCurrentUserId();

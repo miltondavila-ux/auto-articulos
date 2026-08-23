@@ -4,8 +4,7 @@ import { getTwitterAuthUrl } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
 import { getStoredTwitterAppCredentials } from "@/lib/twitter-app-config";
 
-export const TWITTER_STATE_COOKIE = "twitter_oauth_state";
-export const TWITTER_VERIFIER_COOKIE = "twitter_code_verifier";
+import { TWITTER_STATE_COOKIE, TWITTER_VERIFIER_COOKIE } from "./constants";
 
 export async function GET(request: Request) {
   await getCurrentUserId();

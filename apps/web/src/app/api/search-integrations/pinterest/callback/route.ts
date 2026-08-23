@@ -5,7 +5,7 @@ import { encryptSecret, exchangeCodeForPinterestToken } from "@auto-articulos/sh
 import { getCurrentUserId } from "@/lib/current-user";
 import { getStoredPinterestAppCredentials } from "@/lib/pinterest-app-config";
 import { canPublishToNetwork } from "@/lib/social-access";
-import { PINTEREST_STATE_COOKIE } from "../connect/route";
+import { PINTEREST_STATE_COOKIE } from "../connect/constants";
 
 export async function GET(request: NextRequest) {
   const userId = await getCurrentUserId();

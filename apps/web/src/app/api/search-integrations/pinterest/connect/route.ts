@@ -5,7 +5,7 @@ import { getCurrentUserId } from "@/lib/current-user";
 import { getStoredPinterestAppCredentials } from "@/lib/pinterest-app-config";
 import { canPublishToNetwork } from "@/lib/social-access";
 
-export const PINTEREST_STATE_COOKIE = "pinterest_oauth_state";
+import { PINTEREST_STATE_COOKIE } from "./constants";
 
 export async function GET(request: Request) {
   const userId = await getCurrentUserId();

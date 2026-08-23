@@ -4,7 +4,7 @@ import { prisma } from "@auto-articulos/db";
 import { encryptSecret, exchangeCodeForTwitterTokens } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
 import { getStoredTwitterAppCredentials } from "@/lib/twitter-app-config";
-import { TWITTER_STATE_COOKIE, TWITTER_VERIFIER_COOKIE } from "../connect/route";
+import { TWITTER_STATE_COOKIE, TWITTER_VERIFIER_COOKIE } from "../connect/constants";
 
 export async function GET(request: NextRequest) {
   const userId = await getCurrentUserId();
