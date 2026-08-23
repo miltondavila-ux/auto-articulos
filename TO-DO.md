@@ -148,6 +148,13 @@ HANDOFF, solo alimenta ideas hacia él).
   dispone (comportamiento real de los usuarios) — buscando así hacer mucho
   más efectivo el contenido y escribir sobre lo que la gente está buscando.
 
+- **(23/8/2026)** El sistema debe tener un sitio/pantalla donde el usuario
+  pueda re-editar un artículo ya publicado.
+- **(23/8/2026)** Módulo de Inconsistencias: un prompt que le pregunte a
+  OpenAI si hay inconsistencias (entre artículos existentes), y que le vaya
+  comentando al usuario qué artículo debe cambiar y cómo cambiarlo. Debe
+  dejar un histórico de los cambios realizados.
+
 ## Hecho
 
 - **(16/8/2026)** Asistente Flotante Arrastrable (Drag-and-Drop) en `FloatingAssistant`:
