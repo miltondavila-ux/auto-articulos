@@ -5205,3 +5205,13 @@ probadas).
 - Se reescribió la primera aparición de ambos términos (el subtítulo justo debajo del `<h1>`) para definirlos en una frase simple antes de seguir usándolos en el resto de la página (las repeticiones posteriores de "indexado"/"posiciona" ya quedan cubiertas por esa definición temprana) — commit `b5c0a43`.
 - **Verificación:** `npm run typecheck --workspace=@auto-articulos/web` limpio.
 - **Estado del área:** Completado y publicado en `main`. Área LIBERADA.
+
+### 2026-08-23 (cont. 6) — Claude: mejora integral de texto en Cómo Funciona
+
+- Milton dio permiso explícito para una mejora de fondo (no solo reordenar): "que cualquier persona que llegue a ese texto sepa lo que tiene que hacer y qué hace el software por él y que conecte con su necesidad".
+- Se fusionó la sección "Para qué sirve todo esto" dentro del encabezado, eliminando repeticiones del "efecto bola de nieve"/tiempos que aparecían casi dos veces. El encabezado ahora cierra con una frase explícita que nombra la acción del usuario y la del sistema en la misma idea: *"Tu parte es simple: dejas la cuenta configurada una vez, y publicas de forma constante. El sistema hace el resto..."*
+- Se agregó un cierre breve "En resumen" después de los 3 pasos.
+- Los 3 pasos ("Cómo sucede") no se tocaron — nunca fueron objeto de queja.
+- Commit `ec13b82`, publicado en `main`. `npm run typecheck --workspace=@auto-articulos/web` limpio.
+- **Recordatorio de infraestructura (ya anotado antes, sigue vigente):** esta sesión no tiene Vercel CLI autenticado ni proyecto enlazado, así que el despliegue depende 100% de la integración automática GitHub→Vercel al hacer push a `main`. No hay forma de confirmar desde aquí el estado exacto del build (Ready/Building/Error) — solo confirmar que el commit está en `main`.
+- **Estado del área:** Completado y publicado en `main`. Área LIBERADA.
