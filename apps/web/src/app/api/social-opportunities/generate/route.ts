@@ -168,13 +168,14 @@ async function selectArticlesWithoutGSC(userId: string): Promise<ArticleCandidat
 }
 
 async function getConnectedNetworks(userId: string) {
-  const [threads, twitter, linkedin, instagram, facebookPage, pinterest] = await Promise.all([
+  const [threads, twitter, linkedin, instagram, facebookPage, pinterest, user] = await Promise.all([
     prisma.threadsIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.twitterIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.linkedInIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.instagramIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.facebookPageIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.pinterestIntegration.findUnique({ where: { userId }, select: { id: true, boardId: true, expiresAt: true } }),
+    prisma.user.findUnique({ where: { id: userId }, select: { role: true, allowPinterestPublishing: true } }),
   ]);
   return {
     threads: Boolean(threads),
@@ -182,7 +183,7 @@ async function getConnectedNetworks(userId: string) {
     linkedin: Boolean(linkedin),
     instagram: Boolean(instagram),
     facebookPage: Boolean(facebookPage),
-    pinterest: Boolean(pinterest && pinterest.boardId && (!pinterest.expiresAt || pinterest.expiresAt > new Date())),
+    pinterest: Boolean(user?.role === "admin" || user?.allowPinterestPublishing) && Boolean(pinterest && pinterest.boardId && (!pinterest.expiresAt || pinterest.expiresAt > new Date())),
   };
 }
 

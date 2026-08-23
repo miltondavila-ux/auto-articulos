@@ -84,6 +84,7 @@ export default function ConfiguracionPage() {
   const [modulosDeshabilitados, setModulosDeshabilitados] = useState<string[]>([]);
   const [allowLinkedInPublishing, setAllowLinkedInPublishing] = useState(false);
   const [allowThreadsPublishing, setAllowThreadsPublishing] = useState(false);
+  const [allowPinterestPublishing, setAllowPinterestPublishing] = useState(false);
   const [triggeringFix, setTriggeringFix] = useState(false);
   const [clearingFixHistory, setClearingFixHistory] = useState(false);
   const [fixStatus, setFixStatus] = useState<{
@@ -182,6 +183,7 @@ export default function ConfiguracionPage() {
         setAllowFacebookPublishing(data.allowFacebookPublishing ?? false);
         setAllowLinkedInPublishing(data.allowLinkedInPublishing ?? false);
         setAllowThreadsPublishing(data.allowThreadsPublishing ?? false);
+        setAllowPinterestPublishing(data.allowPinterestPublishing ?? false);
         if (typeof data.platformBaseUrl === "string" && data.platformBaseUrl) {
           setPlatformBase(data.platformBaseUrl);
         }
@@ -555,7 +557,8 @@ export default function ConfiguracionPage() {
     allowThreadsPublishing ||
     allowInstagramPublishing ||
     allowFacebookPublishing ||
-    allowLinkedInPublishing;
+    allowLinkedInPublishing ||
+    allowPinterestPublishing;
 
   useEffect(() => {
     if (activeTab === "social" && !showSocialTab) {
@@ -944,7 +947,9 @@ export default function ConfiguracionPage() {
           {(allowLinkedInPublishing || isAdmin || tieneModuloRedes) && (
             <LinkedInSection allowed={allowLinkedInPublishing || isAdmin || tieneModuloRedes} />
           )}
-          {(isAdmin || tieneModuloRedes) && <PinterestSection allowed={isAdmin || tieneModuloRedes} />}
+          {(allowPinterestPublishing || isAdmin || tieneModuloRedes) && (
+            <PinterestSection allowed={allowPinterestPublishing || isAdmin || tieneModuloRedes} />
+          )}
         </div>
       )}
 

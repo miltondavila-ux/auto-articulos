@@ -80,6 +80,7 @@ export async function GET() {
         allowLinkedInPublishing: true,
         allowThreadsPublishing: true,
         allowFacebookPublishing: true,
+        allowPinterestPublishing: true,
         aiImageGenerationEnabled: true,
         usePromptBoxPipeline: true,
         profilePhotoUrl: true,
@@ -193,6 +194,7 @@ export async function PATCH(request: NextRequest) {
     allowLinkedInPublishing,
     allowThreadsPublishing,
     allowFacebookPublishing,
+    allowPinterestPublishing,
     aiImageGenerationEnabled,
     usePromptBoxPipeline,
     profilePhotoUrl,
@@ -224,6 +226,7 @@ export async function PATCH(request: NextRequest) {
     allowLinkedInPublishing?: boolean;
     allowThreadsPublishing?: boolean;
     allowFacebookPublishing?: boolean;
+    allowPinterestPublishing?: boolean;
     aiImageGenerationEnabled?: boolean;
     usePromptBoxPipeline?: boolean;
     profilePhotoUrl?: string | null;
@@ -344,6 +347,10 @@ export async function PATCH(request: NextRequest) {
 
   if ("allowFacebookPublishing" in body) {
     data.allowFacebookPublishing = Boolean(allowFacebookPublishing);
+  }
+
+  if ("allowPinterestPublishing" in body) {
+    data.allowPinterestPublishing = Boolean(allowPinterestPublishing);
   }
 
   if ("aiImageGenerationEnabled" in body) {

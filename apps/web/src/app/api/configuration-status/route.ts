@@ -48,6 +48,8 @@ export async function GET() {
         phone: true,
         imagePrompt: true,
         hasImageCredits: true,
+        role: true,
+        allowPinterestPublishing: true,
       },
     }),
     // 4. Google Search Console
@@ -195,7 +197,7 @@ export async function GET() {
     {
       id: "pinterest",
       label: "Pinterest",
-      configured: Boolean(pinterestIntegration && pinterestIntegration.boardId && (!pinterestIntegration.expiresAt || pinterestIntegration.expiresAt > new Date())),
+      configured: Boolean((user?.role === "admin" || user?.allowPinterestPublishing) && pinterestIntegration && pinterestIntegration.boardId && (!pinterestIntegration.expiresAt || pinterestIntegration.expiresAt > new Date())),
       required: false,
       section: "social",
       description: "Publica automáticamente tus artículos como Pins con imagen y enlace al artículo.",

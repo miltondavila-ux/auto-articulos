@@ -3,12 +3,14 @@ import { prisma } from "@auto-articulos/db";
 import { decryptSecret } from "@auto-articulos/shared";
 import { listPinterestBoards } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
+import { canPublishToNetwork } from "@/lib/social-access";
 
 export const dynamic = "force-dynamic";
 const NO_CACHE = { "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate" };
 
 export async function GET() {
   const userId = await getCurrentUserId();
+  if (!(await canPublishToNetwork(userId, "pinterest"))) return NextResponse.json({ connected: false, forbidden: true }, { status: 403, headers: NO_CACHE });
   const integration = await prisma.pinterestIntegration.findUnique({ where: { userId } });
   if (!integration) return NextResponse.json({ connected: false }, { headers: NO_CACHE });
 
@@ -37,6 +39,7 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
   const userId = await getCurrentUserId();
+  if (!(await canPublishToNetwork(userId, "pinterest"))) return NextResponse.json({ error: "Pinterest no está habilitado para este usuario." }, { status: 403 });
   const integration = await prisma.pinterestIntegration.findUnique({ where: { userId } });
   if (!integration) return NextResponse.json({ error: "Pinterest no está conectado." }, { status: 400 });
   const body = await request.json().catch(() => ({})) as { boardId?: unknown };
@@ -52,6 +55,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE() {
   const userId = await getCurrentUserId();
+  if (!(await canPublishToNetwork(userId, "pinterest"))) return NextResponse.json({ error: "Pinterest no está habilitado para este usuario." }, { status: 403 });
   await prisma.pinterestIntegration.deleteMany({ where: { userId } });
   return NextResponse.json({ ok: true }, { headers: NO_CACHE });
 }

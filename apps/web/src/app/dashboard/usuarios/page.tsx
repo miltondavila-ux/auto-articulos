@@ -46,6 +46,7 @@ interface UserRow {
   allowLinkedInPublishing: boolean;
   allowThreadsPublishing: boolean;
   allowFacebookPublishing: boolean;
+  allowPinterestPublishing: boolean;
   aiImageGenerationEnabled: boolean;
   usePromptBoxPipeline: boolean;
   numeroCuenta?: number;
@@ -2101,6 +2102,9 @@ function UserCard({
   const [permFacebook, setPermFacebook] = useState(
     Boolean(user.allowFacebookPublishing),
   );
+  const [permPinterest, setPermPinterest] = useState(
+    Boolean(user.allowPinterestPublishing),
+  );
   const [permAiImageGeneration, setPermAiImageGeneration] = useState(
     Boolean(user.aiImageGenerationEnabled),
   );
@@ -2141,6 +2145,7 @@ function UserCard({
     setPermLinkedIn(Boolean(user.allowLinkedInPublishing));
     setPermThreads(Boolean(user.allowThreadsPublishing));
     setPermFacebook(Boolean(user.allowFacebookPublishing));
+    setPermPinterest(Boolean(user.allowPinterestPublishing));
     setPermAiImageGeneration(Boolean(user.aiImageGenerationEnabled));
     setPermUsePromptBoxPipeline(Boolean(user.usePromptBoxPipeline));
     setPermIsTrialSignup(Boolean(user.isTrialSignup));
@@ -2154,6 +2159,7 @@ function UserCard({
     permLinkedIn !== Boolean(user.allowLinkedInPublishing) ||
     permThreads !== Boolean(user.allowThreadsPublishing) ||
     permFacebook !== Boolean(user.allowFacebookPublishing) ||
+    permPinterest !== Boolean(user.allowPinterestPublishing) ||
     permAiImageGeneration !== Boolean(user.aiImageGenerationEnabled) ||
     permUsePromptBoxPipeline !== Boolean(user.usePromptBoxPipeline) ||
     permIsTrialSignup !== Boolean(user.isTrialSignup) ||
@@ -2346,6 +2352,7 @@ function UserCard({
           allowLinkedInPublishing: permLinkedIn,
           allowThreadsPublishing: permThreads,
           allowFacebookPublishing: permFacebook,
+          allowPinterestPublishing: permPinterest,
           aiImageGenerationEnabled: permAiImageGeneration,
           usePromptBoxPipeline: permUsePromptBoxPipeline,
           isTrialSignup: permIsTrialSignup,
@@ -2684,6 +2691,16 @@ function UserCard({
                   style={{ accentColor: "#1d1d1f", width: 16, height: 16 }}
                 />
                 Publicar en Facebook Pages
+              </label>
+              <label style={permissionLabelStyle}>
+                <input
+                  type="checkbox"
+                  checked={permPinterest}
+                  onChange={(e) => setPermPinterest(e.target.checked)}
+                  disabled={savingPermissions}
+                  style={{ accentColor: "#e60023", width: 16, height: 16 }}
+                />
+                Conectar y publicar en Pinterest
               </label>
               <label style={permissionLabelStyle}>
                 <input

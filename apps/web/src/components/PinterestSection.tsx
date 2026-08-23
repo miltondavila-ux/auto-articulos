@@ -28,6 +28,10 @@ export default function PinterestSection({ allowed = true }: { allowed?: boolean
   const [disconnecting, setDisconnecting] = useState(false);
   const [message, setMessage] = useState("");
 
+  function connect() {
+    window.location.href = "/api/search-integrations/pinterest/connect";
+  }
+
   async function load() {
     setLoading(true);
     try {
@@ -116,15 +120,34 @@ export default function PinterestSection({ allowed = true }: { allowed?: boolean
 
         {allowed && <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 16, paddingTop: 16 }}>
           <PasosAntesDeConectar red="Pinterest" />
-          {!configured ? <p className="notice">Pinterest no está configurado todavía. {settings?.isAdmin ? "Ingresa las credenciales arriba." : "Contacta al administrador."}</p> : connection?.connected ? <>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}><span style={{ color: "#16803c", fontSize: 13, fontWeight: 600 }}>✓ Cuenta conectada</span>{connection.isExpired && <span style={{ color: "#ff3b30", fontSize: 12 }}>Token expirado</span>}<button onClick={disconnect} disabled={disconnecting} className="secondary" style={disabledStyle(secondaryButtonStyle, disconnecting)}>{disconnecting ? "Desconectando..." : "Desconectar"}</button></div>
-            {connection.isExpired ? <p className="notice" style={{ marginTop: 12 }}>La autorización expiró. Desconecta y vuelve a conectar Pinterest.</p> : <div style={{ display: "grid", gap: 8, marginTop: 14, maxWidth: 520 }}>
+          <div style={{ background: "#f5f5f7", border: "1px solid #e5e5ea", borderRadius: 14, padding: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+              <div>
+                <strong style={{ color: "#1d1d1f", fontSize: 15 }}>Conexión de Pinterest</strong>
+                <p className="lead-copy" style={{ fontSize: 12, margin: "4px 0 0" }}>
+                  Autoriza tu cuenta, elige el tablero y controla la conexión desde aquí.
+                </p>
+              </div>
+              {connection?.connected && !connection.isExpired ? <span style={{ color: "#16803c", fontSize: 12, fontWeight: 700 }}>● Conectada</span> : <span style={{ color: "#8a4b08", fontSize: 12, fontWeight: 700 }}>● Pendiente</span>}
+            </div>
+            {!configured ? <p className="notice" style={{ margin: "14px 0 0" }}>Pinterest todavía no está configurado. {settings?.isAdmin ? "Guarda primero las credenciales de la aplicación arriba." : "El administrador debe configurar la aplicación."}</p> : !connection?.connected ? <div style={{ marginTop: 14 }}>
+              <p className="lead-copy" style={{ fontSize: 13, margin: "0 0 12px" }}>Paso 1 de 2 · Conecta la cuenta que usará este usuario para publicar.</p>
+              <button onClick={connect} className="secondary" style={{ ...secondaryButtonStyle, background: "#e60023", color: "#fff", border: "none" }}>Conectar Pinterest →</button>
+            </div> : <>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
+                <span style={{ fontSize: 13, color: "#1d1d1f" }}>Cuenta autorizada</span>
+                <button onClick={connect} className="secondary" style={{ ...secondaryButtonStyle, fontSize: 12 }}>Reconectar</button>
+                <button onClick={disconnect} disabled={disconnecting} className="secondary" style={disabledStyle({ ...secondaryButtonStyle, fontSize: 12 }, disconnecting)}>{disconnecting ? "Desconectando..." : "Desconectar"}</button>
+              </div>
+            {connection.isExpired ? <p className="notice" style={{ marginTop: 12 }}>La autorización expiró. Pulsa <strong>Reconectar</strong> para renovar el acceso.</p> : <div style={{ display: "grid", gap: 8, marginTop: 14, maxWidth: 520 }}>
+              <p className="lead-copy" style={{ fontSize: 13, margin: 0 }}>Paso 2 de 2 · Selecciona el tablero donde se crearán los Pins.</p>
               <label style={{ color: "#1d1d1f", fontSize: 12, fontWeight: 500 }}>Tablero donde se publicarán los Pins<select value={boardId} onChange={(e) => setBoardId(e.target.value)} style={inputStyle}><option value="">Selecciona un tablero</option>{(connection.boards || []).map((board) => <option key={board.id} value={board.id}>{board.name}{board.privacy && board.privacy !== "PUBLIC" ? ` (${board.privacy.toLowerCase()})` : ""}</option>)}</select></label>
               <button onClick={saveBoard} disabled={saving || !boardId} className="secondary" style={disabledStyle(secondaryButtonStyle, saving || !boardId)}>{saving ? "Guardando..." : "Guardar tablero"}</button>
               {connection.boardsError && <p className="notice">No se pudieron cargar los tableros: {connection.boardsError}</p>}
               <p className="muted" style={{ fontSize: 12 }}>{canPublish ? `Listo para publicar en ${connection.boardName || "el tablero seleccionado"}.` : "Selecciona un tablero para habilitar la publicación."}</p>
             </div>}
-          </> : <a href="/api/search-integrations/pinterest/connect" className="secondary" style={{ ...secondaryButtonStyle, display: "inline-flex", textDecoration: "none", fontSize: 14 }}>Conectar mi cuenta de Pinterest</a>}
+            </>}
+          </div>
           {message && <p className="notice" style={{ marginTop: 12 }}>{message}</p>}
         </div>}
       </>}

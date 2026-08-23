@@ -26,3 +26,33 @@ export async function canUseSocialModule(userId: string): Promise<boolean> {
   const deshabilitados = getEffectiveDisabledModules(user, globalDisabled);
   return !deshabilitados.includes("oportunidades-redes");
 }
+
+export type SocialPublishNetwork = "instagram" | "linkedin" | "threads" | "facebook" | "pinterest";
+
+/** Permiso individual de la red; los administradores siempre tienen acceso. */
+export async function canPublishToNetwork(
+  userId: string,
+  network: SocialPublishNetwork,
+): Promise<boolean> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      role: true,
+      allowInstagramPublishing: true,
+      allowLinkedInPublishing: true,
+      allowThreadsPublishing: true,
+      allowFacebookPublishing: true,
+      allowPinterestPublishing: true,
+    },
+  });
+  if (!user) return false;
+  if (user.role === "admin") return true;
+  const permissions: Record<SocialPublishNetwork, boolean> = {
+    instagram: user.allowInstagramPublishing,
+    linkedin: user.allowLinkedInPublishing,
+    threads: user.allowThreadsPublishing,
+    facebook: user.allowFacebookPublishing,
+    pinterest: user.allowPinterestPublishing,
+  };
+  return permissions[network];
+}

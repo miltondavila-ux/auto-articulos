@@ -45,6 +45,7 @@ export async function getCurrentUser() {
       allowLinkedInPublishing: true,
       allowThreadsPublishing: true,
       allowFacebookPublishing: true,
+      allowPinterestPublishing: true,
     },
   });
 }
