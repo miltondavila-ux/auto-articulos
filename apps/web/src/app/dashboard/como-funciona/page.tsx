@@ -232,8 +232,8 @@ export default function ComoFuncionaPage() {
           Google &ldquo;te indexe&rdquo; significa que ya leyó tu página y la
           guardó en su lista; que &ldquo;te posiciones&rdquo; significa que
           apareces arriba en esa lista, no enterrado varias páginas más
-          abajo. Con este sistema, las dos cosas pasan rápido: no dentro de
-          un año, desde la primera semana de trabajo constante.
+          abajo. Con este sistema, las dos cosas empiezan a pasar desde la
+          primera semana de trabajo constante — no dentro de un año.
         </p>
         <p
           style={{
@@ -274,40 +274,27 @@ export default function ComoFuncionaPage() {
             color: "#6e6e73",
           }}
         >
-          Dicho en simple: esta plataforma escribe artículos sobre lo que tu
-          público busca de verdad y los publica dentro de tu página web, uno
-          detrás de otro. Cuantos más artículos útiles tengas, más veces te
-          encuentran — en el buscador, en la inteligencia artificial y en las
-          redes.
+          Hay que ser honesto con los tiempos: Google tarda en leer y valorar
+          cada artículo nuevo, así que esto no es instantáneo. Pero se va
+          acumulando — cada artículo que se posiciona atrae visitas, esas
+          visitas le confirman a Google que tu sitio responde bien, y eso le
+          facilita el camino al siguiente. Empieza pequeño y crece solo,
+          mientras no se detenga.
+        </p>
+        <p
+          style={{
+            margin: "16px 0 0",
+            fontSize: 17,
+            lineHeight: "25px",
+            color: "#1d1d1f",
+            fontWeight: 500,
+          }}
+        >
+          Tu parte es simple: dejas la cuenta configurada una vez, y publicas
+          de forma constante. El sistema hace el resto — escribe y publica los
+          artículos por ti, sobre lo que tu público de verdad busca.
         </p>
       </header>
-
-      <hr style={SEPARADOR} />
-
-      <section style={{ padding: "clamp(28px, 4vw, 40px) 0 0" }}>
-        <h2 style={TITULO_SECCION}>Para qué sirve todo esto</h2>
-        <p style={PARRAFO}>Para posicionarte con autoridad en internet.</p>
-        <p style={PARRAFO}>
-          Aparecer en los resultados de la inteligencia artificial, de Google y
-          de Bing es lo más importante que le puede pasar a tu negocio en
-          internet. Es la diferencia entre que te encuentren y que no sepan que
-          existes.
-        </p>
-        <p style={PARRAFO}>
-          No pasa de un día para otro, y conviene decirlo claro: Google tarda en
-          leer y valorar cada artículo nuevo. Lo que sí ocurre es que se va
-          acumulando. Cada artículo que se posiciona atrae visitas, esas visitas
-          le confirman a Google que tu sitio responde bien, y eso hace que el
-          siguiente artículo lo tenga un poco más fácil. Es un efecto bola de
-          nieve: empieza pequeño y va creciendo solo, siempre que no se detenga.
-        </p>
-        <p style={PARRAFO}>
-          Por eso el trabajo real es sencillo: dejar la cuenta bien configurada
-          una vez, y después publicar de forma constante desde{" "}
-          <Modulo id="publicar" /> o{" "}
-          <Modulo id="oportunidades" />.
-        </p>
-      </section>
 
       <hr style={SEPARADOR} />
 
@@ -358,6 +345,19 @@ export default function ComoFuncionaPage() {
           </p>
         </section>
       ))}
+
+      <hr style={SEPARADOR} />
+
+      <section style={{ padding: "clamp(28px, 4vw, 40px) 0 0" }}>
+        <h2 style={TITULO_SECCION}>En resumen</h2>
+        <p style={PARRAFO}>
+          Configura tu cuenta una sola vez, y después publica de forma
+          constante desde <Modulo id="publicar" /> o{" "}
+          <Modulo id="oportunidades" />. Eso es lo único que depende de
+          ti — el sistema escribe, publica y va acumulando resultados por ti,
+          semana tras semana.
+        </p>
+      </section>
     </div>
   );
 }
