@@ -15,16 +15,20 @@ export async function GET() {
       prisma.tumblrIntegration.findUnique({ where: { userId }, select: { blogIdentifier: true } }),
     ]);
     const history = opportunities.map((opportunity) => {
+      const tumblrPostMatch = opportunity.postId?.match(/\/post\/(\d+)(?:\/([^/?#]+))?/i);
       if (
         opportunity.status === "published" &&
         opportunity.platform === "tumblr" &&
         opportunity.postId &&
-        !/^https?:\/\//i.test(opportunity.postId) &&
         tumblrIntegration?.blogIdentifier
       ) {
         return {
           ...opportunity,
-          postId: `https://${tumblrIntegration.blogIdentifier}.tumblr.com/post/${opportunity.postId}`,
+          postId: tumblrPostMatch
+            ? `https://www.tumblr.com/${tumblrIntegration.blogIdentifier}/${tumblrPostMatch[1]}${tumblrPostMatch[2] ? `/${tumblrPostMatch[2]}` : ""}`
+            : (/^https?:\/\//i.test(opportunity.postId)
+              ? opportunity.postId
+              : `https://www.tumblr.com/${tumblrIntegration.blogIdentifier}/${opportunity.postId}`),
         };
       }
       return opportunity;

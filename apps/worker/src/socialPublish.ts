@@ -536,7 +536,11 @@ async function processTumblrJob(job: {
   const caption = job.suggestedText.includes("[ENLACE]") ? job.suggestedText.replace("[ENLACE]", "") : job.suggestedText;
   const result = await createTumblrPhotoPost(decryptSecret(integration.accessTokenEncrypted), integration.blogIdentifier, { caption, link: job.articleUrl, imageUrl });
   const postId = String(result.response?.id || "");
-  const postUrl = result.response?.post_url || (postId ? `https://${integration.blogIdentifier}.tumblr.com/post/${postId}` : null);
+  const returnedUrl = result.response?.post_url || "";
+  const returnedPostMatch = returnedUrl.match(/\/post\/(\d+)(?:\/([^/?#]+))?/i);
+  const postUrl = returnedPostMatch
+    ? `https://www.tumblr.com/${integration.blogIdentifier}/${returnedPostMatch[1]}${returnedPostMatch[2] ? `/${returnedPostMatch[2]}` : ""}`
+    : (postId ? `https://www.tumblr.com/${integration.blogIdentifier}/${postId}` : null);
   await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: postUrl || postId, publishedAt: new Date(), errorLog: null } });
   console.log(`Publicado en Tumblr: ${job.id} — postId: ${postId}`);
   if (job.titleId) await prisma.titleEvent.create({ data: { titleId: job.titleId, message: `Publicado exitosamente en Tumblr (${integration.blogTitle || integration.blogIdentifier}) - ID: ${postId}` } });
