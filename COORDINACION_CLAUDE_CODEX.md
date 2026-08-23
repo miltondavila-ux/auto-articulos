@@ -5191,3 +5191,10 @@ probadas).
 - **Lección para quien siga:** en esta página, Milton distingue explícitamente entre *reordenar* (mover secciones enteras de lugar, bienvenido) y *reescribir* (fusionar/resumir texto existente, NO pedido esta vez). No asumir que una instrucción de reordenar autoriza también reescribir contenido, aunque el resultado "se lea mejor".
 - **Verificación:** `npm run typecheck --workspace=@auto-articulos/web` limpio.
 - **Estado del área:** Completado y publicado en `main` (commit `6ef0037`). Área LIBERADA.
+
+### 2026-08-23 (cont. 4) — Claude: párrafo de apertura narrativo en Cómo Funciona
+
+- Pedido explícito de Milton: la página debe abrir con un ejemplo que ponga al lector en situación ("imagínate que buscas en Google o le preguntas a ChatGPT...") antes de nombrar el objetivo — no arrancar en frío con el título.
+- Se agregó un párrafo nuevo justo antes del eyebrow "El objetivo" (19px, sin negrita, tono narrativo en segunda persona), sin tocar ni reordenar nada del texto ya aprobado en las entradas anteriores — commit `52efa5e`.
+- **Verificación:** `npm run typecheck --workspace=@auto-articulos/web` limpio; diff de solo 15 líneas agregadas, nada eliminado ni movido.
+- **Estado del área:** Completado y publicado en `main`. Área LIBERADA.
