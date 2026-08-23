@@ -5242,3 +5242,26 @@ probadas).
 - No se agregó ni quitó ninguna frase de contenido: solo énfasis visual sobre el texto ya aprobado en entradas anteriores del mismo día.
 - **Verificación:** `npm run typecheck --workspace=@auto-articulos/web` limpio.
 - **Estado del área:** Completado y publicado en `main`. Área LIBERADA.
+
+### 2026-08-23 (cont. 10) — Claude: backfill de Actualizaciones (10/8 → 23/8) — el bot de ayuda estaba desactualizado
+
+- Milton notó que `/dashboard/actualizaciones` seguía congelado en el 10/8 pese a la enorme cantidad de código publicado desde entonces (incluidos cambios de interfaz), y que si no está ahí, el bot de ayuda (FloatingAssistant) no lo sabe.
+- **No es un problema nuevo:** ya estaba diagnosticado el 13/8/2026 en este mismo tablero (ver "REQUISITO NUEVO DE MILTON: el changelog debe alimentarse solo"). Se había acordado una regla de proceso — cada agente agrega su entrada en el mismo commit — pero no se siguió, y el automatismo real (script que redacta la entrada con OpenAI a partir del diff/commit) quedó como **decisión pendiente sobre dónde correr** (pre-commit local, GitHub Actions, o paso manual). Sigue sin decidirse; esto no lo resuelve.
+- **Lo que sí se hizo — cerrar el vacío ahora:** `scripts/backfill-product-updates-20260823.ts` (mismo patrón que `scripts/seed-product-updates.ts`, upsert por id estable) con **14 entradas** cubriendo los cambios realmente visibles para un usuario final entre el 10/8 y el 23/8 — no un volcado de los 200+ commits del período:
+  1. Rediseño visual completo estilo Apple (16/8)
+  2. Soporte para cuentas con varios sitios / paneles (15/8)
+  3. Progreso en vivo de publicaciones en redes sociales (17/8)
+  4. Menú principal reorganizado (18/8)
+  5. Nuevo módulo Cómo Funciona (18/8)
+  6. Sincronización de categorías más confiable (18/8)
+  7. Avisos claros de límite diario (19/8)
+  8. Mismos pasos para conectar cualquier red social (19/8)
+  9. Administración: control de acceso a módulos por usuario (19/8)
+  10. El Paso 1 ya no dice "verificado" sin comprobarlo (19/8)
+  11. Nuevas redes: Pinterest y Facebook Pages (20/8)
+  12. Generador de imágenes con IA para redes sociales, piloto (20/8)
+  13. Botón "Comienza aquí" en Inicio + Cómo Funciona reescrito (23/8, hoy)
+  14. Botón para forzar análisis cuando Oportunidades no encuentra nada nuevo (23/8, hoy)
+- **Ejecución:** `.github/workflows/backfill-product-updates-20260823.yml` (`workflow_dispatch`, mismo patrón de solo-escritura controlada que los diagnósticos existentes) disparado y verificado en la corrida `32638973080`: log final `ProductUpdate: 14 entradas de backfill (10/8 - 23/8) verificadas.` — job `success`.
+- **Sigue pendiente (no resuelto hoy):** la decisión de automatismo real del 13/8. Mientras tanto, compromiso explícito: cualquier cambio visible que yo publique de aquí en adelante debe llevar su entrada de `ProductUpdate` en el mismo lote de trabajo — no solo la entrada en este documento de coordinación, que es para otros agentes, no para el bot de usuarios.
+- **Estado del área:** Completado y publicado en `main`. Área LIBERADA.
