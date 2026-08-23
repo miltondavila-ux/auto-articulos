@@ -121,9 +121,19 @@ export default function BusinessProfileSection() {
               </button>
             </>
           ) : (
-            <p style={{ fontSize: 13, color: "#8a4b08", margin: 0 }}>
-              No encontramos ninguna ubicación administrada por esta cuenta de Google.
-            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <p style={{ fontSize: 13, color: "#8a4b08", margin: 0 }}>
+                No pudimos cargar fichas todavía. Reintenta la búsqueda o conecta otra cuenta de Google.
+              </p>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button type="button" onClick={load} className="secondary" style={secondaryButtonStyle}>
+                  Reintentar búsqueda
+                </button>
+                <button type="button" onClick={() => { window.location.href = "/api/business-profile/connect"; }} className="secondary" style={secondaryButtonStyle}>
+                  Conectar otra cuenta
+                </button>
+              </div>
+            </div>
           )}
           {data.error && (
             <p style={{ color: "#ff3b30", fontSize: 12 }}>{data.error}</p>
