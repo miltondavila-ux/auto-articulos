@@ -25,7 +25,17 @@ export async function POST(request: NextRequest) {
     const account = await verifyMastodonToken(instanceUrl, accessToken);
     await prisma.mastodonIntegration.upsert({ where: { userId }, create: { userId, instanceUrl, username: account.username, displayName: account.display_name, accessTokenEncrypted: encryptSecret(accessToken) }, update: { instanceUrl, username: account.username, displayName: account.display_name, accessTokenEncrypted: encryptSecret(accessToken) } });
     return NextResponse.json({ ok: true, username: account.username, displayName: account.display_name, instanceUrl }, { headers: NO_CACHE });
-  } catch { return NextResponse.json({ error: "No se pudo verificar Mastodon. Revisa la instancia y el Access Token." }, { status: 400, headers: NO_CACHE }); }
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : "";
+    const errorMessage = detail.includes("(401)")
+      ? "El Access Token no es válido o no pertenece a una cuenta. Copia el Access Token de usuario, no el Client Key ni el Client Secret."
+      : detail.includes("(403)")
+        ? "El Access Token no tiene permisos suficientes. Verifica profile, write:statuses y write:media."
+        : detail.includes("(404)")
+          ? "No se encontró esa instancia. Comprueba la URL, por ejemplo https://mastodon.social."
+          : "No se pudo verificar Mastodon. Revisa la instancia y el Access Token.";
+    return NextResponse.json({ error: errorMessage }, { status: 400, headers: NO_CACHE });
+  }
 }
 
 export async function DELETE() {
