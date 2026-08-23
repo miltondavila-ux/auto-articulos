@@ -69,6 +69,24 @@ const PASOS = [
         quieres que se escriba, y el permiso de Google para leer tus datos.
       </>,
       <>
+        Sobre esa última parte, en simple: <em>Google</em> es el buscador que
+        usa la mayoría de la gente para encontrar cosas en internet — cuando
+        alguien escribe una pregunta ahí, le muestra una lista de páginas con
+        la respuesta. <em>Bing</em> es lo mismo, pero de Microsoft: lo usa
+        menos gente que Google, pero igual trae visitas reales. Y{" "}
+        <em>Google Search Console</em> es una herramienta gratuita de Google,
+        pensada para dueños de páginas web: ahí Google te muestra, de tu
+        propio sitio, qué buscó exactamente la gente antes de llegar a ti, y
+        si ya leyó tus artículos nuevos.
+      </>,
+      <>
+        Por qué importa tanto conectarla: es la única forma que tiene el
+        sistema de saber qué está buscando tu público de verdad, en vez de
+        adivinar temas al azar. Sin ese permiso, <Modulo id="oportunidades" />{" "}
+        no tendría de dónde sacar los títulos que sabemos que la gente busca
+        — se quedaría sin materia prima.
+      </>,
+      <>
         Todo eso se guarda una sola vez en <Modulo id="configuracion" />. Si es
         tu primera vez, ahí mismo hay un asistente que te lo pide paso a paso,
         sin que tengas que saber dónde está cada cosa. Si algo no te queda
