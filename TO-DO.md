@@ -177,22 +177,91 @@ HANDOFF, solo alimenta ideas hacia él).
   3. Sumar esos datos como otra fuente de información del Módulo de
      Mejoramiento Continuo, junto con Analytics y Search Console.
 
-- **(23/8/2026)** Culminar las integraciones pendientes con otras redes
-  sociales y plataformas de microblogging (esto completa/detalla el ítem
-  del 9/8/2026 "Redes sociales a conectar para envío automático", que ya
-  lista las mismas redes — al ejecutar, revisar ambos ítems juntos). Ir
-  red por red como acciones independientes y pequeñas, sin necesidad de
-  completarlas todas de una vez:
-  1. Threads
-  2. X
-  3. LinkedIn
-  4. Instagram (dos acciones separadas: publicaciones normales y carruseles)
-  5. Facebook (tres acciones separadas: Página, Grupos y Perfil personal)
-  6. Bluesky
-  7. Mastodon
-  8. Pinterest
-  9. Tumblr
-  10. Reddit (fase eventual, no prioritaria)
+- **(23/8/2026)** Plan priorizado de integraciones con redes sociales y
+  microblogging (reemplaza/detalla el ítem anterior de este mismo día
+  "Culminar las integraciones pendientes con otras redes sociales y
+  plataformas de microblogging", y también completa el ítem del 9/8/2026
+  "Redes sociales a conectar para envío automático" — al ejecutar, revisar
+  los tres juntos). Threads, LinkedIn, Instagram y Facebook (Página, Grupos,
+  Perfil) ya estaban contemplados en el ítem del 9/8/2026 como "redes
+  sociales actuales" y no se repiten acá.
+
+  **PRIORIDAD 1 — Implementar primero**
+  1. **Pinterest**
+     - Crear integración con API oficial.
+     - Permitir que cada usuario conecte su propia cuenta mediante OAuth.
+     - Permitir seleccionar el Board donde se publicará.
+     - Convertir automáticamente cada artículo en un Pin.
+     - Publicar imagen OG + título + descripción + enlace directo al
+       artículo.
+     - Objetivo: generar descubrimiento y tráfico adicional hacia los
+       artículos.
+  2. **Google Business Profile**
+     - Integrar la API de Google Business Profile.
+     - Permitir conexión individual mediante cuenta Google.
+     - Detectar las empresas/ubicaciones administradas por el usuario.
+     - Permitir seleccionar en qué negocio publicar.
+     - Crear automáticamente una versión corta del artículo para Google
+       Business.
+     - Incluir imagen + texto + CTA + enlace al artículo cuando corresponda.
+     - Objetivo: reforzar presencia local en Google y aprovechar los
+       artículos para alimentar el perfil del negocio.
+
+  **PRIORIDAD 2 — Ampliar Microblogging**
+  3. **X (Twitter)**
+     - Integrar API + OAuth.
+     - Cada usuario conecta su propia cuenta.
+     - Crear automáticamente una versión corta del artículo.
+     - Publicar texto + imagen + enlace.
+     - Revisar primero costos y límites actuales de la API de X.
+     - Objetivo: ampliar distribución y presencia del contenido en tiempo
+       real.
+  4. **Bluesky**
+     - Integrar autenticación individual de usuarios.
+     - Generar automáticamente un microblog basado en el artículo.
+     - Publicar texto + imagen + enlace.
+     - Objetivo: incorporar una red de microblogging adicional y seguir
+       ampliando el ecosistema de distribución.
+
+  **PRIORIDAD 3 — Distribución adicional**
+  5. **Tumblr**
+     - Integrar API + OAuth.
+     - Permitir que cada usuario conecte su Tumblr.
+     - Convertir el artículo en una publicación resumida.
+     - Publicar título + resumen + imagen + tags + enlace al artículo
+       original.
+     - Objetivo: crear otra superficie de contenido que pueda generar
+       descubrimiento, enlaces y tráfico hacia la web.
+  6. **Mastodon**
+     - Investigar manejo de diferentes servidores/instancias.
+     - Implementar OAuth.
+     - Generar micropublicaciones automáticas.
+     - Publicar texto + imagen + enlace al artículo.
+     - Objetivo: ampliar la distribución hacia el ecosistema descentralizado.
+
+  **PRIORIDAD 4 — Investigar antes de desarrollar**
+  7. **Reddit**
+     - No desarrollar todavía.
+     - Investigar políticas actuales de API y automatización.
+     - Revisar requisitos de aprobación.
+     - Analizar restricciones para publicaciones automatizadas.
+     - Determinar si Auto Artículos puede aportar contenido sin ser
+       considerado spam.
+     - Objetivo: decidir posteriormente si realmente justifica la
+       integración.
+
+  **Orden de desarrollo:** Pinterest → Google Business Profile → X →
+  Bluesky → Tumblr → Mastodon → (investigación) Reddit.
+
+  **Resultado esperado:** al terminar estas integraciones, Auto Artículos
+  tendrá tres grandes canales de distribución — Redes sociales actuales
+  (Facebook + Instagram + LinkedIn + Threads), Descubrimiento y presencia
+  (Pinterest + Google Business Profile), y Microblogging (X + Bluesky +
+  Tumblr + Mastodon). La idea no es simplemente "publicar en muchas redes":
+  un solo artículo creado en Auto Artículos debe transformarse
+  automáticamente en múltiples piezas adaptadas a cada plataforma y
+  distribuir tráfico y autoridad desde diferentes puntos de Internet hacia
+  la página web original.
 
 ## Hecho
 
