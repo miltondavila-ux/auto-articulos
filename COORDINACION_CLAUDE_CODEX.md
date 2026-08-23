@@ -5215,3 +5215,15 @@ probadas).
 - Commit `ec13b82`, publicado en `main`. `npm run typecheck --workspace=@auto-articulos/web` limpio.
 - **Recordatorio de infraestructura (ya anotado antes, sigue vigente):** esta sesión no tiene Vercel CLI autenticado ni proyecto enlazado, así que el despliegue depende 100% de la integración automática GitHub→Vercel al hacer push a `main`. No hay forma de confirmar desde aquí el estado exacto del build (Ready/Building/Error) — solo confirmar que el commit está en `main`.
 - **Estado del área:** Completado y publicado en `main`. Área LIBERADA.
+
+### 2026-08-23 (cont. 7) — Claude: "Comienza aquí" se muda a Inicio + invitación en el wizard + texto en negro
+
+- Milton: el botón "Comienza aquí" no debe estar en Cómo Funciona — debe estar en Inicio, justo cuando el asistente de configuración desaparece y aparece el panel de rendimiento. Además, en el wizard (antes del Paso 1) debe haber una invitación a leer Cómo Funciona, con manera fácil de volver.
+- **Cambios (commit `d572b30`):**
+  - `apps/web/src/components/ComoFuncionaCTA.tsx` — **eliminado** (ya no se usa en ningún lado).
+  - `apps/web/src/app/dashboard/como-funciona/page.tsx` — se quita el botón del encabezado.
+  - `apps/web/src/app/dashboard/page.tsx` — se agrega el botón "Comienza aquí" (mismo estilo grafito ya aprobado) justo antes de `<PerformanceDashboard />`, dentro de la rama `wizardComplete === true` — o sea, solo visible cuando el asistente ya desapareció.
+  - `apps/web/src/components/OnboardingWizard.tsx` — se agrega un banner antes del Paso 1 invitando a leer Cómo Funciona, con enlace de vuelta a `/dashboard` (Inicio, donde vive el propio wizard mientras la cuenta no esté 100% configurada) para que retomar sea inmediato — no hace falta lógica extra: el wizard sigue apareciendo solo hasta que se complete la configuración.
+- **Pedido aparte, mismo commit:** todo el texto de Cómo Funciona se puso en negro (`#1d1d1f`) — se quitaron los grises (`#6e6e73`) del eyebrow "El objetivo", los subtítulos del encabezado, la etiqueta "Paso N" y la intro de "Cómo sucede".
+- **Verificación:** `npm run typecheck --workspace=@auto-articulos/web` limpio. `grep "ComoFuncionaCTA"` confirmó cero referencias antes de borrar el archivo.
+- **Estado del área:** Completado y publicado en `main`. Área LIBERADA.
