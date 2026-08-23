@@ -5278,3 +5278,13 @@ probadas).
 - **Entrada de changelog agregada** (cumpliendo el mismo compromiso): `scripts/add-product-update-20260823-chart.ts`, corrida vía el nuevo workflow genérico — "Corregido: el gráfico de 'Tu ritmo' en Inicio ya muestra la línea de datos".
 - **Verificación:** `npm run typecheck --workspace=@auto-articulos/web` limpio; compilación real de Tailwind confirmando antes/después.
 - **Estado del área:** Completado y publicado en `main`. Área LIBERADA.
+
+### 2026-08-23 (cont. 12) — Claude: paleta de Tremor "carnavalizaba" el tema — alineada a Apple
+
+- Milton, tras el arreglo del gráfico (entrada anterior): "en el dashboard volviste a colocar colores que no van con Apple, estás carnavalizando el tema". Tenía razón: arreglar el `safelist` (commit `f410bdb`) hizo que las clases de Tremor por fin se generaran, pero con los tonos de fábrica de Tailwind (azul/verde/ámbar/rojo saturados) — nunca antes visibles porque estaban purgadas, así que nadie los había visto ni ajustado.
+- **La solución no es volver a esconderlos** (eso deshace el arreglo anterior y el gráfico volvería a quedar en blanco); es que los colores que sí se ven sean los correctos.
+- **Arreglo:** `apps/web/tailwind.config.js` — se redefinen `blue`, `emerald`, `amber`, `red` en `theme.extend.colors` (rampas completas 50-950) anclando el tono 500 (y los tonos ya usados como texto en otros componentes) a los hex reales de la plataforma: azul `#0071e3` (botones), verde `#34c759`/`#16803c` (`ReadyBadge` en `dashboard-ui.tsx`), ámbar `#ff9500`/`#8a5a00` (`PreValidationGuard`), rojo `#ff3b30`.
+- **Por qué es seguro tocar esto globalmente:** confirmado con `grep` que `@tremor/react` (usado únicamente en `PerformanceDashboard.tsx`) es el ÚNICO consumidor de clases crudas de Tailwind en toda la app — el resto usa estilos inline, por diseño (ver comentario ya existente de `corePlugins.preflight` en el mismo archivo). No hay riesgo de romper otra pantalla.
+- **Verificado con build real** (`npx tailwindcss`): `.text-blue-500 { color: rgb(0 113 227) }` = `#0071e3` ✓; `.text-emerald-600 { color: rgb(22 128 60) }` = `#16803c` ✓; `stroke-neutral-500` (arreglo anterior) sigue presente.
+- Commit `0afe47c`. `npm run typecheck --workspace=@auto-articulos/web` limpio.
+- **Estado del área:** Completado y publicado en `main`. Área LIBERADA.
