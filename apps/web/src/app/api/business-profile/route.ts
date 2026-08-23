@@ -49,11 +49,16 @@ export async function GET() {
       )
     ).flat();
     return NextResponse.json({ connected: true, needsLocation: true, locations });
-  } catch {
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No se pudieron consultar las fichas de Google.";
     return NextResponse.json({
       connected: true,
       needsLocation: true,
       locations: [],
+      error: message,
     });
   }
 }
