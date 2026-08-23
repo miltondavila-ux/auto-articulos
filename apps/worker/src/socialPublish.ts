@@ -150,6 +150,22 @@ function stripHtml(value: string): string {
   return decodeHtmlEntities(value.replace(/<[^>]*>/g, "")).replace(/\s+/g, " ").trim();
 }
 
+function extractDivByClass(html: string, className: string): string | null {
+  const opening = new RegExp(`<div\\b[^>]*class=["'][^"']*${className}[^"']*["'][^>]*>`, "i").exec(html);
+  if (!opening) return null;
+  const bodyStart = opening.index + opening[0].length;
+  const tags = /<\/?div\b[^>]*>/gi;
+  tags.lastIndex = bodyStart;
+  let depth = 1;
+  let match: RegExpExecArray | null;
+  while ((match = tags.exec(html))) {
+    if (/^<\s*\/div/i.test(match[0])) depth -= 1;
+    else depth += 1;
+    if (depth === 0) return html.slice(bodyStart, match.index);
+  }
+  return null;
+}
+
 /** Lee el cuerpo real del artículo publicado y lo adapta al Markdown de DEV.to. */
 async function getArticleBodyMarkdown(articleUrl: string): Promise<string> {
   const response = await fetch(articleUrl, {
@@ -162,7 +178,8 @@ async function getArticleBodyMarkdown(articleUrl: string): Promise<string> {
   });
   if (!response.ok) throw new Error(`No se pudo leer el contenido del artículo (${response.status}).`);
   const html = await response.text();
-  const container = html.match(/<article\b[^>]*>([\s\S]*?)<\/article>/i)?.[1]
+  const container = extractDivByClass(html, "crayons-article__body")
+    || html.match(/<article\b[^>]*>([\s\S]*?)<\/article>/i)?.[1]
     || html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i)?.[1]
     || html.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i)?.[1]
     || html;
@@ -176,7 +193,9 @@ async function getArticleBodyMarkdown(articleUrl: string): Promise<string> {
     // Son separadores vacíos que el sitio original usa para sus componentes.
     .replace(/<p>\s*-\s*<\/p>/gi, "")
     // El generador original dejó una etiqueta HTML visible como bloque de código.
-    .replace(/<div\b[^>]*class=["'][^"']*highlight[^"']*["'][^>]*>[\s\S]*?(?=<p\b|<h[1-6]\b)/gi, "")
+    // Quitamos solamente el bloque <pre>, sin cortar el contenido que viene después.
+    .replace(/<pre\b[^>]*>[\s\S]*?<\/pre>/gi, "")
+    .replace(/Enter fullscreen mode|Exit fullscreen mode/gi, "")
     // DEV.to ya muestra el título arriba; no lo repetimos en el cuerpo.
     .replace(/<h1\b[^>]*>[\s\S]*?<\/h1>\s*<p\b[^>]*>\s*Seguros de Salud y Vida\s*<\/p>\s*<p\b[^>]*>\s*[ÚU]ltima actualizaci[óo]n:[\s\S]*?<\/p>/i, "")
     .replace(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi, (_match, level: string, content: string) => `\n\n${"#".repeat(Number(level))} ${stripHtml(content)}\n\n`)
