@@ -137,6 +137,17 @@ HANDOFF, solo alimenta ideas hacia él).
     inyectar/escribir el texto directamente en el editor de la plataforma,
     evitando pulsar el botón de ChatGPT nativo.
 
+- **(23/8/2026)** Módulo de Mejoramiento Continuo: el sistema debe poder
+  detectar, por ejemplo, artículos que están siendo mostrados más de lo
+  común (impresiones altas) para optimizarlos, detectar cómo optimizarlos, e
+  incluso tener un prompt más agresivo que permita crear más botones o que
+  haga que el artículo esté mejor escrito con más "call to actions" (CTAs).
+  Este módulo debe funcionar en conjunto con una integración futura con
+  Google Analytics, tomando en cuenta que Google Search Console ve lo que
+  Google propone (impresiones/posición) y Analytics ve lo que la gente
+  dispone (comportamiento real de los usuarios) — buscando así hacer mucho
+  más efectivo el contenido y escribir sobre lo que la gente está buscando.
+
 ## Hecho
 
 - **(16/8/2026)** Asistente Flotante Arrastrable (Drag-and-Drop) en `FloatingAssistant`:
