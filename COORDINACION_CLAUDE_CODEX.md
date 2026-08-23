@@ -5165,3 +5165,12 @@ probadas).
   - `apps/web/src/app/dashboard/oportunidades/page.tsx`: se agregó `pillDanger` (`#ff2800`, sin borde, texto blanco) y se aplicó al botón "Analizar de todas formas ahora", que solo se muestra dentro del bloque `canForce` (cuando `noNewOpportunities` es cierto) — exactamente el caso que Milton describió.
 - **Verificación:** `npx prisma generate` + `npm run typecheck --workspace=@auto-articulos/web` limpio, código de salida 0. `git status` sin cambios accidentales en otros archivos.
 - **Estado del área:** Completado y publicado directo en `main` (commit `80d6c76`). Área LIBERADA.
+
+### 2026-08-23 (cont.) — Claude: Corrección de estilo del botón + título poco claro
+
+- **Milton señaló dos problemas sobre lo anterior, mismo día:**
+  1. El botón `ComoFuncionaCTA` usaba azul relleno (`#0071e3`) y texto en mayúsculas — no sigue los lineamientos de Apple del propio proyecto: el azul está reservado para enlaces de texto (ver `ENLACE` en esta misma página, y el comentario de `pillPrimary` en `oportunidades/page.tsx`), los botones de acción rellenos van en grafito (`#1d1d1f`), y Apple prácticamente no usa versalitas en botones. Corregido: ahora ambos estados ("Comienza aquí" / "Configura aquí") usan el mismo relleno grafito y texto en frase normal — commit `5efd537`.
+  2. El título "Que te encuentren. En Google, en Bing y dentro de la inteligencia artificial." no comunicaba la necesidad exacta — nombraba el beneficio pero no la acción concreta. Reescrito a "Escribimos y publicamos artículos en tu web para que te encuentren: en Google, en Bing y dentro de la inteligencia artificial." — commit `7b184cb`.
+- **Archivos:** `apps/web/src/components/ComoFuncionaCTA.tsx`, `apps/web/src/app/dashboard/como-funciona/page.tsx`.
+- **Verificación:** `npm run typecheck --workspace=@auto-articulos/web` limpio en ambos commits.
+- **Estado del área:** Completado y publicado en `main`. Área LIBERADA.

@@ -172,6 +172,19 @@ export default function ComoFuncionaPage() {
         <div style={{ marginBottom: 20 }}>
           <ComoFuncionaCTA />
         </div>
+        <p
+          style={{
+            margin: "0 0 8px",
+            fontSize: 14,
+            lineHeight: "20px",
+            fontWeight: 600,
+            letterSpacing: "0.02em",
+            textTransform: "uppercase",
+            color: "#6e6e73",
+          }}
+        >
+          El objetivo
+        </p>
         <h1
           style={{
             margin: 0,
@@ -182,9 +195,8 @@ export default function ComoFuncionaPage() {
             color: "#1d1d1f",
           }}
         >
-          Escribimos y publicamos artículos en tu web para que te
-          encuentren: en Google, en Bing y dentro de la inteligencia
-          artificial.
+          Que te encuentren. En Google, en Bing y dentro de la
+          inteligencia artificial.
         </h1>
         <p
           style={{
