@@ -62,11 +62,12 @@ const PASOS = [
     titulo: "Configura tu cuenta",
     cuerpo: [
       <>
-        Es lo primero, y lo único que no puede saltarse. La plataforma publica
-        artículos <em>dentro de tu página web</em>, así que necesita cuatro
-        cosas antes de poder trabajar: la clave de tu web para poder entrar, la
-        lista de secciones donde colocar cada artículo, el idioma en el que
-        quieres que se escriba, y el permiso de Google para leer tus datos.
+        <strong>Es lo primero, y lo único que no puede saltarse.</strong> La
+        plataforma publica artículos <em>dentro de tu página web</em>, así que
+        necesita cuatro cosas antes de poder trabajar: la clave de tu web para
+        poder entrar, la lista de secciones donde colocar cada artículo, el
+        idioma en el que quieres que se escriba, y el permiso de Google para
+        leer tus datos.
       </>,
       <>
         Sobre esa última parte, en simple: <em>Google</em> es el buscador que
@@ -76,15 +77,15 @@ const PASOS = [
         menos gente que Google, pero igual trae visitas reales. Y{" "}
         <em>Google Search Console</em> es una herramienta gratuita de Google,
         pensada para dueños de páginas web: ahí Google te muestra, de tu
-        propio sitio, qué buscó exactamente la gente antes de llegar a ti, y
-        si ya leyó tus artículos nuevos.
+        propio sitio, <strong>qué buscó exactamente la gente antes de llegar
+        a ti</strong>, y si ya leyó tus artículos nuevos.
       </>,
       <>
-        Por qué importa tanto conectarla: es la única forma que tiene el
-        sistema de saber qué está buscando tu público de verdad, en vez de
-        adivinar temas al azar. Sin ese permiso, <Modulo id="oportunidades" />{" "}
-        no tendría de dónde sacar los títulos que sabemos que la gente busca
-        — se quedaría sin materia prima.
+        Por qué importa tanto conectarla: <strong>es la única forma que
+        tiene el sistema de saber qué está buscando tu público de
+        verdad</strong>, en vez de adivinar temas al azar. Sin ese permiso,{" "}
+        <Modulo id="oportunidades" /> no tendría de dónde sacar los títulos
+        que sabemos que la gente busca — se quedaría sin materia prima.
       </>,
       <>
         Todo eso se guarda una sola vez en <Modulo id="configuracion" />. Si es
@@ -107,8 +108,9 @@ const PASOS = [
       <>
         En <Modulo id="publicar" /> eliges tú. Escribes hasta diez
         títulos de una vez, dices en qué sección va cada uno, y el sistema los
-        redacta y los publica en tu web. Es lo que quieres cuando ya sabes de
-        qué necesitas hablar.
+        redacta y los publica en tu web.{" "}
+        <strong>Es lo que quieres cuando ya sabes de qué necesitas
+        hablar.</strong>
       </>,
       <>
         En <Modulo id="oportunidades" /> elige el sistema. Vas a ver esas
@@ -121,9 +123,9 @@ const PASOS = [
         Google guarda un registro de lo que escribió la gente en el buscador
         antes de llegar a tu página; ese registro se llama Search Console y es
         el que se conectó en el paso anterior. El sistema lo lee, junto con
-        Bing, y descubre qué está buscando de verdad tu público. Con eso te
-        propone títulos que sabemos que la gente busca, en vez de temas
-        inventados.
+        Bing, y <strong>descubre qué está buscando de verdad tu
+        público</strong>. Con eso te propone títulos que sabemos que la gente
+        busca, en vez de temas inventados.
       </>,
       <>
         Esos títulos son de <em>cola larga</em>. Traducido: en vez de pelear
@@ -135,9 +137,10 @@ const PASOS = [
       </>,
       <>
         Esas búsquedas las hace menos gente, pero casi nadie escribe sobre
-        ellas, así que es mucho más fácil salir de primero. Y quien busca así
-        llega más decidido, porque ya sabe lo que quiere. Muchas búsquedas
-        pequeñas juntas suman más que una grande a la que no ibas a llegar.
+        ellas, así que <strong>es mucho más fácil salir de primero</strong>. Y
+        quien busca así llega más decidido, porque ya sabe lo que quiere.
+        Muchas búsquedas pequeñas juntas suman más que una grande a la que no
+        ibas a llegar.
       </>,
       <>
         Tú revisas la lista, borras lo que no te convenza y publicas lo que
@@ -157,9 +160,10 @@ const PASOS = [
     enPrueba: true,
     cuerpo: [
       <>
-        Un artículo en tu web solo lo encuentra quien lo busca. En redes
-        sociales lo ve gente que todavía no te estaba buscando, y cada visita
-        que llega desde ahí es una señal más de que tu contenido interesa.
+        Un artículo en tu web solo lo encuentra quien lo busca.{" "}
+        <strong>En redes sociales lo ve gente que todavía no te estaba
+        buscando</strong>, y cada visita que llega desde ahí es una señal más
+        de que tu contenido interesa.
       </>,
       <>
         En <Modulo id="oportunidades-redes" /> el sistema toma
@@ -170,7 +174,8 @@ const PASOS = [
       <>
         Este paso todavía está en prueba y no está disponible para todas las
         cuentas. Se está activando poco a poco, y si en tu menú no aparece
-        todavía, es por eso: no te falta nada por configurar.
+        todavía, es por eso: <strong>no te falta nada por
+        configurar</strong>.
       </>,
     ],
     accion: {
@@ -204,9 +209,9 @@ export default function ComoFuncionaPage() {
           Imagínate esto: un día alguien busca en Google, o le pregunta
           directamente a una inteligencia artificial, algo relacionado con lo
           que tu negocio ofrece. Aparecen páginas, respuestas armadas con
-          información que esa inteligencia artificial ya leyó por ahí. ¿Te
-          gustaría que tu negocio apareciera en esos resultados, antes que el
-          de los demás? Ven, te contamos el secreto.
+          información que esa inteligencia artificial ya leyó por ahí.{" "}
+          <strong>¿Te gustaría que tu negocio apareciera en esos resultados,
+          antes que el de los demás?</strong> Ven, te contamos el secreto.
         </p>
         <p
           style={{
@@ -243,11 +248,12 @@ export default function ComoFuncionaPage() {
           }}
         >
           Dos palabras que vas a ver seguido aquí, explicadas simple: que
-          Google &ldquo;te indexe&rdquo; significa que ya leyó tu página y la
-          guardó en su lista; que &ldquo;te posiciones&rdquo; significa que
-          apareces arriba en esa lista, no enterrado varias páginas más
-          abajo. Con este sistema, las dos cosas empiezan a pasar desde la
-          primera semana de trabajo constante — no dentro de un año.
+          Google &ldquo;te indexe&rdquo; significa que{" "}
+          <strong>ya leyó tu página y la guardó en su lista</strong>; que
+          &ldquo;te posiciones&rdquo; significa que{" "}
+          <strong>apareces arriba en esa lista</strong>, no enterrado varias
+          páginas más abajo. Con este sistema, las dos cosas empiezan a pasar
+          desde la primera semana de trabajo constante — no dentro de un año.
         </p>
         <p
           style={{
@@ -260,9 +266,10 @@ export default function ComoFuncionaPage() {
           Esto ya no va solo de salir en Google. Hoy mucha gente pregunta
           directamente a una inteligencia artificial y se queda con la
           respuesta que le da, sin llegar a mirar una lista de resultados. Esa
-          respuesta se construye con lo que la IA encontró indexado. Si tu sitio
-          no está ahí, no apareces en la conversación: no es que salgas
-          abajo, es que no existes.
+          respuesta se construye con lo que la IA encontró indexado. Si tu
+          sitio no está ahí,{" "}
+          <strong>no apareces en la conversación: no es que salgas abajo, es
+          que no existes.</strong>
         </p>
         <p
           style={{
@@ -272,13 +279,14 @@ export default function ComoFuncionaPage() {
             color: "#1d1d1f",
           }}
         >
-          Y hay algo que se suele pasar por alto: la persona que busca en Google
-          es exactamente la misma que después abre Instagram, LinkedIn o
-          Facebook. No son dos públicos distintos. Por eso esto no termina en tu
-          web: el sistema lleva a tus redes los temas que esa gente ya está
-          buscando, y cada visita que vuelve desde ahí le confirma a Google que
-          tu sitio merece estar arriba. Buscadores, inteligencia artificial y
-          redes empujan en la misma dirección.
+          Y hay algo que se suele pasar por alto:{" "}
+          <strong>la persona que busca en Google es exactamente la misma que
+          después abre Instagram, LinkedIn o Facebook. No son dos públicos
+          distintos.</strong> Por eso esto no termina en tu web: el sistema
+          lleva a tus redes los temas que esa gente ya está buscando, y cada
+          visita que vuelve desde ahí le confirma a Google que tu sitio
+          merece estar arriba. Buscadores, inteligencia artificial y redes
+          empujan en la misma dirección.
         </p>
         <p
           style={{
@@ -289,11 +297,12 @@ export default function ComoFuncionaPage() {
           }}
         >
           Hay que ser honesto con los tiempos: Google tarda en leer y valorar
-          cada artículo nuevo, así que esto no es instantáneo. Pero se va
-          acumulando — cada artículo que se posiciona atrae visitas, esas
-          visitas le confirman a Google que tu sitio responde bien, y eso le
-          facilita el camino al siguiente. Empieza pequeño y crece solo,
-          mientras no se detenga.
+          cada artículo nuevo, así que esto no es instantáneo. Pero{" "}
+          <strong>se va acumulando</strong> — cada artículo que se posiciona
+          atrae visitas, esas visitas le confirman a Google que tu sitio
+          responde bien, y eso le facilita el camino al siguiente.{" "}
+          <strong>Empieza pequeño y crece solo, mientras no se
+          detenga.</strong>
         </p>
         <p
           style={{
@@ -304,9 +313,10 @@ export default function ComoFuncionaPage() {
             fontWeight: 500,
           }}
         >
-          Tu parte es simple: dejas la cuenta configurada una vez, y publicas
-          de forma constante. El sistema hace el resto — escribe y publica los
-          artículos por ti, sobre lo que tu público de verdad busca.
+          <strong>Tu parte es simple: dejas la cuenta configurada una vez, y
+          publicas de forma constante.</strong> El sistema hace el resto —
+          escribe y publica los artículos por ti, sobre lo que tu público de
+          verdad busca.
         </p>
       </header>
 
@@ -367,9 +377,10 @@ export default function ComoFuncionaPage() {
         <p style={PARRAFO}>
           Configura tu cuenta una sola vez, y después publica de forma
           constante desde <Modulo id="publicar" /> o{" "}
-          <Modulo id="oportunidades" />. Eso es lo único que depende de
-          ti — el sistema escribe, publica y va acumulando resultados por ti,
-          semana tras semana.
+          <Modulo id="oportunidades" />.{" "}
+          <strong>Eso es lo único que depende de ti</strong> — el sistema
+          escribe, publica y va acumulando resultados por ti, semana tras
+          semana.
         </p>
       </section>
     </div>
