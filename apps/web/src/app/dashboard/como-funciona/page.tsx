@@ -174,6 +174,21 @@ export default function ComoFuncionaPage() {
         </div>
         <p
           style={{
+            margin: "0 0 24px",
+            fontSize: 19,
+            lineHeight: "28px",
+            color: "#1d1d1f",
+          }}
+        >
+          Imagínate esto: un día alguien busca en Google, o le pregunta
+          directamente a una inteligencia artificial, algo relacionado con lo
+          que tu negocio ofrece. Aparecen páginas, respuestas armadas con
+          información que esa inteligencia artificial ya leyó por ahí. ¿Te
+          gustaría que tu negocio apareciera en esos resultados, antes que el
+          de los demás? Ven, te contamos el secreto.
+        </p>
+        <p
+          style={{
             margin: "0 0 8px",
             fontSize: 14,
             lineHeight: "20px",
