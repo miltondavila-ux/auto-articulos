@@ -5183,3 +5183,11 @@ probadas).
 - **Nota de infraestructura:** esta sesión no tiene sesión de Vercel CLI activa (`npx vercel whoami` → "Logged out", sin `.vercel/project.json` en `apps/web`), así que el despliegue a producción depende por completo de la integración automática de Vercel con GitHub al hacer push a `main`. Si algún cambio no aparece en `https://auto-articulos-web.vercel.app` después de varios minutos de un push confirmado, revisar el estado del deployment en el dashboard de Vercel antes de asumir que el código está mal — puede ser solo demora de build/caché.
 - **Verificación:** `npm run typecheck --workspace=@auto-articulos/web` limpio en ambos commits.
 - **Estado del área:** Completado y publicado en `main`. Área LIBERADA.
+
+### 2026-08-23 (cont. 3) — Claude: reescritura de texto revertida — Milton solo pidió reordenar, no reescribir
+
+- Después del reorden de arriba (`51b729c`), se intentó además **fusionar** el contenido de "Para qué sirve todo esto" dentro del encabezado y renombrar secciones (commit `1c64010`, "estructura obtienes → pasos → resumen"). Milton pegó una captura del texto tal como estaba en `51b729c` y aclaró: *"esto está muy bueno pero el orden es lo importante, no quiero que lo cambies todo, solo organízalo en el orden correcto"*.
+- **Se revirtió `1c64010`** con `git revert --no-edit 1c64010` → commit `6ef0037`. El texto quedó exactamente como en `51b729c`: párrafos originales sin fusionar, "Cómo sucede" con su nombre original (no "Cómo lograrlo"), sin sección extra "En resumen" al final.
+- **Lección para quien siga:** en esta página, Milton distingue explícitamente entre *reordenar* (mover secciones enteras de lugar, bienvenido) y *reescribir* (fusionar/resumir texto existente, NO pedido esta vez). No asumir que una instrucción de reordenar autoriza también reescribir contenido, aunque el resultado "se lea mejor".
+- **Verificación:** `npm run typecheck --workspace=@auto-articulos/web` limpio.
+- **Estado del área:** Completado y publicado en `main` (commit `6ef0037`). Área LIBERADA.
