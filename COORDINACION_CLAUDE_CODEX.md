@@ -5174,3 +5174,12 @@ probadas).
 - **Archivos:** `apps/web/src/components/ComoFuncionaCTA.tsx`, `apps/web/src/app/dashboard/como-funciona/page.tsx`.
 - **Verificación:** `npm run typecheck --workspace=@auto-articulos/web` limpio en ambos commits.
 - **Estado del área:** Completado y publicado en `main`. Área LIBERADA.
+
+### 2026-08-23 (cont. 2) — Claude: título "El objetivo" y reordenar contenido en Cómo Funciona
+
+- Milton pidió mantener el título original con una etiqueta arriba: se agregó el eyebrow **"El objetivo"** sobre "Que te encuentren. En Google, en Bing y dentro de la inteligencia artificial." (mismo patrón visual que "Paso 1/2/3" en esta misma página) — commit `7f642fd`.
+- Milton señaló que la página abría con instrucciones ("Cómo sucede" + Pasos 1-3) sin decir antes para qué sirve, dejando al lector "a ciegas". Se movió la sección **"Para qué sirve todo esto"** (el beneficio y el efecto acumulativo) para que quede justo después del encabezado, **antes** de "Cómo sucede" y los 3 pasos — commit `51b729c`.
+- **Orden final de la página:** encabezado (El objetivo) → Para qué sirve todo esto → Cómo sucede → Paso 1/2/3.
+- **Nota de infraestructura:** esta sesión no tiene sesión de Vercel CLI activa (`npx vercel whoami` → "Logged out", sin `.vercel/project.json` en `apps/web`), así que el despliegue a producción depende por completo de la integración automática de Vercel con GitHub al hacer push a `main`. Si algún cambio no aparece en `https://auto-articulos-web.vercel.app` después de varios minutos de un push confirmado, revisar el estado del deployment en el dashboard de Vercel antes de asumir que el código está mal — puede ser solo demora de build/caché.
+- **Verificación:** `npm run typecheck --workspace=@auto-articulos/web` limpio en ambos commits.
+- **Estado del área:** Completado y publicado en `main`. Área LIBERADA.
