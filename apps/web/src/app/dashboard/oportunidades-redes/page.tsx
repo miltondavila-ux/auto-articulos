@@ -52,8 +52,8 @@ export default function OportunidadesRedesPage() {
   const [opportunities, setOpportunities] = useState<SocialOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [generatingNetwork, setGeneratingNetwork] = useState<"threads" | "x" | "linkedin" | "instagram" | "facebook-page" | null>(null);
-  const [connectedNetworks, setConnectedNetworks] = useState({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false });
+  const [generatingNetwork, setGeneratingNetwork] = useState<"threads" | "x" | "linkedin" | "instagram" | "facebook-page" | "pinterest" | null>(null);
+  const [connectedNetworks, setConnectedNetworks] = useState({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false });
   const [generateSeconds, setGenerateSeconds] = useState(0);
   const [usedGsc, setUsedGsc] = useState(false);
   const [publishingId, setPublishingId] = useState<string | null>(null);
@@ -114,10 +114,11 @@ export default function OportunidadesRedesPage() {
           linkedin: Boolean(data.linkedin),
           instagram: Boolean(data.instagram),
           facebookPage: Boolean(data.facebookPage),
+          pinterest: Boolean(data.pinterest),
         });
       }
     } catch {
-      setConnectedNetworks({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false });
+      setConnectedNetworks({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false });
     }
   }
 
@@ -129,7 +130,7 @@ export default function OportunidadesRedesPage() {
   const progress = Math.min(92, 8 + generateSeconds * 4);
   const elapsed = `${Math.floor(generateSeconds / 60)}:${String(generateSeconds % 60).padStart(2, "0")}`;
 
-  async function handleGenerate(network: "threads" | "x" | "linkedin" | "instagram" | "facebook-page") {
+  async function handleGenerate(network: "threads" | "x" | "linkedin" | "instagram" | "facebook-page" | "pinterest") {
     setGenerating(true);
     setGeneratingNetwork(network);
     setMessage(null);
@@ -402,6 +403,16 @@ export default function OportunidadesRedesPage() {
                 {generatingNetwork === "facebook-page" ? "Analizando..." : "Facebook"}
               </button>
             )}
+            {connectedNetworks.pinterest && (
+              <button
+                onClick={() => handleGenerate("pinterest")}
+                disabled={generating || loading}
+                className="secondary"
+                style={disabledStyle({ ...secondaryButtonStyle, padding: "9px 14px", fontSize: 13 }, generating || loading)}
+              >
+                {generatingNetwork === "pinterest" ? "Analizando..." : "Pinterest"}
+              </button>
+            )}
             {pendingList.length > 0 && (
               <button
                 onClick={handlePublishAll}
@@ -414,7 +425,7 @@ export default function OportunidadesRedesPage() {
           </div>
         </div>
 
-        {!connectedNetworks.threads && !connectedNetworks.x && !connectedNetworks.linkedin && !connectedNetworks.instagram && !loading && (
+        {!connectedNetworks.threads && !connectedNetworks.x && !connectedNetworks.linkedin && !connectedNetworks.instagram && !connectedNetworks.facebookPage && !connectedNetworks.pinterest && !loading && (
           <div className="notice" style={{ marginTop: 14 }}>
             <p style={{ margin: 0 }}>
               Todavía no tienes ninguna red social conectada, así que no hay

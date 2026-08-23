@@ -15,6 +15,7 @@ import {
   generateSocialImageRaw,
   publishFacebookPagePost,
   publishFacebookPageStory,
+  createPinterestPin,
 } from "@auto-articulos/shared";
 import { put } from "@vercel/blob";
 import sharp from "sharp";
@@ -465,6 +466,53 @@ async function processLinkedInJob(job: {
     });
   }
 
+  return true;
+}
+
+// ─── PINTEREST ─────────────────────────────────────────────────────────────
+
+async function processPinterestJob(job: {
+  id: string;
+  userId: string;
+  titleId: string | null;
+  articleUrl: string;
+  articleTitle: string;
+  suggestedText: string;
+}): Promise<boolean> {
+  const integration = await prisma.pinterestIntegration.findUnique({ where: { userId: job.userId } });
+  if (!integration) throw new Error("Pinterest no está configurado en tu cuenta.");
+  if (!integration.boardId) throw new Error("Pinterest está conectado, pero todavía no has seleccionado un tablero.");
+  if (integration.expiresAt && integration.expiresAt <= new Date()) {
+    throw new Error("La autorización de Pinterest expiró. Debes volver a conectar la cuenta.");
+  }
+
+  await validateArticleUrl(job.articleUrl);
+  const imageUrl = await getArticleOpenGraphImage(job.articleUrl);
+  if (!imageUrl) throw new Error("El artículo no tiene una imagen OG pública para Pinterest.");
+  const description = job.suggestedText.includes("[ENLACE]")
+    ? job.suggestedText.replace("[ENLACE]", job.articleUrl)
+    : `${job.suggestedText}\n\n${job.articleUrl}`;
+  const result = await createPinterestPin(decryptSecret(integration.accessTokenEncrypted), {
+    boardId: integration.boardId,
+    title: job.articleTitle,
+    description,
+    link: job.articleUrl,
+    imageUrl,
+  });
+
+  await prisma.socialOpportunity.update({
+    where: { id: job.id },
+    data: { status: "published", postId: result.link || result.id, publishedAt: new Date(), errorLog: null },
+  });
+  console.log(`Publicado en Pinterest: ${job.id} — pinId: ${result.id}`);
+  if (job.titleId) {
+    await prisma.titleEvent.create({
+      data: {
+        titleId: job.titleId,
+        message: `Publicado exitosamente en Pinterest (${integration.boardName || integration.boardId}) - ID: ${result.id}`,
+      },
+    });
+  }
   return true;
 }
 
@@ -944,6 +992,8 @@ export async function processNextSocialPublish(filterUserId?: string, filterArti
       published = await processTwitterJob(job);
     } else if (job.platform === "linkedin") {
       published = await processLinkedInJob(job);
+    } else if (job.platform === "pinterest") {
+      published = await processPinterestJob(job);
     } else if (job.platform === "facebook-page") {
       published = await processFacebookPageJob(job);
     } else if (job.platform === "facebook-story") {

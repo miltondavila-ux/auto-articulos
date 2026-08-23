@@ -27,6 +27,7 @@ export async function GET() {
     threadsIntegration,
     twitterIntegration,
     linkedinIntegration,
+    pinterestIntegration,
   ] = await Promise.all([
     // 1. Credenciales 10minutesWebsite
     prisma.credential.findUnique({
@@ -78,6 +79,10 @@ export async function GET() {
     prisma.linkedInIntegration.findUnique({
       where: { userId },
       select: { expiresAt: true },
+    }),
+    prisma.pinterestIntegration.findUnique({
+      where: { userId },
+      select: { expiresAt: true, boardId: true },
     }),
   ]);
 
@@ -186,6 +191,16 @@ export async function GET() {
       description: "Publica automáticamente artículos en tu perfil o página de LinkedIn.",
       actionUrl: "/dashboard/configuracion?tab=social",
       actionLabel: "Conectar LinkedIn",
+    },
+    {
+      id: "pinterest",
+      label: "Pinterest",
+      configured: Boolean(pinterestIntegration && pinterestIntegration.boardId && (!pinterestIntegration.expiresAt || pinterestIntegration.expiresAt > new Date())),
+      required: false,
+      section: "social",
+      description: "Publica automáticamente tus artículos como Pins con imagen y enlace al artículo.",
+      actionUrl: "/dashboard/configuracion?tab=social",
+      actionLabel: "Conectar Pinterest",
     },
 
     // ━━━ CONTENIDO ━━━

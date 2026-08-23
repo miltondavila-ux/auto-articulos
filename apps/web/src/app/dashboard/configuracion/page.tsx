@@ -17,6 +17,7 @@ import BingWebmasterSection from "@/components/BingWebmasterSection";
 import ThreadsSection from "@/components/ThreadsSection";
 import TwitterSection from "@/components/TwitterSection";
 import LinkedInSection from "@/components/LinkedInSection";
+import PinterestSection from "@/components/PinterestSection";
 import PhotoLogoUploader from "@/components/PhotoLogoUploader";
 import OnboardingWizard from "@/components/OnboardingWizard";
 import CategorySyncProgress, {
@@ -943,6 +944,7 @@ export default function ConfiguracionPage() {
           {(allowLinkedInPublishing || isAdmin || tieneModuloRedes) && (
             <LinkedInSection allowed={allowLinkedInPublishing || isAdmin || tieneModuloRedes} />
           )}
+          {(isAdmin || tieneModuloRedes) && <PinterestSection allowed={isAdmin || tieneModuloRedes} />}
         </div>
       )}
 
