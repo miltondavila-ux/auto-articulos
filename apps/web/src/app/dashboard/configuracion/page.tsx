@@ -571,7 +571,28 @@ export default function ConfiguracionPage() {
     allowFacebookPublishing ||
     allowLinkedInPublishing ||
     allowPinterestPublishing;
-    allowTumblrPublishing;
+    allowTumblrPublishing ||
+    allowBlueskyPublishing ||
+    allowMastodonPublishing ||
+    allowDevToPublishing;
+
+  const redesSocialesDisponibles = [
+    { name: "Instagram", enabled: isAdmin || allowInstagramPublishing },
+    { name: "Facebook Pages", enabled: isAdmin || allowFacebookPublishing },
+    { name: "Threads", enabled: isAdmin || allowThreadsPublishing },
+    { name: "LinkedIn", enabled: isAdmin || allowLinkedInPublishing },
+    { name: "Pinterest", enabled: isAdmin || allowPinterestPublishing },
+    { name: "Tumblr", enabled: isAdmin || allowTumblrPublishing },
+    { name: "Bluesky", enabled: isAdmin || allowBlueskyPublishing },
+    { name: "Mastodon", enabled: isAdmin || allowMastodonPublishing },
+    { name: "DEV.to", enabled: isAdmin || allowDevToPublishing },
+  ]
+    .filter((network) => network.enabled)
+    .map((network) => network.name);
+
+  const socialNetworksDescription = redesSocialesDisponibles.length
+    ? `Tienes permiso para conectar ${redesSocialesDisponibles.join(", ")} y publicar tus artículos en esas redes sociales.`
+    : "El administrador todavía no ha activado ninguna red social para tu cuenta.";
 
   useEffect(() => {
     if (activeTab === "social" && !showSocialTab) {
@@ -607,8 +628,7 @@ export default function ConfiguracionPage() {
             id: "social" as const,
             eyebrow: "Redes Sociales",
             label: "Publicación Automática",
-            description:
-              "Conecta Instagram, Threads y Google Business Profile para publicar tus artículos en redes sociales.",
+            description: socialNetworksDescription,
           },
         ]
       : []),
