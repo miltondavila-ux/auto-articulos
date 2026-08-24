@@ -8,6 +8,7 @@ import {
   getGoogleAccessToken,
   queryGoogleSearchAnalytics,
 } from "@auto-articulos/shared";
+import { getGoogleAnalyticsSignals, summarizeGoogleAnalyticsSignals } from "@/lib/google-analytics-signals";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
@@ -18,6 +19,7 @@ type ArticleCandidate = {
   text: string;
   summary: string | null;
   articleUrl: string | null;
+  searchQueries?: string[];
 };
 
 const formulas = [
@@ -36,7 +38,9 @@ const formulas = [
 async function generateGPTCopy(
   platform: string,
   finalTitle: string,
-  summary: string
+  summary: string,
+  searchQueries: string[] = [],
+  googleAnalyticsContext?: string,
 ): Promise<string> {
   // "instagram-story" NO tiene caption visible en Instagram (publishInstagramStory
   // no manda texto, solo la imagen) — este texto queda solo de registro interno,
@@ -79,6 +83,12 @@ async function generateGPTCopy(
     : platform === "bluesky"
     ? "Bluesky: tono auténtico, cercano y reflexivo; prioriza una conversación honesta con la comunidad, empatía y utilidad por encima de la promoción."
     : "Tono cercano, empático y directo, como hablarle con respeto y calidez a una persona que necesita ayuda.";
+  const searchContext = searchQueries.length > 0
+    ? `- Consultas reales que están llevando usuarios a este artículo: ${searchQueries.join(" | ")}\n`
+    : "";
+  const analyticsContext = googleAnalyticsContext
+    ? `- Señales agregadas de Google Analytics 4 (solo como contexto): ${googleAnalyticsContext}\n`
+    : "";
   try {
     const response = await fetch(OPENAI_CHAT_URL, {
       method: "POST",
@@ -108,7 +118,9 @@ async function generateGPTCopy(
                   `- NO escribas la URL del artículo directamente. Escribe la palabra exacta "[ENLACE]" (en mayúsculas y con corchetes) al final, integrada en tu frase de cierre (Ej: "Te lo explico con peras y manzanas aquí: [ENLACE]").\n\n`) +
               `Datos:\n` +
               `- Título del artículo: ${finalTitle}\n` +
-              `- Resumen: ${summary}`,
+              `- Resumen: ${summary}\n` +
+              searchContext + analyticsContext +
+              `- Usa las consultas reales solo como contexto: no las enumeres, no inventes datos y mantén un tono natural.`,
           },
         ],
         temperature: 0.85,
@@ -361,6 +373,7 @@ export async function POST(request: Request) {
     }
 
     const createdOpportunities: any[] = [];
+    const googleAnalyticsContext = JSON.stringify(summarizeGoogleAnalyticsSignals(await getGoogleAnalyticsSignals(userId)));
 
     for (const article of candidates) {
       for (const platform of integrations) {
@@ -370,7 +383,9 @@ export async function POST(request: Request) {
         const copyText = await generateGPTCopy(
           platform,
           article.finalTitle || article.text,
-          article.summary || ""
+          article.summary || "",
+          article.searchQueries,
+          googleAnalyticsContext,
         );
 
         const opp = await prisma.socialOpportunity.create({

@@ -14,6 +14,7 @@ import type { CategoryRow, LanguageRow, SyncStatus } from "@/types/dashboard";
 import GoogleSearchConsoleSection from "@/components/GoogleSearchConsoleSection";
 import BusinessProfileSection from "@/components/BusinessProfileSection";
 import BingWebmasterSection from "@/components/BingWebmasterSection";
+import GoogleAnalyticsSection from "@/components/GoogleAnalyticsSection";
 import ThreadsSection from "@/components/ThreadsSection";
 import TwitterSection from "@/components/TwitterSection";
 import LinkedInSection from "@/components/LinkedInSection";
@@ -954,6 +955,8 @@ export default function ConfiguracionPage() {
         >
           <div id="google">
             <GoogleSearchConsoleSection />
+
+            <GoogleAnalyticsSection />
           </div>
           <div id="bing">
             <BingWebmasterSection />
