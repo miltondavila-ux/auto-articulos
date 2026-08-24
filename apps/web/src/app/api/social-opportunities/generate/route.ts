@@ -11,6 +11,7 @@ import {
   queryGoogleSearchAnalytics,
 } from "@auto-articulos/shared";
 import { getBingTokenForIntegration } from "@/lib/bing-token";
+import { getGoogleAnalyticsSignals, summarizeGoogleAnalyticsSignals } from "@/lib/google-analytics-signals";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
@@ -44,6 +45,7 @@ async function generateGPTCopy(
   finalTitle: string,
   summary: string,
   searchQueries: string[] = [],
+  googleAnalyticsContext?: string,
 ): Promise<string> {
   if (!OPENAI_API_KEY) {
     return `${finalTitle}\n\n${summary}\n\nLeer más: [ENLACE]`;
@@ -70,6 +72,9 @@ async function generateGPTCopy(
     : "Tono cercano, empático y directo, como hablarle con respeto y calidez a una persona que necesita ayuda.";
   const searchContext = searchQueries.length > 0
     ? `- Consultas reales que están llevando usuarios a este artículo: ${searchQueries.join(" | ")}\n`
+    : "";
+  const analyticsContext = googleAnalyticsContext
+    ? `- Señales agregadas de Google Analytics 4 (solo como contexto): ${googleAnalyticsContext}\n`
     : "";
   try {
     const response = await fetch(OPENAI_CHAT_URL, {
@@ -99,7 +104,7 @@ async function generateGPTCopy(
               `Datos:\n` +
               `- Título del artículo: ${finalTitle}\n` +
               `- Resumen: ${summary}\n` +
-              searchContext +
+              searchContext + analyticsContext +
               `- Usa las consultas reales solo como contexto: no las enumeres, no inventes datos y mantén un tono natural.`,
           },
         ],
@@ -455,6 +460,7 @@ export async function POST(request: Request) {
     }
 
     const createdOpportunities: any[] = [];
+    const googleAnalyticsContext = JSON.stringify(summarizeGoogleAnalyticsSignals(await getGoogleAnalyticsSignals(userId)));
 
     for (const article of candidates) {
       for (const platform of integrations) {
@@ -466,6 +472,7 @@ export async function POST(request: Request) {
           article.finalTitle || article.text,
           article.summary || "",
           article.searchQueries,
+          googleAnalyticsContext,
         );
 
         const opp = await prisma.socialOpportunity.create({

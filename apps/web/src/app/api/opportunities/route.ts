@@ -7,6 +7,7 @@ import {
 } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
 import { analyzeSeoOpportunities } from "@/lib/opportunity-analysis";
+import { getGoogleAnalyticsSignals, summarizeGoogleAnalyticsSignals } from "@/lib/google-analytics-signals";
 
 const COOLDOWN_DAYS = 3;
 const COOLDOWN_MS = COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
@@ -159,6 +160,7 @@ export async function POST(request: Request) {
         { status: 422 },
       );
     }
+    const googleAnalyticsSignals = await getGoogleAnalyticsSignals(userId);
     const analysis = await analyzeSeoOpportunities({
       categories,
       currentRows,
@@ -167,6 +169,7 @@ export async function POST(request: Request) {
       existingTitles: existing.flatMap((title) =>
         title.finalTitle ? [title.text, title.finalTitle] : [title.text],
       ),
+      googleAnalyticsSummary: summarizeGoogleAnalyticsSignals(googleAnalyticsSignals),
     });
 
     const now = new Date();

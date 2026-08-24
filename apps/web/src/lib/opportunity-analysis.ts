@@ -293,6 +293,7 @@ export async function analyzeSeoOpportunities(input: {
   previousRows: GoogleSearchAnalyticsRow[];
   countryRows: GoogleSearchAnalyticsRow[];
   existingTitles: string[];
+  googleAnalyticsSummary?: unknown;
 }): Promise<OpportunityAnalysisResult> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("OPENAI_API_KEY no esta configurada.");
@@ -341,6 +342,9 @@ ${JSON.stringify(input.categories)}
 
 DISTRIBUCION GEOGRAFICA REAL POR PAIS:
 ${JSON.stringify(topCountries)}
+
+SEÑALES OPCIONALES DE GOOGLE ANALYTICS 4:
+${JSON.stringify(input.googleAnalyticsSummary ?? { connected: false })}
 
 RENDIMIENTO ACTUAL Y COMPARACION (lote ${batchIndex + 1} de ${batchesToProcess.length}):
 ${JSON.stringify(batch)}
