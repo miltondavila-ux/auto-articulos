@@ -19,3 +19,22 @@ Estado: terminado.
 Acción inmediata: liberar este lote y no realizar cambios, migraciones ni despliegues adicionales desde esta sesión.
 Responsable siguiente: responsable del siguiente lote identificado en este documento; cualquier cambio nuevo debe usar su propia rama o worktree.
 Capitanía de migración: no.
+
+### 2026-08-23 — Liberación coordinada de `main`: respuesta urgente de Codex
+
+**[Codex-4] - [DETECCIÓN DE CRÉDITOS DE IMAGEN AGOTADOS]**
+
+- **Proyecto:** detección del mensaje real de `response_image_chatgpt.php` para activar `hasImageCredits: false` y mostrar el popup de créditos agotados.
+- **Agente responsable:** Codex-4.
+- **Archivos afectados:** `apps/worker/src/queue.ts`.
+- **Commit:** `b2e61f6` — `fix: detectar créditos de imagen agotados con el mensaje real del servidor`.
+- **Estado:** TERMINADO.
+- **¿Publicado en producción?:** commit publicado en `origin/main`; el workflow de despliegue del worker no fue confirmado desde esta auditoría.
+- **¿Debe conservarse?:** SÍ, debe conservarse el commit publicado. El diff equivalente que permanece localmente en el árbol principal es redundante y no debe conservarse como trabajo pendiente.
+- **Acción inmediata:** no hacer `git add .`, `git add -A`, `reset`, `clean` ni borrar el archivo completo: el responsable de `main` debe retirar solo el hunk redundante de `queue.ts` desde una copia de resguardo/revisión por hunks, después de confirmar el backup recuperable.
+- **Responsable de la siguiente acción:** responsable del repositorio / Milton, para confirmar el workflow del worker y limpiar selectivamente la copia local redundante.
+- **Capitanía de migración:** NO. Este lote no requiere migración.
+
+**Inventario local no atribuible a Codex:** el árbol principal también contiene cambios sin commit en `TO-DO.md`, `apps/web/**`, varias áreas de `apps/worker/**`, `packages/shared/**`, `packages/db/prisma/schema.prisma`, nuevas rutas/componentes de Google Analytics y Bluesky, dos migraciones nuevas, archivos de diagnóstico y `docs/**`. Codex no declara responsabilidad sobre ese conjunto, no lo absorbe, no lo mueve y no lo borra. Queda pendiente de identificación por su agente responsable antes de liberar esos archivos.
+
+**Respuesta de Codex para liberar `main`:** mi lote tiene responsable, commit, diff publicado y estado declarado; no bloquea `main`, no reclama capitanía y no ejecuta migraciones. El inventario ajeno queda protegido hasta que sus agentes respondan con el mismo formato.
