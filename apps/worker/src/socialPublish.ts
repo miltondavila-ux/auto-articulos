@@ -27,44 +27,7 @@ import {
 } from "@auto-articulos/shared";
 import { put } from "@vercel/blob";
 import sharp from "sharp";
-import { generateAiSocialImage, AiImageFormat, AiImageResult } from "./aiImageGenerator";
-import { runPromptBoxPipeline } from "./promptBoxPipeline";
-
-/**
- * Elige entre el generador de un solo prompt (aiImageGenerator.ts, en
- * producción) y el pipeline nuevo de 8 cajas encadenadas
- * (promptBoxPipeline.ts, en pruebas) según `usePromptBoxPipeline` del
- * usuario — pedido explícito de Milton (20/8/2026) para poder probar el
- * pipeline nuevo sin tocar ni arriesgar el generador que ya funciona.
- *
- * Devuelve también el prompt exacto usado (pedido de Milton, 22/8/2026)
- * para guardarlo en SocialOpportunity y mostrarlo en el histórico.
- */
-async function generateSocialImageWithSelectedEngine(params: {
-  userId: string;
-  articleTitle: string;
-  articleSummary: string;
-  ogImageUrl: string;
-  format: AiImageFormat;
-  businessLogoUrl?: string | null;
-  profilePhotoUrl?: string | null;
-  pathPrefix: string;
-  usePromptBoxPipeline: boolean;
-}): Promise<AiImageResult | null> {
-  if (params.usePromptBoxPipeline) {
-    const result = await runPromptBoxPipeline(params);
-    console.log(
-      `[PromptBoxPipeline] aprobado=${result.approved} imagen=${result.imageUrl ? "sí" : "no"} — cajas: ${Object.keys(result.boxOutputs).join(", ")}`,
-    );
-    // No publicar una imagen que el Inspector de Calidad rechazó, aunque
-    // técnicamente exista un archivo generado — se agotaron los reintentos
-    // sin aprobación, así que el llamador debe cancelar la oportunidad, no
-    // publicar algo con defectos ya detectados.
-    if (!result.approved || !result.imageUrl) return null;
-    return { imageUrl: result.imageUrl, prompt: result.boxOutputs["visual-prompt-builder"] || "" };
-  }
-  return generateAiSocialImage(params);
-}
+import { generateAiSocialImage } from "./aiImageGenerator";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
@@ -788,7 +751,7 @@ async function processFacebookStoryJob(job: {
     job.titleId ? prisma.title.findUnique({ where: { id: job.titleId } }) : Promise.resolve(null),
     prisma.user.findUnique({
       where: { id: job.userId },
-      select: { aiImageGenerationEnabled: true, usePromptBoxPipeline: true, businessLogoUrl: true, profilePhotoUrl: true },
+      select: { aiImageGenerationEnabled: true, businessLogoUrl: true, profilePhotoUrl: true },
     }),
   ]);
   const summary = title?.summary || job.articleTitle || "";
@@ -797,8 +760,7 @@ async function processFacebookStoryJob(job: {
   let imageUrl: string | null = null;
   let aiPrompt: string | null = null;
   if (sourceImage && user?.aiImageGenerationEnabled) {
-    const generated = await generateSocialImageWithSelectedEngine({
-      userId: job.userId,
+    const generated = await generateAiSocialImage({
       articleTitle: job.articleTitle,
       articleSummary: summary,
       ogImageUrl: sourceImage,
@@ -806,7 +768,6 @@ async function processFacebookStoryJob(job: {
       businessLogoUrl: user.businessLogoUrl,
       profilePhotoUrl: user.profilePhotoUrl,
       pathPrefix: `facebook/ai/story/${job.titleId || job.id}`,
-      usePromptBoxPipeline: Boolean(user.usePromptBoxPipeline),
     });
     imageUrl = generated?.imageUrl ?? null;
     aiPrompt = generated?.prompt ?? null;
@@ -942,7 +903,6 @@ async function processInstagramJob(job: {
         imagePrompt: true,
         infographicPrompt: true,
         aiImageGenerationEnabled: true,
-        usePromptBoxPipeline: true,
         businessLogoUrl: true,
         profilePhotoUrl: true,
       },
@@ -1006,8 +966,7 @@ async function processInstagramJob(job: {
         // Opción 2 del "Creador de Imágenes para Redes Sociales": generador
         // IA aparte, partiendo de la OG. Sin fallback a la OG sin tocar si
         // falla — se cancela la oportunidad (regla explícita, por costo).
-        const generated = await generateSocialImageWithSelectedEngine({
-          userId: job.userId,
+        const generated = await generateAiSocialImage({
           articleTitle: job.articleTitle,
           articleSummary: summary,
           ogImageUrl: sourceImage,
@@ -1015,7 +974,6 @@ async function processInstagramJob(job: {
           businessLogoUrl: user.businessLogoUrl,
           profilePhotoUrl: user.profilePhotoUrl,
           pathPrefix: `instagram/ai/reel-image/${job.titleId || job.id}`,
-          usePromptBoxPipeline: Boolean(user.usePromptBoxPipeline),
         });
         imageUrl = generated?.imageUrl ?? null;
         publishedAiPrompt = generated?.prompt ?? null;
@@ -1043,8 +1001,7 @@ async function processInstagramJob(job: {
       const wasAiGenerated = Boolean(sourceImage && user?.aiImageGenerationEnabled);
       let imageUrl: string | null = null;
       if (sourceImage && user?.aiImageGenerationEnabled) {
-        const generated = await generateSocialImageWithSelectedEngine({
-          userId: job.userId,
+        const generated = await generateAiSocialImage({
           articleTitle: job.articleTitle,
           articleSummary: summary,
           ogImageUrl: sourceImage,
@@ -1052,7 +1009,6 @@ async function processInstagramJob(job: {
           businessLogoUrl: user.businessLogoUrl,
           profilePhotoUrl: user.profilePhotoUrl,
           pathPrefix: `instagram/ai/story/${job.titleId || job.id}`,
-          usePromptBoxPipeline: Boolean(user.usePromptBoxPipeline),
         });
         imageUrl = generated?.imageUrl ?? null;
         publishedAiPrompt = generated?.prompt ?? null;
@@ -1080,8 +1036,7 @@ async function processInstagramJob(job: {
       const wasAiGenerated = Boolean(sourceImage && user?.aiImageGenerationEnabled);
       let imageUrl: string | null = null;
       if (sourceImage && user?.aiImageGenerationEnabled) {
-        const generated = await generateSocialImageWithSelectedEngine({
-          userId: job.userId,
+        const generated = await generateAiSocialImage({
           articleTitle: job.articleTitle,
           articleSummary: summary,
           ogImageUrl: sourceImage,
@@ -1089,7 +1044,6 @@ async function processInstagramJob(job: {
           businessLogoUrl: user.businessLogoUrl,
           profilePhotoUrl: user.profilePhotoUrl,
           pathPrefix: `instagram/ai/post/${job.titleId || job.id}`,
-          usePromptBoxPipeline: Boolean(user.usePromptBoxPipeline),
         });
         imageUrl = generated?.imageUrl ?? null;
         publishedAiPrompt = generated?.prompt ?? null;

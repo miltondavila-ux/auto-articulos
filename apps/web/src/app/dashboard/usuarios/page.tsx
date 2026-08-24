@@ -52,7 +52,6 @@ interface UserRow {
   allowMastodonPublishing: boolean;
   allowDevToPublishing: boolean;
   aiImageGenerationEnabled: boolean;
-  usePromptBoxPipeline: boolean;
   numeroCuenta?: number;
   moduleOverrides?: Record<string, "inherit" | "enabled" | "disabled">;
   profilePhotoUrl: string | null;
@@ -216,29 +215,6 @@ function getUserDisplayName(u: UserRow): string {
   return u.email.trim();
 }
 
-interface PromptBoxExecutionRow {
-  id: string;
-  input: string;
-  output: string | null;
-  model: string | null;
-  durationMs: number | null;
-  error: string | null;
-  createdAt: string;
-}
-
-interface PromptBoxRow {
-  id: string;
-  slug: string;
-  name: string;
-  description: string;
-  systemPrompt: string;
-  executionOrder: number;
-  isActive: boolean;
-  inputSchema: string | null;
-  outputSchema: string | null;
-  executions: PromptBoxExecutionRow[];
-}
-
 type UserCategoryFilter =
   | "all"
   | "user"
@@ -285,7 +261,7 @@ export default function UsuariosPage() {
   const [userCategory, setUserCategory] = useState<UserCategoryFilter>("all");
   const [sortOrder, setSortOrder] = useState<UserSortOrder>("alpha_asc");
   const [accessPage, setAccessPage] = useState(1);
-  const [tab, setTab] = useState<"crear" | "uso" | "accesos" | "modulos" | "prompts" | "cajas-imagen">("accesos");
+  const [tab, setTab] = useState<"crear" | "uso" | "accesos" | "modulos" | "prompts">("accesos");
   const [prompts, setPrompts] = useState<{ id: string; name: string; prompt: string }[]>([]);
   const [loadingPrompts, setLoadingPrompts] = useState(false);
   const [promptName, setPromptName] = useState("");
@@ -336,64 +312,6 @@ export default function UsuariosPage() {
       setAiImagePromptBanner({ type: "error", text: e.message || "Error al conectar con el servidor" });
     } finally {
       setSavingAiImagePrompt(false);
-    }
-  }
-
-  // Sistema de prompts encadenados para el generador de imágenes (20/8/2026,
-  // especificación de Milton): en vez de un solo prompt gigante, varias
-  // cajas independientes en secuencia — la salida de una alimenta a la
-  // siguiente. Cada caja se edita y guarda por separado, con su propia
-  // sección "Ver última ejecución" para debugging.
-  const [promptBoxes, setPromptBoxes] = useState<PromptBoxRow[]>([]);
-  const [loadingPromptBoxes, setLoadingPromptBoxes] = useState(false);
-  const [promptBoxDrafts, setPromptBoxDrafts] = useState<Record<string, string>>({});
-  const [savingPromptBoxId, setSavingPromptBoxId] = useState<string | null>(null);
-  const [promptBoxBanner, setPromptBoxBanner] = useState<{ id: string; type: "error" | "info"; text: string } | null>(null);
-  const [expandedExecutionId, setExpandedExecutionId] = useState<string | null>(null);
-
-  async function loadPromptBoxes() {
-    setLoadingPromptBoxes(true);
-    try {
-      const res = await fetch("/api/admin/prompt-boxes");
-      if (res.ok) {
-        const data = await res.json();
-        const boxes: PromptBoxRow[] = data.boxes ?? [];
-        setPromptBoxes(boxes);
-        setPromptBoxDrafts((prev) => {
-          const next = { ...prev };
-          for (const box of boxes) {
-            if (!(box.id in next)) next[box.id] = box.systemPrompt;
-          }
-          return next;
-        });
-      }
-    } catch (e) {
-      console.error("Error al cargar las cajas de prompts", e);
-    } finally {
-      setLoadingPromptBoxes(false);
-    }
-  }
-
-  async function handleSavePromptBox(box: PromptBoxRow, changes: { systemPrompt?: string; isActive?: boolean; executionOrder?: number }) {
-    setSavingPromptBoxId(box.id);
-    setPromptBoxBanner(null);
-    try {
-      const res = await fetch(`/api/admin/prompt-boxes/${box.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(changes),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setPromptBoxBanner({ id: box.id, type: "error", text: data.error ?? "Error al guardar la caja" });
-        return;
-      }
-      setPromptBoxBanner({ id: box.id, type: "info", text: "Caja guardada con éxito" });
-      loadPromptBoxes();
-    } catch (e: any) {
-      setPromptBoxBanner({ id: box.id, type: "error", text: e.message || "Error al conectar con el servidor" });
-    } finally {
-      setSavingPromptBoxId(null);
     }
   }
 
@@ -593,9 +511,6 @@ export default function UsuariosPage() {
     if (tab === "prompts") {
       loadPrompts();
       loadAiImagePrompt();
-    }
-    if (tab === "cajas-imagen") {
-      loadPromptBoxes();
     }
   }, [tab]);
 
@@ -811,12 +726,6 @@ export default function UsuariosPage() {
       label: "Prompts",
       description: "Estilos de redacción de artículos y el prompt del generador de imágenes con IA para redes sociales.",
       eyebrow: "Redacción e imágenes",
-    },
-    {
-      id: "cajas-imagen",
-      label: "Cajas de Imágenes IA",
-      description: "Pipeline de prompts encadenados para construir la imagen de redes sociales, caja por caja.",
-      eyebrow: `${promptBoxes.length || 8} cajas`,
     },
   ];
 
@@ -1893,163 +1802,6 @@ export default function UsuariosPage() {
         </>
       )}
 
-      {tab === "cajas-imagen" && (
-        <section id="administracion-contenido" style={sectionStyle}>
-          <h2 style={h2Style}>Cajas de Imágenes IA</h2>
-          <p style={{ fontSize: 13, color: "#6e6e73" }}>
-            Pipeline de prompts encadenados para construir la imagen de redes sociales: la salida de
-            cada caja alimenta a la siguiente (Analista → Director Creativo → Diseñador de
-            Composición → Editor de Texto → Constructor del Prompt Visual → Generador de Imagen →
-            Inspector de Calidad → Corrector Automático). Edita el prompt de cada caja por separado
-            y guárdalo — cada caja usa exactamente el texto que dejes acá.
-          </p>
-
-          {loadingPromptBoxes ? (
-            <p style={{ fontSize: 13, color: "#6e6e73", marginTop: 16 }}>Cargando cajas...</p>
-          ) : promptBoxes.length === 0 ? (
-            <p style={{ fontSize: 13, color: "#6e6e73", marginTop: 16 }}>No hay cajas creadas todavía.</p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 20 }}>
-              {promptBoxes.map((box) => {
-                const draft = promptBoxDrafts[box.id] ?? box.systemPrompt;
-                const isDirty = draft !== box.systemPrompt;
-                const isSaving = savingPromptBoxId === box.id;
-                const banner = promptBoxBanner?.id === box.id ? promptBoxBanner : null;
-                const lastExecution = box.executions[0] ?? null;
-                const expanded = expandedExecutionId === box.id;
-
-                return (
-                  <div
-                    key={box.id}
-                    style={{
-                      padding: 18,
-                      borderRadius: 14,
-                      border: "1px solid #e4e9f1",
-                      background: box.isActive ? "#ffffff" : "#fafafc",
-                      opacity: box.isActive ? 1 : 0.75,
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <span
-                          style={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: "50%",
-                            background: "#1d1d1f",
-                            color: "#fff",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: 13,
-                            fontWeight: 700,
-                            flexShrink: 0,
-                          }}
-                        >
-                          {box.executionOrder}
-                        </span>
-                        <div>
-                          <strong style={{ fontSize: 16, color: "#1d1d1f" }}>{box.name}</strong>
-                          <p style={{ fontSize: 12, color: "#6e6e73", margin: "2px 0 0" }}>{box.description}</p>
-                        </div>
-                      </div>
-                      <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#6e6e73", flexShrink: 0 }}>
-                        <input
-                          type="checkbox"
-                          checked={box.isActive}
-                          onChange={(e) => handleSavePromptBox(box, { isActive: e.target.checked })}
-                          disabled={isSaving}
-                          style={{ width: 16, height: 16, accentColor: "#1d1d1f", cursor: "pointer" }}
-                        />
-                        {box.isActive ? "Activada" : "Desactivada"}
-                      </label>
-                    </div>
-
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginTop: 12, fontSize: 12 }}>
-                      <div style={{ flex: "1 1 260px" }}>
-                        <strong style={{ color: "#1d1d1f" }}>Recibe:</strong>{" "}
-                        <span style={{ color: "#6e6e73" }}>{box.inputSchema || "—"}</span>
-                      </div>
-                      <div style={{ flex: "1 1 260px" }}>
-                        <strong style={{ color: "#1d1d1f" }}>Entrega:</strong>{" "}
-                        <span style={{ color: "#6e6e73" }}>{box.outputSchema || "—"}</span>
-                      </div>
-                    </div>
-
-                    <textarea
-                      value={draft}
-                      onChange={(e) => setPromptBoxDrafts((prev) => ({ ...prev, [box.id]: e.target.value }))}
-                      rows={8}
-                      style={{
-                        ...inputStyle,
-                        width: "100%",
-                        resize: "vertical",
-                        fontFamily: "inherit",
-                        lineHeight: 1.5,
-                        marginTop: 12,
-                      }}
-                    />
-
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
-                      <button
-                        onClick={() => handleSavePromptBox(box, { systemPrompt: draft })}
-                        disabled={isSaving || !isDirty}
-                        style={disabledStyle(buttonStyle, isSaving || !isDirty)}
-                      >
-                        {isSaving ? "Guardando..." : "Guardar prompt"}
-                      </button>
-                      <button
-                        onClick={() => setExpandedExecutionId(expanded ? null : box.id)}
-                        style={{ ...secondaryButtonStyle, fontSize: 12 }}
-                      >
-                        {expanded ? "Ocultar última ejecución" : "Ver última ejecución"}
-                      </button>
-                    </div>
-
-                    {banner && (
-                      <div
-                        style={{
-                          padding: "8px 12px",
-                          borderRadius: 8,
-                          marginTop: 10,
-                          background: banner.type === "error" ? "#fff2f1" : "#eafaf0",
-                          color: banner.type === "error" ? "#d64545" : "#16803c",
-                          fontSize: 12,
-                        }}
-                      >
-                        {banner.text}
-                      </div>
-                    )}
-
-                    {expanded && (
-                      <div style={{ marginTop: 12, padding: 12, borderRadius: 10, background: "#f5f5f7", fontSize: 12 }}>
-                        {!lastExecution ? (
-                          <p style={{ color: "#6e6e73", margin: 0 }}>Sin ejecuciones todavía.</p>
-                        ) : (
-                          <>
-                            <p style={{ margin: "0 0 6px", color: "#6e6e73" }}>
-                              {new Date(lastExecution.createdAt).toLocaleString("es-US")}
-                              {lastExecution.model ? ` — modelo: ${lastExecution.model}` : ""}
-                              {lastExecution.durationMs != null ? ` — ${lastExecution.durationMs}ms` : ""}
-                            </p>
-                            {lastExecution.error && (
-                              <p style={{ color: "#d64545", margin: "0 0 6px" }}>Error: {lastExecution.error}</p>
-                            )}
-                            <strong style={{ color: "#1d1d1f" }}>Entrada:</strong>
-                            <pre style={{ whiteSpace: "pre-wrap", margin: "4px 0 10px", fontFamily: "inherit" }}>{lastExecution.input}</pre>
-                            <strong style={{ color: "#1d1d1f" }}>Salida:</strong>
-                            <pre style={{ whiteSpace: "pre-wrap", margin: "4px 0 0", fontFamily: "inherit" }}>{lastExecution.output || "—"}</pre>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
-      )}
     </div>
   );
 }
@@ -2118,9 +1870,6 @@ function UserCard({
   const [permAiImageGeneration, setPermAiImageGeneration] = useState(
     Boolean(user.aiImageGenerationEnabled),
   );
-  const [permUsePromptBoxPipeline, setPermUsePromptBoxPipeline] = useState(
-    Boolean(user.usePromptBoxPipeline),
-  );
   // Sistema de prueba gratuita (13/8/2026): estado de prueba y desbloqueo manual.
   const [permIsTrialSignup, setPermIsTrialSignup] = useState(
     Boolean(user.isTrialSignup),
@@ -2161,7 +1910,6 @@ function UserCard({
     setPermMastodon(Boolean(user.allowMastodonPublishing));
     setPermDevTo(Boolean(user.allowDevToPublishing));
     setPermAiImageGeneration(Boolean(user.aiImageGenerationEnabled));
-    setPermUsePromptBoxPipeline(Boolean(user.usePromptBoxPipeline));
     setPermIsTrialSignup(Boolean(user.isTrialSignup));
     setPermTrialUnlocked(Boolean(user.trialUnlocked));
     setPermImageCredits(user.hasImageCredits !== false);
@@ -2179,7 +1927,6 @@ function UserCard({
     permMastodon !== Boolean(user.allowMastodonPublishing) ||
     permDevTo !== Boolean(user.allowDevToPublishing) ||
     permAiImageGeneration !== Boolean(user.aiImageGenerationEnabled) ||
-    permUsePromptBoxPipeline !== Boolean(user.usePromptBoxPipeline) ||
     permIsTrialSignup !== Boolean(user.isTrialSignup) ||
     permTrialUnlocked !== Boolean(user.trialUnlocked) ||
     permImageCredits !== (user.hasImageCredits !== false);
@@ -2376,7 +2123,6 @@ function UserCard({
           allowMastodonPublishing: permMastodon,
           allowDevToPublishing: permDevTo,
           aiImageGenerationEnabled: permAiImageGeneration,
-          usePromptBoxPipeline: permUsePromptBoxPipeline,
           isTrialSignup: permIsTrialSignup,
           trialUnlocked: permTrialUnlocked,
           hasImageCredits: permImageCredits,
@@ -2755,17 +2501,6 @@ function UserCard({
                   style={{ accentColor: "#1d1d1f", width: 16, height: 16 }}
                 />
                 Generador de imágenes con IA (Instagram Story/Reel)
-              </label>
-              <label style={permissionLabelStyle}>
-                <input
-                  type="checkbox"
-                  checked={permUsePromptBoxPipeline}
-                  onChange={(e) => setPermUsePromptBoxPipeline(e.target.checked)}
-                  disabled={savingPermissions}
-                  style={{ accentColor: "#1d1d1f", width: 16, height: 16 }}
-                />
-                Usar pipeline nuevo de "Cajas de Imágenes IA" (experimental —
-                requiere también el generador de imágenes con IA arriba)
               </label>
               <label style={permissionLabelStyle}>
                 <input

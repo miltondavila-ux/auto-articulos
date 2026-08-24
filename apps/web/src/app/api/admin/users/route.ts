@@ -86,7 +86,6 @@ export async function GET() {
         allowMastodonPublishing: true,
         allowDevToPublishing: true,
         aiImageGenerationEnabled: true,
-        usePromptBoxPipeline: true,
         profilePhotoUrl: true,
         businessLogoUrl: true,
         opportunitiesDisclosureAcceptedAt: true,
@@ -203,7 +202,6 @@ export async function PATCH(request: NextRequest) {
     allowMastodonPublishing,
     allowDevToPublishing,
     aiImageGenerationEnabled,
-    usePromptBoxPipeline,
     profilePhotoUrl,
     businessLogoUrl,
     isTrialSignup,
@@ -239,7 +237,6 @@ export async function PATCH(request: NextRequest) {
     allowMastodonPublishing?: boolean;
     allowDevToPublishing?: boolean;
     aiImageGenerationEnabled?: boolean;
-    usePromptBoxPipeline?: boolean;
     profilePhotoUrl?: string | null;
     businessLogoUrl?: string | null;
     isTrialSignup?: boolean;
@@ -381,10 +378,6 @@ export async function PATCH(request: NextRequest) {
     data.aiImageGenerationEnabled = Boolean(aiImageGenerationEnabled);
   }
 
-  if ("usePromptBoxPipeline" in body) {
-    data.usePromptBoxPipeline = Boolean(usePromptBoxPipeline);
-  }
-
   if ("moduleOverrides" in body) {
     if (!moduleOverrides || typeof moduleOverrides !== "object" || Array.isArray(moduleOverrides)) {
       return NextResponse.json(
@@ -480,7 +473,6 @@ export async function PATCH(request: NextRequest) {
         allowThreadsPublishing: true,
         allowFacebookPublishing: true,
         aiImageGenerationEnabled: true,
-        usePromptBoxPipeline: true,
         createdAt: true,
         isTrialSignup: true,
         trialStartedAt: true,
