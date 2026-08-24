@@ -30,6 +30,6 @@ export function summarizeGoogleAnalyticsSignals(signals: GoogleAnalyticsSignals)
     error: signals.error,
     totalPages: rows.length,
     topPages: rows.slice(0, 100),
-    totals: rows.reduce((total, row) => ({ sessions: total.sessions + row.sessions, activeUsers: total.activeUsers + row.activeUsers, conversions: total.conversions + (row.conversions ?? 0) }), { sessions: 0, activeUsers: 0, conversions: 0 }),
+    totals: rows.reduce((total, row) => ({ sessions: total.sessions + row.sessions, activeUsers: total.activeUsers + row.activeUsers, conversions: (total.conversions ?? 0) + (row.conversions ?? 0) }), { sessions: 0, activeUsers: 0, conversions: 0 }),
   };
 }

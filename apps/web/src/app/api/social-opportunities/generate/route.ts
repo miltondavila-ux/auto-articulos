@@ -8,7 +8,6 @@ import {
   getGoogleAccessToken,
   queryGoogleSearchAnalytics,
 } from "@auto-articulos/shared";
-import { getBingTokenForIntegration } from "@/lib/bing-token";
 import { getGoogleAnalyticsSignals, summarizeGoogleAnalyticsSignals } from "@/lib/google-analytics-signals";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -20,6 +19,7 @@ type ArticleCandidate = {
   text: string;
   summary: string | null;
   articleUrl: string | null;
+  searchQueries?: string[];
 };
 
 const formulas = [
