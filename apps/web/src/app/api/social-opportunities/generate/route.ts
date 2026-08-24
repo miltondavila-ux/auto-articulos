@@ -56,10 +56,18 @@ async function generateGPTCopy(
   const charLimit = isLinkedIn ? 1300 : isFacebookPage ? 700 : 360;
   const maxTokens = isLinkedIn ? 700 : isFacebookPage ? 450 : 300;
   const styleNote = isLinkedIn
-    ? "Tono profesional pero cercano (LinkedIn), con más contexto y valor. Puedes usar párrafos cortos separados por saltos de línea."
+    ? "LinkedIn: tono profesional, empático y cercano; aporta contexto, criterio y autoridad sin sonar corporativo. Conecta con una necesidad real del lector y usa párrafos cortos."
     : isFacebookPage
-    ? "Tono cálido y útil de Facebook Page: presenta el beneficio del artículo, usa uno o dos párrafos breves y una invitación clara a leerlo. Debe ser diferente a Threads y LinkedIn."
-    : "Tono súper casual y directo, como un mensaje rápido a un amigo.";
+    ? "Facebook Page: tono cálido, humano y conversacional; reconoce el problema de la persona, explica el beneficio con claridad y cierra con una invitación cercana. Debe sentirse como una recomendación útil, no como un anuncio."
+    : platform === "instagram"
+    ? "Instagram: tono visual, emocional, cercano y fácil de leer; abre con una frase que detenga el desplazamiento, conecta con una necesidad concreta y deja una idea útil. Evita sonar genérico o automatizado."
+    : platform === "threads"
+    ? "Threads: tono espontáneo, empático y conversacional; escribe como una reflexión breve dirigida a personas reales, con una observación útil y una invitación natural a profundizar."
+    : platform === "x"
+    ? "X: tono directo, claro y humano; presenta una idea fuerte o una pregunta que refleje una preocupación real, aporta valor rápidamente y evita exageraciones."
+    : platform === "bluesky"
+    ? "Bluesky: tono auténtico, cercano y reflexivo; prioriza una conversación honesta con la comunidad, empatía y utilidad por encima de la promoción."
+    : "Tono cercano, empático y directo, como hablarle con respeto y calidez a una persona que necesita ayuda.";
   const searchContext = searchQueries.length > 0
     ? `- Consultas reales que están llevando usuarios a este artículo: ${searchQueries.join(" | ")}\n`
     : "";
@@ -76,12 +84,16 @@ async function generateGPTCopy(
           {
             role: "user",
             content:
-              `Eres Lorena Alvarez, una asesora de seguros en Florida súper cercana, alegre, empática y de gran confianza. ` +
+              `Eres Lorena Alvarez, una asesora de seguros en Florida profesional, cercana, alegre, empática y de gran confianza. ` +
               `Escribe una publicación optimizada para la red social ${platform}. Debe sonar 100% natural, en primera persona del singular ("yo", "mi", "me"). ${styleNote}\n\n` +
               `INSTRUCCIONES DE ESTILO ESPECÍFICAS:\n` +
               `${selectedFormula}\n\n` +
               `REGLAS CRÍTICAS:\n` +
               `- El texto debe ser menor a ${charLimit} caracteres.\n` +
+              `- Habla desde la necesidad real del lector: demuestra que entiendes su preocupación antes de presentar la información.\n` +
+              `- Sé empática, cercana y humana; conecta con la persona sin dramatizar, manipular ni prometer resultados.\n` +
+              `- Refuerza autoridad mediante claridad, experiencia y utilidad concreta, nunca mediante frases grandilocuentes.\n` +
+              `- No uses frases vacías, tono frío, lenguaje corporativo ni expresiones que parezcan generadas automáticamente.\n` +
               `- No uses hashtags (#) ni formato markdown.\n` +
               `- NO escribas la URL del artículo directamente. Escribe la palabra exacta "[ENLACE]" (en mayúsculas y con corchetes) al final, integrada en tu frase de cierre (Ej: "Te lo explico con peras y manzanas aquí: [ENLACE]").\n\n` +
               `Datos:\n` +
