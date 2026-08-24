@@ -571,7 +571,7 @@ export default function ConfiguracionPage() {
     allowInstagramPublishing ||
     allowFacebookPublishing ||
     allowLinkedInPublishing ||
-    allowPinterestPublishing;
+    allowPinterestPublishing ||
     allowTumblrPublishing ||
     allowBlueskyPublishing ||
     allowMastodonPublishing ||
