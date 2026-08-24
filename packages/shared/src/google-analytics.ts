@@ -52,7 +52,10 @@ export async function listGoogleAnalyticsProperties(accessToken: string) {
   const accounts = await googleGet<{ accounts?: Array<{ name: string; displayName?: string }> }>(`${ADMIN_API}/accounts`, accessToken);
   const properties: GoogleAnalyticsProperty[] = [];
   for (const account of accounts.accounts ?? []) {
-    const response = await googleGet<{ properties?: Array<{ name: string; displayName?: string }> }>(`${ADMIN_API}/${account.name}/properties`, accessToken);
+    const response = await googleGet<{ properties?: Array<{ name: string; displayName?: string }> }>(
+      `${ADMIN_API}/properties?filter=${encodeURIComponent(`parent:${account.name}`)}`,
+      accessToken,
+    );
     for (const property of response.properties ?? []) {
       const propertyId = property.name.replace(/^properties\//, "");
       properties.push({ name: property.name, propertyId, displayName: property.displayName ?? propertyId, accountName: account.displayName ?? account.name });
