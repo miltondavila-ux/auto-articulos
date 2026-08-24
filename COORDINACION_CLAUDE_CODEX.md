@@ -6,6 +6,20 @@ mismo tiempo los mismos archivos o desplieguen cambios
 incompatibles. `HANDOFF.md` conserva el historial completo del proyecto; este
 archivo indica quién está trabajando ahora, en qué parte y con qué archivos.
 
+## PROTOCOLO DE AISLAMIENTO POR PROYECTO
+
+Cuando el árbol principal contenga cambios locales de otros agentes, cada
+proyecto puede avanzar en un worktree o clon aislado, sin esperar a que los
+demás terminen y sin modificar sus archivos. El agente debe identificarse
+con el nombre completo del proyecto, revisar únicamente su propio diff y
+publicar solo ese lote. Para este proyecto, la identificación obligatoria es:
+**Capitán: CODEX - INTEGRACION GOOGLE ANALYTICS**.
+
+El aislamiento no autoriza a ejecutar migraciones, push o despliegues sin
+seguir la capitanía correspondiente. Si el proyecto no crea migraciones, no
+debe reclamar una capitanía de migración solo para reservarla; basta con
+documentar el lote, validar el diff propio y coordinar su publicación.
+
 ## `TO-DO.md` — buzón de ideas de Milton (leer, nunca ejecutar sin pedido)
 
 Existe un tercer archivo en la raíz del repo, `TO-DO.md` (agregado 7/8/2026),
