@@ -67,12 +67,18 @@ async function generateGPTCopy(
   const styleNote = isLinkedIn
     ? "Tono profesional pero cercano (LinkedIn), con más contexto y valor. Puedes usar párrafos cortos separados por saltos de línea."
     : isFacebookPage
-    ? "Tono cálido y útil de Facebook Page: presenta el beneficio del artículo, usa uno o dos párrafos breves y una invitación clara a leerlo. Debe ser diferente a Threads y LinkedIn."
+    ? "Facebook Page: tono cálido, humano y conversacional; reconoce el problema de la persona, explica el beneficio con claridad y cierra con una invitación cercana. Debe sentirse como una recomendación útil, no como un anuncio."
     : isInstagramFeedCaption
     ? "Caption real de Instagram: la primera línea es lo único visible antes del \"más\" (unos 125 caracteres), así que debe ser un gancho que detenga el scroll por sí solo. Después, párrafos cortos con saltos de línea entre cada uno (no un bloque de texto). Cierra con una invitación clara a leer el artículo."
     : isPinterest
-    ? "Descripción de Pin de Pinterest: clara, útil y orientada a búsqueda. Resume el valor del artículo, incluye palabras clave naturales y termina con [ENLACE]. No uses hashtags ni emojis excesivos."
-    : "Tono súper casual y directo, como un mensaje rápido a un amigo.";
+    ? "Pinterest: tono claro, útil, cercano y orientado a búsqueda; conecta el contenido con una necesidad concreta, usa palabras clave naturales y transmite confianza sin sonar promocional."
+    : platform === "threads"
+    ? "Threads: tono espontáneo, empático y conversacional; escribe como una reflexión breve dirigida a personas reales, con una observación útil y una invitación natural a profundizar."
+    : platform === "x"
+    ? "X: tono directo, claro y humano; presenta una idea fuerte o una pregunta que refleje una preocupación real, aporta valor rápidamente y evita exageraciones."
+    : platform === "bluesky"
+    ? "Bluesky: tono auténtico, cercano y reflexivo; prioriza una conversación honesta con la comunidad, empatía y utilidad por encima de la promoción."
+    : "Tono cercano, empático y directo, como hablarle con respeto y calidez a una persona que necesita ayuda.";
   try {
     const response = await fetch(OPENAI_CHAT_URL, {
       method: "POST",
@@ -92,6 +98,10 @@ async function generateGPTCopy(
               `${selectedFormula}\n\n` +
               `REGLAS CRÍTICAS:\n` +
               `- El texto debe ser menor a ${charLimit} caracteres.\n` +
+              `- Habla desde la necesidad real del lector: demuestra que entiendes su preocupación antes de presentar la información.\n` +
+              `- Sé empática, cercana y humana; conecta con la persona sin dramatizar, manipular ni prometer resultados.\n` +
+              `- Refuerza autoridad mediante claridad, experiencia y utilidad concreta, nunca mediante frases grandilocuentes.\n` +
+              `- No uses frases vacías, tono frío, lenguaje corporativo ni expresiones que parezcan generadas automáticamente.\n` +
               (isInstagramFeedCaption
                 ? `- Instagram no muestra enlaces clicables en el caption — NUNCA escribas una URL ni la palabra "[ENLACE]". En vez de eso, termina con al menos 5 hashtags reales, en español, sacados de palabras clave del tema y contenido del artículo (no genéricos como #instagram) — sin espacios dentro de cada hashtag, separados entre sí por un espacio, en su propia línea al final.\n\n`
                 : `- No uses hashtags (#) ni formato markdown.\n` +
