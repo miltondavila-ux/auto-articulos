@@ -201,20 +201,11 @@ async function getConnectedNetworks(userId: string) {
     prisma.blueskyIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.mastodonIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.devToIntegration.findUnique({ where: { userId }, select: { id: true } }),
-    prisma.user.findUnique({ where: { id: userId }, select: { role: true, allowPinterestPublishing: true, allowTumblrPublishing: true, allowBlueskyPublishing: true, allowMastodonPublishing: true, allowDevToPublishing: true } }),
+    prisma.user.findUnique({ where: { id: userId }, select: { role: true, allowInstagramPublishing: true, allowLinkedInPublishing: true, allowThreadsPublishing: true, allowFacebookPublishing: true, allowPinterestPublishing: true, allowTumblrPublishing: true, allowBlueskyPublishing: true, allowMastodonPublishing: true, allowDevToPublishing: true } }),
   ]);
-  return {
-    threads: Boolean(threads),
-    x: Boolean(twitter),
-    linkedin: Boolean(linkedin),
-    instagram: Boolean(instagram),
-    facebookPage: Boolean(facebookPage),
-    pinterest: Boolean(user?.role === "admin" || user?.allowPinterestPublishing) && Boolean(pinterest && pinterest.boardId && (!pinterest.expiresAt || pinterest.expiresAt > new Date())),
-    tumblr: Boolean(user?.role === "admin" || user?.allowTumblrPublishing) && Boolean(tumblr && (!tumblr.expiresAt || tumblr.expiresAt > new Date())),
-    bluesky: Boolean(user?.role === "admin" || user?.allowBlueskyPublishing) && Boolean(bluesky),
-    mastodon: Boolean(user?.role === "admin" || user?.allowMastodonPublishing) && Boolean(mastodon),
-    devto: Boolean(user?.role === "admin" || user?.allowDevToPublishing) && Boolean(devto),
-  };
+  const isAdmin = user?.role === "admin";
+  const activeNetworks = { threads: Boolean(isAdmin || user?.allowThreadsPublishing), x: Boolean(twitter), linkedin: Boolean(isAdmin || user?.allowLinkedInPublishing), instagram: Boolean(isAdmin || user?.allowInstagramPublishing), facebookPage: Boolean(isAdmin || user?.allowFacebookPublishing), pinterest: Boolean(isAdmin || user?.allowPinterestPublishing), tumblr: Boolean(isAdmin || user?.allowTumblrPublishing), bluesky: Boolean(isAdmin || user?.allowBlueskyPublishing), mastodon: Boolean(isAdmin || user?.allowMastodonPublishing), devto: Boolean(isAdmin || user?.allowDevToPublishing) };
+  return { activeNetworks, threads: activeNetworks.threads && Boolean(threads), x: activeNetworks.x && Boolean(twitter), linkedin: activeNetworks.linkedin && Boolean(linkedin), instagram: activeNetworks.instagram && Boolean(instagram), facebookPage: activeNetworks.facebookPage && Boolean(facebookPage), pinterest: activeNetworks.pinterest && Boolean(pinterest && pinterest.boardId && (!pinterest.expiresAt || pinterest.expiresAt > new Date())), tumblr: activeNetworks.tumblr && Boolean(tumblr && (!tumblr.expiresAt || tumblr.expiresAt > new Date())), bluesky: activeNetworks.bluesky && Boolean(bluesky), mastodon: activeNetworks.mastodon && Boolean(mastodon), devto: activeNetworks.devto && Boolean(devto) };
 }
 
 export async function GET() {
