@@ -281,30 +281,12 @@ async function normalizeSocialImage(imageUrl: string, targetAspect = 3 / 4): Pro
 // ─── THREADS ──────────────────────────────────────────────────────────────
 
 async function generateAndHostThreadsImage(
-  titleId: string,
   articleUrl: string,
 ): Promise<string | null> {
   const ogImageUrl = await getArticleOpenGraphImage(articleUrl);
-  if (!ogImageUrl) return null;
-  try {
-    const response = await fetch(ogImageUrl, { signal: AbortSignal.timeout(15000) });
-    if (!response.ok) return null;
-    // Threads rechaza algunas OG en WebP/AVIF/SVG o con dimensiones/peso
-    // incompatibles. Es la misma imagen del artículo, solo normalizada a JPEG.
-    const normalized = await sharp(Buffer.from(await response.arrayBuffer()))
-      .rotate()
-      .jpeg({ quality: 90, mozjpeg: true })
-      .toBuffer();
-    const blob = await put(`threads/${titleId}-og.jpg`, normalized, {
-      access: "public",
-      contentType: "image/jpeg",
-    });
-    const publicCheck = await fetch(blob.url, { method: "HEAD", signal: AbortSignal.timeout(10000) });
-    return publicCheck.ok ? blob.url : null;
-  } catch (error) {
-    console.error(`Threads ${titleId}: no se pudo preparar la imagen OG`, error);
-    return null;
-  }
+  // Threads recibe directamente la imagen pública que declara el artículo.
+  // No se transforma, no se vuelve a alojar y no pasa por otro generador.
+  return ogImageUrl;
 }
 
 async function processThreadsJob(job: {
@@ -360,7 +342,7 @@ async function processThreadsJob(job: {
   // Generar imagen como respaldo para propuestas creadas antes de este flujo.
   let imageUrl: string | undefined = undefined;
   if (!imageUrl && job.titleId) {
-    imageUrl = (await generateAndHostThreadsImage(job.titleId, job.articleUrl)) ?? undefined;
+    imageUrl = (await generateAndHostThreadsImage(job.articleUrl)) ?? undefined;
   }
 
   if (!imageUrl) {
@@ -442,7 +424,7 @@ async function processTwitterJob(job: {
 
   let imageUrl: string | undefined = undefined;
   if (!imageUrl && job.titleId) {
-    imageUrl = (await generateAndHostThreadsImage(job.titleId, job.articleUrl)) ?? undefined;
+    imageUrl = (await generateAndHostThreadsImage(job.articleUrl)) ?? undefined;
   }
 
   const result = await publishTweet(accessToken, finalPost, imageUrl);
