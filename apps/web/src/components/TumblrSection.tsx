@@ -81,7 +81,7 @@ export default function TumblrSection({ allowed = true }: { allowed?: boolean })
           <div style={{ display: "flex", gap: 8 }}><button onClick={saveSettings} disabled={saving} style={disabledStyle({ ...secondaryButtonStyle, background: "#1d1d1f", color: "#fff", border: "none" }, saving)}>{saving ? "Guardando..." : "Guardar credenciales"}</button><button onClick={() => setEditing(false)} className="secondary" style={secondaryButtonStyle}>Cancelar</button></div>
         </div>}
       </div>}
-      {allowed && <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 16, paddingTop: 16 }}><PasosAntesDeConectar red="Tumblr" /><div style={{ background: "#f5f5f7", border: "1px solid #e5e5ea", borderRadius: 14, padding: 16 }}>
+      {allowed && <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 16, paddingTop: 16 }}><PasosAntesDeConectar red="Tumblr" /><div style={{ background: "#fff", border: "1px solid #e5e5ea", borderRadius: 14, padding: 16 }}>
         <strong style={{ color: "#1d1d1f", fontSize: 15 }}>Conexión de Tumblr</strong>
         <p className="lead-copy" style={{ fontSize: 12, margin: "4px 0 0" }}>Autoriza tu cuenta, elige el blog y controla la conexión desde aquí.</p>
         {!configured ? <p className="notice" style={{ margin: "14px 0 0" }}>El administrador debe configurar primero las credenciales de Tumblr.</p> : !connected ? <button onClick={() => { window.location.href = "/api/search-integrations/tumblr/connect"; }} style={{ ...secondaryButtonStyle, background: "#36465d", color: "#fff", border: "none", marginTop: 14 }}>Conectar Tumblr →</button> : <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
