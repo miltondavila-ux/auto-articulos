@@ -315,6 +315,23 @@ async function generateAndHostThreadsImage(
   return null;
 }
 
+async function hostThreadsSourceImage(titleId: string, imageUrl: string): Promise<string | null> {
+  try {
+    const response = await fetch(imageUrl, { signal: AbortSignal.timeout(15000) });
+    if (!response.ok) return null;
+    const contentType = response.headers.get("content-type")?.split(";")[0] || "image/jpeg";
+    const extension = contentType === "image/png" ? "png" : "jpg";
+    const blob = await put(`threads/source-${titleId}-${Date.now()}.${extension}`, Buffer.from(await response.arrayBuffer()), {
+      access: "public",
+      contentType,
+    });
+    return blob.url;
+  } catch (error) {
+    console.warn("No se pudo alojar la imagen OG de respaldo para Threads:", error);
+    return null;
+  }
+}
+
 async function processThreadsJob(job: {
   id: string;
   userId: string;
@@ -375,8 +392,19 @@ async function processThreadsJob(job: {
     }
   }
 
+  // Si la generación de IA falla, usa la imagen pública del artículo como
+  // respaldo. Threads no debe quedar sin publicar por una falla secundaria
+  // del generador, y Meta necesita una URL pública estable, no la URL OG que
+  // pudiera ser temporal o bloquear al worker.
   if (!imageUrl) {
-    throw new Error("No se pudo preparar una imagen pública para Threads. La publicación no se enviará sin foto.");
+    const articleImage = await getArticleOpenGraphImage(job.articleUrl);
+    if (articleImage && job.titleId) {
+      imageUrl = (await hostThreadsSourceImage(job.titleId, articleImage)) ?? undefined;
+    }
+  }
+
+  if (!imageUrl) {
+    throw new Error("No se encontró una imagen pública para Threads: revisa que el artículo tenga og:image.");
   }
 
   const result = await publishThread(accessToken, integration.threadsUserId, finalPost, imageUrl);
