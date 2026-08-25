@@ -32,6 +32,7 @@ Estado: terminado en código; migración pendiente de ejecución coordinada.
 Acción inmediata: revisar diff, confirmar compilación y solicitar publicación; ejecutar la migración solo con capitanía reclamada inmediatamente antes.
 Responsable siguiente: responsable de `main` para revisar/integrar el commit y aplicar la migración coordinada.
 Capitanía de migración: no; todavía no se ejecuta ninguna migración.
+
 ## Retiro de las 8 cajas de prompts — 24/8/2026
 
 [CODEX] - GENERADOR PRINCIPAL DE IMÁGENES IA
@@ -44,3 +45,16 @@ Estado: terminado en código; migración pendiente de ejecución coordinada.
 Acción inmediata: revisar diff, confirmar compilación y solicitar publicación; ejecutar la migración solo con capitanía reclamada inmediatamente antes.
 Responsable siguiente: responsable de `main` para revisar/integrar el commit y aplicar la migración coordinada.
 Capitanía de migración: no; todavía no se ejecuta ninguna migración.
+
+## Estado visual pendiente de Google Business Profile — 24/8/2026
+
+[CODEX] - APROBACIÓN Y PUBLICACIÓN EN GOOGLE BUSINESS PROFILE
+Proyecto: mostrar el estado de Google Business Profile en Configuración.
+Archivos: `apps/web/src/components/BusinessProfileSection.tsx`.
+Commit: `e83018f`.
+Estado: PENDIENTE; Google aún no aprobó el acceso y el botón de conexión permanece deshabilitado.
+¿Publicado en producción?: no.
+¿Debe conservarse?: sí.
+Acción inmediata: publicar únicamente el indicador `PENDIENTE`; no habilitar OAuth, publicación ni migraciones.
+Responsable siguiente: responsable de `main` cuando Google apruebe el acceso.
+Capitanía de migración: no.
