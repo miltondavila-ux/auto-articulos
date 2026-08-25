@@ -608,8 +608,9 @@ export default function OportunidadesPage() {
               marginTop: 12,
               padding: "10px 14px",
               borderRadius: 8,
-              background: "#f5f5f7",
+              background: "#ffffff",
               border: "1px solid #e5e5ea",
+              boxShadow: "0 6px 18px rgba(0, 0, 0, 0.04)",
               color: "#1d1d1f",
               fontSize: 13,
               display: "flex",
@@ -622,15 +623,30 @@ export default function OportunidadesPage() {
             <span>
               ⚠️ Tu cuenta de 10minutesWebsite no tiene créditos de imagen disponibles.
             </span>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                flexWrap: "wrap",
+              }}
+            >
               <button
                 type="button"
                 onClick={confirmImageCredits}
                 style={{
-                  ...secondaryButtonStyle,
-                  padding: "7px 12px",
-                  borderRadius: 8,
+                  background: "#1d1d1f",
+                  color: "#ffffff",
+                  border: "1px solid #1d1d1f",
+                  padding: "7px 14px",
+                  minWidth: 170,
+                  height: 36,
+                  borderRadius: 18,
                   fontSize: 12,
+                  fontWeight: 600,
+                  lineHeight: "20px",
+                  whiteSpace: "nowrap",
+                  cursor: "pointer",
                 }}
               >
                 Ya recibí mis créditos
@@ -639,10 +655,18 @@ export default function OportunidadesPage() {
                 type="button"
                 onClick={() => setShowImageCreditsModal(true)}
                 style={{
-                  ...secondaryButtonStyle,
-                  padding: "7px 12px",
-                  borderRadius: 8,
+                  background: "#ffffff",
+                  color: "#1d1d1f",
+                  border: "1px solid #d2d2d7",
+                  padding: "7px 14px",
+                  minWidth: 170,
+                  height: 36,
+                  borderRadius: 18,
                   fontSize: 12,
+                  fontWeight: 600,
+                  lineHeight: "20px",
+                  whiteSpace: "nowrap",
+                  cursor: "pointer",
                 }}
               >
                 Solicitar créditos gratuitos
