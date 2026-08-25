@@ -51,6 +51,7 @@ export default function OportunidadesRedesPage() {
   const router = useRouter();
   const [opportunities, setOpportunities] = useState<SocialOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [connectionsLoading, setConnectionsLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [generatingNetwork, setGeneratingNetwork] = useState<"threads" | "x" | "linkedin" | "instagram" | "facebook-page" | "pinterest" | "tumblr" | "bluesky" | "mastodon" | "devto" | null>(null);
   const [connectedNetworks, setConnectedNetworks] = useState({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false, bluesky: false, mastodon: false, devto: false });
@@ -105,6 +106,7 @@ export default function OportunidadesRedesPage() {
   }
 
   async function loadConnectedNetworks() {
+    setConnectionsLoading(true);
     try {
       const response = await fetch("/api/social-opportunities/generate", { cache: "no-store" });
       if (response.ok) {
@@ -117,6 +119,8 @@ export default function OportunidadesRedesPage() {
       const none = { threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false, bluesky: false, mastodon: false, devto: false };
       setConnectedNetworks(none);
       setActiveNetworks(none);
+    } finally {
+      setConnectionsLoading(false);
     }
   }
 
@@ -362,7 +366,11 @@ export default function OportunidadesRedesPage() {
               borderTop: "1px solid #e5e5ea",
             }}
           >
-            {([
+            {connectionsLoading ? (
+              <span className="muted" style={{ fontSize: 13, padding: "9px 0" }}>
+                Preparando las redes conectadas...
+              </span>
+            ) : ([
               ["threads", "threads", "Threads"], ["x", "x", "X (Twitter)"], ["linkedin", "linkedin", "LinkedIn"], ["instagram", "instagram", "Instagram"], ["facebookPage", "facebook-page", "Facebook"], ["pinterest", "pinterest", "Pinterest"], ["tumblr", "tumblr", "Tumblr"], ["bluesky", "bluesky", "Bluesky"], ["mastodon", "mastodon", "Mastodon"], ["devto", "devto", "DEV.to"],
             ] as const).map(([key, platform, label]) => {
               if (!activeNetworks[key]) return null;
@@ -371,7 +379,7 @@ export default function OportunidadesRedesPage() {
               return <button key={key} type="button" onClick={() => connected ? handleGenerate(platform) : router.push("/dashboard/configuracion?tab=social")} disabled={busy} className="secondary" style={disabledStyle({ ...secondaryButtonStyle, flex: "1 1 180px", minHeight: 40, padding: "9px 13px", borderRadius: 20, border: connected ? "1px solid #d2d2d7" : "1px solid #e5e5ea", background: connected ? "#ffffff" : "#f5f5f7", color: connected ? "#1d1d1f" : "#6e6e73", justifyContent: "center", fontSize: 13 }, busy)}>
                 {connected ? generatingNetwork === platform ? "Analizando..." : "✓ " + label + " · Crear oportunidad" : label + " · Configurar"}
               </button>;
-            })}
+            }))}
             {pendingList.length > 0 && (
               <button
                 onClick={handlePublishAll}
@@ -384,7 +392,7 @@ export default function OportunidadesRedesPage() {
           </div>
         </div>
 
-        {!connectedNetworks.threads && !connectedNetworks.x && !connectedNetworks.linkedin && !connectedNetworks.instagram && !connectedNetworks.facebookPage && !connectedNetworks.pinterest && !connectedNetworks.tumblr && !connectedNetworks.bluesky && !connectedNetworks.mastodon && !connectedNetworks.devto && !loading && (
+        {!connectedNetworks.threads && !connectedNetworks.x && !connectedNetworks.linkedin && !connectedNetworks.instagram && !connectedNetworks.facebookPage && !connectedNetworks.pinterest && !connectedNetworks.tumblr && !connectedNetworks.bluesky && !connectedNetworks.mastodon && !connectedNetworks.devto && !loading && !connectionsLoading && (
           <div className="notice" style={{ marginTop: 14 }}>
             <p style={{ margin: 0 }}>
               Todavía no tienes ninguna red social conectada, así que no hay
