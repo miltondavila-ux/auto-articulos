@@ -608,8 +608,9 @@ export default function OportunidadesPage() {
               marginTop: 12,
               padding: "10px 14px",
               borderRadius: 8,
-              background: "#fef3c7",
-              color: "#92400e",
+              background: "#f5f5f7",
+              border: "1px solid #e5e5ea",
+              color: "#1d1d1f",
               fontSize: 13,
               display: "flex",
               alignItems: "center",
@@ -625,7 +626,12 @@ export default function OportunidadesPage() {
               <button
                 type="button"
                 onClick={confirmImageCredits}
-                style={secondaryButtonStyle}
+                style={{
+                  ...secondaryButtonStyle,
+                  padding: "7px 12px",
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
               >
                 Ya recibí mis créditos
               </button>
@@ -633,14 +639,10 @@ export default function OportunidadesPage() {
                 type="button"
                 onClick={() => setShowImageCreditsModal(true)}
                 style={{
-                  background: "#d97706",
-                  color: "#ffffff",
-                  border: "none",
-                  borderRadius: 6,
-                  padding: "6px 12px",
+                  ...secondaryButtonStyle,
+                  padding: "7px 12px",
+                  borderRadius: 8,
                   fontSize: 12,
-                  fontWeight: 600,
-                  cursor: "pointer",
                 }}
               >
                 Solicitar créditos gratuitos

@@ -211,8 +211,9 @@ export default function PublicarPage() {
               marginTop: 20,
               padding: "12px 16px",
               borderRadius: 12,
-              background: "#fef3c7",
-              color: "#92400e",
+              background: "#f5f5f7",
+              border: "1px solid #e5e5ea",
+              color: "#1d1d1f",
               fontSize: 13,
               display: "flex",
               alignItems: "center",
@@ -228,14 +229,24 @@ export default function PublicarPage() {
               <button
                 type="button"
                 onClick={confirmImageCredits}
-                style={secondaryButtonStyle}
+                style={{
+                  ...secondaryButtonStyle,
+                  padding: "7px 12px",
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
               >
                 Ya recibí mis créditos
               </button>
               <button
                 type="button"
                 onClick={() => setShowImageCreditsModal(true)}
-                style={buttonStyle}
+                style={{
+                  ...secondaryButtonStyle,
+                  padding: "7px 12px",
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
               >
                 Solicitar créditos
               </button>
