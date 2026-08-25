@@ -280,15 +280,6 @@ async function normalizeSocialImage(imageUrl: string, targetAspect = 3 / 4): Pro
 
 // ─── THREADS ──────────────────────────────────────────────────────────────
 
-async function generateAndHostThreadsImage(
-  articleUrl: string,
-): Promise<string | null> {
-  const ogImageUrl = await getArticleOpenGraphImage(articleUrl);
-  // Threads recibe directamente la imagen pública que declara el artículo.
-  // No se transforma, no se vuelve a alojar y no pasa por otro generador.
-  return ogImageUrl;
-}
-
 async function processThreadsJob(job: {
   id: string;
   userId: string;
@@ -339,14 +330,12 @@ async function processThreadsJob(job: {
     finalPost = `${finalPost}\n\n${job.articleUrl}`;
   }
 
-  // Generar imagen como respaldo para propuestas creadas antes de este flujo.
-  let imageUrl: string | undefined = undefined;
-  if (!imageUrl && job.titleId) {
-    imageUrl = (await generateAndHostThreadsImage(job.articleUrl)) ?? undefined;
-  }
+  // Igual que en el último commit funcional: Threads recibe directamente la
+  // imagen pública og:image declarada por el artículo.
+  const imageUrl = (await getArticleOpenGraphImage(job.articleUrl)) ?? undefined;
 
   if (!imageUrl) {
-    throw new Error("No se pudo generar y alojar la imagen de Threads. La publicación se detuvo para no enviar un hilo sin imagen.");
+    throw new Error("El artículo no tiene una imagen og:image pública para Threads. La publicación se detuvo para no enviar un hilo sin imagen.");
   }
 
   const result = await publishThread(accessToken, integration.threadsUserId, finalPost, imageUrl);
@@ -424,7 +413,7 @@ async function processTwitterJob(job: {
 
   let imageUrl: string | undefined = undefined;
   if (!imageUrl && job.titleId) {
-    imageUrl = (await generateAndHostThreadsImage(job.articleUrl)) ?? undefined;
+    imageUrl = (await getArticleOpenGraphImage(job.articleUrl)) ?? undefined;
   }
 
   const result = await publishTweet(accessToken, finalPost, imageUrl);
