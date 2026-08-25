@@ -24,6 +24,7 @@ export default function PublicarPage() {
   const [credentialsConfigured, setCredentialsConfigured] = useState(false);
   const [hasImageCredits, setHasImageCredits] = useState(true);
   const [showImageCreditsModal, setShowImageCreditsModal] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [useSequenceCategory, setUseSequenceCategory] = useState(false);
@@ -121,11 +122,13 @@ export default function PublicarPage() {
   }, []);
 
   useEffect(() => {
-    loadCredentialsStatus();
-    loadCategories();
-    checkActiveRun();
-    loadUserLimits();
-    loadLanguages();
+    Promise.all([
+      loadCredentialsStatus(),
+      loadCategories(),
+      checkActiveRun(),
+      loadUserLimits(),
+      loadLanguages(),
+    ]).finally(() => setLoading(false));
   }, [
     loadCredentialsStatus,
     loadCategories,
@@ -211,6 +214,7 @@ export default function PublicarPage() {
         hasImageCredits={hasImageCredits}
         platformDomain={platformDomain}
         onOpenImageCreditsModal={() => setShowImageCreditsModal(true)}
+        loading={loading}
       >
         {!hasImageCredits && (
           <div

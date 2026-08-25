@@ -411,6 +411,7 @@ export default function OportunidadesPage() {
         hasGoogleSiteUrl={Boolean(setupStatus?.hasSiteUrl)}
         platformDomain={platformDomain}
         onOpenImageCreditsModal={() => setShowImageCreditsModal(true)}
+        loading={loading}
       >
         <section style={sectionStyle}>
         <h2 style={h2Style}>Oportunidades SEO</h2>
