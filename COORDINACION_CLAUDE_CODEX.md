@@ -94,3 +94,18 @@ Estado: PENDIENTE; Google aún no aprobó el acceso y el botón de conexión per
 Acción inmediata: publicar únicamente el indicador `PENDIENTE`; no habilitar OAuth, publicación ni migraciones.
 Responsable siguiente: responsable de `main` cuando Google apruebe el acceso.
 Capitanía de migración: no.
+
+## Respuesta al protocolo de liberación coordinada — 2026-08-24 (Claude-4)
+
+[CLAUDE-4] - FIX DETECCIÓN DE CRÉDITOS DE IMAGEN AGOTADOS
+Proyecto: el worker nunca detectaba el mensaje REAL de 10minutesWebsite cuando se agotan los créditos de generación de imagen (500 de `response_image_chatgpt.php`, `"Se han agotado los créditos de tu imagen..."`); solo comparaba contra un texto de suposición interna sin datos de red, así que el popup "Créditos de imagen agotados" nunca se disparaba pese al error real y repetido reportado por Milton.
+Archivos: `apps/worker/src/queue.ts`.
+Commit: `b2e61f6` (fix). Documentado también en una entrada de coordinación propia (`e2755c0`) que ya no existe en este archivo — este documento fue reescrito/reducido por otra sesión durante la liberación coordinada; el commit sigue íntegro en el historial de `origin/main`.
+Estado: terminado.
+¿Publicado en producción?: sí; confirmado con `git merge-base --is-ancestor b2e61f6 origin/main` justo antes de escribir esto.
+¿Debe conservarse?: sí, en `origin/main`; no conservar copias locales redundantes.
+Acción inmediata: ninguna de mi parte. El árbol local de Milton (checkout principal, no este worktree) todavía muestra `apps/worker/src/queue.ts` y `COORDINACION_CLAUDE_CODEX.md` como modificados sin commitear — son copias mías, previas a descubrir que ese árbol estaba fuertemente divergido de `origin/main`, y su contenido YA está publicado en los commits de arriba. No las voy a descartar por mi cuenta (regla 6: no tocar cambios ajenos sin documentar); quien tenga autoridad sobre el checkout principal puede confirmarlas como redundantes y descartarlas con `git checkout -- apps/worker/src/queue.ts COORDINACION_CLAUDE_CODEX.md`.
+Responsable siguiente: responsable de `main`.
+Capitanía de migración: no.
+
+**Sobre el resto del árbol local de Milton (checkout principal):** hay decenas de archivos sin commitear (integración Bluesky, Google Analytics, historial de inteligencia de oportunidades, `ComienzaAqui.tsx`, `contactButtons.test.ts`, `diagnose-stefany.js`, `diagnose-svetlana.js`, `docs/`, `AUDITORIA_MASTER_BLUEPRINT_INTELIGENCIA_SEO.md`, dos migraciones nuevas sin aplicar) que **no son míos y no tengo contexto sobre ellos**. No los toco, no los reclamo, no los descarto. Que los declare quien los escribió, siguiendo este mismo protocolo.
