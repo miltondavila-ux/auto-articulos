@@ -288,12 +288,18 @@ async function generateAndHostThreadsImage(
   if (!ogImageUrl) return null;
   const response = await fetch(ogImageUrl, { signal: AbortSignal.timeout(15000) });
   if (!response.ok) return null;
-  const contentType = response.headers.get("content-type")?.split(";")[0] || "image/jpeg";
-  const extension = contentType === "image/png" ? "png" : "jpg";
-  const blob = await put(`threads/${titleId}-og.${extension}`, Buffer.from(await response.arrayBuffer()), {
+  // Threads rechaza algunas OG en WebP/AVIF/SVG o con dimensiones/peso
+  // incompatibles. Es la misma imagen del artículo, solo normalizada a JPEG.
+  const normalized = await sharp(Buffer.from(await response.arrayBuffer()))
+    .rotate()
+    .jpeg({ quality: 90, mozjpeg: true })
+    .toBuffer();
+  const blob = await put(`threads/${titleId}-og.jpg`, normalized, {
     access: "public",
-    contentType,
+    contentType: "image/jpeg",
   });
+  const publicCheck = await fetch(blob.url, { method: "HEAD", signal: AbortSignal.timeout(10000) });
+  if (!publicCheck.ok) return null;
   return blob.url;
 }
 
