@@ -352,16 +352,14 @@ export default function OportunidadesRedesPage() {
 
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+              display: "flex",
+              alignItems: "center",
               gap: 8,
               width: "100%",
-              maxWidth: 780,
-              marginLeft: "auto",
-              padding: 6,
-              borderRadius: 16,
-              background: "#f5f5f7",
-              border: "1px solid #e5e5ea",
+              flexWrap: "wrap",
+              marginTop: 18,
+              paddingTop: 16,
+              borderTop: "1px solid #e5e5ea",
             }}
           >
             {([
@@ -370,7 +368,7 @@ export default function OportunidadesRedesPage() {
               if (!activeNetworks[key]) return null;
               const connected = connectedNetworks[key];
               const busy = connected && Boolean(generatingNetwork);
-              return <button key={key} type="button" onClick={() => connected ? handleGenerate(platform) : router.push("/dashboard/configuracion?tab=social")} disabled={busy} className="secondary" style={disabledStyle({ ...secondaryButtonStyle, width: "100%", minHeight: 42, padding: "10px 12px", borderRadius: 12, border: connected ? "1px solid #d2d2d7" : "1px solid #e5e5ea", background: "#ffffff", color: connected ? "#1d1d1f" : "#6e6e73", justifyContent: "center", fontSize: 13 }, busy)}>
+              return <button key={key} type="button" onClick={() => connected ? handleGenerate(platform) : router.push("/dashboard/configuracion?tab=social")} disabled={busy} className="secondary" style={disabledStyle({ ...secondaryButtonStyle, flex: "1 1 180px", minHeight: 40, padding: "9px 13px", borderRadius: 20, border: connected ? "1px solid #d2d2d7" : "1px solid #e5e5ea", background: connected ? "#ffffff" : "#f5f5f7", color: connected ? "#1d1d1f" : "#6e6e73", justifyContent: "center", fontSize: 13 }, busy)}>
                 {connected ? generatingNetwork === platform ? "Analizando..." : "✓ " + label + " · Crear oportunidad" : label + " · Configurar"}
               </button>;
             })}
@@ -378,7 +376,7 @@ export default function OportunidadesRedesPage() {
               <button
                 onClick={handlePublishAll}
                 disabled={publishingAll}
-                style={{ ...buttonStyle, gridColumn: "1 / -1", justifySelf: "end", marginTop: 0, minHeight: 42, padding: "10px 18px", borderRadius: 21, fontSize: 13 }}
+                style={{ ...buttonStyle, marginLeft: "auto", marginTop: 0, minHeight: 40, padding: "9px 18px", borderRadius: 20, fontSize: 13, whiteSpace: "nowrap" }}
               >
                 {publishingAll ? "Publicando..." : "Publicar todo el lote"}
               </button>
