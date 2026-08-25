@@ -283,21 +283,18 @@ async function normalizeSocialImage(imageUrl: string, targetAspect = 3 / 4): Pro
 async function generateAndHostThreadsImage(
   titleId: string,
   articleUrl: string,
-  articleTitle: string,
-  summary: string,
-  logoUrl?: string | null,
 ): Promise<string | null> {
   const ogImageUrl = await getArticleOpenGraphImage(articleUrl);
   if (!ogImageUrl) return null;
-  const generated = await generateAiSocialImage({
-    articleTitle,
-    articleSummary: summary,
-    ogImageUrl,
-    format: "post",
-    businessLogoUrl: logoUrl,
-    pathPrefix: `threads/${titleId}`,
+  const response = await fetch(ogImageUrl, { signal: AbortSignal.timeout(15000) });
+  if (!response.ok) return null;
+  const contentType = response.headers.get("content-type")?.split(";")[0] || "image/jpeg";
+  const extension = contentType === "image/png" ? "png" : "jpg";
+  const blob = await put(`threads/${titleId}-og.${extension}`, Buffer.from(await response.arrayBuffer()), {
+    access: "public",
+    contentType,
   });
-  return generated?.imageUrl ?? null;
+  return blob.url;
 }
 
 async function processThreadsJob(job: {
@@ -350,14 +347,7 @@ async function processThreadsJob(job: {
   // Generar imagen como respaldo para propuestas creadas antes de este flujo.
   let imageUrl: string | undefined = undefined;
   if (!imageUrl && job.titleId) {
-    const [title, user] = await Promise.all([
-      prisma.title.findUnique({ where: { id: job.titleId } }),
-      prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true, businessLogoUrl: true } }),
-    ]);
-    const imageBasis = title?.summary || job.articleTitle;
-    if (imageBasis) {
-      imageUrl = (await generateAndHostThreadsImage(job.titleId, job.articleUrl, job.articleTitle, imageBasis, user?.imagePrompt, user?.businessLogoUrl)) ?? undefined;
-    }
+    imageUrl = (await generateAndHostThreadsImage(job.titleId, job.articleUrl)) ?? undefined;
   }
 
   if (!imageUrl) {
@@ -439,14 +429,7 @@ async function processTwitterJob(job: {
 
   let imageUrl: string | undefined = undefined;
   if (!imageUrl && job.titleId) {
-    const [title, user] = await Promise.all([
-      prisma.title.findUnique({ where: { id: job.titleId } }),
-      prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true, businessLogoUrl: true } }),
-    ]);
-    const imageBasis = title?.summary || job.articleTitle;
-    if (imageBasis) {
-      imageUrl = (await generateAndHostThreadsImage(job.titleId, job.articleUrl, job.articleTitle, imageBasis, user?.businessLogoUrl)) ?? undefined;
-    }
+    imageUrl = (await generateAndHostThreadsImage(job.titleId, job.articleUrl)) ?? undefined;
   }
 
   const result = await publishTweet(accessToken, finalPost, imageUrl);
