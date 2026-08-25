@@ -293,7 +293,18 @@ async function generateAndHostThreadsImage(
 
   if (!result) return null;
 
-  if (result.url) return result.url;
+  if (result.url) {
+    const response = await fetch(result.url, { signal: AbortSignal.timeout(15000) });
+    if (!response.ok) return null;
+    const imageBuffer = Buffer.from(await response.arrayBuffer());
+    const contentType = response.headers.get("content-type")?.split(";")[0] || "image/png";
+    const extension = contentType === "image/jpeg" ? "jpg" : "png";
+    const blob = await put(`threads/${titleId}-${Date.now()}.${extension}`, imageBuffer, {
+      access: "public",
+      contentType,
+    });
+    return blob.url;
+  }
 
   if (result.b64) {
     const buffer = Buffer.from(result.b64, "base64");
@@ -362,6 +373,10 @@ async function processThreadsJob(job: {
     if (imageBasis) {
       imageUrl = (await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt, user?.businessLogoUrl, "threads")) ?? undefined;
     }
+  }
+
+  if (!imageUrl) {
+    throw new Error("No se pudo preparar una imagen pública para Threads. La publicación no se enviará sin foto.");
   }
 
   const result = await publishThread(accessToken, integration.threadsUserId, finalPost, imageUrl);
