@@ -1,0 +1,31 @@
+name: Aplicar fotos y logos múltiples
+
+on:
+  workflow_dispatch:
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DIRECT_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: Aplicar únicamente las columnas de fotos y logos
+        shell: bash
+        run: |
+          MIGRATION_DATABASE_URL="${DATABASE_URL/:6543/:5432}"
+          MIGRATION_DATABASE_URL="${MIGRATION_DATABASE_URL/?pgbouncer=true/}"
+          SQL='ALTER TABLE "User"
+            ADD COLUMN IF NOT EXISTS "profilePhotoUrl2" TEXT,
+            ADD COLUMN IF NOT EXISTS "profilePhotoUrl3" TEXT,
+            ADD COLUMN IF NOT EXISTS "businessLogoUrl2" TEXT;'
+          printf '%s\n' "$SQL" | \
+            DATABASE_URL="$MIGRATION_DATABASE_URL" DIRECT_URL="$MIGRATION_DATABASE_URL" \
+            npx prisma db execute --stdin --schema=packages/db/prisma/schema.prisma
