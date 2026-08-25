@@ -51,9 +51,11 @@ export default function OportunidadesRedesPage() {
   const router = useRouter();
   const [opportunities, setOpportunities] = useState<SocialOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [connectionsLoading, setConnectionsLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [generatingNetwork, setGeneratingNetwork] = useState<"threads" | "x" | "linkedin" | "instagram" | "facebook-page" | "pinterest" | "tumblr" | "bluesky" | "mastodon" | "devto" | null>(null);
   const [connectedNetworks, setConnectedNetworks] = useState({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false, bluesky: false, mastodon: false, devto: false });
+  const [activeNetworks, setActiveNetworks] = useState({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false, bluesky: false, mastodon: false, devto: false });
   const [generateSeconds, setGenerateSeconds] = useState(0);
   const [usedGsc, setUsedGsc] = useState(false);
   const [publishingId, setPublishingId] = useState<string | null>(null);
@@ -104,25 +106,21 @@ export default function OportunidadesRedesPage() {
   }
 
   async function loadConnectedNetworks() {
+    setConnectionsLoading(true);
     try {
       const response = await fetch("/api/social-opportunities/generate", { cache: "no-store" });
       if (response.ok) {
         const data = await response.json();
-        setConnectedNetworks({
-          threads: Boolean(data.threads),
-          x: Boolean(data.x),
-          linkedin: Boolean(data.linkedin),
-          instagram: Boolean(data.instagram),
-          facebookPage: Boolean(data.facebookPage),
-          pinterest: Boolean(data.pinterest),
-          tumblr: Boolean(data.tumblr),
-          bluesky: Boolean(data.bluesky),
-          mastodon: Boolean(data.mastodon),
-          devto: Boolean(data.devto),
-        });
+        const effectiveConnections = { threads: Boolean(data.threads), x: Boolean(data.x), linkedin: Boolean(data.linkedin), instagram: Boolean(data.instagram), facebookPage: Boolean(data.facebookPage), pinterest: Boolean(data.pinterest), tumblr: Boolean(data.tumblr), bluesky: Boolean(data.bluesky), mastodon: Boolean(data.mastodon), devto: Boolean(data.devto) };
+        setConnectedNetworks(effectiveConnections);
+        setActiveNetworks(data.activeNetworks ?? effectiveConnections);
       }
     } catch {
-      setConnectedNetworks({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false, bluesky: false, mastodon: false, devto: false });
+      const none = { threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false, bluesky: false, mastodon: false, devto: false };
+      setConnectedNetworks(none);
+      setActiveNetworks(none);
+    } finally {
+      setConnectionsLoading(false);
     }
   }
 
@@ -305,6 +303,8 @@ export default function OportunidadesRedesPage() {
 
   const pendingList = opportunities.filter((o) => o.status === "pending");
 
+  if (loading || connectionsLoading) return null;
+
   return (
     <div style={{ maxWidth: 1120, margin: "0 auto" }}>
       {/* Panel Superior */}
@@ -356,92 +356,39 @@ export default function OportunidadesRedesPage() {
             </p>
           </div>
 
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {connectedNetworks.threads && (
-              <button
-                onClick={() => handleGenerate("threads")}
-                disabled={generating || loading}
-                className="secondary"
-                style={disabledStyle({ ...secondaryButtonStyle, padding: "9px 14px", fontSize: 13 }, generating || loading)}
-              >
-                {generatingNetwork === "threads" ? "Analizando..." : "Threads"}
-              </button>
-            )}
-            {connectedNetworks.x && (
-              <button
-                onClick={() => handleGenerate("x")}
-                disabled={generating || loading}
-                className="secondary"
-                style={disabledStyle({ ...secondaryButtonStyle, padding: "9px 14px", fontSize: 13 }, generating || loading)}
-              >
-                {generatingNetwork === "x" ? "Analizando..." : "X (Twitter)"}
-              </button>
-            )}
-            {connectedNetworks.linkedin && (
-              <button
-                onClick={() => handleGenerate("linkedin")}
-                disabled={generating || loading}
-                className="secondary"
-                style={disabledStyle({ ...secondaryButtonStyle, padding: "9px 14px", fontSize: 13 }, generating || loading)}
-              >
-                {generatingNetwork === "linkedin" ? "Analizando..." : "LinkedIn"}
-              </button>
-            )}
-            {connectedNetworks.instagram && (
-              <button
-                onClick={() => handleGenerate("instagram")}
-                disabled={generating || loading}
-                className="secondary"
-                style={disabledStyle({ ...secondaryButtonStyle, padding: "9px 14px", fontSize: 13 }, generating || loading)}
-              >
-                {generatingNetwork === "instagram" ? "Analizando..." : "Instagram"}
-              </button>
-            )}
-            {connectedNetworks.facebookPage && (
-              <button
-                onClick={() => handleGenerate("facebook-page")}
-                disabled={generating || loading}
-                className="secondary"
-                style={disabledStyle({ ...secondaryButtonStyle, padding: "9px 14px", fontSize: 13 }, generating || loading)}
-              >
-                {generatingNetwork === "facebook-page" ? "Analizando..." : "Facebook"}
-              </button>
-            )}
-            {connectedNetworks.pinterest && (
-              <button
-                onClick={() => handleGenerate("pinterest")}
-                disabled={generating || loading}
-                className="secondary"
-                style={disabledStyle({ ...secondaryButtonStyle, padding: "9px 14px", fontSize: 13 }, generating || loading)}
-              >
-                {generatingNetwork === "pinterest" ? "Analizando..." : "Pinterest"}
-              </button>
-            )}
-            {connectedNetworks.tumblr && (
-              <button onClick={() => handleGenerate("tumblr")} disabled={Boolean(generatingNetwork)} className="secondary">
-                {generatingNetwork === "tumblr" ? "Analizando..." : "Tumblr"}
-              </button>
-            )}
-            {connectedNetworks.bluesky && (
-              <button onClick={() => handleGenerate("bluesky")} disabled={Boolean(generatingNetwork)} className="secondary">
-                {generatingNetwork === "bluesky" ? "Analizando..." : "Bluesky"}
-              </button>
-            )}
-            {connectedNetworks.mastodon && (
-              <button onClick={() => handleGenerate("mastodon")} disabled={Boolean(generatingNetwork)} className="secondary">
-                {generatingNetwork === "mastodon" ? "Analizando..." : "Mastodon"}
-              </button>
-            )}
-            {connectedNetworks.devto && (
-              <button onClick={() => handleGenerate("devto")} disabled={Boolean(generatingNetwork)} className="secondary">
-                {generatingNetwork === "devto" ? "Analizando..." : "DEV.to"}
-              </button>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              width: "100%",
+              flexWrap: "wrap",
+              marginTop: 18,
+              paddingTop: 16,
+              borderTop: "1px solid #e5e5ea",
+            }}
+          >
+            {connectionsLoading ? (
+              <span className="muted" style={{ fontSize: 13, padding: "9px 0" }}>
+                Preparando las redes conectadas...
+              </span>
+            ) : (
+              ([
+              ["threads", "threads", "Threads"], ["x", "x", "X (Twitter)"], ["linkedin", "linkedin", "LinkedIn"], ["instagram", "instagram", "Instagram"], ["facebookPage", "facebook-page", "Facebook"], ["pinterest", "pinterest", "Pinterest"], ["tumblr", "tumblr", "Tumblr"], ["bluesky", "bluesky", "Bluesky"], ["mastodon", "mastodon", "Mastodon"], ["devto", "devto", "DEV.to"],
+              ] as const).map(([key, platform, label]) => {
+              if (!activeNetworks[key]) return null;
+              const connected = connectedNetworks[key];
+              const busy = connected && Boolean(generatingNetwork);
+              return <button key={key} type="button" onClick={() => connected ? handleGenerate(platform) : router.push("/dashboard/configuracion?tab=social")} disabled={busy} className="secondary" style={disabledStyle({ ...secondaryButtonStyle, flex: "1 1 180px", minHeight: 40, padding: "9px 13px", borderRadius: 20, border: connected ? "1px solid #d2d2d7" : "1px solid #e5e5ea", background: connected ? "#ffffff" : "#f5f5f7", color: connected ? "#1d1d1f" : "#6e6e73", justifyContent: "center", fontSize: 13 }, busy)}>
+                {connected ? generatingNetwork === platform ? "Analizando..." : "✓ " + label + " · Crear oportunidad" : label + " · Configurar"}
+              </button>;
+              })
             )}
             {pendingList.length > 0 && (
               <button
                 onClick={handlePublishAll}
                 disabled={publishingAll}
-                style={{ ...buttonStyle, marginTop: 0, padding: "9px 16px", fontSize: 13 }}
+                style={{ ...buttonStyle, marginLeft: "auto", marginTop: 0, minHeight: 40, padding: "9px 18px", borderRadius: 20, fontSize: 13, whiteSpace: "nowrap" }}
               >
                 {publishingAll ? "Publicando..." : "Publicar todo el lote"}
               </button>
@@ -449,7 +396,7 @@ export default function OportunidadesRedesPage() {
           </div>
         </div>
 
-        {!connectedNetworks.threads && !connectedNetworks.x && !connectedNetworks.linkedin && !connectedNetworks.instagram && !connectedNetworks.facebookPage && !connectedNetworks.pinterest && !connectedNetworks.tumblr && !connectedNetworks.bluesky && !connectedNetworks.mastodon && !connectedNetworks.devto && !loading && (
+        {!connectedNetworks.threads && !connectedNetworks.x && !connectedNetworks.linkedin && !connectedNetworks.instagram && !connectedNetworks.facebookPage && !connectedNetworks.pinterest && !connectedNetworks.tumblr && !connectedNetworks.bluesky && !connectedNetworks.mastodon && !connectedNetworks.devto && !loading && !connectionsLoading && (
           <div className="notice" style={{ marginTop: 14 }}>
             <p style={{ margin: 0 }}>
               Todavía no tienes ninguna red social conectada, así que no hay

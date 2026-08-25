@@ -18,12 +18,13 @@ import { hasTrialAccess } from "@/lib/trial";
 // se le pierda de vista el resto.
 export async function POST(request: NextRequest) {
   const userId = await getCurrentUserId();
-  const { disableIndexing, contentLanguage, promptId } = (await request
+  const { disableIndexing, contentLanguage, promptId, confirmedImageCredits } = (await request
     .json()
     .catch(() => ({}))) as {
     disableIndexing?: boolean;
     contentLanguage?: string;
     promptId?: string;
+    confirmedImageCredits?: boolean;
   };
 
   const [credential, activeRun, user] = await Promise.all([
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
-  if (!user.hasImageCredits) {
+  if (!user.hasImageCredits && confirmedImageCredits !== true) {
     return NextResponse.json(
       {
         error:

@@ -120,7 +120,7 @@ export default function PinterestSection({ allowed = true }: { allowed?: boolean
 
         {allowed && <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 16, paddingTop: 16 }}>
           <PasosAntesDeConectar red="Pinterest" />
-          <div style={{ background: "#f5f5f7", border: "1px solid #e5e5ea", borderRadius: 14, padding: 16 }}>
+          <div style={{ background: "#fff", border: "1px solid #e5e5ea", borderRadius: 14, padding: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
               <div>
                 <strong style={{ color: "#1d1d1f", fontSize: 15 }}>Conexión de Pinterest</strong>
@@ -132,7 +132,7 @@ export default function PinterestSection({ allowed = true }: { allowed?: boolean
             </div>
             {!configured ? <p className="notice" style={{ margin: "14px 0 0" }}>Pinterest todavía no está configurado. {settings?.isAdmin ? "Guarda primero las credenciales de la aplicación arriba." : "El administrador debe configurar la aplicación."}</p> : !connection?.connected ? <div style={{ marginTop: 14 }}>
               <p className="lead-copy" style={{ fontSize: 13, margin: "0 0 12px" }}>Paso 1 de 2 · Conecta la cuenta que usará este usuario para publicar.</p>
-              <button onClick={connect} className="secondary" style={{ ...secondaryButtonStyle, background: "#e60023", color: "#fff", border: "none" }}>Conectar Pinterest →</button>
+              <button onClick={connect} className="secondary" style={{ ...secondaryButtonStyle, background: "#1d1d1f", color: "#fff", border: "none" }}>Conectar Pinterest →</button>
             </div> : <>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
                 <span style={{ fontSize: 13, color: "#1d1d1f" }}>Cuenta autorizada</span>

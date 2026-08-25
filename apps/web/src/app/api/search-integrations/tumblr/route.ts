@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
-import { decryptSecret, getTumblrBlogs } from "@auto-articulos/shared";
+import { decryptSecret, encryptSecret, getTumblrBlogs, refreshTumblrToken } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
 import { canPublishToNetwork } from "@/lib/social-access";
+import { getStoredTumblrAppCredentials } from "@/lib/tumblr-app-config";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -13,9 +14,27 @@ export async function GET() {
   if (!(await canPublishToNetwork(userId, "tumblr"))) return NextResponse.json({ connected: false, forbidden: true }, { status: 403, headers: NO_CACHE });
   const integration = await prisma.tumblrIntegration.findUnique({ where: { userId } });
   if (!integration) return NextResponse.json({ connected: false }, { headers: NO_CACHE });
-  let blogs = [{ identifier: integration.blogIdentifier, title: integration.blogTitle || integration.blogIdentifier }];
-  try { blogs = await getTumblrBlogs(decryptSecret(integration.accessTokenEncrypted)); } catch { /* status still useful when Tumblr is temporarily unavailable */ }
-  return NextResponse.json({ connected: true, blogIdentifier: integration.blogIdentifier, blogTitle: integration.blogTitle, expiresAt: integration.expiresAt, isExpired: Boolean(integration.expiresAt && integration.expiresAt < new Date()), blogs }, { headers: NO_CACHE });
+  let current = integration;
+  if (current.expiresAt && current.expiresAt <= new Date() && current.refreshTokenEncrypted) {
+    try {
+      const credentials = await getStoredTumblrAppCredentials();
+      const refreshed = await refreshTumblrToken(decryptSecret(current.refreshTokenEncrypted), credentials);
+      current = await prisma.tumblrIntegration.update({
+        where: { userId },
+        data: {
+          accessTokenEncrypted: encryptSecret(refreshed.access_token),
+          refreshTokenEncrypted: refreshed.refresh_token ? encryptSecret(refreshed.refresh_token) : undefined,
+          expiresAt: refreshed.expires_in ? new Date(Date.now() + refreshed.expires_in * 1000) : null,
+        },
+      });
+    } catch {
+      // La pantalla conserva el estado expirado y ofrece reconectar si Tumblr
+      // rechazó también la renovación silenciosa.
+    }
+  }
+  let blogs = [{ identifier: current.blogIdentifier, title: current.blogTitle || current.blogIdentifier }];
+  try { blogs = await getTumblrBlogs(decryptSecret(current.accessTokenEncrypted)); } catch { /* status still useful when Tumblr is temporarily unavailable */ }
+  return NextResponse.json({ connected: true, blogIdentifier: current.blogIdentifier, blogTitle: current.blogTitle, expiresAt: current.expiresAt, isExpired: Boolean(current.expiresAt && current.expiresAt < new Date()), blogs }, { headers: NO_CACHE });
 }
 
 export async function PATCH(request: NextRequest) {

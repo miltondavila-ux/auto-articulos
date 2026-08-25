@@ -9,7 +9,7 @@
 
 ## Liberación coordinada de main — 23/8/2026
 
-[CODEX] - INTEGRACIONES SOCIALES Y GENERACIÓN DE IMÁGENES IA
+[CODEX] - REDES SOCIALES
 Proyecto: lote de Tumblr, menú/no-cache, enlaces del historial y ajustes de publicación social realizados en este worktree.
 Archivos: no hay cambios locales pendientes; el worktree está limpio.
 Commit: `b04b0e9` (integración Tumblr) y `25aee57` (documentación de coordinación); los cambios publicados están incorporados en `origin/main`.
@@ -30,3 +30,67 @@ Estado: terminado.
 Acción inmediata: liberar este lote; sin cambios, migraciones ni despliegues adicionales pendientes de esta sesión.
 Responsable siguiente: quien tome el próximo lote sobre `main`; si alguien retoma algo de "Cómo Funciona", "Inicio" o el gráfico de Tremor, coordinar aquí antes de tocar los mismos archivos.
 Capitanía de migración: no (ningún cambio de esta sesión tocó `schema.prisma` ni requirió migración).
+
+## 2026-08-24 — Codex: visibilidad coherente de redes para Lorena
+
+[Codex] - [COHERENCIA DEL MÓDULO OPORTUNIDADES EN REDES]
+Proyecto: hacer que Oportunidades use el mismo permiso efectivo que Configuración.
+Archivos: `apps/web/src/app/api/social-opportunities/generate/route.ts`.
+Commit: `d777f16` (`fix: align allowed social networks for Lorena`).
+Estado: terminado en código; rama aislada publicada para revisión.
+¿Publicado en producción?: no; pendiente de integración por el responsable de `main`.
+¿Debe conservarse?: sí.
+Acción inmediata: revisar e integrar únicamente `d777f16`; no aplicar migraciones.
+Responsable siguiente: responsable autorizado de `main`.
+Capitanía de migración: no.
+
+## Instrucciones de pestañas para conexiones sociales — 24/8/2026
+
+[CODEX] - REDES SOCIALES
+Proyecto: hacer explícito el procedimiento de pestañas antes de configurar cualquier red social.
+Archivos: `apps/web/src/components/PasosAntesDeConectar.tsx`, `apps/web/src/components/BrowserTabsConnectionNotice.tsx` y `apps/web/src/app/dashboard/configuracion/page.tsx`.
+Estado: terminado en código; se muestra la instrucción de cerrar las demás pestañas, mantener abierta Auto Artículos y autorizar en una pestaña nueva.
+¿Publicado en producción?: no.
+¿Debe conservarse?: sí.
+Acción inmediata: revisar el despliegue de este lote; no cambia la lógica OAuth ni requiere migración.
+Responsable siguiente: responsable de `main`.
+Capitanía de migración: no.
+
+## Retiro de las 8 cajas de prompts — 24/8/2026
+
+[CODEX] - GENERADOR PRINCIPAL DE IMÁGENES IA
+Proyecto: eliminación definitiva del experimento de 8 PromptBox y de su asociación por usuario, porque el generador principal ya funciona correctamente.
+Archivos: `apps/worker/src/promptBoxPipeline.ts` eliminado; retirados el panel y endpoints administrativos de PromptBox; `socialPublish.ts` usa directamente `aiImageGenerator.ts`; eliminados los modelos Prisma `PromptBox`, `PromptBoxExecution` y `CreativeGenerationHistory`; eliminado `User.usePromptBoxPipeline`.
+Commit: pendiente de commit de este lote.
+Estado: terminado en código; migración pendiente de ejecución coordinada.
+¿Publicado en producción?: no; requiere desplegar el lote y aplicar la migración `20260824090000_remove_prompt_box_system`.
+¿Debe conservarse?: sí, únicamente el generador principal y la migración de retiro; no conservar copias activas del pipeline experimental.
+Acción inmediata: revisar diff, confirmar compilación y solicitar publicación; ejecutar la migración solo con capitanía reclamada inmediatamente antes.
+Responsable siguiente: responsable de `main` para revisar/integrar el commit y aplicar la migración coordinada.
+Capitanía de migración: no; todavía no se ejecuta ninguna migración.
+
+## Retiro de las 8 cajas de prompts — 24/8/2026
+
+[CODEX] - GENERADOR PRINCIPAL DE IMÁGENES IA
+Proyecto: eliminación definitiva del experimento de 8 PromptBox y de su asociación por usuario, porque el generador principal ya funciona correctamente.
+Archivos: `apps/worker/src/promptBoxPipeline.ts` eliminado; retirados el panel y endpoints administrativos de PromptBox; `socialPublish.ts` usa directamente `aiImageGenerator.ts`; eliminados los modelos Prisma `PromptBox`, `PromptBoxExecution` y `CreativeGenerationHistory`; eliminado `User.usePromptBoxPipeline`.
+Commit: `148205b`.
+Estado: terminado en código; migración pendiente de ejecución coordinada.
+¿Publicado en producción?: no; requiere desplegar el lote y aplicar la migración `20260824090000_remove_prompt_box_system`.
+¿Debe conservarse?: sí, únicamente el generador principal y la migración de retiro; no conservar copias activas del pipeline experimental.
+Acción inmediata: revisar diff, confirmar compilación y solicitar publicación; ejecutar la migración solo con capitanía reclamada inmediatamente antes.
+Responsable siguiente: responsable de `main` para revisar/integrar el commit y aplicar la migración coordinada.
+Capitanía de migración: no; todavía no se ejecuta ninguna migración.
+
+## Estado visual pendiente de Google Business Profile — 24/8/2026
+
+[CODEX] - REDES SOCIALES
+Proyecto: mostrar el estado de Google Business Profile en Configuración.
+Archivos: `apps/web/src/components/BusinessProfileSection.tsx`.
+Commit: `e83018f`.
+Estado: PENDIENTE; Google aún no aprobó el acceso y el botón de conexión permanece deshabilitado.
+¿Publicado en producción?: no.
+¿Debe conservarse?: sí.
+Acción inmediata: publicar únicamente el indicador `PENDIENTE`; no habilitar OAuth, publicación ni migraciones.
+Responsable siguiente: responsable de `main` cuando Google apruebe el acceso.
+Capitanía de migración: no.

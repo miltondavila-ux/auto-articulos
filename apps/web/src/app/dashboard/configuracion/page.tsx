@@ -14,6 +14,7 @@ import type { CategoryRow, LanguageRow, SyncStatus } from "@/types/dashboard";
 import GoogleSearchConsoleSection from "@/components/GoogleSearchConsoleSection";
 import BusinessProfileSection from "@/components/BusinessProfileSection";
 import BingWebmasterSection from "@/components/BingWebmasterSection";
+import GoogleAnalyticsSection from "@/components/GoogleAnalyticsSection";
 import ThreadsSection from "@/components/ThreadsSection";
 import TwitterSection from "@/components/TwitterSection";
 import LinkedInSection from "@/components/LinkedInSection";
@@ -22,6 +23,7 @@ import TumblrSection from "@/components/TumblrSection";
 import BlueskySection from "@/components/BlueskySection";
 import MastodonSection from "@/components/MastodonSection";
 import DevToSection from "@/components/DevToSection";
+import BrowserTabsConnectionNotice from "@/components/BrowserTabsConnectionNotice";
 import PhotoLogoUploader from "@/components/PhotoLogoUploader";
 import OnboardingWizard from "@/components/OnboardingWizard";
 import CategorySyncProgress, {
@@ -570,7 +572,7 @@ export default function ConfiguracionPage() {
     allowInstagramPublishing ||
     allowFacebookPublishing ||
     allowLinkedInPublishing ||
-    allowPinterestPublishing;
+    allowPinterestPublishing ||
     allowTumblrPublishing ||
     allowBlueskyPublishing ||
     allowMastodonPublishing ||
@@ -954,6 +956,8 @@ export default function ConfiguracionPage() {
         >
           <div id="google">
             <GoogleSearchConsoleSection />
+
+            <GoogleAnalyticsSection />
           </div>
           <div id="bing">
             <BingWebmasterSection />
@@ -966,6 +970,7 @@ export default function ConfiguracionPage() {
         <div
           style={{ display: "flex", flexDirection: "column", gap: 16 }}
         >
+          <BrowserTabsConnectionNotice />
           <BusinessProfileSection />
           {(allowThreadsPublishing || allowInstagramPublishing || allowFacebookPublishing || isAdmin || tieneModuloRedes) && (
             <ThreadsSection allowThreads={isAdmin || tieneModuloRedes || allowThreadsPublishing} allowInstagram={isAdmin || tieneModuloRedes || allowInstagramPublishing} allowFacebook={isAdmin || tieneModuloRedes || allowFacebookPublishing} isAdmin={isAdmin} />

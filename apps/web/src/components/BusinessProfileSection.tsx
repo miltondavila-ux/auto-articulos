@@ -74,7 +74,29 @@ export default function BusinessProfileSection() {
 
   return (
     <section style={sectionStyle}>
-      <h2 style={h2Style}>Google Business Profile</h2>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <h2 style={{ ...h2Style, margin: 0 }}>Google Business Profile</h2>
+        {!data?.connected && (
+          <span
+            style={{
+              color: "#b45309",
+              fontWeight: 700,
+              fontSize: 12,
+              letterSpacing: ".04em",
+            }}
+          >
+            PENDIENTE
+          </span>
+        )}
+      </div>
       <p className="lead-copy" style={{ margin: "0 0 14px 0" }}>
         Cuando el sistema detecte una oportunidad para Google Business Profile en Oportunidades Redes, preparará una publicación con el formato permitido por Google, imagen y enlace al artículo. No se publicará cada artículo automáticamente.
       </p>

@@ -41,14 +41,12 @@ const OPENAI_IMAGE_API_KEY = process.env.OPENAI_IMAGE_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
 const OPENAI_EDIT_URL = "https://api.openai.com/v1/images/edits";
 
-// Mismo adaptador de proveedor que ya existía en promptBoxPipeline.ts —
-// duplicado acá a propósito, sin importar de ese archivo, porque ese
-// pipeline está pausado y pendiente de borrado seguro (ver COORDINACION
-// 22/8/2026); este archivo no debe depender de código que puede
-// desaparecer. Confirmado en vivo (22/8/2026, cuenta de Lorena) que
+// Adaptador independiente del proveedor de generación de imágenes. Este
+// archivo no depende de ningún pipeline experimental. Confirmado en vivo
+// (22/8/2026, cuenta de Lorena) que
 // gpt-image-1-mini corrompe letras en español incluso con un prompt
 // corto y limpio — la misma falla de texto que llevó a adoptar fal.ai/
-// Ideogram en el pipeline de 8 cajas, así que se activa acá también.
+// Ideogram, así que se activa acá también.
 const FAL_API_KEY = process.env.FAL_API_KEY;
 const FAL_IDEOGRAM_REMIX_URL = "https://fal.run/fal-ai/ideogram/v3/remix";
 const FAL_GPT_IMAGE_2_EDIT_URL = "https://fal.run/openai/gpt-image-2/edit";
@@ -367,7 +365,7 @@ async function decideCreativeDirection(
                   // Story", "Facebook Story", etc.) — antes decía "Instagram"
                   // hardcodeado ADEMÁS del label, contradiciéndolo para
                   // Facebook Story ("Instagram, Facebook Story"). Mismo bug
-                  // encontrado y corregido en promptBoxPipeline.ts, 21/8/2026.
+                  // encontrado y corregido durante la auditoría del generador.
                   `Red social y formato: ${formatLabel}.\n` +
                   `Título del artículo: ${articleTitle}\n` +
                   `Resumen del artículo: ${articleSummary}\n` +
@@ -519,8 +517,7 @@ export async function generateAiSocialImage(params: {
   const prompt = buildEditPrompt(decision, Boolean(logoPng), Boolean(photoPng), providerLabel);
 
   try {
-    // Proveedor de la Caja de generación de imagen — mismo switch que
-    // promptBoxPipeline.ts (env var IMAGE_PROVIDER, ya configurada en los
+    // Proveedor de generación de imagen (env var IMAGE_PROVIDER, ya configurada en los
     // 3 workflows). "fal" usa Ideogram V3 Remix; "nano" usa Nano Banana
     // (Gemini) — agregado 22/8/2026 tras 3 fallas distintas de Ideogram en
     // pruebas reales (sin texto, texto deforme, imagen sin relación con la

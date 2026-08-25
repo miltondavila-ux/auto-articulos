@@ -109,12 +109,6 @@ model User {
   // usar la OG sin tocar. No afecta Carrusel/Infografía (ya generan imagen
   // propia, no usan la OG).
   aiImageGenerationEnabled          Boolean   @default(false)
-  // Usar el pipeline nuevo de "Cajas de Imágenes IA" (PromptBox, 8 cajas
-  // encadenadas y editables desde el admin) en vez del generador de un
-  // solo prompt de arriba. Solo tiene efecto si aiImageGenerationEnabled
-  // también está activo. Default false — en pruebas, solo para la cuenta
-  // de Lorena por ahora. Ver MASTER_BLUEPRINT_CREADOR_DE_IMAGENES.md.
-  usePromptBoxPipeline               Boolean   @default(false)
   // Foto de perfil del usuario y logo de su negocio/marca.
   // Se usan como elementos visuales en las publicaciones de redes sociales
   // (carruseles, reels, infografías). Subidas como URLs de Vercel Blob.
@@ -174,7 +168,6 @@ model User {
   oauthAccessTokens          OAuthAccessToken[]
   oauthRefreshTokens         OAuthRefreshToken[]
   trialDomainRegistries      TrialDomainRegistry[]
-  creativeGenerationHistory  CreativeGenerationHistory[]
 }
 
 // Credenciales del authorization server propio para el enlace de cuentas MCP.
@@ -785,83 +778,4 @@ model Prompt {
   updatedAt DateTime @updatedAt
   runs      Run[]
   users     User[]
-}
-
-// ─── SISTEMA DE PROMPTS ENCADENADOS (20/8/2026) ────────────────────────────
-// Pedido explícito de Milton: en vez de un solo prompt gigante para el
-// generador de imágenes de redes sociales, un pipeline de "cajas"
-// independientes y editables desde el admin — la salida de una alimenta a
-// la siguiente (Analista de contenido → Director creativo → Diseñador de
-// composición → Editor de texto → Constructor del prompt visual →
-// Generador de imagen → Inspector de calidad → Corrector automático).
-// Esta migración solo crea la infraestructura (tabla + semilla con
-// placeholders) — la ejecución real todavía no está conectada, sigue
-// activo el generador actual (aiImageGenerator.ts) hasta que Milton
-// perfeccione cada prompt individualmente.
-model PromptBox {
-  id             String   @id @default(cuid())
-  // Identificador estable usado por el código para ubicar cada caja sin
-  // depender del nombre visible (que Milton puede renombrar libremente).
-  slug           String   @unique
-  name           String
-  description    String   @db.Text
-  // El prompt editable en sí — placeholder al crear la caja, Milton lo
-  // perfecciona desde el panel de administración sin tocar código.
-  systemPrompt   String   @db.Text
-  // Orden de ejecución en el pipeline (1 = primero). Editable directamente
-  // desde el admin — "posibilidad futura de cambiar el orden" del pedido
-  // de Milton, resuelta como un número editable en vez de arrastrar-soltar.
-  executionOrder Int
-  // "Posibilidad futura de activar/desactivar la caja."
-  isActive       Boolean  @default(true)
-  // Descripción en texto libre de qué recibe y qué entrega cada caja — no
-  // es un JSON Schema real todavía, es documentación visible en el admin
-  // para que Milton sepa qué espera y qué debe devolver cada prompt.
-  inputSchema    String?  @db.Text
-  outputSchema   String?  @db.Text
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  executions PromptBoxExecution[]
-
-  @@index([executionOrder])
-}
-
-// Registro de cada corrida de una caja — alimenta la sección "Ver última
-// ejecución" del admin (debugging) y sirve de auditoría. Una fila por
-// intento, éxito o error.
-model PromptBoxExecution {
-  id          String    @id @default(cuid())
-  promptBoxId String
-  input       String    @db.Text // JSON serializado de lo que recibió la caja
-  output      String?   @db.Text // JSON serializado de lo que devolvió (null si falló)
-  model       String? // qué modelo/proveedor de IA se usó en esta corrida
-  durationMs  Int?
-  error       String?   @db.Text
-  createdAt   DateTime  @default(now())
-
-  promptBox PromptBox @relation(fields: [promptBoxId], references: [id], onDelete: Cascade)
-
-  @@index([promptBoxId, createdAt])
-}
-
-// Historial de decisiones creativas de publicaciones ya generadas — pedido
-// explícito de Milton para que la Caja 2 (Director Creativo) pueda evitar
-// repetir el mismo modelo conceptual/composición en publicaciones
-// consecutivas del mismo usuario. Todavía no se escribe desde ningún
-// flujo real (la infraestructura se crea primero, según pidió Milton).
-model CreativeGenerationHistory {
-  id               String   @id @default(cuid())
-  userId           String
-  conceptualModel  String? // ej. "premiumeditorial"
-  composition      String? // ej. "leftcopy"
-  headlineText     String?  @db.Text
-  textPosition     String?
-  logoPosition     String?
-  publicationType  String? // red social + formato, ej. "instagram-story"
-  createdAt        DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, createdAt])
 }

@@ -4,6 +4,7 @@ import { prisma } from "@auto-articulos/db";
 import { encryptSecret, exchangeCodeForThreadsTokens } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
 import { getStoredThreadsAppCredentials } from "@/lib/threads-app-config";
+import { canPublishToNetwork } from "@/lib/social-access";
 import { THREADS_STATE_COOKIE } from "../connect/constants";
 
 export async function GET(request: NextRequest) {
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
   const state = request.nextUrl.searchParams.get("state");
   const code = request.nextUrl.searchParams.get("code");
 
-  if (!state || state !== cookieStore.get(THREADS_STATE_COOKIE)?.value || !code) {
+  if (!(await canPublishToNetwork(userId, "threads")) || !state || state !== cookieStore.get(THREADS_STATE_COOKIE)?.value || !code) {
     return NextResponse.redirect(
       new URL("/dashboard/configuracion?threads=error", request.url)
     );
