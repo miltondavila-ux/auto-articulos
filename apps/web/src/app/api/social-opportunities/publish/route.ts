@@ -4,6 +4,9 @@ import { getCurrentUserId } from "@/lib/current-user";
 import { canUseSocialModule } from "@/lib/social-access";
 import { triggerSocialWorkerNow } from "@/lib/trigger-worker";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function POST(request: NextRequest) {
   try {
     const userId = await getCurrentUserId();
@@ -67,6 +70,19 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           { error: "No tienes permiso para publicar en Instagram. Contacta al administrador." },
           { status: 403 }
+        );
+      }
+    }
+
+    if (opp.platform === "threads") {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true, allowThreadsPublishing: true },
+      });
+      if (user?.role !== "admin" && !user?.allowThreadsPublishing) {
+        return NextResponse.json(
+          { error: "No tienes permiso para publicar en Threads. Contacta al administrador." },
+          { status: 403 },
         );
       }
     }

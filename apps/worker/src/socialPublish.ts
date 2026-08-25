@@ -286,21 +286,25 @@ async function generateAndHostThreadsImage(
 ): Promise<string | null> {
   const ogImageUrl = await getArticleOpenGraphImage(articleUrl);
   if (!ogImageUrl) return null;
-  const response = await fetch(ogImageUrl, { signal: AbortSignal.timeout(15000) });
-  if (!response.ok) return null;
-  // Threads rechaza algunas OG en WebP/AVIF/SVG o con dimensiones/peso
-  // incompatibles. Es la misma imagen del artículo, solo normalizada a JPEG.
-  const normalized = await sharp(Buffer.from(await response.arrayBuffer()))
-    .rotate()
-    .jpeg({ quality: 90, mozjpeg: true })
-    .toBuffer();
-  const blob = await put(`threads/${titleId}-og.jpg`, normalized, {
-    access: "public",
-    contentType: "image/jpeg",
-  });
-  const publicCheck = await fetch(blob.url, { method: "HEAD", signal: AbortSignal.timeout(10000) });
-  if (!publicCheck.ok) return null;
-  return blob.url;
+  try {
+    const response = await fetch(ogImageUrl, { signal: AbortSignal.timeout(15000) });
+    if (!response.ok) return null;
+    // Threads rechaza algunas OG en WebP/AVIF/SVG o con dimensiones/peso
+    // incompatibles. Es la misma imagen del artículo, solo normalizada a JPEG.
+    const normalized = await sharp(Buffer.from(await response.arrayBuffer()))
+      .rotate()
+      .jpeg({ quality: 90, mozjpeg: true })
+      .toBuffer();
+    const blob = await put(`threads/${titleId}-og.jpg`, normalized, {
+      access: "public",
+      contentType: "image/jpeg",
+    });
+    const publicCheck = await fetch(blob.url, { method: "HEAD", signal: AbortSignal.timeout(10000) });
+    return publicCheck.ok ? blob.url : null;
+  } catch (error) {
+    console.error(`Threads ${titleId}: no se pudo preparar la imagen OG`, error);
+    return null;
+  }
 }
 
 async function processThreadsJob(job: {
@@ -336,8 +340,11 @@ async function processThreadsJob(job: {
           expiresAt: newExpiresAt,
         },
       });
-    } catch {
+    } catch (error) {
       console.warn("No se pudo autorrefrescar token de Threads, usando el actual.");
+      if (daysUntilExpiration <= 0) {
+        throw new Error(`La autorización de Threads expiró y no pudo renovarse: ${error instanceof Error ? error.message : String(error)}`);
+      }
     }
   }
 

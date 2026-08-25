@@ -225,31 +225,27 @@ export async function publishThread(
       // Esperar 2 segundos antes de volver a verificar
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      try {
-        const statusRes = await fetch(
-          `https://graph.threads.net/v1.0/${creationId}?fields=status_code,error_message&access_token=${accessToken}`
+      const statusRes = await fetch(
+        `https://graph.threads.net/v1.0/${creationId}?fields=status_code,error_message&access_token=${accessToken}`
+      );
+      if (!statusRes.ok) {
+        const errorText = await statusRes.text().catch(() => "");
+        throw new Error(`Meta no pudo consultar el contenedor de Threads (${statusRes.status}): ${errorText}`);
+      }
+
+      const statusData = (await statusRes.json()) as {
+        status_code?: string;
+        error_message?: string;
+      };
+
+      if (statusData.status_code === "FINISHED") {
+        finished = true;
+      } else if (statusData.status_code === "ERROR") {
+        throw new Error(
+          `El procesamiento de la imagen en Threads falló: ${statusData.error_message || "Error desconocido"}`
         );
-
-        if (statusRes.ok) {
-          const statusData = (await statusRes.json()) as {
-            status_code: string;
-            error_message?: string;
-          };
-
-          if (statusData.status_code === "FINISHED") {
-            finished = true;
-          } else if (statusData.status_code === "ERROR") {
-            throw new Error(
-              `El procesamiento de la imagen en Threads falló: ${statusData.error_message || "Error desconocido"}`
-            );
-          }
-        }
-      } catch (err: any) {
-        // Si hay error en la consulta y es por rechazo de imagen, lanzarlo
-        if (err.message && err.message.includes("procesamiento de la imagen")) {
-          throw err;
-        }
-        console.warn(`Intento ${attempts} de consultar estado del contenedor falló. Reintentando...`, err);
+      } else if (!statusData.status_code) {
+        throw new Error("Meta devolvió el estado vacío para el contenedor de Threads.");
       }
     }
 
