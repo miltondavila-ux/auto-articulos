@@ -190,6 +190,13 @@ export default function PublicarPage() {
         hasImageCredits={hasImageCredits}
         platformDomain={platformDomain}
         onOpenImageCreditsModal={() => setShowImageCreditsModal(true)}
+        onConfirmImageCredits={() => {
+          setHasImageCredits(true);
+          setBanner({
+            type: "info",
+            text: "Has indicado que ya recibiste créditos. Puedes intentar publicar; si aún no están activos, vuelve aquí y solicítalos.",
+          });
+        }}
       >
         {hasActiveRun && (
           <div
@@ -431,6 +438,14 @@ export default function PublicarPage() {
       <ImageCreditsModal
         isOpen={showImageCreditsModal}
         onClose={() => setShowImageCreditsModal(false)}
+        onConfirmImageCredits={() => {
+          setHasImageCredits(true);
+          setShowImageCreditsModal(false);
+          setBanner({
+            type: "info",
+            text: "Has indicado que ya recibiste créditos. Puedes intentar publicar; si aún no están activos, vuelve aquí y solicítalos.",
+          });
+        }}
         platformDomain={platformDomain}
       />
     </div>
