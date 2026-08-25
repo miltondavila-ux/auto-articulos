@@ -20,6 +20,19 @@ Acción inmediata: liberar este lote y no realizar cambios, migraciones ni despl
 Responsable siguiente: responsable del siguiente lote identificado en este documento; cualquier cambio nuevo debe usar su propia rama o worktree.
 Capitanía de migración: no.
 
+## 2026-08-24 — Codex: visibilidad coherente de redes para Lorena
+
+[Codex] - [COHERENCIA DEL MÓDULO OPORTUNIDADES EN REDES]
+Proyecto: hacer que Oportunidades use el mismo permiso efectivo que Configuración.
+Archivos: `apps/web/src/app/api/social-opportunities/generate/route.ts`.
+Commit: `d777f16` (`fix: align allowed social networks for Lorena`).
+Estado: terminado en código; rama aislada publicada para revisión.
+¿Publicado en producción?: no; pendiente de integración por el responsable de `main`.
+¿Debe conservarse?: sí.
+Acción inmediata: revisar e integrar únicamente `d777f16`; no aplicar migraciones.
+Responsable siguiente: responsable autorizado de `main`.
+Capitanía de migración: no.
+
 ## Instrucciones de pestañas para conexiones sociales — 24/8/2026
 
 [CODEX] - REDES SOCIALES
