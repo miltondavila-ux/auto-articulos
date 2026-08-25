@@ -30,6 +30,7 @@ interface OpportunityGroup {
 }
 
 const DEFAULT_MAX_TITLES_PER_BATCH = 20;
+const IMAGE_CREDITS_CONFIRMED_KEY = "auto-articulos:image-credits-confirmed";
 
 function formatDateTime(value: string | Date) {
   return new Date(value).toLocaleString("es-US", {
@@ -126,7 +127,10 @@ export default function OportunidadesPage() {
         setContentLanguage(me.contentLanguage);
       }
       if (typeof me.hasImageCredits === "boolean") {
-        setHasImageCredits(me.hasImageCredits);
+        setHasImageCredits(
+          me.hasImageCredits ||
+            window.localStorage.getItem(IMAGE_CREDITS_CONFIRMED_KEY) === "true",
+        );
       }
       if (typeof me.platformDomain === "string") {
         setPlatformDomain(me.platformDomain);
@@ -157,6 +161,7 @@ export default function OportunidadesPage() {
   }, []);
 
   const confirmImageCredits = useCallback(() => {
+    window.localStorage.setItem(IMAGE_CREDITS_CONFIRMED_KEY, "true");
     setHasImageCredits(true);
     setMessage({
       kind: "info",
@@ -280,11 +285,17 @@ export default function OportunidadesPage() {
     const response = await fetch("/api/opportunities/execute-all", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ disableIndexing, contentLanguage }),
+      body: JSON.stringify({
+        disableIndexing,
+        contentLanguage,
+        confirmedImageCredits: hasImageCredits,
+      }),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       if (data.code === "NO_IMAGE_CREDITS") {
+        window.localStorage.removeItem(IMAGE_CREDITS_CONFIRMED_KEY);
+        setHasImageCredits(false);
         setShowImageCreditsModal(true);
       }
       setMessage({
@@ -316,11 +327,19 @@ export default function OportunidadesPage() {
     const response = await fetch("/api/opportunities/execute", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type, id, disableIndexing, contentLanguage }),
+      body: JSON.stringify({
+        type,
+        id,
+        disableIndexing,
+        contentLanguage,
+        confirmedImageCredits: hasImageCredits,
+      }),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       if (data.code === "NO_IMAGE_CREDITS") {
+        window.localStorage.removeItem(IMAGE_CREDITS_CONFIRMED_KEY);
+        setHasImageCredits(false);
         setShowImageCreditsModal(true);
       }
       setMessage({ kind: "error", text: data.error ?? "No se pudo ejecutar." });

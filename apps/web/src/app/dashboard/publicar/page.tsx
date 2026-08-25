@@ -16,6 +16,7 @@ import PreValidationGuard from "@/components/PreValidationGuard";
 import type { CategoryRow } from "@/types/dashboard";
 
 const DEFAULT_MAX_TITLES_PER_BATCH = 20;
+const IMAGE_CREDITS_CONFIRMED_KEY = "auto-articulos:image-credits-confirmed";
 
 export default function PublicarPage() {
   const router = useRouter();
@@ -62,7 +63,10 @@ export default function PublicarPage() {
         setContentLanguage(data.contentLanguage);
       }
       if (typeof data.hasImageCredits === "boolean") {
-        setHasImageCredits(data.hasImageCredits);
+        setHasImageCredits(
+          data.hasImageCredits ||
+            window.localStorage.getItem(IMAGE_CREDITS_CONFIRMED_KEY) === "true",
+        );
       }
       if (typeof data.platformDomain === "string") {
         setPlatformDomain(data.platformDomain);
@@ -71,6 +75,7 @@ export default function PublicarPage() {
   }, []);
 
   const confirmImageCredits = useCallback(() => {
+    window.localStorage.setItem(IMAGE_CREDITS_CONFIRMED_KEY, "true");
     setHasImageCredits(true);
     setBanner({
       type: "info",
@@ -168,11 +173,14 @@ export default function PublicarPage() {
           categoryId: selectedCategoryId,
           disableIndexing,
           contentLanguage,
+          confirmedImageCredits: hasImageCredits,
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         if (data.code === "NO_IMAGE_CREDITS") {
+          window.localStorage.removeItem(IMAGE_CREDITS_CONFIRMED_KEY);
+          setHasImageCredits(false);
           setShowImageCreditsModal(true);
         }
         setBanner({
