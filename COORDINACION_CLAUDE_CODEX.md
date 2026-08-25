@@ -9,7 +9,7 @@
 
 ## Liberación coordinada de main — 23/8/2026
 
-[CODEX] - INTEGRACIONES SOCIALES Y GENERACIÓN DE IMÁGENES IA
+[CODEX] - REDES SOCIALES
 Proyecto: lote de Tumblr, menú/no-cache, enlaces del historial y ajustes de publicación social realizados en este worktree.
 Archivos: no hay cambios locales pendientes; el worktree está limpio.
 Commit: `b04b0e9` (integración Tumblr) y `25aee57` (documentación de coordinación); los cambios publicados están incorporados en `origin/main`.
@@ -22,7 +22,7 @@ Capitanía de migración: no.
 
 ## Instrucciones de pestañas para conexiones sociales — 24/8/2026
 
-[CODEX] - CONFIGURACIÓN DE REDES SOCIALES
+[CODEX] - REDES SOCIALES
 Proyecto: hacer explícito el procedimiento de pestañas antes de configurar cualquier red social.
 Archivos: `apps/web/src/components/PasosAntesDeConectar.tsx`, `apps/web/src/components/BrowserTabsConnectionNotice.tsx` y `apps/web/src/app/dashboard/configuracion/page.tsx`.
 Estado: terminado en código; se muestra la instrucción de cerrar las demás pestañas, mantener abierta Auto Artículos y autorizar en una pestaña nueva.
@@ -60,7 +60,7 @@ Capitanía de migración: no; todavía no se ejecuta ninguna migración.
 
 ## Estado visual pendiente de Google Business Profile — 24/8/2026
 
-[CODEX] - APROBACIÓN Y PUBLICACIÓN EN GOOGLE BUSINESS PROFILE
+[CODEX] - REDES SOCIALES
 Proyecto: mostrar el estado de Google Business Profile en Configuración.
 Archivos: `apps/web/src/components/BusinessProfileSection.tsx`.
 Commit: `e83018f`.
