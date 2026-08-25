@@ -358,8 +358,8 @@ async function processThreadsJob(job: {
       prisma.title.findUnique({ where: { id: job.titleId } }),
       prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true, businessLogoUrl: true } }),
     ]);
-    if (title?.summary) {
-      const imageBasis = title.summary || job.articleTitle;
+    const imageBasis = title?.summary || job.articleTitle;
+    if (imageBasis) {
       imageUrl = (await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt, user?.businessLogoUrl, "threads")) ?? undefined;
     }
   }
