@@ -12,7 +12,6 @@ import {
   publishInstagramCarousel,
   publishInstagramImage,
   publishInstagramStory,
-  generateSocialImageRaw,
   publishFacebookPagePost,
   publishFacebookPageStory,
   createPinterestPin,
@@ -283,53 +282,22 @@ async function normalizeSocialImage(imageUrl: string, targetAspect = 3 / 4): Pro
 
 async function generateAndHostThreadsImage(
   titleId: string,
+  articleUrl: string,
+  articleTitle: string,
   summary: string,
-  customImagePrompt?: string | null,
   logoUrl?: string | null,
-  platform?: string | null,
 ): Promise<string | null> {
-  const shouldIncludeLogo = logoUrl && Math.random() < 0.5;
-  const result = await generateSocialImageRaw(summary, customImagePrompt, undefined, shouldIncludeLogo ? logoUrl : null, platform);
-
-  if (!result) return null;
-
-  if (result.url) {
-    const response = await fetch(result.url, { signal: AbortSignal.timeout(15000) });
-    if (!response.ok) return null;
-    const imageBuffer = Buffer.from(await response.arrayBuffer());
-    const contentType = response.headers.get("content-type")?.split(";")[0] || "image/png";
-    const extension = contentType === "image/jpeg" ? "jpg" : "png";
-    const blob = await put(`threads/${titleId}-${Date.now()}.${extension}`, imageBuffer, {
-      access: "public",
-      contentType,
-    });
-    return blob.url;
-  }
-
-  if (result.b64) {
-    const buffer = Buffer.from(result.b64, "base64");
-    const blob = await put(`threads/${titleId}.png`, buffer, { access: "public", contentType: "image/png" });
-    return blob.url;
-  }
-
-  return null;
-}
-
-async function hostThreadsSourceImage(titleId: string, imageUrl: string): Promise<string | null> {
-  try {
-    const response = await fetch(imageUrl, { signal: AbortSignal.timeout(15000) });
-    if (!response.ok) return null;
-    const contentType = response.headers.get("content-type")?.split(";")[0] || "image/jpeg";
-    const extension = contentType === "image/png" ? "png" : "jpg";
-    const blob = await put(`threads/source-${titleId}-${Date.now()}.${extension}`, Buffer.from(await response.arrayBuffer()), {
-      access: "public",
-      contentType,
-    });
-    return blob.url;
-  } catch (error) {
-    console.warn("No se pudo alojar la imagen OG de respaldo para Threads:", error);
-    return null;
-  }
+  const ogImageUrl = await getArticleOpenGraphImage(articleUrl);
+  if (!ogImageUrl) return null;
+  const generated = await generateAiSocialImage({
+    articleTitle,
+    articleSummary: summary,
+    ogImageUrl,
+    format: "post",
+    businessLogoUrl: logoUrl,
+    pathPrefix: `threads/${titleId}`,
+  });
+  return generated?.imageUrl ?? null;
 }
 
 async function processThreadsJob(job: {
@@ -388,25 +356,12 @@ async function processThreadsJob(job: {
     ]);
     const imageBasis = title?.summary || job.articleTitle;
     if (imageBasis) {
-      imageUrl = (await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt, user?.businessLogoUrl, "threads")) ?? undefined;
-    }
-  }
-
-  // Si la generación de IA falla, usa la imagen pública del artículo como
-  // respaldo. Threads no debe quedar sin publicar por una falla secundaria
-  // del generador, y Meta necesita una URL pública estable, no la URL OG que
-  // pudiera ser temporal o bloquear al worker.
-  if (!imageUrl) {
-    const articleImage = await getArticleOpenGraphImage(job.articleUrl);
-    if (articleImage) {
-      imageUrl = (await hostThreadsSourceImage(job.titleId || job.id, articleImage)) ?? undefined;
+      imageUrl = (await generateAndHostThreadsImage(job.titleId, job.articleUrl, job.articleTitle, imageBasis, user?.imagePrompt, user?.businessLogoUrl)) ?? undefined;
     }
   }
 
   if (!imageUrl) {
-    // La imagen es preferible, pero nunca debe impedir la publicación del
-    // texto: este era el comportamiento funcional anterior de Threads.
-    console.warn(`Threads ${job.id}: no se pudo preparar imagen; se publicará solo el texto.`);
+    throw new Error("No se pudo generar y alojar la imagen de Threads. La publicación se detuvo para no enviar un hilo sin imagen.");
   }
 
   const result = await publishThread(accessToken, integration.threadsUserId, finalPost, imageUrl);
@@ -489,8 +444,8 @@ async function processTwitterJob(job: {
       prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true, businessLogoUrl: true } }),
     ]);
     const imageBasis = title?.summary || job.articleTitle;
-    if (title?.summary) {
-      imageUrl = (await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt, user?.businessLogoUrl, "x")) ?? undefined;
+    if (imageBasis) {
+      imageUrl = (await generateAndHostThreadsImage(job.titleId, job.articleUrl, job.articleTitle, imageBasis, user?.businessLogoUrl)) ?? undefined;
     }
   }
 
