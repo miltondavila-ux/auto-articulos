@@ -8,6 +8,7 @@ import {
   h2Style,
   inputStyle,
   buttonStyle,
+  secondaryButtonStyle,
   readySectionStyle,
   disabledStyle,
 } from "@/components/dashboard-ui";
@@ -49,7 +50,7 @@ export default function PublicarPage() {
   const [platformDomain, setPlatformDomain] = useState<string>("net");
 
   const loadUserLimits = useCallback(async () => {
-    const res = await fetch("/api/me");
+    const res = await fetch("/api/me", { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       if (
@@ -68,6 +69,14 @@ export default function PublicarPage() {
         setPlatformDomain(data.platformDomain);
       }
     }
+  }, []);
+
+  const confirmImageCredits = useCallback(() => {
+    setHasImageCredits(true);
+    setBanner({
+      type: "info",
+      text: "Has indicado que ya recibiste créditos. Puedes intentar publicar; si aún no están activos, vuelve aquí y solicítalos.",
+    });
   }, []);
 
   const loadLanguages = useCallback(async () => {
@@ -196,6 +205,43 @@ export default function PublicarPage() {
         platformDomain={platformDomain}
         onOpenImageCreditsModal={() => setShowImageCreditsModal(true)}
       >
+        {!hasImageCredits && (
+          <div
+            style={{
+              marginTop: 20,
+              padding: "12px 16px",
+              borderRadius: 12,
+              background: "#fef3c7",
+              color: "#92400e",
+              fontSize: 13,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 10,
+            }}
+          >
+            <span>
+              Si ya te dieron créditos, confírmalo para poder intentar publicar.
+            </span>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={confirmImageCredits}
+                style={secondaryButtonStyle}
+              >
+                Ya recibí mis créditos
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowImageCreditsModal(true)}
+                style={buttonStyle}
+              >
+                Solicitar créditos
+              </button>
+            </div>
+          </div>
+        )}
         {hasActiveRun && (
           <div
             style={{

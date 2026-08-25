@@ -156,6 +156,14 @@ export default function OportunidadesPage() {
     setLoading(false);
   }, []);
 
+  const confirmImageCredits = useCallback(() => {
+    setHasImageCredits(true);
+    setMessage({
+      kind: "info",
+      text: "Has indicado que ya recibiste créditos. Puedes intentar continuar; si aún no están activos, vuelve aquí y solicítalos.",
+    });
+  }, []);
+
   async function acceptDisclosure() {
     setAcceptingDisclosure(true);
     try {
@@ -613,22 +621,31 @@ export default function OportunidadesPage() {
             <span>
               ⚠️ Tu cuenta de 10minutesWebsite no tiene créditos de imagen disponibles.
             </span>
-            <button
-              type="button"
-              onClick={() => setShowImageCreditsModal(true)}
-              style={{
-                background: "#d97706",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: 6,
-                padding: "6px 12px",
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              Solicitar créditos gratuitos
-            </button>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={confirmImageCredits}
+                style={secondaryButtonStyle}
+              >
+                Ya recibí mis créditos
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowImageCreditsModal(true)}
+                style={{
+                  background: "#d97706",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: 6,
+                  padding: "6px 12px",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Solicitar créditos gratuitos
+              </button>
+            </div>
           </div>
         )}
         <p style={{ color: "#6b7280", fontSize: 12 }}>
