@@ -21,6 +21,7 @@ interface PreValidationGuardProps {
   platformDomain?: string;
   loading?: boolean;
   onOpenImageCreditsModal?: () => void;
+  onConfirmImageCredits?: () => void;
   children: React.ReactNode;
 }
 
@@ -37,6 +38,7 @@ export default function PreValidationGuard({
   platformDomain = "net",
   loading = false,
   onOpenImageCreditsModal,
+  onConfirmImageCredits,
   children,
 }: PreValidationGuardProps) {
   const productName = platformProductName(platformDomain);
@@ -220,18 +222,26 @@ export default function PreValidationGuard({
 
                 {!step.ready && (
                   step.isImageCredit ? (
-                    <button
-                      type="button"
-                      onClick={onOpenImageCreditsModal}
-                      className="secondary"
-                      style={{
-                        padding: "6px 12px",
-                        fontSize: 12,
-                        borderRadius: 8,
-                      }}
-                    >
-                      {step.actionLabel}
-                    </button>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                      {onConfirmImageCredits && (
+                        <button
+                          type="button"
+                          onClick={onConfirmImageCredits}
+                          className="secondary"
+                          style={{ padding: "6px 12px", fontSize: 12, borderRadius: 8 }}
+                        >
+                          Ya recibí mis créditos
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={onOpenImageCreditsModal}
+                        className="secondary"
+                        style={{ padding: "6px 12px", fontSize: 12, borderRadius: 8 }}
+                      >
+                        {step.actionLabel}
+                      </button>
+                    </div>
                   ) : (
                     <Link
                       href={step.actionUrl}

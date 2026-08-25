@@ -7,12 +7,14 @@ import { platformHelpUrl, platformProductName } from "@auto-articulos/shared";
 interface ImageCreditsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onConfirmImageCredits?: () => void;
   platformDomain?: string;
 }
 
 export default function ImageCreditsModal({
   isOpen,
   onClose,
+  onConfirmImageCredits,
   platformDomain = "net",
 }: ImageCreditsModalProps) {
   const productName = platformProductName(platformDomain);
@@ -103,6 +105,21 @@ export default function ImageCreditsModal({
             gap: 10,
           }}
         >
+          {onConfirmImageCredits && (
+            <button
+              type="button"
+              onClick={onConfirmImageCredits}
+              className="secondary"
+              style={{
+                ...secondaryButtonStyle,
+                padding: "10px 16px",
+                fontSize: 13,
+              }}
+            >
+              Ya recibí mis créditos
+            </button>
+          )}
+
           {helpUrl && (
             <a
               href={helpUrl}

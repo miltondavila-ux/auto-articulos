@@ -306,7 +306,16 @@ export default function OportunidadesPage() {
       setBusyId(null);
       return;
     }
-    router.push("/dashboard/publicaciones-en-curso");
+    const publishedCount = Number(data.publishedCount ?? 0);
+    const pendingCount = Number(data.pendingCount ?? 0);
+    setMessage({
+      kind: "info",
+      text: pendingCount > 0
+        ? `Se publicarán ${publishedCount} títulos según tu cupo. Quedaron ${pendingCount} títulos pendientes en Oportunidades.`
+        : `Se publicarán ${publishedCount} títulos. No quedaron títulos pendientes.`,
+    });
+    await load();
+    setBusyId(null);
     router.refresh();
   }
 
@@ -412,6 +421,13 @@ export default function OportunidadesPage() {
         platformDomain={platformDomain}
         onOpenImageCreditsModal={() => setShowImageCreditsModal(true)}
         loading={loading}
+        onConfirmImageCredits={() => {
+          setHasImageCredits(true);
+          setMessage({
+            kind: "info",
+            text: "Has indicado que ya recibiste créditos. Puedes intentar continuar; si aún no están activos, vuelve aquí y solicítalos.",
+          });
+        }}
       >
         <section style={sectionStyle}>
         <h2 style={h2Style}>Oportunidades SEO</h2>
@@ -755,7 +771,7 @@ export default function OportunidadesPage() {
                 0,
               );
               const overLimit = totalTitles > maxTitlesPerBatch;
-              const disabled = busyId !== null || overLimit || !contentLanguage;
+              const disabled = busyId !== null || !contentLanguage;
               return (
                 <>
                   <button
@@ -764,9 +780,7 @@ export default function OportunidadesPage() {
                     title={
                       !contentLanguage
                         ? "Debes configurar tu idioma de redacción en Configuración antes de publicar."
-                        : overLimit
-                          ? `Tienes ${totalTitles} títulos en ${groups.length} categorías, más de tu máximo de ${maxTitlesPerBatch} por lote.`
-                          : undefined
+                        : undefined
                     }
                     style={disabledStyle(
                       { ...buttonStyle, marginTop: 0 },
@@ -775,9 +789,7 @@ export default function OportunidadesPage() {
                   >
                     {busyId === "__all__"
                       ? "Publicando todas..."
-                      : overLimit
-                        ? `Supera el máximo (${totalTitles}/${maxTitlesPerBatch})`
-                        : `Publicar todas las categorías (${totalTitles})`}
+                      : `Publicar todas las categorías (${totalTitles})`}
                   </button>
                   {overLimit && (
                     <p
@@ -787,10 +799,9 @@ export default function OportunidadesPage() {
                         color: "#d64545",
                       }}
                     >
-                      Tienes {totalTitles} títulos en {groups.length}{" "}
-                      categorías, más de tu máximo de {maxTitlesPerBatch} por
-                      lote. Publica categoría por categoría, o elimina algunos
-                      títulos primero.
+                      Se publicarán hasta {maxTitlesPerBatch} títulos por cupo.
+                      Los {Math.max(0, totalTitles - maxTitlesPerBatch)} que
+                      excedan el cupo quedarán pendientes.
                     </p>
                   )}
                   {!contentLanguage && (
@@ -996,6 +1007,14 @@ export default function OportunidadesPage() {
       <ImageCreditsModal
         isOpen={showImageCreditsModal}
         onClose={() => setShowImageCreditsModal(false)}
+        onConfirmImageCredits={() => {
+          setHasImageCredits(true);
+          setShowImageCreditsModal(false);
+          setMessage({
+            kind: "info",
+            text: "Has indicado que ya recibiste créditos. Puedes intentar continuar; si aún no están activos, vuelve aquí y solicítalos.",
+          });
+        }}
         platformDomain={platformDomain}
       />
     </div>
