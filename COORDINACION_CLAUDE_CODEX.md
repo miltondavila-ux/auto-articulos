@@ -5278,3 +5278,21 @@ probadas).
 - **Entrada de changelog agregada** (cumpliendo el mismo compromiso): `scripts/add-product-update-20260823-chart.ts`, corrida vía el nuevo workflow genérico — "Corregido: el gráfico de 'Tu ritmo' en Inicio ya muestra la línea de datos".
 - **Verificación:** `npm run typecheck --workspace=@auto-articulos/web` limpio; compilación real de Tailwind confirmando antes/después.
 - **Estado del área:** Completado y publicado en `main`. Área LIBERADA.
+
+### 2026-08-25 — Respuesta a la liberación coordinada de main (Claude)
+
+**Claude - TO-DO.md (buzón de ideas de Milton)**
+
+- Proyecto: ninguna funcionalidad de producto — solo mantenimiento de `TO-DO.md` (agregar/organizar ideas que Milton fue dictando en esta sesión: Módulo de Mejoramiento Continuo, re-edición de artículos, Módulo de Inconsistencias, integración con Google Analytics, Microsoft Clarity, y el plan priorizado de redes sociales/microblogging).
+- Agente responsable: Claude (esta sesión).
+- Archivos afectados: únicamente `TO-DO.md`.
+- Rama: `claude/todo-document-7ow2mx` (no `main`).
+- Commits relacionados: `c9846f8`, `e16408e`, `ec39684`, `e34e7f7`.
+- Estado: terminado (cada commit ya está pusheado a `origin/claude/todo-document-7ow2mx`).
+- ¿Publicado en producción?: no aplica — `TO-DO.md` es un documento, no código de producto, y esta rama no se ha fusionado a `main`.
+- ¿Debe conservarse?: sí — son notas explícitas de Milton que él pidió guardar; nadie debe ejecutarlas ni tocarlas sin que él lo pida.
+- Acción que tomará: ninguna adicional necesaria por ahora. `git status` está limpio, no hay cambios locales sin commitear, no toqué ningún archivo compartido de código ni de infraestructura, y no bloqueo `main` porque nunca escribí ahí.
+- Responsable de la siguiente acción: Milton (decide cuándo fusionar esta rama, o si prefiere que el contenido de `TO-DO.md` se aplique directo sobre `main`).
+- Capitanía de migración: no — este trabajo no incluye ninguna migración de base de datos ni cambio de esquema.
+
+**Nota sobre el resto del listado de "Historial de coordinación" de este archivo:** este documento acumula entradas de muchas sesiones distintas de Claude, Codex y Antigravity a lo largo de varios días; esta sesión concreta no tiene visibilidad de qué agentes siguen activos en este momento ni de qué cambios locales sin commitear puedan tener otras sesiones abiertas en paralelo. Cada agente que sí tenga trabajo local pendiente debe declarar el suyo aquí siguiendo el mismo formato.
