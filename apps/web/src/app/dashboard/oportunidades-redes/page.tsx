@@ -303,6 +303,8 @@ export default function OportunidadesRedesPage() {
 
   const pendingList = opportunities.filter((o) => o.status === "pending");
 
+  if (loading || connectionsLoading) return null;
+
   return (
     <div style={{ maxWidth: 1120, margin: "0 auto" }}>
       {/* Panel Superior */}
@@ -370,16 +372,18 @@ export default function OportunidadesRedesPage() {
               <span className="muted" style={{ fontSize: 13, padding: "9px 0" }}>
                 Preparando las redes conectadas...
               </span>
-            ) : ([
+            ) : (
+              ([
               ["threads", "threads", "Threads"], ["x", "x", "X (Twitter)"], ["linkedin", "linkedin", "LinkedIn"], ["instagram", "instagram", "Instagram"], ["facebookPage", "facebook-page", "Facebook"], ["pinterest", "pinterest", "Pinterest"], ["tumblr", "tumblr", "Tumblr"], ["bluesky", "bluesky", "Bluesky"], ["mastodon", "mastodon", "Mastodon"], ["devto", "devto", "DEV.to"],
-            ] as const).map(([key, platform, label]) => {
+              ] as const).map(([key, platform, label]) => {
               if (!activeNetworks[key]) return null;
               const connected = connectedNetworks[key];
               const busy = connected && Boolean(generatingNetwork);
               return <button key={key} type="button" onClick={() => connected ? handleGenerate(platform) : router.push("/dashboard/configuracion?tab=social")} disabled={busy} className="secondary" style={disabledStyle({ ...secondaryButtonStyle, flex: "1 1 180px", minHeight: 40, padding: "9px 13px", borderRadius: 20, border: connected ? "1px solid #d2d2d7" : "1px solid #e5e5ea", background: connected ? "#ffffff" : "#f5f5f7", color: connected ? "#1d1d1f" : "#6e6e73", justifyContent: "center", fontSize: 13 }, busy)}>
                 {connected ? generatingNetwork === platform ? "Analizando..." : "✓ " + label + " · Crear oportunidad" : label + " · Configurar"}
               </button>;
-            }))}
+              })
+            )}
             {pendingList.length > 0 && (
               <button
                 onClick={handlePublishAll}

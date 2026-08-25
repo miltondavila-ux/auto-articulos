@@ -398,13 +398,15 @@ async function processThreadsJob(job: {
   // pudiera ser temporal o bloquear al worker.
   if (!imageUrl) {
     const articleImage = await getArticleOpenGraphImage(job.articleUrl);
-    if (articleImage && job.titleId) {
-      imageUrl = (await hostThreadsSourceImage(job.titleId, articleImage)) ?? undefined;
+    if (articleImage) {
+      imageUrl = (await hostThreadsSourceImage(job.titleId || job.id, articleImage)) ?? undefined;
     }
   }
 
   if (!imageUrl) {
-    throw new Error("No se encontró una imagen pública para Threads: revisa que el artículo tenga og:image.");
+    // La imagen es preferible, pero nunca debe impedir la publicación del
+    // texto: este era el comportamiento funcional anterior de Threads.
+    console.warn(`Threads ${job.id}: no se pudo preparar imagen; se publicará solo el texto.`);
   }
 
   const result = await publishThread(accessToken, integration.threadsUserId, finalPost, imageUrl);
