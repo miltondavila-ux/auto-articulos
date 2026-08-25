@@ -62,12 +62,11 @@ export default function PreValidationGuard({
 
   const isReady =
     type === "publicar"
-      ? credentialsConfigured && hasCategories && hasLanguage && hasImageCredits
+      ? credentialsConfigured && hasCategories && hasLanguage
       : credentialsConfigured &&
         hasCategories &&
         hasLanguage &&
-        isGoogleReady &&
-        hasImageCredits;
+        isGoogleReady;
 
   if (isReady) {
     return <>{children}</>;

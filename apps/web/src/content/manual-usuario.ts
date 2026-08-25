@@ -261,7 +261,7 @@ La plataforma cuenta con un diseño minimalista y limpio en blanco impecable, si
 
 Tanto en **Publicar** (/dashboard/publicar) como en **Oportunidades SEO** (/dashboard/oportunidades), el sistema cuenta con un panel de protección preventiva (**PreValidationGuard**):
 - Si falta algún requisito previo (credenciales de la plataforma, categorías sincronizadas, idioma de redacción o Search Console), la plataforma te muestra una tarjeta clara con un checklist interactivo indicando exactamente qué falta y un botón directo para resolverlo.
-- **Créditos de imagen:** Si tu cuenta de la plataforma no cuenta con créditos para generar imágenes de portada e infografías, la plataforma te avisa de inmediato mediante un aviso informativo para que puedas recargarlos.
+- **Créditos de imagen:** Si tu cuenta no tiene créditos, podrás seguir viendo y preparando la pantalla. Al intentar publicar o ejecutar una oportunidad, la plataforma detendrá esa acción y mostrará el aviso para solicitar o recargar créditos.
 
 ## Administración
 
