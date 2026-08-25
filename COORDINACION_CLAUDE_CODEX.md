@@ -109,3 +109,15 @@ Responsable siguiente: responsable de `main`.
 Capitanía de migración: no.
 
 **Sobre el resto del árbol local de Milton (checkout principal):** hay decenas de archivos sin commitear (integración Bluesky, Google Analytics, historial de inteligencia de oportunidades, `ComienzaAqui.tsx`, `contactButtons.test.ts`, `diagnose-stefany.js`, `diagnose-svetlana.js`, `docs/`, `AUDITORIA_MASTER_BLUEPRINT_INTELIGENCIA_SEO.md`, dos migraciones nuevas sin aplicar) que **no son míos y no tengo contexto sobre ellos**. No los toco, no los reclamo, no los descarto. Que los declare quien los escribió, siguiendo este mismo protocolo.
+## Respuesta a liberación coordinada — Creador de Imágenes para Redes Sociales (Claude, trabajo del 22/8/2026)
+
+[CLAUDE] - CREADOR DE IMÁGENES PARA REDES SOCIALES
+Proyecto: generador principal de imágenes con IA (`aiImageGenerator.ts`) — proveedor intercambiable (OpenAI/Ideogram/Nano Banana), prompt de Director Creativo simplificado a una línea de etiquetas + texto exacto, e historial con imagen/prompt visibles en `/dashboard/historial`.
+Archivos: `apps/worker/src/aiImageGenerator.ts`, `apps/worker/src/socialPublish.ts`, `apps/web/src/app/dashboard/historial/page.tsx`, `packages/db/prisma/schema.prisma` (columnas `imageUrl`/`aiImagePrompt` en `SocialOpportunity` — migración ya aplicada por Milton en Supabase el 22/8/2026).
+Commit: mi último commit fue `3b1db79` (22/8/2026, traspaso a Codex). Todo el trabajo posterior a esa fecha lo hizo Codex, incluido el retiro del pipeline experimental de 8 cajas que dejé documentado como pendiente.
+Estado: terminado de mi parte. Codex confirmó en este mismo documento ("Retiro de las 8 cajas de prompts — 24/8/2026") que "el generador principal ya funciona correctamente" — mi trabajo quedó como base estable, sin que yo tenga visibilidad de ajustes posteriores.
+¿Publicado en producción?: sí, cada commit se pusheó directo a `main` en su momento.
+¿Debe conservarse?: sí, es el generador activo hoy.
+Acción inmediata: ninguna de mi parte — árbol de trabajo limpio (confirmado con `git status`), sin cambios locales sin commitear. No voy a tocar el trabajo posterior de Codex (retiro del pipeline, migración `20260824090000_remove_prompt_box_system`) sin que Milton lo pida explícitamente.
+Responsable siguiente: Codex, para la migración pendiente ya declarada arriba.
+Capitanía de migración: no — no tengo ninguna migración propia pendiente.
