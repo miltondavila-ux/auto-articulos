@@ -23,6 +23,7 @@ import TumblrSection from "@/components/TumblrSection";
 import BlueskySection from "@/components/BlueskySection";
 import MastodonSection from "@/components/MastodonSection";
 import DevToSection from "@/components/DevToSection";
+import BrowserTabsConnectionNotice from "@/components/BrowserTabsConnectionNotice";
 import PhotoLogoUploader from "@/components/PhotoLogoUploader";
 import OnboardingWizard from "@/components/OnboardingWizard";
 import CategorySyncProgress, {
@@ -969,6 +970,7 @@ export default function ConfiguracionPage() {
         <div
           style={{ display: "flex", flexDirection: "column", gap: 16 }}
         >
+          <BrowserTabsConnectionNotice />
           <BusinessProfileSection />
           {(allowThreadsPublishing || allowInstagramPublishing || allowFacebookPublishing || isAdmin || tieneModuloRedes) && (
             <ThreadsSection allowThreads={isAdmin || tieneModuloRedes || allowThreadsPublishing} allowInstagram={isAdmin || tieneModuloRedes || allowInstagramPublishing} allowFacebook={isAdmin || tieneModuloRedes || allowFacebookPublishing} isAdmin={isAdmin} />

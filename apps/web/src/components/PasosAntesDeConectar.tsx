@@ -61,11 +61,10 @@ export default function PasosAntesDeConectar({
         }}
       >
         <li style={{ marginBottom: 8 }}>
-          <strong>Primero que todo: abre {red} en otra pestaña</strong> de este
-          mismo navegador, o en la app de tu teléfono si estás desde el móvil, y
-          deja la sesión iniciada. Es el paso que más falla: sin sesión abierta,
-          el botón te lleva a una pantalla de acceso y la conexión no se
-          completa.
+          <strong>Cierra todas las pestañas del navegador excepto esta del sistema.</strong>{" "}
+          Después abre {red} en una pestaña nueva de este mismo navegador y deja
+          allí iniciada la sesión. No cierres esta pestaña del sistema: la
+          necesitarás para volver y completar la conexión.
         </li>
         <li style={{ marginBottom: 8 }}>
           <strong>Si todavía no tienes cuenta, créala primero.</strong>{" "}
@@ -79,8 +78,9 @@ export default function PasosAntesDeConectar({
         </li>
         {extra}
         <li>
-          <strong>Vuelve aquí y pulsa el botón.</strong> Se abrirá {red} para
-          que autorices. Acepta y te devolverá solo a esta página.
+          <strong>Vuelve a esta pestaña del sistema y pulsa el botón.</strong>{" "}
+          Se abrirá una pestaña nueva para que autorices {red}. Acepta y vuelve
+          a la pestaña del sistema para comprobar el resultado.
         </li>
       </ol>
     </div>

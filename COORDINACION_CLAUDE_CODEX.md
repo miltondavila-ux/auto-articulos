@@ -20,6 +20,18 @@ Acción inmediata: liberar este lote y no realizar cambios, migraciones ni despl
 Responsable siguiente: responsable del siguiente lote identificado en este documento; cualquier cambio nuevo debe usar su propia rama o worktree.
 Capitanía de migración: no.
 
+## Instrucciones de pestañas para conexiones sociales — 24/8/2026
+
+[CODEX] - CONFIGURACIÓN DE REDES SOCIALES
+Proyecto: hacer explícito el procedimiento de pestañas antes de configurar cualquier red social.
+Archivos: `apps/web/src/components/PasosAntesDeConectar.tsx`, `apps/web/src/components/BrowserTabsConnectionNotice.tsx` y `apps/web/src/app/dashboard/configuracion/page.tsx`.
+Estado: terminado en código; se muestra la instrucción de cerrar las demás pestañas, mantener abierta Auto Artículos y autorizar en una pestaña nueva.
+¿Publicado en producción?: no.
+¿Debe conservarse?: sí.
+Acción inmediata: revisar el despliegue de este lote; no cambia la lógica OAuth ni requiere migración.
+Responsable siguiente: responsable de `main`.
+Capitanía de migración: no.
+
 ## Retiro de las 8 cajas de prompts — 24/8/2026
 
 [CODEX] - GENERADOR PRINCIPAL DE IMÁGENES IA
