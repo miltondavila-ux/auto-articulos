@@ -24,7 +24,7 @@ import BlueskySection from "@/components/BlueskySection";
 import MastodonSection from "@/components/MastodonSection";
 import DevToSection from "@/components/DevToSection";
 import BrowserTabsConnectionNotice from "@/components/BrowserTabsConnectionNotice";
-import PhotoLogoUploader from "@/components/PhotoLogoUploader";
+import PhotoLogoUploader, { type UploadType } from "@/components/PhotoLogoUploader";
 import OnboardingWizard from "@/components/OnboardingWizard";
 import CategorySyncProgress, {
   type CategorySyncStatus,
@@ -78,10 +78,9 @@ export default function ConfiguracionPage() {
   const [savingPrompt, setSavingPrompt] = useState(false);
   const [phone, setPhone] = useState("");
   const [savingPhone, setSavingPhone] = useState(false);
-  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
-  const [businessLogoUrl, setBusinessLogoUrl] = useState<string | null>(null);
-  const [uploadingProfilePhoto, setUploadingProfilePhoto] = useState(false);
-  const [uploadingBusinessLogo, setUploadingBusinessLogo] = useState(false);
+  const [profilePhotoUrls, setProfilePhotoUrls] = useState<Record<"profile" | "profile2" | "profile3", string | null>>({ profile: null, profile2: null, profile3: null });
+  const [businessLogoUrls, setBusinessLogoUrls] = useState<Record<"logo" | "logo2", string | null>>({ logo: null, logo2: null });
+  const [uploadingImageType, setUploadingImageType] = useState<UploadType | null>(null);
   const [imageUploadError, setImageUploadError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userEmail, setUserEmail] = useState("");
@@ -182,8 +181,8 @@ export default function ConfiguracionPage() {
        setArticleSignature(data.articleSignature ?? "");
        setDefaultPromptId(data.defaultPromptId ?? "");
        setPhone(data.phone ?? "");
-       setProfilePhotoUrl(data.profilePhotoUrl ?? null);
-       setBusinessLogoUrl(data.businessLogoUrl ?? null);
+       setProfilePhotoUrls({ profile: data.profilePhotoUrl ?? null, profile2: data.profilePhotoUrl2 ?? null, profile3: data.profilePhotoUrl3 ?? null });
+       setBusinessLogoUrls({ logo: data.businessLogoUrl ?? null, logo2: data.businessLogoUrl2 ?? null });
         setIsAdmin(data.role === "admin");
         setUserEmail(data.email ?? "");
         setAllowInstagramPublishing(data.allowInstagramPublishing ?? false);
@@ -393,9 +392,8 @@ export default function ConfiguracionPage() {
     }
   }
 
-  async function handleUploadImage(type: "profile" | "logo", file: File) {
-    const setUploading = type === "profile" ? setUploadingProfilePhoto : setUploadingBusinessLogo;
-    setUploading(true);
+  async function handleUploadImage(type: UploadType, file: File) {
+    setUploadingImageType(type);
     setImageUploadError(null);
     try {
       const formData = new FormData();
@@ -408,17 +406,17 @@ export default function ConfiguracionPage() {
         setImageUploadError(msg);
         throw new Error(msg);
       }
-      if (type === "profile") {
-        setProfilePhotoUrl(data.url);
+      if (type === "profile" || type === "profile2" || type === "profile3") {
+        setProfilePhotoUrls((current) => ({ ...current, [type]: data.url }));
       } else {
-        setBusinessLogoUrl(data.url);
+        setBusinessLogoUrls((current) => ({ ...current, [type]: data.url }));
       }
       const kb = data.sizeBytes ? Math.round(data.sizeBytes / 1024) : null;
       const sizeNote = kb ? ` (${kb}KB)` : "";
       setBanner({
         type: "info",
         text:
-          (type === "profile" ? "Foto de perfil guardada" : "Logo guardado") + sizeNote + ".",
+          (type.startsWith("profile") ? "Foto guardada" : "Logo guardado") + sizeNote + ".",
       });
     } catch (err) {
       const msg =
@@ -428,28 +426,27 @@ export default function ConfiguracionPage() {
       setImageUploadError(msg);
       throw err;
     } finally {
-      setUploading(false);
+      setUploadingImageType(null);
     }
   }
 
-  async function handleRemoveImage(type: "profile" | "logo") {
-    const label = type === "profile" ? "tu foto de perfil" : "el logo del negocio";
+  async function handleRemoveImage(type: UploadType) {
+    const label = type.startsWith("profile") ? "esta foto" : "este logo";
     if (!confirm(`¿Deseas eliminar ${label}?`)) return;
-    const setUploading = type === "profile" ? setUploadingProfilePhoto : setUploadingBusinessLogo;
-    setUploading(true);
+    setUploadingImageType(type);
     try {
       await fetch("/api/me/upload-image", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type }),
       });
-      if (type === "profile") {
-        setProfilePhotoUrl(null);
+      if (type === "profile" || type === "profile2" || type === "profile3") {
+        setProfilePhotoUrls((current) => ({ ...current, [type]: null }));
       } else {
-        setBusinessLogoUrl(null);
+        setBusinessLogoUrls((current) => ({ ...current, [type]: null }));
       }
     } finally {
-      setUploading(false);
+      setUploadingImageType(null);
     }
   }
 
@@ -1598,9 +1595,10 @@ export default function ConfiguracionPage() {
             </div>
 
             <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 14 }}>
-              Estas dos imágenes se usan como elementos visuales al generar las
+              Estas imágenes se usan como elementos visuales al generar las
               publicaciones de Instagram, Threads, X y LinkedIn (carruseles,
-              reels e infografías). Sube aquí las tuyas y el sistema las
+              reels e infografías). Puedes subir hasta tres fotos diferentes y
+              dos versiones de tu logo; el sistema las
               optimizará automáticamente. No necesitas preocuparte por el
               tamaño: el servidor las deja listas en óptimas condiciones para
               que el prompt de redes sociales las use sin perder calidad.
@@ -1608,13 +1606,44 @@ export default function ConfiguracionPage() {
 
             <PhotoLogoUploader
               type="profile"
-              currentUrl={profilePhotoUrl}
-              uploading={uploadingProfilePhoto}
+              kind="profile"
+              currentUrl={profilePhotoUrls.profile}
+              uploading={uploadingImageType === "profile"}
               onUpload={handleUploadImage}
               onRemove={handleRemoveImage}
               errorMessage={imageUploadError}
-              label="Tu foto de perfil"
-              description="Una foto tuya con buen encuadre. Aparece en cada composición de redes sociales que genere el sistema."
+              label="Foto 1 de perfil"
+              description="Tu foto principal. Puedes reemplazarla cuando quieras."
+              targetWidth={600}
+              targetHeight={600}
+              maxKb={200}
+            />
+
+            <PhotoLogoUploader
+              type="profile2"
+              kind="profile"
+              currentUrl={profilePhotoUrls.profile2}
+              uploading={uploadingImageType === "profile2"}
+              onUpload={handleUploadImage}
+              onRemove={handleRemoveImage}
+              errorMessage={imageUploadError}
+              label="Foto 2 de perfil"
+              description="Una segunda foto diferente para dar variedad a tus publicaciones."
+              targetWidth={600}
+              targetHeight={600}
+              maxKb={200}
+            />
+
+            <PhotoLogoUploader
+              type="profile3"
+              kind="profile"
+              currentUrl={profilePhotoUrls.profile3}
+              uploading={uploadingImageType === "profile3"}
+              onUpload={handleUploadImage}
+              onRemove={handleRemoveImage}
+              errorMessage={imageUploadError}
+              label="Foto 3 de perfil"
+              description="Una tercera foto diferente para ampliar las referencias disponibles."
               targetWidth={600}
               targetHeight={600}
               maxKb={200}
@@ -1622,13 +1651,29 @@ export default function ConfiguracionPage() {
 
             <PhotoLogoUploader
               type="logo"
-              currentUrl={businessLogoUrl}
-              uploading={uploadingBusinessLogo}
+              kind="logo"
+              currentUrl={businessLogoUrls.logo}
+              uploading={uploadingImageType === "logo"}
               onUpload={handleUploadImage}
               onRemove={handleRemoveImage}
               errorMessage={imageUploadError}
-              label="Logo de tu negocio"
-              description="El logo de tu marca o negocio. Idealmente con fondo transparente. Se estampa en una esquina de cada publicación."
+              label="Logo 1 de tu negocio"
+              description="Tu logo principal, idealmente con fondo transparente."
+              targetWidth={500}
+              targetHeight={250}
+              maxKb={200}
+            />
+
+            <PhotoLogoUploader
+              type="logo2"
+              kind="logo"
+              currentUrl={businessLogoUrls.logo2}
+              uploading={uploadingImageType === "logo2"}
+              onUpload={handleUploadImage}
+              onRemove={handleRemoveImage}
+              errorMessage={imageUploadError}
+              label="Logo 2 de tu negocio"
+              description="Una segunda versión de tu logo, por ejemplo horizontal o cuadrada."
               targetWidth={500}
               targetHeight={250}
               maxKb={200}

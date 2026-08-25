@@ -222,7 +222,7 @@ Aquí conectas Google Business Profile y las redes sociales. Las redes son opcio
 
 Ruta: /dashboard/configuracion?tab=platform
 
-Guarda las credenciales de la plataforma, sincroniza categorías e idiomas y elige el idioma habitual. También puedes definir la firma de los artículos, teléfono de contacto, foto de perfil y logo. La foto y el logo se usan cuando el generador de imágenes con IA para redes sociales está activo en tu cuenta (lo activa el administrador).
+Guarda las credenciales de la plataforma, sincroniza categorías e idiomas y elige el idioma habitual. También puedes definir la firma de los artículos, teléfono de contacto, hasta 3 fotos tuyas y hasta 2 logos. Solo la primera foto y el primer logo son obligatorios; el resto es opcional y le da al sistema más variedad para elegir. Estas imágenes se usan cuando el generador de imágenes con IA para redes sociales está activo en tu cuenta (lo activa el administrador).
 
 ### Estado de configuración
 
