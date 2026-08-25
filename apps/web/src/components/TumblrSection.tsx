@@ -64,7 +64,10 @@ export default function TumblrSection({ allowed = true }: { allowed?: boolean })
   }
 
   const configured = settings?.configured ?? false;
-  const connected = Boolean(connection?.connected && !connection?.isExpired);
+  // Una autorización vencida sigue siendo una conexión guardada. No debemos
+  // ocultarla como si se hubiera borrado: así el usuario conserva el blog
+  // elegido y solo ve que necesita renovar el acceso.
+  const connected = Boolean(connection?.connected);
   return <section style={sectionStyle}>
     <h2 style={{ ...h2Style, margin: 0 }}>Tumblr</h2>
     <p className="lead-copy" style={{ fontSize: 13, margin: "4px 0 0" }}>Publica automáticamente tus artículos con imagen, texto y enlace.</p>
@@ -82,7 +85,9 @@ export default function TumblrSection({ allowed = true }: { allowed?: boolean })
         <strong style={{ color: "#1d1d1f", fontSize: 15 }}>Conexión de Tumblr</strong>
         <p className="lead-copy" style={{ fontSize: 12, margin: "4px 0 0" }}>Autoriza tu cuenta, elige el blog y controla la conexión desde aquí.</p>
         {!configured ? <p className="notice" style={{ margin: "14px 0 0" }}>El administrador debe configurar primero las credenciales de Tumblr.</p> : !connected ? <button onClick={() => { window.location.href = "/api/search-integrations/tumblr/connect"; }} style={{ ...secondaryButtonStyle, background: "#36465d", color: "#fff", border: "none", marginTop: 14 }}>Conectar Tumblr →</button> : <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
-          <p style={{ margin: 0, color: "#16803c", fontSize: 13, fontWeight: 600 }}>✓ Tumblr conectado</p>
+          <p style={{ margin: 0, color: connection?.isExpired ? "#b45309" : "#16803c", fontSize: 13, fontWeight: 600 }}>
+            {connection?.isExpired ? "⚠ Tumblr conectado, pero la autorización venció" : "✓ Tumblr conectado"}
+          </p>
           <label style={{ color: "#1d1d1f", fontSize: 12 }}>Blog<select value={blogIdentifier} onChange={(e) => setBlogIdentifier(e.target.value)} style={inputStyle}>{(connection?.blogs || []).map((blog) => <option key={blog.identifier} value={blog.identifier}>{blog.title}</option>)}</select></label>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><button onClick={saveBlog} disabled={saving} className="secondary" style={secondaryButtonStyle}>Guardar blog</button><button onClick={() => { window.location.href = "/api/search-integrations/tumblr/connect"; }} className="secondary" style={secondaryButtonStyle}>Reconectar</button><button onClick={disconnect} disabled={saving} className="secondary" style={secondaryButtonStyle}>Desconectar</button></div>
         </div>}
