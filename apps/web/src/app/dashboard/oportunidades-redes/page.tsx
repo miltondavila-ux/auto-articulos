@@ -350,14 +350,27 @@ export default function OportunidadesRedesPage() {
             </p>
           </div>
 
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+              gap: 8,
+              width: "100%",
+              maxWidth: 780,
+              marginLeft: "auto",
+              padding: 6,
+              borderRadius: 16,
+              background: "#f5f5f7",
+              border: "1px solid #e5e5ea",
+            }}
+          >
             {([
               ["threads", "threads", "Threads"], ["x", "x", "X (Twitter)"], ["linkedin", "linkedin", "LinkedIn"], ["instagram", "instagram", "Instagram"], ["facebookPage", "facebook-page", "Facebook"], ["pinterest", "pinterest", "Pinterest"], ["tumblr", "tumblr", "Tumblr"], ["bluesky", "bluesky", "Bluesky"], ["mastodon", "mastodon", "Mastodon"], ["devto", "devto", "DEV.to"],
             ] as const).map(([key, platform, label]) => {
               if (!activeNetworks[key]) return null;
               const connected = connectedNetworks[key];
               const busy = connected && Boolean(generatingNetwork);
-              return <button key={key} type="button" onClick={() => connected ? handleGenerate(platform) : router.push("/dashboard/configuracion?tab=social")} disabled={busy} className="secondary" style={disabledStyle({ ...secondaryButtonStyle, padding: "9px 14px", fontSize: 13, border: connected ? "1px solid rgba(52, 199, 89, 0.38)" : "1px solid #d2d2d7", background: connected ? "#f2faf4" : "#f5f5f7", color: connected ? "#16803c" : "#6e6e73" }, busy)}>
+              return <button key={key} type="button" onClick={() => connected ? handleGenerate(platform) : router.push("/dashboard/configuracion?tab=social")} disabled={busy} className="secondary" style={disabledStyle({ ...secondaryButtonStyle, width: "100%", minHeight: 42, padding: "10px 12px", borderRadius: 12, border: connected ? "1px solid #d2d2d7" : "1px solid #e5e5ea", background: "#ffffff", color: connected ? "#1d1d1f" : "#6e6e73", justifyContent: "center", fontSize: 13 }, busy)}>
                 {connected ? generatingNetwork === platform ? "Analizando..." : "✓ " + label + " · Crear oportunidad" : label + " · Configurar"}
               </button>;
             })}
@@ -365,7 +378,7 @@ export default function OportunidadesRedesPage() {
               <button
                 onClick={handlePublishAll}
                 disabled={publishingAll}
-                style={{ ...buttonStyle, marginTop: 0, padding: "9px 16px", fontSize: 13 }}
+                style={{ ...buttonStyle, gridColumn: "1 / -1", justifySelf: "end", marginTop: 0, minHeight: 42, padding: "10px 18px", borderRadius: 21, fontSize: 13 }}
               >
                 {publishingAll ? "Publicando..." : "Publicar todo el lote"}
               </button>
