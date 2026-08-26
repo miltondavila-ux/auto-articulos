@@ -339,7 +339,7 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
                     Conectar Instagram
                   </a>
                 ))}
-              {allowFacebook && isAdmin && (facebookPageConnection?.connected ? (
+              {allowFacebook && (facebookPageConnection?.connected ? (
                 <button onClick={() => disconnect("facebook")} disabled={disconnecting === "facebook"} className="secondary" style={disabledStyle(secondaryButtonStyle, disconnecting === "facebook")}>
                   {disconnecting === "facebook" ? "Desconectando..." : `Desconectar Facebook Page${facebookPageConnection.facebookPageName ? ` (${facebookPageConnection.facebookPageName})` : ""}`}
                 </button>
