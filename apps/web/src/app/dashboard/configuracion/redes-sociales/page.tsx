@@ -1,2 +1,2 @@
-import { redirect } from "next/navigation";
-export default function RedesSocialesPage() { redirect("/dashboard/configuracion?tab=social"); }
+import ConfiguracionView from "../ConfiguracionView";
+export default function RedesSocialesPage() { return <ConfiguracionView initialTab="social" showTabs={false} />; }

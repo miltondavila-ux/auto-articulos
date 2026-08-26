@@ -1,2 +1,2 @@
-import { redirect } from "next/navigation";
-export default function IndexacionPage() { redirect("/dashboard/configuracion?tab=integrations"); }
+import ConfiguracionView from "../ConfiguracionView";
+export default function IndexacionPage() { return <ConfiguracionView initialTab="integrations" showTabs={false} />; }

@@ -1,2 +1,2 @@
-import { redirect } from "next/navigation";
-export default function MovilPage() { redirect("/dashboard/configuracion?tab=mobile"); }
+import ConfiguracionView from "../ConfiguracionView";
+export default function MovilPage() { return <ConfiguracionView initialTab="mobile" showTabs={false} />; }
