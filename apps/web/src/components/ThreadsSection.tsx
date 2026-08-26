@@ -232,6 +232,14 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
     );
   }
 
+  function connectionStatus(connected: boolean, label: string, account?: string) {
+    return (
+      <span style={{ color: connected ? "#16803c" : "#8a4b08", fontSize: 12, fontWeight: 600 }}>
+        {connected ? `✓ Conectado — ${label}${account ? ` (${account})` : ""}` : `○ No conectado — ${label}`}
+      </span>
+    );
+  }
+
   return (
     <section style={sectionStyle}>
       <h2 style={{ ...h2Style, margin: 0 }}>Instagram, Facebook y Threads</h2>
@@ -251,7 +259,7 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
           */}
           {isAdmin && (
             <>
-              {credentialBlock(
+          {credentialBlock(
                 "meta",
                 "Meta Principal",
                 "Credenciales principales para Instagram y Facebook.",
@@ -265,6 +273,12 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
               )}
             </>
           )}
+
+          <div style={{ display: "grid", gap: 8, marginTop: 16 }}>
+            {allowThreads && connectionStatus(Boolean(threadsConnection?.connected), "Threads", threadsConnection?.threadsUsername ? `@${threadsConnection.threadsUsername}` : undefined)}
+            {allowInstagram && connectionStatus(Boolean(instagramConnection?.connected), "Instagram", instagramConnection?.instagramUsername ? `@${instagramConnection.instagramUsername}` : undefined)}
+            {allowFacebook && connectionStatus(Boolean(facebookPageConnection?.connected), "Facebook Page", facebookPageConnection?.facebookPageName)}
+          </div>
 
           {(allowThreads || allowInstagram || allowFacebook) && (
           <div style={{ marginTop: 18 }}>
@@ -305,29 +319,16 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
                 </a>
               ))}
 
-              {/*
-                Un solo botón para Instagram y Facebook: los dos salían del
-                MISMO permiso de Meta y apuntaban a la misma dirección, así que
-                dos botones hacían pensar que eran dos conexiones distintas. El
-                de Facebook además solo lo veían los administradores.
-              */}
-              {(allowInstagram || allowFacebook) &&
-                (instagramConnection?.connected || facebookPageConnection?.connected ? (
+              {allowInstagram && (instagramConnection?.connected ? (
                   <button
-                    onClick={() => disconnect("facebook")}
-                    disabled={disconnecting === "facebook"}
+                    onClick={() => disconnect("meta")}
+                    disabled={disconnecting === "meta"}
                     className="secondary"
-                    style={disabledStyle(secondaryButtonStyle, disconnecting === "facebook")}
+                    style={disabledStyle(secondaryButtonStyle, disconnecting === "meta")}
                   >
-                    {disconnecting === "facebook"
+                    {disconnecting === "meta"
                       ? "Desconectando..."
-                      : `Desconectar Instagram y Facebook${
-                          instagramConnection?.instagramUsername
-                            ? ` (@${instagramConnection.instagramUsername})`
-                            : facebookPageConnection?.facebookPageName
-                              ? ` (${facebookPageConnection.facebookPageName})`
-                              : ""
-                        }`}
+                      : `Desconectar Instagram${instagramConnection.instagramUsername ? ` (@${instagramConnection.instagramUsername})` : ""}`}
                   </button>
                 ) : (
                   <a
@@ -335,9 +336,18 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
                     className="secondary"
                     style={{ ...secondaryButtonStyle, textDecoration: "none", display: "inline-flex" }}
                   >
-                    Conectar Instagram y Facebook
+                    Conectar Instagram
                   </a>
                 ))}
+              {allowFacebook && isAdmin && (facebookPageConnection?.connected ? (
+                <button onClick={() => disconnect("facebook")} disabled={disconnecting === "facebook"} className="secondary" style={disabledStyle(secondaryButtonStyle, disconnecting === "facebook")}>
+                  {disconnecting === "facebook" ? "Desconectando..." : `Desconectar Facebook Page${facebookPageConnection.facebookPageName ? ` (${facebookPageConnection.facebookPageName})` : ""}`}
+                </button>
+              ) : (
+                <a href="/api/search-integrations/instagram/connect" className="secondary" style={{ ...secondaryButtonStyle, textDecoration: "none", display: "inline-flex" }}>
+                  Conectar Facebook Page
+                </a>
+              ))}
             </div>
           </div>
           )}
