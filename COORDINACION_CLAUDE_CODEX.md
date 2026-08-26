@@ -190,3 +190,39 @@ Estado: corrección confirmada en producción por Milton; no requiere migración
 Pruebas: `git diff --check` correcto. El typecheck completo quedó bloqueado por
 dependencias no instaladas en el worktree aislado. Producción queda marcada como
 confirmada por el responsable, sin verificación independiente desde esta sesión.
+
+## ENTREGA — CODEX - GPT-5 - PROMPT ESTADISTICO PERDIDO
+
+Proyecto: Restauración de selectores de prompts de redacción.
+
+Objetivo de programación: devolver el prompt secundario configurable a
+Oportunidades y Publicar.
+
+Alcance incluido: carga de prompts, selector visual, prompt predeterminado y
+envío de `promptId` en ambas pantallas.
+
+Alcance excluido: Administración, API, base de datos, worker y migraciones; ya
+estaban presentes y funcionales en producción.
+
+Archivos modificados: `apps/web/src/app/dashboard/oportunidades/page.tsx` y
+`apps/web/src/app/dashboard/publicar/page.tsx`; `vercel.json` para build del
+monorepo.
+
+Commit propio: `6509408` (funcionalidad), `9f08cce` (build del monorepo).
+
+Rama/worktree: `codex/restaurar-selectores-prompts` /
+`/private/tmp/restaurar-selectores-prompts`.
+
+Estado actual: publicado y READY en Vercel, proyecto `web`, deployment
+`dpl_8uuaFyG8xqDh1GrtiaHamJ4jD21A`.
+
+URL/deployment verificado: `https://web-aovkk8sao-luna-portex-intelligence.vercel.app`.
+
+Migraciones: ninguna. Pruebas: build completo de Next.js, TypeScript y Prisma;
+`git diff --check` correcto.
+
+Conflictos: ninguno; se trabajó desde el commit exacto de producción y con
+diff mínimo. Trabajo pendiente: confirmar visualmente en la cuenta de usuario
+que los nombres de prompts aparecen en ambos selectores.
+
+Responsable siguiente: Milton.
