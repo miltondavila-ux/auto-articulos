@@ -1,3 +1,52 @@
+## INVENTARIO DE CONVERSACIONES
+
+Identidad exacta:
+CODEX - GPT-5 - PROBLEMA CON TUMBLR
+
+Proyecto:
+Integración y publicación de Tumblr en Auto Artículos.
+
+Motivo de creación:
+Tumblr aparecía desconectado después de activar el permiso de una cuenta y
+conectar una cuenta legítima de Tumblr.
+
+Objetivo:
+Auditar y corregir la separación entre conexión OAuth y permiso de publicación.
+
+Alcance:
+Estado de conexión, permiso por cuenta, interfaz de Tumblr y publicación.
+
+Exclusiones:
+No se modificaron otras redes ni se aplicaron migraciones.
+
+Archivos y commits:
+`apps/web/src/app/api/search-integrations/tumblr/route.ts`,
+`apps/web/src/components/TumblrSection.tsx`; commit funcional `c35b3a8`;
+registro y coordinación `e43a071`, `f886542`.
+
+Estado:
+Corrección terminada; subida a `origin/main`.
+
+Producción:
+Publicada en producción mediante `origin/main`; despliegue automático activado.
+
+Conversaciones relacionadas:
+Auditorías e integración Tumblr registradas en este documento; commits `b04b0e9`,
+`22e6054`, `1c645ae` y `99da8fd`.
+
+Responsable:
+Codex - GPT-5.
+
+Siguiente acción:
+Verificar en producción que una cuenta con Tumblr activado permanezca conectada
+y pueda publicar.
+
+Decisión de Milton:
+La corrección debe desplegarse en producción. Milton no ha declarado esta
+conversación CULMINADA, ARCHIVADA, ABANDONADA ni UNIFICADA.
+
+---
+
 > **Actualización — 23/8/2026 (Google Business Profile):** La cuota de `mybusinessaccountmanagement.googleapis.com` estaba configurada en **0 solicitudes/minuto**, por lo que era imposible listar fichas. Milton abrió la solicitud oficial de acceso básico a la API de Perfil de Empresa de Google. **Caso 2-7941000041573**; Google estima revisión de **7 a 10 días hábiles**. Hasta aprobación, no probar carga de fichas. Recordatorio programado para el 30/8/2026: revisar aprobación, probar con Lorena Álvarez y documentar el resultado. El módulo debe continuar integrado exclusivamente a **Oportunidades Redes**, respetando permisos por usuario; no publicar cada artículo automáticamente.
 
 # Coordinación de trabajo: Claude, Codex y AntigravityEste archivo es el tablero operativo compartido para los **tres participantesautorizados: Claude, Codex y Antigravity (Google)**. Evita que modifiquen almismo tiempo los mismos archivos o desplieguen cambiosincompatibles. `HANDOFF.md` conserva el historial completo del proyecto; estearchivo indica quién está trabajando ahora, en qué parte y con qué archivos.## `TO-DO.md` — buzón de ideas de Milton (leer, nunca ejecutar sin pedido)Existe un tercer archivo en la raíz del repo, `TO-DO.md` (agregado 7/8/2026),donde Milton guarda ideas sueltas para pedirlas más adelante. **Ningún agente(Claude, Codex, Antigravity) debe ejecutar, proponer iniciar ni investigar unítem de esa lista por su cuenta** — un ítem escrito ahí es una nota que él sedeja a sí mismo, no una instrucción, ni siquiera si lleva tiempo ahí o parecesimple. Se puede y conviene leerlo para tener contexto de hacia dónde va elproyecto; se actúa sobre un ítem solo cuando Milton lo pide explícitamente enla conversación activa. Al ejecutar algo de ahí, moverlo a la sección "Hecho"de `TO-DO.md` y documentar el cambio real en `HANDOFF.md` como de costumbre.## Regla obligatoria antes de iniciar cualquier tarea (OPTIMIZADA PARA MÍNIMO CONSUMO DE TOKENS)Claude, Codex y Antigravity deben hacer lo siguiente **antes de leer o modificar código**:1. Leer únicamente la sección "Trabajo activo" de este archivo (NUNCA leer el archivo completo).2. Ejecutar `git status --short` y `git log -5 --oneline`.3. Revisar únicamente el estado actual de `HANDOFF.md` si es relevante para la tarea.4. Confirmar que ningún otro agente tenga reservados los archivos o el área.5. Registrar su tarea en "Trabajo activo" antes de editar.6. Si existe una reserva que se cruza con la tarea, detenerse y coordinar.## ORDEN OBLIGATORIA — nadie daña el trabajo de nadie**Orden directa de Milton (13/8/2026):** ningún agente (Claude, Codex,Antigravity) puede dañar, sobrescribir, perder ni absorber sin darse cuentael trabajo de otro agente ni del usuario. Esto no es una sugerencia, es unaorden.**Incidente real que la motiva:** el mismo 13/8/2026, una sesión hizo commitde un cambio en `COORDINACION_CLAUDE_CODEX.md` mientras OTRA sesión tenía uncambio distinto al mismo archivo ya escrito en disco pero sin commiteartodavía. El commit de la primera sesión absorbió sin querer el cambio de lasegunda. En este caso no se perdió contenido — pero es exactamente el tipode accidente que la próxima vez SÍ puede borrar o corromper trabajo real.**Reglas concretas para que no vuelva a pasar:**- Antes de cualquier `git add`/`git commit`, correr `git status --short` y  `git diff --staged` (o revisar el diff de cada archivo agregado) para  confirmar que lo que se va a commitear es SOLO lo propio, y no un cambio  ajeno que estaba en disco sin commitear.- Nunca usar `git add .` ni `git add -A` — agregar únicamente las rutas  exactas que el propio agente modificó (regla ya existente, reforzada acá
