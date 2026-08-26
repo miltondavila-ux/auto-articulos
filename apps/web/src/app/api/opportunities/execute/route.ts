@@ -6,7 +6,7 @@ import { hasTrialAccess } from "@/lib/trial";
 
 export async function POST(request: NextRequest) {
   const userId = await getCurrentUserId();
-  const { type, id, ids, disableIndexing, contentLanguage, promptId } =
+  const { type, id, ids, disableIndexing, contentLanguage, promptId, confirmedImageCredits } =
     (await request.json()) as {
       type?: string;
       id?: string;
@@ -14,6 +14,7 @@ export async function POST(request: NextRequest) {
       disableIndexing?: boolean;
       contentLanguage?: string;
       promptId?: string;
+      confirmedImageCredits?: boolean;
     };
   const selectedIds = type === "titles" && Array.isArray(ids)
     ? [...new Set(ids.filter((candidate): candidate is string => typeof candidate === "string" && candidate.length > 0))]
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
-  if (!user.hasImageCredits) {
+  if (!user.hasImageCredits && confirmedImageCredits !== true) {
     return NextResponse.json(
       {
         error:

@@ -20,6 +20,17 @@ Acción inmediata: liberar este lote y no realizar cambios, migraciones ni despl
 Responsable siguiente: responsable del siguiente lote identificado en este documento; cualquier cambio nuevo debe usar su propia rama o worktree.
 Capitanía de migración: no.
 
+[CLAUDE] - MEJORAS APPLE HIG EN COMO FUNCIONA/INICIO, SYNC DE CATEGORÍAS (WENDY CHAWA) Y GRÁFICO/PALETA DE TREMOR
+Proyecto: en esta sesión (rama `claude/coordination-document-bu3fbo`, publicando siempre directo a `main`): (1) diagnóstico y fix de sincronización de categorías atascada prematuramente (caso Wendy Chawa); (2) reescritura completa e iterativa de `/dashboard/como-funciona` (botón de estado, ejemplo narrativo, explicación de indexar/posicionar/SEO-AEO/Google/Bing/Search Console, negritas, reordenamiento); (3) botón "Comienza aquí" movido de Cómo Funciona a Inicio, e invitación a leer Cómo Funciona agregada al wizard; (4) botón rojo Ferrari en Oportunidades cuando no hay resultados nuevos; (5) backfill del changelog de usuario (`ProductUpdate`) para el hueco 10/8→23/8 y workflow reutilizable para futuras entradas; (6) arreglo del gráfico "Tu ritmo" de Inicio (clases de Tremor purgadas por Tailwind) y realineación de la paleta de Tremor a los colores Apple ya establecidos, tras reportarse que "carnavalizaba" el tema.
+Archivos: sin cambios locales pendientes — el worktree está limpio (`git status --short` vacío). Áreas tocadas ya integradas en `origin/main`: `apps/worker/src/categorySync.ts`, `apps/worker/src/cleanup.ts`, `apps/web/src/lib/sync-jobs.ts`, `apps/web/src/app/dashboard/como-funciona/page.tsx`, `apps/web/src/app/dashboard/page.tsx`, `apps/web/src/app/dashboard/oportunidades/page.tsx`, `apps/web/src/components/OnboardingWizard.tsx`, `apps/web/tailwind.config.js`, además de varios `scripts/*.ts` y `.github/workflows/*.yml` de solo-lectura/backfill (diagnóstico y changelog).
+Commit: cadena continua sobre `main` desde `65fd59d` hasta `0afe47c`/`d1890e0` (más de 30 commits pequeños, cada uno documentado en su propia entrada de este mismo tablero con fecha 18-23/8/2026); rama local sincronizada con `origin/main` en `440e87f` (fast-forward, sin conflictos) al momento de escribir esta entrada.
+Estado: terminado.
+¿Publicado en producción?: sí — cada commit se empujó directo a `main` en el momento (no hay lote pendiente de desplegar); no hubo migraciones de Prisma en ninguno de estos cambios (ni falta aplicar nada en Supabase).
+¿Debe conservarse?: sí, ya vive en `origin/main`; no hay copias locales redundantes que conservar.
+Acción inmediata: liberar este lote; sin cambios, migraciones ni despliegues adicionales pendientes de esta sesión.
+Responsable siguiente: quien tome el próximo lote sobre `main`; si alguien retoma algo de "Cómo Funciona", "Inicio" o el gráfico de Tremor, coordinar aquí antes de tocar los mismos archivos.
+Capitanía de migración: no (ningún cambio de esta sesión tocó `schema.prisma` ni requirió migración).
+
 ## 2026-08-24 — Codex: visibilidad coherente de redes para Lorena
 
 [Codex] - [COHERENCIA DEL MÓDULO OPORTUNIDADES EN REDES]
@@ -83,3 +94,30 @@ Estado: PENDIENTE; Google aún no aprobó el acceso y el botón de conexión per
 Acción inmediata: publicar únicamente el indicador `PENDIENTE`; no habilitar OAuth, publicación ni migraciones.
 Responsable siguiente: responsable de `main` cuando Google apruebe el acceso.
 Capitanía de migración: no.
+
+## Respuesta al protocolo de liberación coordinada — 2026-08-24 (Claude-4)
+
+[CLAUDE-4] - FIX DETECCIÓN DE CRÉDITOS DE IMAGEN AGOTADOS
+Proyecto: el worker nunca detectaba el mensaje REAL de 10minutesWebsite cuando se agotan los créditos de generación de imagen (500 de `response_image_chatgpt.php`, `"Se han agotado los créditos de tu imagen..."`); solo comparaba contra un texto de suposición interna sin datos de red, así que el popup "Créditos de imagen agotados" nunca se disparaba pese al error real y repetido reportado por Milton.
+Archivos: `apps/worker/src/queue.ts`.
+Commit: `b2e61f6` (fix). Documentado también en una entrada de coordinación propia (`e2755c0`) que ya no existe en este archivo — este documento fue reescrito/reducido por otra sesión durante la liberación coordinada; el commit sigue íntegro en el historial de `origin/main`.
+Estado: terminado.
+¿Publicado en producción?: sí; confirmado con `git merge-base --is-ancestor b2e61f6 origin/main` justo antes de escribir esto.
+¿Debe conservarse?: sí, en `origin/main`; no conservar copias locales redundantes.
+Acción inmediata: ninguna de mi parte. El árbol local de Milton (checkout principal, no este worktree) todavía muestra `apps/worker/src/queue.ts` y `COORDINACION_CLAUDE_CODEX.md` como modificados sin commitear — son copias mías, previas a descubrir que ese árbol estaba fuertemente divergido de `origin/main`, y su contenido YA está publicado en los commits de arriba. No las voy a descartar por mi cuenta (regla 6: no tocar cambios ajenos sin documentar); quien tenga autoridad sobre el checkout principal puede confirmarlas como redundantes y descartarlas con `git checkout -- apps/worker/src/queue.ts COORDINACION_CLAUDE_CODEX.md`.
+Responsable siguiente: responsable de `main`.
+Capitanía de migración: no.
+
+**Sobre el resto del árbol local de Milton (checkout principal):** hay decenas de archivos sin commitear (integración Bluesky, Google Analytics, historial de inteligencia de oportunidades, `ComienzaAqui.tsx`, `contactButtons.test.ts`, `diagnose-stefany.js`, `diagnose-svetlana.js`, `docs/`, `AUDITORIA_MASTER_BLUEPRINT_INTELIGENCIA_SEO.md`, dos migraciones nuevas sin aplicar) que **no son míos y no tengo contexto sobre ellos**. No los toco, no los reclamo, no los descarto. Que los declare quien los escribió, siguiendo este mismo protocolo.
+## Respuesta a liberación coordinada — Creador de Imágenes para Redes Sociales (Claude, trabajo del 22/8/2026)
+
+[CLAUDE] - CREADOR DE IMÁGENES PARA REDES SOCIALES
+Proyecto: generador principal de imágenes con IA (`aiImageGenerator.ts`) — proveedor intercambiable (OpenAI/Ideogram/Nano Banana), prompt de Director Creativo simplificado a una línea de etiquetas + texto exacto, e historial con imagen/prompt visibles en `/dashboard/historial`.
+Archivos: `apps/worker/src/aiImageGenerator.ts`, `apps/worker/src/socialPublish.ts`, `apps/web/src/app/dashboard/historial/page.tsx`, `packages/db/prisma/schema.prisma` (columnas `imageUrl`/`aiImagePrompt` en `SocialOpportunity` — migración ya aplicada por Milton en Supabase el 22/8/2026).
+Commit: mi último commit fue `3b1db79` (22/8/2026, traspaso a Codex). Todo el trabajo posterior a esa fecha lo hizo Codex, incluido el retiro del pipeline experimental de 8 cajas que dejé documentado como pendiente.
+Estado: terminado de mi parte. Codex confirmó en este mismo documento ("Retiro de las 8 cajas de prompts — 24/8/2026") que "el generador principal ya funciona correctamente" — mi trabajo quedó como base estable, sin que yo tenga visibilidad de ajustes posteriores.
+¿Publicado en producción?: sí, cada commit se pusheó directo a `main` en su momento.
+¿Debe conservarse?: sí, es el generador activo hoy.
+Acción inmediata: ninguna de mi parte — árbol de trabajo limpio (confirmado con `git status`), sin cambios locales sin commitear. No voy a tocar el trabajo posterior de Codex (retiro del pipeline, migración `20260824090000_remove_prompt_box_system`) sin que Milton lo pida explícitamente.
+Responsable siguiente: Codex, para la migración pendiente ya declarada arriba.
+Capitanía de migración: no — no tengo ninguna migración propia pendiente.

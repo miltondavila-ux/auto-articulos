@@ -21,6 +21,7 @@ interface PreValidationGuardProps {
   platformDomain?: string;
   loading?: boolean;
   onOpenImageCreditsModal?: () => void;
+  onConfirmImageCredits?: () => void;
   children: React.ReactNode;
 }
 
@@ -37,6 +38,7 @@ export default function PreValidationGuard({
   platformDomain = "net",
   loading = false,
   onOpenImageCreditsModal,
+  onConfirmImageCredits,
   children,
 }: PreValidationGuardProps) {
   const productName = platformProductName(platformDomain);
@@ -44,30 +46,19 @@ export default function PreValidationGuard({
   const isGoogleReady = googleConnected && hasGoogleSiteUrl;
 
   if (loading) {
-    return (
-      <div style={{ maxWidth: 840, margin: "0 auto", padding: "10px 0 30px" }}>
-        <section className="panel" style={{ ...sectionStyle, padding: 28 }}>
-          <div style={{ height: 12, width: 140, background: "rgba(0,0,0,0.06)", borderRadius: 6, marginBottom: 12 }} />
-          <div style={{ height: 24, width: 280, background: "rgba(0,0,0,0.06)", borderRadius: 6, marginBottom: 16 }} />
-          <div style={{ height: 14, width: "70%", background: "rgba(0,0,0,0.04)", borderRadius: 4, marginBottom: 24 }} />
-          <div style={{ display: "grid", gap: 10 }}>
-            {[1, 2, 3].map((n) => (
-              <div key={n} className="row" style={{ height: 56, background: "#ffffff", borderRadius: 12, border: "1px solid #e5e5ea" }} />
-            ))}
-          </div>
-        </section>
-      </div>
-    );
+    // No mostrar una pantalla provisional que luego sea reemplazada por el
+    // módulo real. El layout permanece estable y el contenido aparece una
+    // sola vez cuando terminan las consultas iniciales.
+    return null;
   }
 
   const isReady =
     type === "publicar"
-      ? credentialsConfigured && hasCategories && hasLanguage && hasImageCredits
+      ? credentialsConfigured && hasCategories && hasLanguage
       : credentialsConfigured &&
         hasCategories &&
         hasLanguage &&
-        isGoogleReady &&
-        hasImageCredits;
+        isGoogleReady;
 
   if (isReady) {
     return <>{children}</>;
@@ -231,18 +222,26 @@ export default function PreValidationGuard({
 
                 {!step.ready && (
                   step.isImageCredit ? (
-                    <button
-                      type="button"
-                      onClick={onOpenImageCreditsModal}
-                      className="secondary"
-                      style={{
-                        padding: "6px 12px",
-                        fontSize: 12,
-                        borderRadius: 8,
-                      }}
-                    >
-                      {step.actionLabel}
-                    </button>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                      {onConfirmImageCredits && (
+                        <button
+                          type="button"
+                          onClick={onConfirmImageCredits}
+                          className="secondary"
+                          style={{ padding: "6px 12px", fontSize: 12, borderRadius: 8 }}
+                        >
+                          Ya recibí mis créditos
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={onOpenImageCreditsModal}
+                        className="secondary"
+                        style={{ padding: "6px 12px", fontSize: 12, borderRadius: 8 }}
+                      >
+                        {step.actionLabel}
+                      </button>
+                    </div>
                   ) : (
                     <Link
                       href={step.actionUrl}

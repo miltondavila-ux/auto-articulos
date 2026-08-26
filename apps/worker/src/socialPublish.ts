@@ -12,7 +12,6 @@ import {
   publishInstagramCarousel,
   publishInstagramImage,
   publishInstagramStory,
-  generateSocialImageRaw,
   publishFacebookPagePost,
   publishFacebookPageStory,
   createPinterestPin,
@@ -281,29 +280,6 @@ async function normalizeSocialImage(imageUrl: string, targetAspect = 3 / 4): Pro
 
 // ─── THREADS ──────────────────────────────────────────────────────────────
 
-async function generateAndHostThreadsImage(
-  titleId: string,
-  summary: string,
-  customImagePrompt?: string | null,
-  logoUrl?: string | null,
-  platform?: string | null,
-): Promise<string | null> {
-  const shouldIncludeLogo = logoUrl && Math.random() < 0.5;
-  const result = await generateSocialImageRaw(summary, customImagePrompt, undefined, shouldIncludeLogo ? logoUrl : null, platform);
-
-  if (!result) return null;
-
-  if (result.url) return result.url;
-
-  if (result.b64) {
-    const buffer = Buffer.from(result.b64, "base64");
-    const blob = await put(`threads/${titleId}.png`, buffer, { access: "public", contentType: "image/png" });
-    return blob.url;
-  }
-
-  return null;
-}
-
 async function processThreadsJob(job: {
   id: string;
   userId: string;
@@ -337,8 +313,11 @@ async function processThreadsJob(job: {
           expiresAt: newExpiresAt,
         },
       });
-    } catch {
+    } catch (error) {
       console.warn("No se pudo autorrefrescar token de Threads, usando el actual.");
+      if (daysUntilExpiration <= 0) {
+        throw new Error(`La autorización de Threads expiró y no pudo renovarse: ${error instanceof Error ? error.message : String(error)}`);
+      }
     }
   }
 
@@ -351,17 +330,12 @@ async function processThreadsJob(job: {
     finalPost = `${finalPost}\n\n${job.articleUrl}`;
   }
 
-  // Generar imagen como respaldo para propuestas creadas antes de este flujo.
-  let imageUrl: string | undefined = undefined;
-  if (!imageUrl && job.titleId) {
-    const [title, user] = await Promise.all([
-      prisma.title.findUnique({ where: { id: job.titleId } }),
-      prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true, businessLogoUrl: true } }),
-    ]);
-    if (title?.summary) {
-      const imageBasis = title.summary || job.articleTitle;
-      imageUrl = (await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt, user?.businessLogoUrl, "threads")) ?? undefined;
-    }
+  // Igual que en el último commit funcional: Threads recibe directamente la
+  // imagen pública og:image declarada por el artículo.
+  const imageUrl = (await getArticleOpenGraphImage(job.articleUrl)) ?? undefined;
+
+  if (!imageUrl) {
+    throw new Error("El artículo no tiene una imagen og:image pública para Threads. La publicación se detuvo para no enviar un hilo sin imagen.");
   }
 
   const result = await publishThread(accessToken, integration.threadsUserId, finalPost, imageUrl);
@@ -439,14 +413,7 @@ async function processTwitterJob(job: {
 
   let imageUrl: string | undefined = undefined;
   if (!imageUrl && job.titleId) {
-    const [title, user] = await Promise.all([
-      prisma.title.findUnique({ where: { id: job.titleId } }),
-      prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true, businessLogoUrl: true } }),
-    ]);
-    const imageBasis = title?.summary || job.articleTitle;
-    if (title?.summary) {
-      imageUrl = (await generateAndHostThreadsImage(job.titleId, imageBasis, user?.imagePrompt, user?.businessLogoUrl, "x")) ?? undefined;
-    }
+    imageUrl = (await getArticleOpenGraphImage(job.articleUrl)) ?? undefined;
   }
 
   const result = await publishTweet(accessToken, finalPost, imageUrl);

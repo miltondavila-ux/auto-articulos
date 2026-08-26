@@ -44,6 +44,30 @@ export async function exchangeCodeForTumblrToken(
   }>;
 }
 
+/** Renueva el token de Tumblr sin obligar al usuario a repetir OAuth. */
+export async function refreshTumblrToken(
+  refreshToken: string,
+  credentials: TumblrAppCredentials,
+) {
+  const response = await fetch(`${TUMBLR_API}/oauth2/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+      client_id: credentials.clientId,
+      client_secret: credentials.clientSecret,
+    }),
+  });
+  if (!response.ok) throw new Error(`Tumblr no pudo renovar la autorización: ${await response.text()}`);
+  return response.json() as Promise<{
+    access_token: string;
+    refresh_token?: string;
+    expires_in?: number;
+    token_type?: string;
+  }>;
+}
+
 export async function getTumblrBlogs(accessToken: string) {
   const response = await fetch(`${TUMBLR_API}/user/info`, {
     headers: { Authorization: `Bearer ${accessToken}` },

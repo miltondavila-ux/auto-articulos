@@ -3,10 +3,12 @@
 import { useRef, useState } from "react";
 import { secondaryButtonStyle, disabledStyle } from "@/components/dashboard-ui";
 
-type UploadType = "profile" | "logo";
+export type UploadType = "profile" | "profile2" | "profile3" | "logo" | "logo2";
+type UploadKind = "profile" | "logo";
 
 interface PhotoLogoUploaderProps {
   type: UploadType;
+  kind: UploadKind;
   currentUrl: string | null;
   uploading: boolean;
   onUpload: (type: UploadType, file: File) => Promise<void>;
@@ -24,6 +26,7 @@ const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
 
 export default function PhotoLogoUploader({
   type,
+  kind,
   currentUrl,
   uploading,
   onUpload,
@@ -77,7 +80,7 @@ export default function PhotoLogoUploader({
   }
 
   async function handleRemoveClick() {
-    const isProfile = type === "profile";
+    const isProfile = kind === "profile";
     const thing = isProfile ? "tu foto de perfil" : "el logo de tu negocio";
     if (!confirm(`¿Deseas eliminar ${thing}?`)) return;
     setLocalPreview(null);

@@ -22,10 +22,14 @@ export async function GET(request: NextRequest) {
     const blogs = await getTumblrBlogs(tokens.access_token);
     const firstBlog = blogs[0];
     if (!firstBlog) throw new Error("La cuenta de Tumblr no tiene blogs disponibles.");
+    const previous = await prisma.tumblrIntegration.findUnique({
+      where: { userId },
+      select: { refreshTokenEncrypted: true },
+    });
     await prisma.tumblrIntegration.upsert({
       where: { userId },
       create: { userId, blogIdentifier: firstBlog.identifier, blogTitle: firstBlog.title, accessTokenEncrypted: encryptSecret(tokens.access_token), refreshTokenEncrypted: tokens.refresh_token ? encryptSecret(tokens.refresh_token) : null, expiresAt: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : null },
-      update: { blogIdentifier: firstBlog.identifier, blogTitle: firstBlog.title, accessTokenEncrypted: encryptSecret(tokens.access_token), refreshTokenEncrypted: tokens.refresh_token ? encryptSecret(tokens.refresh_token) : null, expiresAt: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : null },
+      update: { blogIdentifier: firstBlog.identifier, blogTitle: firstBlog.title, accessTokenEncrypted: encryptSecret(tokens.access_token), refreshTokenEncrypted: tokens.refresh_token ? encryptSecret(tokens.refresh_token) : (previous?.refreshTokenEncrypted ?? null), expiresAt: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : null },
     });
     const response = NextResponse.redirect(new URL("/dashboard/configuracion?tumblr=connected", request.url));
     response.cookies.delete(TUMBLR_STATE_COOKIE);

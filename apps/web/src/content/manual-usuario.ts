@@ -222,7 +222,7 @@ Aquí conectas Google Business Profile y las redes sociales. Las redes son opcio
 
 Ruta: /dashboard/configuracion?tab=platform
 
-Guarda las credenciales de la plataforma, sincroniza categorías e idiomas y elige el idioma habitual. También puedes definir la firma de los artículos, teléfono de contacto, foto de perfil y logo. La foto y el logo se usan cuando el generador de imágenes con IA para redes sociales está activo en tu cuenta (lo activa el administrador).
+Guarda las credenciales de la plataforma, sincroniza categorías e idiomas y elige el idioma habitual. También puedes definir la firma de los artículos, teléfono de contacto, hasta 3 fotos tuyas y hasta 2 logos. Solo la primera foto y el primer logo son obligatorios; el resto es opcional y le da al sistema más variedad para elegir. Estas imágenes se usan cuando el generador de imágenes con IA para redes sociales está activo en tu cuenta (lo activa el administrador).
 
 ### Estado de configuración
 
@@ -261,7 +261,7 @@ La plataforma cuenta con un diseño minimalista y limpio en blanco impecable, si
 
 Tanto en **Publicar** (/dashboard/publicar) como en **Oportunidades SEO** (/dashboard/oportunidades), el sistema cuenta con un panel de protección preventiva (**PreValidationGuard**):
 - Si falta algún requisito previo (credenciales de la plataforma, categorías sincronizadas, idioma de redacción o Search Console), la plataforma te muestra una tarjeta clara con un checklist interactivo indicando exactamente qué falta y un botón directo para resolverlo.
-- **Créditos de imagen:** Si tu cuenta de la plataforma no cuenta con créditos para generar imágenes de portada e infografías, la plataforma te avisa de inmediato mediante un aviso informativo para que puedas recargarlos.
+- **Créditos de imagen:** Si ya recibiste créditos, pulsa **Ya recibí mis créditos**. El sistema recordará la confirmación aunque refresques la pantalla. Si una ejecución real detecta que los créditos siguen agotados, quitará la confirmación y volverá a mostrar el aviso para que solicites créditos.
 
 ## Administración
 
@@ -281,7 +281,7 @@ Comprueba que tienes categorías sincronizadas, un idioma elegido y que no hay o
 
 ### Aviso de falta de créditos de imagen
 
-Si aparece el aviso de créditos de imagen, significa que tu cuenta necesita saldo para ilustrar artículos. Puedes adquirir créditos en la plataforma o consultar a soporte.
+Si aparece el aviso de créditos de imagen, significa que la pantalla todavía no reconoce saldo para ilustrar artículos. Si ya te los asignaron, pulsa **Ya recibí mis créditos** y vuelve a intentar. Si la operación sigue detenida, solicita créditos o consulta a soporte.
 
 ### No veo Oportunidades SEO
 

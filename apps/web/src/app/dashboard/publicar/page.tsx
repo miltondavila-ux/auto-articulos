@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import ModuleIntro, { IntroP, Modulo } from "@/components/ModuleIntro";
-import AvisoCupo from "@/components/AvisoCupo";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -18,9 +16,7 @@ import PreValidationGuard from "@/components/PreValidationGuard";
 import type { CategoryRow } from "@/types/dashboard";
 
 const DEFAULT_MAX_TITLES_PER_BATCH = 20;
-// null = sin límite (el administrador lo dejó abierto para esta cuenta).
-const DEFAULT_DAILY_ARTICLE_LIMIT: number | null = 20;
-const DEFAULT_MONTHLY_ARTICLE_LIMIT: number | null = 300;
+const IMAGE_CREDITS_CONFIRMED_KEY = "auto-articulos:image-credits-confirmed";
 
 export default function PublicarPage() {
   const router = useRouter();
@@ -28,6 +24,7 @@ export default function PublicarPage() {
   const [credentialsConfigured, setCredentialsConfigured] = useState(false);
   const [hasImageCredits, setHasImageCredits] = useState(true);
   const [showImageCreditsModal, setShowImageCreditsModal] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [useSequenceCategory, setUseSequenceCategory] = useState(false);
@@ -41,12 +38,6 @@ export default function PublicarPage() {
   const [maxTitlesPerBatch, setMaxTitlesPerBatch] = useState(
     DEFAULT_MAX_TITLES_PER_BATCH,
   );
-  const [dailyArticleLimit, setDailyArticleLimit] = useState(
-    DEFAULT_DAILY_ARTICLE_LIMIT,
-  );
-  const [monthlyArticleLimit, setMonthlyArticleLimit] = useState(
-    DEFAULT_MONTHLY_ARTICLE_LIMIT,
-  );
   // Idioma de ESTE lote (pedido del usuario, 7/8/2026: el idioma es del
   // artículo, no del usuario). Arranca en el configurado del usuario, así que
   // quien no lo toque publica exactamente como antes.
@@ -54,88 +45,97 @@ export default function PublicarPage() {
     { id: string; externalId: string; name: string }[]
   >([]);
   const [contentLanguage, setContentLanguage] = useState("");
-  const [prompts, setPrompts] = useState<{ id: string; name: string; prompt: string }[]>([]);
-  const [selectedPromptId, setSelectedPromptId] = useState("");
   // Para marca blanca (tagcrush): PreValidationGuard necesita saber el
   // servidor de la cuenta para no mostrar "10minutesWebsite" ni enlaces de
   // ayuda equivocados. Ver packages/shared/src/platform-servers.ts.
-  const [loading, setLoading] = useState(true);
   const [platformDomain, setPlatformDomain] = useState<string>("net");
 
-  const loadAll = useCallback(async () => {
-    try {
-      const [credRes, catRes, runsRes, meRes, langRes, promptRes] = await Promise.all([
-        fetch("/api/credentials", { cache: "no-store" }),
-        fetch("/api/categories", { cache: "no-store" }),
-        fetch("/api/runs", { cache: "no-store" }),
-        fetch("/api/me", { cache: "no-store" }),
-        fetch("/api/languages", { cache: "no-store" }),
-        fetch("/api/prompts", { cache: "no-store" }),
-      ]);
-
-      if (credRes.ok) {
-        const credData = await credRes.json().catch(() => ({}));
-        setCredentialsConfigured(Boolean(credData.configured));
+  const loadUserLimits = useCallback(async () => {
+    const res = await fetch("/api/me", { cache: "no-store" });
+    if (res.ok) {
+      const data = await res.json();
+      if (
+        typeof data.maxTitlesPerBatch === "number" &&
+        data.maxTitlesPerBatch >= 1
+      ) {
+        setMaxTitlesPerBatch(data.maxTitlesPerBatch);
       }
-      if (catRes.ok) {
-        const catData = await catRes.json().catch(() => ({}));
-        const cats: CategoryRow[] = catData.categories ?? [];
-        setCategories(cats);
-        const regularCount = cats.filter((c) => !c.isSequence).length;
-        const sequenceCount = cats.filter((c) => c.isSequence).length;
-        if (regularCount === 0 && sequenceCount > 0) {
-          setUseSequenceCategory(true);
-        }
+      if (typeof data.contentLanguage === "string") {
+        setContentLanguage(data.contentLanguage);
       }
-      if (runsRes.ok) {
-        const runsData = await runsRes.json().catch(() => ({}));
-        setHasActiveRun(
-          (runsData.runs ?? []).some(
-            (r: { status: string }) =>
-              r.status === "pending" || r.status === "running",
-          ),
+      if (typeof data.hasImageCredits === "boolean") {
+        setHasImageCredits(
+          data.hasImageCredits ||
+            window.localStorage.getItem(IMAGE_CREDITS_CONFIRMED_KEY) === "true",
         );
       }
-      if (meRes.ok) {
-        const meData = await meRes.json().catch(() => ({}));
-        if (typeof meData.maxTitlesPerBatch === "number" && meData.maxTitlesPerBatch >= 1) {
-          setMaxTitlesPerBatch(meData.maxTitlesPerBatch);
-        }
-        if (meData.dailyArticleLimit === null || typeof meData.dailyArticleLimit === "number") {
-          setDailyArticleLimit(meData.dailyArticleLimit);
-        }
-        if (meData.monthlyArticleLimit === null || typeof meData.monthlyArticleLimit === "number") {
-          setMonthlyArticleLimit(meData.monthlyArticleLimit);
-        }
-        if (typeof meData.contentLanguage === "string") {
-          setContentLanguage(meData.contentLanguage);
-        }
-        if (typeof meData.defaultPromptId === "string" && meData.defaultPromptId) {
-          setSelectedPromptId(meData.defaultPromptId);
-        }
-        if (typeof meData.hasImageCredits === "boolean") {
-          setHasImageCredits(meData.hasImageCredits);
-        }
-        if (typeof meData.platformDomain === "string") {
-          setPlatformDomain(meData.platformDomain);
-        }
+      if (typeof data.platformDomain === "string") {
+        setPlatformDomain(data.platformDomain);
       }
-      if (langRes.ok) {
-        const langData = await langRes.json().catch(() => ({}));
-        setLanguages(langData.languages ?? []);
-      }
-      if (promptRes.ok) {
-        const promptData = await promptRes.json().catch(() => ({}));
-        setPrompts(promptData.prompts ?? []);
-      }
-    } finally {
-      setLoading(false);
+    }
+  }, []);
+
+  const confirmImageCredits = useCallback(() => {
+    window.localStorage.setItem(IMAGE_CREDITS_CONFIRMED_KEY, "true");
+    setHasImageCredits(true);
+    setBanner({
+      type: "info",
+      text: "Has indicado que ya recibiste créditos. Puedes intentar publicar; si aún no están activos, vuelve aquí y solicítalos.",
+    });
+  }, []);
+
+  const loadLanguages = useCallback(async () => {
+    const res = await fetch("/api/languages");
+    if (res.ok) {
+      const data = await res.json();
+      setLanguages(data.languages ?? []);
+    }
+  }, []);
+
+  const loadCredentialsStatus = useCallback(async () => {
+    const res = await fetch("/api/credentials");
+    if (res.ok) {
+      const data = await res.json();
+      setCredentialsConfigured(Boolean(data.configured));
+    }
+  }, []);
+
+  const loadCategories = useCallback(async () => {
+    const res = await fetch("/api/categories");
+    if (res.ok) {
+      const data = await res.json();
+      setCategories(data.categories);
+    }
+  }, []);
+
+  const checkActiveRun = useCallback(async () => {
+    const res = await fetch("/api/runs");
+    if (res.ok) {
+      const data = await res.json();
+      setHasActiveRun(
+        data.runs.some(
+          (r: { status: string }) =>
+            r.status === "pending" || r.status === "running",
+        ),
+      );
     }
   }, []);
 
   useEffect(() => {
-    loadAll();
-  }, [loadAll]);
+    Promise.all([
+      loadCredentialsStatus(),
+      loadCategories(),
+      checkActiveRun(),
+      loadUserLimits(),
+      loadLanguages(),
+    ]).finally(() => setLoading(false));
+  }, [
+    loadCredentialsStatus,
+    loadCategories,
+    checkActiveRun,
+    loadUserLimits,
+    loadLanguages,
+  ]);
 
   // 10minutesWebsite distingue categorías "regulares" de categorías "de
   // secuencia" — por defecto solo se ofrecen las regulares; las de
@@ -152,18 +152,6 @@ export default function PublicarPage() {
     .map((line) => line.trim())
     .filter((line) => line.length > 0).length;
   const overLimit = titleCount > maxTitlesPerBatch;
-
-  const cuotaContextoPartes: string[] = [];
-  if (dailyArticleLimit !== null) {
-    cuotaContextoPartes.push(`tu límite diario es de ${dailyArticleLimit} artículos`);
-  }
-  if (monthlyArticleLimit !== null) {
-    cuotaContextoPartes.push(`tu límite mensual es de ${monthlyArticleLimit}`);
-  }
-  const cuotaContextoTexto =
-    cuotaContextoPartes.length > 0
-      ? `Aunque parezca poco, ${cuotaContextoPartes.join(" y ")}, de sobra para posicionarte.`
-      : "";
 
   async function handleIniciar() {
     if (!hasImageCredits) {
@@ -188,28 +176,20 @@ export default function PublicarPage() {
           categoryId: selectedCategoryId,
           disableIndexing,
           contentLanguage,
-          promptId: selectedPromptId || null,
+          confirmedImageCredits: hasImageCredits,
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         if (data.code === "NO_IMAGE_CREDITS") {
+          window.localStorage.removeItem(IMAGE_CREDITS_CONFIRMED_KEY);
+          setHasImageCredits(false);
           setShowImageCreditsModal(true);
         }
         setBanner({
           type: "error",
           text: data.error ?? "Error al iniciar la ejecución",
         });
-        return;
-      }
-      // Si el cupo obligó a recortar el lote, NO se redirige: se muestra el
-      // aviso y los títulos que quedaron fuera vuelven al cuadro, listos para
-      // reenviarlos mañana sin tener que escribirlos otra vez.
-      if (typeof data.avisoDeCupo === "string" && data.avisoDeCupo) {
-        setBanner({ type: "info", text: data.avisoDeCupo });
-        setTitlesText(
-          Array.isArray(data.descartados) ? data.descartados.join("\n") : "",
-        );
         return;
       }
       router.push("/dashboard/publicaciones-en-curso");
@@ -226,7 +206,6 @@ export default function PublicarPage() {
     <div>
       <PreValidationGuard
         type="publicar"
-        loading={loading}
         credentialsConfigured={credentialsConfigured}
         hasCategories={categories.length > 0}
         categoriesCount={categories.length}
@@ -235,18 +214,87 @@ export default function PublicarPage() {
         hasImageCredits={hasImageCredits}
         platformDomain={platformDomain}
         onOpenImageCreditsModal={() => setShowImageCreditsModal(true)}
+        loading={loading}
+        onConfirmImageCredits={() => {
+          setHasImageCredits(true);
+          setBanner({
+            type: "info",
+            text: "Has indicado que ya recibiste créditos. Puedes intentar publicar; si aún no están activos, vuelve aquí y solicítalos.",
+          });
+        }}
       >
-        <ModuleIntro titulo="Publicaciones propias">
-          <IntroP>
-            Aquí decides tú el tema. Escribes tus propios títulos, hasta diez de una vez, eliges en qué sección de tu web va cada uno, y el sistema los redacta completos y los publica.
-          </IntroP>
-          <IntroP>
-            Úsalo cuando ya sabes de qué necesitas hablar. Si prefieres que sea el sistema quien elija los temas, a partir de lo que la gente busca de verdad en Google, ese es <Modulo id="oportunidades" />.
-          </IntroP>
-          <IntroP>
-            Una vez le des a publicar, el avance se ve en <Modulo id="publicaciones-en-curso" />.
-          </IntroP>
-        </ModuleIntro>
+        {!hasImageCredits && (
+          <div
+            style={{
+              marginTop: 20,
+              padding: "12px 16px",
+              borderRadius: 12,
+              background: "#ffffff",
+              border: "1px solid #e5e5ea",
+              boxShadow: "0 6px 18px rgba(0, 0, 0, 0.04)",
+              color: "#1d1d1f",
+              fontSize: 13,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 10,
+            }}
+          >
+            <span>
+              Si ya te dieron créditos, confírmalo para poder intentar publicar.
+            </span>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                flexWrap: "wrap",
+              }}
+            >
+              <button
+                type="button"
+                onClick={confirmImageCredits}
+                style={{
+                  background: "#1d1d1f",
+                  color: "#ffffff",
+                  border: "1px solid #1d1d1f",
+                  padding: "7px 14px",
+                  minWidth: 170,
+                  height: 36,
+                  borderRadius: 18,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  lineHeight: "20px",
+                  whiteSpace: "nowrap",
+                  cursor: "pointer",
+                }}
+              >
+                Ya recibí mis créditos
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowImageCreditsModal(true)}
+                style={{
+                  background: "#ffffff",
+                  color: "#1d1d1f",
+                  border: "1px solid #d2d2d7",
+                  padding: "7px 14px",
+                  minWidth: 170,
+                  height: 36,
+                  borderRadius: 18,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  lineHeight: "20px",
+                  whiteSpace: "nowrap",
+                  cursor: "pointer",
+                }}
+              >
+                Solicitar créditos
+              </button>
+            </div>
+          </div>
+        )}
         {hasActiveRun && (
           <div
             style={{
@@ -262,7 +310,7 @@ export default function PublicarPage() {
             Ya hay una ejecución en curso.{" "}
             <Link
               href="/dashboard/publicaciones-en-curso"
-              style={{ color: "#0066cc", fontWeight: 500 }}
+              style={{ color: "#0071e3", fontWeight: 500 }}
             >
               Ver progreso en Publicaciones en Curso
             </Link>
@@ -320,7 +368,7 @@ export default function PublicarPage() {
           {categories.length === 0 && (
             <p style={{ fontSize: 13, color: "#6e6e73", marginTop: 8 }}>
               Sincroniza tus categorías desde{" "}
-              <Link href="/dashboard/configuracion?tab=platform#categories" style={{ color: "#1d1d1f", fontWeight: 500 }}>
+              <Link href="/dashboard/configuracion?tab=platform#categories" style={{ color: "#0071e3", fontWeight: 500 }}>
                 Configuración &gt; Categorías
               </Link>
               .
@@ -349,24 +397,6 @@ export default function PublicarPage() {
               ))
             )}
           </select>
-
-          <h2 style={{ ...h2Style, marginTop: 24 }}>Estilo de escritura (Prompt)</h2>
-          <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 8 }}>
-            Elige el estilo de escritura/prompt con el que la IA generará el contenido de tus artículos.
-          </p>
-          <select
-            value={selectedPromptId}
-            onChange={(e) => setSelectedPromptId(e.target.value)}
-            disabled={hasActiveRun}
-            style={{ ...inputStyle, width: "100%" }}
-          >
-            <option value="">STANDARD (Estilo predeterminado de la plataforma)</option>
-            {prompts.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
         </section>
 
         <section style={readySectionStyle(titleCount > 0 && !overLimit)}>
@@ -374,15 +404,7 @@ export default function PublicarPage() {
           <p style={{ fontSize: 13, color: "#6e6e73", margin: "0 0 12px" }}>
             Pega un título por línea. Puedes publicar como máximo{" "}
             <strong>{maxTitlesPerBatch}</strong> por lote (si tienes más,
-            divídelos en varios lotes).{" "}
-            {dailyArticleLimit === null
-              ? "No tienes límite diario de artículos."
-              : (
-                  <>
-                    Tu límite diario es de <strong>{dailyArticleLimit}</strong>{" "}
-                    artículos.
-                  </>
-                )}
+            divídelos en varios lotes).
           </p>
           <textarea
             value={titlesText}
@@ -435,25 +457,8 @@ export default function PublicarPage() {
               onChange={(e) => setDisableIndexing(e.target.checked)}
             />
             Desactivar indexación en buscadores para este lote (por defecto queda
-            activada, como en la plataforma)
+            activada, como en 10minutesWebsite)
           </label>
-          {overLimit && (
-            <AvisoCupo
-              titulo={`Seleccionaste ${titleCount} artículos y tu máximo es de ${maxTitlesPerBatch}`}
-              pregunta={`Seleccioné ${titleCount} artículos pero mi máximo por lote es ${maxTitlesPerBatch}. ¿Qué pasa con los que no entran y cuándo puedo publicarlos?`}
-            >
-              <p style={{ margin: 0 }}>
-                Se publicarán <strong>{maxTitlesPerBatch}</strong> ahora, en cuanto
-                confirmes. Los <strong>{titleCount - maxTitlesPerBatch}</strong>{" "}
-                restantes no se pierden: quedan escritos en el cuadro de arriba y
-                podrás publicarlos mañana, cuando se te renueve la cuota.
-              </p>
-              <p style={{ margin: "10px 0 0", color: "#6e6e73", fontSize: 15 }}>
-                Ese máximo lo asigna el administrador de Auto Artículos.{" "}
-                {cuotaContextoTexto}
-              </p>
-            </AvisoCupo>
-          )}
           <button
             onClick={handleIniciar}
             disabled={
@@ -461,7 +466,8 @@ export default function PublicarPage() {
               hasActiveRun ||
               titlesText.trim().length === 0 ||
               !selectedCategoryId ||
-              !contentLanguage
+              !contentLanguage ||
+              overLimit
             }
             style={disabledStyle(
               buttonStyle,
@@ -469,16 +475,15 @@ export default function PublicarPage() {
                 hasActiveRun ||
                 titlesText.trim().length === 0 ||
                 !selectedCategoryId ||
-                !contentLanguage,
+                !contentLanguage ||
+                overLimit,
             )}
           >
             {hasActiveRun
               ? "Ejecución en curso..."
               : starting
                 ? "Iniciando..."
-                : overLimit
-                  ? `Confirmar y publicar ${maxTitlesPerBatch}`
-                  : "Iniciar"}
+                : "Iniciar"}
           </button>
           {!selectedCategoryId && !hasActiveRun && (
             <p style={{ fontSize: 13, color: "#6e6e73", marginTop: 8 }}>
@@ -512,6 +517,14 @@ export default function PublicarPage() {
       <ImageCreditsModal
         isOpen={showImageCreditsModal}
         onClose={() => setShowImageCreditsModal(false)}
+        onConfirmImageCredits={() => {
+          setHasImageCredits(true);
+          setShowImageCreditsModal(false);
+          setBanner({
+            type: "info",
+            text: "Has indicado que ya recibiste créditos. Puedes intentar publicar; si aún no están activos, vuelve aquí y solicítalos.",
+          });
+        }}
         platformDomain={platformDomain}
       />
     </div>

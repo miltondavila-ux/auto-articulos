@@ -43,8 +43,14 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const userId = await getCurrentUserId();
-  const { titlesText, categoryId, disableIndexing, contentLanguage, promptId } =
-    await request.json();
+  const {
+    titlesText,
+    categoryId,
+    disableIndexing,
+    contentLanguage,
+    promptId,
+    confirmedImageCredits,
+  } = await request.json();
 
   if (typeof titlesText !== "string") {
     return NextResponse.json(
@@ -98,7 +104,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!user.hasImageCredits) {
+  if (!user.hasImageCredits && confirmedImageCredits !== true) {
     return NextResponse.json(
       {
         error:
