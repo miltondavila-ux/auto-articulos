@@ -94,6 +94,8 @@ export default function OportunidadesPage() {
   // Para marca blanca (tagcrush): PreValidationGuard necesita el servidor
   // de la cuenta para no mostrar "10minutesWebsite" ni enlaces equivocados.
   const [platformDomain, setPlatformDomain] = useState<string>("net");
+  const [prompts, setPrompts] = useState<{ id: string; name: string; prompt: string }[]>([]);
+  const [selectedPromptId, setSelectedPromptId] = useState("");
 
   const load = useCallback(async () => {
     const [
@@ -102,12 +104,14 @@ export default function OportunidadesPage() {
       languagesResponse,
       googleResponse,
       categoriesResponse,
+      promptsResponse,
     ] = await Promise.all([
       fetch("/api/opportunities", { cache: "no-store" }),
       fetch("/api/me", { cache: "no-store" }),
       fetch("/api/languages", { cache: "no-store" }),
       fetch("/api/search-integrations/google", { cache: "no-store" }),
       fetch("/api/categories", { cache: "no-store" }),
+      fetch("/api/prompts", { cache: "no-store" }),
     ]);
     const data = await opportunitiesResponse.json().catch(() => ({}));
     if (opportunitiesResponse.ok) {
@@ -126,6 +130,15 @@ export default function OportunidadesPage() {
       if (typeof me.contentLanguage === "string") {
         setContentLanguage(me.contentLanguage);
       }
+      if (typeof me.defaultPromptId === "string" && me.defaultPromptId) {
+        setSelectedPromptId(me.defaultPromptId);
+      }
+      if (typeof me.hasImageCredits === "boolean") {
+        setHasImageCredits(
+          me.hasImageCredits ||
+            window.localStorage.getItem(IMAGE_CREDITS_CONFIRMED_KEY) === "true",
+        );
+      }
       if (typeof me.platformDomain === "string") {
         setPlatformDomain(me.platformDomain);
       }
@@ -133,6 +146,10 @@ export default function OportunidadesPage() {
     if (languagesResponse.ok) {
       const langs = await languagesResponse.json().catch(() => ({}));
       setLanguages(langs.languages ?? []);
+    }
+    if (promptsResponse.ok) {
+      const promptsData = await promptsResponse.json().catch(() => ({}));
+      setPrompts(promptsData.prompts ?? []);
     }
     const google = await googleResponse.json().catch(() => ({}));
     const categoriesData = await categoriesResponse.json().catch(() => ({}));
@@ -278,6 +295,7 @@ export default function OportunidadesPage() {
       body: JSON.stringify({
         disableIndexing,
         contentLanguage,
+        promptId: selectedPromptId || null,
         confirmedImageCredits: hasImageCredits,
       }),
     });
@@ -325,6 +343,7 @@ export default function OportunidadesPage() {
         id,
         disableIndexing,
         contentLanguage,
+        promptId: selectedPromptId || null,
         confirmedImageCredits: hasImageCredits,
       }),
     });
@@ -742,6 +761,16 @@ export default function OportunidadesPage() {
                 </option>
               ))
             )}
+          </select>
+        </div>
+
+        <div style={{ marginTop: 12 }}>
+          <label style={{ display: "block", fontSize: 13, color: "#6b7280", marginBottom: 6 }}>
+            Estilo de escritura (Prompt) con el que se generarán los artículos de estas oportunidades.
+          </label>
+          <select value={selectedPromptId} onChange={(e) => setSelectedPromptId(e.target.value)} style={{ ...inputStyle, width: "100%", maxWidth: 320 }}>
+            <option value="">STANDARD (Estilo predeterminado de la plataforma)</option>
+            {prompts.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
         </div>
 
