@@ -6,7 +6,7 @@ import { disabledStyle, h2Style, inputStyle, secondaryButtonStyle, sectionStyle 
 
 interface Settings { configured: boolean; clientId?: string | null; rawClientId?: string; isAdmin?: boolean }
 interface Blog { identifier: string; title: string }
-interface Connection { connected: boolean; blogIdentifier?: string; blogTitle?: string; blogs?: Blog[]; isExpired?: boolean }
+interface Connection { connected: boolean; allowed?: boolean; forbidden?: boolean; blogIdentifier?: string; blogTitle?: string; blogs?: Blog[]; isExpired?: boolean }
 
 export default function TumblrSection({ allowed = true }: { allowed?: boolean }) {
   const [settings, setSettings] = useState<Settings | null>(null);
@@ -84,7 +84,7 @@ export default function TumblrSection({ allowed = true }: { allowed?: boolean })
       {allowed && <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 16, paddingTop: 16 }}><PasosAntesDeConectar red="Tumblr" /><div style={{ background: "#fff", border: "1px solid #e5e5ea", borderRadius: 14, padding: 16 }}>
         <strong style={{ color: "#1d1d1f", fontSize: 15 }}>Conexión de Tumblr</strong>
         <p className="lead-copy" style={{ fontSize: 12, margin: "4px 0 0" }}>Autoriza tu cuenta, elige el blog y controla la conexión desde aquí.</p>
-        {!configured ? <p className="notice" style={{ margin: "14px 0 0" }}>El administrador debe configurar primero las credenciales de Tumblr.</p> : !connected ? <button onClick={() => { window.location.href = "/api/search-integrations/tumblr/connect"; }} style={{ ...secondaryButtonStyle, background: "#36465d", color: "#fff", border: "none", marginTop: 14 }}>Conectar Tumblr →</button> : <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
+        {!configured ? <p className="notice" style={{ margin: "14px 0 0" }}>El administrador debe configurar primero las credenciales de Tumblr.</p> : connection?.forbidden ? <p className="notice" style={{ margin: "14px 0 0" }}>Tumblr está conectado, pero esta cuenta no tiene permiso de publicación. El administrador debe activar Tumblr para esta cuenta.</p> : !connected ? <button onClick={() => { window.location.href = "/api/search-integrations/tumblr/connect"; }} style={{ ...secondaryButtonStyle, background: "#36465d", color: "#fff", border: "none", marginTop: 14 }}>Conectar Tumblr →</button> : <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
           <p style={{ margin: 0, color: connection?.isExpired ? "#b45309" : "#16803c", fontSize: 13, fontWeight: 600 }}>
             {connection?.isExpired ? "⚠ Tumblr conectado, pero la autorización venció" : "✓ Tumblr conectado"}
           </p>

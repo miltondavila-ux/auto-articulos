@@ -11,9 +11,9 @@ const NO_CACHE = { "Cache-Control": "no-store, no-cache, must-revalidate, proxy-
 
 export async function GET() {
   const userId = await getCurrentUserId();
-  if (!(await canPublishToNetwork(userId, "tumblr"))) return NextResponse.json({ connected: false, forbidden: true }, { status: 403, headers: NO_CACHE });
+  const allowed = await canPublishToNetwork(userId, "tumblr");
   const integration = await prisma.tumblrIntegration.findUnique({ where: { userId } });
-  if (!integration) return NextResponse.json({ connected: false }, { headers: NO_CACHE });
+  if (!integration) return NextResponse.json({ connected: false, allowed }, { headers: NO_CACHE });
   let current = integration;
   if (current.expiresAt && current.expiresAt <= new Date() && current.refreshTokenEncrypted) {
     try {
@@ -34,7 +34,7 @@ export async function GET() {
   }
   let blogs = [{ identifier: current.blogIdentifier, title: current.blogTitle || current.blogIdentifier }];
   try { blogs = await getTumblrBlogs(decryptSecret(current.accessTokenEncrypted)); } catch { /* status still useful when Tumblr is temporarily unavailable */ }
-  return NextResponse.json({ connected: true, blogIdentifier: current.blogIdentifier, blogTitle: current.blogTitle, expiresAt: current.expiresAt, isExpired: Boolean(current.expiresAt && current.expiresAt < new Date()), blogs }, { headers: NO_CACHE });
+  return NextResponse.json({ connected: true, allowed, forbidden: !allowed, blogIdentifier: current.blogIdentifier, blogTitle: current.blogTitle, expiresAt: current.expiresAt, isExpired: Boolean(current.expiresAt && current.expiresAt < new Date()), blogs }, { headers: NO_CACHE });
 }
 
 export async function PATCH(request: NextRequest) {
