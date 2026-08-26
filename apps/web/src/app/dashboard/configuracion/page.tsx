@@ -493,7 +493,7 @@ export default function ConfiguracionPage() {
   }
 
   const [activeTab, setActiveTab] = useState<
-    "wizard" | "integrations" | "social" | "platform" | "mobile"
+    "wizard" | "integrations" | "social" | "platform" | "content" | "mobile"
   >("integrations");
 
   useEffect(() => {
@@ -505,6 +505,7 @@ export default function ConfiguracionPage() {
       tabParam === "integrations" ||
       tabParam === "social" ||
       tabParam === "platform" ||
+      tabParam === "content" ||
       tabParam === "mobile"
     ) {
       setActiveTab(tabParam);
@@ -600,11 +601,12 @@ export default function ConfiguracionPage() {
   }, [activeTab, showSocialTab]);
 
   const tabs: {
-    id: "wizard" | "integrations" | "social" | "platform" | "mobile";
+    id: "wizard" | "integrations" | "social" | "platform" | "content" | "mobile";
     eyebrow: string;
     label: string;
     description: string;
     badge?: string;
+    href?: string;
   }[] = [
     {
       id: "wizard",
@@ -620,6 +622,7 @@ export default function ConfiguracionPage() {
       label: "Indexación & SEO",
       description:
         "Conecta Google Search Console y Bing Webmaster Tools para monitorear y mejorar la indexación de tus artículos.",
+      href: "/dashboard/configuracion/indexacion",
     },
     ...(showSocialTab
       ? [
@@ -628,16 +631,25 @@ export default function ConfiguracionPage() {
             eyebrow: "Redes Sociales",
             label: "Publicación Automática",
             description: socialNetworksDescription,
+            href: "/dashboard/configuracion/redes-sociales",
           },
         ]
       : []),
     {
       id: "platform",
       eyebrow: productName,
-      label: "Cuenta & Contenido",
+      label: "Cuenta",
       description:
         "Credenciales, categorías, idioma de redacción, firma y teléfono de contacto.",
       badge: credentialsConfigured ? "✓ Listo" : undefined,
+      href: "/dashboard/configuracion/cuenta",
+    },
+    {
+      id: "content",
+      eyebrow: "Contenido",
+      label: "Contenido",
+      description: "Firma, teléfono y preferencias de contenido.",
+      href: "/dashboard/configuracion/contenido",
     },
     {
       id: "mobile",
@@ -645,6 +657,7 @@ export default function ConfiguracionPage() {
       label: "App Móvil",
       description:
         "Código QR e instrucciones para instalar Auto Artículos en tu celular.",
+      href: "/dashboard/configuracion/movil",
     },
   ];
 
@@ -846,7 +859,7 @@ export default function ConfiguracionPage() {
             <button
               key={t.id}
               type="button"
-              onClick={() => setActiveTab(t.id)}
+              onClick={() => (t.href ? window.location.assign(t.href) : setActiveTab(t.id))}
               aria-pressed={isActive}
               style={{
                 display: "flex",
@@ -1001,7 +1014,7 @@ export default function ConfiguracionPage() {
       )}
 
       {/* Pestaña 3: Cuenta & Contenido */}
-      {activeTab === "platform" && (
+      {(activeTab === "platform" || activeTab === "content") && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {/* Credenciales Card */}
           <section id="credentials" style={readySectionStyle(credentialsConfigured)}>
