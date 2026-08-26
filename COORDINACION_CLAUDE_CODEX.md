@@ -137,7 +137,7 @@ publicación permanece activa en los endpoints de conexión, callback, cambios,
 eliminación y publicación.
 
 Commit: `c35b3a8`, rama aislada `codex/problema-con-tumblr-fix`.
-Estado: corrección lista para integración; no se desplegó ni se aplicaron
-migraciones.
+Estado: corrección confirmada en producción por Milton; no requiere migración.
 Pruebas: `git diff --check` correcto. El typecheck completo quedó bloqueado por
-dependencias no instaladas en el worktree aislado.
+dependencias no instaladas en el worktree aislado. Producción queda marcada como
+confirmada por el responsable, sin verificación independiente desde esta sesión.
