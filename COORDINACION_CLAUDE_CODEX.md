@@ -121,3 +121,23 @@ Estado: terminado de mi parte. Codex confirmó en este mismo documento ("Retiro 
 Acción inmediata: ninguna de mi parte — árbol de trabajo limpio (confirmado con `git status`), sin cambios locales sin commitear. No voy a tocar el trabajo posterior de Codex (retiro del pipeline, migración `20260824090000_remove_prompt_box_system`) sin que Milton lo pida explícitamente.
 Responsable siguiente: Codex, para la migración pendiente ya declarada arriba.
 Capitanía de migración: no — no tengo ninguna migración propia pendiente.
+
+## 2026-08-26 — Auditoría y corrección de PROBLEMA CON TUMBLR
+
+**CODEX - GPT-5 - PROBLEMA CON TUMBLR**
+
+Se confirmó que el endpoint de estado mezclaba conexión y permiso: cuando
+`canPublishToNetwork` devolvía falso respondía `connected: false`, aunque
+existiera una integración OAuth guardada. Esto presentaba una cuenta conectada
+como desconectada.
+
+Se corrigió para devolver por separado `connected`, `allowed` y `forbidden`, y
+la interfaz ahora informa que falta activar el permiso. La protección de
+publicación permanece activa en los endpoints de conexión, callback, cambios,
+eliminación y publicación.
+
+Commit: `c35b3a8`, rama aislada `codex/problema-con-tumblr-fix`.
+Estado: corrección lista para integración; no se desplegó ni se aplicaron
+migraciones.
+Pruebas: `git diff --check` correcto. El typecheck completo quedó bloqueado por
+dependencias no instaladas en el worktree aislado.
