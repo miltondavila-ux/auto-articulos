@@ -1,10 +1,10 @@
 import Link from "next/link";
 
 const MODULES = [
-  ["Publicaciones Propias", "/dashboard/publicar", "Genera y publica tus artículos."],
-  ["Oportunidades SEO/AEO", "/dashboard/oportunidades", "Descubre temas para posicionarte."],
-  ["Oportunidades para Redes", "/dashboard/oportunidades-redes", "Encuentra ideas para tus redes sociales."],
-  ["Publicaciones en curso", "/dashboard/publicaciones-en-curso", "Consulta el progreso de tus publicaciones."],
+  ["01", "Publicaciones Propias", "/dashboard/publicar", "Genera y publica tus artículos."],
+  ["02", "Oportunidades SEO/AEO", "/dashboard/oportunidades", "Descubre temas para posicionarte."],
+  ["03", "Oportunidades para Redes", "/dashboard/oportunidades-redes", "Encuentra ideas para tus redes sociales."],
+  ["04", "Publicaciones en curso", "/dashboard/publicaciones-en-curso", "Consulta el progreso de tus publicaciones."],
 ] as const;
 
 export default function ComienzaAqui() {
@@ -12,9 +12,9 @@ export default function ComienzaAqui() {
     <section style={{ marginTop: 4, marginBottom: 20 }}>
       <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 700, color: "#1d1d1f" }}>COMIENZA AQUÍ</h2>
       <div className="comienza-aqui-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 12 }}>
-        {MODULES.map(([label, href, description]) => (
+        {MODULES.map(([number, label, href, description]) => (
           <Link key={href} href={href} style={{ display: "flex", flexDirection: "column", gap: 7, minHeight: 132, padding: 16, borderRadius: 14, background: "#fff", border: "1px solid #d2d2d7", textDecoration: "none" }}>
-            <span style={{ fontSize: 15, fontWeight: 600, color: "#1d1d1f" }}>{label}</span><span style={{ fontSize: 12.5, lineHeight: 1.4, color: "#6e6e73" }}>{description}</span><span style={{ marginTop: "auto", fontSize: 12, fontWeight: 600, color: "#1d1d1f" }}>Empezar →</span>
+            <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", color: "#86868b" }}>{number}</span><span style={{ fontSize: 15, fontWeight: 600, color: "#1d1d1f" }}>{label}</span><span style={{ fontSize: 12.5, lineHeight: 1.4, color: "#6e6e73" }}>{description}</span><span style={{ marginTop: "auto", fontSize: 12, fontWeight: 600, color: "#1d1d1f" }}>Empezar →</span>
           </Link>
         ))}
       </div>
