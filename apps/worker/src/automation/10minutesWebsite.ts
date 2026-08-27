@@ -2126,6 +2126,15 @@ async function saveAndGetUrl(
   let titleInUse = expectedTitle;
   const MAX_SAVE_ATTEMPTS = 3;
 
+  const makeUniqueTitle = (baseTitle: string, attempt: number) => {
+    // Un número incremental no basta: puede existir ya porque otro intento
+    // anterior o una publicación manual usó exactamente el mismo sufijo.
+    // La marca corta de tiempo evita que el validador remoto vuelva a
+    // rechazar la segunda oportunidad del mismo artículo.
+    const uniqueness = ` — versión ${Date.now().toString().slice(-7)}-${attempt}`;
+    return `${baseTitle.slice(0, 200 - uniqueness.length)}${uniqueness}`;
+  };
+
   for (let saveAttempt = 1; saveAttempt <= MAX_SAVE_ATTEMPTS; saveAttempt++) {
     await onStep("Guardando y publicando el artículo...");
     await page.dispatchEvent("#type", "change").catch(() => {});
@@ -2250,14 +2259,29 @@ async function saveAndGetUrl(
       /titlees/i.test(validatorErrors) && /existe/i.test(validatorErrors);
 
     if (isDuplicateTitle && saveAttempt < MAX_SAVE_ATTEMPTS) {
-      const mutatedTitle = `${expectedTitle} (${saveAttempt + 1})`.slice(0, 200);
+      const mutatedTitle = makeUniqueTitle(expectedTitle, saveAttempt + 1);
       const titleField = page.locator("#titlees");
       await titleField.fill(mutatedTitle).catch(() => {});
+      // La regla `remote` de jQuery Validate se dispara al perder el foco.
+      // Forzar también el cambio evita que el botón conserve el error remoto
+      // del título anterior y permanezca deshabilitado indefinidamente.
+      await titleField.press("Tab").catch(() => {});
       titleInUse = mutatedTitle;
       await onStep(
         `El título "${expectedTitle}" ya existe en la cuenta. Reintentando guardar con "${mutatedTitle}".`,
       );
       continue;
+    }
+
+    if (stillOnForm) {
+      // Si el sitio no habilitó el guardado, no tiene sentido navegar y
+      // esperar 90 segundos buscando una publicación que nunca se envió.
+      // Devuelve inmediatamente para que queue.ts registre el intento y,
+      // si corresponde, avance al siguiente título del lote.
+      await onStep(
+        "El sitio no permitió guardar este artículo después de agotar la validación. Se continúa con el siguiente título del lote.",
+      );
+      return { url: null, titleUsed: titleInUse };
     }
 
     break;
