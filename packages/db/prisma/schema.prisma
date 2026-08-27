@@ -612,6 +612,12 @@ model Title {
   articleUrl             String?
   finalTitle             String?
   errorMessage           String?
+  // Fecha original de la oportunidad, copiada al convertirla en un Run.
+  // NULL para publicaciones creadas directamente desde el módulo Publicar.
+  opportunityCreatedAt   DateTime?
+  // Momento en que el worker confirmó que el artículo quedó publicado.
+  // Se mantiene separado de processedAt, que también se usa para errores.
+  publishedAt            DateTime?
   processedAt            DateTime?
   googleIndexingStatus   String?
   googleIndexingMessage  String?

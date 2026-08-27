@@ -163,6 +163,7 @@ export async function POST(request: NextRequest) {
             create: group.titles.map((title, order) => ({
               text: title.text,
               order,
+              opportunityCreatedAt: group.createdAt,
             })),
           },
         },

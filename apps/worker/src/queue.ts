@@ -264,6 +264,7 @@ async function processRunTitle(
         articleUrl: result.articleUrl,
         finalTitle: result.finalTitle,
         summary: result.summary,
+        publishedAt: new Date(),
         processedAt: new Date(),
         errorMessage: null,
       },

@@ -148,7 +148,11 @@ export async function POST(request: NextRequest) {
             ? promptId.trim()
             : user.defaultPromptId,
         titles: {
-          create: selected.map((title, order) => ({ text: title.text, order })),
+          create: selected.map((title, order) => ({
+            text: title.text,
+            order,
+            opportunityCreatedAt: group.createdAt,
+          })),
         },
       },
       select: { id: true },

@@ -748,7 +748,8 @@ function RunTable({ titles }: { titles: TitleRow[] }) {
             <th style={thStyle}>Título</th>
             <th style={thStyle}>Estado</th>
             <th style={thStyle}>Intentos</th>
-            <th style={thStyle}>Fecha publicación</th>
+            <th style={thStyle}>Oportunidad creada</th>
+            <th style={thStyle}>Publicado</th>
             <th style={thStyle}>Enlace / Error</th>
             <th style={thStyle}>Log</th>
           </tr>
@@ -761,6 +762,17 @@ function RunTable({ titles }: { titles: TitleRow[] }) {
       </table>
     </div>
   );
+}
+
+function formatDateTime(value: string) {
+  return new Date(value).toLocaleString("es-US", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
 
 function renderMessageWithLinks(message: string) {
@@ -817,21 +829,18 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
       <td style={tdStyle} data-label="Intentos">
         {title.attempts}
       </td>
-      <td style={tdStyle} data-label="Fecha publicación">
-        {title.processedAt ? (
-          <span style={{ whiteSpace: "nowrap" }}>
-            {title.status === "success" && title.articleUrl
-              ? "Publicado: "
-              : "Procesado: "}
-            {new Date(title.processedAt).toLocaleString("es-US", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-            })}
-          </span>
+      <td style={tdStyle} data-label="Oportunidad creada">
+        {title.opportunityCreatedAt ? (
+          formatDateTime(title.opportunityCreatedAt)
+        ) : (
+          <span className="muted">No aplica</span>
+        )}
+      </td>
+      <td style={tdStyle} data-label="Publicado">
+        {title.publishedAt ? (
+          formatDateTime(title.publishedAt)
+        ) : title.status === "success" && title.processedAt ? (
+          <span className="muted">Fecha antigua no registrada</span>
         ) : (
           <span className="muted">Pendiente</span>
         )}
