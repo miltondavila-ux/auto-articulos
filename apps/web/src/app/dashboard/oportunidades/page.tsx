@@ -314,8 +314,8 @@ export default function OportunidadesPage() {
         ? `Se publicarán ${publishedCount} títulos según tu cupo. Quedaron ${pendingCount} títulos pendientes en Oportunidades.`
         : `Se publicarán ${publishedCount} títulos. No quedaron títulos pendientes.`,
     });
-    await load();
     setBusyId(null);
+    router.push("/dashboard/publicaciones-en-curso");
     router.refresh();
   }
 
