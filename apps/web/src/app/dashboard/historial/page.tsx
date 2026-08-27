@@ -622,6 +622,7 @@ function HistoryEntry({
 }) {
   const successCount = run.titles.filter((t) => t.status === "success").length;
   const hasErrors = run.status === "halted";
+  const publicationAt = latestPublicationAt(run.titles);
   const [retrying, setRetrying] = useState(false);
 
   async function handleRetryRun(e: React.MouseEvent) {
@@ -661,7 +662,13 @@ function HistoryEntry({
         }}
       >
         <span style={{ color: "#1d1d1f", fontWeight: 600 }}>
-          Inicio: {new Date(run.createdAt).toLocaleString()}
+          Creación: {formatDateTime(run.createdAt, false)}
+        </span>
+        <span className="muted">|</span>
+        <span style={{ color: "#1d1d1f", fontWeight: 600 }}>
+          Publicación: {publicationAt
+            ? `${formatDateTime(publicationAt, false)}${successCount < run.titles.length ? " (parcial)" : ""}`
+            : "Pendiente"}
         </span>
         <span className="muted">
           — {successCount}/{run.titles.length} publicados
@@ -764,15 +771,28 @@ function RunTable({ titles }: { titles: TitleRow[] }) {
   );
 }
 
-function formatDateTime(value: string) {
+function formatDateTime(value: string, includeSeconds = true) {
   return new Date(value).toLocaleString("es-US", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit",
+    ...(includeSeconds ? { second: "2-digit" } : {}),
   });
+}
+
+function latestPublicationAt(titles: TitleRow[]) {
+  return titles.reduce<string | null>((latest, title) => {
+    const value = title.publishedAt ?? (
+      title.status === "success" ? title.processedAt : null
+    );
+    if (!value) return latest;
+    if (!latest || new Date(value).getTime() > new Date(latest).getTime()) {
+      return value;
+    }
+    return latest;
+  }, null);
 }
 
 function renderMessageWithLinks(message: string) {
