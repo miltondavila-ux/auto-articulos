@@ -2126,6 +2126,13 @@ async function saveAndGetUrl(
   let titleInUse = expectedTitle;
   const MAX_SAVE_ATTEMPTS = 3;
 
+  const makeUniqueTitle = (baseTitle: string, attempt: number) => {
+    // Un sufijo incremental puede existir ya; la marca corta de tiempo
+    // evita que la validación remota vuelva a rechazar el segundo intento.
+    const uniqueness = " — versión " + Date.now().toString().slice(-7) + "-" + attempt;
+    return baseTitle.slice(0, 200 - uniqueness.length) + uniqueness;
+  };
+
   for (let saveAttempt = 1; saveAttempt <= MAX_SAVE_ATTEMPTS; saveAttempt++) {
     await onStep("Guardando y publicando el artículo...");
     await page.dispatchEvent("#type", "change").catch(() => {});
