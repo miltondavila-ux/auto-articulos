@@ -2250,14 +2250,22 @@ async function saveAndGetUrl(
       /titlees/i.test(validatorErrors) && /existe/i.test(validatorErrors);
 
     if (isDuplicateTitle && saveAttempt < MAX_SAVE_ATTEMPTS) {
-      const mutatedTitle = `${expectedTitle} (${saveAttempt + 1})`.slice(0, 200);
+      const mutatedTitle = makeUniqueTitle(expectedTitle, saveAttempt + 1);
       const titleField = page.locator("#titlees");
       await titleField.fill(mutatedTitle).catch(() => {});
+      await titleField.press("Tab").catch(() => {});
       titleInUse = mutatedTitle;
       await onStep(
         `El título "${expectedTitle}" ya existe en la cuenta. Reintentando guardar con "${mutatedTitle}".`,
       );
       continue;
+    }
+
+    if (stillOnForm) {
+      await onStep(
+        "El sitio no permitió guardar este artículo después de agotar la validación. Se continúa con el siguiente título del lote.",
+      );
+      return { url: null, titleUsed: titleInUse };
     }
 
     break;
