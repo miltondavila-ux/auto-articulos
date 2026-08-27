@@ -77,14 +77,19 @@ function HistorialEjecuciones() {
     (r) => r.status !== "pending" && r.status !== "running",
   );
 
-  const runsByCategory = useMemo(() => {
+  const runsByPublicationDay = useMemo(() => {
     const map = new Map<string, RunRow[]>();
     for (const run of runs) {
-      const cat = run.category?.name ?? "Sin categoría";
-      if (!map.has(cat)) map.set(cat, []);
-      map.get(cat)!.push(run);
+      const publicationAt = latestPublicationAt(run.titles);
+      const dayKey = publicationAt ? localDayKey(publicationAt) : "no-confirmada";
+      if (!map.has(dayKey)) map.set(dayKey, []);
+      map.get(dayKey)!.push(run);
     }
-    return Array.from(map.entries());
+    return Array.from(map.entries()).sort(([dayA], [dayB]) => {
+      if (dayA === "no-confirmada") return 1;
+      if (dayB === "no-confirmada") return -1;
+      return dayB.localeCompare(dayA);
+    });
   }, [runs]);
 
   return (
@@ -175,11 +180,11 @@ function HistorialEjecuciones() {
             Aún no hay ejecuciones en el historial.
           </p>
         ) : (
-          runsByCategory.map(([categoryName, categoryRuns]) => (
-            <CategoryGroup
-              key={categoryName}
-              categoryName={categoryName}
-              runs={categoryRuns}
+          runsByPublicationDay.map(([dayKey, dayRuns]) => (
+            <PublicationDayGroup
+              key={dayKey}
+              dayKey={dayKey}
+              runs={dayRuns}
               onRetried={loadRuns}
             />
           ))
@@ -189,12 +194,12 @@ function HistorialEjecuciones() {
   );
 }
 
-function CategoryGroup({
-  categoryName,
+function PublicationDayGroup({
+  dayKey,
   runs,
   onRetried,
 }: {
-  categoryName: string;
+  dayKey: string;
   runs: RunRow[];
   onRetried: () => void;
 }) {
@@ -203,6 +208,11 @@ function CategoryGroup({
     0,
   );
   const totalTitles = runs.reduce((acc, r) => acc + r.titles.length, 0);
+  const orderedRuns = [...runs].sort((a, b) => {
+    const aDate = latestPublicationAt(a.titles) ?? a.createdAt;
+    const bDate = latestPublicationAt(b.titles) ?? b.createdAt;
+    return new Date(bDate).getTime() - new Date(aDate).getTime();
+  });
 
   return (
     <details
@@ -229,13 +239,13 @@ function CategoryGroup({
           userSelect: "none",
         }}
       >
-        <span>{categoryName}</span>
+        <span>{publicationDayLabel(dayKey)}</span>
         <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
           — {runs.length} ejecución{runs.length !== 1 ? "es" : ""} ({totalSuccess}/{totalTitles} publicados)
         </span>
       </summary>
       <div style={{ padding: "0 16px 16px 16px" }}>
-        {runs.map((run) => (
+        {orderedRuns.map((run) => (
           <HistoryEntry key={run.id} run={run} onRetried={onRetried} />
         ))}
       </div>
@@ -674,6 +684,9 @@ function HistoryEntry({
           — {successCount}/{run.titles.length} publicados
         </span>
         <span className="muted">
+          — Categoría: {run.category?.name ?? "Sin categoría"}
+        </span>
+        <span className="muted">
           — {formatDuration(run.createdAt, run.finishedAt)}
         </span>
         {hasErrors && (
@@ -779,6 +792,32 @@ function formatDateTime(value: string, includeSeconds = true) {
     hour: "2-digit",
     minute: "2-digit",
     ...(includeSeconds ? { second: "2-digit" } : {}),
+  });
+}
+
+function localDayKey(value: string) {
+  const date = new Date(value);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function publicationDayLabel(dayKey: string) {
+  if (dayKey === "no-confirmada") return "Sin publicación confirmada";
+
+  const today = localDayKey(new Date().toISOString());
+  const yesterdayDate = new Date();
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+  const yesterday = localDayKey(yesterdayDate.toISOString());
+  if (dayKey === today) return "Hoy";
+  if (dayKey === yesterday) return "Ayer";
+
+  const [year, month, day] = dayKey.split("-").map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString("es-US", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
   });
 }
 
