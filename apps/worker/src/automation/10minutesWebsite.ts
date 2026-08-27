@@ -2127,15 +2127,35 @@ async function saveAndGetUrl(
   const MAX_SAVE_ATTEMPTS = 3;
 
   const makeUniqueTitle = (baseTitle: string, attempt: number) => {
-    // Un sufijo incremental puede existir ya; la marca corta de tiempo
-    // evita que la validación remota vuelva a rechazar el segundo intento.
-    const uniqueness = " — versión " + Date.now().toString().slice(-7) + "-" + attempt;
-    return baseTitle.slice(0, 200 - uniqueness.length) + uniqueness;
+    // Un número incremental no basta: puede existir ya porque otro intento
+    // anterior o una publicación manual usó exactamente el mismo sufijo.
+    // La marca corta de tiempo evita que el validador remoto vuelva a
+    // rechazar la segunda oportunidad del mismo artículo.
+    const uniqueness = ` — versión ${Date.now().toString().slice(-7)}-${attempt}`;
+    return `${baseTitle.slice(0, 200 - uniqueness.length)}${uniqueness}`;
+  };
+
+  const revalidateTitleAndForm = async () => {
+    // El sitio usa jQuery Validate con una regla remota en #titlees.
+    // Cambiar el valor no siempre limpia el error anterior ni vuelve a
+    // habilitar #save_art, por lo que se fuerzan los eventos del formulario
+    // y una validación explícita antes de consultar el botón.
+    await page.evaluate(() => {
+      const title = document.querySelector("#titlees") as HTMLInputElement | null;
+      const jq = (window as unknown as { jQuery?: (selector: string) => { valid?: () => boolean } }).jQuery;
+      if (!title) return;
+      for (const eventName of ["input", "keyup", "change", "blur", "focusout"]) {
+        title.dispatchEvent(new Event(eventName, { bubbles: true }));
+      }
+      jq?.("#titlees").valid?.();
+    }).catch(() => {});
+    await page.waitForTimeout(1200);
+    await page.dispatchEvent("#type", "change").catch(() => {});
   };
 
   for (let saveAttempt = 1; saveAttempt <= MAX_SAVE_ATTEMPTS; saveAttempt++) {
     await onStep("Guardando y publicando el artículo...");
-    await page.dispatchEvent("#type", "change").catch(() => {});
+    await revalidateTitleAndForm();
 
     // Bug real encontrado en producción (15/8/2026, cuenta de Lorena
     // Álvarez, en el reintento por título duplicado): 300ms alcanza cuando
@@ -2148,11 +2168,12 @@ async function saveAndGetUrl(
     // quedaba 30s esperando un elemento que nunca se habilitaba. Se
     // sondea el estado real del botón hasta 8s en vez de una espera fija.
     const saveBtn = page.getByRole("button", { name: TEXT_GUARDAR_CAMBIOS }).first();
-    const enableDeadline = Date.now() + 8000;
+    const enableDeadline = Date.now() + 10000;
     let saveBtnEnabled = false;
     while (Date.now() < enableDeadline) {
       saveBtnEnabled = !(await saveBtn.isDisabled().catch(() => true));
       if (saveBtnEnabled) break;
+      await page.dispatchEvent("#type", "change").catch(() => {});
       await page.waitForTimeout(250);
     }
     if (!saveBtnEnabled) {
@@ -2260,7 +2281,11 @@ async function saveAndGetUrl(
       const mutatedTitle = makeUniqueTitle(expectedTitle, saveAttempt + 1);
       const titleField = page.locator("#titlees");
       await titleField.fill(mutatedTitle).catch(() => {});
+      // La regla `remote` de jQuery Validate se dispara al perder el foco.
+      // Forzar también el cambio evita que el botón conserve el error remoto
+      // del título anterior y permanezca deshabilitado indefinidamente.
       await titleField.press("Tab").catch(() => {});
+      await revalidateTitleAndForm();
       titleInUse = mutatedTitle;
       await onStep(
         `El título "${expectedTitle}" ya existe en la cuenta. Reintentando guardar con "${mutatedTitle}".`,
@@ -2269,6 +2294,10 @@ async function saveAndGetUrl(
     }
 
     if (stillOnForm) {
+      // Si el sitio no habilitó el guardado, no tiene sentido navegar y
+      // esperar 90 segundos buscando una publicación que nunca se envió.
+      // Devuelve inmediatamente para que queue.ts registre el intento y,
+      // si corresponde, avance al siguiente título del lote.
       await onStep(
         "El sitio no permitió guardar este artículo después de agotar la validación. Se continúa con el siguiente título del lote.",
       );
