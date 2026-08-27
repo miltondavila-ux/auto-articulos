@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { RunRow } from "@/types/dashboard";
 import PerformanceDashboard from "@/components/PerformanceDashboard";
 import OnboardingWizard from "@/components/OnboardingWizard";
+import ComienzaAqui from "@/components/ComienzaAqui";
 import { TRIAL_DAYS } from "@/lib/trial";
 
 interface PublishedNotification {
@@ -135,6 +136,8 @@ export default function InicioPage() {
 
   return (
     <div>
+      <ComienzaAqui />
+
       <ModuleIntro titulo="Inicio">
         <IntroP>
           Esta es tu pantalla de control. Aquí ves de un vistazo cómo va tu cuenta: cuántos artículos se han publicado hoy y este mes, cuánto te queda de tu límite y el ritmo que llevas.
@@ -308,4 +311,3 @@ export default function InicioPage() {
     </div>
   );
 }
-
