@@ -257,30 +257,6 @@ export default function InicioPage() {
         <OnboardingWizard onUpdated={checkWizardStatus} />
       ) : wizardComplete === true ? (
         <>
-          {/* Pedido explícito del usuario (23/8/2026): "Comienza aquí" vive
-              acá, no en Cómo Funciona — solo tiene sentido una vez que el
-              asistente de configuración ya desapareció y esta pantalla
-              muestra el panel de rendimiento en su lugar. */}
-          <div style={{ marginTop: 20, marginBottom: 20 }}>
-            <Link
-              href="/dashboard/oportunidades"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "11px 20px",
-                borderRadius: 980,
-                fontSize: 15,
-                fontWeight: 500,
-                textDecoration: "none",
-                color: "#ffffff",
-                background: "#1d1d1f",
-              }}
-            >
-              Comienza aquí
-              <span aria-hidden="true">›</span>
-            </Link>
-          </div>
           <PerformanceDashboard />
         </>
       ) : null}
