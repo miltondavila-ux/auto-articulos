@@ -1,2 +1,3 @@
-ALTER TABLE "Title" ADD COLUMN "opportunityCreatedAt" TIMESTAMP(3),
-ADD COLUMN "publishedAt" TIMESTAMP(3);
+ALTER TABLE "Title"
+  ADD COLUMN IF NOT EXISTS "opportunityCreatedAt" TIMESTAMP(3),
+  ADD COLUMN IF NOT EXISTS "publishedAt" TIMESTAMP(3);
