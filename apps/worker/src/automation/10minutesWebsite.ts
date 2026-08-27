@@ -858,7 +858,27 @@ async function createArticleDraft(
   // la publicación completa por esto.
   if (contentLanguage) {
     const languageSelect = dialog.locator("select").first();
-    await languageSelect.selectOption(contentLanguage).catch(() => {});
+    const languageOptions = await languageSelect
+      .locator("option")
+      .evaluateAll((options) =>
+        options.map((option) => ({
+          value: (option as HTMLOptionElement).value,
+          text: (option.textContent ?? "").trim(),
+        })),
+      )
+      .catch(() => [] as { value: string; text: string }[]);
+    const normalizedRequestedLanguage = contentLanguage.toLowerCase().split("_")[0];
+    const matchingLanguage = languageOptions.find(
+      (option) =>
+        option.value === contentLanguage ||
+        option.value.toLowerCase().split("_")[0] === normalizedRequestedLanguage ||
+        option.text.toLowerCase().split(" ")[0] === normalizedRequestedLanguage,
+    );
+    if (matchingLanguage?.value) {
+      // Evita esperar el timeout completo cuando la cuenta usa valores como
+      // "es_ES" y Auto Artículos guarda el código corto "es".
+      await languageSelect.selectOption(matchingLanguage.value, { timeout: 5000 }).catch(() => {});
+    }
     // Bug real encontrado el 6/8/2026 (cuenta de Gustavo Torres, contentLanguage
     // en inglés): a diferencia del selector de categoría (#user_label_list_article),
     // este también parece estar reforzado por un widget visual que necesita el
