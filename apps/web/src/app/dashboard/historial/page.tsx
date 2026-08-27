@@ -661,7 +661,7 @@ function HistoryEntry({
         }}
       >
         <span style={{ color: "#1d1d1f", fontWeight: 600 }}>
-          {new Date(run.createdAt).toLocaleString()}
+          Inicio: {new Date(run.createdAt).toLocaleString()}
         </span>
         <span className="muted">
           — {successCount}/{run.titles.length} publicados
@@ -748,6 +748,7 @@ function RunTable({ titles }: { titles: TitleRow[] }) {
             <th style={thStyle}>Título</th>
             <th style={thStyle}>Estado</th>
             <th style={thStyle}>Intentos</th>
+            <th style={thStyle}>Fecha publicación</th>
             <th style={thStyle}>Enlace / Error</th>
             <th style={thStyle}>Log</th>
           </tr>
@@ -815,6 +816,25 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
       </td>
       <td style={tdStyle} data-label="Intentos">
         {title.attempts}
+      </td>
+      <td style={tdStyle} data-label="Fecha publicación">
+        {title.processedAt ? (
+          <span style={{ whiteSpace: "nowrap" }}>
+            {title.status === "success" && title.articleUrl
+              ? "Publicado: "
+              : "Procesado: "}
+            {new Date(title.processedAt).toLocaleString("es-US", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+            })}
+          </span>
+        ) : (
+          <span className="muted">Pendiente</span>
+        )}
       </td>
       <td style={tdStyle} data-label="Enlace / Error">
         {title.articleUrl ? (

@@ -19,6 +19,7 @@ export interface TitleRow {
   articleUrl: string | null;
   finalTitle: string | null;
   errorMessage: string | null;
+  processedAt: string | null;
   googleIndexingStatus: string | null;
   googleIndexingMessage: string | null;
   googleIndexingAt: string | null;
