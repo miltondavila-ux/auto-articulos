@@ -314,6 +314,9 @@ export default function OportunidadesPage() {
         ? `Se publicarán ${publishedCount} títulos según tu cupo. Quedaron ${pendingCount} títulos pendientes en Oportunidades.`
         : `Se publicarán ${publishedCount} títulos. No quedaron títulos pendientes.`,
     });
+    if (typeof data.workerWarning === "string") {
+      window.sessionStorage.setItem("auto-articulos-worker-warning", data.workerWarning);
+    }
     setBusyId(null);
     router.push("/dashboard/publicaciones-en-curso");
     router.refresh();
@@ -358,6 +361,9 @@ export default function OportunidadesPage() {
       await load();
       setBusyId(null);
       return;
+    }
+    if (typeof data.workerWarning === "string") {
+      window.sessionStorage.setItem("auto-articulos-worker-warning", data.workerWarning);
     }
     router.push("/dashboard/publicaciones-en-curso");
     router.refresh();

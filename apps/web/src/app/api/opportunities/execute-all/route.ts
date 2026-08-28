@@ -111,34 +111,36 @@ export async function POST(request: NextRequest) {
   /*
    * Cupo. Antes, pasarse del máximo por lote rechazaba TODO y la persona se
    * quedaba sin publicar nada. Pedido de Milton (19/8/2026): publicar lo que
-   * cabe y avisar. Se recorta por categorías completas, no partiéndolas: una
-   * categoría a medias dejaría oportunidades sueltas sin su contexto.
+   * cabe y avisar. Las categorías grandes se dividen en bloques; el resto se
+   * conserva como oportunidad para no perder ningún título ni su contexto.
    */
-  const gruposQueCaben: typeof groups = [];
+  const gruposQueCaben: Array<{
+    group: (typeof groups)[number];
+    titles: (typeof groups)[number]["titles"];
+  }> = [];
   let acumulado = 0;
+  let pendingCount = 0;
   for (const grupo of groups) {
-    if (acumulado + grupo.titles.length > user.maxTitlesPerBatch) break;
-    gruposQueCaben.push(grupo);
-    acumulado += grupo.titles.length;
+    const capacidad = Math.max(0, user.maxTitlesPerBatch - acumulado);
+    const titles = grupo.titles.slice(0, capacidad);
+    if (titles.length > 0) {
+      gruposQueCaben.push({ group: grupo, titles });
+      acumulado += titles.length;
+    }
+    pendingCount += grupo.titles.length - titles.length;
   }
 
   if (gruposQueCaben.length === 0) {
-    const primera = groups[0];
     return NextResponse.json(
-      {
-        error: `Tu máximo es de ${user.maxTitlesPerBatch} títulos por lote y la primera categoría ya tiene ${primera.titles.length}. Elimina algunos títulos de esa categoría, o pide al administrador que aumente tu máximo.`,
-      },
+      { error: "No hay títulos que quepan en el máximo permitido para este lote." },
       { status: 400 },
     );
   }
 
-  const gruposFuera = groups.length - gruposQueCaben.length;
   const avisoDeCupo =
-    gruposFuera > 0
-      ? `Se enviaron a publicar ${acumulado} títulos de ${gruposQueCaben.length} categoría(s), porque tu máximo es de ${user.maxTitlesPerBatch} por lote. Las otras ${gruposFuera} categoría(s) quedaron pendientes: vuelve mañana y publícalas de nuevo.`
+    pendingCount > 0
+      ? `Se enviaron a publicar ${acumulado} títulos porque tu máximo es de ${user.maxTitlesPerBatch} por lote. Los ${pendingCount} restantes quedaron pendientes en Oportunidades para publicarlos después.`
       : null;
-
-  groups = gruposQueCaben;
 
   const normalizedContentLanguage =
     typeof contentLanguage === "string" && contentLanguage.trim()
@@ -147,7 +149,7 @@ export async function POST(request: NextRequest) {
 
   const runIds = await prisma.$transaction(async (tx) => {
     const ids: string[] = [];
-    for (const group of groups) {
+    for (const { group, titles } of gruposQueCaben) {
       const created = await tx.run.create({
         data: {
           userId,
@@ -160,7 +162,7 @@ export async function POST(request: NextRequest) {
               ? promptId.trim()
               : user.defaultPromptId,
           titles: {
-            create: group.titles.map((title, order) => ({
+            create: titles.map((title, order) => ({
               text: title.text,
               order,
               opportunityCreatedAt: group.createdAt,
@@ -173,10 +175,40 @@ export async function POST(request: NextRequest) {
       // Cascade en el schema borra las OpportunityTitle de este grupo junto
       // con el grupo.
       await tx.opportunityGroup.delete({ where: { id: group.id } });
+
+      const remainingTitles = group.titles.slice(titles.length);
+      if (remainingTitles.length > 0) {
+        await tx.opportunityGroup.create({
+          data: {
+            userId: group.userId,
+            categoryId: group.categoryId,
+            rationale: group.rationale,
+            impressions: group.impressions,
+            clicks: group.clicks,
+            titles: {
+              create: remainingTitles.map((title) => ({
+                text: title.text,
+                rationale: title.rationale,
+              })),
+            },
+          },
+        });
+      }
     }
     return ids;
   });
 
-  await triggerWorkerNow();
-  return NextResponse.json({ ok: true, runIds, avisoDeCupo });
+  const worker = await triggerWorkerNow();
+  return NextResponse.json({
+    ok: true,
+    runIds,
+    avisoDeCupo,
+    publishedCount: acumulado,
+    pendingCount,
+    workerStarted: worker.started,
+    workerAlreadyActive: worker.alreadyActive ?? false,
+    workerWarning: worker.reason
+      ? "Las publicaciones quedaron creadas, pero el worker no pudo iniciarse de inmediato. El sistema las retomará en el próximo ciclo automático."
+      : null,
+  });
 }

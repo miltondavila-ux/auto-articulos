@@ -192,6 +192,9 @@ export default function PublicarPage() {
         });
         return;
       }
+      if (typeof data.workerWarning === "string") {
+        window.sessionStorage.setItem("auto-articulos-worker-warning", data.workerWarning);
+      }
       router.push("/dashboard/publicaciones-en-curso");
     } finally {
       setStarting(false);

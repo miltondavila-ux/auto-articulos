@@ -17,6 +17,71 @@ async function markTitleError(titleId: string, message: string) {
   });
 }
 
+const OPPORTUNITY_RETRY_NOTE =
+  "No se publicó en el primer intento y quedó disponible en Oportunidades para reintentarlo.";
+
+/**
+ * Reincorpora al módulo Oportunidades los títulos que ya no pueden avanzar en
+ * este Run. Al iniciar una publicación el grupo original se convierte en Run
+ * y se elimina; sin esta compensación, un fallo definitivo hacía desaparecer
+ * la oportunidad aunque el artículo nunca hubiera sido publicado.
+ */
+async function restoreUnfinishedTitlesToOpportunities(
+  runId: string,
+  onlyTitleId?: string,
+) {
+  await prisma.$transaction(async (tx) => {
+    const run = await tx.run.findUnique({
+      where: { id: runId },
+      select: { userId: true, categoryId: true },
+    });
+    if (!run) return;
+
+    const titles = await tx.title.findMany({
+      where: {
+        runId,
+        ...(onlyTitleId ? { id: onlyTitleId } : {}),
+        status: { in: ["pending", "error"] },
+      },
+      orderBy: { order: "asc" },
+      select: { text: true },
+    });
+    if (titles.length === 0) return;
+
+    const group = await tx.opportunityGroup.upsert({
+      where: { userId_categoryId: { userId: run.userId, categoryId: run.categoryId } },
+      create: {
+        userId: run.userId,
+        categoryId: run.categoryId,
+        rationale: "Títulos pendientes de publicación; puedes reintentarlos desde aquí.",
+      },
+      update: {},
+      select: { id: true },
+    });
+
+    for (const title of titles) {
+      const existing = await tx.opportunityTitle.findFirst({
+        where: { groupId: group.id, text: title.text },
+        select: { id: true },
+      });
+      if (existing) {
+        await tx.opportunityTitle.update({
+          where: { id: existing.id },
+          data: { rationale: OPPORTUNITY_RETRY_NOTE },
+        });
+      } else {
+        await tx.opportunityTitle.create({
+          data: {
+            groupId: group.id,
+            text: title.text,
+            rationale: OPPORTUNITY_RETRY_NOTE,
+          },
+        });
+      }
+    }
+  });
+}
+
 /**
  * Procesa un único título de algún run activo. Devuelve true si hizo algo.
  *
@@ -138,6 +203,7 @@ async function processRunTitle(
       where: { id: run.id, status: { in: ["pending", "running"] } },
       data: { status: "halted", finishedAt: new Date() },
     });
+    await restoreUnfinishedTitlesToOpportunities(run.id);
     return true;
   }
 
@@ -220,6 +286,7 @@ async function processRunTitle(
         where: { id: run.id, status: { in: ["pending", "running"] } },
         data: { status: "halted", finishedAt: new Date() },
       });
+      await restoreUnfinishedTitlesToOpportunities(run.id);
       return true;
     }
 
@@ -318,6 +385,7 @@ async function processRunTitle(
         where: { id: run.id, status: { in: ["pending", "running"] } },
         data: { status: "halted", finishedAt: new Date() },
       });
+      await restoreUnfinishedTitlesToOpportunities(run.id);
     } else if (err instanceof DailyLimitReachedError) {
       // Límite diario de artículos confirmado por el propio sitio (no una
       // hipótesis): NINGÚN otro título de este lote puede avanzar hoy, así
@@ -330,10 +398,12 @@ async function processRunTitle(
         where: { id: run.id, status: { in: ["pending", "running"] } },
         data: { status: "halted", finishedAt: new Date() },
       });
+      await restoreUnfinishedTitlesToOpportunities(run.id);
     } else if (fresh.attempts >= MAX_ATTEMPTS) {
       // Se acabaron los intentos para ESTE título, pero el lote sigue: el
       // worker continúa con los demás títulos pendientes del mismo run.
       await markTitleError(nextTitle.id, message);
+      await restoreUnfinishedTitlesToOpportunities(run.id, nextTitle.id);
     } else {
       // Vuelve a "pending" para reintentar desde el inicio en el próximo ciclo.
       await prisma.title.update({

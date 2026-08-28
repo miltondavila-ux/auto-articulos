@@ -26,6 +26,12 @@ const GITHUB_API_HEADERS = (token: string) => ({
  */
 const MAX_ACTIVE_RUN_AGE_MS = 30 * 60 * 1000;
 
+export type WorkerTriggerResult = {
+  started: boolean;
+  alreadyActive?: boolean;
+  reason?: "missing_configuration" | "github_rejected" | "network_error";
+};
+
 async function isWorkerAlreadyActive(
   token: string,
   repo: string,
@@ -60,7 +66,10 @@ async function isWorkerAlreadyActive(
  * falla (token vencido, sin permisos, etc.) no debe romper la petición del
  * usuario: el respaldo por horario sigue funcionando de todos modos.
  */
-async function triggerWorkflowNow(workflow: string, label: string): Promise<void> {
+async function triggerWorkflowNow(
+  workflow: string,
+  label: string,
+): Promise<WorkerTriggerResult> {
   const token = process.env.GITHUB_ACTIONS_TOKEN;
   const repo = process.env.GITHUB_REPO;
 
@@ -68,12 +77,12 @@ async function triggerWorkflowNow(workflow: string, label: string): Promise<void
     console.error(
       `${label}: falta GITHUB_ACTIONS_TOKEN o GITHUB_REPO; se depende del horario.`,
     );
-    return;
+    return { started: false, reason: "missing_configuration" };
   }
 
   try {
     if (await isWorkerAlreadyActive(token, repo, workflow)) {
-      return;
+      return { started: false, alreadyActive: true };
     }
 
     const res = await fetch(
@@ -94,16 +103,19 @@ async function triggerWorkflowNow(workflow: string, label: string): Promise<void
       console.error(
         `${label}: GitHub respondió ${res.status} al intentar disparar el workflow: ${body}`,
       );
+      return { started: false, reason: "github_rejected" };
     }
+    return { started: true };
   } catch (err) {
     console.error(`${label}: no se pudo disparar el workflow:`, err);
+    return { started: false, reason: "network_error" };
   }
 }
 
-export function triggerWorkerNow(): Promise<void> {
+export function triggerWorkerNow(): Promise<WorkerTriggerResult> {
   return triggerWorkflowNow("worker.yml", "triggerWorkerNow");
 }
 
-export function triggerSocialWorkerNow(): Promise<void> {
+export function triggerSocialWorkerNow(): Promise<WorkerTriggerResult> {
   return triggerWorkflowNow("social-worker.yml", "triggerSocialWorkerNow");
 }
