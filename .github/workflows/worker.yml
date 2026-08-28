@@ -7,10 +7,12 @@ on:
 
 concurrency:
   # Las reservas atómicas en la base de datos ya impiden que dos procesos
-  # trabajen sobre la misma cuenta. Separar por SHA permite que una corrección
-  # recién publicada arranque sin esperar a que termine la versión anterior;
-  # las corridas de la misma versión siguen compartiendo una sola cola.
-  group: auto-articulos-worker-${{ github.sha }}
+  # trabajen sobre la misma cuenta. Las ejecuciones programadas siguen
+  # compartiendo grupo por SHA, pero cada disparo manual obtiene su propio
+  # grupo. Así una corrida programada zombie no puede retener para siempre un
+  # lote que el usuario acaba de iniciar; la reserva por usuario evita que dos
+  # lanes publiquen simultáneamente en la misma cuenta.
+  group: auto-articulos-worker-${{ github.event_name == 'workflow_dispatch' && github.run_id || github.sha }}
   cancel-in-progress: false
 
 jobs:
