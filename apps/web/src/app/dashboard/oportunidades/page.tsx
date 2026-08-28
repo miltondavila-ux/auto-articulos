@@ -388,3 +388,641 @@ export default function OportunidadesPage() {
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <button
             onClick={acceptDisclosure}
+            disabled={acceptingDisclosure}
+            style={disabledStyle(
+              { ...buttonStyle, marginTop: 0 },
+              acceptingDisclosure,
+            )}
+          >
+            {acceptingDisclosure ? "Guardando..." : "Acepto y entiendo"}
+          </button>
+          <Link href="/dashboard" style={{ textDecoration: "none" }}>
+            <button
+              type="button"
+              style={{ ...secondaryButtonStyle, marginTop: 0 }}
+            >
+              Volver a Inicio
+            </button>
+          </Link>
+        </div>
+      </section>
+    );
+  }
+
+  const activeLangName =
+    languages.find((l) => l.externalId === contentLanguage)?.name ||
+    (contentLanguage === "es" ? "Español" : contentLanguage === "en" ? "Inglés" : contentLanguage);
+
+  return (
+    <div>
+      <PreValidationGuard
+        type="oportunidades"
+        credentialsConfigured={true}
+        hasCategories={Boolean(setupStatus?.hasCategories)}
+        hasLanguage={Boolean(contentLanguage && contentLanguage.trim().length > 0)}
+        languageName={activeLangName}
+        hasImageCredits={hasImageCredits}
+        googleConnected={Boolean(setupStatus?.googleConnected)}
+        hasGoogleSiteUrl={Boolean(setupStatus?.hasSiteUrl)}
+        platformDomain={platformDomain}
+        onOpenImageCreditsModal={() => setShowImageCreditsModal(true)}
+        loading={loading}
+        onConfirmImageCredits={() => {
+          setHasImageCredits(true);
+          setMessage({
+            kind: "info",
+            text: "Has indicado que ya recibiste créditos. Puedes intentar continuar; si aún no están activos, vuelve aquí y solicítalos.",
+          });
+        }}
+      >
+        <section style={sectionStyle}>
+        <h2 style={h2Style}>Oportunidades SEO</h2>
+        <p style={{ color: "#6b7280", fontSize: 14, lineHeight: 1.55 }}>
+          Analiza impresiones, tendencias, posiciones, consultas y páginas de tu
+          propiedad de Google Search Console. El sistema selecciona hasta 10
+          categorías y crea 9 oportunidades long tail únicas para cada una,
+          evitando duplicados y canibalización.
+        </p>
+        {availablePanels.length > 1 && (
+          <div style={{ marginTop: 12 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>
+              ¿Para cuál sitio generar oportunidades?
+              <select
+                value={selectedPanel}
+                onChange={(e) => setSelectedPanel(e.target.value)}
+                style={{ ...inputStyle, marginTop: 4, maxWidth: 260 }}
+              >
+                {availablePanels.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        )}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+            marginTop: 12,
+          }}
+        >
+          <button
+            onClick={() => analyze()}
+            disabled={analyzing}
+            style={disabledStyle({ ...buttonStyle, marginTop: 0 }, analyzing)}
+          >
+            {analyzing
+              ? "Analizando Search Console..."
+              : groups.length
+                ? "Actualizar análisis"
+                : "Analizar oportunidades"}
+          </button>
+          {lastAnalysisAt && (
+            <span style={{ fontSize: 12, color: "#6b7280" }}>
+              Último análisis: {formatDateTime(lastAnalysisAt)}
+            </span>
+          )}
+        </div>
+        {analyzing && (
+          <div
+            role="status"
+            aria-live="polite"
+            style={{
+              marginTop: 16,
+              padding: 16,
+              border: "1px solid #b8caf7",
+              borderRadius: 10,
+              background: "#f3f6ff",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 16,
+                alignItems: "center",
+                marginBottom: 10,
+              }}
+            >
+              <strong style={{ fontSize: 14, color: "#24458f" }}>
+                {analysisStages[currentStage]}
+              </strong>
+              <span
+                style={{
+                  minWidth: 52,
+                  textAlign: "center",
+                  padding: "4px 8px",
+                  borderRadius: 999,
+                  background: "#dfe8ff",
+                  color: "#24458f",
+                  fontSize: 12,
+                  fontVariantNumeric: "tabular-nums",
+                  fontWeight: 700,
+                }}
+              >
+                {elapsedTime}
+              </span>
+            </div>
+            <div
+              aria-hidden="true"
+              style={{
+                height: 8,
+                borderRadius: 999,
+                background: "#dfe5f2",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  width: `${analysisProgress}%`,
+                  height: "100%",
+                  borderRadius: 999,
+                  background: "linear-gradient(90deg, #2f5fdb, #4dd8e8)",
+                  transition: "width 1s linear",
+                }}
+              />
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+                gap: 8,
+                marginTop: 12,
+              }}
+            >
+              {analysisStages.map((stage, index) => (
+                <div
+                  key={stage}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: 12,
+                    color:
+                      index < currentStage
+                        ? "#15803d"
+                        : index === currentStage
+                          ? "#24458f"
+                          : "#8a97ab",
+                    fontWeight: index === currentStage ? 600 : 400,
+                  }}
+                >
+                  <span aria-hidden="true">
+                    {index < currentStage
+                      ? "✓"
+                      : index === currentStage
+                        ? "●"
+                        : "○"}
+                  </span>
+                  <span>{stage}</span>
+                </div>
+              ))}
+            </div>
+            <p style={{ margin: "12px 0 0", color: "#5e6b83", fontSize: 12 }}>
+              El tiempo depende de la cantidad de datos. No cierres esta página
+              mientras termina el análisis.
+            </p>
+          </div>
+        )}
+        {setupStatus &&
+          (!setupStatus.googleConnected ||
+            !setupStatus.hasSiteUrl ||
+            !setupStatus.hasCategories ||
+            !contentLanguage) && (
+            <div
+              style={{
+                marginTop: 12,
+                padding: "10px 14px",
+                borderRadius: 8,
+                background: "#fef3c7",
+                color: "#92400e",
+                fontSize: 13,
+                display: "flex",
+                flexDirection: "column",
+                gap: 4,
+              }}
+            >
+              <strong>Faltan configuraciones para aprovechar Oportunidades:</strong>
+              <ul style={{ margin: "4px 0 0 18px", padding: 0 }}>
+                {(!setupStatus.googleConnected || !setupStatus.hasSiteUrl) && (
+                  <li>
+                    <Link
+                      href="/dashboard/configuracion?tab=integrations#google"
+                      style={{ color: "#2563eb", fontWeight: 600 }}
+                    >
+                      {!setupStatus.googleConnected
+                        ? "Conectar Google Search Console"
+                        : "Elegir propiedad de Search Console"}
+                    </Link>
+                  </li>
+                )}
+                {!setupStatus.hasCategories && (
+                  <li>
+                    <Link
+                      href="/dashboard/configuracion?tab=platform#categories"
+                      style={{ color: "#2563eb", fontWeight: 600 }}
+                    >
+                      Sincronizar tus categorías
+                    </Link>
+                  </li>
+                )}
+                {!contentLanguage && (
+                  <li>
+                    <Link
+                      href="/dashboard/configuracion?tab=platform#language"
+                      style={{ color: "#2563eb", fontWeight: 600 }}
+                    >
+                      Configurar tu idioma de redacción
+                    </Link>
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
+
+        {!hasImageCredits && (
+          <div
+            style={{
+              marginTop: 12,
+              padding: "10px 14px",
+              borderRadius: 8,
+              background: "#ffffff",
+              border: "1px solid #e5e5ea",
+              boxShadow: "0 6px 18px rgba(0, 0, 0, 0.04)",
+              color: "#1d1d1f",
+              fontSize: 13,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 8,
+            }}
+          >
+            <span>
+              ⚠️ Tu cuenta de 10minutesWebsite no tiene créditos de imagen disponibles.
+            </span>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                flexWrap: "wrap",
+              }}
+            >
+              <button
+                type="button"
+                onClick={confirmImageCredits}
+                style={{
+                  background: "#1d1d1f",
+                  color: "#ffffff",
+                  border: "1px solid #1d1d1f",
+                  padding: "7px 14px",
+                  minWidth: 170,
+                  height: 36,
+                  borderRadius: 18,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  lineHeight: "20px",
+                  whiteSpace: "nowrap",
+                  cursor: "pointer",
+                }}
+              >
+                Ya recibí mis créditos
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowImageCreditsModal(true)}
+                style={{
+                  background: "#ffffff",
+                  color: "#1d1d1f",
+                  border: "1px solid #d2d2d7",
+                  padding: "7px 14px",
+                  minWidth: 170,
+                  height: 36,
+                  borderRadius: 18,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  lineHeight: "20px",
+                  whiteSpace: "nowrap",
+                  cursor: "pointer",
+                }}
+              >
+                Solicitar créditos gratuitos
+              </button>
+            </div>
+          </div>
+        )}
+        <p style={{ color: "#6b7280", fontSize: 12 }}>
+          Tu máximo permitido es de {maxTitlesPerBatch} títulos por lote.
+        </p>
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            fontSize: 13,
+            color: "#6b7280",
+            margin: "10px 0 0",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={disableIndexing}
+            onChange={(e) => setDisableIndexing(e.target.checked)}
+          />
+          Desactivar indexación en buscadores al ejecutar (por defecto queda
+          activada, como en 10minutesWebsite)
+        </label>
+
+        <div style={{ marginTop: 16 }}>
+          <label
+            style={{
+              display: "block",
+              fontSize: 13,
+              color: "#6b7280",
+              marginBottom: 6,
+            }}
+          >
+            Idioma con el que se escribirán los artículos que ejecutes desde
+            aquí. Solo aplica a lo que ejecutes ahora; no cambia tu
+            configuración.
+          </label>
+          <select
+            value={contentLanguage}
+            onChange={(e) => setContentLanguage(e.target.value)}
+            disabled={languages.length === 0}
+            style={{ ...inputStyle, width: "100%", maxWidth: 320 }}
+          >
+            {languages.length === 0 ? (
+              <option value="">Sin idiomas sincronizados</option>
+            ) : (
+              languages.map((l) => (
+                <option key={l.id} value={l.externalId}>
+                  {l.name}
+                </option>
+              ))
+            )}
+          </select>
+        </div>
+
+        {groups.length > 0 && (
+          <div style={{ marginTop: 16 }}>
+            {(() => {
+              const totalTitles = groups.reduce(
+                (sum, g) => sum + g.titles.length,
+                0,
+              );
+              const overLimit = totalTitles > maxTitlesPerBatch;
+              const disabled = busyId !== null || !contentLanguage;
+              return (
+                <>
+                  <button
+                    onClick={executeAll}
+                    disabled={disabled}
+                    title={
+                      !contentLanguage
+                        ? "Debes configurar tu idioma de redacción en Configuración antes de publicar."
+                        : undefined
+                    }
+                    style={disabledStyle(
+                      { ...buttonStyle, marginTop: 0 },
+                      disabled,
+                    )}
+                  >
+                    {busyId === "__all__"
+                      ? "Publicando todas..."
+                      : `Publicar todas las categorías (${totalTitles})`}
+                  </button>
+                  {overLimit && (
+                    <p
+                      style={{
+                        margin: "6px 0 0",
+                        fontSize: 12,
+                        color: "#d64545",
+                      }}
+                    >
+                      Se publicarán hasta {maxTitlesPerBatch} títulos por cupo.
+                      Los {Math.max(0, totalTitles - maxTitlesPerBatch)} que
+                      excedan el cupo quedarán pendientes.
+                    </p>
+                  )}
+                  {!contentLanguage && (
+                    <p
+                      style={{
+                        margin: "6px 0 0",
+                        fontSize: 12,
+                        color: "#d64545",
+                      }}
+                    >
+                      Debes seleccionar o configurar un idioma de redacción antes de publicar.
+                    </p>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        )}
+      </section>
+
+      {message && (
+        <div
+          style={{
+            marginTop: 16,
+            padding: "12px 16px",
+            borderRadius: 12,
+            background:
+              message.kind === "error"
+                ? "#fff2f1"
+                : message.kind === "info"
+                  ? "#f5f5f7"
+                  : "#f2faf4",
+            border:
+              message.kind === "error"
+                ? "1px solid rgba(255, 59, 48, 0.25)"
+                : message.kind === "info"
+                  ? "1px solid rgba(0, 0, 0, 0.08)"
+                  : "1px solid rgba(52, 199, 89, 0.25)",
+            color:
+              message.kind === "error"
+                ? "#ff3b30"
+                : message.kind === "info"
+                  ? "#6e6e73"
+                  : "#16803c",
+            fontSize: 13,
+          }}
+        >
+          {message.text}
+          {canForce && (
+            <div style={{ marginTop: 10 }}>
+              <button
+                onClick={() => analyze(true)}
+                disabled={analyzing}
+                className="secondary"
+                style={{
+                  fontSize: 13,
+                  padding: "6px 14px",
+                }}
+              >
+                Analizar de todas formas ahora
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {loading && <p className="muted" style={{ marginTop: 20 }}>Cargando oportunidades...</p>}
+      {!loading && groups.length === 0 && (
+        <section style={sectionStyle}>
+          <p className="muted" style={{ margin: 0 }}>
+            Todavía no hay oportunidades guardadas. Presiona el botón para crear
+            el primer análisis.
+          </p>
+        </section>
+      )}
+
+      {groups.map((group) => (
+        <section key={group.id} style={sectionStyle}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 16,
+              alignItems: "flex-start",
+              flexWrap: "wrap",
+            }}
+          >
+            <div>
+              <h2 style={{ ...h2Style, marginBottom: 4 }}>
+                {group.category.name}
+                {group.category.panel ? ` (${group.category.panel})` : ""}
+              </h2>
+              <p style={{ margin: 0, color: "#6e6e73", fontSize: 13 }}>
+                {group.rationale}
+              </p>
+              <p style={{ color: "#86868b", fontSize: 12, marginTop: 4 }}>
+                {Math.round(group.impressions).toLocaleString("es-US")}{" "}
+                impresiones · {Math.round(group.clicks).toLocaleString("es-US")}{" "}
+                clics
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button
+                onClick={() => execute("group", group.id)}
+                disabled={
+                  busyId !== null ||
+                  group.titles.length > maxTitlesPerBatch ||
+                  !contentLanguage
+                }
+                title={
+                  !contentLanguage
+                    ? "Debes configurar tu idioma de redacción en Configuración antes de ejecutar."
+                    : group.titles.length > maxTitlesPerBatch
+                      ? `Esta categoría supera tu máximo de ${maxTitlesPerBatch} títulos por lote.`
+                      : undefined
+                }
+                style={disabledStyle(
+                  { ...buttonStyle, marginTop: 0 },
+                  busyId !== null ||
+                    group.titles.length > maxTitlesPerBatch ||
+                    !contentLanguage,
+                )}
+              >
+                {group.titles.length > maxTitlesPerBatch
+                  ? `Supera el máximo (${group.titles.length}/${maxTitlesPerBatch})`
+                  : `Ejecutar categoría (${group.titles.length})`}
+              </button>
+              <button
+                onClick={() => remove("groups", group.id)}
+                disabled={busyId !== null}
+                className="secondary"
+                style={disabledStyle({ ...secondaryButtonStyle, marginTop: 0 }, busyId !== null)}
+              >
+                Eliminar categoría
+              </button>
+            </div>
+          </div>
+          <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
+            {group.titles.map((title, index) => (
+              <div
+                key={title.id}
+                className="row"
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: 16,
+                  padding: "12px 14px",
+                  borderRadius: 12,
+                  border: "1px solid #e5e5ea",
+                  background: "#ffffff",
+                }}
+              >
+                <div style={{ minWidth: 200, flex: "1 1 200px" }}>
+                  <strong style={{ fontSize: 14, color: "#1d1d1f" }}>
+                    {index + 1}. {title.text}
+                  </strong>
+                  {title.rationale && (
+                    <div
+                      style={{ color: "#6e6e73", fontSize: 12, marginTop: 3 }}
+                    >
+                      {title.rationale}
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                  <button
+                    onClick={() => execute("title", title.id)}
+                    disabled={busyId !== null || !contentLanguage}
+                    title={
+                      !contentLanguage
+                        ? "Debes configurar tu idioma de redacción en Configuración antes de ejecutar."
+                        : undefined
+                    }
+                    className="secondary"
+                    style={disabledStyle(
+                      { ...secondaryButtonStyle, fontSize: 12, padding: "6px 12px" },
+                      busyId !== null || !contentLanguage,
+                    )}
+                  >
+                    Ejecutar
+                  </button>
+                  <button
+                    onClick={() => remove("titles", title.id)}
+                    disabled={busyId !== null}
+                    className="secondary"
+                    style={disabledStyle(
+                      { ...secondaryButtonStyle, color: "#ff3b30", fontSize: 12, padding: "6px 12px" },
+                      busyId !== null,
+                    )}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+      </PreValidationGuard>
+
+      <ImageCreditsModal
+        isOpen={showImageCreditsModal}
+        onClose={() => setShowImageCreditsModal(false)}
+        onConfirmImageCredits={() => {
+          setHasImageCredits(true);
+          setShowImageCreditsModal(false);
+          setMessage({
+            kind: "info",
+            text: "Has indicado que ya recibiste créditos. Puedes intentar continuar; si aún no están activos, vuelve aquí y solicítalos.",
+          });
+        }}
+        platformDomain={platformDomain}
+      />
+    </div>
+  );
+}
