@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@auto-articulos/db";
 import { sectionStyle, h2Style } from "@/components/dashboard-ui";
+import ConfigurationStatus from "@/components/ConfigurationStatus";
 
 type Categoria = "nuevas-herramientas" | "arreglos";
 
@@ -15,8 +16,8 @@ function filterButtonStyle(active: boolean) {
     borderRadius: 20,
     fontSize: 13,
     fontWeight: 500,
-    border: active ? "1px solid #1d1d1f" : "1px solid #d2d2d7",
-    background: active ? "#1d1d1f" : "#ffffff",
+    border: active ? "1px solid #0071e3" : "1px solid #d2d2d7",
+    background: active ? "#0071e3" : "#ffffff",
     color: active ? "#ffffff" : "#1d1d1f",
     textDecoration: "none",
     transition: "all 0.15s ease",
@@ -45,17 +46,12 @@ export default async function ActualizacionesPage({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 1120, margin: "0 auto" }}>
+      <ConfigurationStatus />
       <div className="panel" style={sectionStyle}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
           <div>
             <p className="eyebrow" style={{ margin: "0 0 4px" }}>Novedades del Sistema</p>
             <h1 style={{ ...h2Style, fontSize: 26, marginBottom: 6 }}>Registro de Actualizaciones</h1>
-            <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
-              Aquí se anota cada mejora y cada arreglo que se hace en la plataforma, con su fecha y una explicación de qué cambió y para qué sirve.
-            </p>
-            <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
-              Míralo cuando notes algo distinto en una pantalla, o cuando aparezca una función que antes no estaba. En vez de tener que preguntar, aquí está escrito qué pasó.
-            </p>
             <p className="lead-copy" style={{ margin: 0, maxWidth: 680 }}>
               Entérate de las nuevas herramientas incorporadas y los arreglos realizados en la plataforma, explicados de forma clara y sencilla.
             </p>
@@ -91,8 +87,8 @@ function TarjetaActualizacion({ item }: { item: { date: Date; title: string; cat
               borderRadius: 999,
               fontSize: 11,
               fontWeight: 500,
-              color: esNueva ? "#16803c" : "#1d1d1f",
-              background: esNueva ? "rgba(52, 199, 89, 0.1)" : "#f5f5f7",
+              color: esNueva ? "#16803c" : "#0071e3",
+              background: esNueva ? "rgba(52, 199, 89, 0.1)" : "#e8f2ff",
             }}
           >
             {badgeTexto}

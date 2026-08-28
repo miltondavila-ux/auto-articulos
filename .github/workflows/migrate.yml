@@ -13,11 +13,6 @@ on:
         required: false
         default: false
         type: boolean
-      safe_opportunity_dates:
-        description: "Aplicar solo las columnas seguras de fechas de oportunidades/publicaciones"
-        required: false
-        default: false
-        type: boolean
 
 jobs:
   migrar:
@@ -37,17 +32,7 @@ jobs:
       # advisory locks. El runtime serverless usa el Transaction pooler :6543,
       # pero una migración aislada debe usar el Session pooler :5432 (una sola
       # conexión, dentro del límite de 15). Nunca imprime la URL ni el secreto.
-      - name: Aplicar migración segura de fechas de oportunidades
-        if: ${{ inputs.safe_opportunity_dates }}
-        shell: bash
-        run: |
-          MIGRATION_DATABASE_URL="${DATABASE_URL/:6543/:5432}"
-          MIGRATION_DATABASE_URL="${MIGRATION_DATABASE_URL/?pgbouncer=true/}"
-          npx prisma db execute \
-            --url "$MIGRATION_DATABASE_URL" \
-            --file packages/db/prisma/migrations/20260827130000_add_opportunity_publication_dates/migration.sql
       - name: Aplicar migraciones con Session pooler
-        if: ${{ !inputs.safe_opportunity_dates }}
         shell: bash
         run: |
           MIGRATION_DATABASE_URL="${DATABASE_URL/:6543/:5432}"

@@ -4,18 +4,6 @@ import {
   publicHeadingStyle,
   publicLinkStyle,
 } from "@/components/public-info-page";
-import {
-  DEFAULT_PLATFORM_DOMAIN,
-  platformContactEmail,
-} from "@auto-articulos/shared";
-
-/*
- * Contacto del servidor por defecto: estas páginas son públicas y quien las
- * lee todavía no tiene sesión, así que no se puede saber si viene de
- * 10minutesWebsite o de tagcrush. Dentro del panel sí se sabe y se usa
- * platformContactEmail(user.platformDomain).
- */
-const CONTACTO = platformContactEmail(DEFAULT_PLATFORM_DOMAIN);
 
 export const metadata: Metadata = {
   title: "Condiciones del Servicio | Auto Artículos",
@@ -69,8 +57,8 @@ export default function TermsPage() {
         Podemos suspender cuentas que comprometan la seguridad, incumplan estas
         condiciones o utilicen el servicio sin autorización. El usuario puede
         solicitar el cierre y eliminación de su cuenta escribiendo a{" "}
-        <a href={`mailto:${CONTACTO}`} style={publicLinkStyle}>
-          {CONTACTO}
+        <a href="mailto:10minuteswebsite@gmail.com" style={publicLinkStyle}>
+          10minuteswebsite@gmail.com
         </a>
         .
       </p>
@@ -78,8 +66,8 @@ export default function TermsPage() {
       <h2 style={publicHeadingStyle}>Contacto</h2>
       <p>
         Para preguntas sobre estas condiciones, contacta a{" "}
-        <a href={`mailto:${CONTACTO}`} style={publicLinkStyle}>
-          {CONTACTO}
+        <a href="mailto:10minuteswebsite@gmail.com" style={publicLinkStyle}>
+          10minuteswebsite@gmail.com
         </a>
         .
       </p>

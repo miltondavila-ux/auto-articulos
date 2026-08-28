@@ -6,9 +6,11 @@ import { triggerSocialWorkerNow } from "@/lib/trigger-worker";
 import {
   decryptSecret,
   getGoogleAccessToken,
+  getBingPageQueryStats,
+  getBingPageStats,
   queryGoogleSearchAnalytics,
 } from "@auto-articulos/shared";
-import { getGoogleAnalyticsSignals, summarizeGoogleAnalyticsSignals } from "@/lib/google-analytics-signals";
+import { getBingTokenForIntegration } from "@/lib/bing-token";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
@@ -21,6 +23,8 @@ type ArticleCandidate = {
   articleUrl: string | null;
   searchQueries?: string[];
 };
+
+type PublishedArticleCandidate = ArticleCandidate & { articleUrl: string };
 
 const formulas = [
   `Fórmula: Historia personal / Anécdota cercana.
@@ -40,42 +44,23 @@ async function generateGPTCopy(
   finalTitle: string,
   summary: string,
   searchQueries: string[] = [],
-  googleAnalyticsContext?: string,
 ): Promise<string> {
-  // "instagram-story" NO tiene caption visible en Instagram (publishInstagramStory
-  // no manda texto, solo la imagen) — este texto queda solo de registro interno,
-  // por eso sigue el estilo corto genérico. Post/Reel-image/Carousel/Infografía sí
-  // muestran el caption debajo de la imagen y merecen su propio estilo — pedido
-  // explícito de Milton (20/8/2026), antes usaban el mismo molde casual de Threads.
-  // Instagram tampoco vuelve clicable ninguna URL en el caption: usan hashtags,
-  // no enlace — otro pedido explícito de Milton.
-  const isInstagramFeedCaption =
-    platform === "instagram-post" ||
-    platform === "instagram-reel-image" ||
-    platform === "instagram-carousel" ||
-    platform === "instagram-infografia";
-  const fallbackText = isInstagramFeedCaption
-    ? `${finalTitle}\n\n${summary}`
-    : `${finalTitle}\n\n${summary}\n\nLeer más: [ENLACE]`;
   if (!OPENAI_API_KEY) {
-    return fallbackText;
+    return `${finalTitle}\n\n${summary}\n\nLeer más: [ENLACE]`;
   }
   const selectedFormula = formulas[Math.floor(Math.random() * formulas.length)];
   // LinkedIn permite hasta 3000 caracteres y funciona mejor con posts más
   // elaborados; Threads/X son de formato corto (límites reales 500/280).
   const isLinkedIn = platform === "linkedin";
   const isFacebookPage = platform === "facebook-page";
-  const isPinterest = platform === "pinterest";
-  const charLimit = isLinkedIn ? 1300 : isFacebookPage ? 700 : isInstagramFeedCaption ? 1000 : isPinterest ? 800 : 360;
-  const maxTokens = isLinkedIn ? 700 : isFacebookPage ? 450 : isInstagramFeedCaption ? 550 : isPinterest ? 500 : 300;
+  const charLimit = isLinkedIn ? 1300 : isFacebookPage ? 700 : 360;
+  const maxTokens = isLinkedIn ? 700 : isFacebookPage ? 450 : 300;
   const styleNote = isLinkedIn
-    ? "Tono profesional pero cercano (LinkedIn), con más contexto y valor. Puedes usar párrafos cortos separados por saltos de línea."
+    ? "LinkedIn: tono profesional, empático y cercano; aporta contexto, criterio y autoridad sin sonar corporativo. Conecta con una necesidad real del lector y usa párrafos cortos."
     : isFacebookPage
     ? "Facebook Page: tono cálido, humano y conversacional; reconoce el problema de la persona, explica el beneficio con claridad y cierra con una invitación cercana. Debe sentirse como una recomendación útil, no como un anuncio."
-    : isInstagramFeedCaption
-    ? "Caption real de Instagram: la primera línea es lo único visible antes del \"más\" (unos 125 caracteres), así que debe ser un gancho que detenga el scroll por sí solo. Después, párrafos cortos con saltos de línea entre cada uno (no un bloque de texto). Cierra con una invitación clara a leer el artículo."
-    : isPinterest
-    ? "Pinterest: tono claro, útil, cercano y orientado a búsqueda; conecta el contenido con una necesidad concreta, usa palabras clave naturales y transmite confianza sin sonar promocional."
+    : platform === "instagram"
+    ? "Instagram: tono visual, emocional, cercano y fácil de leer; abre con una frase que detenga el desplazamiento, conecta con una necesidad concreta y deja una idea útil. Evita sonar genérico o automatizado."
     : platform === "threads"
     ? "Threads: tono espontáneo, empático y conversacional; escribe como una reflexión breve dirigida a personas reales, con una observación útil y una invitación natural a profundizar."
     : platform === "x"
@@ -85,9 +70,6 @@ async function generateGPTCopy(
     : "Tono cercano, empático y directo, como hablarle con respeto y calidez a una persona que necesita ayuda.";
   const searchContext = searchQueries.length > 0
     ? `- Consultas reales que están llevando usuarios a este artículo: ${searchQueries.join(" | ")}\n`
-    : "";
-  const analyticsContext = googleAnalyticsContext
-    ? `- Señales agregadas de Google Analytics 4 (solo como contexto): ${googleAnalyticsContext}\n`
     : "";
   try {
     const response = await fetch(OPENAI_CHAT_URL, {
@@ -102,7 +84,7 @@ async function generateGPTCopy(
           {
             role: "user",
             content:
-              `Eres Lorena Alvarez, una asesora de seguros en Florida súper cercana, alegre, empática y de gran confianza. ` +
+              `Eres Lorena Alvarez, una asesora de seguros en Florida profesional, cercana, alegre, empática y de gran confianza. ` +
               `Escribe una publicación optimizada para la red social ${platform}. Debe sonar 100% natural, en primera persona del singular ("yo", "mi", "me"). ${styleNote}\n\n` +
               `INSTRUCCIONES DE ESTILO ESPECÍFICAS:\n` +
               `${selectedFormula}\n\n` +
@@ -112,14 +94,12 @@ async function generateGPTCopy(
               `- Sé empática, cercana y humana; conecta con la persona sin dramatizar, manipular ni prometer resultados.\n` +
               `- Refuerza autoridad mediante claridad, experiencia y utilidad concreta, nunca mediante frases grandilocuentes.\n` +
               `- No uses frases vacías, tono frío, lenguaje corporativo ni expresiones que parezcan generadas automáticamente.\n` +
-              (isInstagramFeedCaption
-                ? `- Instagram no muestra enlaces clicables en el caption — NUNCA escribas una URL ni la palabra "[ENLACE]". En vez de eso, termina con al menos 5 hashtags reales, en español, sacados de palabras clave del tema y contenido del artículo (no genéricos como #instagram) — sin espacios dentro de cada hashtag, separados entre sí por un espacio, en su propia línea al final.\n\n`
-                : `- No uses hashtags (#) ni formato markdown.\n` +
-                  `- NO escribas la URL del artículo directamente. Escribe la palabra exacta "[ENLACE]" (en mayúsculas y con corchetes) al final, integrada en tu frase de cierre (Ej: "Te lo explico con peras y manzanas aquí: [ENLACE]").\n\n`) +
+              `- No uses hashtags (#) ni formato markdown.\n` +
+              `- NO escribas la URL del artículo directamente. Escribe la palabra exacta "[ENLACE]" (en mayúsculas y con corchetes) al final, integrada en tu frase de cierre (Ej: "Te lo explico con peras y manzanas aquí: [ENLACE]").\n\n` +
               `Datos:\n` +
               `- Título del artículo: ${finalTitle}\n` +
               `- Resumen: ${summary}\n` +
-              searchContext + analyticsContext +
+              searchContext +
               `- Usa las consultas reales solo como contexto: no las enumeres, no inventes datos y mantén un tono natural.`,
           },
         ],
@@ -128,9 +108,9 @@ async function generateGPTCopy(
       }),
     });
     const data = (await response.json()) as any;
-    return data.choices?.[0]?.message?.content?.trim() ?? fallbackText;
+    return data.choices?.[0]?.message?.content?.trim() ?? `${finalTitle}\n\nLeer más: [ENLACE]`;
   } catch {
-    return fallbackText;
+    return `${finalTitle}\n\nLeer más: [ENLACE]`;
   }
 }
 
@@ -142,35 +122,110 @@ async function selectArticlesWithGSC(userId: string): Promise<ArticleCandidate[]
 
   try {
     const accessToken = await getGoogleAccessToken(decryptSecret(gsc.encryptedRefreshToken));
+    // Search Console consolida los últimos días con retraso. Excluirlos evita
+    // comparar datos parciales contra un período anterior completo.
     const endDate = new Date();
-    const startDate = new Date(Date.now() - 30 * 86400000);
+    endDate.setUTCDate(endDate.getUTCDate() - 3);
+    const startDate = new Date(endDate);
+    startDate.setUTCDate(startDate.getUTCDate() - 27);
+    const previousEndDate = new Date(startDate);
+    previousEndDate.setUTCDate(previousEndDate.getUTCDate() - 1);
+    const previousStartDate = new Date(previousEndDate);
+    previousStartDate.setUTCDate(previousStartDate.getUTCDate() - 27);
     const fmt = (d: Date) => d.toISOString().slice(0, 10);
 
-    const rows = await queryGoogleSearchAnalytics(
-      accessToken,
-      gsc.siteUrl,
-      fmt(startDate),
-      fmt(endDate),
-      ["page"],
-    );
+    const [rows, previousRows] = await Promise.all([
+      queryGoogleSearchAnalytics(
+        accessToken,
+        gsc.siteUrl,
+        fmt(startDate),
+        fmt(endDate),
+        ["query", "page"],
+      ),
+      queryGoogleSearchAnalytics(
+        accessToken,
+        gsc.siteUrl,
+        fmt(previousStartDate),
+        fmt(previousEndDate),
+        ["query", "page"],
+      ),
+    ]);
 
     if (rows.length === 0) return [];
 
-    const gscUrls = rows.map((r) => r.keys[0]);
+    const articleUrls = Array.from(new Set(rows.map((row) => row.keys[1]).filter(Boolean)));
 
     const articles = await prisma.title.findMany({
       where: {
         run: { userId },
         status: "success",
-        articleUrl: { in: gscUrls },
+        articleUrl: { in: articleUrls },
       },
       select: { id: true, finalTitle: true, text: true, summary: true, articleUrl: true },
     });
+    const articlesByUrl = new Map(
+      articles
+        .filter((article): article is PublishedArticleCandidate => Boolean(article.articleUrl))
+        .map((article) => [article.articleUrl, article]),
+    );
+    if (articlesByUrl.size === 0) return [];
 
-    const urlOrder = new Map(gscUrls.map((url, i) => [url, i]));
-    articles.sort((a, b) => (urlOrder.get(a.articleUrl!) ?? 999) - (urlOrder.get(b.articleUrl!) ?? 999));
+    const previousByQueryAndPage = new Map(
+      previousRows.map((row) => [`${row.keys[0]}\u0000${row.keys[1]}`, row]),
+    );
+    type PageSignals = {
+      impressions: number;
+      clicks: number;
+      weightedPosition: number;
+      previousImpressions: number;
+      queries: Map<string, number>;
+    };
+    const signalsByUrl = new Map<string, PageSignals>();
 
-    return articles;
+    for (const row of rows) {
+      const [query, page] = row.keys;
+      if (!query || !page || !articlesByUrl.has(page)) continue;
+      const signal = signalsByUrl.get(page) ?? {
+        impressions: 0,
+        clicks: 0,
+        weightedPosition: 0,
+        previousImpressions: 0,
+        queries: new Map<string, number>(),
+      };
+      const previous = previousByQueryAndPage.get(`${query}\u0000${page}`);
+      signal.impressions += row.impressions;
+      signal.clicks += row.clicks;
+      signal.weightedPosition += row.position * row.impressions;
+      signal.previousImpressions += previous?.impressions ?? 0;
+      signal.queries.set(query, (signal.queries.get(query) ?? 0) + row.impressions);
+      signalsByUrl.set(page, signal);
+    }
+
+    return Array.from(signalsByUrl.entries())
+      .map(([articleUrl, signal]) => {
+        const article = articlesByUrl.get(articleUrl)!;
+        const averagePosition = signal.weightedPosition / Math.max(signal.impressions, 1);
+        const ctr = signal.clicks / Math.max(signal.impressions, 1);
+        const growthRate = (signal.impressions - signal.previousImpressions) /
+          Math.max(signal.previousImpressions, 20);
+        const longTailCount = Array.from(signal.queries.keys())
+          .filter((query) => query.trim().split(/\s+/).length >= 3).length;
+        // Priorizamos demanda real, crecimiento, visibilidad alcanzable y
+        // preguntas long tail. Un CTR bajo suma solo cuando ya hay volumen.
+        const score =
+          Math.log10(signal.impressions + 1) * 20 +
+          Math.min(Math.max(growthRate, 0) * 15, 25) +
+          (averagePosition >= 4 && averagePosition <= 20 ? 18 : averagePosition >= 2 && averagePosition < 4 ? 8 : averagePosition <= 40 ? 5 : 0) +
+          (signal.impressions >= 20 && ctr < 0.05 ? 12 : 0) +
+          Math.min(longTailCount, 3) * 5;
+        const searchQueries = Array.from(signal.queries.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([query]) => query);
+        return { article, score, searchQueries };
+      })
+      .sort((a, b) => b.score - a.score)
+      .map(({ article, searchQueries }) => ({ ...article, searchQueries }));
   } catch {
     return [];
   }
@@ -189,24 +244,112 @@ async function selectArticlesWithoutGSC(userId: string): Promise<ArticleCandidat
   });
 }
 
+function normalizedArticleUrl(value: string) {
+  try {
+    const url = new URL(value);
+    const pathname = url.pathname === "/" ? "/" : url.pathname.replace(/\/+$/, "");
+    return `${url.origin}${pathname}`;
+  } catch {
+    return value;
+  }
+}
+
+async function selectArticlesWithBing(userId: string): Promise<ArticleCandidate[]> {
+  const integration = await prisma.searchIntegration.findUnique({
+    where: { userId_provider: { userId, provider: "bing" } },
+  });
+  if (!integration?.siteUrl) return [];
+
+  try {
+    const accessToken = await getBingTokenForIntegration(integration);
+    const articles = await prisma.title.findMany({
+      where: { run: { userId }, status: "success", articleUrl: { not: null } },
+      select: { id: true, finalTitle: true, text: true, summary: true, articleUrl: true },
+    });
+    const articlesByUrl = new Map(
+      articles
+        .filter((article): article is PublishedArticleCandidate => Boolean(article.articleUrl))
+        .map((article) => [normalizedArticleUrl(article.articleUrl), article]),
+    );
+    if (articlesByUrl.size === 0) return [];
+
+    const pageStats = await getBingPageStats(accessToken, integration.siteUrl);
+    const matchingPages = pageStats
+      .map((stat) => ({ stat, article: articlesByUrl.get(normalizedArticleUrl(stat.Query)) }))
+      .filter((item): item is { stat: typeof item.stat; article: PublishedArticleCandidate } => Boolean(item.article))
+      .sort((a, b) => b.stat.Impressions - a.stat.Impressions)
+      // Limita las llamadas para proteger cuotas y tiempos de respuesta.
+      .slice(0, 12);
+
+    const candidates: Array<{ article: ArticleCandidate; score: number; searchQueries: string[] }> = [];
+    for (const { stat, article } of matchingPages) {
+      const queryStats = await getBingPageQueryStats(accessToken, integration.siteUrl, stat.Query);
+      const queries = queryStats
+        .filter((item) => item.Query)
+        .sort((a, b) => b.Impressions - a.Impressions);
+      const queryImpressions = queries.reduce((sum, item) => sum + item.Impressions, 0);
+      const queryClicks = queries.reduce((sum, item) => sum + item.Clicks, 0);
+      const impressions = queryImpressions || stat.Impressions;
+      const clicks = queryClicks || stat.Clicks;
+      const position = stat.AvgImpressionPosition ?? stat.AvgClickPosition ?? 100;
+      const ctr = clicks / Math.max(impressions, 1);
+      const longTailCount = queries.filter((item) => item.Query.trim().split(/\s+/).length >= 3).length;
+      const score =
+        Math.log10(impressions + 1) * 20 +
+        (position >= 4 && position <= 20 ? 18 : position >= 2 && position < 4 ? 8 : position <= 40 ? 5 : 0) +
+        (impressions >= 20 && ctr < 0.05 ? 12 : 0) +
+        Math.min(longTailCount, 3) * 5;
+      candidates.push({
+        article,
+        score,
+        searchQueries: queries.slice(0, 3).map((item) => item.Query),
+      });
+    }
+
+    return candidates
+      .sort((a, b) => b.score - a.score)
+      .map(({ article, searchQueries }) => ({ ...article, searchQueries }));
+  } catch (error) {
+    // Bing es una fuente adicional: una conexión vencida o una respuesta sin
+    // datos no debe impedir que las oportunidades sigan funcionando con Google.
+    console.warn("[social-opportunities/generate] Bing no aportó señales:", error);
+    return [];
+  }
+}
+
+function mergeSearchCandidates(
+  googleCandidates: ArticleCandidate[],
+  bingCandidates: ArticleCandidate[],
+): ArticleCandidate[] {
+  const merged = new Map<string, { article: ArticleCandidate; score: number; queries: Set<string> }>();
+  const add = (candidate: ArticleCandidate, rank: number) => {
+    const current = merged.get(candidate.id) ?? {
+      article: candidate,
+      score: 0,
+      queries: new Set<string>(),
+    };
+    // Cada buscador aporta su propia clasificación; coincidir en ambos suma
+    // evidencia, sin comparar directamente sus volúmenes absolutos.
+    current.score += Math.max(1, 100 - rank);
+    for (const query of candidate.searchQueries ?? []) current.queries.add(query);
+    merged.set(candidate.id, current);
+  };
+  googleCandidates.forEach(add);
+  bingCandidates.forEach(add);
+  return Array.from(merged.values())
+    .sort((a, b) => b.score - a.score)
+    .map(({ article, queries }) => ({ ...article, searchQueries: Array.from(queries).slice(0, 3) }));
+}
+
 async function getConnectedNetworks(userId: string) {
-  const [threads, twitter, linkedin, instagram, facebookPage, pinterest, tumblr, bluesky, mastodon, devto, user] = await Promise.all([
+  const [threads, twitter, linkedin, instagram, facebookPage] = await Promise.all([
     prisma.threadsIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.twitterIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.linkedInIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.instagramIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.facebookPageIntegration.findUnique({ where: { userId }, select: { id: true } }),
-    prisma.pinterestIntegration.findUnique({ where: { userId }, select: { id: true, boardId: true, expiresAt: true } }),
-    prisma.tumblrIntegration.findUnique({ where: { userId }, select: { id: true, expiresAt: true } }),
-    prisma.blueskyIntegration.findUnique({ where: { userId }, select: { id: true } }),
-    prisma.mastodonIntegration.findUnique({ where: { userId }, select: { id: true } }),
-    prisma.devToIntegration.findUnique({ where: { userId }, select: { id: true } }),
-    prisma.user.findUnique({ where: { id: userId }, select: { role: true, email: true, allowInstagramPublishing: true, allowLinkedInPublishing: true, allowThreadsPublishing: true, allowFacebookPublishing: true, allowPinterestPublishing: true, allowTumblrPublishing: true, allowBlueskyPublishing: true, allowMastodonPublishing: true, allowDevToPublishing: true } }),
   ]);
-  const isAdmin = user?.role === "admin";
-  const socialOverride = user?.email?.toLowerCase() === "lorenalvarez30@gmail.com";
-  const activeNetworks = { threads: Boolean(isAdmin || socialOverride || user?.allowThreadsPublishing), x: Boolean(isAdmin || socialOverride || twitter), linkedin: Boolean(isAdmin || socialOverride || user?.allowLinkedInPublishing), instagram: Boolean(isAdmin || socialOverride || user?.allowInstagramPublishing), facebookPage: Boolean(isAdmin || socialOverride || user?.allowFacebookPublishing), pinterest: Boolean(isAdmin || socialOverride || user?.allowPinterestPublishing), tumblr: Boolean(isAdmin || socialOverride || user?.allowTumblrPublishing), bluesky: Boolean(isAdmin || user?.allowBlueskyPublishing), mastodon: Boolean(isAdmin || socialOverride || user?.allowMastodonPublishing), devto: Boolean(isAdmin || socialOverride || user?.allowDevToPublishing) };
-  return { activeNetworks, threads: activeNetworks.threads && Boolean(threads), x: activeNetworks.x && Boolean(twitter), linkedin: activeNetworks.linkedin && Boolean(linkedin), instagram: activeNetworks.instagram && Boolean(instagram), facebookPage: activeNetworks.facebookPage && Boolean(facebookPage), pinterest: activeNetworks.pinterest && Boolean(pinterest && pinterest.boardId && (!pinterest.expiresAt || pinterest.expiresAt > new Date())), tumblr: activeNetworks.tumblr && Boolean(tumblr && (!tumblr.expiresAt || tumblr.expiresAt > new Date())), bluesky: activeNetworks.bluesky && Boolean(bluesky), mastodon: activeNetworks.mastodon && Boolean(mastodon), devto: activeNetworks.devto && Boolean(devto) };
+  return { threads: Boolean(threads), x: Boolean(twitter), linkedin: Boolean(linkedin), instagram: Boolean(instagram), facebookPage: Boolean(facebookPage) };
 }
 
 export async function GET() {
@@ -226,8 +369,8 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({})) as { networks?: string[] };
     const connected = await getConnectedNetworks(userId);
     const requestedNetworks = Array.isArray(body.networks)
-      ? body.networks.filter((network) => network === "threads" || network === "x" || network === "linkedin" || network === "instagram" || network === "facebook-page" || network === "pinterest" || network === "tumblr" || network === "bluesky" || network === "mastodon" || network === "devto")
-      : ["threads", "x", "linkedin", "instagram", "facebook-page", "pinterest", "tumblr", "bluesky", "mastodon", "devto"];
+      ? body.networks.filter((network) => network === "threads" || network === "x" || network === "linkedin" || network === "instagram" || network === "facebook-page")
+      : ["threads", "x", "linkedin", "instagram", "facebook-page"];
 
     const integrations: string[] = [];
     if (requestedNetworks.includes("threads") && connected.threads) {
@@ -241,22 +384,6 @@ export async function POST(request: Request) {
     }
     if (requestedNetworks.includes("facebook-page") && connected.facebookPage) {
       integrations.push("facebook-page");
-      integrations.push("facebook-story");
-    }
-    if (requestedNetworks.includes("pinterest") && connected.pinterest) {
-      integrations.push("pinterest");
-    }
-    if (requestedNetworks.includes("tumblr") && connected.tumblr) {
-      integrations.push("tumblr");
-    }
-    if (requestedNetworks.includes("bluesky") && connected.bluesky) {
-      integrations.push("bluesky");
-    }
-    if (requestedNetworks.includes("mastodon") && connected.mastodon) {
-      integrations.push("mastodon");
-    }
-    if (requestedNetworks.includes("devto") && connected.devto) {
-      integrations.push("devto");
     }
     if (requestedNetworks.includes("instagram") && connected.instagram) {
       const user = await prisma.user.findUnique({
@@ -265,119 +392,80 @@ export async function POST(request: Request) {
       });
       if (user?.allowInstagramPublishing) {
         integrations.push("instagram-story");
-        integrations.push("instagram-post");
       }
     }
 
     if (integrations.length === 0) {
-      console.warn("[social-opportunities/generate] red solicitada sin conexión efectiva", {
-        requestedNetworks,
-        connected,
-        userId,
-      });
       return NextResponse.json(
-        { error: `La red seleccionada (${requestedNetworks.join(", ") || "desconocida"}) no está conectada en tu configuración. Recarga la página y vuelve a intentarlo; si sigue apareciendo, revisa la tarjeta de esa red en Configuración.` },
+        { error: "La red seleccionada no está conectada en tu configuración." },
         { status: 400 }
       );
     }
 
-    const [gscCandidates, recentCandidates] = await Promise.all([
+    const [gscCandidates, bingCandidates] = await Promise.all([
       selectArticlesWithGSC(userId),
-      selectArticlesWithoutGSC(userId),
+      selectArticlesWithBing(userId),
     ]);
-    const candidateMap = new Map<string, ArticleCandidate>();
-    for (const article of [...gscCandidates, ...recentCandidates]) {
-      candidateMap.set(article.id, article);
-    }
-    // Dedupe también por URL real, no solo por id de artículo — pedido
-    // explícito de Milton (20/8/2026), tras confirmar el mismo artículo
-    // publicado varias veces en Threads/Facebook/LinkedIn. Si existen dos
-    // registros de Title distintos apuntando a la misma articleUrl (título
-    // duplicado), antes se trataban como dos artículos "distintos" y cada
-    // uno recibía su propia oportunidad — mismo enlace, misma imagen OG,
-    // texto diferente. Ahora solo sobrevive un candidato por URL real.
-    const seenUrls = new Set<string>();
-    const allCandidates = Array.from(candidateMap.values()).filter((article) => {
-      if (!article.articleUrl) return true;
-      if (seenUrls.has(article.articleUrl)) return false;
-      seenUrls.add(article.articleUrl);
-      return true;
-    });
+    const searchCandidates = mergeSearchCandidates(gscCandidates, bingCandidates);
+    // Solo recurrimos a artículos recientes si no hay evidencia GSC asociada a
+    // artículos publicados. Cuando algún buscador sí aporta evidencia, manda.
+    const allCandidates = searchCandidates.length > 0
+      ? searchCandidates
+      : await selectArticlesWithoutGSC(userId);
 
-    // El historial completo evita que una oportunidad ya publicada,
-    // descartada o fallida vuelva a aparecer. Cada formato de Instagram
-    // (story/post/reel-image/carousel/infografia) cuenta como su propio
-    // canal — pedido explícito de Milton (20/8/2026): antes se colapsaban
-    // todos como un único "instagram", así que un artículo que ya tenía una
-    // Story nunca podía ofrecerse también como Post. Ahora es igual que
-    // LinkedIn/Threads/Facebook: cada plataforma se rastrea por separado.
+    const candidateIds = allCandidates.map((article) => article.id);
+    const candidatesByUrl = new Map(
+      allCandidates
+        .filter((article): article is ArticleCandidate & { articleUrl: string } => Boolean(article.articleUrl))
+        .map((article) => [article.articleUrl, article]),
+    );
+    // Una oportunidad previa ya es historial de distribución: publicada,
+    // descartada o fallida no debe volver a proponerse por accidente.
+    // También revisamos articleUrl para cubrir propuestas heredadas sin titleId.
     const previousOpportunities = await prisma.socialOpportunity.findMany({
       where: {
         userId,
-        // "skipped" (botón Descartar) no debe bloquear el artículo para
-        // siempre — descartar una idea significa "no esta, dame otra
-        // después", no "este artículo ya no puede tener oportunidades
-        // nunca más". Reportado por Milton (21/8/2026): tras descartar 52
-        // propuestas en lote para "empezar de cero", seguía sin poder
-        // generar nuevas porque estas igual contaban como "ya usado".
-        status: { not: "skipped" },
+        platform: { in: integrations },
         OR: [
-          { titleId: { in: allCandidates.map((article) => article.id) } },
-          { articleUrl: { in: allCandidates.map((article) => article.articleUrl).filter((url): url is string => Boolean(url)) } },
+          { titleId: { in: candidateIds } },
+          { articleUrl: { in: Array.from(candidatesByUrl.keys()) } },
         ],
       },
       select: { titleId: true, articleUrl: true, platform: true },
     });
-    const candidateByUrl = new Map(allCandidates.filter((article) => article.articleUrl).map((article) => [article.articleUrl!, article]));
-    const normalizePlatform = (platform: string) => platform;
-    const activeKeys = new Set<string>();
+    const usedKeys = new Set<string>();
     for (const opportunity of previousOpportunities) {
-      const platform = normalizePlatform(opportunity.platform);
-      if (opportunity.titleId) activeKeys.add(`${opportunity.titleId}:${platform}`);
-      const article = candidateByUrl.get(opportunity.articleUrl);
-      if (article) activeKeys.add(`${article.id}:${platform}`);
+      if (opportunity.titleId) {
+        usedKeys.add(`${opportunity.titleId}:${opportunity.platform}`);
+      }
+      const article = candidatesByUrl.get(opportunity.articleUrl);
+      if (article) usedKeys.add(`${article.id}:${opportunity.platform}`);
     }
-    const normalizedIntegrations = integrations.map(normalizePlatform);
     const candidates = allCandidates
       .filter((article) =>
-        normalizedIntegrations.some((platform) => !activeKeys.has(`${article.id}:${platform}`)),
+        integrations.some((platform) => !usedKeys.has(`${article.id}:${platform}`)),
       )
       .slice(0, 3);
 
     if (candidates.length === 0) {
-      // El mensaje viejo ("no hay artículos nuevos disponibles") sonaba a
-      // que no había nada para publicar, cuando en realidad puede haber
-      // decenas de propuestas pendientes sin publicar todavía — el sistema
-      // solo evita generar MÁS mientras esas no se resuelvan. Milton lo
-      // reportó como confuso (21/8/2026): aclarar con el número real.
-      const pendingCount = await prisma.socialOpportunity.count({
-        where: { userId, status: "pending" },
-      });
       return NextResponse.json(
-        {
-          error:
-            pendingCount > 0
-              ? `Ya tenés ${pendingCount} propuesta${pendingCount === 1 ? "" : "s"} pendiente${pendingCount === 1 ? "" : "s"} sin publicar — no se generan más hasta que se publiquen o se descarten. Revisá la lista de "Propuestas Pendientes" más abajo.`
-              : "No hay artículos nuevos disponibles. Todos los artículos publicados ya tienen una oportunidad generada.",
-        },
+        { error: "No hay artículos nuevos disponibles. Los artículos candidatos ya fueron propuestos, publicados o descartados para esta red." },
         { status: 400 }
       );
     }
 
     const createdOpportunities: any[] = [];
-    const googleAnalyticsContext = JSON.stringify(summarizeGoogleAnalyticsSignals(await getGoogleAnalyticsSignals(userId)));
 
     for (const article of candidates) {
       for (const platform of integrations) {
-        const opportunityKey = `${article.id}:${normalizePlatform(platform)}`;
-        if (activeKeys.has(opportunityKey)) continue;
+        const opportunityKey = `${article.id}:${platform}`;
+        if (usedKeys.has(opportunityKey)) continue;
 
         const copyText = await generateGPTCopy(
           platform,
           article.finalTitle || article.text,
           article.summary || "",
           article.searchQueries,
-          googleAnalyticsContext,
         );
 
         const opp = await prisma.socialOpportunity.create({
@@ -392,29 +480,19 @@ export async function POST(request: Request) {
           },
         });
 
-        // La imagen la genera el worker (processNextOpportunityImage) en
-        // background para no agotar el timeout de Vercel Functions con la
-        // llamada a DALL-E. El usuario la ve aparecer automáticamente.
-
         createdOpportunities.push(opp);
-        activeKeys.add(opportunityKey);
+        usedKeys.add(opportunityKey);
       }
     }
 
-    const source = await prisma.searchIntegration.findUnique({
-      where: { userId_provider: { userId, provider: "google" } },
-    });
-
     if (createdOpportunities.length === 0) {
       return NextResponse.json(
-        { error: "Los artículos encontrados ya tienen propuestas para todas las redes y formatos conectados." },
+        { error: "Los artículos encontrados ya tienen historial de propuesta, publicación o descarte para las redes seleccionadas." },
         { status: 400 },
       );
     }
 
-    // Disparar al worker para que genere las imágenes en background y la UI
-    // se actualice automáticamente al refrescar. No esperamos la respuesta
-    // para no bloquear el handler de Vercel.
+    // Despachar el worker de forma no bloqueante para mantener la respuesta ágil.
     if (createdOpportunities.length > 0) {
       void triggerSocialWorkerNow().catch((err) => {
         console.error("[social-opportunities/generate] triggerSocialWorkerNow falló:", err);
@@ -422,7 +500,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({
-      message: `Se generaron ${createdOpportunities.length} nuevas propuestas usando ${source?.siteUrl ? "Google Search Console y artículos recientes" : "artículos publicados recientes"}.`,
+      message: `Se generaron ${createdOpportunities.length} nuevas propuestas usando ${gscCandidates.length > 0 && bingCandidates.length > 0 ? "señales de Google Search Console y Bing Webmaster" : gscCandidates.length > 0 ? "consultas, tendencia y rendimiento de Google Search Console" : bingCandidates.length > 0 ? "consultas y rendimiento de Bing Webmaster" : "artículos publicados recientes (sin señales de buscadores asociadas)"}.`,
       count: createdOpportunities.length,
     });
   } catch (unexpected) {

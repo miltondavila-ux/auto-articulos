@@ -6,7 +6,7 @@ import { hasTrialAccess } from "@/lib/trial";
 
 export async function POST(request: NextRequest) {
   const userId = await getCurrentUserId();
-  const { type, id, ids, disableIndexing, contentLanguage, promptId, confirmedImageCredits } =
+  const { type, id, ids, disableIndexing, contentLanguage, promptId } =
     (await request.json()) as {
       type?: string;
       id?: string;
@@ -14,7 +14,6 @@ export async function POST(request: NextRequest) {
       disableIndexing?: boolean;
       contentLanguage?: string;
       promptId?: string;
-      confirmedImageCredits?: boolean;
     };
   const selectedIds = type === "titles" && Array.isArray(ids)
     ? [...new Set(ids.filter((candidate): candidate is string => typeof candidate === "string" && candidate.length > 0))]
@@ -61,7 +60,7 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
-  if (!user.hasImageCredits && confirmedImageCredits !== true) {
+  if (!user.hasImageCredits) {
     return NextResponse.json(
       {
         error:
@@ -148,11 +147,7 @@ export async function POST(request: NextRequest) {
             ? promptId.trim()
             : user.defaultPromptId,
         titles: {
-          create: selected.map((title, order) => ({
-            text: title.text,
-            order,
-            opportunityCreatedAt: group.createdAt,
-          })),
+          create: selected.map((title, order) => ({ text: title.text, order })),
         },
       },
       select: { id: true },

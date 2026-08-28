@@ -12,8 +12,8 @@ Este manual explica cómo usar la plataforma desde la perspectiva de una persona
 
 Cuando ingresas a tu cuenta por primera vez o aún no tienes artículos publicados, Inicio te muestra el **Asistente de Configuración Inicial Paso a Paso**. Este asistente te guía de forma secuencial por los 4 pasos esenciales:
 
-1. **Paso 1 (Cuenta de la plataforma):** Guarda tu usuario y contraseña de la plataforma. Si no recuerdas esa clave, puedes restablecerla o crear una nueva en segundos desde el enlace directo de recuperación de la plataforma incluido en el asistente. Al guardar, el paso queda en **"Pendiente de verificar"** (ámbar): tus datos se guardan cifrados, pero todavía no se ha comprobado que sirvan para entrar. Se vuelve verde solo cuando la sincronización del Paso 2 logra entrar de verdad a tu cuenta — esa es la única prueba real de que el usuario y la contraseña son correctos. Si el Paso 2 falla diciendo que no pudo iniciar sesión, revisa esas credenciales entrando a mano a tu plataforma y vuelve a guardarlas aquí.
-2. **Paso 2 (Sincronizar categorías):** Descarga en vivo las categorías reales de tu web para clasificar tus artículos. Mientras corre verás una **barra de progreso con las etapas** (En cola → Entrando a tu plataforma → Guardando categorías), un cronómetro y un **Detalle del proceso** desplegable que registra con hora exacta qué fue pasando: cuándo se envió la solicitud, cuándo un procesador la tomó y cómo terminó. Si algo falla, ahí aparece el motivo real. Puede tardar varios minutos según la cola de trabajo; la pantalla se actualiza sola y no hace falta recargar ni volver a pulsar. Verás lo mismo si sincronizas desde Configuración.
+1. **Paso 1 (Cuenta de 10minutesWebsite):** Guarda tu usuario y contraseña de 10minutesWebsite. Si no recuerdas esa clave, puedes restablecerla o crear una nueva en segundos desde el enlace directo de recuperación de 10minutesWebsite incluido en el asistente.
+2. **Paso 2 (Sincronizar categorías):** Descarga en vivo las categorías reales de tu web para clasificar tus artículos.
 3. **Paso 3 (Idioma de redacción):** Confirma el idioma principal en el que la Inteligencia Artificial redactará tus contenidos.
 4. **Paso 4 (Google Search Console):** Abre Search Console en una pestaña contigua de tu navegador para comprobar que esté activo con la cuenta de Google dueña de tu web, y luego conéctalo mediante Google OAuth seleccionando tu sitio.
 5. **Meta final:** Al completar los 4 pasos, se desbloquea el acceso para publicar tu primer artículo o explorar Oportunidades SEO.
@@ -27,28 +27,7 @@ Ruta: /dashboard
 Inicio es tu centro de operaciones:
 - **Para cuentas nuevas (sin artículos aún):** Muestra de forma prioritaria el Asistente de Configuración Inicial para que completes tu puesta a punto sin distracciones.
 - **Para cuentas con artículos publicados:** Muestra el panel de métricas de rendimiento (artículos publicados hoy, en el mes, límites y gráfico de actividad).
-- Desde el menú superior tienes acceso a: Cómo Funciona, Publicaciones, Historial, Actualizaciones y Configuración.
-
-## Cada módulo se explica solo
-
-Al principio de cada pantalla hay un recuadro que empieza con "Antes de avanzar, lee esto". Ahí se explica en pocas líneas qué sucede en ese módulo, para qué sirve y qué se espera de ti, en lenguaje llano y sin dar por supuesto ningún conocimiento previo.
-
-Dentro de esas explicaciones, el nombre de cualquier módulo aparece en MAYÚSCULAS y en negrita, y además es un enlace: al pulsarlo vas directo a esa pantalla. Así, si un texto te manda a otro módulo, no tienes que buscarlo en el menú.
-
-## El menú
-
-El menú superior tiene, en este orden: **Inicio**, **Cómo Funciona**, **Publicaciones**, **Historial**, **Actualizaciones** y **Configuración**. Los administradores ven además **Administración**.
-
-**Publicaciones** no es una pantalla: es un grupo que se despliega. Dentro están las cuatro pantallas relacionadas con publicar:
-
-- **Publicaciones propias** (/dashboard/publicar): tus propios títulos.
-- **Oportunidades SEO/AEO** (/dashboard/oportunidades): las que propone el sistema a partir de Google Search Console.
-- **Oportunidades para Redes Sociales** (/dashboard/oportunidades-redes): llevar artículos ya publicados a tus redes.
-- **Publicaciones en Curso** (/dashboard/publicaciones-en-curso): lo que se está publicando ahora mismo.
-
-En computadora, Publicaciones se abre al pulsarlo y se cierra al elegir una opción, al pulsar fuera o con la tecla Escape. En teléfono y tableta no se despliega: las cuatro opciones aparecen listadas debajo del título Publicaciones.
-
-Si el administrador te oculta algún módulo, simplemente no aparece en el menú. Si te oculta los cuatro, el grupo Publicaciones desaparece entero.
+- Desde el menú superior tienes acceso a: Publicar, Publicaciones en Curso, Oportunidades, Oportunidades Redes, Historial, Configuración y Actualizaciones.
 
 ## Configuración
 
@@ -56,13 +35,13 @@ Ruta: /dashboard/configuracion
 
 Aquí preparas tu cuenta y personalizas el contenido.
 
-### Configuración Inicial (Asistente Paso a Paso)
+### 🚀 Configuración Inicial (Asistente Paso a Paso)
 
 Pestaña destacada en Configuración que te permite repasar o completar el asistente de 4 pasos en cualquier momento. Cuenta con un banner superior para abrirlo directamente.
 
-### Cuenta de la plataforma de publicación
+### Cuenta de 10minutesWebsite
 
-Guarda el usuario y contraseña de tu cuenta de la plataforma. El sistema los usa para publicar artículos en tu sitio. Si no recuerdas esa contraseña, usa el enlace de recuperación de la plataforma; no uses aquí la contraseña de Auto Artículos.
+Guarda el usuario y contraseña de tu cuenta de 10minutesWebsite. La plataforma los usa para publicar artículos en tu sitio. Si no recuerdas esa contraseña, usa el enlace de recuperación de 10minutesWebsite; no uses aquí la contraseña de Auto Artículos.
 
 ### Categorías e idiomas
 
@@ -74,23 +53,7 @@ Puedes conectar Google Search Console y Bing Webmaster. Selecciona la propiedad 
 
 ### Redes sociales
 
-Desde Configuración puedes vincular los servicios disponibles, como Google Business Profile, Threads, X, LinkedIn, Instagram, Pinterest, Tumblr, Bluesky, Mastodon y DEV.to. Algunas redes pueden requerir que el administrador habilite tu permiso de publicación. Conectar una red no obliga a publicar en ella: sirve para que puedas utilizarla cuando corresponda.
-
-### Cómo conectar cada red social, explicado para cualquier persona
-
-Si una red no aparece, primero pide al administrador que active el permiso correspondiente para tu usuario. Después sigue únicamente las instrucciones de esa red. Nunca escribas aquí tu contraseña de la red: cuando una conexión use OAuth, se abrirá la red para que autorices; cuando use una credencial manual, debes copiar solo el dato que se indica.
-
-**Threads, Instagram, Facebook, LinkedIn, Pinterest y Tumblr:** abre la red en otra pestaña con la cuenta correcta iniciada, vuelve a Auto Artículos y pulsa el botón de conexión. Sigue las pantallas de autorización y acepta los permisos. Si hay varias cuentas abiertas, cierra las que no quieras conectar. Pinterest puede pedirte elegir un tablero; Tumblr puede pedirte elegir un blog. LinkedIn conecta el perfil que autorices. Instagram debe ser una cuenta profesional asociada a Facebook.
-
-**X (Twitter):** el administrador configura primero el Client ID y Client Secret de la aplicación de X. Luego abre X con la cuenta correcta iniciada, vuelve a Auto Artículos y pulsa “Conectar X (Twitter)”. Acepta los permisos y espera a volver a Auto Artículos. No copies aquí tu contraseña.
-
-**Bluesky:** entra en Bluesky y ve a Configuración → Privacidad y seguridad → Contraseñas de aplicación → Crear nueva App Password. Ponle “Auto Artículos”, copia la App Password y escribe tu usuario completo, por ejemplo “nombre.bsky.social”. En Auto Artículos pega ambos datos. No uses la contraseña principal de Bluesky.
-
-**Mastodon:** entra en la instancia donde vive tu cuenta, por ejemplo “https://mastodon.social”. Ve a Preferencias → Desarrollo → Nueva aplicación. Usa el nombre “Auto Artículos”, el sitio web “https://auto-articulos-web.vercel.app” y la URI “urn:ietf:wg:oauth:2.0:oob”. Marca “profile”, “write:statuses” y “write:media”; no marques permisos de administración. Guarda la aplicación y copia el **Access Token**, no el Client Key ni el Client Secret. En Auto Artículos pega la URL de tu instancia y el Access Token.
-
-**DEV.to:** entra en DEV.to → Settings → Extensions → API Keys. Crea una clave con un nombre como “Auto Artículos”, copia la API key y pégala en la configuración de tu cuenta. Cada usuario debe conectar su propia cuenta de DEV.to; no se comparte la clave del administrador.
-
-**Si aparece un error:** revisa primero que el permiso esté activado por el administrador, que estés usando la cuenta correcta y que no hayas copiado espacios al principio o al final. En Bluesky debe ser una App Password. En Mastodon debe ser el Access Token de usuario y la URL debe ser la instancia donde está la cuenta. Si sigue fallando, copia el mensaje exacto del aviso y envíalo al administrador; no envíes contraseñas ni tokens.
+Desde Configuración puedes vincular los servicios disponibles, como Google Business Profile, Threads, X, LinkedIn e Instagram. Algunas redes pueden requerir que el administrador habilite tu permiso de publicación. Conectar una red no obliga a publicar en ella: sirve para que puedas utilizarla cuando corresponda.
 
 ### Personalización del contenido
 
@@ -123,23 +86,15 @@ Esta pantalla muestra el avance de la ejecución actual. Úsala para saber si lo
 
 Ruta: /dashboard/oportunidades
 
-En este módulo el sistema te propone títulos de artículos. No se los inventa: los deduce de lo que Google ya te está mostrando. Google Search Console guarda lo que escribió la gente en el buscador antes de llegar a tu página, y de ahí salen las propuestas: de búsquedas reales, hechas por personas reales que ya llegaron a tu sitio.
+Oportunidades analiza datos de Google Search Console para sugerir temas y títulos relacionados con lo que busca tu audiencia.
 
-Con eso se arman títulos de cola larga. Es más sencillo de lo que suena: en vez de pelear por una palabra corta y muy disputada como "seguros", donde compites contra empresas enormes, se apunta a la búsqueda larga y concreta de alguien con una duda real, del estilo "cuánto cuesta un seguro dental para mayores de 60 en Miami". Esas búsquedas las hace menos gente, pero casi nadie escribe sobre ellas, así que es mucho más fácil salir de primero, y quien busca así llega más decidido. Cada artículo que se posiciona atrae visitas nuevas, y esas visitas le dan más señales a Google sobre tu sitio. Es un efecto bola de nieve: empieza pequeño y va creciendo solo.
+Antes de usarlo debes conectar Google Search Console, elegir una propiedad, sincronizar categorías y configurar un idioma de redacción. Ejecuta el análisis y espera a que termine sin cerrar la página. El sistema agrupa sugerencias por categoría y muestra una explicación de cada oportunidad, impresiones y clics cuando están disponibles.
 
-La pantalla está separada en tres pasos.
+Puedes ejecutar una categoría completa o un título individual. También puedes eliminar sugerencias que no quieras usar. Respeta el máximo de títulos por lote: si una categoría lo supera, publícala en partes o elimina títulos antes de ejecutar.
 
-Paso 1, pide el análisis. Si tienes más de un sitio, eliges para cuál generar oportunidades y pulsas Analizar. Tarda unos minutos y no debes cerrar la página. Si te falta conectar Google Search Console, elegir la propiedad, sincronizar categorías o configurar el idioma, la propia pantalla te lo dice con un enlace directo a donde se arregla.
-
-Paso 2, elige cómo se escribirán. Seleccionas el idioma de los artículos y el estilo de escritura. También puedes desactivar la indexación en buscadores, aunque por defecto queda activada, que es lo normal si quieres que Google los encuentre. Estas opciones solo afectan a lo que publiques desde esta pantalla; no cambian tu configuración general.
-
-Paso 3, revisa y publica. Aparecen las propuestas agrupadas por categoría, con su explicación, impresiones y clics. Puedes eliminar los títulos que no te convenzan, publicar un título suelto, una categoría completa o todas de una vez. Respeta el máximo de títulos por lote: si una categoría lo supera, publícala en partes o elimina títulos antes.
-
-Nada se publica sin que tú lo mandes. Las sugerencias ayudan a decidir, pero la decisión es tuya: revisa que cada título sea adecuado para tu negocio y tu audiencia.
+Las sugerencias ayudan a decidir, pero tú decides qué publicar. Revisa que cada título sea adecuado para tu negocio y audiencia.
 
 ## Oportunidades Redes
-
-**Este módulo está en prueba.** Todavía no está disponible para todas las cuentas: se está activando poco a poco. Si no aparece en tu menú, no es que te falte algo por configurar.
 
 Ruta: /dashboard/oportunidades-redes
 
@@ -154,26 +109,6 @@ Ruta: /dashboard/historial
 Historial conserva las ejecuciones anteriores y el estado de los títulos. Puedes revisar cuáles se publicaron, cuáles tuvieron error y los mensajes asociados. También muestra información disponible sobre publicaciones en redes e intentos de indexación.
 
 Si un artículo muestra un error, lee el mensaje antes de repetir la acción. Si el problema indica una conexión, revisa primero Configuración.
-
-## Cómo Funciona
-
-Ruta: /dashboard/como-funciona
-
-Explica en texto, sin gráficas, para qué sirve la plataforma y en qué orden ocurre todo.
-
-El objetivo es que te encuentren: en Google, en Bing y dentro de la inteligencia artificial, en tiempo récord.
-
-Explica por qué ya no basta con salir en Google: hoy mucha gente le pregunta directamente a una inteligencia artificial y se queda con esa respuesta, que se construye con lo que la IA encontró indexado. Si tu sitio no está ahí, no aparece en la conversación.
-
-También explica por qué las redes sociales cuentan para el posicionamiento: quien busca en Google es la misma persona que luego abre Instagram o LinkedIn. Por eso el sistema lleva a tus redes los temas que esa gente ya está buscando, y cada visita que vuelve desde ahí refuerza tu posición en el buscador.
-
-Lo explica en tres pasos:
-
-1. **Configura tu cuenta.** Es lo primero y lo único que no se puede saltar. Si no estás seguro de haberlo dejado todo listo, entra en Configuración y revísalo. Si algo no queda claro, la burbuja de ayuda está en la esquina de todas las pantallas.
-2. **Publica tus artículos.** Hay dos caminos y puedes usar los dos: publicar tus propios títulos, hasta diez a la vez, o dejar que el sistema decida por ti desde Oportunidades, donde consulta Google Search Console y Bing. Cuando la inteligencia artificial haya decidido, publicas de uno en uno o por lotes.
-3. **Lleva lo publicado a las redes.** Desde Oportunidades para Redes Sociales, los artículos más relevantes pasan a tus redes de forma repartida y equilibrada, sin parecer spam.
-
-Cierra explicando para qué sirve todo esto: posicionarte con autoridad en internet. Aparecer en los resultados de la inteligencia artificial, de Google y de Bing es lo más importante que le puede pasar a tu negocio en internet.
 
 ## Actualizaciones
 
@@ -193,7 +128,7 @@ Configuración está organizada por pestañas. Si una opción no aparece, puede 
 
 Ruta: /dashboard/configuracion?tab=wizard
 
-Puedes repetir el asistente de cuatro pasos cuando quieras: cuenta de la plataforma, categorías, idioma y Google Search Console. Es la forma más rápida de preparar una cuenta nueva.
+Puedes repetir el asistente de cuatro pasos cuando quieras: cuenta de 10minutesWebsite, categorías, idioma y Google Search Console. Es la forma más rápida de preparar una cuenta nueva.
 
 ### Google Search Console
 
@@ -216,17 +151,17 @@ Abre Bing Webmaster Tools con tu sesión iniciada, vuelve a Auto Artículos y pu
 
 Ruta: /dashboard/configuracion?tab=social
 
-Aquí conectas Google Business Profile y las redes sociales. Las redes son opcionales: solo conéctalas si quieres publicar allí. Cada tarjeta te explica los pasos antes de pedirte datos. Instagram necesita una cuenta profesional vinculada a una página de Facebook. Algunas redes requieren que el administrador active tu permiso; si ves un aviso de que no está disponible, pide acceso al administrador. Puedes desconectar una red desde el mismo lugar.
+Aquí conectas Google Business Profile, Threads, Instagram, X y LinkedIn. Las redes son opcionales: solo conéctalas si quieres publicar allí. Instagram necesita una cuenta profesional vinculada a una página de Facebook. Algunas redes requieren que el administrador active tu permiso; si ves un aviso de que no está disponible, pide acceso al administrador. Puedes desconectar una red desde el mismo lugar.
 
 ### Cuenta y contenido
 
 Ruta: /dashboard/configuracion?tab=platform
 
-Guarda las credenciales de la plataforma, sincroniza categorías e idiomas y elige el idioma habitual. También puedes definir la firma de los artículos, teléfono de contacto, hasta 3 fotos tuyas y hasta 2 logos. Solo la primera foto y el primer logo son obligatorios; el resto es opcional y le da al sistema más variedad para elegir. Estas imágenes se usan cuando el generador de imágenes con IA para redes sociales está activo en tu cuenta (lo activa el administrador).
+Guarda las credenciales de 10minutesWebsite, sincroniza categorías e idiomas y elige el idioma habitual. También puedes definir la firma de los artículos, teléfono de contacto, foto de perfil, logo y las instrucciones de estilo para imágenes e infografías. Estos últimos campos son opcionales y se aplican a los contenidos nuevos; no modifican artículos ya publicados.
 
 ### Estado de configuración
 
-Inicio muestra una lista de progreso con lo obligatorio y opcional. Para publicar necesitas credenciales de la plataforma, categorías sincronizadas e idioma. Google, Bing y redes sociales amplían lo que puedes hacer, pero no impiden publicar artículos.
+Inicio muestra una lista de progreso con lo obligatorio y opcional. Para publicar necesitas credenciales de 10minutesWebsite, categorías sincronizadas e idioma. Google, Bing y redes sociales amplían lo que puedes hacer, pero no impiden publicar artículos.
 
 ## Publicaciones, progreso e historial
 
@@ -248,8 +183,6 @@ Ruta: /dashboard/oportunidades-redes
 
 Este módulo propone textos para publicar en las redes que tengas conectadas. Puede usar datos de Google Search Console cuando está conectado; si no, trabaja con artículos recientes. Revisa cada propuesta, edítala si quieres, guarda los cambios y luego apruébala o descártala explicando el motivo. Antes de publicar, puedes revisar una vista previa cuando esté disponible.
 
-Para Instagram puedes proponer Story, Post (imagen normal de feed), Reel-image, Carrusel e Infografía. Para Facebook Page, además del post normal, también hay Historia (Story). Si tu cuenta tiene activado el generador de imágenes con IA (lo activa el administrador), la imagen de Story/Post/Historia se genera a partir de la imagen del artículo, tu logo y tu foto de perfil en vez de usar la imagen del artículo tal cual.
-
 ## Interfaz y Diseño Estilo Apple
 
 La plataforma cuenta con un diseño minimalista y limpio en blanco impecable, siguiendo los estándares de Apple Human Interface Guidelines (HIG):
@@ -260,8 +193,8 @@ La plataforma cuenta con un diseño minimalista y limpio en blanco impecable, si
 ## Pre-Validación Inteligente antes de Publicar
 
 Tanto en **Publicar** (/dashboard/publicar) como en **Oportunidades SEO** (/dashboard/oportunidades), el sistema cuenta con un panel de protección preventiva (**PreValidationGuard**):
-- Si falta algún requisito previo (credenciales de la plataforma, categorías sincronizadas, idioma de redacción o Search Console), la plataforma te muestra una tarjeta clara con un checklist interactivo indicando exactamente qué falta y un botón directo para resolverlo.
-- **Créditos de imagen:** Si ya recibiste créditos, pulsa **Ya recibí mis créditos**. El sistema recordará la confirmación aunque refresques la pantalla. Si una ejecución real detecta que los créditos siguen agotados, quitará la confirmación y volverá a mostrar el aviso para que solicites créditos.
+- Si falta algún requisito previo (credenciales de 10minutesWebsite, categorías sincronizadas, idioma de redacción o Search Console), la plataforma te muestra una tarjeta clara con un checklist interactivo indicando exactamente qué falta y un botón directo para resolverlo.
+- **Créditos de imagen:** Si tu cuenta de 10minutesWebsite no cuenta con créditos para generar imágenes de portada e infografías, la plataforma te avisa de inmediato mediante un aviso informativo para que puedas recargarlos.
 
 ## Administración
 
@@ -271,7 +204,6 @@ Solo los administradores tienen acceso a este módulo:
 - **Orden alfabético A-Z:** La lista de usuarios se organiza de forma clara y ordenada alfabéticamente por nombre.
 - **Filtros por Tipo de Cuenta:** Permite filtrar instantáneamente entre *Todos los tipos*, *Usuarios comunes*, *Administradores* y usuarios en periodo de *Free Trial (Prueba Gratuita)*, combinándose con la barra de búsqueda en tiempo real.
 - **Visibilidad de Módulos:** Permite ocultar o activar módulos específicos de forma individual por usuario o de manera global para mantenimiento.
-- **Prompts:** además de los estilos de redacción de artículos, incluye el prompt del generador de imágenes con IA para redes sociales — es global (aplica a todas las cuentas), se edita ahí mismo y no necesita ningún cambio de código para actualizarse.
 
 ## Problemas frecuentes
 
@@ -281,7 +213,7 @@ Comprueba que tienes categorías sincronizadas, un idioma elegido y que no hay o
 
 ### Aviso de falta de créditos de imagen
 
-Si aparece el aviso de créditos de imagen, significa que la pantalla todavía no reconoce saldo para ilustrar artículos. Si ya te los asignaron, pulsa **Ya recibí mis créditos** y vuelve a intentar. Si la operación sigue detenida, solicita créditos o consulta a soporte.
+Si aparece el aviso de créditos de imagen, significa que tu cuenta de 10minutesWebsite necesita saldo para ilustrar artículos. Puedes adquirir créditos en 10minutesWebsite o consultar a soporte.
 
 ### No veo Oportunidades SEO
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import PasosAntesDeConectar from "@/components/PasosAntesDeConectar";
 import {
   disabledStyle,
   h2Style,
@@ -198,7 +197,7 @@ export default function LinkedInSection({ allowed = true }: LinkedInSectionProps
                       disabled={saving}
                       style={{
                         ...secondaryButtonStyle,
-                        background: "#1d1d1f",
+                        background: "#0071e3",
                         color: "#ffffff",
                         border: "none",
                       }}
@@ -214,7 +213,6 @@ export default function LinkedInSection({ allowed = true }: LinkedInSectionProps
 
           {allowed && (
           <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 16, paddingTop: 16 }}>
-            <PasosAntesDeConectar red="LinkedIn" />
             <strong style={{ color: "#1d1d1f", fontSize: 14 }}>Conectar cuenta de usuario</strong>
             <p className="lead-copy" style={{ fontSize: 13, margin: "3px 0 12px" }}>
               Cada usuario conecta su perfil de LinkedIn autorizando mediante OAuth.

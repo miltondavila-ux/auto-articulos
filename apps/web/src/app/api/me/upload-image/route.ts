@@ -13,32 +13,6 @@ const TARGET = {
   logo: { width: 500, height: 250 },
 } as const;
 
-type UploadType = "profile" | "profile2" | "profile3" | "logo" | "logo2";
-const UPLOAD_TYPES: UploadType[] = ["profile", "profile2", "profile3", "logo", "logo2"];
-
-// Hasta 3 fotos del usuario y 2 logos distintos (p.ej. horizontal + cuadrado)
-// para que el generador de imágenes de redes sociales tenga variedad real de
-// dónde elegir en vez de una sola foto/logo fijos.
-const FIELD_BY_TYPE: Record<UploadType, "profilePhotoUrl" | "profilePhotoUrl2" | "profilePhotoUrl3" | "businessLogoUrl" | "businessLogoUrl2"> = {
-  profile: "profilePhotoUrl",
-  profile2: "profilePhotoUrl2",
-  profile3: "profilePhotoUrl3",
-  logo: "businessLogoUrl",
-  logo2: "businessLogoUrl2",
-};
-
-const BLOB_PREFIX_BY_TYPE: Record<UploadType, string> = {
-  profile: "profile-photos",
-  profile2: "profile-photos-2",
-  profile3: "profile-photos-3",
-  logo: "business-logos",
-  logo2: "business-logos-2",
-};
-
-function isProfileType(type: UploadType): boolean {
-  return type === "profile" || type === "profile2" || type === "profile3";
-}
-
 // Límite duro de entrada (4MB). sharp lo comprime al guardar, así que el
 // peso final siempre termina muy por debajo de esto.
 const MAX_INPUT_BYTES = 4 * 1024 * 1024;
@@ -56,17 +30,12 @@ export async function POST(request: NextRequest) {
   const userId = await getCurrentUserId();
 
   const formData = await request.formData();
-  const rawType = formData.get("type");
+  const type = formData.get("type");
   const file = formData.get("file");
 
-  if (typeof rawType !== "string" || !UPLOAD_TYPES.includes(rawType as UploadType)) {
-    return NextResponse.json(
-      { error: `type debe ser uno de: ${UPLOAD_TYPES.join(", ")}.` },
-      { status: 400 },
-    );
+  if (type !== "profile" && type !== "logo") {
+    return NextResponse.json({ error: "type debe ser 'profile' o 'logo'." }, { status: 400 });
   }
-  const type = rawType as UploadType;
-  const isProfile = isProfileType(type);
 
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "Debes adjuntar un archivo de imagen." }, { status: 400 });
@@ -91,7 +60,7 @@ export async function POST(request: NextRequest) {
   let resizedBuffer: Buffer;
   let outputType: "image/jpeg" | "image/png";
   let ext: "jpg" | "png";
-  if (isProfile) {
+  if (type === "profile") {
     outputType = "image/jpeg";
     ext = "jpg";
     resizedBuffer = await sharp(inputBuffer)
@@ -117,7 +86,7 @@ export async function POST(request: NextRequest) {
   // Salvavidas: si la primera pasada quedó pesada (raro en la práctica),
   // reintentamos con más compresión para no superar el límite de salida.
   if (resizedBuffer.length > MAX_OUTPUT_BYTES) {
-    if (isProfile) {
+    if (type === "profile") {
       resizedBuffer = await sharp(inputBuffer)
         .rotate()
         .resize(TARGET.profile.width, TARGET.profile.height, {
@@ -146,38 +115,42 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const prefix = BLOB_PREFIX_BY_TYPE[type];
+  const prefix = type === "profile" ? "profile-photos" : "business-logos";
   const blob = await put(`${prefix}/${userId}.${ext}`, resizedBuffer, {
     access: "public",
     contentType: outputType,
     addRandomSuffix: true,
   });
 
-  await prisma.user.update({ where: { id: userId }, data: { [FIELD_BY_TYPE[type]]: blob.url } });
+  if (type === "profile") {
+    await prisma.user.update({ where: { id: userId }, data: { profilePhotoUrl: blob.url } });
+  } else {
+    await prisma.user.update({ where: { id: userId }, data: { businessLogoUrl: blob.url } });
+  }
 
   // Devolvemos también el peso final en KB para que el UI pueda mostrar
   // "guardada (45KB)" al usuario.
   return NextResponse.json({
     url: blob.url,
     sizeBytes: resizedBuffer.length,
-    width: isProfile ? TARGET.profile.width : TARGET.logo.width,
-    height: isProfile ? TARGET.profile.height : TARGET.logo.height,
+    width: type === "profile" ? TARGET.profile.width : TARGET.logo.width,
+    height: type === "profile" ? TARGET.profile.height : TARGET.logo.height,
   });
 }
 
 export async function DELETE(request: NextRequest) {
   const userId = await getCurrentUserId();
-  const { type: rawType } = await request.json().catch(() => ({}));
+  const { type } = await request.json().catch(() => ({}));
 
-  if (typeof rawType !== "string" || !UPLOAD_TYPES.includes(rawType as UploadType)) {
-    return NextResponse.json(
-      { error: `type debe ser uno de: ${UPLOAD_TYPES.join(", ")}.` },
-      { status: 400 },
-    );
+  if (type !== "profile" && type !== "logo") {
+    return NextResponse.json({ error: "type debe ser 'profile' o 'logo'." }, { status: 400 });
   }
-  const type = rawType as UploadType;
 
-  await prisma.user.update({ where: { id: userId }, data: { [FIELD_BY_TYPE[type]]: null } });
+  if (type === "profile") {
+    await prisma.user.update({ where: { id: userId }, data: { profilePhotoUrl: null } });
+  } else {
+    await prisma.user.update({ where: { id: userId }, data: { businessLogoUrl: null } });
+  }
 
   return NextResponse.json({ ok: true });
 }

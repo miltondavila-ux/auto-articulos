@@ -12,7 +12,7 @@ export default async function VistaPreviaBloqueoPage() {
 
   return (
     <div>
-      <p style={{ fontSize: 12, color: "#86868b", marginBottom: 8 }}>
+      <p style={{ fontSize: 12, color: "#a8b3c7", marginBottom: 8 }}>
         Vista previa (solo admin) — así se ve la pantalla real cuando vence
         el período de prueba de un usuario.
       </p>

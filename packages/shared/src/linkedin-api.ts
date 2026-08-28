@@ -309,24 +309,13 @@ export async function publishLinkedInPost(
     body: JSON.stringify(postBody),
   });
 
-  const responseText = await res.text();
   if (!res.ok) {
-    throw new Error(`Error al publicar en LinkedIn (${res.status}): ${responseText}`);
+    const errorText = await res.text();
+    throw new Error(`Error al publicar en LinkedIn: ${errorText}`);
   }
 
-  let responseBody: { id?: string; post?: string } = {};
-  if (responseText.trim()) {
-    try {
-      responseBody = JSON.parse(responseText) as { id?: string; post?: string };
-    } catch {
-      // El endpoint puede devolver un cuerpo vacío; el header sigue siendo la
-      // fuente principal del identificador.
-    }
-  }
-  const postId = res.headers.get("X-RestLi-Id") || responseBody.id || responseBody.post || "";
-  if (!postId) {
-    throw new Error("LinkedIn aceptó la solicitud pero no devolvió el identificador de la publicación; se dejó como error para evitar un falso publicado.");
-  }
+  // LinkedIn devuelve el ID del post en el header X-RestLi-Id
+  const postId = res.headers.get("X-RestLi-Id") || "";
 
   // Construir URL del post
   const postUrl = postId

@@ -74,31 +74,16 @@ function TitleProgressRow({
 
   const [fullEvents, setFullEvents] = useState<TitleEventRow[] | null>(null);
   const [loadingEvents, setLoadingEvents] = useState(false);
-  const [eventsError, setEventsError] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
 
-  // Si la carga fallaba, el panel abría vacío y en silencio: `fullEvents`
-  // quedaba en null, `loadingEvents` volvía a false, y el render no tenía
-  // ninguna rama que mostrar. Reportado por Milton el 27/8/2026 ("no está
-  // mostrando el tema de ver todos los pasos"). Ahora cada final posible deja
-  // un mensaje: así se sabe si falló la petición o si de verdad no hay pasos.
   async function loadFullEvents() {
     setLoadingEvents(true);
-    setEventsError(null);
     try {
       const res = await fetch(`/api/titles/${title.id}/events`);
-      if (!res.ok) {
-        setEventsError(
-          `No se pudo cargar el log de este artículo (respuesta ${res.status}). Vuelve a abrirlo para reintentar.`,
-        );
-        return;
+      if (res.ok) {
+        const data = await res.json();
+        setFullEvents(data.events);
       }
-      const data = await res.json();
-      setFullEvents(data.events ?? []);
-    } catch (err) {
-      setEventsError(
-        `No se pudo cargar el log de este artículo: ${err instanceof Error ? err.message : String(err)}`,
-      );
     } finally {
       setLoadingEvents(false);
     }
@@ -148,7 +133,7 @@ function TitleProgressRow({
                 : title.status === "error"
                   ? "#fff2f1"
                   : title.status === "processing"
-                    ? "#f5f5f7"
+                    ? "#e8f2ff"
                     : "#f5f5f7",
             color:
               title.status === "success"
@@ -156,7 +141,7 @@ function TitleProgressRow({
                 : title.status === "error"
                   ? "#ff3b30"
                   : title.status === "processing"
-                    ? "#1d1d1f"
+                    ? "#0071e3"
                     : "#6e6e73",
             flexShrink: 0,
           }}
@@ -194,7 +179,7 @@ function TitleProgressRow({
               style={{
                 height: "100%",
                 width: `${titlePercent}%`,
-                background: "#1d1d1f",
+                background: "#0071e3",
                 transition: "width 0.4s ease",
               }}
             />
@@ -319,17 +304,7 @@ function TitleProgressRow({
               Cargando...
             </p>
           )}
-          {!loadingEvents && eventsError && (
-            <p style={{ fontSize: 12, marginTop: 4, color: "#ff3b30" }}>
-              {eventsError}
-            </p>
-          )}
-          {fullEvents?.length === 0 && (
-            <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>
-              Todavía no hay pasos registrados para este artículo.
-            </p>
-          )}
-          {fullEvents && fullEvents.length > 0 && (
+          {fullEvents && (
             <ol
               style={{
                 marginTop: 6,
@@ -534,7 +509,7 @@ export default function LiveProgress({
               width: 14,
               height: 14,
               border: "2px solid #d2d2d7",
-              borderTopColor: "#1d1d1f",
+              borderTopColor: "#0071e3",
               borderRadius: "50%",
               animation: "auto-articulos-spin 0.8s linear infinite",
               flexShrink: 0,
@@ -558,7 +533,7 @@ export default function LiveProgress({
           style={{
             height: "100%",
             width: `${percent}%`,
-            background: "#1d1d1f",
+            background: "#0071e3",
             transition: "width 0.4s ease",
           }}
         />

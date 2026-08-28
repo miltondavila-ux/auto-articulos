@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import ModuleIntro, { IntroP, Modulo } from "@/components/ModuleIntro";
 import {
   sectionStyle,
   h2Style,
@@ -22,17 +21,6 @@ import GoogleIndexingStatus from "@/components/GoogleIndexingStatus";
 export default function HistorialPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <ModuleIntro titulo="Historial">
-        <IntroP>
-          Todo lo que la plataforma ha publicado por ti queda registrado aquí: artículos y publicaciones en redes, con su fecha, su estado y el enlace a lo que se publicó.
-        </IntroP>
-        <IntroP>
-          Sirve para dos cosas muy concretas: comprobar que algo salió bien de verdad, y encontrar rápido un artículo cuando lo necesitas para compartirlo o revisarlo.
-        </IntroP>
-        <IntroP>
-          Si un trabajo todavía no aparece aquí, es que sigue en marcha: míralo en <Modulo id="publicaciones-en-curso" />.
-        </IntroP>
-      </ModuleIntro>
       <HistorialEjecuciones />
       <HistorialRedes />
     </div>
@@ -77,23 +65,18 @@ function HistorialEjecuciones() {
     (r) => r.status !== "pending" && r.status !== "running",
   );
 
-  const runsByPublicationDay = useMemo(() => {
+  const runsByCategory = useMemo(() => {
     const map = new Map<string, RunRow[]>();
     for (const run of runs) {
-      const publicationAt = latestPublicationAt(run.titles);
-      const dayKey = publicationAt ? localDayKey(publicationAt) : "no-confirmada";
-      if (!map.has(dayKey)) map.set(dayKey, []);
-      map.get(dayKey)!.push(run);
+      const cat = run.category?.name ?? "Sin categoría";
+      if (!map.has(cat)) map.set(cat, []);
+      map.get(cat)!.push(run);
     }
-    return Array.from(map.entries()).sort(([dayA], [dayB]) => {
-      if (dayA === "no-confirmada") return 1;
-      if (dayB === "no-confirmada") return -1;
-      return dayB.localeCompare(dayA);
-    });
+    return Array.from(map.entries());
   }, [runs]);
 
   return (
-    <details className="panel" style={sectionStyle}>
+    <details open={true} className="panel" style={sectionStyle}>
       <summary
         style={{
           cursor: "pointer",
@@ -107,7 +90,7 @@ function HistorialEjecuciones() {
       >
         <div>
           <p className="eyebrow" style={{ margin: "0 0 2px" }}>Registro</p>
-          <h2 style={{ ...h2Style, margin: 0 }}>Artículos publicados</h2>
+          <h2 style={{ ...h2Style, margin: 0 }}>Historial de Ejecuciones</h2>
         </div>
         <span className="muted" style={{ fontSize: 13 }}>
           {runs.length} ejecución{runs.length !== 1 ? "es" : ""}
@@ -117,7 +100,6 @@ function HistorialEjecuciones() {
         <div
           style={{
             display: "flex",
-            flexWrap: "wrap",
             justifyContent: "flex-end",
             gap: 8,
             marginBottom: 12,
@@ -125,7 +107,7 @@ function HistorialEjecuciones() {
         >
           {hasDeletableRuns &&
             (confirmingDelete ? (
-              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 12, color: "#8a4b08" }}>
                   ¿Borrar historial? No se puede deshacer.
                 </span>
@@ -180,11 +162,11 @@ function HistorialEjecuciones() {
             Aún no hay ejecuciones en el historial.
           </p>
         ) : (
-          runsByPublicationDay.map(([dayKey, dayRuns]) => (
-            <PublicationDayGroup
-              key={dayKey}
-              dayKey={dayKey}
-              runs={dayRuns}
+          runsByCategory.map(([categoryName, categoryRuns]) => (
+            <CategoryGroup
+              key={categoryName}
+              categoryName={categoryName}
+              runs={categoryRuns}
               onRetried={loadRuns}
             />
           ))
@@ -194,12 +176,12 @@ function HistorialEjecuciones() {
   );
 }
 
-function PublicationDayGroup({
-  dayKey,
+function CategoryGroup({
+  categoryName,
   runs,
   onRetried,
 }: {
-  dayKey: string;
+  categoryName: string;
   runs: RunRow[];
   onRetried: () => void;
 }) {
@@ -208,14 +190,10 @@ function PublicationDayGroup({
     0,
   );
   const totalTitles = runs.reduce((acc, r) => acc + r.titles.length, 0);
-  const orderedRuns = [...runs].sort((a, b) => {
-    const aDate = latestPublicationAt(a.titles) ?? a.createdAt;
-    const bDate = latestPublicationAt(b.titles) ?? b.createdAt;
-    return new Date(bDate).getTime() - new Date(aDate).getTime();
-  });
 
   return (
     <details
+      open={true}
       className="row"
       style={{
         marginBottom: 10,
@@ -239,13 +217,13 @@ function PublicationDayGroup({
           userSelect: "none",
         }}
       >
-        <span>{publicationDayLabel(dayKey)}</span>
+        <span>{categoryName}</span>
         <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
           — {runs.length} ejecución{runs.length !== 1 ? "es" : ""} ({totalSuccess}/{totalTitles} publicados)
         </span>
       </summary>
       <div style={{ padding: "0 16px 16px 16px" }}>
-        {orderedRuns.map((run) => (
+        {runs.map((run) => (
           <HistoryEntry key={run.id} run={run} onRetried={onRetried} />
         ))}
       </div>
@@ -265,13 +243,6 @@ interface SocialOpportunity {
   titleId: string | null;
   createdAt: string;
   publishedAt: string | null;
-  startedAt: string | null;
-  finishedAt: string | null;
-  // Imagen y prompt exactos usados cuando la publicación usó el generador
-  // de imágenes con IA — pedido explícito de Milton (22/8/2026) para ver
-  // esto en el histórico sin tener que revisar los logs de GitHub Actions.
-  imageUrl: string | null;
-  aiImagePrompt: string | null;
 }
 
 function HistorialRedes() {
@@ -352,7 +323,7 @@ function HistorialRedes() {
       >
         <div>
           <p className="eyebrow" style={{ margin: "0 0 2px" }}>Redes Sociales</p>
-          <h2 style={{ ...h2Style, margin: 0 }}>Publicaciones en redes sociales</h2>
+          <h2 style={{ ...h2Style, margin: 0 }}>Historial de Publicaciones en Redes</h2>
         </div>
         {!loading && (
           <span className="muted" style={{ fontSize: 13 }}>
@@ -375,7 +346,7 @@ function HistorialRedes() {
             >
               {opportunities.length > 0 &&
                 (confirmingDelete ? (
-                  <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ fontSize: 12, color: "#8a4b08" }}>
                       ¿Borrar todo? No se puede deshacer.
                     </span>
@@ -453,9 +424,9 @@ function HistorialRedes() {
                         flexWrap: "wrap",
                       }}
                     >
-                      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                         <span style={{ color: "#1d1d1f", fontWeight: 600 }}>
-                          {new Date(opp.publishedAt || opp.finishedAt || opp.createdAt).toLocaleString("es-US", {
+                          {new Date(opp.publishedAt || opp.createdAt).toLocaleString("es-US", {
                             day: "2-digit",
                             month: "2-digit",
                             hour: "2-digit",
@@ -463,7 +434,7 @@ function HistorialRedes() {
                           })}
                         </span>
                         <span className="muted">—</span>
-                        <span style={{ fontWeight: 600, color: "#1d1d1f", textTransform: "uppercase", fontSize: 11 }}>
+                        <span style={{ fontWeight: 600, color: "#0071e3", textTransform: "uppercase", fontSize: 11 }}>
                           {opp.platform}
                         </span>
                         <span className="muted">—</span>
@@ -507,48 +478,6 @@ function HistorialRedes() {
                           </a>
                         )}
                       </div>
-                      {opp.imageUrl && (
-                        <div style={{ marginTop: 12 }}>
-                          <p style={{ margin: "0 0 6px 0", color: "#1d1d1f", fontSize: 13, fontWeight: 500 }}>
-                            Imagen generada con IA:
-                          </p>
-                          <img
-                            src={opp.imageUrl}
-                            alt="Imagen generada con IA"
-                            style={{ maxWidth: 220, borderRadius: 8, border: "1px solid #e5e5ea", display: "block" }}
-                          />
-                          <a
-                            href={opp.imageUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="link-button"
-                            style={{ display: "inline-block", marginTop: 6, fontSize: 12 }}
-                          >
-                            Abrir imagen en tamaño completo &rarr;
-                          </a>
-                          {opp.aiImagePrompt && (
-                            <>
-                              <p style={{ margin: "10px 0 6px 0", color: "#1d1d1f", fontSize: 13, fontWeight: 500 }}>
-                                Prompt exacto usado:
-                              </p>
-                              <div
-                                style={{
-                                  padding: 10,
-                                  background: "#f5f5f7",
-                                  borderRadius: 8,
-                                  fontSize: 12,
-                                  color: "#6e6e73",
-                                  fontFamily: "monospace",
-                                  whiteSpace: "pre-wrap",
-                                  wordBreak: "break-word",
-                                }}
-                              >
-                                {opp.aiImagePrompt}
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      )}
                       {opp.errorLog && (
                         <div
                           style={{
@@ -577,38 +506,15 @@ function HistorialRedes() {
                           {loadingSocialEvent === opp.titleId && !socialEvents[opp.titleId] && (
                             <p className="muted" style={{ fontSize: 12, marginTop: 6 }}>Cargando...</p>
                           )}
-                          {socialEvents[opp.titleId] && (() => {
-                            // El artículo puede tener eventos de otras publicaciones (otra red,
-                            // sitemap, etc.) mezclados en el mismo título — nos quedamos solo con
-                            // los que ocurrieron durante ESTE intento de publicación específico
-                            // (con un margen de 2s por si el evento se registró justo al borde).
-                            const start = opp.startedAt ? new Date(opp.startedAt).getTime() - 2000 : null;
-                            const end = start
-                              ? (opp.finishedAt ? new Date(opp.finishedAt).getTime() : Date.now()) + 2000
-                              : null;
-                            const filtered = start !== null && end !== null
-                              ? socialEvents[opp.titleId].filter((e) => {
-                                  const t = new Date(e.createdAt).getTime();
-                                  return t >= start && t <= end;
-                                })
-                              : [];
-                            if (filtered.length === 0) {
-                              return (
-                                <p className="muted" style={{ fontSize: 12, marginTop: 6 }}>
-                                  Sin eventos registrados para este intento de publicación.
-                                </p>
-                              );
-                            }
-                            return (
-                              <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: "#6e6e73", fontSize: 12 }}>
-                                {filtered.map((e) => (
-                                  <li key={e.id} style={{ marginBottom: 3 }}>
-                                    <span>{new Date(e.createdAt).toLocaleTimeString()}</span> — {e.message}
-                                  </li>
-                                ))}
-                              </ul>
-                            );
-                          })()}
+                          {socialEvents[opp.titleId] && (
+                            <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: "#6e6e73", fontSize: 12 }}>
+                              {socialEvents[opp.titleId].map((e) => (
+                                <li key={e.id} style={{ marginBottom: 3 }}>
+                                  <span>{new Date(e.createdAt).toLocaleTimeString()}</span> — {e.message}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
                         </details>
                       )}
                     </div>
@@ -632,7 +538,6 @@ function HistoryEntry({
 }) {
   const successCount = run.titles.filter((t) => t.status === "success").length;
   const hasErrors = run.status === "halted";
-  const publicationAt = latestPublicationAt(run.titles);
   const [retrying, setRetrying] = useState(false);
 
   async function handleRetryRun(e: React.MouseEvent) {
@@ -672,19 +577,10 @@ function HistoryEntry({
         }}
       >
         <span style={{ color: "#1d1d1f", fontWeight: 600 }}>
-          Creación: {formatDateTime(run.createdAt, false)}
-        </span>
-        <span className="muted">|</span>
-        <span style={{ color: "#1d1d1f", fontWeight: 600 }}>
-          Publicación: {publicationAt
-            ? `${formatDateTime(publicationAt, false)}${successCount < run.titles.length ? " (parcial)" : ""}`
-            : "Pendiente"}
+          {new Date(run.createdAt).toLocaleString()}
         </span>
         <span className="muted">
           — {successCount}/{run.titles.length} publicados
-        </span>
-        <span className="muted">
-          — Categoría: {run.category?.name ?? "Sin categoría"}
         </span>
         <span className="muted">
           — {formatDuration(run.createdAt, run.finishedAt)}
@@ -768,8 +664,6 @@ function RunTable({ titles }: { titles: TitleRow[] }) {
             <th style={thStyle}>Título</th>
             <th style={thStyle}>Estado</th>
             <th style={thStyle}>Intentos</th>
-            <th style={thStyle}>Oportunidad creada</th>
-            <th style={thStyle}>Publicado</th>
             <th style={thStyle}>Enlace / Error</th>
             <th style={thStyle}>Log</th>
           </tr>
@@ -782,56 +676,6 @@ function RunTable({ titles }: { titles: TitleRow[] }) {
       </table>
     </div>
   );
-}
-
-function formatDateTime(value: string, includeSeconds = true) {
-  return new Date(value).toLocaleString("es-US", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    ...(includeSeconds ? { second: "2-digit" } : {}),
-  });
-}
-
-function localDayKey(value: string) {
-  const date = new Date(value);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function publicationDayLabel(dayKey: string) {
-  if (dayKey === "no-confirmada") return "Sin publicación confirmada";
-
-  const today = localDayKey(new Date().toISOString());
-  const yesterdayDate = new Date();
-  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-  const yesterday = localDayKey(yesterdayDate.toISOString());
-  if (dayKey === today) return "Hoy";
-  if (dayKey === yesterday) return "Ayer";
-
-  const [year, month, day] = dayKey.split("-").map(Number);
-  return new Date(year, month - 1, day).toLocaleDateString("es-US", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
-
-function latestPublicationAt(titles: TitleRow[]) {
-  return titles.reduce<string | null>((latest, title) => {
-    const value = title.publishedAt ?? (
-      title.status === "success" ? title.processedAt : null
-    );
-    if (!value) return latest;
-    if (!latest || new Date(value).getTime() > new Date(latest).getTime()) {
-      return value;
-    }
-    return latest;
-  }, null);
 }
 
 function renderMessageWithLinks(message: string) {
@@ -887,22 +731,6 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
       </td>
       <td style={tdStyle} data-label="Intentos">
         {title.attempts}
-      </td>
-      <td style={tdStyle} data-label="Oportunidad creada">
-        {title.opportunityCreatedAt ? (
-          formatDateTime(title.opportunityCreatedAt)
-        ) : (
-          <span className="muted">No aplica</span>
-        )}
-      </td>
-      <td style={tdStyle} data-label="Publicado">
-        {title.publishedAt ? (
-          formatDateTime(title.publishedAt)
-        ) : title.status === "success" && title.processedAt ? (
-          <span className="muted">Fecha antigua no registrada</span>
-        ) : (
-          <span className="muted">Pendiente</span>
-        )}
       </td>
       <td style={tdStyle} data-label="Enlace / Error">
         {title.articleUrl ? (

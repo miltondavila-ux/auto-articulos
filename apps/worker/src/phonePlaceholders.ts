@@ -3,14 +3,6 @@ export type PhonePlaceholderResult = {
   replacements: { whatsapp: number; call: number; other: number };
 };
 
-/** Normaliza también marcadores que llegaron codificados dentro de una URL. */
-export function normalizePhonePlaceholders(html: string): string {
-  return html.replace(
-    /(?:\{|%(?:25)?7B)(?:TELEFONO|PHONE_NUMBER|NUMERO-WHATSAPP)(?:\}|%(?:25)?7D)/gi,
-    "PHONE_NUMBER",
-  );
-}
-
 /** WhatsApp requires digits only; telephone links keep the leading +. */
 export function replacePhonePlaceholders(
   html: string,
@@ -21,22 +13,8 @@ export function replacePhonePlaceholders(
 
   const international = `+${digits}`;
   const replacements = { whatsapp: 0, call: 0, other: 0 };
-  let result = normalizePhonePlaceholders(html);
+  let result = html;
   const phoneToken = `(?:PHONE_NUMBER|NUMERO-WHATSAPP|(?:\\+|%2B)?${digits})`;
-
-  // Algunos generadores de enlaces de WhatsApp producen /resolve/?deeplink=
-  // con el número embebido. Convertirlo a wa.me evita dejar una URL que
-  // WhatsApp no puede resolver y conserva un enlace directo y estable.
-  result = result.replace(
-    new RegExp(
-      `https?:\\/\\/api\\.whatsapp\\.com\\/resolve\\/\\?[^"'<>\\s]*?(?:%2F|\\/)${phoneToken}`,
-      "gi",
-    ),
-    () => {
-      replacements.whatsapp++;
-      return `https://wa.me/${digits}`;
-    },
-  );
 
   // Incluye enlaces directos y enlaces anidados dentro de un generador de QR.
   result = result.replace(

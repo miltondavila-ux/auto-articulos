@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import PasosAntesDeConectar from "@/components/PasosAntesDeConectar";
 import {
   disabledStyle,
   h2Style,
@@ -190,7 +189,7 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
           </span>
         </div>
 
-        {isAdmin && settings?.isAdmin && !isEditing && (
+        {settings?.isAdmin && !isEditing && (
           <div style={{ marginTop: 12 }}>
             {settings.configured && (
               <p className="muted" style={{ fontSize: 13, marginBottom: 8 }}>App ID: {settings.appId}</p>
@@ -201,7 +200,7 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
           </div>
         )}
 
-        {isAdmin && settings?.isAdmin && isEditing && (
+        {settings?.isAdmin && isEditing && (
           <div style={{ display: "grid", gap: 12, marginTop: 14 }}>
             <label style={{ color: "#1d1d1f", fontSize: 12, fontWeight: 500 }}>
               App ID
@@ -217,7 +216,7 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
                 disabled={saving}
                 style={{
                   ...secondaryButtonStyle,
-                  background: "#1d1d1f",
+                  background: "#0071e3",
                   color: "#ffffff",
                   border: "none",
                 }}
@@ -232,71 +231,46 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
     );
   }
 
-  function connectionStatus(connected: boolean, label: string, account?: string) {
-    return (
-      <span style={{ color: connected ? "#16803c" : "#8a4b08", fontSize: 12, fontWeight: 600 }}>
-        {connected ? `✓ Conectado — ${label}${account ? ` (${account})` : ""}` : `○ No conectado — ${label}`}
-      </span>
-    );
-  }
-
   return (
     <section style={sectionStyle}>
-      <h2 style={{ ...h2Style, margin: 0 }}>Instagram, Facebook y Threads</h2>
+      <h2 style={{ ...h2Style, margin: 0 }}>Meta API</h2>
       <p className="lead-copy" style={{ fontSize: 13, margin: "4px 0 0" }}>
-        Conecta aquí tus cuentas para que el sistema pueda publicar en ellas.
+        Credenciales e integraciones sociales de Meta (Instagram y Threads).
       </p>
 
       {loading ? (
         <p className="muted" style={{ fontSize: 13, marginTop: 12 }}>Cargando configuración...</p>
       ) : (
         <>
-          {/*
-            Credenciales de la plataforma, no de la persona usuaria: las
-            configura el administrador una sola vez para todo el sistema. A un
-            usuario normal no le sirven de nada y solo le hacen dudar de si
-            tiene que rellenar algo. Se muestran solo a administradores.
-          */}
-          {isAdmin && (
-            <>
           {credentialBlock(
-                "meta",
-                "Meta Principal",
-                "Credenciales principales para Instagram y Facebook.",
-                metaSettings,
-              )}
-              {credentialBlock(
-                "threads",
-                "Threads API",
-                "Credenciales específicas del producto Threads.",
-                threadsSettings,
-              )}
-            </>
+            "meta",
+            "Meta Principal",
+            "Credenciales principales para Instagram y Facebook.",
+            metaSettings,
+          )}
+          {credentialBlock(
+            "threads",
+            "Threads API",
+            "Credenciales específicas del producto Threads.",
+            threadsSettings,
           )}
 
-          <div style={{ display: "grid", gap: 8, marginTop: 16 }}>
-            {allowThreads && connectionStatus(Boolean(threadsConnection?.connected), "Threads", threadsConnection?.threadsUsername ? `@${threadsConnection.threadsUsername}` : undefined)}
-            {allowInstagram && connectionStatus(Boolean(instagramConnection?.connected), "Instagram", instagramConnection?.instagramUsername ? `@${instagramConnection.instagramUsername}` : undefined)}
-            {allowFacebook && connectionStatus(Boolean(facebookPageConnection?.connected), "Facebook Page", facebookPageConnection?.facebookPageName)}
-          </div>
-
           {(allowThreads || allowInstagram || allowFacebook) && (
-          <div style={{ marginTop: 18 }}>
-            <PasosAntesDeConectar red="Instagram, Facebook o Threads" />
-
+          <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 18, paddingTop: 16 }}>
             <strong style={{ color: "#1d1d1f", fontSize: 14 }}>Conectar cuentas</strong>
             <p className="lead-copy" style={{ fontSize: 13, margin: "3px 0 12px" }}>
-              Autorizas directamente en Meta; nunca vemos tu contraseña.
+              La autorización se realiza directamente en Meta de forma segura.
             </p>
 
             {allowInstagram && !instagramConnection?.connected && (
-              <p style={{ fontSize: 13, color: "#6e6e73", margin: "0 0 12px", lineHeight: 1.55 }}>
-                Instagram y Facebook se conectan con un mismo permiso de Meta,
-                así que no busques un botón aparte. Instagram debe ser una
-                cuenta Profesional (Empresa o Creador), vinculada a una Página
-                de Facebook y accesible desde Meta Business Suite; con una
-                cuenta personal, Meta no permite publicar desde fuera.
-              </p>
+              <div className="row" style={{ padding: 14, marginBottom: 14, fontSize: 13 }}>
+                <strong style={{ color: "#1d1d1f" }}>Requisitos para conectar Instagram:</strong>
+                <ul style={{ margin: "6px 0 0", paddingLeft: 18, color: "#6e6e73" }}>
+                  <li>Tener una cuenta de Instagram Profesional (Business o Creator).</li>
+                  <li>Tener una Página de Facebook vinculada a esa cuenta.</li>
+                  <li>Tener acceso a Meta Business Suite.</li>
+                </ul>
+              </div>
             )}
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -320,31 +294,38 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
               ))}
 
               {allowInstagram && (instagramConnection?.connected ? (
-                  <button
-                    onClick={() => disconnect("meta")}
-                    disabled={disconnecting === "meta"}
-                    className="secondary"
-                    style={disabledStyle(secondaryButtonStyle, disconnecting === "meta")}
-                  >
-                    {disconnecting === "meta"
-                      ? "Desconectando..."
-                      : `Desconectar Instagram${instagramConnection.instagramUsername ? ` (@${instagramConnection.instagramUsername})` : ""}`}
-                  </button>
-                ) : (
-                  <a
-                    href="/api/search-integrations/instagram/connect"
-                    className="secondary"
-                    style={{ ...secondaryButtonStyle, textDecoration: "none", display: "inline-flex" }}
-                  >
-                    Conectar Instagram
-                  </a>
-                ))}
-              {allowFacebook && (facebookPageConnection?.connected ? (
-                <button onClick={() => disconnect("facebook")} disabled={disconnecting === "facebook"} className="secondary" style={disabledStyle(secondaryButtonStyle, disconnecting === "facebook")}>
-                  {disconnecting === "facebook" ? "Desconectando..." : `Desconectar Facebook Page${facebookPageConnection.facebookPageName ? ` (${facebookPageConnection.facebookPageName})` : ""}`}
+                <button
+                  onClick={() => disconnect("facebook")}
+                  disabled={disconnecting === "facebook"}
+                  className="secondary"
+                  style={disabledStyle(secondaryButtonStyle, disconnecting === "facebook")}
+                >
+                  {disconnecting === "meta" ? "Desconectando..." : `Desconectar Instagram${instagramConnection.instagramUsername ? ` (@${instagramConnection.instagramUsername})` : ""}`}
                 </button>
               ) : (
-                <a href="/api/search-integrations/instagram/connect" className="secondary" style={{ ...secondaryButtonStyle, textDecoration: "none", display: "inline-flex" }}>
+                <a
+                  href="/api/search-integrations/instagram/connect"
+                  className="secondary"
+                  style={{ ...secondaryButtonStyle, textDecoration: "none", display: "inline-flex" }}
+                >
+                  Conectar Instagram
+                </a>
+              ))}
+              {isAdmin && (facebookPageConnection?.connected ? (
+                <button
+                  onClick={() => disconnect("facebook")}
+                  disabled={disconnecting === "facebook"}
+                  className="secondary"
+                  style={disabledStyle(secondaryButtonStyle, disconnecting === "facebook")}
+                >
+                  {`Facebook Page conectada${facebookPageConnection.facebookPageName ? ` (${facebookPageConnection.facebookPageName})` : ""}`}
+                </button>
+              ) : (
+                <a
+                  href="/api/search-integrations/instagram/connect"
+                  className="secondary"
+                  style={{ ...secondaryButtonStyle, textDecoration: "none", display: "inline-flex" }}
+                >
                   Conectar Facebook Page
                 </a>
               ))}

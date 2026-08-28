@@ -110,7 +110,7 @@ async function generateAndHostImage(
  * falta el mismo bloqueo por usuario que usa queue.ts, porque esto no abre
  * ninguna sesión de Playwright contra 10minutesWebsite.
  */
-export async function processNextBusinessProfilePost(filterUserId?: string): Promise<boolean> {
+export async function processNextBusinessProfilePost(): Promise<boolean> {
   const candidate = await prisma.title.findFirst({
     where: {
       status: "success",
@@ -118,7 +118,6 @@ export async function processNextBusinessProfilePost(filterUserId?: string): Pro
       summary: { not: null },
       businessProfilePost: null,
       run: {
-        ...(filterUserId ? { userId: filterUserId } : {}),
         user: {
           businessProfileIntegration: { locationName: { not: null } },
         },

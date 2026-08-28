@@ -48,7 +48,7 @@ function OAuthConsentContent() {
       <p>{consentDescription}</p>
       <p><strong>Permisos:</strong> {params.scope || "no especificados"}</p>
       {error && <p role="alert" style={{ color: "#b91c1c" }}>{error}</p>}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+      <div style={{ display: "flex", gap: 12 }}>
         <button type="button" onClick={() => decide(true)} disabled={sending}>Autorizar</button>
         <button type="button" onClick={() => decide(false)} disabled={sending}>Cancelar</button>
       </div>

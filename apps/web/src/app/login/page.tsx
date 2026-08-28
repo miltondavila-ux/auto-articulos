@@ -143,13 +143,13 @@ function LoginContent() {
               fontSize: 12,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: "#1d1d1f",
+              color: "#0071e3",
               fontWeight: 700,
               display: "inline-block",
-              background: "rgba(0, 0, 0, 0.04)",
+              background: "rgba(0, 113, 227, 0.08)",
               padding: "4px 10px",
               borderRadius: 9999,
-              border: "1px solid #d2d2d7",
+              border: "1px solid rgba(0, 113, 227, 0.2)",
             }}
           >
             Automatización con IA
@@ -192,7 +192,7 @@ function LoginContent() {
               display: "flex",
               flexDirection: "column",
               gap: 14,
-              boxShadow: "none",
+              boxShadow: "0 12px 36px rgba(0, 0, 0, 0.06)",
               boxSizing: "border-box",
             }}
           >
@@ -202,14 +202,14 @@ function LoginContent() {
                   width: 28,
                   height: 28,
                   borderRadius: 7,
-                  background: "#1d1d1f",
+                  background: "#0071e3",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   color: "#ffffff",
                   fontSize: 14,
                   fontWeight: 700,
-                  boxShadow: "none",
+                  boxShadow: "0 2px 8px rgba(0, 113, 227, 0.3)",
                 }}
               >
                 A
@@ -284,7 +284,7 @@ function LoginContent() {
               display: "flex",
               flexDirection: "column",
               gap: 12,
-              boxShadow: "none",
+              boxShadow: "0 12px 36px rgba(0, 0, 0, 0.06)",
               boxSizing: "border-box",
             }}
           >
@@ -414,12 +414,12 @@ const buttonStyle: CSSProperties = {
   padding: "12px 16px",
   borderRadius: 10,
   border: "none",
-  background: "#1d1d1f",
+  background: "#0071e3",
   color: "#ffffff",
   fontWeight: 600,
   fontSize: 14,
   cursor: "pointer",
-  boxShadow: "none",
+  boxShadow: "0 2px 8px rgba(0, 113, 227, 0.25)",
   transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
   minHeight: 44,
 };

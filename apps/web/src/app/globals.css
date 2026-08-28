@@ -9,23 +9,18 @@
 :root {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   color: #1d1d1f;
-  background: #ffffff;
+  background: #f5f5f7;
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
   --apple-font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif;
-  --apple-bg: #ffffff;
-  --apple-surface: #ffffff;
-  /* Línea fina de Apple Support: separa sin usar sombra. */
-  --apple-hairline: #d2d2d7;
+  --apple-bg: #f5f5f7;
+  --apple-surface: rgba(255, 255, 255, 0.88);
   --apple-surface-card: #ffffff;
   --apple-text-primary: #1d1d1f;
   --apple-text-secondary: #6e6e73;
-  /* El acento del sistema es grafito: Apple no colorea las acciones. */
-  --apple-accent: #1d1d1f;
-  /* El azul sobrevive SOLO en enlaces de texto, como en apple.com. */
-  --apple-link: #0066cc;
+  --apple-accent: #0071e3;
   --apple-border: rgba(0, 0, 0, 0.07);
 }
 
@@ -36,19 +31,8 @@
 body {
   margin: 0;
   padding: 0;
-  /*
-   * En un teléfono, 100vh mide la pantalla CON la barra del navegador
-   * escondida. Al deslizar con el dedo esa barra aparece y desaparece, el
-   * alto visible cambia, pero 100vh no — y la página salta y parece cambiar
-   * de tamaño. Era el bug de responsive reportado por Milton el 16/8/2026.
-   *
-   * svh (small viewport height) mide siempre el alto MÍNIMO, con la barra
-   * visible, así que no cambia durante el desplazamiento. La primera línea es
-   * el respaldo para navegadores que no conocen svh.
-   */
   min-height: 100vh;
-  min-height: 100svh;
-  background: #ffffff;
+  background: #f5f5f7;
   color: #1d1d1f;
   overflow-x: hidden;
 }
@@ -62,12 +46,12 @@ body {
 
 /* Paneles Apple */
 .panel {
-  background: #ffffff;
-  border: 1px solid var(--apple-hairline);
-  border-radius: 18px;
-  box-shadow: none;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 22px;
+  box-shadow: 0 12px 38px rgba(0, 0, 0, 0.06);
   padding: 24px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 /* Tipografía Apple */
@@ -120,7 +104,7 @@ h3 {
 button {
   border: 0;
   border-radius: 10px;
-  background: #1d1d1f;
+  background: #0071e3;
   color: #ffffff;
   padding: 11px 16px;
   min-height: 44px;
@@ -136,19 +120,19 @@ button {
 }
 
 button:hover {
-  background: #000000;
+  background: #0077ed;
   transform: translateY(-1px);
 }
 
 button.secondary {
   background: #ffffff;
-  color: #1d1d1f;
+  color: #0071e3;
   border: 1px solid #d2d2d7;
 }
 
 button.secondary:hover {
   background: #f5f5f7;
-  color: #1d1d1f;
+  color: #0071e3;
 }
 
 button:disabled {
@@ -161,7 +145,7 @@ button:disabled {
   padding: 0;
   min-height: auto;
   background: transparent;
-  color: #0066cc;
+  color: #0071e3;
   font-size: 13px;
   font-weight: 500;
   border: none;
@@ -176,7 +160,7 @@ button:disabled {
 }
 
 /* Controles de Formulario */
-input:not([type="checkbox"]):not([type="radio"]), textarea, select {
+input, textarea, select {
   width: 100%;
   border: 1px solid #d2d2d7;
   border-radius: 11px;
@@ -193,7 +177,7 @@ input:not([type="checkbox"]):not([type="radio"]), select {
   min-height: 44px;
 }
 
-input:not([type="checkbox"]):not([type="radio"]):focus, textarea:focus, select:focus {
+input:focus, textarea:focus, select:focus {
   border-color: #0071e3;
   box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15) !important;
 }
@@ -258,7 +242,7 @@ textarea {
 }
 
 .row a {
-  color: #0066cc;
+  color: #0071e3;
   text-decoration: none;
 }
 
@@ -278,8 +262,8 @@ textarea {
   display: inline-block;
   padding: 4px 10px;
   border-radius: 999px;
-  background: #f5f5f7;
-  color: #6e6e73;
+  background: #e8f2ff;
+  color: #0071e3;
   font-size: 11px;
   font-weight: 600;
   margin-bottom: 12px;
@@ -302,57 +286,4 @@ textarea {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.28);
-}
-
-/* Alto de pantalla completo sin saltos en móvil. Ver la nota en body. */
-.pantalla-completa {
-  min-height: 100vh;
-  min-height: 100svh;
-}
-
-/*
- * Casillas y botones de opción. Antes heredaban la regla de los campos de
- * texto (width: 100%) y se estiraban a todo lo ancho, dejando la etiqueta
- * separada al otro extremo. Reportado por Milton el 19/8/2026 en Publicar.
- */
-input[type="checkbox"],
-input[type="radio"] {
-  width: 16px;
-  height: 16px;
-  min-height: 0;
-  flex-shrink: 0;
-  margin: 0;
-  padding: 0;
-  accent-color: #1d1d1f;
-  cursor: pointer;
-}
-
-input[type="checkbox"]:disabled,
-input[type="radio"]:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-/*
- * Objetivo táctil mínimo. En un dispositivo con dedo (pointer: coarse) ningún
- * botón baja de 44px de alto: es la medida que recomienda Apple para que se
- * pueda pulsar sin fallar. En escritorio no se toca nada, para que los botones
- * pequeños de las tablas sigan siendo compactos.
- */
-@media (pointer: coarse) {
-  button,
-  [role="button"],
-  a.boton {
-    min-height: 44px;
-  }
-}
-
-/*
- * Cualquier fila de botones se parte en varias líneas si no cabe, en vez de
- * desbordarse fuera de la pantalla.
- */
-.fila-botones {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
 }

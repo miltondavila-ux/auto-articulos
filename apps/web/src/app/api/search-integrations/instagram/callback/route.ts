@@ -5,7 +5,7 @@ import { encryptSecret, exchangeCodeForInstagramTokens } from "@auto-articulos/s
 import { getCurrentUserId } from "@/lib/current-user";
 import { getStoredInstagramAppCredentials } from "@/lib/instagram-app-config";
 import { canUseSocialModule } from "@/lib/social-access";
-import { INSTAGRAM_STATE_COOKIE } from "../connect/constants";
+import { INSTAGRAM_STATE_COOKIE } from "../connect/route";
 
 export async function GET(request: NextRequest) {
   const userId = await getCurrentUserId();

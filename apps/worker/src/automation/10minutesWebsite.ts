@@ -7,10 +7,7 @@ import { platformBaseUrl } from "@auto-articulos/shared";
 import { buildImagePrompt, isImageRelevant } from "../imagePrompt";
 import { generateFaqs, type Faq } from "../faqPrompt";
 import { translateText } from "../translateText";
-import {
-  normalizePhonePlaceholders,
-  replacePhonePlaceholders,
-} from "../phonePlaceholders";
+import { replacePhonePlaceholders } from "../phonePlaceholders";
 import { generateCustomArticle } from "./generateCustomArticle";
 
 export interface TenMinutesWebsiteCredentials {
@@ -32,12 +29,6 @@ export interface TenMinutesWebsiteCredentials {
   articleSignature?: string | null;
   // Teléfono del usuario para reemplazar marcadores "PHONE_NUMBER" de WhatsApp/llamada
   userPhone?: string | null;
-  // País ISO de la cuenta para completar teléfonos locales de EE. UU./Canadá.
-  userCountry?: string | null;
-  // Nombre para resolver {NOMBRE_AUTOR} de un estilo personalizado.
-  authorName?: string | null;
-  // Prompt de redacción personalizado cargado desde Run.prompt.
-  promptText?: string | null;
 }
 
 function escapeHtml(value: string): string {
@@ -45,102 +36,6 @@ function escapeHtml(value: string): string {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
-}
-
-export function buildContactButtonsHtml(
-  phone: string,
-  whatsappLabel: string,
-  callLabel: string,
-  includeWhatsApp = true,
-  includeCall = true,
-  country?: string | null,
-): string {
-  const digits = normalizeContactPhone(phone, country);
-  if (!digits) return "";
-
-  const buttons: string[] = [];
-  if (includeWhatsApp) {
-    buttons.push(
-      '<div class="visible-xs visible-sm" style="text-align:center;margin:20px 0;">',
-      `<a href="https://wa.me/${digits}" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;text-align:center;text-decoration:none;padding:10px 20px;border-radius:7px;box-sizing:border-box;" target="_blank">${escapeHtml(whatsappLabel)}</a>`,
-      "</div>",
-    );
-  }
-  if (includeCall) {
-    buttons.push(
-      '<div class="visible-xs visible-sm" style="text-align:center;margin:20px 0;">',
-      `<a href="tel:${digits}" style="display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#838b8e;color:#fff;text-align:center;text-decoration:none;padding:10px 20px;border-radius:7px;box-sizing:border-box;">${escapeHtml(callLabel)}</a>`,
-      "</div>",
-    );
-  }
-  return buttons.join("");
-}
-
-/** Normaliza a formato internacional sin adivinar prefijos fuera de NANP. */
-export function normalizeContactPhone(
-  phone: string,
-  country?: string | null,
-): string {
-  const digits = phone.replace(/\D/g, "");
-  if (digits.length !== 10) return digits;
-
-  const normalizedCountry = country?.trim().toUpperCase();
-  const isNanp = /^[2-9]\d{2}[2-9]\d{6}$/.test(digits);
-  // Las cuentas antiguas sin país son el caso histórico de Florida; para un
-  // número NANP local aplicamos el mismo prefijo 1 que exige wa.me.
-  if (isNanp && (!normalizedCountry || normalizedCountry === "US" || normalizedCountry === "CA")) {
-    return `1${digits}`;
-  }
-  return digits;
-}
-
-/** QR de contacto con etiqueta legible y el patrón que ya utiliza la plataforma. */
-export function buildContactQrHtml(
-  phone: string,
-  country?: string | null,
-): string {
-  const digits = normalizeContactPhone(phone, country);
-  if (!digits) return "";
-
-  const whatsappUrl = `https://wa.me/${digits}`;
-  return `<div class="hidden-xs hidden-sm" style="text-align:left;margin:20px 0;"><a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;flex-direction:column;align-items:center;text-decoration:none;"><img alt="QR Code" src="https://quickchart.io/chart?cht=qr&amp;chl=${whatsappUrl}&amp;chs=140x140&amp;chld=M|0" style="border:0;display:block;" /><span style="margin-top:8px;line-height:1.25;font-size:14px;font-weight:700;letter-spacing:0.04em;color:#1d1d1f;">WHATSAPP</span></a></div>`;
-}
-
-/** Los CTAs del modelo no son confiables: sólo conservamos los botones propios. */
-export function removeGeneratedContactLinks(html: string): string {
-  return html
-    .replace(
-      /<a\b[^>]*\bhref=["'](?:https?:\/\/(?:api\.)?whatsapp\.com|https?:\/\/wa\.me|tel:)[^"']*["'][^>]*>[\s\S]*?<\/a>/gi,
-      "",
-    )
-    // Al retirar un enlace defectuoso, el modelo a veces deja sólo el título
-    // del CTA. No es contenido del artículo ni un contacto funcional.
-    .replace(/<p\b[^>]*>\s*(?:whats\s*app|c[oó]digo\s*qr|qr\s*code)\s*<\/p>/gi, "")
-    // Si el enlace eliminado era el único hijo, tampoco dejamos la caja
-    // responsive vacía que el modelo había creado para ese CTA.
-    .replace(/<div\b[^>]*\b(?:visible-xs|visible-sm|hidden-xs|hidden-sm)[^>]*>\s*(?:&nbsp;)?\s*<\/div>/gi, "");
-}
-
-/** Inserta los CTA en dos pausas naturales del artículo, nunca juntos al final. */
-export function distributeContactButtonsHtml(
-  html: string,
-  whatsappButton: string,
-  callButton: string,
-): string {
-  const endings = [...html.matchAll(/<\/(?:p|ul|ol|blockquote|h2|h3|h4)>/gi)];
-  if (endings.length < 2) {
-    return `${whatsappButton}\n${html}\n${callButton}`;
-  }
-
-  const firstBlock = Math.ceil(endings.length / 3) - 1;
-  const secondBlock = Math.max(
-    firstBlock + 1,
-    Math.ceil((endings.length * 2) / 3) - 1,
-  );
-  const firstEnd = (endings[firstBlock].index ?? 0) + endings[firstBlock][0].length;
-  const secondEnd = (endings[secondBlock].index ?? 0) + endings[secondBlock][0].length;
-
-  return `${html.slice(0, firstEnd)}\n${whatsappButton}\n${html.slice(firstEnd, secondEnd)}\n${callButton}\n${html.slice(secondEnd)}`;
 }
 
 export interface PublishResult {
@@ -303,35 +198,21 @@ const CHATGPT_MODAL_TITLE_TEXTS = [
   "Generador de artículos usando Inteligencia Artificial",
   "AI Article Generator",
   "Article Generator using Artificial Intelligence",
-  "Gerador de artigos usando Inteligência Artificial",
 ];
 const TEXT_USAR_CHATGPT = bilingual("Usar ChatGPT", "Use ChatGPT");
 const TEXT_CHATGPT_MODAL_TITLE = bilingual(...CHATGPT_MODAL_TITLE_TEXTS);
-const TEXT_GENERAR = bilingual("Generar", "Generate", "Gerar");
-const TEXT_USAR_CONTENIDO = bilingual("Usar contenido", "Use content", "Usar conteúdo");
-const TEXT_GUARDAR_CAMBIOS = bilingual(
-  "Guardar cambios",
-  "Save changes",
-  "Guardar alterações",
-  "Salvar alterações",
-  "Gravar alterações",
-);
-const TEXT_GENERAR_IMAGEN = bilingual("Generar imagen", "Generate image", "Gerar imagem", "Gerar imagens");
+const TEXT_GENERAR = bilingual("Generar", "Generate");
+const TEXT_USAR_CONTENIDO = bilingual("Usar contenido", "Use content");
+const TEXT_GUARDAR_CAMBIOS = bilingual("Guardar cambios", "Save changes");
+const TEXT_GENERAR_IMAGEN = bilingual("Generar imagen", "Generate image");
 const TEXT_CREACION_IMAGENES = bilingual(
   "Creación de imágenes con inteligencia artificial",
   "Image creation with artificial intelligence",
   "AI image creation",
-  "Criação de imagens com inteligência artificial",
-  "Criação de imagens por Inteligência Artificial",
-  "Criação de imagens por IA",
-  "Criação de imagens",
 );
 const TEXT_AVISO_IMAGENES_IA = bilingual(
   "Generación de imágenes mediante IA",
   "AI image generation",
-  "Geração de imagens por IA",
-  "Geração de imagens mediante IA",
-  "Geração de imagem por inteligência artificial",
 );
 
 /**
@@ -377,8 +258,6 @@ export async function publishArticle(
       credentials.contentLanguage,
       credentials.articleSignature,
       credentials.userPhone,
-      credentials.userCountry,
-      credentials.authorName,
       onStep,
       credentials.promptText,
     );
@@ -613,8 +492,6 @@ async function createArticleDraft(
   contentLanguage: string | null | undefined,
   articleSignature: string | null | undefined,
   userPhone: string | null | undefined,
-  userCountry: string | null | undefined,
-  authorName: string | null | undefined,
   onStep: OnStep,
   promptText?: string | null,
 ): Promise<{ summary: string; contentHtml: string; finalTitle: string }> {
@@ -701,21 +578,13 @@ async function createArticleDraft(
     await onStep("Usando estilo de redacción personalizado con prompt propio.");
     await onStep("Generando contenido del artículo con OpenAI...");
     const lang = contentLanguage || "es";
-    const customArticle = await generateCustomArticle(
-      title,
-      promptText,
-      lang,
-      authorName,
-    );
+    const customArticle = await generateCustomArticle(title, promptText, lang);
     await onStep(`✓ Artículo generado con éxito por OpenAI. Título: "${customArticle.title}"`);
 
     let contentHtml = customArticle.contentHtml;
 
-    // El modelo puede devolver los marcadores del sistema en inglés o español.
-    // Se normalizan antes de reutilizar el reparador contextual ya probado.
-    contentHtml = normalizePhonePlaceholders(contentHtml);
-
-    if (/(?:PHONE_NUMBER|NUMERO-WHATSAPP)/.test(contentHtml)) {
+    // Reemplazo del teléfono
+    if (contentHtml.includes("PHONE_NUMBER")) {
       if (userPhone) {
         const repaired = replacePhonePlaceholders(contentHtml, userPhone);
         contentHtml = repaired.html;
@@ -738,63 +607,15 @@ async function createArticleDraft(
       await onStep("Texto propio agregado al final del artículo.");
     }
 
-    // Los artículos con prompt propio no reciben la plantilla de CTA de la
-    // plataforma. Se descartan CTAs creados por el modelo para no conservar
-    // URLs incompletas y se añaden siempre los dos botones oficiales.
-    if (userPhone?.replace(/\D/g, "")) {
-      contentHtml = removeGeneratedContactLinks(contentHtml);
-      const [whatsappLabel, callLabel] = await Promise.all([
-        translateText("CONTACTA AHORA", lang),
-        translateText("LLAMA AHORA", lang),
-      ]);
-      const whatsappButton = buildContactButtonsHtml(
-        userPhone,
-        whatsappLabel,
-        callLabel,
-        true,
-        false,
-        userCountry,
-      );
-      const callButton = buildContactButtonsHtml(
-        userPhone,
-        whatsappLabel,
-        callLabel,
-        false,
-        true,
-        userCountry,
-      );
-      // QR + WhatsApp en el primer tercio; llamada en el segundo, nunca juntos.
-      const whatsappContact = `${buildContactQrHtml(userPhone, userCountry)}${whatsappButton}`;
-      contentHtml = distributeContactButtonsHtml(
-        contentHtml,
-        whatsappContact,
-        callButton,
-      );
-      await onStep("QR de contacto y botones oficiales de WhatsApp/llamada distribuidos dentro del artículo.");
-    } else {
-      await onStep("⚠️ No se agregaron botones de contacto porque no tienes un teléfono configurado en tu perfil.");
-    }
-
-    // El panel español usa #titlees y el panel inglés usa #title. Validamos
-    // que el título realmente quedó escrito antes de gastar créditos de imagen.
+    // Rellenar título (#titlees)
     const titleSelector = await page
-      .evaluate(() => {
-        for (const id of ["#titlees", "#title"]) {
-          if (document.querySelector(id)) return id;
-        }
-        return null;
-      })
+      .evaluate(() => (document.querySelector("#titlees") ? "#titlees" : null))
       .catch(() => null);
-    if (!titleSelector) {
-      throw new Error("No se encontró el campo obligatorio de título (#titlees o #title) en el formulario.");
+    if (titleSelector) {
+      const titleField = page.locator(titleSelector);
+      await titleField.fill(customArticle.title.slice(0, 200));
+      await onStep("Título completado en el formulario.");
     }
-    const titleField = page.locator(titleSelector);
-    await titleField.fill(customArticle.title.slice(0, 200));
-    const savedTitle = await titleField.inputValue().catch(() => "");
-    if (!savedTitle.trim()) {
-      throw new Error("El título generado no quedó escrito en el formulario; se detiene antes de generar imagen o guardar.");
-    }
-    await onStep("Título completado y verificado en el formulario.");
 
     // Rellenar resumen
     const excerptSelector = await page
@@ -858,27 +679,7 @@ async function createArticleDraft(
   // la publicación completa por esto.
   if (contentLanguage) {
     const languageSelect = dialog.locator("select").first();
-    const languageOptions = await languageSelect
-      .locator("option")
-      .evaluateAll((options) =>
-        options.map((option) => ({
-          value: (option as HTMLOptionElement).value,
-          text: (option.textContent ?? "").trim(),
-        })),
-      )
-      .catch(() => [] as { value: string; text: string }[]);
-    const normalizedRequestedLanguage = contentLanguage.toLowerCase().split("_")[0];
-    const matchingLanguage = languageOptions.find(
-      (option) =>
-        option.value === contentLanguage ||
-        option.value.toLowerCase().split("_")[0] === normalizedRequestedLanguage ||
-        option.text.toLowerCase().split(" ")[0] === normalizedRequestedLanguage,
-    );
-    if (matchingLanguage?.value) {
-      // Evita esperar el timeout completo cuando la cuenta usa valores como
-      // "es_ES" y Auto Artículos guarda el código corto "es".
-      await languageSelect.selectOption(matchingLanguage.value, { timeout: 5000 }).catch(() => {});
-    }
+    await languageSelect.selectOption(contentLanguage).catch(() => {});
     // Bug real encontrado el 6/8/2026 (cuenta de Gustavo Torres, contentLanguage
     // en inglés): a diferencia del selector de categoría (#user_label_list_article),
     // este también parece estar reforzado por un widget visual que necesita el
@@ -2146,36 +1947,9 @@ async function saveAndGetUrl(
   let titleInUse = expectedTitle;
   const MAX_SAVE_ATTEMPTS = 3;
 
-  const makeUniqueTitle = (baseTitle: string, attempt: number) => {
-    // Un número incremental no basta: puede existir ya porque otro intento
-    // anterior o una publicación manual usó exactamente el mismo sufijo.
-    // La marca corta de tiempo evita que el validador remoto vuelva a
-    // rechazar la segunda oportunidad del mismo artículo.
-    const uniqueness = ` — versión ${Date.now().toString().slice(-7)}-${attempt}`;
-    return `${baseTitle.slice(0, 200 - uniqueness.length)}${uniqueness}`;
-  };
-
-  const revalidateTitleAndForm = async () => {
-    // El sitio usa jQuery Validate con una regla remota en #titlees.
-    // Cambiar el valor no siempre limpia el error anterior ni vuelve a
-    // habilitar #save_art, por lo que se fuerzan los eventos del formulario
-    // y una validación explícita antes de consultar el botón.
-    await page.evaluate(() => {
-      const title = document.querySelector("#titlees") as HTMLInputElement | null;
-      const jq = (window as unknown as { jQuery?: (selector: string) => { valid?: () => boolean } }).jQuery;
-      if (!title) return;
-      for (const eventName of ["input", "keyup", "change", "blur", "focusout"]) {
-        title.dispatchEvent(new Event(eventName, { bubbles: true }));
-      }
-      jq?.("#titlees").valid?.();
-    }).catch(() => {});
-    await page.waitForTimeout(1200);
-    await page.dispatchEvent("#type", "change").catch(() => {});
-  };
-
   for (let saveAttempt = 1; saveAttempt <= MAX_SAVE_ATTEMPTS; saveAttempt++) {
     await onStep("Guardando y publicando el artículo...");
-    await revalidateTitleAndForm();
+    await page.dispatchEvent("#type", "change").catch(() => {});
 
     // Bug real encontrado en producción (15/8/2026, cuenta de Lorena
     // Álvarez, en el reintento por título duplicado): 300ms alcanza cuando
@@ -2188,12 +1962,11 @@ async function saveAndGetUrl(
     // quedaba 30s esperando un elemento que nunca se habilitaba. Se
     // sondea el estado real del botón hasta 8s en vez de una espera fija.
     const saveBtn = page.getByRole("button", { name: TEXT_GUARDAR_CAMBIOS }).first();
-    const enableDeadline = Date.now() + 10000;
+    const enableDeadline = Date.now() + 8000;
     let saveBtnEnabled = false;
     while (Date.now() < enableDeadline) {
       saveBtnEnabled = !(await saveBtn.isDisabled().catch(() => true));
       if (saveBtnEnabled) break;
-      await page.dispatchEvent("#type", "change").catch(() => {});
       await page.waitForTimeout(250);
     }
     if (!saveBtnEnabled) {
@@ -2298,30 +2071,14 @@ async function saveAndGetUrl(
       /titlees/i.test(validatorErrors) && /existe/i.test(validatorErrors);
 
     if (isDuplicateTitle && saveAttempt < MAX_SAVE_ATTEMPTS) {
-      const mutatedTitle = makeUniqueTitle(expectedTitle, saveAttempt + 1);
+      const mutatedTitle = `${expectedTitle} (${saveAttempt + 1})`.slice(0, 200);
       const titleField = page.locator("#titlees");
       await titleField.fill(mutatedTitle).catch(() => {});
-      // La regla `remote` de jQuery Validate se dispara al perder el foco.
-      // Forzar también el cambio evita que el botón conserve el error remoto
-      // del título anterior y permanezca deshabilitado indefinidamente.
-      await titleField.press("Tab").catch(() => {});
-      await revalidateTitleAndForm();
       titleInUse = mutatedTitle;
       await onStep(
         `El título "${expectedTitle}" ya existe en la cuenta. Reintentando guardar con "${mutatedTitle}".`,
       );
       continue;
-    }
-
-    if (stillOnForm) {
-      // Si el sitio no habilitó el guardado, no tiene sentido navegar y
-      // esperar 90 segundos buscando una publicación que nunca se envió.
-      // Devuelve inmediatamente para que queue.ts registre el intento y,
-      // si corresponde, avance al siguiente título del lote.
-      await onStep(
-        "El sitio no permitió guardar este artículo después de agotar la validación. Se continúa con el siguiente título del lote.",
-      );
-      return { url: null, titleUsed: titleInUse };
     }
 
     break;
@@ -2357,3 +2114,5 @@ async function saveAndGetUrl(
 
   return { url: null, titleUsed: titleInUse };
 }
+
+

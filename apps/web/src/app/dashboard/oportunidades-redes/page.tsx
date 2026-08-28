@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { EnPrueba, Modulo } from "@/components/ModuleIntro";
 import { useRouter } from "next/navigation";
 import {
   buttonStyle,
@@ -14,6 +12,7 @@ import {
 
 interface SocialOpportunity {
   id: string;
+  titleId: string | null;
   articleTitle: string;
   articleUrl: string;
   platform: string;
@@ -51,11 +50,9 @@ export default function OportunidadesRedesPage() {
   const router = useRouter();
   const [opportunities, setOpportunities] = useState<SocialOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
-  const [connectionsLoading, setConnectionsLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [generatingNetwork, setGeneratingNetwork] = useState<"threads" | "x" | "linkedin" | "instagram" | "facebook-page" | "pinterest" | "tumblr" | "bluesky" | "mastodon" | "devto" | null>(null);
-  const [connectedNetworks, setConnectedNetworks] = useState({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false, bluesky: false, mastodon: false, devto: false });
-  const [activeNetworks, setActiveNetworks] = useState({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false, bluesky: false, mastodon: false, devto: false });
+  const [generatingNetwork, setGeneratingNetwork] = useState<"threads" | "x" | "linkedin" | "instagram" | "facebook-page" | null>(null);
+  const [connectedNetworks, setConnectedNetworks] = useState({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false });
   const [generateSeconds, setGenerateSeconds] = useState(0);
   const [usedGsc, setUsedGsc] = useState(false);
   const [publishingId, setPublishingId] = useState<string | null>(null);
@@ -106,21 +103,20 @@ export default function OportunidadesRedesPage() {
   }
 
   async function loadConnectedNetworks() {
-    setConnectionsLoading(true);
     try {
       const response = await fetch("/api/social-opportunities/generate", { cache: "no-store" });
       if (response.ok) {
         const data = await response.json();
-        const effectiveConnections = { threads: Boolean(data.threads), x: Boolean(data.x), linkedin: Boolean(data.linkedin), instagram: Boolean(data.instagram), facebookPage: Boolean(data.facebookPage), pinterest: Boolean(data.pinterest), tumblr: Boolean(data.tumblr), bluesky: Boolean(data.bluesky), mastodon: Boolean(data.mastodon), devto: Boolean(data.devto) };
-        setConnectedNetworks(effectiveConnections);
-        setActiveNetworks(data.activeNetworks ?? effectiveConnections);
+        setConnectedNetworks({
+          threads: Boolean(data.threads),
+          x: Boolean(data.x),
+          linkedin: Boolean(data.linkedin),
+          instagram: Boolean(data.instagram),
+          facebookPage: Boolean(data.facebookPage),
+        });
       }
     } catch {
-      const none = { threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false, bluesky: false, mastodon: false, devto: false };
-      setConnectedNetworks(none);
-      setActiveNetworks(none);
-    } finally {
-      setConnectionsLoading(false);
+      setConnectedNetworks({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false });
     }
   }
 
@@ -132,7 +128,7 @@ export default function OportunidadesRedesPage() {
   const progress = Math.min(92, 8 + generateSeconds * 4);
   const elapsed = `${Math.floor(generateSeconds / 60)}:${String(generateSeconds % 60).padStart(2, "0")}`;
 
-  async function handleGenerate(network: "threads" | "x" | "linkedin" | "instagram" | "facebook-page" | "pinterest" | "tumblr" | "bluesky" | "mastodon" | "devto") {
+  async function handleGenerate(network: "threads" | "x" | "linkedin" | "instagram" | "facebook-page") {
     setGenerating(true);
     setGeneratingNetwork(network);
     setMessage(null);
@@ -286,7 +282,7 @@ export default function OportunidadesRedesPage() {
       const res = await fetch("/api/social-opportunities/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ summary: opp.articleTitle, platform: opp.platform }),
+        body: JSON.stringify({ titleId: opp.titleId }),
       });
       const data = await res.json();
       setPreviewModal({
@@ -302,8 +298,6 @@ export default function OportunidadesRedesPage() {
   }
 
   const pendingList = opportunities.filter((o) => o.status === "pending");
-
-  if (loading || connectionsLoading) return null;
 
   return (
     <div style={{ maxWidth: 1120, margin: "0 auto" }}>
@@ -339,56 +333,67 @@ export default function OportunidadesRedesPage() {
             >
               Oportunidades en Redes Sociales
             </h1>
-            <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
-              <strong style={{ fontWeight: 600 }}>Este módulo está en prueba</strong>
-          <EnPrueba />. Todavía no está disponible para todas las cuentas y se
-          está activando poco a poco. Puede que algo cambie de sitio o de
-          comportamiento mientras se termina de ajustar.
-            </p>
-            <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
-              Un artículo publicado en tu web solo lo encuentra quien lo busca. En redes sociales lo ve gente que todavía no te estaba buscando, y cada visita que llega desde ahí es una señal más para Google de que tu contenido interesa.
-            </p>
-            <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
-              Aquí el sistema toma artículos que ya publicaste desde <Modulo id="publicar" /> u <Modulo id="oportunidades" />, y prepara la publicación adaptada a cada red: el texto, la imagen y el formato que esa red necesita.
-            </p>
-            <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
-              Tú revisas cada propuesta y decides cuál sale y a qué red. No se publica todo ni todo el tiempo: el sistema reparte las publicaciones a lo largo de los días para que tu presencia crezca sin parecer spam y sin que las redes te penalicen.
+            <p className="lead-copy" style={{ margin: 0, maxWidth: 650 }}>
+              Genera y publica contenido optimizado para tus redes sociales a partir de tus artículos publicados y datos de búsqueda.
             </p>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              width: "100%",
-              flexWrap: "wrap",
-              marginTop: 18,
-              paddingTop: 16,
-              borderTop: "1px solid #e5e5ea",
-            }}
-          >
-            {connectionsLoading ? (
-              <span className="muted" style={{ fontSize: 13, padding: "9px 0" }}>
-                Preparando las redes conectadas...
-              </span>
-            ) : (
-              ([
-              ["threads", "threads", "Threads"], ["x", "x", "X (Twitter)"], ["linkedin", "linkedin", "LinkedIn"], ["instagram", "instagram", "Instagram"], ["facebookPage", "facebook-page", "Facebook"], ["pinterest", "pinterest", "Pinterest"], ["tumblr", "tumblr", "Tumblr"], ["bluesky", "bluesky", "Bluesky"], ["mastodon", "mastodon", "Mastodon"], ["devto", "devto", "DEV.to"],
-              ] as const).map(([key, platform, label]) => {
-              if (!activeNetworks[key]) return null;
-              const connected = connectedNetworks[key];
-              const busy = connected && Boolean(generatingNetwork);
-              return <button key={key} type="button" onClick={() => connected ? handleGenerate(platform) : router.push("/dashboard/configuracion?tab=social")} disabled={busy} className="secondary" style={disabledStyle({ ...secondaryButtonStyle, flex: "1 1 180px", minHeight: 40, padding: "9px 13px", borderRadius: 20, border: connected ? "1px solid #d2d2d7" : "1px solid #e5e5ea", background: connected ? "#ffffff" : "#f5f5f7", color: connected ? "#1d1d1f" : "#6e6e73", justifyContent: "center", fontSize: 13 }, busy)}>
-                {connected ? generatingNetwork === platform ? "Analizando..." : "✓ " + label + " · Crear oportunidad" : label + " · Configurar"}
-              </button>;
-              })
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {connectedNetworks.threads && (
+              <button
+                onClick={() => handleGenerate("threads")}
+                disabled={generating || loading}
+                className="secondary"
+                style={disabledStyle({ ...secondaryButtonStyle, padding: "9px 14px", fontSize: 13 }, generating || loading)}
+              >
+                {generatingNetwork === "threads" ? "Analizando..." : "Threads"}
+              </button>
+            )}
+            {connectedNetworks.x && (
+              <button
+                onClick={() => handleGenerate("x")}
+                disabled={generating || loading}
+                className="secondary"
+                style={disabledStyle({ ...secondaryButtonStyle, padding: "9px 14px", fontSize: 13 }, generating || loading)}
+              >
+                {generatingNetwork === "x" ? "Analizando..." : "X (Twitter)"}
+              </button>
+            )}
+            {connectedNetworks.linkedin && (
+              <button
+                onClick={() => handleGenerate("linkedin")}
+                disabled={generating || loading}
+                className="secondary"
+                style={disabledStyle({ ...secondaryButtonStyle, padding: "9px 14px", fontSize: 13 }, generating || loading)}
+              >
+                {generatingNetwork === "linkedin" ? "Analizando..." : "LinkedIn"}
+              </button>
+            )}
+            {connectedNetworks.instagram && (
+              <button
+                onClick={() => handleGenerate("instagram")}
+                disabled={generating || loading}
+                className="secondary"
+                style={disabledStyle({ ...secondaryButtonStyle, padding: "9px 14px", fontSize: 13 }, generating || loading)}
+              >
+                {generatingNetwork === "instagram" ? "Analizando..." : "Instagram"}
+              </button>
+            )}
+            {connectedNetworks.facebookPage && (
+              <button
+                onClick={() => handleGenerate("facebook-page")}
+                disabled={generating || loading}
+                className="secondary"
+                style={disabledStyle({ ...secondaryButtonStyle, padding: "9px 14px", fontSize: 13 }, generating || loading)}
+              >
+                {generatingNetwork === "facebook-page" ? "Analizando..." : "Facebook Pages"}
+              </button>
             )}
             {pendingList.length > 0 && (
               <button
                 onClick={handlePublishAll}
                 disabled={publishingAll}
-                style={{ ...buttonStyle, marginLeft: "auto", marginTop: 0, minHeight: 40, padding: "9px 18px", borderRadius: 20, fontSize: 13, whiteSpace: "nowrap" }}
+                style={{ ...buttonStyle, marginTop: 0, padding: "9px 16px", fontSize: 13 }}
               >
                 {publishingAll ? "Publicando..." : "Publicar todo el lote"}
               </button>
@@ -396,30 +401,10 @@ export default function OportunidadesRedesPage() {
           </div>
         </div>
 
-        {!connectedNetworks.threads && !connectedNetworks.x && !connectedNetworks.linkedin && !connectedNetworks.instagram && !connectedNetworks.facebookPage && !connectedNetworks.pinterest && !connectedNetworks.tumblr && !connectedNetworks.bluesky && !connectedNetworks.mastodon && !connectedNetworks.devto && !loading && !connectionsLoading && (
-          <div className="notice" style={{ marginTop: 14 }}>
-            <p style={{ margin: 0 }}>
-              Todavía no tienes ninguna red social conectada, así que no hay
-              dónde publicar. Conecta al menos una y vuelve aquí: las propuestas
-              se generan a partir de tus artículos ya publicados.
-            </p>
-            <p style={{ margin: "10px 0 0" }}>
-              <Link
-                href="/dashboard/configuracion?tab=social"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 4,
-                  fontWeight: 600,
-                  color: "#0066cc",
-                  textDecoration: "none",
-                }}
-              >
-                Conectar una red social en Configuración
-                <span aria-hidden="true">›</span>
-              </Link>
-            </p>
-          </div>
+        {!connectedNetworks.threads && !connectedNetworks.x && !connectedNetworks.linkedin && !connectedNetworks.instagram && !loading && (
+          <p className="notice" style={{ marginTop: 14 }}>
+            Conecta una red social en Configuración para solicitar propuestas.
+          </p>
         )}
 
         {generating && (
@@ -443,7 +428,7 @@ export default function OportunidadesRedesPage() {
               </span>
             </div>
             <div style={{ height: 6, borderRadius: 999, background: "rgba(0,0,0,0.06)", overflow: "hidden" }}>
-              <div style={{ width: `${progress}%`, height: "100%", background: "#1d1d1f", transition: "width 1s linear" }} />
+              <div style={{ width: `${progress}%`, height: "100%", background: "#0071e3", transition: "width 1s linear" }} />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 8, marginTop: 12 }}>
               {stages.map((stage, index) => (
@@ -516,8 +501,8 @@ export default function OportunidadesRedesPage() {
                               fontSize: 11,
                               fontWeight: 600,
                               textTransform: "uppercase",
-                              background: "#f5f5f7",
-                              color: "#1d1d1f",
+                              background: "#e8f2ff",
+                              color: "#0071e3",
                             }}
                           >
                             {opp.platform}
@@ -665,8 +650,8 @@ export default function OportunidadesRedesPage() {
                     gap: 10,
                     padding: "8px 12px",
                     borderRadius: 10,
-                    background: skipModal.reason === reason ? "#f5f5f7" : "#ffffff",
-                    border: `1px solid ${skipModal.reason === reason ? "#1d1d1f" : "#e5e5ea"}`,
+                    background: skipModal.reason === reason ? "#e8f2ff" : "#ffffff",
+                    border: `1px solid ${skipModal.reason === reason ? "#0071e3" : "#e5e5ea"}`,
                     cursor: "pointer",
                     color: "#1d1d1f",
                     fontSize: 13,
@@ -684,7 +669,7 @@ export default function OportunidadesRedesPage() {
               ))}
             </div>
 
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 18, justifyContent: "flex-end" }}>
+            <div style={{ display: "flex", gap: 8, marginTop: 18, justifyContent: "flex-end" }}>
               <button
                 onClick={() => setSkipModal(null)}
                 className="secondary"
@@ -747,7 +732,7 @@ export default function OportunidadesRedesPage() {
             <div style={{ background: "#f5f5f7", borderRadius: 12, overflow: "hidden", minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
               {previewModal.loading ? (
                 <div className="muted" style={{ textAlign: "center", padding: 30, fontSize: 13 }}>
-                  Generando preview...
+                  Buscando la imagen del artículo...
                 </div>
               ) : previewModal.imageUrl || previewModal.imageBase64 ? (
                 <img
@@ -757,7 +742,7 @@ export default function OportunidadesRedesPage() {
                 />
               ) : (
                 <div style={{ color: "#ff3b30", textAlign: "center", padding: 30, fontSize: 13 }}>
-                  No se pudo generar el preview
+                  Este artículo no tiene una imagen destacada disponible.
                 </div>
               )}
             </div>

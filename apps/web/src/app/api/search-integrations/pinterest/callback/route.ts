@@ -4,14 +4,10 @@ import { prisma } from "@auto-articulos/db";
 import { encryptSecret, exchangeCodeForPinterestToken } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
 import { getStoredPinterestAppCredentials } from "@/lib/pinterest-app-config";
-import { canPublishToNetwork } from "@/lib/social-access";
-import { PINTEREST_STATE_COOKIE } from "../connect/constants";
+import { PINTEREST_STATE_COOKIE } from "../connect/route";
 
 export async function GET(request: NextRequest) {
   const userId = await getCurrentUserId();
-  if (!(await canPublishToNetwork(userId, "pinterest"))) {
-    return NextResponse.redirect(new URL("/dashboard/configuracion?pinterest=forbidden", request.url));
-  }
   const cookieStore = await cookies();
   const state = request.nextUrl.searchParams.get("state");
   const code = request.nextUrl.searchParams.get("code");

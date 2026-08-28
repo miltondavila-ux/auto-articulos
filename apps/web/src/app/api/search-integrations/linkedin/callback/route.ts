@@ -4,7 +4,7 @@ import { prisma } from "@auto-articulos/db";
 import { encryptSecret, exchangeCodeForLinkedInTokens } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
 import { getStoredLinkedInAppCredentials } from "@/lib/linkedin-app-config";
-import { LINKEDIN_STATE_COOKIE } from "../connect/constants";
+import { LINKEDIN_STATE_COOKIE } from "../connect/route";
 
 export async function GET(request: NextRequest) {
   const userId = await getCurrentUserId();

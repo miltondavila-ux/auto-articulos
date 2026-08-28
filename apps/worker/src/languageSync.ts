@@ -9,9 +9,9 @@ import { tryReserveUser, releaseUser } from "./reservation";
  * propio archivo/lane a propósito: si algo falla acá nunca afecta la
  * sincronización de categorías, que ya es confiable en producción).
  */
-export async function processNextLanguageSync(filterUserId?: string): Promise<boolean> {
+export async function processNextLanguageSync(): Promise<boolean> {
   const candidates = await prisma.languageSyncJob.findMany({
-    where: { status: "pending", ...(filterUserId ? { userId: filterUserId } : {}) },
+    where: { status: "pending" },
     orderBy: { createdAt: "asc" },
     take: 20,
   });

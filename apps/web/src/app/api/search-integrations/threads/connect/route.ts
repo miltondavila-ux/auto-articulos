@@ -4,7 +4,7 @@ import { getThreadsAuthUrl } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
 import { getStoredThreadsAppCredentials } from "@/lib/threads-app-config";
 
-import { THREADS_STATE_COOKIE } from "./constants";
+export const THREADS_STATE_COOKIE = "threads_oauth_state";
 
 export async function GET(request: Request) {
   await getCurrentUserId();

@@ -43,14 +43,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const userId = await getCurrentUserId();
-  const {
-    titlesText,
-    categoryId,
-    disableIndexing,
-    contentLanguage,
-    promptId,
-    confirmedImageCredits,
-  } = await request.json();
+  const { titlesText, categoryId, disableIndexing, contentLanguage, promptId } =
+    await request.json();
 
   if (typeof titlesText !== "string") {
     return NextResponse.json(
@@ -104,7 +98,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!user.hasImageCredits && confirmedImageCredits !== true) {
+  if (!user.hasImageCredits) {
     return NextResponse.json(
       {
         error:
@@ -130,19 +124,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  /*
-   * Cupos. Antes, pasarse de cualquier límite rechazaba el lote entero y la
-   * persona se quedaba sin publicar nada. Pedido de Milton (19/8/2026): que se
-   * publique lo que sí cabe y se le diga con claridad cuántos entraron,
-   * cuántos quedaron fuera y cuándo volver.
-   */
-  const cupos: { disponible: number; tope: number; motivo: string }[] = [
-    {
-      disponible: user.maxTitlesPerBatch,
-      tope: user.maxTitlesPerBatch,
-      motivo: "tu lote máximo",
-    },
-  ];
+  if (titles.length > user.maxTitlesPerBatch) {
+    return NextResponse.json(
+      {
+        error: `Puedes publicar como máximo ${user.maxTitlesPerBatch} títulos por lote (pegaste ${titles.length}). Divide la lista en varios lotes más chicos.`,
+      },
+      { status: 400 },
+    );
+  }
 
   const credential = await prisma.credential.findUnique({
     where: { userId_platform: { userId, platform: "10minutesWebsite" } },
@@ -185,11 +174,18 @@ export async function POST(request: NextRequest) {
         run: { userId },
       },
     });
-    cupos.push({
-      disponible: user.monthlyArticleLimit - publishedThisMonth,
-      tope: user.monthlyArticleLimit,
-      motivo: "tu límite mensual",
-    });
+    const remaining = user.monthlyArticleLimit - publishedThisMonth;
+    if (titles.length > remaining) {
+      return NextResponse.json(
+        {
+          error:
+            remaining <= 0
+              ? `Ya alcanzaste tu límite mensual de ${user.monthlyArticleLimit} artículos.`
+              : `Solo puedes publicar ${remaining} artículo(s) más este mes (límite mensual: ${user.monthlyArticleLimit}).`,
+        },
+        { status: 403 },
+      );
+    }
   }
   if (user.dailyArticleLimit !== null) {
     const startOfDay = new Date();
@@ -201,37 +197,19 @@ export async function POST(request: NextRequest) {
         run: { userId },
       },
     });
-    cupos.push({
-      disponible: user.dailyArticleLimit - publishedToday,
-      tope: user.dailyArticleLimit,
-      motivo: "tu límite diario",
-    });
+    const remainingToday = user.dailyArticleLimit - publishedToday;
+    if (titles.length > remainingToday) {
+      return NextResponse.json(
+        {
+          error:
+            remainingToday <= 0
+              ? `Ya alcanzaste tu límite diario de ${user.dailyArticleLimit} artículos. Intenta de nuevo mañana.`
+              : `Solo puedes publicar ${remainingToday} artículo(s) más hoy (límite diario: ${user.dailyArticleLimit}).`,
+        },
+        { status: 403 },
+      );
+    }
   }
-
-  // Manda el cupo más estrecho de todos.
-  const cupoMasEstrecho = cupos.reduce((a, b) => (b.disponible < a.disponible ? b : a));
-  const permitidos = Math.max(0, Math.min(titles.length, cupoMasEstrecho.disponible));
-
-  if (permitidos === 0) {
-    const contextoMensual =
-      user.monthlyArticleLimit !== null
-        ? ` Tu límite mensual es de ${user.monthlyArticleLimit} artículos.`
-        : "";
-    return NextResponse.json(
-      {
-        error: `Has alcanzado ${cupoMasEstrecho.tope}, que es ${cupoMasEstrecho.motivo} asignado por el administrador de Auto Artículos. Regresa mañana y tendrás la cuota renovada.${contextoMensual}`,
-      },
-      { status: 403 },
-    );
-  }
-
-  // Lo que no cabe se deja fuera, pero se devuelve para poder decírselo.
-  const descartados = titles.slice(permitidos);
-  const titulosAPublicar = titles.slice(0, permitidos);
-  const avisoDeCupo =
-    descartados.length > 0
-      ? `Seleccionaste ${titles.length} artículos y tu máximo es de ${cupoMasEstrecho.tope}. Se enviaron a publicar ${permitidos}. Los ${descartados.length} restantes quedaron escritos abajo: podrás publicarlos mañana, cuando se te renueve la cuota.`
-      : null;
 
   const run = await prisma.run.create({
     data: {
@@ -251,7 +229,7 @@ export async function POST(request: NextRequest) {
           ? promptId.trim()
           : user.defaultPromptId,
       titles: {
-        create: titulosAPublicar.map((text: string, index: number) => ({
+        create: titles.map((text: string, index: number) => ({
           text,
           order: index,
         })),
@@ -262,9 +240,7 @@ export async function POST(request: NextRequest) {
 
   await triggerWorkerNow();
 
-  // `avisoDeCupo` va con la respuesta correcta (no como error): la publicación
-  // sí ocurrió, solo que recortada. La pantalla lo muestra tal cual.
-  return NextResponse.json({ run, avisoDeCupo, descartados });
+  return NextResponse.json({ run });
 }
 
 // Borra el historial del usuario (los Title/TitleEvent caen en cascada). Se

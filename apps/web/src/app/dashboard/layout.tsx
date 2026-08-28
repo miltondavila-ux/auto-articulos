@@ -90,7 +90,7 @@ export default async function DashboardLayout({
             padding: 12px 14px;
             margin-bottom: 12px;
             box-sizing: border-box;
-            box-shadow: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
           }
           table.responsive-table td {
             padding: 6px 0;
@@ -200,7 +200,7 @@ export default async function DashboardLayout({
           margin: "0 0 16px",
         }}
       >
-        Esta aplicación funciona en el celular, pero se recomienda usarla
+        📱 Esta aplicación funciona en el celular, pero se recomienda usarla
         desde una computadora para una mejor experiencia.
       </p>
       {blocked ? (

@@ -8,7 +8,6 @@ import {
   secondaryButtonStyle,
   sectionStyle,
 } from "./dashboard-ui";
-import PasosAntesDeConectar from "@/components/PasosAntesDeConectar";
 
 interface ApiSettings {
   configured: boolean;
@@ -122,7 +121,6 @@ export default function TwitterSection() {
       <p className="lead-copy" style={{ fontSize: 13, margin: "4px 0 0" }}>
         Publica tweets automáticamente cuando se publiquen artículos.
       </p>
-      <PasosAntesDeConectar red="X (Twitter)" />
 
       {loading ? (
         <p className="muted" style={{ fontSize: 13, marginTop: 12 }}>Cargando configuración...</p>
@@ -168,7 +166,7 @@ export default function TwitterSection() {
                     disabled={saving}
                     style={{
                       ...secondaryButtonStyle,
-                      background: "#1d1d1f",
+                      background: "#0071e3",
                       color: "#ffffff",
                       border: "none",
                     }}

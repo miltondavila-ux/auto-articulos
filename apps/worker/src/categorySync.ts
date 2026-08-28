@@ -57,21 +57,7 @@ async function fetchCategoriesDetectingServer(
     }
   }
 
-  // Mensaje honesto sobre lo que realmente se intentó. Antes se propagaba tal
-  // cual el error del servidor configurado, que nombraba UN solo dominio
-  // ("No se pudo iniciar sesión en https://10minuteswebsite.net") — daba a
-  // entender que solo se había probado ahí, cuando en realidad ya se habían
-  // probado TODOS. Encontrado con la cuenta de Stefany Meza (15/8/2026):
-  // el mensaje mandaba a revisar el servidor asignado, cuando el problema
-  // real era que las credenciales no servían en ninguno.
-  const intentados = candidates
-    .map((d) => PLATFORM_SERVERS[d].label)
-    .join(", ");
-  const detalle =
-    firstError instanceof Error ? firstError.message : String(firstError ?? "");
-  throw new Error(
-    `No se pudo iniciar sesión con las credenciales guardadas en ninguno de los servidores disponibles (${intentados}). Lo más probable es que el usuario o la contraseña guardados en Configuración ya no sean válidos: verifícalos entrando a mano a tu plataforma y vuelve a guardarlos.${detalle ? ` Detalle técnico del primer intento: ${detalle}` : ""}`,
-  );
+  throw firstError ?? new Error("No se pudieron descargar las categorías.");
 }
 
 /**
@@ -83,9 +69,9 @@ async function fetchCategoriesDetectingServer(
  * en este momento), para no abrir una segunda sesión contra la misma cuenta
  * de 10minutesWebsite en paralelo.
  */
-export async function processNextCategorySync(filterUserId?: string): Promise<boolean> {
+export async function processNextCategorySync(): Promise<boolean> {
   const candidates = await prisma.categorySyncJob.findMany({
-    where: { status: "pending", ...(filterUserId ? { userId: filterUserId } : {}) },
+    where: { status: "pending" },
     orderBy: { createdAt: "asc" },
     take: 20,
   });
@@ -319,16 +305,9 @@ export async function processNextCategorySync(filterUserId?: string): Promise<bo
       await prisma.$transaction(syncOperations);
     }
 
-    // errorMessage: null es necesario porque el mismo job puede haber sido
-    // marcado "error" de forma prematura por recoverStuckSyncJobs (ver
-    // cleanup.ts) mientras seguía realmente en curso, y luego terminar solo
-    // con éxito: sin este reseteo, un job en status="success" podía quedar
-    // con el mensaje de "posible caída del worker" pegado para siempre
-    // (caso real: Wendy Chawa, 18/8/2026 — 24 categorías sincronizadas bien,
-    // pero el mensaje de error seguía ahí confundiendo a quien lo mirara).
     await prisma.categorySyncJob.update({
       where: { id: job.id },
-      data: { status: "success", errorMessage: null, finishedAt: new Date() },
+      data: { status: "success", finishedAt: new Date() },
     });
     // Único rastro visible en el log de esta corrida hasta ahora era la
     // corrección de servidor (arriba), que solo dispara cuando el servidor

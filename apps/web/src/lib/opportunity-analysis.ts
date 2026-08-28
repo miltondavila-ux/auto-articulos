@@ -2,12 +2,27 @@ import type { GoogleSearchAnalyticsRow } from "@auto-articulos/shared";
 
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 
+interface OpportunityAnalysisTitle {
+  text: string;
+  rationale: string;
+  searchIntent: string;
+  clusterRole: "pillar" | "support";
+}
+
+interface OpportunityAnalysisCluster {
+  topic: string;
+  rationale: string;
+  primaryIntent: string;
+  titles: OpportunityAnalysisTitle[];
+}
+
 interface OpportunityAnalysisGroup {
   categoryId: string;
   rationale: string;
   impressions: number;
   clicks: number;
-  titles: Array<{ text: string; rationale: string }>;
+  titles: OpportunityAnalysisTitle[];
+  clusters: OpportunityAnalysisCluster[];
 }
 
 export type OpportunityAnalysisResult =
@@ -132,7 +147,8 @@ const PROMPT_HEADER = [
   "",
   "REGLAS OBLIGATORIAS:",
   "- Selecciona como maximo 10 categorias (prioriza por volumen total de oportunidad)",
-  "- Devuelve 5-9 titulos por categoria (calidad sobre cantidad fija)",
+  "- Devuelve 5-9 titulos por categoria (calidad sobre cantidad fija), organizados en 1-3 clusters de intención",
+  "- Cada cluster debe tener exactamente un título con clusterRole=\"pillar\"; los demás usan clusterRole=\"support\"",
   "- Cada titulo debe tener una justificacion basada en datos reales",
   "- Evita canibalizacion entre titulos del MISMO grupo",
   "- Usa unicamente categoryId existentes en la lista permitida",
@@ -140,7 +156,7 @@ const PROMPT_HEADER = [
   "",
   "FORMATO DE RESPUESTA:",
   "Responde SOLO con JSON valido (sin markdown, sin texto adicional):",
-  '{"opportunities":[{"categoryId":"id","rationale":"analisis de oportunidad basado en datos","impressions":123,"clicks":4,"titles":[{"text":"titulo long tail inteligente","rationale":"justificacion con datos reales que respalda esta oportunidad"}]}]}',
+  '{"opportunities":[{"categoryId":"id","rationale":"analisis de oportunidad basado en datos","impressions":123,"clicks":4,"clusters":[{"topic":"tema pilar del cluster","rationale":"por qué este cluster responde a la demanda","primaryIntent":"informativa","titles":[{"text":"guía pilar completa","rationale":"justificación basada en datos","searchIntent":"informativa","clusterRole":"pillar"},{"text":"long tail complementaria","rationale":"justificación basada en datos","searchIntent":"comparativa","clusterRole":"support"}]}]}]}',
   "",
   'Si genuinamente no hay datos suficientes para crear oportunidades reales, responde: {"opportunities":[]}',
 ].join("\n");
@@ -277,7 +293,6 @@ export async function analyzeSeoOpportunities(input: {
   previousRows: GoogleSearchAnalyticsRow[];
   countryRows: GoogleSearchAnalyticsRow[];
   existingTitles: string[];
-  googleAnalyticsSummary?: unknown;
 }): Promise<OpportunityAnalysisResult> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("OPENAI_API_KEY no esta configurada.");
@@ -327,9 +342,6 @@ ${JSON.stringify(input.categories)}
 DISTRIBUCION GEOGRAFICA REAL POR PAIS:
 ${JSON.stringify(topCountries)}
 
-SEÑALES OPCIONALES DE GOOGLE ANALYTICS 4:
-${JSON.stringify(input.googleAnalyticsSummary ?? { connected: false })}
-
 RENDIMIENTO ACTUAL Y COMPARACION (lote ${batchIndex + 1} de ${batchesToProcess.length}):
 ${JSON.stringify(batch)}
 
@@ -357,8 +369,7 @@ ${JSON.stringify(Array.from(seen).slice(-200))}`;
       const group = item as Record<string, unknown>;
       if (
         typeof group.categoryId !== "string" ||
-        !validCategoryIds.has(group.categoryId) ||
-        !Array.isArray(group.titles)
+        !validCategoryIds.has(group.categoryId)
       )
         continue;
 
@@ -372,20 +383,50 @@ ${JSON.stringify(Array.from(seen).slice(-200))}`;
         MAX_TITLES_PER_CATEGORY - (existingGroup?.titles.length ?? 0);
       if (remainingSlots <= 0) continue;
 
+      const rawClusters = Array.isArray(group.clusters)
+        ? group.clusters
+        : Array.isArray(group.titles)
+          ? [{ topic: "Contenido relacionado", rationale: group.rationale, primaryIntent: "informativa", titles: group.titles }]
+          : [];
       const newTitles: OpportunityAnalysisGroup["titles"] = [];
-      for (const candidate of group.titles) {
-        if (newTitles.length >= remainingSlots) break;
-        if (!candidate || typeof candidate !== "object") continue;
-        const value = candidate as Record<string, unknown>;
-        if (typeof value.text !== "string") continue;
-        const text = value.text.trim();
-        const normalized = normalizeTitle(text);
-        if (!text || seen.has(normalized)) continue;
-        seen.add(normalized);
-        newTitles.push({
-          text,
-          rationale:
-            typeof value.rationale === "string" ? value.rationale.trim() : "",
+      const newClusters: OpportunityAnalysisCluster[] = [];
+      for (const rawCluster of rawClusters) {
+        if (newTitles.length >= remainingSlots || !rawCluster || typeof rawCluster !== "object") break;
+        const cluster = rawCluster as Record<string, unknown>;
+        if (!Array.isArray(cluster.titles)) continue;
+        const clusterTitles: OpportunityAnalysisTitle[] = [];
+        for (const candidate of cluster.titles) {
+          if (newTitles.length + clusterTitles.length >= remainingSlots) break;
+          if (!candidate || typeof candidate !== "object") continue;
+          const value = candidate as Record<string, unknown>;
+          if (typeof value.text !== "string") continue;
+          const text = value.text.trim();
+          const normalized = normalizeTitle(text);
+          if (!text || seen.has(normalized)) continue;
+          seen.add(normalized);
+          clusterTitles.push({
+            text,
+            rationale: typeof value.rationale === "string" ? value.rationale.trim() : "",
+            searchIntent: typeof value.searchIntent === "string" ? value.searchIntent.trim() : "informativa",
+            clusterRole: value.clusterRole === "pillar" ? "pillar" : "support",
+          });
+        }
+        if (clusterTitles.length === 0) continue;
+        // Cada cluster necesita exactamente un pilar para que los satélites
+        // tengan una página central a la cual enlazar.
+        const pillarIndex = clusterTitles.findIndex((title) => title.clusterRole === "pillar");
+        if (pillarIndex === -1) clusterTitles[0].clusterRole = "pillar";
+        else {
+          clusterTitles.forEach((title, index) => {
+            if (index !== pillarIndex && title.clusterRole === "pillar") title.clusterRole = "support";
+          });
+        }
+        newTitles.push(...clusterTitles);
+        newClusters.push({
+          topic: typeof cluster.topic === "string" && cluster.topic.trim() ? cluster.topic.trim() : clusterTitles[0].text,
+          rationale: typeof cluster.rationale === "string" ? cluster.rationale.trim() : "",
+          primaryIntent: typeof cluster.primaryIntent === "string" ? cluster.primaryIntent.trim() : "informativa",
+          titles: clusterTitles,
         });
       }
 
@@ -393,6 +434,7 @@ ${JSON.stringify(Array.from(seen).slice(-200))}`;
 
       if (existingGroup) {
         existingGroup.titles.push(...newTitles);
+        existingGroup.clusters.push(...newClusters);
       } else {
         const newGroup: OpportunityAnalysisGroup = {
           categoryId: group.categoryId,
@@ -402,6 +444,7 @@ ${JSON.stringify(Array.from(seen).slice(-200))}`;
             typeof group.impressions === "number" ? group.impressions : 0,
           clicks: typeof group.clicks === "number" ? group.clicks : 0,
           titles: newTitles,
+          clusters: newClusters,
         };
         groupsByCategory.set(group.categoryId, newGroup);
         allResult.push(newGroup);

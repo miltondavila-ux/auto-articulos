@@ -12,21 +12,11 @@ import {
   publishInstagramCarousel,
   publishInstagramImage,
   publishInstagramStory,
+  getArticleOpenGraphImage,
   publishFacebookPagePost,
-  publishFacebookPageStory,
-  createPinterestPin,
-  createTumblrPhotoPost,
-  createBlueskySession,
-  createBlueskyPost,
-  getBlueskyPostUrl,
-  createMastodonMedia,
-  createMastodonStatus,
-  createDevToArticle,
-  getDevToArticleUrl,
 } from "@auto-articulos/shared";
 import { put } from "@vercel/blob";
 import sharp from "sharp";
-import { generateAiSocialImage } from "./aiImageGenerator";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
@@ -42,171 +32,11 @@ async function validateArticleUrl(url: string): Promise<void> {
   if (!url) throw new Error("La oportunidad no tiene URL de artículo.");
 
   try {
-    const res = await fetch(url, {
-      redirect: "follow",
-      signal: AbortSignal.timeout(10000),
-      // Algunos hostings bloquean o frenan pedidos sin User-Agent de
-      // navegador (los tratan como bots) — el worker corre desde GitHub
-      // Actions sin este header por defecto.
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-      },
-    });
+    const res = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(10000) });
     if (!res.ok) throw new Error(`La URL del artículo devuelve error ${res.status}. Verifica que el artículo siga publicado en tu blog.`);
   } catch (err) {
     throw new Error(`No se pudo validar la URL del artículo (${url}): ${err instanceof Error ? err.message : String(err)}. Verifica que el artículo siga publicado.`);
   }
-}
-
-/**
- * Obtiene la imagen pública que el propio artículo declara para compartirse.
- * No generamos una imagen alternativa para LinkedIn: así la publicación usa
- * exactamente la imagen destacada/OG del artículo, igual que su vista previa.
- */
-export async function getArticleOpenGraphImage(articleUrl: string): Promise<string | null> {
-  try {
-    const res = await fetch(articleUrl, {
-      redirect: "follow",
-      signal: AbortSignal.timeout(10000),
-      headers: { Accept: "text/html,application/xhtml+xml" },
-    });
-    if (!res.ok) return null;
-
-    const html = await res.text();
-    const match = html.match(
-      /<meta\s+[^>]*(?:property|name)=["']og:image["'][^>]*content=["']([^"']+)["'][^>]*>/i,
-    ) ?? html.match(
-      /<meta\s+[^>]*content=["']([^"']+)["'][^>]*(?:property|name)=["']og:image["'][^>]*>/i,
-    );
-    if (!match?.[1]) return null;
-
-    return new URL(match[1].replace(/&amp;/g, "&"), res.url).toString();
-  } catch (error) {
-    console.warn("No se pudo obtener og:image del artículo para LinkedIn:", error);
-    return null;
-  }
-}
-
-function decodeHtmlEntities(value: string): string {
-  return value
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;|&apos;/gi, "'")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">");
-}
-
-export function deriveDevToTags(title: string, summary: string, category: string | null): string[] {
-  const stopWords = new Set(["para", "como", "qué", "que", "una", "uno", "los", "las", "del", "con", "por", "sobre", "desde", "este", "esta", "sus", "más", "cómo"]);
-  const values = [category || "", title, summary].join(" ")
-    .toLocaleLowerCase("es")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .split(/[^a-z0-9]+/)
-    .filter((word: string) => word.length >= 4 && !stopWords.has(word));
-  return Array.from(new Set(values)).slice(0, 4);
-}
-
-function stripHtml(value: string): string {
-  return decodeHtmlEntities(value.replace(/<[^>]*>/g, "")).replace(/\s+/g, " ").trim();
-}
-
-function extractDivByClass(html: string, className: string): string | null {
-  const opening = new RegExp(`<div\\b[^>]*class=["'][^"']*${className}[^"']*["'][^>]*>`, "i").exec(html);
-  if (!opening) return null;
-  const bodyStart = opening.index + opening[0].length;
-  const tags = /<\/?div\b[^>]*>/gi;
-  tags.lastIndex = bodyStart;
-  let depth = 1;
-  let match: RegExpExecArray | null;
-  while ((match = tags.exec(html))) {
-    if (/^<\s*\/div/i.test(match[0])) depth -= 1;
-    else depth += 1;
-    if (depth === 0) return html.slice(bodyStart, match.index);
-  }
-  return null;
-}
-
-function extractDivById(html: string, id: string): string | null {
-  const opening = new RegExp(`<div\\b[^>]*id=["']${id}["'][^>]*>`, "i").exec(html);
-  if (!opening) return null;
-  const bodyStart = opening.index + opening[0].length;
-  const tags = /<\/?div\b[^>]*>/gi;
-  tags.lastIndex = bodyStart;
-  let depth = 1;
-  let match: RegExpExecArray | null;
-  while ((match = tags.exec(html))) {
-    if (/^<\s*\/div/i.test(match[0])) depth -= 1;
-    else depth += 1;
-    if (depth === 0) return html.slice(bodyStart, match.index);
-  }
-  return null;
-}
-
-/** Lee el cuerpo real del artículo publicado y lo adapta al Markdown de DEV.to. */
-export async function getArticleBodyMarkdown(articleUrl: string): Promise<string> {
-  const response = await fetch(articleUrl, {
-    redirect: "follow",
-    signal: AbortSignal.timeout(15000),
-    headers: {
-      "User-Agent": "Mozilla/5.0 (compatible; AutoArticulos/1.0)",
-      Accept: "text/html,application/xhtml+xml",
-    },
-  });
-  if (!response.ok) throw new Error(`No se pudo leer el contenido del artículo (${response.status}).`);
-  const html = await response.text();
-  const container = extractDivByClass(html, "crayons-article__body")
-    || extractDivById(html, "seo-readmore-container")
-    || html.match(/<article\b[^>]*>([\s\S]*?)<\/article>/i)?.[1]
-    || html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i)?.[1]
-    || html.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i)?.[1]
-    || html;
-  let markdown = container
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/<(script|style|nav|header|footer|aside|form)\b[^>]*>[\s\S]*?<\/\1>/gi, "")
-    // El sitio de origen inyecta bloques de navegación, redes y enlaces
-    // relacionados dentro del article. No forman parte del contenido editorial.
-    .replace(/<h4\b[^>]*>[\s\S]*?Tambi[ée]n podr[íi]a gustarte[\s\S]*$/i, "")
-    .replace(/<h2\b[^>]*>[\s\S]*?TU PR[ÓO]XIMO GRAN PASO[\s\S]*$/i, "")
-    // Son separadores vacíos que el sitio original usa para sus componentes.
-    .replace(/<p>\s*-\s*<\/p>/gi, "")
-    .replace(/<div\b[^>]*id=["']seo-readmore-fade["'][^>]*>[\s\S]*?<\/div>/gi, "")
-    // El generador original dejó una etiqueta HTML visible como bloque de código.
-    // Quitamos solamente el bloque <pre>, sin cortar el contenido que viene después.
-    .replace(/<pre\b[^>]*>[\s\S]*?<\/pre>/gi, "")
-    .replace(/Enter fullscreen mode|Exit fullscreen mode/gi, "")
-    // DEV.to ya muestra el título arriba; no lo repetimos en el cuerpo.
-    .replace(/<h1\b[^>]*>[\s\S]*?<\/h1>\s*<p\b[^>]*>\s*Seguros de Salud y Vida\s*<\/p>\s*<p\b[^>]*>\s*[ÚU]ltima actualizaci[óo]n:[\s\S]*?<\/p>/i, "")
-    .replace(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi, (_match, level: string, content: string) => `\n\n${"#".repeat(Number(level))} ${stripHtml(content)}\n\n`)
-    .replace(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, (_match, href: string, content: string) => {
-      const label = stripHtml(content);
-      return label ? `[${label}](${decodeHtmlEntities(href)})` : "";
-    })
-    .replace(/<img\b[^>]*alt=["']([^"']*)["'][^>]*src=["']([^"']+)["'][^>]*\/?>/gi, (_match, alt: string, src: string) => `![${decodeHtmlEntities(alt)}](${decodeHtmlEntities(src)})`)
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<li\b[^>]*>([\s\S]*?)<\/li>/gi, (_match, content: string) => `\n- ${stripHtml(content)}\n`)
-    .replace(/<\/(p|div|section|blockquote|ul|ol|figure)>/gi, "\n\n")
-    .replace(/<(p|div|section|blockquote|ul|ol|figure)\b[^>]*>/gi, "\n\n")
-    .replace(/<[^>]+>/g, "");
- markdown = decodeHtmlEntities(markdown).replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
-  markdown = decodeHtmlEntities(markdown)
-    // Nunca enviar cajas de código provenientes del HTML del sitio de origen.
-    .replace(/```[\s\S]*?```/g, "")
-    // Ni los separadores vacíos que el editor original deja como guiones.
-    .replace(/^\s*-\s*$/gm, "")
-    // Eliminar widgets/pie de página que el sitio inserta después del artículo.
-    .replace(/\n(?:Más sobre nuestros servicios|Tambi[ée]n podr[íi]a gustarte|TU PR[ÓO]XIMO GRAN PASO)\b[\s\S]*$/i, "")
-    .replace(/\nSeguros de Salud y Vida\nSeguros de Salud y Vida es una firma[\s\S]*$/i, "")
-    // "Whatsapp" queda como texto suelto cuando el botón no tiene etiqueta.
-    .replace(/^Whatsapp\s*$/gim, "")
-    .replace(/[ \t]+\n/g, "\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-  if (markdown.length < 80) throw new Error("El artículo publicado no devolvió un cuerpo de contenido válido.");
-  return markdown;
 }
 
 /** Quita barras negras incorporadas en la imagen OG antes de subirla a redes. */
@@ -313,11 +143,8 @@ async function processThreadsJob(job: {
           expiresAt: newExpiresAt,
         },
       });
-    } catch (error) {
+    } catch {
       console.warn("No se pudo autorrefrescar token de Threads, usando el actual.");
-      if (daysUntilExpiration <= 0) {
-        throw new Error(`La autorización de Threads expiró y no pudo renovarse: ${error instanceof Error ? error.message : String(error)}`);
-      }
     }
   }
 
@@ -330,13 +157,8 @@ async function processThreadsJob(job: {
     finalPost = `${finalPost}\n\n${job.articleUrl}`;
   }
 
-  // Igual que en el último commit funcional: Threads recibe directamente la
-  // imagen pública og:image declarada por el artículo.
+  // Threads debe difundir la imagen destacada del artículo, no una imagen IA.
   const imageUrl = (await getArticleOpenGraphImage(job.articleUrl)) ?? undefined;
-
-  if (!imageUrl) {
-    throw new Error("El artículo no tiene una imagen og:image pública para Threads. La publicación se detuvo para no enviar un hilo sin imagen.");
-  }
 
   const result = await publishThread(accessToken, integration.threadsUserId, finalPost, imageUrl);
 
@@ -411,10 +233,8 @@ async function processTwitterJob(job: {
     finalPost = `${finalPost}\n\n${job.articleUrl}`;
   }
 
-  let imageUrl: string | undefined = undefined;
-  if (!imageUrl && job.titleId) {
-    imageUrl = (await getArticleOpenGraphImage(job.articleUrl)) ?? undefined;
-  }
+  // X debe difundir la imagen destacada del artículo, no una imagen IA.
+  const imageUrl = (await getArticleOpenGraphImage(job.articleUrl)) ?? undefined;
 
   const result = await publishTweet(accessToken, finalPost, imageUrl);
 
@@ -527,152 +347,6 @@ async function processLinkedInJob(job: {
   return true;
 }
 
-// ─── PINTEREST ─────────────────────────────────────────────────────────────
-
-async function processPinterestJob(job: {
-  id: string;
-  userId: string;
-  titleId: string | null;
-  articleUrl: string;
-  articleTitle: string;
-  suggestedText: string;
-}): Promise<boolean> {
-  const integration = await prisma.pinterestIntegration.findUnique({ where: { userId: job.userId } });
-  if (!integration) throw new Error("Pinterest no está configurado en tu cuenta.");
-  if (!integration.boardId) throw new Error("Pinterest está conectado, pero todavía no has seleccionado un tablero.");
-  if (integration.expiresAt && integration.expiresAt <= new Date()) {
-    throw new Error("La autorización de Pinterest expiró. Debes volver a conectar la cuenta.");
-  }
-
-  await validateArticleUrl(job.articleUrl);
-  const imageUrl = await getArticleOpenGraphImage(job.articleUrl);
-  if (!imageUrl) throw new Error("El artículo no tiene una imagen OG pública para Pinterest.");
-  const description = job.suggestedText.includes("[ENLACE]")
-    ? job.suggestedText.replace("[ENLACE]", job.articleUrl)
-    : `${job.suggestedText}\n\n${job.articleUrl}`;
-  const result = await createPinterestPin(decryptSecret(integration.accessTokenEncrypted), {
-    boardId: integration.boardId,
-    title: job.articleTitle,
-    description,
-    link: job.articleUrl,
-    imageUrl,
-  });
-
-  await prisma.socialOpportunity.update({
-    where: { id: job.id },
-    data: { status: "published", postId: result.link || result.id, publishedAt: new Date(), errorLog: null },
-  });
-  console.log(`Publicado en Pinterest: ${job.id} — pinId: ${result.id}`);
-  if (job.titleId) {
-    await prisma.titleEvent.create({
-      data: {
-        titleId: job.titleId,
-        message: `Publicado exitosamente en Pinterest (${integration.boardName || integration.boardId}) - ID: ${result.id}`,
-      },
-    });
-  }
-  return true;
-}
-
-// ─── TUMBLR ────────────────────────────────────────────────────────────────
-
-async function processTumblrJob(job: {
-  id: string;
-  userId: string;
-  titleId: string | null;
-  articleUrl: string;
-  articleTitle: string;
-  suggestedText: string;
-}): Promise<boolean> {
-  const integration = await prisma.tumblrIntegration.findUnique({ where: { userId: job.userId } });
-  if (!integration) throw new Error("Tumblr no está configurado en tu cuenta.");
-  if (integration.expiresAt && integration.expiresAt <= new Date()) throw new Error("La autorización de Tumblr expiró. Debes volver a conectar la cuenta.");
-  await validateArticleUrl(job.articleUrl);
-  const imageUrl = await getArticleOpenGraphImage(job.articleUrl);
-  if (!imageUrl) throw new Error("El artículo no tiene una imagen OG pública para Tumblr.");
-  const caption = job.suggestedText.includes("[ENLACE]") ? job.suggestedText.replace("[ENLACE]", "") : job.suggestedText;
-  const result = await createTumblrPhotoPost(decryptSecret(integration.accessTokenEncrypted), integration.blogIdentifier, { caption, link: job.articleUrl, imageUrl });
-  const postId = String(result.response?.id || "");
-  const returnedUrl = result.response?.post_url || "";
-  const returnedPostMatch = returnedUrl.match(/\/post\/(\d+)(?:\/([^/?#]+))?/i);
-  const postUrl = returnedPostMatch
-    ? `https://www.tumblr.com/${integration.blogIdentifier}/${returnedPostMatch[1]}${returnedPostMatch[2] ? `/${returnedPostMatch[2]}` : ""}`
-    : (postId ? `https://www.tumblr.com/${integration.blogIdentifier}/${postId}` : null);
-  await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: postUrl || postId, publishedAt: new Date(), errorLog: null } });
-  console.log(`Publicado en Tumblr: ${job.id} — postId: ${postId}`);
-  if (job.titleId) await prisma.titleEvent.create({ data: { titleId: job.titleId, message: `Publicado exitosamente en Tumblr (${integration.blogTitle || integration.blogIdentifier}) - ID: ${postId}` } });
-  return true;
-}
-
-// ─── BLUESKY ───────────────────────────────────────────────────────────────
-
-async function processBlueskyJob(job: {
-  id: string; userId: string; titleId: string | null; articleUrl: string; articleTitle: string; suggestedText: string;
-}): Promise<boolean> {
-  const integration = await prisma.blueskyIntegration.findUnique({ where: { userId: job.userId } });
-  if (!integration) throw new Error("Bluesky no está configurado en tu cuenta.");
-  await validateArticleUrl(job.articleUrl);
-  const text = job.suggestedText.includes("[ENLACE]") ? job.suggestedText.replace("[ENLACE]", job.articleUrl) : `${job.suggestedText}\n\n${job.articleUrl}`;
-  const imageUrl = await getArticleOpenGraphImage(job.articleUrl);
-  const session = await createBlueskySession(integration.handle, decryptSecret(integration.encryptedAppPassword));
-  const result = await createBlueskyPost(session, text, imageUrl);
-  const rkey = result.uri.split("/").pop() || result.cid;
-  const postUrl = getBlueskyPostUrl(session.handle || integration.handle, rkey);
-  await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: postUrl, publishedAt: new Date(), errorLog: null } });
-  if (job.titleId) await prisma.titleEvent.create({ data: { titleId: job.titleId, message: `Publicado exitosamente en Bluesky (@${session.handle || integration.handle})${imageUrl ? " (con imagen)" : ""}.` } });
-  return true;
-}
-
-// ─── MASTODON ─────────────────────────────────────────────────────────────
-
-async function processMastodonJob(job: { id: string; userId: string; titleId: string | null; articleUrl: string; articleTitle: string; suggestedText: string }): Promise<boolean> {
-  const integration = await prisma.mastodonIntegration.findUnique({ where: { userId: job.userId } });
-  if (!integration) throw new Error("Mastodon no está configurado en tu cuenta.");
-  await validateArticleUrl(job.articleUrl);
-  const imageUrl = await getArticleOpenGraphImage(job.articleUrl);
-  const token = decryptSecret(integration.accessTokenEncrypted);
-  const text = job.suggestedText.includes("[ENLACE]") ? job.suggestedText.replace("[ENLACE]", job.articleUrl) : `${job.suggestedText}\n\n${job.articleUrl}`;
-  let mediaId: string | undefined;
-  if (imageUrl) {
-    const image = await fetch(imageUrl, { signal: AbortSignal.timeout(15000) });
-    if (image.ok) mediaId = (await createMastodonMedia(integration.instanceUrl, token, new Uint8Array(await image.arrayBuffer()), image.headers.get("content-type") || "image/jpeg", job.articleTitle)).id;
-  }
-  const result = await createMastodonStatus(integration.instanceUrl, token, text, mediaId);
-  const postUrl = result.url || result.uri || `${integration.instanceUrl}/@${integration.username}/${result.id}`;
-  await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: postUrl, publishedAt: new Date(), errorLog: null } });
-  if (job.titleId) await prisma.titleEvent.create({ data: { titleId: job.titleId, message: `Publicado exitosamente en Mastodon (@${integration.username || "cuenta"}).` } });
-  return true;
-}
-
-// ─── DEV.TO ───────────────────────────────────────────────────────────────
-
-async function processDevToJob(job: {
-  id: string; userId: string; titleId: string | null; articleUrl: string; articleTitle: string; suggestedText: string;
-}): Promise<boolean> {
-  const integration = await prisma.devToIntegration.findUnique({ where: { userId: job.userId } });
-  if (!integration) throw new Error("DEV.to no está configurado en tu cuenta.");
-  await validateArticleUrl(job.articleUrl);
-  const title = job.titleId ? await prisma.title.findUnique({ where: { id: job.titleId }, select: { summary: true, finalTitle: true, run: { select: { category: { select: { name: true } } } } } }) : null;
-  const articleTitle = title?.finalTitle || job.articleTitle;
-  const articleSummary = title?.summary || job.articleTitle;
-  const bodyMarkdown = await getArticleBodyMarkdown(job.articleUrl);
-  const imageUrl = await getArticleOpenGraphImage(job.articleUrl);
-  const result = await createDevToArticle(decryptSecret(integration.encryptedApiKey), {
-    title: articleTitle,
-    bodyMarkdown,
-    canonicalUrl: job.articleUrl,
-    description: articleSummary,
-    mainImage: imageUrl,
-    tags: deriveDevToTags(articleTitle, articleSummary, title?.run.category.name || null),
-    series: title?.run.category.name || null,
-  });
-  const postUrl = getDevToArticleUrl(result);
-  if (!postUrl) throw new Error("DEV.to no devolvió la URL del artículo publicado.");
-  await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: postUrl, publishedAt: new Date(), errorLog: null } });
-  if (job.titleId) await prisma.titleEvent.create({ data: { titleId: job.titleId, message: `Artículo adaptado publicado exitosamente en DEV.to${imageUrl ? " (con imagen y canonical URL)" : " (con canonical URL)"}.` } });
-  return true;
-}
-
 // ─── FACEBOOK PAGES ───────────────────────────────────────────────────────
 
 async function processFacebookPageJob(job: {
@@ -694,62 +368,6 @@ async function processFacebookPageJob(job: {
 
   await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: result.permalink || result.postId, publishedAt: new Date(), errorLog: null } });
   if (job.titleId) await prisma.titleEvent.create({ data: { titleId: job.titleId, message: `Publicado en Facebook Page (${integration.facebookPageName || integration.facebookPageId}) - ID: ${result.postId}${imageUrl ? " (con imagen del artículo)" : ""}` } });
-  return true;
-}
-
-/**
- * Historia (Story) estática de Facebook Page (20/8/2026, pedido de
- * Milton). Mismo patrón OG-vs-IA que Instagram Story: opción 1 (OG tal
- * cual, default) u opción 2 (generador IA) según aiImageGenerationEnabled.
- * La API de Historias de Facebook no acepta caption — igual que Instagram
- * Story, el texto de la oportunidad no se usa para publicar, solo la
- * imagen.
- */
-async function processFacebookStoryJob(job: {
-  id: string; userId: string; titleId: string | null; articleUrl: string; articleTitle: string; suggestedText: string;
-}): Promise<boolean> {
-  const integration = await prisma.facebookPageIntegration.findUnique({ where: { userId: job.userId } });
-  if (!integration) throw new Error("Facebook Pages no está configurado en tu cuenta.");
-  if (integration.expiresAt <= new Date()) throw new Error("La autorización de Facebook Pages expiró. Vuelve a conectar Meta en Configuración.");
-
-  await validateArticleUrl(job.articleUrl);
-
-  const [title, user] = await Promise.all([
-    job.titleId ? prisma.title.findUnique({ where: { id: job.titleId } }) : Promise.resolve(null),
-    prisma.user.findUnique({
-      where: { id: job.userId },
-      select: { aiImageGenerationEnabled: true, businessLogoUrl: true, profilePhotoUrl: true },
-    }),
-  ]);
-  const summary = title?.summary || job.articleTitle || "";
-
-  const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
-  let imageUrl: string | null = null;
-  let aiPrompt: string | null = null;
-  if (sourceImage && user?.aiImageGenerationEnabled) {
-    const generated = await generateAiSocialImage({
-      articleTitle: job.articleTitle,
-      articleSummary: summary,
-      ogImageUrl: sourceImage,
-      format: "facebook-story",
-      businessLogoUrl: user.businessLogoUrl,
-      profilePhotoUrl: user.profilePhotoUrl,
-      pathPrefix: `facebook/ai/story/${job.titleId || job.id}`,
-    });
-    imageUrl = generated?.imageUrl ?? null;
-    aiPrompt = generated?.prompt ?? null;
-    if (!imageUrl) throw new Error("No se pudo generar la imagen con IA para la Historia de Facebook.");
-  } else {
-    imageUrl = sourceImage ? await normalizeSocialImage(sourceImage, 9 / 16) : null;
-    if (!imageUrl) throw new Error("No se pudo adaptar la imagen del artículo para la Historia de Facebook.");
-  }
-
-  const result = await publishFacebookPageStory(
-    decryptSecret(integration.accessTokenEncrypted), integration.facebookPageId, imageUrl,
-  );
-
-  await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: result.permalink || result.postId, publishedAt: new Date(), errorLog: null, imageUrl, aiImagePrompt: aiPrompt } });
-  if (job.titleId) await prisma.titleEvent.create({ data: { titleId: job.titleId, message: `Historia publicada en Facebook Page (${integration.facebookPageName || integration.facebookPageId}) - ID: ${result.postId}` } });
   return true;
 }
 
@@ -861,39 +479,17 @@ async function processInstagramJob(job: {
 
   await validateArticleUrl(job.articleUrl);
 
-  const format = job.platform.replace("instagram-", "") as "carousel" | "reel-image" | "story" | "infografia" | "post";
+  const format = job.platform.replace("instagram-", "") as "carousel" | "reel-image" | "story" | "infografia";
   const [title, user] = await Promise.all([
     job.titleId ? prisma.title.findUnique({ where: { id: job.titleId } }) : Promise.resolve(null),
-    prisma.user.findUnique({
-      where: { id: job.userId },
-      select: {
-        imagePrompt: true,
-        infographicPrompt: true,
-        aiImageGenerationEnabled: true,
-        businessLogoUrl: true,
-        profilePhotoUrl: true,
-      },
-    }),
+    prisma.user.findUnique({ where: { id: job.userId }, select: { imagePrompt: true, infographicPrompt: true } }),
   ]);
   const summary = title?.summary || job.articleTitle || "";
-  // Instagram no vuelve clicable ninguna URL dentro del caption — para
-  // post/reel-image/carousel/infografia el texto ya trae hashtags en vez de
-  // enlace (generate/route.ts), así que NO se le pega la URL cruda al final
-  // como con las demás redes (pedido explícito de Milton, 20/8/2026).
-  // "story" no tiene caption visible en Instagram, da igual — se deja como
-  // estaba por si algún registro viejo aún trae [ENLACE].
   const finalPost = job.suggestedText.includes("[ENLACE]")
     ? job.suggestedText.replace("[ENLACE]", job.articleUrl)
-    : format === "story"
-    ? `${job.suggestedText}\n\n${job.articleUrl}`
-    : job.suggestedText;
+    : `${job.suggestedText}\n\n${job.articleUrl}`;
 
   let result;
-  // Pedido explícito de Milton (22/8/2026): guardar la imagen y el prompt
-  // exacto usados para que aparezcan en el histórico, sin tener que
-  // reconstruirlos desde los logs de GitHub Actions cada vez.
-  let publishedImageUrl: string | null = null;
-  let publishedAiPrompt: string | null = null;
 
   console.log(`[Instagram Publish] user=${job.userId} format=${format} businessAccountId=${integration.instagramBusinessAccountId}`);
 
@@ -915,7 +511,6 @@ async function processInstagramJob(job: {
       if (imageUrls.length < 2) {
         throw new Error(`No se pudieron generar suficientes imágenes para el carrusel (solo ${imageUrls.length}).`);
       }
-      publishedImageUrl = imageUrls[0];
       result = await publishInstagramCarousel(
         accessToken,
         integration.instagramBusinessAccountId,
@@ -927,105 +522,26 @@ async function processInstagramJob(job: {
 
     case "reel-image": {
       const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
-      const wasAiGenerated = Boolean(sourceImage && user?.aiImageGenerationEnabled);
-      let imageUrl: string | null = null;
-      if (sourceImage && user?.aiImageGenerationEnabled) {
-        // Opción 2 del "Creador de Imágenes para Redes Sociales": generador
-        // IA aparte, partiendo de la OG. Sin fallback a la OG sin tocar si
-        // falla — se cancela la oportunidad (regla explícita, por costo).
-        const generated = await generateAiSocialImage({
-          articleTitle: job.articleTitle,
-          articleSummary: summary,
-          ogImageUrl: sourceImage,
-          format: "reel-image",
-          businessLogoUrl: user.businessLogoUrl,
-          profilePhotoUrl: user.profilePhotoUrl,
-          pathPrefix: `instagram/ai/reel-image/${job.titleId || job.id}`,
-        });
-        imageUrl = generated?.imageUrl ?? null;
-        publishedAiPrompt = generated?.prompt ?? null;
-        console.log(`[Instagram ${format}] AI image: ${imageUrl?.substring(0, 80)}`);
-        if (!imageUrl) throw new Error("No se pudo generar la imagen con IA para Reel.");
-      } else {
-        // Opción 1 (default, sin cambios): imagen OG tal cual.
-        imageUrl = sourceImage ? await normalizeSocialImage(sourceImage, 9 / 16) : null;
-        console.log(`[Instagram ${format}] adapted article image: ${imageUrl?.substring(0, 80)}`);
-        if (!imageUrl) throw new Error("No se pudo generar la imagen estilo Reel.");
-      }
-      publishedImageUrl = imageUrl;
+      const imageUrl = sourceImage ? await normalizeSocialImage(sourceImage, 9 / 16) : null;
+      console.log(`[Instagram ${format}] adapted article image: ${imageUrl?.substring(0, 80)}`);
+      if (!imageUrl) throw new Error("No se pudo generar la imagen estilo Reel.");
       result = await publishInstagramImage(
         accessToken,
         integration.instagramBusinessAccountId,
         imageUrl,
         finalPost,
-        wasAiGenerated,
       );
       break;
     }
 
     case "story": {
       const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
-      const wasAiGenerated = Boolean(sourceImage && user?.aiImageGenerationEnabled);
-      let imageUrl: string | null = null;
-      if (sourceImage && user?.aiImageGenerationEnabled) {
-        const generated = await generateAiSocialImage({
-          articleTitle: job.articleTitle,
-          articleSummary: summary,
-          ogImageUrl: sourceImage,
-          format: "story",
-          businessLogoUrl: user.businessLogoUrl,
-          profilePhotoUrl: user.profilePhotoUrl,
-          pathPrefix: `instagram/ai/story/${job.titleId || job.id}`,
-        });
-        imageUrl = generated?.imageUrl ?? null;
-        publishedAiPrompt = generated?.prompt ?? null;
-        if (!imageUrl) throw new Error("No se pudo generar la imagen con IA para Stories.");
-      } else {
-        imageUrl = sourceImage ? await normalizeSocialImage(sourceImage, 9 / 16) : null;
-        if (!imageUrl) throw new Error("No se pudo adaptar la imagen del artículo para Stories.");
-      }
-      publishedImageUrl = imageUrl;
+      const imageUrl = sourceImage ? await normalizeSocialImage(sourceImage, 9 / 16) : null;
+      if (!imageUrl) throw new Error("No se pudo adaptar la imagen del artículo para Stories.");
       result = await publishInstagramStory(
         accessToken,
         integration.instagramBusinessAccountId,
         imageUrl,
-        wasAiGenerated,
-      );
-      break;
-    }
-
-    case "post": {
-      // Post normal de feed (20/8/2026, pedido de Milton): igual patrón que
-      // Story/Reel-image — opción 1 (OG tal cual, default) u opción 2
-      // (generador IA) según aiImageGenerationEnabled. 4:5 vertical, el
-      // formato de feed que más espacio ocupa en pantalla hoy en Instagram.
-      const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
-      const wasAiGenerated = Boolean(sourceImage && user?.aiImageGenerationEnabled);
-      let imageUrl: string | null = null;
-      if (sourceImage && user?.aiImageGenerationEnabled) {
-        const generated = await generateAiSocialImage({
-          articleTitle: job.articleTitle,
-          articleSummary: summary,
-          ogImageUrl: sourceImage,
-          format: "post",
-          businessLogoUrl: user.businessLogoUrl,
-          profilePhotoUrl: user.profilePhotoUrl,
-          pathPrefix: `instagram/ai/post/${job.titleId || job.id}`,
-        });
-        imageUrl = generated?.imageUrl ?? null;
-        publishedAiPrompt = generated?.prompt ?? null;
-        if (!imageUrl) throw new Error("No se pudo generar la imagen con IA para el post.");
-      } else {
-        imageUrl = sourceImage ? await normalizeSocialImage(sourceImage, 4 / 5) : null;
-        if (!imageUrl) throw new Error("No se pudo adaptar la imagen del artículo para el post.");
-      }
-      publishedImageUrl = imageUrl;
-      result = await publishInstagramImage(
-        accessToken,
-        integration.instagramBusinessAccountId,
-        imageUrl,
-        finalPost,
-        wasAiGenerated,
       );
       break;
     }
@@ -1034,14 +550,11 @@ async function processInstagramJob(job: {
       const imageUrl = await generateInstagramImage(job.titleId || job.id, summary, "infografia", undefined, user?.imagePrompt, user?.infographicPrompt);
       console.log(`[Instagram Infografia] generated image: ${imageUrl?.substring(0, 80)}`);
       if (!imageUrl) throw new Error("No se pudo generar la infografía.");
-      publishedImageUrl = imageUrl;
-      // La infografía no tiene camino sin IA — siempre se genera con IA.
       result = await publishInstagramImage(
         accessToken,
         integration.instagramBusinessAccountId,
         imageUrl,
         finalPost,
-        true,
       );
       break;
     }
@@ -1057,25 +570,10 @@ async function processInstagramJob(job: {
       postId: result.permalink || result.postId,
       publishedAt: new Date(),
       errorLog: null,
-      imageUrl: publishedImageUrl,
-      aiImagePrompt: publishedAiPrompt,
     },
   });
 
-  // Bug preexistente (no de hoy) encontrado en auditoría 22/8/2026: solo
-  // distinguía "Carrusel"/"Reel-image", cualquier otro formato (incluidos
-  // "story" y "post") se etiquetaba "Infografía" en el log, aunque el
-  // postId/estado guardados siempre fueron correctos.
-  const formatLabel =
-    format === "carousel"
-      ? "Carrusel"
-      : format === "reel-image"
-        ? "Reel-image"
-        : format === "story"
-          ? "Story"
-          : format === "post"
-            ? "Post"
-            : "Infografía";
+  const formatLabel = format === "carousel" ? "Carrusel" : format === "reel-image" ? "Reel-image" : "Infografía";
 
   console.log(`Publicado en Instagram (${formatLabel}): ${job.id} — postId: ${result.postId}`);
 
@@ -1093,13 +591,9 @@ async function processInstagramJob(job: {
 
 // ─── PROCESADOR PRINCIPAL ─────────────────────────────────────────────────
 
-export async function processNextSocialPublish(filterUserId?: string, filterArticleUrl?: string): Promise<boolean> {
+export async function processNextSocialPublish(): Promise<boolean> {
   const job = await prisma.socialOpportunity.findFirst({
-    where: {
-      status: "queued",
-      ...(filterUserId ? { userId: filterUserId } : {}),
-      ...(filterArticleUrl ? { articleUrl: filterArticleUrl } : {}),
-    },
+    where: { status: "queued" },
     orderBy: { createdAt: "asc" },
   });
 
@@ -1140,20 +634,8 @@ export async function processNextSocialPublish(filterUserId?: string, filterArti
       published = await processTwitterJob(job);
     } else if (job.platform === "linkedin") {
       published = await processLinkedInJob(job);
-    } else if (job.platform === "pinterest") {
-      published = await processPinterestJob(job);
-    } else if (job.platform === "tumblr") {
-      published = await processTumblrJob(job);
-    } else if (job.platform === "bluesky") {
-      published = await processBlueskyJob(job);
-    } else if (job.platform === "mastodon") {
-      published = await processMastodonJob(job);
-    } else if (job.platform === "devto") {
-      published = await processDevToJob(job);
     } else if (job.platform === "facebook-page") {
       published = await processFacebookPageJob(job);
-    } else if (job.platform === "facebook-story") {
-      published = await processFacebookStoryJob(job);
     } else if (job.platform.startsWith("instagram-")) {
       published = await processInstagramJob(job);
     } else {

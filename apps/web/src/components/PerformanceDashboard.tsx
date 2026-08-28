@@ -11,7 +11,7 @@ import {
   Title,
   Flex,
   ProgressBar,
-  LineChart,
+  AreaChart,
   BarList,
   Callout,
   Badge,
@@ -48,7 +48,7 @@ function empathyMessage(stats: DashboardStats): {
   if (stats.streak >= 3) {
     return {
       color: "emerald",
-      title: `¡${stats.streak} días seguidos publicando!`,
+      title: `🔥 ¡${stats.streak} días seguidos publicando!`,
       text: "Excelente ritmo constante — así se construye posicionamiento a largo plazo.",
     };
   }
@@ -114,7 +114,7 @@ export default function PerformanceDashboard() {
       <Callout title={msg.title} color={msg.color}>
         {msg.text}{" "}
         {msg.cta && (
-          <Link href={msg.cta.href} className="font-medium underline" style={{ color: "#1d1d1f" }}>
+          <Link href={msg.cta.href} className="font-medium underline" style={{ color: "#0071e3" }}>
             {msg.cta.label} →
           </Link>
         )}
@@ -186,72 +186,17 @@ export default function PerformanceDashboard() {
       <Grid numItemsLg={3} className="mt-4 gap-4">
         <Col numColSpanLg={2}>
           <Card>
-            <Title>Tu ritmo — últimos 14 días</Title>
-            {(() => {
-              /*
-               * Dos líneas, a pedido de Milton: la recta es lo que deberías
-               * publicar cada día (tu lote máximo) y la curva es lo que
-               * realmente publicaste. Un día sin publicar hunde la curva; un
-               * día flojo la baja. De un vistazo se ve si el ritmo se sostiene.
-               */
-              const meta = stats.dailyArticleLimit ?? 0;
-              const datos = stats.chart.map((d) => ({
-                ...d,
-                "Tu meta diaria": meta,
-              }));
-              const publicados = stats.chart.reduce(
-                (suma, d) => suma + d["Artículos publicados"],
-                0,
-              );
-              const esperados = meta * stats.chart.length;
-              const porcentaje =
-                esperados > 0 ? Math.round((publicados / esperados) * 100) : null;
-              const diasSinPublicar = stats.chart.filter(
-                (d) => d["Artículos publicados"] === 0,
-              ).length;
-
-              return (
-                <>
-                  <LineChart
-                    className="mt-4 h-56"
-                    data={datos}
-                    index="label"
-                    categories={
-                      meta > 0
-                        ? ["Artículos publicados", "Tu meta diaria"]
-                        : ["Artículos publicados"]
-                    }
-                    colors={meta > 0 ? ["neutral", "gray"] : ["neutral"]}
-                    curveType="natural"
-                    showLegend={meta > 0}
-                    showAnimation
-                    allowDecimals={false}
-                  />
-                  {porcentaje !== null && (
-                    <div
-                      style={{
-                        marginTop: 14,
-                        paddingTop: 14,
-                        borderTop: "1px solid #d2d2d7",
-                        fontSize: 15,
-                        lineHeight: 1.55,
-                        color: "#1d1d1f",
-                      }}
-                    >
-                      <strong>
-                        {publicados} de {esperados} artículos ({porcentaje}%)
-                      </strong>{" "}
-                      en estos 14 días.{" "}
-                      {porcentaje >= 90
-                        ? "Vas al ritmo que toca: sigue así y el efecto se acumula solo."
-                        : porcentaje >= 50
-                          ? `Vas a medio gas. ${diasSinPublicar} día(s) sin publicar te dejaron por debajo de la meta.`
-                          : `Vas muy por debajo: ${diasSinPublicar} de ${stats.chart.length} días sin publicar. Cada día vacío es posicionamiento que no se recupera.`}
-                    </div>
-                  )}
-                </>
-              );
-            })()}
+            <Title>Artículos publicados — últimos 14 días</Title>
+            <AreaChart
+              className="mt-4 h-56"
+              data={stats.chart}
+              index="label"
+              categories={["Artículos publicados"]}
+              colors={["blue"]}
+              showLegend={false}
+              showAnimation
+              allowDecimals={false}
+            />
           </Card>
         </Col>
         <Col>

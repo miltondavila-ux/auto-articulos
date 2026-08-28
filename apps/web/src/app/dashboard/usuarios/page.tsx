@@ -45,15 +45,6 @@ interface UserRow {
   allowInstagramPublishing: boolean;
   allowLinkedInPublishing: boolean;
   allowThreadsPublishing: boolean;
-  allowFacebookPublishing: boolean;
-  allowPinterestPublishing: boolean;
-  allowTumblrPublishing: boolean;
-  allowBlueskyPublishing: boolean;
-  allowMastodonPublishing: boolean;
-  allowDevToPublishing: boolean;
-  aiImageGenerationEnabled: boolean;
-  numeroCuenta?: number;
-  moduleOverrides?: Record<string, "inherit" | "enabled" | "disabled">;
   profilePhotoUrl: string | null;
   businessLogoUrl: string | null;
   opportunitiesDisclosureAcceptedAt: string | null;
@@ -114,17 +105,9 @@ const riskColors: Record<UsagePerUser["risk"], { bg: string; color: string }> =
 
 const PAGE_SIZE = 10;
 
-function Field({
-  label,
-  children,
-  filaCompleta = false,
-}: {
-  label: string;
-  children: ReactNode;
-  filaCompleta?: boolean;
-}) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div style={filaCompleta ? { gridColumn: "1 / -1" } : undefined}>
+    <div>
       <div
         style={{
           fontSize: 11,
@@ -170,7 +153,7 @@ function Pagination({
         {filteredCount !== totalCount &&
           ` · ${filteredCount.toLocaleString("es-US")} coinciden con el filtro`}
       </span>
-      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <button
           onClick={() => onChange(page - 1)}
           disabled={page <= 1}
@@ -269,51 +252,6 @@ export default function UsuariosPage() {
   const [editingPromptId, setEditingPromptId] = useState<string | null>(null);
   const [savingPrompt, setSavingPrompt] = useState(false);
   const [promptBanner, setPromptBanner] = useState<{ type: "error" | "info"; text: string } | null>(null);
-  // Prompt del generador de imágenes con IA para redes sociales (20/8/2026):
-  // global, no por usuario — Milton lo edita directo desde acá en vez de
-  // pedir un redeploy cada vez que quiere ajustar el texto.
-  const [aiImagePrompt, setAiImagePrompt] = useState("");
-  const [loadingAiImagePrompt, setLoadingAiImagePrompt] = useState(false);
-  const [savingAiImagePrompt, setSavingAiImagePrompt] = useState(false);
-  const [aiImagePromptBanner, setAiImagePromptBanner] = useState<{ type: "error" | "info"; text: string } | null>(null);
-
-  async function loadAiImagePrompt() {
-    setLoadingAiImagePrompt(true);
-    try {
-      const res = await fetch("/api/admin/ai-image-prompt");
-      if (res.ok) {
-        const data = await res.json();
-        setAiImagePrompt(data.prompt ?? "");
-      }
-    } catch (e) {
-      console.error("Error al cargar el prompt de imágenes IA", e);
-    } finally {
-      setLoadingAiImagePrompt(false);
-    }
-  }
-
-  async function handleSaveAiImagePrompt() {
-    setSavingAiImagePrompt(true);
-    setAiImagePromptBanner(null);
-    try {
-      const res = await fetch("/api/admin/ai-image-prompt", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: aiImagePrompt }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setAiImagePromptBanner({ type: "error", text: data.error ?? "Error al guardar el prompt" });
-        return;
-      }
-      setAiImagePromptBanner({ type: "info", text: "Prompt de imágenes con IA guardado con éxito" });
-      setAiImagePrompt(data.prompt ?? "");
-    } catch (e: any) {
-      setAiImagePromptBanner({ type: "error", text: e.message || "Error al conectar con el servidor" });
-    } finally {
-      setSavingAiImagePrompt(false);
-    }
-  }
 
   async function loadPrompts() {
     setLoadingPrompts(true);
@@ -510,7 +448,6 @@ export default function UsuariosPage() {
   useEffect(() => {
     if (tab === "prompts") {
       loadPrompts();
-      loadAiImagePrompt();
     }
   }, [tab]);
 
@@ -519,19 +456,18 @@ export default function UsuariosPage() {
       // Category / Type filter
       if (userCategory === "admin" && u.role !== "admin") return false;
       if (userCategory === "user" && u.role !== "user") return false;
-      const enPrueba = u.isTrialSignup && u.role !== "admin";
-      if (userCategory === "trial" && !enPrueba) return false;
+      if (userCategory === "trial" && !u.isTrialSignup) return false;
       if (
         userCategory === "trial_active" &&
-        (!enPrueba || u.trialUnlocked)
+        (!u.isTrialSignup || u.trialUnlocked)
       )
         return false;
       if (
         userCategory === "trial_unlocked" &&
-        (!enPrueba || !u.trialUnlocked)
+        (!u.isTrialSignup || !u.trialUnlocked)
       )
         return false;
-      if (userCategory === "standard" && enPrueba) return false;
+      if (userCategory === "standard" && u.isTrialSignup) return false;
       if (userCategory === "no_image_credits" && u.hasImageCredits !== false)
         return false;
 
@@ -543,8 +479,7 @@ export default function UsuariosPage() {
         (u.firstName ?? "").toLowerCase().includes(q) ||
         (u.lastName ?? "").toLowerCase().includes(q) ||
         (u.name ?? "").toLowerCase().includes(q) ||
-        (u.phone ?? "").toLowerCase().includes(q) ||
-        String(u.numeroCuenta ?? "") === q.replace("#", "")
+        (u.phone ?? "").toLowerCase().includes(q)
       );
     })
     .sort((a, b) => {
@@ -663,7 +598,7 @@ export default function UsuariosPage() {
       label: "Usuarios totales",
       value: users.length.toLocaleString("es-US"),
       detail: `${adminCount} con acceso administrativo`,
-      color: "#1d1d1f",
+      color: "#0071e3",
     },
     {
       label: "Activos ahora",
@@ -675,7 +610,7 @@ export default function UsuariosPage() {
       label: "Artículos publicados",
       value: totalPublished.toLocaleString("es-US"),
       detail: "Suma de todas las cuentas",
-      color: "#1d1d1f",
+      color: "#5e5ce6",
     },
     {
       label: "Base de datos usada",
@@ -723,9 +658,9 @@ export default function UsuariosPage() {
     },
     {
       id: "prompts",
-      label: "Prompts",
-      description: "Estilos de redacción de artículos y el prompt del generador de imágenes con IA para redes sociales.",
-      eyebrow: "Redacción e imágenes",
+      label: "Prompts de redacción",
+      description: "Crea y edita estilos de escritura personalizados para artículos.",
+      eyebrow: "Estilos de escritura",
     },
   ];
 
@@ -756,15 +691,6 @@ export default function UsuariosPage() {
         <h1 style={{ margin: "0 0 6px", fontSize: 26, fontWeight: 600, color: "#1d1d1f", letterSpacing: "-0.03em" }}>
           Administración
         </h1>
-        <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
-          Desde aquí gestionas las cuentas de la plataforma: crear usuarios, cambiar sus contraseñas, ver cuánto consume cada uno y decidir a qué módulos y a qué redes sociales tiene acceso.
-        </p>
-        <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
-          El control de módulos tiene tres posturas por usuario: heredar lo que diga la configuración general, forzar que lo vea aunque esté oculto para todos, o forzar que no lo vea aunque esté visible.
-        </p>
-        <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
-          También está aquí el modo de mantenimiento, que oculta la plataforma a todo el mundo menos a los administradores mientras se trabaja en ella.
-        </p>
         <p
           className="lead-copy"
           style={{
@@ -842,10 +768,10 @@ export default function UsuariosPage() {
               fontFamily: "inherit",
               cursor: "pointer",
               borderRadius: 14,
-              border: tab === t.id ? "1px solid #1d1d1f" : "1px solid #e5e5ea",
+              border: tab === t.id ? "1px solid #0071e3" : "1px solid #e5e5ea",
               background: "#ffffff",
               color: "#1d1d1f",
-              boxShadow: "none",
+              boxShadow: tab === t.id ? "0 4px 14px rgba(0, 113, 227, 0.1)" : "none",
             }}
           >
             <span
@@ -853,8 +779,8 @@ export default function UsuariosPage() {
                 display: "inline-flex",
                 padding: "2px 8px",
                 borderRadius: 999,
-                background: tab === t.id ? "#f5f5f7" : "#f5f5f7",
-                color: tab === t.id ? "#1d1d1f" : "#6e6e73",
+                background: tab === t.id ? "#e8f2ff" : "#f5f5f7",
+                color: tab === t.id ? "#0071e3" : "#6e6e73",
                 fontSize: 10,
                 fontWeight: 600,
                 letterSpacing: "0.06em",
@@ -1120,7 +1046,7 @@ export default function UsuariosPage() {
                       height: "100%",
                       width: `${Math.min(100, usage.percentUsed * 100)}%`,
                       background:
-                        usage.percentUsed >= 0.8 ? "#ff3b30" : "#1d1d1f",
+                        usage.percentUsed >= 0.8 ? "#ff3b30" : "#0071e3",
                       transition: "width 0.4s ease",
                     }}
                   />
@@ -1140,7 +1066,7 @@ export default function UsuariosPage() {
                     style={{
                       border: "1px solid #e5e5ea",
                       borderRadius: 10,
-                      background: row.active ? "rgba(0, 0, 0, 0.06)" : "#fff",
+                      background: row.active ? "rgba(0, 113, 227, 0.06)" : "#fff",
                       color: "#1d1d1f",
                       overflow: "hidden",
                     }}
@@ -1173,7 +1099,7 @@ export default function UsuariosPage() {
                               fontWeight: 700,
                               padding: "2px 8px",
                               borderRadius: 999,
-                              background: "#1d1d1f",
+                              background: "#0071e3",
                               color: "#fff",
                             }}
                           >
@@ -1398,7 +1324,7 @@ export default function UsuariosPage() {
             }}
           >
             <h2 style={h2Style}>Visibilidad global de módulos</h2>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <button
                 type="button"
                 onClick={loadGlobalModules}
@@ -1493,7 +1419,7 @@ export default function UsuariosPage() {
                     border: isHidden
                       ? "1px solid rgba(255, 149, 0, 0.3)"
                       : "1px solid #e5e5ea",
-                    boxShadow: "none",
+                    boxShadow: "0 2px 8px rgba(0, 9, 35, 0.04)",
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
@@ -1579,7 +1505,7 @@ export default function UsuariosPage() {
                       style={{
                         width: 18,
                         height: 18,
-                        accentColor: "#1d1d1f",
+                        accentColor: "#0071e3",
                         cursor: "pointer",
                       }}
                     />
@@ -1597,14 +1523,13 @@ export default function UsuariosPage() {
       )}
 
       {tab === "prompts" && (
-        <>
         <section id="administracion-contenido" style={sectionStyle}>
           <h2 style={h2Style}>
             {editingPromptId ? "Editar estilo de redacción" : "Agregar nuevo estilo de redacción (Prompt)"}
           </h2>
-          <p style={{ fontSize: 13, color: "#6e6e73" }}>
+          <p style={{ fontSize: 13, color: "#6b7280" }}>
             Los prompts de redacción personalizados permiten a los usuarios elegir diferentes estilos de escritura al generar artículos.
-            Puedes usar placeholders como <code style={{ background: "#f5f5f7", padding: "2px 4px", borderRadius: 4 }}>{"{title}"}</code> o <code style={{ background: "#f5f5f7", padding: "2px 4px", borderRadius: 4 }}>{"{keyword}"}</code> en el texto del prompt, que serán reemplazados automáticamente con el tema del artículo.
+            Puedes usar placeholders como <code style={{ background: "#f1f1f1", padding: "2px 4px", borderRadius: 4 }}>{"{title}"}</code> o <code style={{ background: "#f1f1f1", padding: "2px 4px", borderRadius: 4 }}>{"{keyword}"}</code> en el texto del prompt, que serán reemplazados automáticamente con el tema del artículo.
           </p>
 
           <form onSubmit={handleSavePrompt} style={{ marginTop: 14 }}>
@@ -1631,7 +1556,7 @@ export default function UsuariosPage() {
                   style={{ ...inputStyle, fontFamily: "inherit" }}
                 />
               </label>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+              <div style={{ display: "flex", gap: 10 }}>
                 <button
                   type="submit"
                   disabled={savingPrompt}
@@ -1662,8 +1587,8 @@ export default function UsuariosPage() {
                 padding: "10px 14px",
                 borderRadius: 8,
                 marginTop: 14,
-                background: promptBanner.type === "error" ? "#fff2f1" : "#eafaf0",
-                color: promptBanner.type === "error" ? "#d64545" : "#16803c",
+                background: promptBanner.type === "error" ? "#fdecec" : "#eafaf0",
+                color: promptBanner.type === "error" ? "#d64545" : "#1e8a4b",
                 fontSize: 13,
               }}
             >
@@ -1673,9 +1598,9 @@ export default function UsuariosPage() {
 
           <h2 style={{ ...h2Style, marginTop: 28 }}>Estilos de redacción registrados</h2>
           {loadingPrompts ? (
-            <p style={{ fontSize: 13, color: "#6e6e73" }}>Cargando estilos...</p>
+            <p style={{ fontSize: 13, color: "#6b7280" }}>Cargando estilos...</p>
           ) : prompts.length === 0 ? (
-            <p style={{ fontSize: 13, color: "#6e6e73" }}>No hay estilos personalizados guardados. Todos los artículos se generarán con el flujo estándar.</p>
+            <p style={{ fontSize: 13, color: "#6b7280" }}>No hay estilos personalizados guardados. Todos los artículos se generarán con el flujo estándar.</p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 14 }}>
               {prompts.map((p) => (
@@ -1686,12 +1611,12 @@ export default function UsuariosPage() {
                     borderRadius: 12,
                     border: "1px solid #e4e9f1",
                     background: "#ffffff",
-                    boxShadow: "none",
+                    boxShadow: "0 2px 8px rgba(0, 9, 35, 0.04)",
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <strong style={{ fontSize: 15, color: "#1d1d1f" }}>{p.name}</strong>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    <strong style={{ fontSize: 15, color: "#16181d" }}>{p.name}</strong>
+                    <div style={{ display: "flex", gap: 8 }}>
                       <button
                         onClick={() => {
                           setEditingPromptId(p.id);
@@ -1702,7 +1627,7 @@ export default function UsuariosPage() {
                         style={{
                           background: "none",
                           border: "none",
-                          color: "#1d1d1f",
+                          color: "#0071e3",
                           cursor: "pointer",
                           fontSize: 13,
                           fontWeight: 500,
@@ -1728,8 +1653,8 @@ export default function UsuariosPage() {
                   <pre
                     style={{
                       fontSize: 12,
-                      color: "#6e6e73",
-                      background: "#f5f5f7",
+                      color: "#4b5563",
+                      background: "#f9fafb",
                       padding: 10,
                       borderRadius: 6,
                       whiteSpace: "pre-wrap",
@@ -1746,62 +1671,7 @@ export default function UsuariosPage() {
             </div>
           )}
         </section>
-
-        <section style={sectionStyle}>
-          <h2 style={h2Style}>Prompt del generador de imágenes con IA (redes sociales)</h2>
-          <p style={{ fontSize: 13, color: "#6e6e73" }}>
-            Este prompt es global — aplica a todas las cuentas, no por usuario. Define el criterio
-            que usa la IA para transformar la imagen OG del artículo en la imagen final de
-            Instagram Story/Reel (fondo, retoque, composición, tipografía, marca). Si lo dejas
-            vacío, se usa el prompt por defecto del sistema.
-          </p>
-          {loadingAiImagePrompt ? (
-            <p style={{ fontSize: 13, color: "#6e6e73" }}>Cargando...</p>
-          ) : (
-            <>
-              <textarea
-                value={aiImagePrompt}
-                onChange={(e) => setAiImagePrompt(e.target.value)}
-                placeholder="Ej: Eres un Director Creativo Senior especializado en transformar artículos, imágenes OG y recursos de marca en publicaciones visuales de alto impacto..."
-                rows={20}
-                style={{
-                  ...inputStyle,
-                  width: "100%",
-                  resize: "vertical",
-                  fontFamily: "inherit",
-                  lineHeight: 1.5,
-                  marginTop: 12,
-                }}
-              />
-              <div style={{ marginTop: 12 }}>
-                <button
-                  onClick={handleSaveAiImagePrompt}
-                  disabled={savingAiImagePrompt}
-                  style={disabledStyle(buttonStyle, savingAiImagePrompt)}
-                >
-                  {savingAiImagePrompt ? "Guardando..." : "Guardar prompt de imágenes IA"}
-                </button>
-              </div>
-              {aiImagePromptBanner && (
-                <div
-                  style={{
-                    padding: "10px 14px",
-                    borderRadius: 8,
-                    marginTop: 14,
-                    background: aiImagePromptBanner.type === "error" ? "#fdecec" : "#eafaf0",
-                    color: aiImagePromptBanner.type === "error" ? "#d64545" : "#16803c",
-                    fontSize: 13,
-                  }}
-                >
-                  {aiImagePromptBanner.text}
-                </div>
-              )}
-            </>
-          )}
-        </section>
-        </>
       )}
-
     </div>
   );
 }
@@ -1855,21 +1725,6 @@ function UserCard({
   const [permThreads, setPermThreads] = useState(
     Boolean(user.allowThreadsPublishing),
   );
-  const [permFacebook, setPermFacebook] = useState(
-    Boolean(user.allowFacebookPublishing),
-  );
-  const [permPinterest, setPermPinterest] = useState(
-    Boolean(user.allowPinterestPublishing),
-  );
-  const [permTumblr, setPermTumblr] = useState(
-    Boolean(user.allowTumblrPublishing),
-  );
-  const [permBluesky, setPermBluesky] = useState(Boolean(user.allowBlueskyPublishing));
-  const [permMastodon, setPermMastodon] = useState(Boolean(user.allowMastodonPublishing));
-  const [permDevTo, setPermDevTo] = useState(Boolean(user.allowDevToPublishing));
-  const [permAiImageGeneration, setPermAiImageGeneration] = useState(
-    Boolean(user.aiImageGenerationEnabled),
-  );
   // Sistema de prueba gratuita (13/8/2026): estado de prueba y desbloqueo manual.
   const [permIsTrialSignup, setPermIsTrialSignup] = useState(
     Boolean(user.isTrialSignup),
@@ -1883,9 +1738,6 @@ function UserCard({
   const [savingPermissions, setSavingPermissions] = useState(false);
   const [permissionsError, setPermissionsError] = useState<string | null>(null);
   const [permissionsSaved, setPermissionsSaved] = useState(false);
-  const [moduleOverrides, setModuleOverrides] = useState<
-    Record<string, "inherit" | "enabled" | "disabled">
-  >(user.moduleOverrides ?? {});
   const [userDisabledModules, setUserDisabledModules] = useState<string[]>(
     user.disabledModules ?? [],
   );
@@ -1903,13 +1755,6 @@ function UserCard({
     setPermInstagram(Boolean(user.allowInstagramPublishing));
     setPermLinkedIn(Boolean(user.allowLinkedInPublishing));
     setPermThreads(Boolean(user.allowThreadsPublishing));
-    setPermFacebook(Boolean(user.allowFacebookPublishing));
-    setPermPinterest(Boolean(user.allowPinterestPublishing));
-    setPermTumblr(Boolean(user.allowTumblrPublishing));
-    setPermBluesky(Boolean(user.allowBlueskyPublishing));
-    setPermMastodon(Boolean(user.allowMastodonPublishing));
-    setPermDevTo(Boolean(user.allowDevToPublishing));
-    setPermAiImageGeneration(Boolean(user.aiImageGenerationEnabled));
     setPermIsTrialSignup(Boolean(user.isTrialSignup));
     setPermTrialUnlocked(Boolean(user.trialUnlocked));
     setPermImageCredits(user.hasImageCredits !== false);
@@ -1920,19 +1765,11 @@ function UserCard({
     permInstagram !== Boolean(user.allowInstagramPublishing) ||
     permLinkedIn !== Boolean(user.allowLinkedInPublishing) ||
     permThreads !== Boolean(user.allowThreadsPublishing) ||
-    permFacebook !== Boolean(user.allowFacebookPublishing) ||
-    permPinterest !== Boolean(user.allowPinterestPublishing) ||
-    permTumblr !== Boolean(user.allowTumblrPublishing) ||
-    permBluesky !== Boolean(user.allowBlueskyPublishing) ||
-    permMastodon !== Boolean(user.allowMastodonPublishing) ||
-    permDevTo !== Boolean(user.allowDevToPublishing) ||
-    permAiImageGeneration !== Boolean(user.aiImageGenerationEnabled) ||
     permIsTrialSignup !== Boolean(user.isTrialSignup) ||
     permTrialUnlocked !== Boolean(user.trialUnlocked) ||
     permImageCredits !== (user.hasImageCredits !== false);
 
   const userModulesDirty =
-    JSON.stringify(moduleOverrides) !== JSON.stringify(user.moduleOverrides ?? {}) ||
     JSON.stringify((userDisabledModules ?? []).slice().sort()) !==
     JSON.stringify((user.disabledModules ?? []).slice().sort());
 
@@ -1946,7 +1783,7 @@ function UserCard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: user.id,
-          moduleOverrides,
+          disabledModules: userDisabledModules,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -2116,20 +1953,9 @@ function UserCard({
           allowInstagramPublishing: permInstagram,
           allowLinkedInPublishing: permLinkedIn,
           allowThreadsPublishing: permThreads,
-          allowFacebookPublishing: permFacebook,
-          allowPinterestPublishing: permPinterest,
-          allowTumblrPublishing: permTumblr,
-          allowBlueskyPublishing: permBluesky,
-          allowMastodonPublishing: permMastodon,
-          allowDevToPublishing: permDevTo,
-          aiImageGenerationEnabled: permAiImageGeneration,
           isTrialSignup: permIsTrialSignup,
           trialUnlocked: permTrialUnlocked,
           hasImageCredits: permImageCredits,
-          // El acceso a los módulos viaja con el mismo botón: tenerlo en una
-          // sección aparte hacía que se guardaran los permisos y el acceso se
-          // quedara sin guardar sin que nadie se diera cuenta.
-          moduleOverrides,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -2245,20 +2071,6 @@ function UserCard({
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-            {user.numeroCuenta !== undefined && (
-              <span
-                title="Número de cuenta. Es fijo: no cambia al filtrar ni al reordenar la lista."
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: "#86868b",
-                  fontVariantNumeric: "tabular-nums",
-                  minWidth: 34,
-                }}
-              >
-                #{user.numeroCuenta}
-              </span>
-            )}
             <strong style={{ fontSize: 14 }}>{fullName || "(sin nombre)"}</strong>
             {user.isTrialSignup && user.role !== "admin" && (
               <span
@@ -2277,15 +2089,10 @@ function UserCard({
                     : "Se registró desde Solicitar prueba; sin desbloquear, pierde el acceso al terminar los 7 días."
                 }
               >
-                {user.trialUnlocked
-                  ? "Prueba desbloqueada"
-                  : user.trialStartedAt
-                    ? (() => {
-                        const dias = trialDaysRemaining(new Date(user.trialStartedAt));
-                        if (dias <= 0) return "Prueba vencida";
-                        return `Prueba · le queda${dias === 1 ? "" : "n"} ${dias} día${dias === 1 ? "" : "s"}`;
-                      })()
-                    : "Prueba gratuita"}
+                🎁 PRUEBA
+                {!user.trialUnlocked && user.trialStartedAt
+                  ? ` · ${trialDaysRemaining(new Date(user.trialStartedAt))}d`
+                  : ""}
               </span>
             )}
             {user.connectedDomain && (
@@ -2295,13 +2102,13 @@ function UserCard({
                   fontWeight: 600,
                   padding: "2px 7px",
                   borderRadius: 999,
-                  background: "#f5f5f7",
-                  color: "#1d1d1f",
-                  border: "1px solid #d2d2d7",
+                  background: "#e8f2ff",
+                  color: "#0071e3",
+                  border: "1px solid rgba(0, 113, 227, 0.25)",
                 }}
                 title={`Dominio vinculado: ${user.connectedDomain}`}
               >
-                {user.connectedDomain}
+                🌐 {user.connectedDomain}
               </span>
             )}
             {user.hasImageCredits === false && (
@@ -2317,7 +2124,7 @@ function UserCard({
                 }}
                 title="Esta cuenta se quedó sin créditos de imagen en 10minutesWebsite."
               >
-                SIN CRÉDITOS IMAGEN
+                ⚠️ SIN CRÉDITOS IMAGEN
               </span>
             )}
           </div>
@@ -2344,8 +2151,8 @@ function UserCard({
               fontWeight: 700,
               padding: "2px 8px",
               borderRadius: 999,
-              background: user.role === "admin" ? "rgba(0, 0, 0, 0.12)" : "#f5f5f7",
-              color: user.role === "admin" ? "#1d1d1f" : "#6e6e73",
+              background: user.role === "admin" ? "rgba(0, 113, 227, 0.12)" : "#f5f5f7",
+              color: user.role === "admin" ? "#0071e3" : "#6e6e73",
             }}
           >
             {user.role === "admin" ? "Administrador" : "Usuario"}
@@ -2374,13 +2181,13 @@ function UserCard({
 
           <Field label="Dominio Web Vinculado">
             <span style={{ fontSize: 13, color: user.connectedDomain ? "#1d1d1f" : "#6e6e73", wordBreak: "break-all" }}>
-              {user.connectedDomain ? `${user.connectedDomain}` : "Sin dominio vinculado"}
+              {user.connectedDomain ? `🌐 ${user.connectedDomain}` : "Sin dominio vinculado"}
             </span>
           </Field>
 
           <Field label="Cuenta 10minutesWebsite">
             <span style={{ fontSize: 13, color: user.tenMinutesUsername ? "#1d1d1f" : "#6e6e73", wordBreak: "break-all" }}>
-              {user.tenMinutesUsername ? `${user.tenMinutesUsername}` : "Sin credenciales guardadas"}
+              {user.tenMinutesUsername ? `👤 ${user.tenMinutesUsername}` : "Sin credenciales guardadas"}
             </span>
           </Field>
 
@@ -2426,7 +2233,7 @@ function UserCard({
                   checked={permInstagram}
                   onChange={(e) => setPermInstagram(e.target.checked)}
                   disabled={savingPermissions}
-                  style={{ accentColor: "#1d1d1f", width: 16, height: 16 }}
+                  style={{ accentColor: "#8134af", width: 16, height: 16 }}
                 />
                 Publicar en Instagram
               </label>
@@ -2436,7 +2243,7 @@ function UserCard({
                   checked={permLinkedIn}
                   onChange={(e) => setPermLinkedIn(e.target.checked)}
                   disabled={savingPermissions}
-                  style={{ accentColor: "#1d1d1f", width: 16, height: 16 }}
+                  style={{ accentColor: "#0077b5", width: 16, height: 16 }}
                 />
                 Publicar en LinkedIn
               </label>
@@ -2449,58 +2256,6 @@ function UserCard({
                   style={{ accentColor: "#000000", width: 16, height: 16 }}
                 />
                 Publicar en Threads
-              </label>
-              <label style={permissionLabelStyle}>
-                <input
-                  type="checkbox"
-                  checked={permFacebook}
-                  onChange={(e) => setPermFacebook(e.target.checked)}
-                  disabled={savingPermissions}
-                  style={{ accentColor: "#1d1d1f", width: 16, height: 16 }}
-                />
-                Publicar en Facebook Pages
-              </label>
-              <label style={permissionLabelStyle}>
-                <input
-                  type="checkbox"
-                  checked={permPinterest}
-                  onChange={(e) => setPermPinterest(e.target.checked)}
-                  disabled={savingPermissions}
-                  style={{ accentColor: "#e60023", width: 16, height: 16 }}
-                />
-                Conectar y publicar en Pinterest
-              </label>
-              <label style={permissionLabelStyle}>
-                <input
-                  type="checkbox"
-                  checked={permTumblr}
-                  onChange={(e) => setPermTumblr(e.target.checked)}
-                  disabled={savingPermissions}
-                  style={{ accentColor: "#36465d", width: 16, height: 16 }}
-                />
-                Conectar y publicar en Tumblr
-              </label>
-              <label style={permissionLabelStyle}>
-                <input type="checkbox" checked={permBluesky} onChange={(e) => setPermBluesky(e.target.checked)} disabled={savingPermissions} style={{ accentColor: "#1d1d1f", width: 16, height: 16 }} />
-                Conectar y publicar en Bluesky
-              </label>
-              <label style={permissionLabelStyle}>
-                <input type="checkbox" checked={permMastodon} onChange={(e) => setPermMastodon(e.target.checked)} disabled={savingPermissions} style={{ accentColor: "#1d1d1f", width: 16, height: 16 }} />
-                Conectar y publicar en Mastodon
-              </label>
-              <label style={permissionLabelStyle}>
-                <input type="checkbox" checked={permDevTo} onChange={(e) => setPermDevTo(e.target.checked)} disabled={savingPermissions} style={{ accentColor: "#1d1d1f", width: 16, height: 16 }} />
-                Conectar y publicar artículos en DEV.to
-              </label>
-              <label style={permissionLabelStyle}>
-                <input
-                  type="checkbox"
-                  checked={permAiImageGeneration}
-                  onChange={(e) => setPermAiImageGeneration(e.target.checked)}
-                  disabled={savingPermissions}
-                  style={{ accentColor: "#1d1d1f", width: 16, height: 16 }}
-                />
-                Generador de imágenes con IA (Instagram Story/Reel)
               </label>
               <label style={permissionLabelStyle}>
                 <input
@@ -2574,9 +2329,9 @@ function UserCard({
                             ...secondaryButtonStyle,
                             padding: "4px 8px",
                             fontSize: 11,
-                            background: "#f5f5f7",
-                            color: "#1d1d1f",
-                            borderColor: "rgba(0, 0, 0, 0.25)",
+                            background: "#e8f2ff",
+                            color: "#0071e3",
+                            borderColor: "rgba(0, 113, 227, 0.25)",
                           },
                           savingPermissions,
                         )}
@@ -2592,16 +2347,16 @@ function UserCard({
                 )}
               </div>
 
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginTop: 4 }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 4 }}>
                 <button
                   onClick={handleSavePermissions}
-                  disabled={savingPermissions || (!permissionsDirty && !userModulesDirty)}
+                  disabled={savingPermissions || !permissionsDirty}
                   style={disabledStyle(
                     { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
                     savingPermissions || !permissionsDirty,
                   )}
                 >
-                  {savingPermissions ? "Guardando..." : "Guardar permisos y accesos"}
+                  {savingPermissions ? "Guardando..." : "Guardar permisos"}
                 </button>
                 {permissionsSaved && (
                   <span style={{ fontSize: 11, color: "#16803c" }}>
@@ -2617,79 +2372,50 @@ function UserCard({
             </div>
           </Field>
 
-          <Field label="Acceso a módulos (esta cuenta)" filaCompleta>
-            <p style={{ margin: "0 0 8px", fontSize: 11, lineHeight: 1.5, color: "#6e6e73" }}>
-              <strong>Dárselo a esta cuenta</strong> pasa por encima del apagado
-              global: aunque el módulo esté oculto para todos, esta persona sí lo
-              verá. Se guarda con el botón <strong>Guardar permisos y accesos</strong> de arriba.
-            </p>
+          <Field label="Visibilidad de módulos (esta cuenta)">
             <div style={{ display: "grid", gap: 6 }}>
               {SYSTEM_MODULES.map((mod) => {
-                const acceso = moduleOverrides[mod.id] ?? "inherit";
-                const isGloballyDisabled = globalDisabledModules.includes(mod.id);
+                const isAllowed = !userDisabledModules.includes(mod.id);
+                const isGloballyDisabled = globalDisabledModules.includes(
+                  mod.id,
+                );
                 return (
-                  <label
-                    key={mod.id}
-                    style={{
-                      ...permissionLabelStyle,
-                      display: "flex",
-                      flexWrap: "wrap",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: 10,
-                    }}
-                  >
-                    <span>{mod.label}</span>
-                    <span
-                      style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        alignItems: "center",
-                        gap: 8,
-                        flex: "1 1 240px",
-                        justifyContent: "flex-end",
+                  <label key={mod.id} style={permissionLabelStyle}>
+                    <input
+                      type="checkbox"
+                      checked={isAllowed}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setUserDisabledModules((prev) =>
+                          checked
+                            ? prev.filter((id) => id !== mod.id)
+                            : [...prev, mod.id],
+                        );
                       }}
-                    >
-                      {isGloballyDisabled && (
-                        <span
-                          style={{
-                            fontSize: 9,
-                            fontWeight: 700,
-                            padding: "1px 5px",
-                            borderRadius: 4,
-                            background: "#fff4e5",
-                            color: "#8a4b08",
-                            border: "1px solid rgba(255, 149, 0, 0.25)",
-                          }}
-                          title="Este módulo está oculto globalmente para todos los usuarios"
-                        >
-                          Oculto global
-                        </span>
-                      )}
-                      <select
-                        value={acceso}
-                        onChange={(e) =>
-                          setModuleOverrides((prev) => ({
-                            ...prev,
-                            [mod.id]: e.target.value as "inherit" | "enabled" | "disabled",
-                          }))
-                        }
-                        disabled={savingUserModules}
+                      disabled={savingUserModules}
+                      style={{
+                        accentColor: "#0071e3",
+                        width: 16,
+                        height: 16,
+                      }}
+                    />
+                    <span>{mod.label}</span>
+                    {isGloballyDisabled && (
+                      <span
                         style={{
-                          flex: "1 1 220px",
-                          maxWidth: 280,
-                          margin: 0,
-                          fontSize: 13,
-                          padding: "8px 10px",
-                          minHeight: 36,
-                          cursor: "pointer",
+                          fontSize: 9,
+                          fontWeight: 700,
+                          padding: "1px 5px",
+                          borderRadius: 4,
+                          background: "#fff4e5",
+                          color: "#8a4b08",
+                          border: "1px solid rgba(255, 149, 0, 0.25)",
                         }}
+                        title="Este módulo ya está oculto globalmente para todos los usuarios"
                       >
-                        <option value="inherit">Según la config. general</option>
-                        <option value="enabled">Dárselo a esta cuenta</option>
-                        <option value="disabled">Quitárselo a esta cuenta</option>
-                      </select>
-                    </span>
+                        Oculto global
+                      </span>
+                    )}
                   </label>
                 );
               })}
@@ -2914,7 +2640,7 @@ function UserCard({
                 ...secondaryButtonStyle,
                 padding: "4px 10px",
                 fontSize: 12,
-                color: "#1d1d1f",
+                color: "#0071e3",
               },
               isCurrentUser || user.role === "admin" || impersonating,
             )}
@@ -3231,7 +2957,7 @@ function UserHistorial({ email }: { email: string }) {
                               href={title.articleUrl}
                               target="_blank"
                               rel="noreferrer"
-                              style={{ color: "#0066cc", fontWeight: 600 }}
+                              style={{ color: "#0071e3", fontWeight: 600 }}
                             >
                               Ver artículo
                             </a>

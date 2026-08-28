@@ -29,13 +29,6 @@ const PUBLIC_PATHS = [
 /** Endpoint del servidor MCP; se autentica con Bearer, no con cookie. */
 const MCP_PATH = "/api/mcp";
 
-const NO_CACHE_HEADERS = {
-  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
-  Pragma: "no-cache",
-  Expires: "0",
-  "Surrogate-Control": "no-store",
-};
-
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -64,18 +57,13 @@ export async function middleware(request: NextRequest) {
 
   if (!userId) {
     if (pathname.startsWith("/api")) {
-      return NextResponse.json(
-        { error: "No autenticado" },
-        { status: 401, headers: NO_CACHE_HEADERS },
-      );
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
     const loginUrl = new URL("/login", request.url);
     if (pathname === "/oauth/autorizar") {
       loginUrl.searchParams.set("returnTo", `${pathname}${request.nextUrl.search}`);
     }
-    const response = NextResponse.redirect(loginUrl);
-    Object.entries(NO_CACHE_HEADERS).forEach(([key, value]) => response.headers.set(key, value));
-    return response;
+    return NextResponse.redirect(loginUrl);
   }
 
   const requestHeaders = new Headers(request.headers);
@@ -89,11 +77,6 @@ export async function middleware(request: NextRequest) {
   }
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
-
-  // El dashboard y sus datos son siempre sensibles al estado actual de la
-  // cuenta. Impedir el almacenamiento en navegador, CDN y proxies evita que
-  // una versión anterior del menú o de los permisos sobreviva a un despliegue.
-  Object.entries(NO_CACHE_HEADERS).forEach(([key, value]) => response.headers.set(key, value));
 
   // Sliding session: si queda menos de la mitad del TTL, renueva expiración
   // para que sesiones activas no caduquen. Costo: una operación HMAC cada
