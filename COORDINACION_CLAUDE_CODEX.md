@@ -1,3 +1,9 @@
+# CONTROL DE VERSIONES — LECTURA OBLIGATORIA
+
+Antes de modificar código, cambiar de rama, crear commits, ejecutar migraciones o desplegar, todo agente debe leer completo el documento \`CONTROLADOR_DE_VERSIONES.md\`. Ese documento es la autoridad para identificar la versión estable, comparar diferencias y proteger los cambios del usuario. No se debe publicar una rama o commit anterior sin verificar primero que conserva la versión funcional completa. Toda entrega debe registrar su commit exacto, despliegue y verificación.
+
+---
+
 # Coordinación de trabajo: Claude, Codex y Antigravity
 
 Este archivo es el tablero operativo compartido para los **tres participantes
