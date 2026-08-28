@@ -69,6 +69,52 @@ Acción inmediata: liberar este lote y no realizar cambios, migraciones ni despl
 Responsable siguiente: responsable del siguiente lote identificado en este documento; cualquier cambio nuevo debe usar su propia rama o worktree.
 Capitanía de migración: no.
 
+## ENTREGA FORMAL Y LIBERACIÓN — 2026-08-28
+
+Identidad exacta:
+CODEX - GPT-5 - PROBLEMA CON TUMBLR
+
+Proyecto:
+Auditoría, corrección y liberación documental de integraciones sociales,
+Google Analytics, configuración, oportunidades y migraciones Prisma.
+
+Archivos bajo mi control:
+Únicamente la documentación modificada en este lote; ningún archivo de código
+queda reservado.
+
+Rama y worktree:
+`codex/liberar-inventario-20260828` en
+`/private/tmp/auto-articulos-liberar-inventario`.
+
+Commits:
+`b23b5b0` y `8e063a2` (documentación); el commit funcional de Tumblr es
+`c35b3a8`, integrado en `origin/main`.
+
+Migraciones pendientes:
+No se aplicó ninguna. Quedan por confirmar individualmente las migraciones de
+Tumblr, Bluesky, inteligencia de oportunidades, retiro de PromptBox y las que
+correspondan exclusivamente a Google Analytics.
+
+Pruebas ejecutadas:
+`git status`, `git log`, `git worktree list`, revisión de ramas/commits,
+auditoría documental y `git diff --check`. No se ejecutaron pruebas externas ni
+SQL contra producción.
+
+Estado de producción:
+El código de Tumblr está integrado en `origin/main`; los estados de producción
+de las demás integraciones quedan documentados como no verificados. No se hizo
+ningún despliegue de código en esta entrega.
+
+Confirmación de liberación:
+Queda liberado todo control, reserva o capitanía sobre archivos, áreas, ramas y
+worktrees compartidos. No quedan cambios locales sin declarar en este worktree.
+No se borró, restauró ni sobrescribió código ajeno.
+
+Siguiente acción:
+El responsable designado por Milton debe tomar cada proyecto por separado,
+revisar su diff desde `origin/main` y reclamar explícitamente cualquier
+migración antes de aplicarla.
+
 [CLAUDE] - MEJORAS APPLE HIG EN COMO FUNCIONA/INICIO, SYNC DE CATEGORÍAS (WENDY CHAWA) Y GRÁFICO/PALETA DE TREMOR
 Proyecto: en esta sesión (rama `claude/coordination-document-bu3fbo`, publicando siempre directo a `main`): (1) diagnóstico y fix de sincronización de categorías atascada prematuramente (caso Wendy Chawa); (2) reescritura completa e iterativa de `/dashboard/como-funciona` (botón de estado, ejemplo narrativo, explicación de indexar/posicionar/SEO-AEO/Google/Bing/Search Console, negritas, reordenamiento); (3) botón "Comienza aquí" movido de Cómo Funciona a Inicio, e invitación a leer Cómo Funciona agregada al wizard; (4) botón rojo Ferrari en Oportunidades cuando no hay resultados nuevos; (5) backfill del changelog de usuario (`ProductUpdate`) para el hueco 10/8→23/8 y workflow reutilizable para futuras entradas; (6) arreglo del gráfico "Tu ritmo" de Inicio (clases de Tremor purgadas por Tailwind) y realineación de la paleta de Tremor a los colores Apple ya establecidos, tras reportarse que "carnavalizaba" el tema.
 Archivos: sin cambios locales pendientes — el worktree está limpio (`git status --short` vacío). Áreas tocadas ya integradas en `origin/main`: `apps/worker/src/categorySync.ts`, `apps/worker/src/cleanup.ts`, `apps/web/src/lib/sync-jobs.ts`, `apps/web/src/app/dashboard/como-funciona/page.tsx`, `apps/web/src/app/dashboard/page.tsx`, `apps/web/src/app/dashboard/oportunidades/page.tsx`, `apps/web/src/components/OnboardingWizard.tsx`, `apps/web/tailwind.config.js`, además de varios `scripts/*.ts` y `.github/workflows/*.yml` de solo-lectura/backfill (diagnóstico y changelog).
