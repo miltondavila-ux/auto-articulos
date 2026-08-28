@@ -7,11 +7,33 @@ export async function GET() {
   try {
     const userId = await getCurrentUserId();
     if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Módulo reservado a administradores y Lorena." }, { status: 403 });
-    const opportunities = await prisma.socialOpportunity.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
+    const [opportunities, tumblrIntegration] = await Promise.all([
+      prisma.socialOpportunity.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.tumblrIntegration.findUnique({ where: { userId }, select: { blogIdentifier: true } }),
+    ]);
+    const history = opportunities.map((opportunity) => {
+      const tumblrPostMatch = opportunity.postId?.match(/\/post\/(\d+)(?:\/([^/?#]+))?/i);
+      if (
+        opportunity.status === "published" &&
+        opportunity.platform === "tumblr" &&
+        opportunity.postId &&
+        tumblrIntegration?.blogIdentifier
+      ) {
+        return {
+          ...opportunity,
+          postId: tumblrPostMatch
+            ? `https://www.tumblr.com/${tumblrIntegration.blogIdentifier}/${tumblrPostMatch[1]}${tumblrPostMatch[2] ? `/${tumblrPostMatch[2]}` : ""}`
+            : (/^https?:\/\//i.test(opportunity.postId)
+              ? opportunity.postId
+              : `https://www.tumblr.com/${tumblrIntegration.blogIdentifier}/${opportunity.postId}`),
+        };
+      }
+      return opportunity;
     });
-    return NextResponse.json({ opportunities });
+    return NextResponse.json({ opportunities: history });
   } catch {
     return NextResponse.json({ error: "Error al obtener propuestas" }, { status: 500 });
   }
@@ -78,14 +100,15 @@ export async function DELETE() {
     const userId = await getCurrentUserId();
     if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Módulo reservado a administradores y Lorena." }, { status: 403 });
 
-    // El historial es la protección contra propuestas repetidas. No se borra
-    // automáticamente: una publicación terminada debe seguir impidiendo que
-    // el mismo artículo vuelva a proponerse para la misma red por accidente.
-    return NextResponse.json({
-      success: true,
-      deleted: 0,
-      message: "El historial de oportunidades se conserva para evitar publicaciones repetidas.",
+    // Borrar todas las propuestas que no estén pendientes (es decir, publicadas o con error)
+    await prisma.socialOpportunity.deleteMany({
+      where: {
+        userId,
+        status: { not: "pending" },
+      },
     });
+
+    return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Error al eliminar propuestas" }, { status: 500 });
   }

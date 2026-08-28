@@ -28,7 +28,7 @@ export default function GoogleIndexingStatus({ title }: { title: TitleRow }) {
         <div style={{ marginTop: 5 }}>
           <a
             href="/dashboard/configuracion"
-            style={{ color: "#0071e3", fontWeight: 600 }}
+            style={{ color: "#0066cc", fontWeight: 600 }}
           >
             Conectar Google Search Console
           </a>

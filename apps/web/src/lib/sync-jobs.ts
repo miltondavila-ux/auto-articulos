@@ -18,8 +18,18 @@
  * porque las corridas se serializan y encolar un runner de GitHub Actions ha
  * llegado a tomar 14 minutos. Aplicar el mismo criterio aquí, en el momento
  * del clic, hace que el desbloqueo sea inmediato para quien está esperando.
+ *
+ * Subido de 3 a 20 minutos el 18/8/2026 (caso real: Wendy Chawa). Con 3
+ * minutos, un job que seguía genuinamente en curso —por ejemplo esperando en
+ * cola de GitHub Actions (hasta 14 min documentados) más el tiempo real de
+ * descargar categorías probando varios servidores— se declaraba "atascado"
+ * y se descartaba antes de que tuviera oportunidad real de terminar. Su
+ * sincronización tardó 500s (8.3 min) en total y sí funcionó: 24 categorías
+ * guardadas correctamente, pero el mensaje de error prematuro quedó visible
+ * y la hizo pensar que había fallado. 20 minutos da margen real sobre el
+ * peor caso documentado sin dejar de recuperar jobs de verdad muertos.
  */
-export const STUCK_SYNC_JOB_MS = 3 * 60 * 1000;
+export const STUCK_SYNC_JOB_MS = 20 * 60 * 1000;
 
 export const STUCK_SYNC_JOB_MESSAGE =
   "El intento anterior se interrumpió de forma inesperada y quedó atascado. Se descartó automáticamente para que este nuevo intento pueda ejecutarse.";

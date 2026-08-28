@@ -10,7 +10,11 @@ import {
 } from "@auto-articulos/shared";
 import { auditLog } from "@/lib/audit";
 import { getCurrentUserId, requireAdmin } from "@/lib/current-user";
-import { parseUserDisabledModules } from "@/lib/modules";
+import {
+  parseUserDisabledModules,
+  parseUserModuleOverrides,
+  type ModuleAccessOverrides,
+} from "@/lib/modules";
 
 interface PublishedCountRow {
   userId: string;
@@ -19,6 +23,9 @@ interface PublishedCountRow {
 
 const MAX_POSTGRES_INT = 2_147_483_647;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 function isValidMaxTitlesPerBatch(value: unknown): value is number {
   return (
@@ -37,9 +44,6 @@ function isValidArticleLimit(value: unknown): value is number {
     value <= MAX_POSTGRES_INT
   );
 }
-
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 export async function GET() {
   let currentUserId: string;
@@ -75,6 +79,13 @@ export async function GET() {
         allowInstagramPublishing: true,
         allowLinkedInPublishing: true,
         allowThreadsPublishing: true,
+        allowFacebookPublishing: true,
+        allowPinterestPublishing: true,
+        allowTumblrPublishing: true,
+        allowBlueskyPublishing: true,
+        allowMastodonPublishing: true,
+        allowDevToPublishing: true,
+        aiImageGenerationEnabled: true,
         profilePhotoUrl: true,
         businessLogoUrl: true,
         opportunitiesDisclosureAcceptedAt: true,
@@ -114,7 +125,7 @@ export async function GET() {
 
   return NextResponse.json({
     currentUserId,
-    users: users.map((u) => {
+    users: users.map((u, indice) => {
       let currentPassword: string | null = null;
       if (u.initialPasswordEncrypted) {
         try {
@@ -144,7 +155,13 @@ export async function GET() {
       const { initialPasswordEncrypted, disabledModules, credentials, searchIntegrations, trialDomainRegistries, ...rest } = u;
       return {
         ...rest,
+        // Número de cuenta: el puesto que ocupa por antigüedad de registro. La
+        // consulta viene ordenada por createdAt ascendente, así que el índice
+        // es el orden de llegada. Sirve para que Milton pueda decir "revisa la
+        // 42" sin depender del filtro ni del orden que tenga en pantalla.
+        numeroCuenta: indice + 1,
         disabledModules: parseUserDisabledModules(disabledModules),
+        moduleOverrides: parseUserModuleOverrides(disabledModules),
         currentPassword,
         tenMinutesUsername,
         connectedDomain,
@@ -179,11 +196,18 @@ export async function PATCH(request: NextRequest) {
     allowInstagramPublishing,
     allowLinkedInPublishing,
     allowThreadsPublishing,
+    allowFacebookPublishing,
+    allowPinterestPublishing,
+    allowBlueskyPublishing,
+    allowMastodonPublishing,
+    allowDevToPublishing,
+    aiImageGenerationEnabled,
     profilePhotoUrl,
     businessLogoUrl,
     isTrialSignup,
     trialUnlocked,
     disabledModules,
+    moduleOverrides,
   } = body;
 
   if (typeof userId !== "string" || !userId) {
@@ -206,6 +230,13 @@ export async function PATCH(request: NextRequest) {
     allowInstagramPublishing?: boolean;
     allowLinkedInPublishing?: boolean;
     allowThreadsPublishing?: boolean;
+    allowFacebookPublishing?: boolean;
+    allowPinterestPublishing?: boolean;
+    allowTumblrPublishing?: boolean;
+    allowBlueskyPublishing?: boolean;
+    allowMastodonPublishing?: boolean;
+    allowDevToPublishing?: boolean;
+    aiImageGenerationEnabled?: boolean;
     profilePhotoUrl?: string | null;
     businessLogoUrl?: string | null;
     isTrialSignup?: boolean;
@@ -322,6 +353,47 @@ export async function PATCH(request: NextRequest) {
     data.allowThreadsPublishing = Boolean(allowThreadsPublishing);
   }
 
+  if ("allowFacebookPublishing" in body) {
+    data.allowFacebookPublishing = Boolean(allowFacebookPublishing);
+  }
+
+  if ("allowPinterestPublishing" in body) {
+    data.allowPinterestPublishing = Boolean(allowPinterestPublishing);
+  }
+
+  if ("allowTumblrPublishing" in body) {
+    data.allowTumblrPublishing = Boolean(body.allowTumblrPublishing);
+  }
+  if ("allowDevToPublishing" in body) {
+    data.allowDevToPublishing = Boolean(allowDevToPublishing);
+  }
+  if ("allowBlueskyPublishing" in body) {
+    data.allowBlueskyPublishing = Boolean(allowBlueskyPublishing);
+  }
+  if ("allowMastodonPublishing" in body) {
+    data.allowMastodonPublishing = Boolean(allowMastodonPublishing);
+  }
+
+  if ("aiImageGenerationEnabled" in body) {
+    data.aiImageGenerationEnabled = Boolean(aiImageGenerationEnabled);
+  }
+
+  if ("moduleOverrides" in body) {
+    if (!moduleOverrides || typeof moduleOverrides !== "object" || Array.isArray(moduleOverrides)) {
+      return NextResponse.json(
+        { error: "moduleOverrides debe ser un objeto" },
+        { status: 400 },
+      );
+    }
+    const limpio = Object.fromEntries(
+      Object.entries(moduleOverrides as ModuleAccessOverrides).filter(
+        ([, value]) =>
+          value === "inherit" || value === "enabled" || value === "disabled",
+      ),
+    );
+    data.disabledModules = JSON.stringify(limpio);
+  }
+
   if ("isTrialSignup" in body) {
     data.isTrialSignup = Boolean(isTrialSignup);
     if (!data.isTrialSignup) {
@@ -399,6 +471,8 @@ export async function PATCH(request: NextRequest) {
         allowInstagramPublishing: true,
         allowLinkedInPublishing: true,
         allowThreadsPublishing: true,
+        allowFacebookPublishing: true,
+        aiImageGenerationEnabled: true,
         createdAt: true,
         isTrialSignup: true,
         trialStartedAt: true,

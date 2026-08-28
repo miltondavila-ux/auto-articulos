@@ -89,11 +89,35 @@ model User {
   // activarlo por usuario. Default: false (nadie tiene acceso).
   allowThreadsPublishing            Boolean   @default(false)
   allowFacebookPublishing           Boolean   @default(false)
+  // Control de acceso a publicación en Pinterest. Solo el admin puede
+  // activarlo por usuario. Default: false (nadie tiene acceso).
+  allowPinterestPublishing          Boolean   @default(false)
+  // Control de acceso a publicación en Tumblr. Solo el admin puede
+  // activarlo por usuario. Default: false (nadie tiene acceso).
+  allowTumblrPublishing              Boolean   @default(false)
+  // Control de acceso a publicación en Bluesky. Solo el admin puede activarlo.
+  allowBlueskyPublishing             Boolean   @default(false)
+  // Control de acceso a publicación en Mastodon. Solo el admin puede activarlo.
+  allowMastodonPublishing            Boolean   @default(false)
+  // Control de acceso a publicación de artículos adaptados en DEV.to.
+  allowDevToPublishing               Boolean   @default(false)
+  // Control de acceso al generador de imágenes con IA para redes sociales
+  // (20/8/2026, "Creador de Imágenes para Redes Sociales"). Solo el admin
+  // puede activarlo por usuario — es un upsell, no un reemplazo forzado.
+  // Default: false = se sigue usando la imagen OG del artículo tal cual,
+  // exactamente como hoy. En true, Instagram Story y Reel-image generan la
+  // imagen con IA (partiendo de la OG + logo/foto del usuario) en vez de
+  // usar la OG sin tocar. No afecta Carrusel/Infografía (ya generan imagen
+  // propia, no usan la OG).
+  aiImageGenerationEnabled          Boolean   @default(false)
   // Foto de perfil del usuario y logo de su negocio/marca.
   // Se usan como elementos visuales en las publicaciones de redes sociales
   // (carruseles, reels, infografías). Subidas como URLs de Vercel Blob.
   profilePhotoUrl                   String?
+  profilePhotoUrl2                  String?
+  profilePhotoUrl3                  String?
   businessLogoUrl                   String?
+  businessLogoUrl2                  String?
   // Plantilla de prompt personalizada para la generación de imágenes de
   // artículos y redes sociales. Null = usar el prompt por defecto del
   // sistema. Guardado en texto plano (no sensible).
@@ -139,6 +163,10 @@ model User {
   instagramIntegration       InstagramIntegration?
   facebookPageIntegration   FacebookPageIntegration?
   pinterestIntegration      PinterestIntegration?
+  tumblrIntegration         TumblrIntegration?
+  blueskyIntegration         BlueskyIntegration?
+  mastodonIntegration         MastodonIntegration?
+  devToIntegration           DevToIntegration?
   socialOpportunities        SocialOpportunity[]
   oauthAuthorizationCodes    OAuthAuthorizationCode[]
   oauthAccessTokens          OAuthAccessToken[]
@@ -317,6 +345,60 @@ model PinterestIntegration {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// Conexión manual de Mastodon: cada usuario puede pertenecer a una instancia
+// distinta y su Access Token se guarda cifrado.
+model MastodonIntegration {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  instanceUrl          String
+  username             String?
+  displayName          String?
+  accessTokenEncrypted String
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Conexión OAuth2 con Tumblr para publicar posts con imagen y enlace.
+model TumblrIntegration {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  blogIdentifier       String
+  blogTitle            String?
+  accessTokenEncrypted String
+  refreshTokenEncrypted String?
+  expiresAt            DateTime?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Conexión de Bluesky mediante handle y App Password cifrada.
+model BlueskyIntegration {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  handle               String
+  encryptedAppPassword String
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// API key de DEV.to cifrada para publicar artículos adaptados con canonical URL.
+model DevToIntegration {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  username             String?
+  encryptedApiKey      String
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 model SearchIntegration {
   id                    String    @id @default(cuid())
   userId                String
@@ -443,44 +525,21 @@ model OpportunityGroup {
   user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   category Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   titles   OpportunityTitle[]
-  clusters OpportunityCluster[]
 
   @@unique([userId, categoryId])
   @@index([userId, createdAt])
 }
 
 model OpportunityTitle {
-  id           String   @id @default(cuid())
-  groupId      String
-  clusterId    String?
-  text         String
-  rationale    String?
-  searchIntent String?
-  clusterRole  String?  // "pillar" | "support"
-  createdAt    DateTime @default(now())
+  id        String   @id @default(cuid())
+  groupId   String
+  text      String
+  rationale String?
+  createdAt DateTime @default(now())
 
-  group   OpportunityGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  cluster OpportunityCluster? @relation(fields: [clusterId], references: [id], onDelete: SetNull)
+  group OpportunityGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@index([groupId])
-  @@index([clusterId])
-}
-
-// Un cluster organiza oportunidades de una misma categoría alrededor de una
-// intención concreta. Sus títulos conservan groupId para que los flujos
-// actuales de ejecución por categoría permanezcan intactos.
-model OpportunityCluster {
-  id            String   @id @default(cuid())
-  groupId       String
-  topic         String
-  rationale     String?
-  primaryIntent String?
-  createdAt     DateTime @default(now())
-
-  group  OpportunityGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  titles OpportunityTitle[]
-
-  @@index([groupId, createdAt])
 }
 
 enum CategorySyncStatus {
@@ -554,6 +613,12 @@ model Title {
   articleUrl             String?
   finalTitle             String?
   errorMessage           String?
+  // Fecha original de la oportunidad, copiada al convertirla en un Run.
+  // NULL para publicaciones creadas directamente desde el módulo Publicar.
+  opportunityCreatedAt   DateTime?
+  // Momento en que el worker confirmó que el artículo quedó publicado.
+  // Se mantiene separado de processedAt, que también se usa para errores.
+  publishedAt            DateTime?
   processedAt            DateTime?
   googleIndexingStatus   String?
   googleIndexingMessage  String?
@@ -647,7 +712,7 @@ model SocialOpportunity {
   titleId       String?
   articleUrl    String
   articleTitle  String
-  platform      String // "threads" | "linkedin" | "x" | "instagram" | "facebook"
+  platform      String // "threads" | "linkedin" | "x" | "instagram" | "facebook" | "pinterest" | "tumblr"
   suggestedText String    @db.Text
   status        String    @default("pending") // "pending" | "published" | "skipped"
   progressPercent Int       @default(0)
@@ -657,6 +722,17 @@ model SocialOpportunity {
   postId        String?
   errorLog      String?   @db.Text
   skipReason    String?
+  // Columna real en la base desde la migración 20260811000000 pero nunca
+  // declarada en este schema — Prisma Client no podía leerla ni escribirla
+  // pese a existir en la tabla. Corregido 22/8/2026 al agregar el guardado
+  // del prompt/imagen de IA que pidió Milton.
+  imageUrl      String?
+  // Prompt EXACTO que se le mandó al generador de imagen (línea cruda del
+  // Director Creativo, sin modificar) — para que Milton pueda ver en el
+  // histórico qué se usó realmente en cada publicación, sin tener que
+  // reconstruirlo desde los logs de GitHub Actions. Pedido explícito de
+  // Milton, 22/8/2026.
+  aiImagePrompt String?   @db.Text
   createdAt     DateTime  @default(now())
   publishedAt   DateTime?
 

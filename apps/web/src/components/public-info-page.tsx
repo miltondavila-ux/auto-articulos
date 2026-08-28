@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
+import {
+  DEFAULT_PLATFORM_DOMAIN,
+  platformContactEmail,
+} from "@auto-articulos/shared";
 
-const linkStyle = { color: "#66d9e8", textDecoration: "none" } as const;
+const linkStyle = { color: "#f5f5f7", textDecoration: "none" } as const;
 
 export function PublicInfoPage({
   eyebrow,
@@ -64,7 +68,7 @@ export function PublicInfoPage({
           <p
             style={{
               margin: 0,
-              color: "#66d9e8",
+              color: "#f5f5f7",
               fontSize: 12,
               fontWeight: 800,
               letterSpacing: "0.14em",
@@ -105,7 +109,7 @@ export function PublicInfoPage({
             textAlign: "center",
           }}
         >
-          © 2026 Auto Artículos · Contacto: 10minuteswebsite@gmail.com
+          © 2026 Auto Artículos · Contacto: {platformContactEmail(DEFAULT_PLATFORM_DOMAIN)}
         </footer>
       </div>
     </main>

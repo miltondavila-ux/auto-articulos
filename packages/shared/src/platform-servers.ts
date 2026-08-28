@@ -29,6 +29,12 @@ export interface PlatformServer {
   // usuarios no deben ver ninguna mención a "10minutesWebsite" en la
   // interfaz — ver platformProductName().
   whiteLabel?: boolean;
+  /** Persona de contacto que ve la persona usuaria de este servidor. */
+  contactName: string;
+  /** Correo de contacto de este servidor. */
+  contactEmail: string;
+  /** Servicio técnico / ayuda de este servidor. */
+  helpUrl: string;
 }
 
 export const PLATFORM_SERVERS = {
@@ -36,16 +42,29 @@ export const PLATFORM_SERVERS = {
     baseUrl: "https://10minuteswebsite.net",
     label: "10minuteswebsite.net",
     whiteLabel: false,
+    contactName: "Milton Dávila",
+    contactEmail: "milton@10minuteswebsite.com",
+    helpUrl: "https://www.10minuteswebsite.com/ayuda",
   },
   site: {
     baseUrl: "https://10minuteswebsite.site",
     label: "10minuteswebsite.site",
     whiteLabel: false,
+    contactName: "Milton Dávila",
+    contactEmail: "milton@10minuteswebsite.com",
+    helpUrl: "https://www.10minuteswebsite.com/ayuda",
   },
+  // ATENCIÓN a los dominios, no son un error tipográfico: el panel de agentes
+  // de tagcrush vive en tagcrush.NET (baseUrl, donde entra el worker), pero su
+  // contacto y su servicio técnico están en tagcrush.COM. Datos dados por
+  // Milton el 18/8/2026. No "corregir" uno para que coincida con el otro.
   tagcrush: {
     baseUrl: "https://tagcrush.net",
     label: "tagcrush.net (Panel de agentes)",
     whiteLabel: true,
+    contactName: "Estee Soto",
+    contactEmail: "info@tagcrush.com",
+    helpUrl: "https://www.tagcrush.com/customer-service-chat",
   },
 } as const satisfies Record<string, PlatformServer>;
 
@@ -84,9 +103,18 @@ export function platformLabel(value: unknown): string {
   return PLATFORM_SERVERS[normalizePlatformDomain(value)].label;
 }
 
-/** Pantalla de recuperación de contraseña del servidor correspondiente. */
+/**
+ * Pantalla de recuperación de contraseña del servidor correspondiente.
+ *
+ * No es simplemente `${baseUrl}/dashboard/forgot-password.php`: tagcrush.net
+ * tiene su propia recuperación, pero net Y site comparten la misma — vive en
+ * www.10minuteswebsite.net incluso para cuentas alojadas en el dominio .site.
+ * Confirmado por Milton, 18/8/2026.
+ */
 export function platformForgotPasswordUrl(value: unknown): string {
-  return `${platformBaseUrl(value)}/dashboard/forgot-password.php`;
+  return isWhiteLabelPlatform(value)
+    ? `${platformBaseUrl(value)}/dashboard/forgot-password.php`
+    : "https://www.10minuteswebsite.net/dashboard/forgot-password.php";
 }
 
 export function isWhiteLabelPlatform(value: unknown): boolean {
@@ -104,14 +132,38 @@ export function platformProductName(value: unknown): string {
 }
 
 /**
- * Enlace de ayuda/soporte de la plataforma. null en cuentas de marca
- * blanca: no hay un URL real de soporte de tagcrush conocido, y mostrar el
- * de 10minutesWebsite rompería la marca blanca y mandaría a la persona a
- * soporte equivocado. Quien renderiza debe ocultar el enlace si es null,
- * no inventar uno.
+ * Igual que platformProductName, pero para cuando TODAVÍA no se sabe a qué
+ * servidor pertenece la cuenta.
+ *
+ * Las pantallas arrancaban su estado en el servidor por defecto, así que se
+ * dibujaban diciendo "10minutesWebsite" hasta que respondía /api/me: un
+ * usuario de tagcrush veía la marca ajena en ese instante, y de forma
+ * permanente si la llamada fallaba. Ante la duda se dice el término genérico:
+ * equivocarse hacia lo neutro no molesta a nadie, hacia la marca sí.
+ */
+export function platformProductNameOrNeutral(value: unknown): string {
+  return isPlatformDomain(value) ? platformProductName(value) : "tu plataforma";
+}
+
+/**
+ * Enlace de ayuda/soporte del servidor correspondiente.
+ *
+ * Antes devolvía null para marca blanca porque no se conocía un soporte
+ * propio de tagcrush y mandar a esa gente al de 10minutesWebsite rompía la
+ * marca blanca. El 18/8/2026 Milton dio el enlace real de tagcrush, así que
+ * ahora cada servidor tiene el suyo. Se mantiene el tipo `string | null`
+ * para no romper a quienes ya comprueban el null antes de renderizar.
  */
 export function platformHelpUrl(value: unknown): string | null {
-  return isWhiteLabelPlatform(value)
-    ? null
-    : "https://www.10minuteswebsite.com/ayuda";
+  return PLATFORM_SERVERS[normalizePlatformDomain(value)].helpUrl;
+}
+
+/** Persona de contacto del servidor correspondiente. */
+export function platformContactName(value: unknown): string {
+  return PLATFORM_SERVERS[normalizePlatformDomain(value)].contactName;
+}
+
+/** Correo de contacto del servidor correspondiente. */
+export function platformContactEmail(value: unknown): string {
+  return PLATFORM_SERVERS[normalizePlatformDomain(value)].contactEmail;
 }

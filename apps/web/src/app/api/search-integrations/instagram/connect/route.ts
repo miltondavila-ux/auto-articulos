@@ -4,7 +4,7 @@ import { getInstagramAuthUrl } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
 import { getStoredInstagramAppCredentials } from "@/lib/instagram-app-config";
 
-export const INSTAGRAM_STATE_COOKIE = "instagram_oauth_state";
+import { INSTAGRAM_STATE_COOKIE } from "./constants";
 
 export async function GET(request: Request) {
   await getCurrentUserId();

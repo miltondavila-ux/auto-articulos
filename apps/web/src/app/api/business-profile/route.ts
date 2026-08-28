@@ -8,11 +8,13 @@ import {
 } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
 
+const LOCATION_LOOKUP_COOLDOWN_MS = 60_000;
+
 async function integrationFor(userId: string) {
   return prisma.businessProfileIntegration.findUnique({ where: { userId } });
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const userId = await getCurrentUserId();
   const integration = await integrationFor(userId);
   if (!integration) return NextResponse.json({ connected: false });
@@ -25,35 +27,65 @@ export async function GET() {
     });
   }
 
-  // Conectado pero sin ubicación elegida todavía: se le muestran al usuario
-  // todas las ubicaciones reales de todas sus cuentas para que elija una,
-  // igual que se hace con las categorías/idiomas de 10minutesWebsite.
+  // Abrir Configuración no debe gastar cuota de Google. Las fichas se piden
+  // únicamente cuando el usuario pulsa Buscar fichas disponibles.
+  if (request.nextUrl.searchParams.get("locations") !== "1") {
+    return NextResponse.json({
+      connected: true,
+      needsLocation: true,
+      locations: [],
+      locationsLoaded: false,
+    });
+  }
+
+  const now = new Date();
+  const elapsedMs = now.getTime() - integration.updatedAt.getTime();
+  const retryAfterSeconds = Math.max(1, Math.ceil((LOCATION_LOOKUP_COOLDOWN_MS - elapsedMs) / 1000));
+  if (elapsedMs < LOCATION_LOOKUP_COOLDOWN_MS) {
+    return NextResponse.json({ connected: true, needsLocation: true, locations: [], locationsLoaded: false, retryAfterSeconds });
+  }
+
+  const claimed = await prisma.businessProfileIntegration.updateMany({
+    where: { userId, updatedAt: { lt: new Date(now.getTime() - LOCATION_LOOKUP_COOLDOWN_MS) } },
+    data: { updatedAt: now },
+  });
+  if (claimed.count === 0) {
+    return NextResponse.json({ connected: true, needsLocation: true, locations: [], locationsLoaded: false, retryAfterSeconds: 60 });
+  }
+
   try {
     const accessToken = await getGoogleAccessToken(
       decryptSecret(integration.encryptedRefreshToken),
     );
     const accounts = await listBusinessAccounts(accessToken);
-    const locations = (
-      await Promise.all(
-        accounts.map(async (account) => {
-          const accountLocations = await listBusinessLocations(
-            accessToken,
-            account.name,
-          );
-          return accountLocations.map((location) => ({
-            accountName: account.name,
-            locationName: location.name,
-            locationTitle: location.title,
-          }));
-        }),
-      )
-    ).flat();
-    return NextResponse.json({ connected: true, needsLocation: true, locations });
-  } catch {
+    const locations: { accountName: string; locationName: string; locationTitle: string }[] = [];
+    for (const account of accounts) {
+      const accountLocations = await listBusinessLocations(accessToken, account.name);
+      locations.push(
+        ...accountLocations.map((location) => ({
+          accountName: account.name,
+          locationName: location.name,
+          locationTitle: location.title,
+        })),
+      );
+    }
+    return NextResponse.json({
+      connected: true,
+      needsLocation: true,
+      locations,
+      locationsLoaded: true,
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No se pudieron consultar las fichas de Google.";
     return NextResponse.json({
       connected: true,
       needsLocation: true,
       locations: [],
+      locationsLoaded: true,
+      error: message,
     });
   }
 }

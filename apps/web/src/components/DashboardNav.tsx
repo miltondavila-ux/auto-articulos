@@ -58,7 +58,6 @@ const ADMIN_TAB: TabItem = { href: "/dashboard/usuarios", label: "Administració
 export default function DashboardNav() {
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
   const [disabledModules, setDisabledModules] = useState<string[]>([]);
   const [globalDisabledModules, setGlobalDisabledModules] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
@@ -73,7 +72,6 @@ export default function DashboardNav() {
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         setIsAdmin(data?.role === "admin" || Boolean(data?.isActingAdmin));
-        setUserEmail(typeof data?.email === "string" ? data.email.toLowerCase() : "");
         if (Array.isArray(data?.disabledModules)) {
           setDisabledModules(data.disabledModules);
         }
@@ -115,14 +113,14 @@ export default function DashboardNav() {
     };
   }, [openGroup]);
 
-  const canUseSocial = isAdmin || userEmail === "lorenalvarez30@gmail.com";
-
   // Misma regla de visibilidad que antes, aplicada ahora también dentro de los
   // grupos: Oportunidades Redes depende de su permiso propio y el resto de la
   // lista de módulos deshabilitados. Los administradores lo ven todo.
+  // El acceso a cada módulo sale del permiso real de la cuenta. Antes,
+  // Oportunidades Redes estaba clavado a un correo concreto en el código, así
+  // que no había forma de dárselo a otra persona desde Administración.
   function isVisible(tab: TabItem): boolean {
     if (isAdmin) return true;
-    if (tab.id === "oportunidades-redes") return canUseSocial;
     return !tab.id || !disabledModules.includes(tab.id);
   }
 
@@ -159,7 +157,7 @@ export default function DashboardNav() {
     color: active ? "#1d1d1f" : "#6e6e73",
     background: active ? "#ffffff" : "transparent",
     borderRadius: 10,
-    boxShadow: active ? "0 1px 3px rgba(0, 0, 0, 0.08)" : "none",
+    boxShadow: "none",
     whiteSpace: "nowrap",
     flexShrink: 0,
     transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
@@ -216,7 +214,7 @@ export default function DashboardNav() {
           border: "1px solid rgba(0, 0, 0, 0.08)",
           borderRadius: 12,
           cursor: "pointer",
-          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.06)",
+          boxShadow: "none",
           transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
           fontFamily: "inherit",
         }}
@@ -252,7 +250,7 @@ export default function DashboardNav() {
             overflow: "hidden",
             boxShadow: "0 16px 40px rgba(0, 0, 0, 0.12)",
             padding: 4,
-            maxHeight: "min(70vh, 520px)",
+            maxHeight: "min(70svh, 520px)",
             overflowY: "auto",
           }}
         >

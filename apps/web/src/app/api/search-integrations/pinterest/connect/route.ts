@@ -3,11 +3,15 @@ import { NextResponse } from "next/server";
 import { getPinterestAuthUrl } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
 import { getStoredPinterestAppCredentials } from "@/lib/pinterest-app-config";
+import { canPublishToNetwork } from "@/lib/social-access";
 
-export const PINTEREST_STATE_COOKIE = "pinterest_oauth_state";
+import { PINTEREST_STATE_COOKIE } from "./constants";
 
 export async function GET(request: Request) {
-  await getCurrentUserId();
+  const userId = await getCurrentUserId();
+  if (!(await canPublishToNetwork(userId, "pinterest"))) {
+    return NextResponse.json({ error: "Pinterest no está habilitado para este usuario." }, { status: 403 });
+  }
   try {
     const credentials = await getStoredPinterestAppCredentials();
     const url = new URL(request.url);

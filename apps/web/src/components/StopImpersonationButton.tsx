@@ -14,7 +14,7 @@ export default function StopImpersonationButton() {
         borderRadius: 8,
         border: "1px solid rgba(255, 159, 10, 0.35)",
         background: "rgba(255, 159, 10, 0.15)",
-        color: "#ff9f0a",
+        color: "#ff9500",
         fontWeight: 600,
         fontSize: 12,
         cursor: "pointer",

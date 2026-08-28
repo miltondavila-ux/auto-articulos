@@ -7,10 +7,88 @@ interface CustomArticleResult {
   contentHtml: string;
 }
 
+/**
+ * El editor de 10minutesWebsite muestra las tablas sin un estilo útil en
+ * móvil. Convertimos las tablas informativas simples que puede devolver el
+ * modelo en listas: conservan cada dato, pero se leen como parte natural del
+ * artículo y se adaptan a cualquier ancho de pantalla.
+ */
+export function convertGeneratedTablesToLists(html: string): string {
+  return html.replace(/<table\b[^>]*>([\s\S]*?)<\/table\s*>/gi, (_table, tableBody: string) => {
+    const rows = [...tableBody.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr\s*>/gi)]
+      .map((row) => {
+        const cells = [...row[1].matchAll(/<(th|td)\b[^>]*>([\s\S]*?)<\/\1\s*>/gi)];
+        return cells.length
+          ? {
+              cells: cells.map((cell) => cell[2].trim()),
+              isHeader: cells.every((cell) => cell[1].toLowerCase() === "th"),
+            }
+          : null;
+      })
+      .filter((row): row is { cells: string[]; isHeader: boolean } => row !== null);
+
+    if (!rows.length) return "";
+    const dataRows = rows[0].isHeader ? rows.slice(1) : rows;
+    if (!dataRows.length) return "";
+
+    const items = dataRows
+      .map(({ cells }) => {
+        const [label, ...details] = cells;
+        if (!label) return "";
+        const detail = details.filter(Boolean).join(" — ");
+        return `<li><strong>${label}</strong>${detail ? `: ${detail}` : ""}</li>`;
+      })
+      .filter(Boolean)
+      .join("");
+
+    return items ? `<ul>${items}</ul>` : "";
+  });
+}
+
+/**
+ * Los estilos corporativos existentes pueden pedir marcadores de identidad.
+ * Nunca deben hacer fallar toda la generación: el teléfono se resuelve más
+ * adelante con el dato real del perfil y el nombre se conoce en el worker.
+ */
+export function sanitizeGeneratedArticleResult(
+  article: CustomArticleResult,
+  authorName?: string | null,
+): CustomArticleResult {
+  const replaceIdentityMarkers = (value: string, preservePhone: boolean) =>
+    value
+      .replace(
+        /\{(?:TELEFONO|PHONE_NUMBER|NUMERO-WHATSAPP)\}/gi,
+        preservePhone ? "PHONE_NUMBER" : "",
+      )
+      .replace(/\{NOMBRE_AUTOR\}/gi, authorName?.trim() || "")
+      // Aún no existe un campo de ciudad en User; nunca dejamos el marcador
+      // crudo en el artículo mientras ese dato no esté configurado.
+      .replace(/\{CIUDAD_ESTADO\}/gi, "");
+  const removeScripts = (html: string) =>
+    html
+      // JSON-LD y scripts del prompt no pertenecen al editor del artículo.
+      // Quitarlos conserva el texto visible y evita que el reintento entero
+      // falle por un bloque no ejecutable en esta plataforma.
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, "")
+      // Defensa ante una etiqueta de script incompleta/malformada.
+      .replace(/<\/?script\b[^>]*>/gi, "");
+
+  return {
+    title: replaceIdentityMarkers(article.title, false).trim(),
+    summary: replaceIdentityMarkers(article.summary || "", false).trim(),
+    contentHtml: removeScripts(
+      convertGeneratedTablesToLists(
+        replaceIdentityMarkers(article.contentHtml, true),
+      ),
+    ).trim(),
+  };
+}
+
 export async function generateCustomArticle(
   titleText: string,
   promptTemplate: string,
-  contentLanguage: string
+  contentLanguage: string,
+  authorName?: string | null,
 ): Promise<CustomArticleResult> {
   if (!OPENAI_API_KEY) {
     throw new Error(
@@ -19,9 +97,10 @@ export async function generateCustomArticle(
   }
 
   // Reemplazar placeholders en el prompt del usuario
-  const userPrompt = promptTemplate
+  const customInstructions = promptTemplate
     .replace(/{title}/gi, titleText)
     .replace(/{keyword}/gi, titleText);
+  const userPrompt = `${customInstructions}\n\nTEMA OBLIGATORIO: "${titleText}". Escribe únicamente sobre este tema, aunque las instrucciones personalizadas no incluyan {title} ni {keyword}.`;
 
   const systemPrompt = `Eres un redactor experto en SEO y marketing digital.
 Tu tarea es escribir un artículo de blog completo de alta calidad en el idioma "${contentLanguage}", siguiendo de manera estricta las instrucciones dadas por el usuario.
@@ -30,51 +109,77 @@ Debes responder ÚNICAMENTE en formato JSON con la siguiente estructura exacta:
 {
   "title": "El título final u optimizado para el artículo (máximo 200 caracteres)",
   "summary": "Un resumen/extracto corto y atractivo para SEO, de 150 a 280 caracteres",
-  "contentHtml": "El cuerpo del artículo redactado en formato HTML limpio. Utiliza etiquetas semánticas como <h2>, <h3>, <p>, <strong>, <em>, <ul>, <ol>, <li>. NO incluyas etiquetas estructurales de documento completo como <html>, <head>, <body>, <!DOCTYPE>, ni bloques de código markdown como \`\`\`html."
+  "contentHtml": "El cuerpo del artículo redactado en formato HTML limpio. Utiliza etiquetas semánticas como <h2>, <h3>, <p>, <strong>, <em>, <ul>, <ol>, <li>. Para datos comparativos usa listas con etiquetas en negrita; NO uses <table>, <tr>, <th> ni <td>. NO incluyas etiquetas estructurales de documento completo como <html>, <head>, <body>, <!DOCTYPE>, ni bloques de código markdown como \`\`\`html."
 }
 
 Asegúrate de que el HTML generado sea válido y esté limpio.`;
 
-  const response = await fetch(OPENAI_CHAT_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini", // Modelo económico, rápido y de alto rendimiento
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      temperature: 0.7,
-    }),
-  });
+  const safetyRules = `
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Error en la llamada a OpenAI (Status ${response.status}): ${errorText}`);
-  }
+Límites obligatorios para que el resultado pueda guardarse correctamente:
+- Escribe un máximo de 1.200 palabras en contentHtml.
+- No incluyas <script>, JSON-LD, CSS, códigos QR, botones de contacto ni enlaces tel:/wa.me: Auto Artículos añade los datos de contacto reales de forma segura.
+- No uses tablas HTML. Si quieres destacar datos, redacta una lista de puntos breves y claros, con el dato en <strong> y su explicación a continuación.
+- No uses marcadores de datos personales; Auto Artículos los resuelve de forma segura si aparecieran.
+- Escapa correctamente cualquier comilla dentro del valor JSON de contentHtml.`;
 
-  const data = (await response.json()) as any;
-  const content = data.choices?.[0]?.message?.content;
+  let lastError = "";
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const response = await fetch(OPENAI_CHAT_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: systemPrompt + safetyRules },
+          {
+            role: "user",
+            content:
+              attempt === 0
+                ? userPrompt
+                : `${userPrompt}\n\nReintento: responde con un artículo más conciso y JSON completo, sin marcadores ni código estructurado.`,
+          },
+        ],
+        temperature: 0.5,
+        max_tokens: 10000,
+      }),
+    });
 
-  if (!content) {
-    throw new Error("La llamada a OpenAI no retornó ningún contenido.");
-  }
-
-  try {
-    const parsed = JSON.parse(content) as CustomArticleResult;
-    if (!parsed.title || !parsed.contentHtml) {
-      throw new Error("El JSON retornado por OpenAI no contiene los campos obligatorios 'title' y 'contentHtml'.");
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Error en la llamada a OpenAI (Status ${response.status}): ${errorText}`);
     }
-    return {
-      title: parsed.title.trim(),
-      summary: (parsed.summary || "").trim(),
-      contentHtml: parsed.contentHtml.trim(),
+
+    const data = (await response.json()) as {
+      choices?: { finish_reason?: string | null; message?: { content?: string } }[];
     };
-  } catch (e: any) {
-    throw new Error(`Error al parsear el JSON generado por OpenAI: ${e.message}. Contenido crudo: ${content}`);
+    const choice = data.choices?.[0];
+    const content = choice?.message?.content;
+
+    if (!content) {
+      lastError = "OpenAI no retornó contenido.";
+      continue;
+    }
+    if (choice?.finish_reason === "length") {
+      lastError = "OpenAI alcanzó el límite de longitud antes de completar el JSON.";
+      continue;
+    }
+
+    try {
+      const parsed = JSON.parse(content) as CustomArticleResult;
+      if (!parsed.title || !parsed.contentHtml) {
+        lastError = "El JSON retornado por OpenAI no contiene título y contenido completos.";
+        continue;
+      }
+      return sanitizeGeneratedArticleResult(parsed, authorName);
+    } catch (error) {
+      lastError = `OpenAI devolvió JSON inválido: ${error instanceof Error ? error.message : String(error)}`;
+    }
   }
+
+  throw new Error(`OpenAI no pudo generar un artículo válido tras dos intentos: ${lastError}`);
 }

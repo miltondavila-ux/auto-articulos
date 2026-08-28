@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import ModuleIntro, { IntroP, Modulo } from "@/components/ModuleIntro";
 import Link from "next/link";
 import type { RunRow } from "@/types/dashboard";
 import PerformanceDashboard from "@/components/PerformanceDashboard";
 import OnboardingWizard from "@/components/OnboardingWizard";
-import ComienzaAqui from "@/components/ComienzaAqui";
 import { TRIAL_DAYS } from "@/lib/trial";
 
 interface PublishedNotification {
@@ -135,11 +135,21 @@ export default function InicioPage() {
 
   return (
     <div>
-      <ComienzaAqui />
+      <ModuleIntro titulo="Inicio">
+        <IntroP>
+          Esta es tu pantalla de control. Aquí ves de un vistazo cómo va tu cuenta: cuántos artículos se han publicado hoy y este mes, cuánto te queda de tu límite y el ritmo que llevas.
+        </IntroP>
+        <IntroP>
+          Si tu cuenta es nueva y todavía no hay artículos, en lugar de las métricas verás el asistente de configuración, que te pide una por una las cuatro cosas que el sistema necesita para poder publicar por ti. Cuando termines, el resto de la plataforma se desbloquea.
+        </IntroP>
+        <IntroP>
+          Si no sabes por dónde empezar, <Modulo id="como-funciona" /> lo explica entero en tres pasos.
+        </IntroP>
+      </ModuleIntro>
       {showTrialWelcome && (
         <div
           style={{
-            background: "linear-gradient(135deg, rgba(0, 113, 227, 0.9) 0%, rgba(0, 75, 153, 0.9) 100%)",
+            background: "linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 75, 153, 0.9) 100%)",
             backdropFilter: "blur(20px) saturate(180%)",
             WebkitBackdropFilter: "blur(20px) saturate(180%)",
             color: "#fff",
@@ -152,13 +162,13 @@ export default function InicioPage() {
             alignItems: "center",
             gap: 16,
             flexWrap: "wrap",
-            boxShadow: "0 12px 32px rgba(0, 113, 227, 0.35)",
+            boxShadow: "none",
             border: "1px solid rgba(255, 255, 255, 0.2)",
           }}
         >
           <div>
             <p style={{ margin: 0, fontSize: 17, fontWeight: 700, letterSpacing: "-0.01em" }}>
-              🎉 ¡Bienvenido! Tienes {TRIAL_DAYS} días de prueba gratuita.
+              ¡Bienvenido! Tienes {TRIAL_DAYS} días de prueba gratuita.
             </p>
             <p style={{ margin: "6px 0 0", fontSize: 13, opacity: 0.9 }}>
               Explora todo el sistema sin restricciones durante este período.
@@ -204,10 +214,10 @@ export default function InicioPage() {
                 background: "#f2faf4",
                 border: "1px solid rgba(52, 199, 89, 0.3)",
                 fontSize: 13,
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.02)",
+                boxShadow: "none",
               }}
             >
-              <span style={{ color: "#1e8a4b" }}>
+              <span style={{ color: "#16803c" }}>
                 ✓ Artículo publicado: <strong style={{ color: "#1d1d1f" }}>{n.text}</strong>
                 {n.url && (
                   <>
@@ -216,7 +226,7 @@ export default function InicioPage() {
                       href={n.url}
                       target="_blank"
                       rel="noreferrer"
-                      style={{ color: "#0071e3", textDecoration: "underline" }}
+                      style={{ color: "#0066cc", textDecoration: "underline" }}
                     >
                       Ver artículo
                     </a>
@@ -243,7 +253,33 @@ export default function InicioPage() {
       {wizardComplete === false ? (
         <OnboardingWizard onUpdated={checkWizardStatus} />
       ) : wizardComplete === true ? (
-        <PerformanceDashboard />
+        <>
+          {/* Pedido explícito del usuario (23/8/2026): "Comienza aquí" vive
+              acá, no en Cómo Funciona — solo tiene sentido una vez que el
+              asistente de configuración ya desapareció y esta pantalla
+              muestra el panel de rendimiento en su lugar. */}
+          <div style={{ marginTop: 20, marginBottom: 20 }}>
+            <Link
+              href="/dashboard/oportunidades"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "11px 20px",
+                borderRadius: 980,
+                fontSize: 15,
+                fontWeight: 500,
+                textDecoration: "none",
+                color: "#ffffff",
+                background: "#1d1d1f",
+              }}
+            >
+              Comienza aquí
+              <span aria-hidden="true">›</span>
+            </Link>
+          </div>
+          <PerformanceDashboard />
+        </>
       ) : null}
 
       {activeRun && (
@@ -254,15 +290,15 @@ export default function InicioPage() {
             borderRadius: 12,
             background: "#f2faf4",
             border: "1px solid rgba(52, 199, 89, 0.3)",
-            color: "#1e8a4b",
+            color: "#16803c",
             fontSize: 13,
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.02)",
+            boxShadow: "none",
           }}
         >
           Hay una publicación en curso.{" "}
           <Link
             href="/dashboard/publicaciones-en-curso"
-            style={{ color: "#0071e3", fontWeight: 600, textDecoration: "underline" }}
+            style={{ color: "#0066cc", fontWeight: 600, textDecoration: "underline" }}
           >
             Ver progreso en Publicaciones en Curso
           </Link>

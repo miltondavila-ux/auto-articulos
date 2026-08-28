@@ -9,7 +9,6 @@ export default function ModuleGuard({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [disabledModules, setDisabledModules] = useState<string[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isLorena, setIsLorena] = useState(false);
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
@@ -20,7 +19,6 @@ export default function ModuleGuard({ children }: { children: ReactNode }) {
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         setIsAdmin(data?.role === "admin" || Boolean(data?.isActingAdmin));
-        setIsLorena(typeof data?.email === "string" && data.email.toLowerCase() === "lorenalvarez30@gmail.com");
         if (Array.isArray(data?.disabledModules)) {
           setDisabledModules(data.disabledModules);
         }
@@ -36,10 +34,19 @@ export default function ModuleGuard({ children }: { children: ReactNode }) {
     return <>{children}</>;
   }
 
-  const matchingModule = SYSTEM_MODULES.find((m) =>
-    Boolean(pathname && pathname.startsWith(m.href)),
-  );
-  if (matchingModule && disabledModules.includes(matchingModule.id) && !(isLorena && matchingModule.id === "oportunidades-redes")) {
+  /*
+   * Coincidencia por segmento de ruta, no por prefijo de texto.
+   *
+   * Con startsWith, "/dashboard/oportunidades-redes" empezaba por
+   * "/dashboard/oportunidades", así que el guard resolvía la pantalla de redes
+   * como si fuera el módulo de Oportunidades: apagar uno apagaba el otro, y
+   * apagar redes no protegía nada. Se elige además la coincidencia más larga,
+   * para que gane siempre el módulo más específico.
+   */
+  const matchingModule = SYSTEM_MODULES.filter(
+    (m) => pathname === m.href || pathname?.startsWith(`${m.href}/`),
+  ).sort((a, b) => b.href.length - a.href.length)[0];
+  if (matchingModule && disabledModules.includes(matchingModule.id)) {
     return (
       <div
         style={{
@@ -48,14 +55,14 @@ export default function ModuleGuard({ children }: { children: ReactNode }) {
           background: "#ffffff",
           borderRadius: 22,
           border: "1px solid rgba(0, 0, 0, 0.07)",
-          boxShadow: "0 12px 38px rgba(0, 0, 0, 0.06)",
+          boxShadow: "none",
           textAlign: "center",
           maxWidth: 600,
           marginLeft: "auto",
           marginRight: "auto",
         }}
       >
-        <div style={{ fontSize: 40, marginBottom: 12 }}>🛠️</div>
+        <div style={{ fontSize: 40, marginBottom: 12 }}></div>
         <h2 style={{ fontSize: 22, color: "#1d1d1f", margin: "0 0 10px" }}>
           Módulo en mantenimiento
         </h2>
@@ -76,7 +83,7 @@ export default function ModuleGuard({ children }: { children: ReactNode }) {
           style={{
             display: "inline-block",
             padding: "10px 20px",
-            background: "#0071e3",
+            background: "#1d1d1f",
             color: "#ffffff",
             borderRadius: 10,
             fontSize: 14,

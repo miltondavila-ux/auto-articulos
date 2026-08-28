@@ -7,6 +7,7 @@ import {
 } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
 import { analyzeSeoOpportunities } from "@/lib/opportunity-analysis";
+import { getGoogleAnalyticsSignals, summarizeGoogleAnalyticsSignals } from "@/lib/google-analytics-signals";
 
 const COOLDOWN_DAYS = 3;
 const COOLDOWN_MS = COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
@@ -19,7 +20,7 @@ async function list(userId: string) {
   return prisma.opportunityGroup.findMany({
     where: { userId },
     orderBy: [{ impressions: "desc" }, { createdAt: "desc" }],
-    include: { category: true, titles: { orderBy: { createdAt: "asc" }, include: { cluster: true } } },
+    include: { category: true, titles: { orderBy: { createdAt: "asc" } } },
   });
 }
 
@@ -159,6 +160,7 @@ export async function POST(request: Request) {
         { status: 422 },
       );
     }
+    const googleAnalyticsSignals = await getGoogleAnalyticsSignals(userId);
     const analysis = await analyzeSeoOpportunities({
       categories,
       currentRows,
@@ -167,6 +169,7 @@ export async function POST(request: Request) {
       existingTitles: existing.flatMap((title) =>
         title.finalTitle ? [title.text, title.finalTitle] : [title.text],
       ),
+      googleAnalyticsSummary: summarizeGoogleAnalyticsSignals(googleAnalyticsSignals),
     });
 
     const now = new Date();
@@ -191,37 +194,16 @@ export async function POST(request: Request) {
         where: { userId, category: { panel } },
       });
       for (const group of analysis.groups) {
-        const createdGroup = await tx.opportunityGroup.create({
+        await tx.opportunityGroup.create({
           data: {
             userId,
             categoryId: group.categoryId,
             rationale: group.rationale,
             impressions: group.impressions,
             clicks: group.clicks,
+            titles: { create: group.titles },
           },
-          select: { id: true },
         });
-        for (const cluster of group.clusters) {
-          const createdCluster = await tx.opportunityCluster.create({
-            data: {
-              groupId: createdGroup.id,
-              topic: cluster.topic,
-              rationale: cluster.rationale,
-              primaryIntent: cluster.primaryIntent,
-            },
-            select: { id: true },
-          });
-          await tx.opportunityTitle.createMany({
-            data: cluster.titles.map((title) => ({
-              groupId: createdGroup.id,
-              clusterId: createdCluster.id,
-              text: title.text,
-              rationale: title.rationale,
-              searchIntent: title.searchIntent,
-              clusterRole: title.clusterRole,
-            })),
-          });
-        }
       }
       await tx.user.update({
         where: { id: userId },

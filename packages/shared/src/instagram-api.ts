@@ -239,9 +239,16 @@ export async function publishInstagramImage(
   accessToken: string,
   instagramBusinessAccountId: string,
   imageUrl: string,
-  caption: string
+  caption: string,
+  // Requerido a propósito (no opcional/default) para forzar a cada llamador
+  // a decidir explícitamente — antes quedaba hardcodeado en "true" siempre,
+  // incluso cuando la imagen era la foto OG del artículo sin tocar (Opción
+  // 1, sin IA involucrada). Eso etiquetaba ante Meta como "generado por IA"
+  // contenido que en realidad era una foto real, solo recortada. Auditoría
+  // 21/8/2026.
+  isAiGenerated: boolean,
 ): Promise<InstagramPublishResult> {
-  console.log(`[Instagram API] publishImage: businessAccountId=${instagramBusinessAccountId} imageUrl=${imageUrl.substring(0, 100)}`);
+  console.log(`[Instagram API] publishImage: businessAccountId=${instagramBusinessAccountId} imageUrl=${imageUrl.substring(0, 100)} isAiGenerated=${isAiGenerated}`);
   const maxCaption = 2200;
   const safeCaption = caption.length > maxCaption
     ? caption.substring(0, maxCaption - 3) + "..."
@@ -251,7 +258,7 @@ export async function publishInstagramImage(
     media_type: "IMAGE",
     image_url: imageUrl,
     caption: safeCaption,
-    is_ai_generated: "true",
+    is_ai_generated: isAiGenerated ? "true" : "false",
     access_token: accessToken,
   });
 
@@ -284,10 +291,15 @@ export async function publishInstagramStory(
   accessToken: string,
   instagramBusinessAccountId: string,
   imageUrl: string,
+  // Antes esta función nunca enviaba is_ai_generated, por lo que ninguna
+  // Historia quedaba etiquetada como generada por IA ante Meta aunque sí lo
+  // fuera. Auditoría 21/8/2026, mismo hallazgo que en publishInstagramImage.
+  isAiGenerated: boolean,
 ): Promise<InstagramPublishResult> {
   const containerParams = new URLSearchParams({
     media_type: "STORIES",
     image_url: imageUrl,
+    is_ai_generated: isAiGenerated ? "true" : "false",
     access_token: accessToken,
   });
   const containerRes = await fetch(`${GRAPH_API_URL}/${instagramBusinessAccountId}/media`, {
@@ -297,7 +309,13 @@ export async function publishInstagramStory(
   });
   if (!containerRes.ok) throw new Error(`Error al crear la Historia de Instagram: ${await containerRes.text()}`);
   const { id: creationId } = (await containerRes.json()) as { id: string };
-  await pollMediaContainerStatus(accessToken, creationId);
+  // 120s en vez del default de 60s: confirmado en vivo (20/8/2026, cuenta de
+  // Lorena) que Instagram tarda más de 60s en procesar el media de una
+  // Story incluso con un JPEG de 300KB — no es cuestión de peso de archivo.
+  // El historial de Stories previo a esto (17/8/2026) también fallaba
+  // siempre por este mismo timeout, con o sin imagen de IA, así que dar más
+  // margen no arriesga nada que ya funcionara.
+  await pollMediaContainerStatus(accessToken, creationId, 120);
   return publishMediaContainer(accessToken, instagramBusinessAccountId, creationId);
 }
 
@@ -531,14 +549,21 @@ async function pollMediaContainerStatus(
     await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
 
     try {
+      // "error_message" NO es un campo válido en este objeto de status para
+      // Instagram (Graph API responde 400 "Tried accessing nonexisting
+      // field" al pedirlo) — confirmado en vivo el 20/8/2026. Pedirlo hacía
+      // que TODAS las consultas de estado fallaran con 400, así que nunca se
+      // llegaba a leer status_code y siempre se agotaba el tiempo de espera,
+      // sin importar qué tan rápido terminara Instagram de verdad. Esto
+      // afectaba a los 4 tipos de publicación de Instagram (story, reel,
+      // carousel, imagen), no solo a este generador de imágenes con IA.
       const statusRes = await fetch(
-        `${GRAPH_API_URL}/${creationId}?fields=status_code,error_message,id&access_token=${accessToken}`
+        `${GRAPH_API_URL}/${creationId}?fields=status_code,id&access_token=${accessToken}`
       );
 
       if (statusRes.ok) {
         const statusData = (await statusRes.json()) as {
           status_code: string;
-          error_message?: string;
         };
 
         console.log(`[Instagram Poll] creation_id=${creationId} status=${statusData.status_code} attempt=${attempts}/${maxAttempts}`);
@@ -546,9 +571,7 @@ async function pollMediaContainerStatus(
         if (statusData.status_code === "FINISHED") {
           finished = true;
         } else if (statusData.status_code === "ERROR") {
-          throw new Error(
-            `El procesamiento del media en Instagram falló: ${statusData.error_message || "Error desconocido"}`
-          );
+          throw new Error(`El procesamiento del media en Instagram falló (creation_id: ${creationId}).`);
         }
       } else {
         const errText = await statusRes.text();

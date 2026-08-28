@@ -4,6 +4,18 @@ import {
   publicHeadingStyle,
   publicLinkStyle,
 } from "@/components/public-info-page";
+import {
+  DEFAULT_PLATFORM_DOMAIN,
+  platformContactEmail,
+} from "@auto-articulos/shared";
+
+/*
+ * Contacto del servidor por defecto: estas páginas son públicas y quien las
+ * lee todavía no tiene sesión, así que no se puede saber si viene de
+ * 10minutesWebsite o de tagcrush. Dentro del panel sí se sabe y se usa
+ * platformContactEmail(user.platformDomain).
+ */
+const CONTACTO = platformContactEmail(DEFAULT_PLATFORM_DOMAIN);
 
 export const metadata: Metadata = {
   title: "Acerca de Auto Artículos",
@@ -43,8 +55,8 @@ export default function AboutPage() {
           iniciar sesión aquí
         </a>
         . Para preguntas sobre la aplicación o sus permisos, escribe a{" "}
-        <a href="mailto:10minuteswebsite@gmail.com" style={publicLinkStyle}>
-          10minuteswebsite@gmail.com
+        <a href={`mailto:${CONTACTO}`} style={publicLinkStyle}>
+          {CONTACTO}
         </a>
         .
       </p>

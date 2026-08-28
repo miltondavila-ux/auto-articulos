@@ -20,10 +20,10 @@ export default function MaintenanceScreen() {
           background: "#fff",
           border: "1px solid #e5e5ea",
           textAlign: "center",
-          boxShadow: "0 12px 36px rgba(0,0,0,.06)",
+          boxShadow: "none",
         }}
       >
-        <p style={{ margin: "0 0 10px", color: "#0071e3", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", fontSize: 12 }}>
+        <p style={{ margin: "0 0 10px", color: "#1d1d1f", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", fontSize: 12 }}>
           Auto Artículos
         </p>
         <h1 style={{ margin: "0 0 12px", fontSize: 28 }}>Estamos en mantenimiento</h1>

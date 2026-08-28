@@ -1,14 +1,18 @@
 import type { CSSProperties } from "react";
 import type { RunStatus, TitleStatus } from "@/types/dashboard";
 
+// Lenguaje de las páginas de soporte de Apple, pedido por Milton (18/8/2026):
+// fondo blanco inmaculado en todo el sistema y secciones separadas por una
+// línea fina en vez de una sombra flotante. Sobre fondo blanco una sombra no
+// delimita nada; la línea sí.
 export const sectionStyle: CSSProperties = {
-  background: "rgba(255, 255, 255, 0.88)",
+  background: "#ffffff",
   color: "#1d1d1f",
-  border: "1px solid rgba(0, 0, 0, 0.07)",
-  borderRadius: 22,
+  border: "1px solid #d2d2d7",
+  borderRadius: 18,
   padding: 24,
-  marginTop: 20,
-  boxShadow: "0 12px 38px rgba(0, 0, 0, 0.06)",
+  marginTop: 16,
+  boxShadow: "none",
   boxSizing: "border-box",
   width: "100%",
 };
@@ -39,7 +43,7 @@ export const buttonStyle: CSSProperties = {
   padding: "11px 16px",
   borderRadius: 10,
   border: "none",
-  background: "#0071e3",
+  background: "#1d1d1f",
   color: "#ffffff",
   fontWeight: 500,
   fontSize: 14,
@@ -56,7 +60,7 @@ export const secondaryButtonStyle: CSSProperties = {
   borderRadius: 10,
   border: "1px solid #d2d2d7",
   background: "#ffffff",
-  color: "#0071e3",
+  color: "#1d1d1f",
   fontWeight: 500,
   fontSize: 14,
   cursor: "pointer",

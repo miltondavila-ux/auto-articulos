@@ -8,11 +8,13 @@ import {
   secondaryButtonStyle,
 } from "./dashboard-ui";
 import {
-  DEFAULT_PLATFORM_DOMAIN,
-  PLATFORM_SERVERS,
-  platformProductName,
+  platformForgotPasswordUrl,
+  platformProductNameOrNeutral,
 } from "@auto-articulos/shared";
 import type { CategoryRow, LanguageRow, RunRow } from "@/types/dashboard";
+import CategorySyncProgress, {
+  type CategorySyncStatus,
+} from "@/components/CategorySyncProgress";
 
 interface OnboardingWizardProps {
   variant?: "standalone" | "embedded";
@@ -28,17 +30,11 @@ export default function OnboardingWizard({
   const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [languages, setLanguages] = useState<LanguageRow[]>([]);
   const [contentLanguage, setContentLanguage] = useState("");
-  // Servidor real de la cuenta (net / site / tagcrush). Arranca en el valor
-  // histórico por defecto para que, si /api/me todavía no respondió, el
-  // enlace apunte a donde apuntaba antes en vez de quedar roto.
-  const [platformBase, setPlatformBase] = useState(
-    PLATFORM_SERVERS[DEFAULT_PLATFORM_DOMAIN].baseUrl,
-  );
   // Para marca blanca (tagcrush): decide si el texto dice "10minutesWebsite"
   // o un término genérico. Ver platform-servers.ts.
-  const [platformDomain, setPlatformDomain] = useState<string>(
-    DEFAULT_PLATFORM_DOMAIN,
-  );
+  // Vacío a propósito hasta que /api/me diga el servidor real: mientras
+  // tanto el texto usa el término genérico y nunca la marca equivocada.
+  const [platformDomain, setPlatformDomain] = useState<string>("");
   const [selectedLang, setSelectedLang] = useState("");
   const [googleData, setGoogleData] = useState<{
     connected: boolean;
@@ -64,7 +60,7 @@ export default function OnboardingWizard({
   const [lastSyncStatus, setLastSyncStatus] = useState<string | null>(null);
   const [lastSyncError, setLastSyncError] = useState<string | null>(null);
   // true solo si la persona pulsó sincronizar en esta visita: evita saludarla
-  // con un "✅ sincronizado" cada vez que abre el asistente.
+  // con un "sincronizado" cada vez que abre el asistente.
   const [syncRequested, setSyncRequested] = useState(false);
   const [syncingLanguages, setSyncingLanguages] = useState(false);
   const [savingLanguage, setSavingLanguage] = useState(false);
@@ -124,7 +120,7 @@ export default function OnboardingWizard({
           } else if (lastJob.status === "success") {
             setMessage({
               type: "info",
-              text: "⚠️ La última conexión con tu sitio funcionó, pero no se encontraron categorías creadas. Créalas en tu plataforma y vuelve a sincronizar.",
+              text: "La última conexión con tu sitio funcionó, pero no se encontraron categorías creadas. Créalas en tu plataforma y vuelve a sincronizar.",
             });
           }
         }
@@ -138,9 +134,6 @@ export default function OnboardingWizard({
         const lang = data.contentLanguage || "";
         setContentLanguage(lang);
         setSelectedLang(lang || "es");
-        if (typeof data.platformBaseUrl === "string" && data.platformBaseUrl) {
-          setPlatformBase(data.platformBaseUrl);
-        }
         if (typeof data.platformDomain === "string") {
           setPlatformDomain(data.platformDomain);
         }
@@ -189,7 +182,7 @@ export default function OnboardingWizard({
   // Resultado del intento, una vez que el job dejó de estar en curso. Los
   // errores se muestran siempre (son la única pista de qué falló); el éxito,
   // solo si la persona pidió sincronizar en esta visita, para no saludarla con
-  // un "✅ sincronizado" cada vez que abre el asistente.
+  // un "sincronizado" cada vez que abre el asistente.
   useEffect(() => {
     if (categorySyncInProgress) return;
     if (lastSyncStatus === "error") {
@@ -203,13 +196,13 @@ export default function OnboardingWizard({
     if (categories.length > 0) {
       setMessage({
         type: "success",
-        text: `✅ ¡Listo! Se descargaron ${categories.length} categorías de tu sitio web.`,
+        text: `¡Listo! Se descargaron ${categories.length} categorías de tu sitio web.`,
       });
       onUpdated?.();
     } else {
       setMessage({
         type: "info",
-        text: "⚠️ La conexión funcionó, pero tu sitio no tiene categorías creadas todavía. Créalas en tu plataforma y vuelve a sincronizar.",
+        text: "La conexión funcionó, pero tu sitio no tiene categorías creadas todavía. Créalas en tu plataforma y vuelve a sincronizar.",
       });
     }
     setSyncRequested(false);
@@ -264,7 +257,7 @@ export default function OnboardingWizard({
     setSyncRequested(true);
     setMessage({
       type: "info",
-      text: "🔄 Conectando con tu sitio para descargar tus categorías...",
+      text: "Conectando con tu sitio para descargar tus categorías...",
     });
     try {
       const [catRes] = await Promise.all([
@@ -309,7 +302,7 @@ export default function OnboardingWizard({
       }
       setManualCategoryName("");
       setShowManualCategory(false);
-      setMessage({ type: "success", text: `✅ Categoría "${cleanName}" agregada con éxito.` });
+      setMessage({ type: "success", text: `Categoría "${cleanName}" agregada con éxito.` });
       await loadAll();
       onUpdated?.();
     } finally {
@@ -357,7 +350,7 @@ export default function OnboardingWizard({
         (cleanLang === "es" ? "Español" : cleanLang === "en" ? "Inglés" : cleanLang);
       setMessage({
         type: "success",
-        text: `✅ Doble validación exitosa: Idioma ${name} confirmado y verificado en la base de datos.`,
+        text: `Doble validación exitosa: Idioma ${name} confirmado y verificado en la base de datos.`,
       });
       await loadAll();
       onUpdated?.();
@@ -419,7 +412,27 @@ export default function OnboardingWizard({
   // EVALUACIÓN SECUENCIAL ESTRICTA
   // Un paso SOLO está completado si los anteriores también lo están
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  const step1Done = credentialsConfigured;
+  // OJO con la diferencia entre estas dos, es la corrección de un defecto real
+  // (cuenta de Stefany Meza, 15/8/2026): la pantalla mostraba el Paso 1 en
+  // verde diciendo "credenciales verificadas" AL MISMO TIEMPO que un error
+  // rojo de "no se pudo iniciar sesión". Guardar credenciales NUNCA las
+  // prueba — POST /api/credentials cifra y guarda, nada más — así que
+  // `credentialsConfigured` solo significa "hay una fila guardada", jamás
+  // significó "el login funciona".
+  //
+  // `step1Saved` sigue siendo lo que DESBLOQUEA el Paso 2: hay que poder
+  // intentar sincronizar para poder probar las credenciales (si el verde
+  // dependiera de la sincronización y la sincronización del verde, nadie
+  // podría avanzar nunca).
+  //
+  // `step1Verified` es lo único que pinta verde: la ÚNICA prueba real de que
+  // el usuario y la contraseña sirven es que un login de verdad haya
+  // funcionado, y eso solo ocurre cuando una sincronización de categorías
+  // termina bien (el worker es quien abre el navegador y entra al sitio).
+  const step1Saved = credentialsConfigured;
+  const step1Verified =
+    step1Saved && (lastSyncStatus === "success" || categories.length > 0);
+  const step1Done = step1Saved;
   const step2Done = step1Done && categories.length > 0;
   const step3Done = step1Done && step2Done && Boolean(contentLanguage);
   const step4Done = step1Done && step2Done && step3Done && Boolean(googleData?.connected && googleData?.siteUrl);
@@ -433,15 +446,15 @@ export default function OnboardingWizard({
   else if (step1Done && step2Done && step3Done && step4Done) activeStep = 5;
 
   const totalCoreSteps = 4;
-  const completedCoreSteps = [step1Done, step2Done, step3Done, step4Done].filter(Boolean).length;
+  // El progreso cuenta el Paso 1 solo si está VERIFICADO de verdad: si no, el
+  // porcentaje también estaría mintiendo.
+  const completedCoreSteps = [step1Verified, step2Done, step3Done, step4Done].filter(Boolean).length;
   const allCoreDone = completedCoreSteps === totalCoreSteps;
   const progressPercent = Math.round((completedCoreSteps / totalCoreSteps) * 100);
 
-  // "https://tagcrush.net" -> "tagcrush.net", para el texto visible.
-  const platformHost = platformBase.replace(/^https?:\/\//, "");
   // Nombre de marca a mostrar: "10minutesWebsite" para cuentas normales, un
   // término genérico para marca blanca (tagcrush) — ver platform-servers.ts.
-  const productName = platformProductName(platformDomain);
+  const productName = platformProductNameOrNeutral(platformDomain);
 
   const activeLangName =
     languages.find((l) => l.externalId === contentLanguage)?.name ||
@@ -457,6 +470,56 @@ export default function OnboardingWizard({
 
   return (
     <div style={{ marginBottom: 24 }}>
+      {/* Invitación a leer "Cómo Funciona" antes de empezar. Pedido explícito
+          del usuario (23/8/2026): quien recién llega debe poder entender el
+          panorama completo antes de meterse en los 4 pasos, y volver aquí
+          sin fricción — por eso el enlace manda de vuelta a /dashboard, que
+          es exactamente donde vive este asistente mientras la cuenta no esté
+          configurada del todo: no hay nada que "perder" al ir y volver. */}
+      <div
+        style={{
+          marginBottom: 16,
+          padding: "14px 18px",
+          borderRadius: 12,
+          background: "#f5f5f7",
+          border: "1px solid #e5e5ea",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 12,
+        }}
+      >
+        <div style={{ fontSize: 13, color: "#1d1d1f", lineHeight: 1.5 }}>
+          <strong>¿Primera vez aquí?</strong> Antes de completar estos pasos,
+          te recomendamos leer{" "}
+          <Link
+            href="/dashboard/como-funciona"
+            style={{ color: "#0066cc", fontWeight: 600, textDecoration: "underline" }}
+          >
+            Cómo Funciona
+          </Link>{" "}
+          — toma un par de minutos y te explica todo el panorama. Cuando
+          termines, vuelve a Inicio para seguir aquí mismo, exactamente donde
+          lo dejaste.
+        </div>
+        <Link
+          href="/dashboard/como-funciona"
+          style={{
+            background: "#1d1d1f",
+            color: "#fff",
+            textDecoration: "none",
+            padding: "8px 16px",
+            borderRadius: 8,
+            fontSize: 13,
+            fontWeight: 600,
+            whiteSpace: "nowrap",
+          }}
+        >
+          Leer Cómo Funciona →
+        </Link>
+      </div>
+
       {/* Mensajes de feedback */}
       {message && (
         <div
@@ -474,19 +537,19 @@ export default function OnboardingWizard({
                 ? "rgba(52, 199, 89, 0.1)"
                 : message.type === "error"
                   ? "rgba(255, 59, 48, 0.08)"
-                  : "#e8f2ff",
+                  : "#f5f5f7",
             border:
               message.type === "success"
                 ? "1px solid rgba(52, 199, 89, 0.25)"
                 : message.type === "error"
                   ? "1px solid rgba(255, 59, 48, 0.3)"
-                  : "1px solid rgba(0, 113, 227, 0.25)",
+                  : "1px solid rgba(0, 0, 0, 0.25)",
             color:
               message.type === "success"
                 ? "#16803c"
                 : message.type === "error"
                   ? "#ff3b30"
-                  : "#0071e3",
+                  : "#1d1d1f",
           }}
         >
           <span>{message.text}</span>
@@ -511,7 +574,7 @@ export default function OnboardingWizard({
           background: "rgba(255, 255, 255, 0.88)",
           borderRadius: 22,
           border: "1px solid rgba(0, 0, 0, 0.07)",
-          boxShadow: "0 12px 38px rgba(0, 0, 0, 0.06)",
+          boxShadow: "none",
           overflow: "hidden",
           padding: 0,
         }}
@@ -564,12 +627,12 @@ export default function OnboardingWizard({
                 style={{
                   width: `${progressPercent}%`,
                   height: "100%",
-                  background: allCoreDone ? "#34c759" : "#0071e3",
+                  background: allCoreDone ? "#34c759" : "#1d1d1f",
                   transition: "width 0.4s ease",
                 }}
               />
             </div>
-            <span style={{ fontSize: 12, fontWeight: 600, color: allCoreDone ? "#16803c" : "#0071e3" }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: allCoreDone ? "#16803c" : "#1d1d1f" }}>
               {allCoreDone ? "100% Configurado" : `${progressPercent}% completado`}
             </span>
           </div>
@@ -585,9 +648,15 @@ export default function OnboardingWizard({
             stepNumber={1}
             title={`Conectar tu cuenta de ${productName}`}
             subtitle={`Ingresa el usuario y contraseña con los que entras a tu plataforma de ${productName}.`}
-            isDone={step1Done}
+            isDone={step1Verified}
             isActive={activeStep === 1}
-            badgeText={step1Done ? "Conectado" : "Paso 1 en curso"}
+            badgeText={
+              step1Verified
+                ? "Conectado"
+                : step1Saved
+                  ? "Pendiente de verificar"
+                  : "Paso 1 en curso"
+            }
           >
             {step1Done && !editingCreds ? (
               <div
@@ -599,13 +668,24 @@ export default function OnboardingWizard({
                   gap: 12,
                   marginTop: 10,
                   padding: "10px 14px",
-                  background: "rgba(52, 199, 89, 0.1)",
+                  background: step1Verified
+                    ? "rgba(52, 199, 89, 0.1)"
+                    : "rgba(255, 149, 0, 0.1)",
                   borderRadius: 8,
-                  border: "1px solid rgba(52, 199, 89, 0.25)",
+                  border: step1Verified
+                    ? "1px solid rgba(52, 199, 89, 0.25)"
+                    : "1px solid rgba(255, 149, 0, 0.35)",
                 }}
               >
-                <div style={{ fontSize: 13, color: "#16803c" }}>
-                  ✅ Credenciales de {productName} guardadas y verificadas de forma segura.
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: step1Verified ? "#16803c" : "#8a5a00",
+                  }}
+                >
+                  {step1Verified
+                    ? `Credenciales de ${productName} verificadas: la conexión con tu cuenta funciona.`
+                    : `Credenciales de ${productName} guardadas de forma segura, pendientes de verificar. Se comprobarán al sincronizar tus categorías en el Paso 2.`}
                 </div>
                 <button
                   type="button"
@@ -617,46 +697,46 @@ export default function OnboardingWizard({
               </div>
             ) : (
               <div style={{ marginTop: 12 }}>
-                {/* Cuadro de ayuda para contraseña */}
+                {/* Cuadro de recomendación fuerte para resetear contraseña */}
                 <div
                   style={{
-                    background: "#e8f2ff",
-                    border: "1px solid rgba(0, 113, 227, 0.25)",
+                    background: "#fff4e5",
+                    border: "1.5px solid rgba(255, 149, 0, 0.4)",
                     borderRadius: 8,
                     padding: "12px 14px",
                     marginBottom: 14,
                     fontSize: 13,
-                    color: "#0071e3",
+                    color: "#8a5a00",
                     lineHeight: 1.45,
                   }}
                 >
                   <p style={{ margin: "0 0 6px 0", fontWeight: 700 }}>
-                    💡 ¿No tienes o no recuerdas tu contraseña de {platformHost}?
+                    Paso recomendado antes de continuar: resetea tu contraseña de la plataforma
                   </p>
                   <p style={{ margin: "0 0 8px 0" }}>
-                    Puedes recuperarla o crear una nueva en segundos aquí:
+                    Aunque ya conozcas tu contraseña, te recomendamos generarla de nuevo aquí. Así evitas errores por claves antiguas, olvidadas o mal copiadas, y te aseguras de que la que ingreses abajo sea exactamente la correcta.
                   </p>
                   <a
-                    href={`${platformBase}/dashboard/forgot-password.php`}
+                    href={platformForgotPasswordUrl(platformDomain)}
                     target="_blank"
                     rel="noreferrer"
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
                       gap: 6,
-                      background: "#0071e3",
+                      background: "#ff9500",
                       color: "#ffffff",
-                      padding: "6px 12px",
+                      padding: "7px 14px",
                       borderRadius: 6,
                       fontSize: 12,
-                      fontWeight: 600,
+                      fontWeight: 700,
                       textDecoration: "none",
                     }}
                   >
-                    🔑 Resetear contraseña en {platformHost} ↗
+                    Resetear contraseña de la plataforma ahora ↗
                   </a>
-                  <p style={{ margin: "8px 0 0 0", fontSize: 12, color: "#0071e3" }}>
-                    <strong>Recomendación práctica:</strong> Al generar tu contraseña en {platformHost}, copia y pega esa misma clave aquí para que ambos sistemas queden sincronizados.
+                  <p style={{ margin: "8px 0 0 0", fontSize: 12, color: "#8a5a00" }}>
+                    <strong>Importante:</strong> al generar tu nueva contraseña en la plataforma, copia y pega esa misma clave en el campo de abajo para que ambos sistemas queden sincronizados.
                   </p>
                 </div>
 
@@ -700,7 +780,7 @@ export default function OnboardingWizard({
                       type="submit"
                       disabled={savingCreds}
                       style={{
-                        background: "#0071e3",
+                        background: "#1d1d1f",
                         color: "#fff",
                         border: "none",
                         borderRadius: 8,
@@ -749,7 +829,7 @@ export default function OnboardingWizard({
             <div style={{ marginTop: 10 }}>
               {!step1Done ? (
                 <p style={{ fontSize: 13, color: "#6e6e73", margin: 0 }}>
-                  🔒 Este paso se desbloqueará automáticamente al completar el Paso 1.
+                  Este paso se desbloqueará automáticamente al completar el Paso 1.
                 </p>
               ) : step2Done ? (
                 <div>
@@ -768,7 +848,7 @@ export default function OnboardingWizard({
                     }}
                   >
                     <div style={{ fontSize: 13, color: "#16803c" }}>
-                      ✅ <strong>{categories.length} categorías</strong> sincronizadas y listas para publicar.
+                      <strong>{categories.length} categorías</strong> sincronizadas y listas para publicar.
                     </div>
                     <button
                       type="button"
@@ -787,15 +867,15 @@ export default function OnboardingWizard({
                       <span
                         key={cat.id}
                         style={{
-                          background: "#e8f2ff",
-                          color: "#0071e3",
+                          background: "#f5f5f7",
+                          color: "#1d1d1f",
                           fontSize: 12,
                           padding: "3px 8px",
                           borderRadius: 6,
                           fontWeight: 500,
                         }}
                       >
-                        🏷️ {cat.name}
+                        {cat.name}
                         {cat.panel ? ` (${cat.panel})` : ""}
                       </span>
                     ))}
@@ -804,49 +884,25 @@ export default function OnboardingWizard({
               ) : (
                 <div
                   style={{
-                    background: "#e8f2ff",
-                    border: "1px solid rgba(0, 113, 227, 0.25)",
+                    background: "#f5f5f7",
+                    border: "1px solid #d2d2d7",
                     borderRadius: 8,
                     padding: "14px 16px",
                   }}
                 >
                   {syncingCategories || categorySyncInProgress ? (
-                    <div
-                      style={{
-                        background: "#ffffff",
-                        border: "2px solid #0071e3",
-                        borderRadius: 10,
-                        padding: "18px 20px",
-                        textAlign: "center",
-                        boxShadow: "0 4px 14px rgba(59, 130, 246, 0.15)",
-                      }}
-                    >
-                      <div style={{ fontSize: 36, marginBottom: 8 }}>⏳</div>
-                      <h4 style={{ margin: "0 0 6px 0", fontSize: 16, color: "#0071e3", fontWeight: 800 }}>
-                        Conectando con tu sitio web de {productName}...
-                      </h4>
-                      <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#6e6e73", lineHeight: 1.5, maxWidth: 500, marginLeft: "auto", marginRight: "auto" }}>
-                        Nuestro robot está ingresando a tu cuenta para descargar automáticamente todas las categorías de tu web. Puede tardar <strong>unos minutos</strong> según la cola de trabajo; esta pantalla se actualiza sola cuando termine, no hace falta que hagas nada.
-                      </p>
-                      <div
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 8,
-                          background: "#e8f2ff",
-                          color: "#0071e3",
-                          padding: "8px 16px",
-                          borderRadius: 20,
-                          fontSize: 13,
-                          fontWeight: 700,
-                        }}
-                      >
-                        <span>🔄 Sincronización en curso... por favor no recargues la página</span>
-                      </div>
-                    </div>
+                    <CategorySyncProgress
+                      status={
+                        (lastSyncStatus as CategorySyncStatus | null) ??
+                        "pending"
+                      }
+                      categoriesCount={categories.length}
+                      errorMessage={lastSyncError}
+                      active={syncingCategories || categorySyncInProgress}
+                    />
                   ) : (
                     <>
-                      <p style={{ margin: "0 0 10px 0", fontSize: 13, color: "#0071e3", fontWeight: 500 }}>
+                      <p style={{ margin: "0 0 10px 0", fontSize: 13, color: "#1d1d1f", fontWeight: 500 }}>
                         Haz clic a continuación para conectar con tu cuenta de {productName} y descargar tus categorías:
                       </p>
                       <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
@@ -855,7 +911,7 @@ export default function OnboardingWizard({
                           onClick={handleSyncCategories}
                           disabled={syncingCategories}
                           style={{
-                            background: "#0071e3",
+                            background: "#1d1d1f",
                             color: "#fff",
                             border: "none",
                             borderRadius: 8,
@@ -866,14 +922,14 @@ export default function OnboardingWizard({
                             display: "inline-flex",
                             alignItems: "center",
                             gap: 8,
-                            boxShadow: "0 4px 12px rgba(47, 95, 219, 0.25)",
+                            boxShadow: "none",
                           }}
                         >
-                          ⚡ Sincronizar mis Categorías Ahora →
+                          Sincronizar mis Categorías Ahora →
                         </button>
                       </div>
 
-                      <div style={{ marginTop: 12, borderTop: "1px dashed rgba(0, 113, 227, 0.25)", paddingTop: 10 }}>
+                      <div style={{ marginTop: 12, borderTop: "1px dashed rgba(0, 0, 0, 0.25)", paddingTop: 10 }}>
                         {!showManualCategory ? (
                           <button
                             type="button"
@@ -881,7 +937,7 @@ export default function OnboardingWizard({
                             style={{
                               background: "none",
                               border: "none",
-                              color: "#0071e3",
+                              color: "#1d1d1f",
                               fontSize: 12,
                               fontWeight: 600,
                               cursor: "pointer",
@@ -908,7 +964,7 @@ export default function OnboardingWizard({
                               type="submit"
                               disabled={savingManualCategory || !manualCategoryName.trim()}
                               style={{
-                                background: "#0071e3",
+                                background: "#1d1d1f",
                                 color: "#fff",
                                 border: "none",
                                 borderRadius: 8,
@@ -957,7 +1013,7 @@ export default function OnboardingWizard({
             <div style={{ marginTop: 10 }}>
               {!step2Done ? (
                 <p style={{ fontSize: 13, color: "#6e6e73", margin: 0 }}>
-                  🔒 Este paso se desbloqueará automáticamente al completar el Paso 2.
+                  Este paso se desbloqueará automáticamente al completar el Paso 2.
                 </p>
               ) : step3Done && !editingLang ? (
                 <div
@@ -974,7 +1030,7 @@ export default function OnboardingWizard({
                   }}
                 >
                   <div style={{ fontSize: 13, color: "#16803c" }}>
-                    ✅ Idioma activo: <strong>{activeLangName}</strong>. Los artículos se generarán en este idioma.
+                    Idioma activo: <strong>{activeLangName}</strong>. Los artículos se generarán en este idioma.
                   </div>
                   <button
                     type="button"
@@ -987,13 +1043,13 @@ export default function OnboardingWizard({
               ) : (
                 <div
                   style={{
-                    background: "#e8f2ff",
-                    border: "1px solid rgba(0, 113, 227, 0.25)",
+                    background: "#f5f5f7",
+                    border: "1px solid #d2d2d7",
                     borderRadius: 8,
                     padding: "14px 16px",
                   }}
                 >
-                  <p style={{ fontSize: 13, color: "#0071e3", margin: "0 0 10px 0", fontWeight: 500 }}>
+                  <p style={{ fontSize: 13, color: "#1d1d1f", margin: "0 0 10px 0", fontWeight: 500 }}>
                     Elige el idioma principal para tus artículos:
                   </p>
 
@@ -1006,7 +1062,7 @@ export default function OnboardingWizard({
                         ...inputStyle,
                         maxWidth: 320,
                         fontWeight: 600,
-                        color: "#0071e3",
+                        color: "#1d1d1f",
                         background: "#fff",
                       }}
                     >
@@ -1029,7 +1085,7 @@ export default function OnboardingWizard({
                       onClick={() => handleSaveLanguage(selectedLang || contentLanguage || "es")}
                       disabled={savingLanguage}
                       style={{
-                        background: "#0071e3",
+                        background: "#1d1d1f",
                         color: "#fff",
                         border: "none",
                         borderRadius: 8,
@@ -1049,7 +1105,7 @@ export default function OnboardingWizard({
                       style={{ ...secondaryButtonStyle, fontSize: 12, padding: "8px 12px" }}
                       title={`Descargar idiomas actualizados desde ${productName}`}
                     >
-                      {syncingLanguages ? "Sincronizando..." : "🔄 Recargar lista"}
+                      {syncingLanguages ? "Sincronizando..." : "Recargar lista"}
                     </button>
 
                     {step3Done && (
@@ -1088,18 +1144,18 @@ export default function OnboardingWizard({
               {/* Bloque del video tutorial: SIEMPRE VISIBLE */}
               <div
                 style={{
-                  background: "#e8f2ff",
-                  border: "1px solid rgba(0, 113, 227, 0.25)",
+                  background: "#f5f5f7",
+                  border: "1px solid #d2d2d7",
                   borderRadius: 8,
                   padding: "14px 16px",
                   marginBottom: 14,
                   fontSize: 13,
-                  color: "#0071e3",
+                  color: "#1d1d1f",
                   lineHeight: 1.5,
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                  <span style={{ fontSize: 16 }}>📺</span>
+                  <span style={{ fontSize: 16 }}></span>
                   <strong style={{ fontSize: 14, color: "#1d1d1f" }}>¿No tienes el Google Search Console?</strong>
                 </div>
                 <p style={{ margin: "0 0 10px 0", fontSize: 13, color: "#6e6e73" }}>
@@ -1120,16 +1176,16 @@ export default function OnboardingWizard({
                     borderRadius: 6,
                     fontWeight: 700,
                     fontSize: 13,
-                    boxShadow: "0 2px 6px rgba(220, 38, 38, 0.25)",
+                    boxShadow: "none",
                   }}
                 >
-                  ▶️ Ver video: Cómo activar Google Search Console ↗
+                  ▶Ver video: Cómo activar Google Search Console ↗
                 </a>
               </div>
 
               {!step3Done ? (
                 <p style={{ fontSize: 13, color: "#6e6e73", margin: 0 }}>
-                  🔒 El botón de conexión se desbloqueará automáticamente al completar el Paso 3.
+                  El botón de conexión se desbloqueará automáticamente al completar el Paso 3.
                 </p>
               ) : (
                 <div>
@@ -1149,7 +1205,7 @@ export default function OnboardingWizard({
                       }}
                     >
                       <div style={{ fontSize: 13, color: "#16803c" }}>
-                        ✅ Google Search Console conectado y activo en: <strong>{googleData?.siteUrl}</strong>
+                        Google Search Console conectado y activo en: <strong>{googleData?.siteUrl}</strong>
                       </div>
                       <button
                         type="button"
@@ -1174,10 +1230,10 @@ export default function OnboardingWizard({
                     }}
                   >
                     <p style={{ margin: "0 0 4px 0", fontWeight: 700 }}>
-                      🌐 Instrucción antes de conectar:
+                      Instrucción antes de conectar:
                     </p>
                     <p style={{ margin: 0 }}>
-                      Abre tu <a href="https://search.google.com/search-console" target="_blank" rel="noreferrer" style={{ color: "#0071e3", fontWeight: 700, textDecoration: "underline" }}>Google Search Console ↗</a> en una pestaña al lado de tu navegador, asegúrate de que funciona y que lo tienes activado con la misma cuenta de Google dueña de tu sitio web, y luego haz clic en el botón de abajo.
+                      Abre tu <a href="https://search.google.com/search-console" target="_blank" rel="noreferrer" style={{ color: "#1d1d1f", fontWeight: 700, textDecoration: "underline" }}>Google Search Console ↗</a> en una pestaña al lado de tu navegador, asegúrate de que funciona y que lo tienes activado con la misma cuenta de Google dueña de tu sitio web, y luego haz clic en el botón de abajo.
                     </p>
                   </div>
 
@@ -1186,7 +1242,7 @@ export default function OnboardingWizard({
                       <a
                         href="/api/search-integrations/google/connect?returnTo=/dashboard"
                         style={{
-                          background: "#0071e3",
+                          background: "#1d1d1f",
                           color: "#fff",
                           textDecoration: "none",
                           borderRadius: 8,
@@ -1196,10 +1252,10 @@ export default function OnboardingWizard({
                           display: "inline-flex",
                           alignItems: "center",
                           gap: 8,
-                          boxShadow: "0 4px 12px rgba(47, 95, 219, 0.25)",
+                          boxShadow: "none",
                         }}
                       >
-                        🔗 Conectar Google Search Console con Google OAuth →
+                        Conectar Google Search Console con Google OAuth →
                       </a>
                     </div>
                   ) : (
@@ -1226,7 +1282,7 @@ export default function OnboardingWizard({
                               type="submit"
                               disabled={savingGoogleSite || !selectedGoogleSite}
                               style={{
-                                background: "#0071e3",
+                                background: "#1d1d1f",
                                 color: "#fff",
                                 border: "none",
                                 borderRadius: 8,
@@ -1247,7 +1303,7 @@ export default function OnboardingWizard({
                               style={{
                                 background: "none",
                                 border: "none",
-                                color: "#0071e3",
+                                color: "#1d1d1f",
                                 fontSize: 12,
                                 fontWeight: 600,
                                 cursor: "pointer",
@@ -1255,13 +1311,13 @@ export default function OnboardingWizard({
                                 padding: 0,
                               }}
                             >
-                              ✏️ ¿No ves tu sitio? Ingresar URL manualmente
+                              ✏¿No ves tu sitio? Ingresar URL manualmente
                             </button>
                             <a
                               href="/api/search-integrations/google/connect?returnTo=/dashboard&prompt=select_account"
                               style={{ ...secondaryButtonStyle, textDecoration: "none", fontSize: 12, padding: "6px 12px" }}
                             >
-                              🔄 Cambiar cuenta de Google
+                              Cambiar cuenta de Google
                             </a>
                           </div>
                         </div>
@@ -1278,7 +1334,7 @@ export default function OnboardingWizard({
                                 color: "#8a4b08",
                               }}
                             >
-                              ⚠️ Tu cuenta de Google está vinculada, pero no tiene sitios listados en Google Search Console. Puedes ingresar la URL exacta de tu propiedad a continuación:
+                              Tu cuenta de Google está vinculada, pero no tiene sitios listados en Google Search Console. Puedes ingresar la URL exacta de tu propiedad a continuación:
                             </div>
                           )}
 
@@ -1298,7 +1354,7 @@ export default function OnboardingWizard({
                               type="submit"
                               disabled={savingGoogleSite || !selectedGoogleSite.trim()}
                               style={{
-                                background: "#0071e3",
+                                background: "#1d1d1f",
                                 color: "#fff",
                                 border: "none",
                                 borderRadius: 8,
@@ -1320,7 +1376,7 @@ export default function OnboardingWizard({
                                 style={{
                                   background: "none",
                                   border: "none",
-                                  color: "#0071e3",
+                                  color: "#1d1d1f",
                                   fontSize: 12,
                                   fontWeight: 600,
                                   cursor: "pointer",
@@ -1328,14 +1384,14 @@ export default function OnboardingWizard({
                                   padding: 0,
                                 }}
                               >
-                                📋 Volver a la lista de sitios detectados
+                                Volver a la lista de sitios detectados
                               </button>
                             )}
                             <a
                               href="/api/search-integrations/google/connect?returnTo=/dashboard&prompt=select_account"
                               style={{ ...secondaryButtonStyle, textDecoration: "none", fontSize: 12, padding: "6px 12px" }}
                             >
-                              🔄 Cambiar cuenta de Google
+                              Cambiar cuenta de Google
                             </a>
                           </div>
                         </div>
@@ -1367,28 +1423,28 @@ export default function OnboardingWizard({
             <div style={{ marginTop: 10 }}>
               {!allCoreDone ? (
                 <p style={{ fontSize: 13, color: "#6e6e73", margin: 0 }}>
-                  🔒 Completa los 4 pasos anteriores para comenzar a generar oportunidades de posicionamiento SEO.
+                  Completa los 4 pasos anteriores para comenzar a generar oportunidades de posicionamiento SEO.
                 </p>
               ) : (
                 <div
                   style={{
-                    background: "linear-gradient(135deg, #e8f2ff 0%, #e8f2ff 100%)",
-                    border: "1px solid rgba(0, 113, 227, 0.3)",
+                    background: "linear-gradient(135deg, #f5f5f7 0%, #f5f5f7 100%)",
+                    border: "1px solid #d2d2d7",
                     borderRadius: 10,
                     padding: "18px 20px",
                   }}
                 >
-                  <p style={{ margin: "0 0 8px 0", fontSize: 16, fontWeight: 800, color: "#0071e3" }}>
-                    🎯 ¡Felicitaciones! Has completado todos los pasos de configuración inicial.
+                  <p style={{ margin: "0 0 8px 0", fontSize: 16, fontWeight: 800, color: "#1d1d1f" }}>
+                    ¡Felicitaciones! Has completado todos los pasos de configuración inicial.
                   </p>
-                  <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "#0071e3", lineHeight: 1.5 }}>
+                  <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "#1d1d1f", lineHeight: 1.5 }}>
                     El siguiente paso es ingresar al módulo de <strong>Oportunidades</strong>. La Inteligencia Artificial analizará las consultas de tus clientes potenciales en Google y creará ideas de contenido listas para publicar con 1 solo clic.
                   </p>
                   <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
                     <Link
                       href="/dashboard/oportunidades"
                       style={{
-                        background: "#0071e3",
+                        background: "#1d1d1f",
                         color: "#fff",
                         textDecoration: "none",
                         padding: "11px 20px",
@@ -1398,17 +1454,17 @@ export default function OnboardingWizard({
                         display: "inline-flex",
                         alignItems: "center",
                         gap: 8,
-                        boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)",
+                        boxShadow: "none",
                       }}
                     >
-                      🎯 Ir a Crear Oportunidades SEO →
+                      Ir a Crear Oportunidades SEO →
                     </Link>
                     <Link
                       href="/dashboard/publicar"
                       style={{
                         background: "#ffffff",
-                        color: "#0071e3",
-                        border: "1px solid rgba(0, 113, 227, 0.3)",
+                        color: "#0066cc",
+                        border: "1px solid #d2d2d7",
                         textDecoration: "none",
                         padding: "10px 16px",
                         borderRadius: 8,
@@ -1417,7 +1473,7 @@ export default function OnboardingWizard({
                         display: "inline-block",
                       }}
                     >
-                      ✍️ O redactar un artículo directamente
+                      ✍O redactar un artículo directamente
                     </Link>
                   </div>
                 </div>
@@ -1455,12 +1511,10 @@ function StepCard({
         borderRadius: 14,
         transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
         border: isActive
-          ? "1px solid #0071e3"
+          ? "1px solid #1d1d1f"
           : "1px solid #e5e5ea",
         background: "#ffffff",
-        boxShadow: isActive
-          ? "0 4px 16px rgba(0, 113, 227, 0.08)"
-          : "none",
+        boxShadow: "none",
         opacity: isPending ? 0.65 : 1,
         padding: "18px 20px",
       }}
@@ -1487,12 +1541,12 @@ function StepCard({
               fontWeight: 600,
               flexShrink: 0,
               background: isDone
-                ? "#e8f2ff"
+                ? "#f5f5f7"
                 : isActive
-                  ? "#0071e3"
+                  ? "#1d1d1f"
                   : "#f5f5f7",
               color: isDone
-                ? "#0071e3"
+                ? "#1d1d1f"
                 : isActive
                   ? "#ffffff"
                   : "#6e6e73",
@@ -1534,12 +1588,12 @@ function StepCard({
               background: isDone
                 ? "rgba(52, 199, 89, 0.1)"
                 : isActive
-                  ? "#e8f2ff"
+                  ? "#f5f5f7"
                   : "#f5f5f7",
               color: isDone
                 ? "#16803c"
                 : isActive
-                  ? "#0071e3"
+                  ? "#1d1d1f"
                   : "#6e6e73",
             }}
           >

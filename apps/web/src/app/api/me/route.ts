@@ -7,6 +7,7 @@ import {
   getGlobalDisabledModules,
   getEffectiveDisabledModules,
   parseUserDisabledModules,
+  parseUserModuleOverrides,
 } from "@/lib/modules";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +15,7 @@ export const revalidate = 0;
 
 // Un poco más del doble del texto de ejemplo que dio el usuario (340
 // caracteres) — pedido explícito, 6/8/2026.
-export const MAX_ARTICLE_SIGNATURE_LEN = 700;
+const MAX_ARTICLE_SIGNATURE_LEN = 700;
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -22,6 +23,7 @@ export async function GET() {
   const globalDisabledModules = await getGlobalDisabledModules();
   const disabledModules = getEffectiveDisabledModules(user, globalDisabledModules);
   const userDisabledModules = parseUserDisabledModules(user.disabledModules);
+  const moduleOverrides = parseUserModuleOverrides(user.disabledModules);
 
   return NextResponse.json(
     {
@@ -32,6 +34,8 @@ export async function GET() {
         ? { id: actingAdmin.id, email: actingAdmin.email, name: displayName(actingAdmin) }
         : null,
       maxTitlesPerBatch: user.maxTitlesPerBatch,
+      dailyArticleLimit: user.dailyArticleLimit,
+      monthlyArticleLimit: user.monthlyArticleLimit,
       // Servidor donde vive su cuenta de la plataforma. La interfaz lo usa
       // para enlazar al sitio correcto (por ejemplo, recuperar contraseña):
       // desde que hay más de un servidor, un enlace fijo a
@@ -46,11 +50,21 @@ export async function GET() {
       infographicPrompt: user.infographicPrompt,
       defaultPromptId: user.defaultPromptId,
       profilePhotoUrl: user.profilePhotoUrl,
+      profilePhotoUrl2: user.profilePhotoUrl2,
+      profilePhotoUrl3: user.profilePhotoUrl3,
       businessLogoUrl: user.businessLogoUrl,
+      businessLogoUrl2: user.businessLogoUrl2,
       allowInstagramPublishing: user.allowInstagramPublishing,
+      allowFacebookPublishing: user.allowFacebookPublishing,
+      allowLinkedInPublishing: user.allowLinkedInPublishing,
+      allowThreadsPublishing: user.allowThreadsPublishing,
+      allowBlueskyPublishing: user.allowBlueskyPublishing,
+      allowMastodonPublishing: user.allowMastodonPublishing,
+      allowDevToPublishing: user.allowDevToPublishing,
       hasImageCredits: user.hasImageCredits,
       disabledModules,
       userDisabledModules,
+      moduleOverrides,
       globalDisabledModules,
     },
     {

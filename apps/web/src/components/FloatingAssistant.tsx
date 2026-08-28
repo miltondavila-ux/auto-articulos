@@ -47,6 +47,22 @@ export default function FloatingAssistant() {
 
   // Estados para posicionamiento de arrastre
   const [position, setPosition] = useState<{ right: number; bottom: number } | null>(null);
+
+  /*
+   * Permite abrir el asistente desde cualquier parte de la plataforma con una
+   * pregunta ya escrita, disparando el evento "auto-articulos:preguntar".
+   * Lo usan los círculos de ayuda que acompañan a los avisos: la persona pulsa
+   * y llega al chat con la pregunta puesta, en vez de tener que redactarla.
+   */
+  useEffect(() => {
+    function alPreguntar(evento: Event) {
+      const detalle = (evento as CustomEvent<{ pregunta?: string }>).detail;
+      setOpen(true);
+      if (detalle?.pregunta) setMessage(detalle.pregunta);
+    }
+    window.addEventListener("auto-articulos:preguntar", alPreguntar);
+    return () => window.removeEventListener("auto-articulos:preguntar", alPreguntar);
+  }, []);
   const [isDragging, setIsDragging] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -376,18 +392,18 @@ export default function FloatingAssistant() {
         .floating-assistant { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); z-index: 100; font-family: inherit; }
         .floating-assistant.dragging, .floating-assistant.dragging * { cursor: grabbing !important; user-select: none; }
         .assistant-panel { display: flex; width: min(440px, calc(100vw - 32px)); height: min(680px, calc(100svh - 112px)); min-height: 460px; flex-direction: column; box-sizing: border-box; margin: 0 0 14px; overflow: hidden; overscroll-behavior: contain; border: 1px solid rgba(0, 0, 0, .07); border-radius: 22px; background: #fff; box-shadow: 0 24px 70px rgba(0, 0, 0, .18); animation: assistant-enter .18s ease-out; }
-        .assistant-header { display: flex; align-items: flex-start; gap: 11px; padding: 18px; color: #fff; background: #0071e3; cursor: grab; }
+        .assistant-header { display: flex; align-items: flex-start; gap: 11px; padding: 18px; color: #fff; background: #1d1d1f; cursor: grab; }
         .assistant-header:active { cursor: grabbing; }
-        .assistant-avatar, .assistant-launcher-icon { display: grid; flex: 0 0 auto; place-items: center; color: #0071e3; background: #fff; box-shadow: 0 4px 14px rgba(0, 0, 0, .18); }
+        .assistant-avatar, .assistant-launcher-icon { display: grid; flex: 0 0 auto; place-items: center; color: #1d1d1f; background: #fff; box-shadow: 0 4px 14px rgba(0, 0, 0, .18); }
         .assistant-avatar { width: 36px; height: 36px; border-radius: 12px; font-size: 20px; }
         .assistant-heading { min-width: 0; flex: 1; }.assistant-eyebrow { display: block; margin-bottom: 3px; color: rgba(255, 255, 255, .75); font-size: 9px; font-weight: 800; letter-spacing: .13em; }.assistant-heading h2 { margin: 0; color: #fff; font-size: 18px; line-height: 1.2; font-weight: 800; letter-spacing: -.02em; }.assistant-heading p { margin: 4px 0 0; color: rgba(255, 255, 255, .85); font-size: 12px; }
         .assistant-close, .assistant-reset { min-height: 30px; padding: 0 8px; border: 1px solid rgba(255,255,255,.25); border-radius: 9px; color: #fff; background: rgba(255, 255, 255, .15); cursor: pointer; }.assistant-close { width: 30px; padding: 0; font-size: 24px; line-height: 1; }.assistant-reset { font-size: 11px; font-weight: 700; }
         .assistant-content { min-height: 0; flex: 1; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 17px 18px 12px; background: #fff; }.assistant-welcome { display: grid; gap: 4px; margin-bottom: 13px; color: #6e6e73; font-size: 13px; line-height: 1.45; }.assistant-welcome strong { color: #1d1d1f; font-size: 14px; }
-        .assistant-suggestions { display: grid; gap: 7px; }.assistant-suggestions button { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 44px; padding: 10px 11px; border: 1px solid rgba(0, 113, 227, .2); border-radius: 11px; color: #0071e3; background: #fff; text-align: left; font-size: 12px; font-weight: 650; cursor: pointer; touch-action: manipulation; }.assistant-suggestions span { color: #0071e3; font-size: 15px; }
-        .assistant-messages { display: grid; gap: 10px; }.assistant-message { max-width: 92%; padding: 11px 12px; border-radius: 14px; white-space: pre-wrap; font-size: 13px; line-height: 1.55; }.assistant-message-user { justify-self: end; color: #fff; background: #0071e3; border-bottom-right-radius: 4px; }.assistant-message-assistant { justify-self: start; color: #1d1d1f; background: #f5f5f7; border-bottom-left-radius: 4px; }.assistant-message :global(.assistant-module-link) { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; box-sizing: border-box; margin: 8px 0; padding: 10px 11px; border: 1px solid rgba(0, 113, 227, .3); border-radius: 10px; color: #0071e3; background: #fff; font-weight: 750; text-decoration: none; cursor: pointer; }.assistant-typing { color: #6e6e73; font-weight: 600; }.assistant-typing span { display: inline-block; width: 22px; overflow: hidden; vertical-align: bottom; animation: assistant-dots 1.2s steps(4, end) infinite; }
-        .assistant-form { display: flex; align-items: flex-end; gap: 8px; padding: 8px 12px; border-top: 1px solid rgba(0, 0, 0, .07); background: #fff; }.assistant-form textarea { min-width: 0; flex: 1; resize: none; border: 0; outline: 0; color: #1d1d1f; background: transparent; font: inherit; font-size: 13px; line-height: 1.45; }.assistant-form textarea::placeholder { color: #6e6e73; }.assistant-form button { display: grid; width: 42px; height: 42px; flex: 0 0 auto; place-items: center; border: 0; border-radius: 12px; color: #fff; background: #0071e3; font-size: 20px; font-weight: 700; cursor: pointer; touch-action: manipulation; }.assistant-form button:disabled { opacity: .42; cursor: not-allowed; }
+        .assistant-suggestions { display: grid; gap: 7px; }.assistant-suggestions button { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 44px; padding: 10px 11px; border: 1px solid rgba(0, 113, 227, .2); border-radius: 11px; color: #1d1d1f; background: #fff; text-align: left; font-size: 12px; font-weight: 650; cursor: pointer; touch-action: manipulation; }.assistant-suggestions span { color: #1d1d1f; font-size: 15px; }
+        .assistant-messages { display: grid; gap: 10px; }.assistant-message { max-width: 92%; padding: 11px 12px; border-radius: 14px; white-space: pre-wrap; font-size: 13px; line-height: 1.55; }.assistant-message-user { justify-self: end; color: #fff; background: #1d1d1f; border-bottom-right-radius: 4px; }.assistant-message-assistant { justify-self: start; color: #1d1d1f; background: #f5f5f7; border-bottom-left-radius: 4px; }.assistant-message :global(.assistant-module-link) { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; box-sizing: border-box; margin: 8px 0; padding: 10px 11px; border: 1px solid rgba(0, 113, 227, .3); border-radius: 10px; color: #1d1d1f; background: #fff; font-weight: 750; text-decoration: none; cursor: pointer; }.assistant-typing { color: #6e6e73; font-weight: 600; }.assistant-typing span { display: inline-block; width: 22px; overflow: hidden; vertical-align: bottom; animation: assistant-dots 1.2s steps(4, end) infinite; }
+        .assistant-form { display: flex; align-items: flex-end; gap: 8px; padding: 8px 12px; border-top: 1px solid rgba(0, 0, 0, .07); background: #fff; }.assistant-form textarea { min-width: 0; flex: 1; resize: none; border: 0; outline: 0; color: #1d1d1f; background: transparent; font: inherit; font-size: 13px; line-height: 1.45; }.assistant-form textarea::placeholder { color: #6e6e73; }.assistant-form button { display: grid; width: 42px; height: 42px; flex: 0 0 auto; place-items: center; border: 0; border-radius: 12px; color: #fff; background: #1d1d1f; font-size: 20px; font-weight: 700; cursor: pointer; touch-action: manipulation; }.assistant-form button:disabled { opacity: .42; cursor: not-allowed; }
         .assistant-hint { margin: 0; padding: 0 14px 11px; color: #6e6e73; background: #fff; font-size: 10px; text-align: center; }
-        .assistant-launcher { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 9px 15px 9px 10px; border: 1px solid rgba(255,255,255,.25); border-radius: 17px; color: #fff; background: #0071e3; box-shadow: 0 12px 28px rgba(0, 113, 227, .32); text-align: left; cursor: grab; touch-action: none; }
+        .assistant-launcher { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 9px 15px 9px 10px; border: 1px solid rgba(255,255,255,.25); border-radius: 17px; color: #fff; background: #1d1d1f; box-shadow: 0 12px 28px rgba(0, 113, 227, .32); text-align: left; cursor: grab; touch-action: none; }
         .assistant-launcher:active { cursor: grabbing; }
         .assistant-launcher-icon { width: 34px; height: 34px; border-radius: 11px; font-size: 18px; }.assistant-launcher-copy { display: grid; gap: 1px; }.assistant-launcher-copy small { color: rgba(255, 255, 255, .75); font-size: 9px; font-weight: 800; letter-spacing: .1em; }.assistant-launcher-copy strong { color: #fff; font-size: 13px; line-height: 1.2; }
         @keyframes assistant-enter { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } } @keyframes assistant-dots { to { width: 0; } }

@@ -13,6 +13,9 @@ interface ConfigurationCheck {
   actionLabel: string;
 }
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   const userId = await getCurrentUserId();
 
@@ -27,6 +30,9 @@ export async function GET() {
     threadsIntegration,
     twitterIntegration,
     linkedinIntegration,
+    pinterestIntegration,
+    tumblrIntegration,
+    devToIntegration,
   ] = await Promise.all([
     // 1. Credenciales 10minutesWebsite
     prisma.credential.findUnique({
@@ -47,6 +53,10 @@ export async function GET() {
         phone: true,
         imagePrompt: true,
         hasImageCredits: true,
+        role: true,
+        allowPinterestPublishing: true,
+        allowTumblrPublishing: true,
+        allowDevToPublishing: true,
       },
     }),
     // 4. Google Search Console
@@ -78,6 +88,18 @@ export async function GET() {
     prisma.linkedInIntegration.findUnique({
       where: { userId },
       select: { expiresAt: true },
+    }),
+    prisma.pinterestIntegration.findUnique({
+      where: { userId },
+      select: { expiresAt: true, boardId: true },
+    }),
+    prisma.tumblrIntegration.findUnique({
+      where: { userId },
+      select: { expiresAt: true },
+    }),
+    prisma.devToIntegration.findUnique({
+      where: { userId },
+      select: { username: true },
     }),
   ]);
 
@@ -186,6 +208,36 @@ export async function GET() {
       description: "Publica automáticamente artículos en tu perfil o página de LinkedIn.",
       actionUrl: "/dashboard/configuracion?tab=social",
       actionLabel: "Conectar LinkedIn",
+    },
+    {
+      id: "pinterest",
+      label: "Pinterest",
+      configured: Boolean((user?.role === "admin" || user?.allowPinterestPublishing) && pinterestIntegration && pinterestIntegration.boardId && (!pinterestIntegration.expiresAt || pinterestIntegration.expiresAt > new Date())),
+      required: false,
+      section: "social",
+      description: "Publica automáticamente tus artículos como Pins con imagen y enlace al artículo.",
+      actionUrl: "/dashboard/configuracion?tab=social",
+      actionLabel: "Conectar Pinterest",
+    },
+    {
+      id: "tumblr",
+      label: "Tumblr",
+      configured: Boolean((user?.role === "admin" || user?.allowTumblrPublishing) && tumblrIntegration && (!tumblrIntegration.expiresAt || tumblrIntegration.expiresAt > new Date())),
+      required: false,
+      section: "social",
+      description: "Publica automáticamente tus artículos con imagen, texto y enlace en Tumblr.",
+      actionUrl: "/dashboard/configuracion?tab=social",
+      actionLabel: "Conectar Tumblr",
+    },
+    {
+      id: "devto",
+      label: "DEV.to",
+      configured: Boolean((user?.role === "admin" || user?.allowDevToPublishing) && devToIntegration),
+      required: false,
+      section: "social",
+      description: "Publica una versión adaptada del artículo con enlace canónico en DEV.to.",
+      actionUrl: "/dashboard/configuracion?tab=social",
+      actionLabel: "Conectar DEV.to",
     },
 
     // ━━━ CONTENIDO ━━━

@@ -217,7 +217,7 @@ export async function publishThread(
   // Paso 2: Polling del estado del contenedor (especialmente si lleva imagen)
   if (imageUrl) {
     let attempts = 0;
-    const maxAttempts = 15; // 30 segundos máximo
+    const maxAttempts = 45; // Hasta 90 segundos: Meta puede tardar en procesar la imagen OG.
     let finished = false;
 
     while (attempts < maxAttempts && !finished) {
@@ -245,7 +245,6 @@ export async function publishThread(
           }
         }
       } catch (err: any) {
-        // Si hay error en la consulta y es por rechazo de imagen, lanzarlo
         if (err.message && err.message.includes("procesamiento de la imagen")) {
           throw err;
         }

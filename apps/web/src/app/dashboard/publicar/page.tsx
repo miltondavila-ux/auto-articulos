@@ -16,6 +16,7 @@ import PreValidationGuard from "@/components/PreValidationGuard";
 import type { CategoryRow } from "@/types/dashboard";
 
 const DEFAULT_MAX_TITLES_PER_BATCH = 20;
+const IMAGE_CREDITS_CONFIRMED_KEY = "auto-articulos:image-credits-confirmed";
 
 export default function PublicarPage() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function PublicarPage() {
   const [credentialsConfigured, setCredentialsConfigured] = useState(false);
   const [hasImageCredits, setHasImageCredits] = useState(true);
   const [showImageCreditsModal, setShowImageCreditsModal] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [useSequenceCategory, setUseSequenceCategory] = useState(false);
@@ -43,76 +45,97 @@ export default function PublicarPage() {
     { id: string; externalId: string; name: string }[]
   >([]);
   const [contentLanguage, setContentLanguage] = useState("");
-  const [prompts, setPrompts] = useState<{ id: string; name: string; prompt: string }[]>([]);
-  const [selectedPromptId, setSelectedPromptId] = useState("");
   // Para marca blanca (tagcrush): PreValidationGuard necesita saber el
   // servidor de la cuenta para no mostrar "10minutesWebsite" ni enlaces de
   // ayuda equivocados. Ver packages/shared/src/platform-servers.ts.
-  const [loading, setLoading] = useState(true);
   const [platformDomain, setPlatformDomain] = useState<string>("net");
 
-  const loadAll = useCallback(async () => {
-    try {
-      const [credRes, catRes, runsRes, meRes, langRes, promptRes] = await Promise.all([
-        fetch("/api/credentials", { cache: "no-store" }),
-        fetch("/api/categories", { cache: "no-store" }),
-        fetch("/api/runs", { cache: "no-store" }),
-        fetch("/api/me", { cache: "no-store" }),
-        fetch("/api/languages", { cache: "no-store" }),
-        fetch("/api/prompts", { cache: "no-store" }),
-      ]);
-
-      if (credRes.ok) {
-        const credData = await credRes.json().catch(() => ({}));
-        setCredentialsConfigured(Boolean(credData.configured));
+  const loadUserLimits = useCallback(async () => {
+    const res = await fetch("/api/me", { cache: "no-store" });
+    if (res.ok) {
+      const data = await res.json();
+      if (
+        typeof data.maxTitlesPerBatch === "number" &&
+        data.maxTitlesPerBatch >= 1
+      ) {
+        setMaxTitlesPerBatch(data.maxTitlesPerBatch);
       }
-      if (catRes.ok) {
-        const catData = await catRes.json().catch(() => ({}));
-        setCategories(catData.categories ?? []);
+      if (typeof data.contentLanguage === "string") {
+        setContentLanguage(data.contentLanguage);
       }
-      if (runsRes.ok) {
-        const runsData = await runsRes.json().catch(() => ({}));
-        setHasActiveRun(
-          (runsData.runs ?? []).some(
-            (r: { status: string }) =>
-              r.status === "pending" || r.status === "running",
-          ),
+      if (typeof data.hasImageCredits === "boolean") {
+        setHasImageCredits(
+          data.hasImageCredits ||
+            window.localStorage.getItem(IMAGE_CREDITS_CONFIRMED_KEY) === "true",
         );
       }
-      if (meRes.ok) {
-        const meData = await meRes.json().catch(() => ({}));
-        if (typeof meData.maxTitlesPerBatch === "number" && meData.maxTitlesPerBatch >= 1) {
-          setMaxTitlesPerBatch(meData.maxTitlesPerBatch);
-        }
-        if (typeof meData.contentLanguage === "string") {
-          setContentLanguage(meData.contentLanguage);
-        }
-        if (typeof meData.defaultPromptId === "string" && meData.defaultPromptId) {
-          setSelectedPromptId(meData.defaultPromptId);
-        }
-        if (typeof meData.hasImageCredits === "boolean") {
-          setHasImageCredits(meData.hasImageCredits);
-        }
-        if (typeof meData.platformDomain === "string") {
-          setPlatformDomain(meData.platformDomain);
-        }
+      if (typeof data.platformDomain === "string") {
+        setPlatformDomain(data.platformDomain);
       }
-      if (langRes.ok) {
-        const langData = await langRes.json().catch(() => ({}));
-        setLanguages(langData.languages ?? []);
-      }
-      if (promptRes.ok) {
-        const promptData = await promptRes.json().catch(() => ({}));
-        setPrompts(promptData.prompts ?? []);
-      }
-    } finally {
-      setLoading(false);
+    }
+  }, []);
+
+  const confirmImageCredits = useCallback(() => {
+    window.localStorage.setItem(IMAGE_CREDITS_CONFIRMED_KEY, "true");
+    setHasImageCredits(true);
+    setBanner({
+      type: "info",
+      text: "Has indicado que ya recibiste créditos. Puedes intentar publicar; si aún no están activos, vuelve aquí y solicítalos.",
+    });
+  }, []);
+
+  const loadLanguages = useCallback(async () => {
+    const res = await fetch("/api/languages");
+    if (res.ok) {
+      const data = await res.json();
+      setLanguages(data.languages ?? []);
+    }
+  }, []);
+
+  const loadCredentialsStatus = useCallback(async () => {
+    const res = await fetch("/api/credentials");
+    if (res.ok) {
+      const data = await res.json();
+      setCredentialsConfigured(Boolean(data.configured));
+    }
+  }, []);
+
+  const loadCategories = useCallback(async () => {
+    const res = await fetch("/api/categories");
+    if (res.ok) {
+      const data = await res.json();
+      setCategories(data.categories);
+    }
+  }, []);
+
+  const checkActiveRun = useCallback(async () => {
+    const res = await fetch("/api/runs");
+    if (res.ok) {
+      const data = await res.json();
+      setHasActiveRun(
+        data.runs.some(
+          (r: { status: string }) =>
+            r.status === "pending" || r.status === "running",
+        ),
+      );
     }
   }, []);
 
   useEffect(() => {
-    loadAll();
-  }, [loadAll]);
+    Promise.all([
+      loadCredentialsStatus(),
+      loadCategories(),
+      checkActiveRun(),
+      loadUserLimits(),
+      loadLanguages(),
+    ]).finally(() => setLoading(false));
+  }, [
+    loadCredentialsStatus,
+    loadCategories,
+    checkActiveRun,
+    loadUserLimits,
+    loadLanguages,
+  ]);
 
   // 10minutesWebsite distingue categorías "regulares" de categorías "de
   // secuencia" — por defecto solo se ofrecen las regulares; las de
@@ -153,12 +176,14 @@ export default function PublicarPage() {
           categoryId: selectedCategoryId,
           disableIndexing,
           contentLanguage,
-          promptId: selectedPromptId || null,
+          confirmedImageCredits: hasImageCredits,
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         if (data.code === "NO_IMAGE_CREDITS") {
+          window.localStorage.removeItem(IMAGE_CREDITS_CONFIRMED_KEY);
+          setHasImageCredits(false);
           setShowImageCreditsModal(true);
         }
         setBanner({
@@ -181,7 +206,6 @@ export default function PublicarPage() {
     <div>
       <PreValidationGuard
         type="publicar"
-        loading={loading}
         credentialsConfigured={credentialsConfigured}
         hasCategories={categories.length > 0}
         categoriesCount={categories.length}
@@ -190,6 +214,7 @@ export default function PublicarPage() {
         hasImageCredits={hasImageCredits}
         platformDomain={platformDomain}
         onOpenImageCreditsModal={() => setShowImageCreditsModal(true)}
+        loading={loading}
         onConfirmImageCredits={() => {
           setHasImageCredits(true);
           setBanner({
@@ -198,6 +223,78 @@ export default function PublicarPage() {
           });
         }}
       >
+        {!hasImageCredits && (
+          <div
+            style={{
+              marginTop: 20,
+              padding: "12px 16px",
+              borderRadius: 12,
+              background: "#ffffff",
+              border: "1px solid #e5e5ea",
+              boxShadow: "0 6px 18px rgba(0, 0, 0, 0.04)",
+              color: "#1d1d1f",
+              fontSize: 13,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 10,
+            }}
+          >
+            <span>
+              Si ya te dieron créditos, confírmalo para poder intentar publicar.
+            </span>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                flexWrap: "wrap",
+              }}
+            >
+              <button
+                type="button"
+                onClick={confirmImageCredits}
+                style={{
+                  background: "#1d1d1f",
+                  color: "#ffffff",
+                  border: "1px solid #1d1d1f",
+                  padding: "7px 14px",
+                  minWidth: 170,
+                  height: 36,
+                  borderRadius: 18,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  lineHeight: "20px",
+                  whiteSpace: "nowrap",
+                  cursor: "pointer",
+                }}
+              >
+                Ya recibí mis créditos
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowImageCreditsModal(true)}
+                style={{
+                  background: "#ffffff",
+                  color: "#1d1d1f",
+                  border: "1px solid #d2d2d7",
+                  padding: "7px 14px",
+                  minWidth: 170,
+                  height: 36,
+                  borderRadius: 18,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  lineHeight: "20px",
+                  whiteSpace: "nowrap",
+                  cursor: "pointer",
+                }}
+              >
+                Solicitar créditos
+              </button>
+            </div>
+          </div>
+        )}
         {hasActiveRun && (
           <div
             style={{
@@ -300,24 +397,6 @@ export default function PublicarPage() {
               ))
             )}
           </select>
-
-          <h2 style={{ ...h2Style, marginTop: 24 }}>Estilo de escritura (Prompt)</h2>
-          <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 8 }}>
-            Elige el estilo de escritura/prompt con el que la IA generará el contenido de tus artículos.
-          </p>
-          <select
-            value={selectedPromptId}
-            onChange={(e) => setSelectedPromptId(e.target.value)}
-            disabled={hasActiveRun}
-            style={{ ...inputStyle, width: "100%" }}
-          >
-            <option value="">STANDARD (Estilo predeterminado de la plataforma)</option>
-            {prompts.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
         </section>
 
         <section style={readySectionStyle(titleCount > 0 && !overLimit)}>
@@ -378,7 +457,7 @@ export default function PublicarPage() {
               onChange={(e) => setDisableIndexing(e.target.checked)}
             />
             Desactivar indexación en buscadores para este lote (por defecto queda
-            activada, como en la plataforma)
+            activada, como en 10minutesWebsite)
           </label>
           <button
             onClick={handleIniciar}

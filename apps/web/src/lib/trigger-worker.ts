@@ -15,7 +15,17 @@ const GITHUB_API_HEADERS = (token: string) => ({
  * la corrida en curso vuelve a revisar la base de datos en cada vuelta de
  * su loop (ver `run-once.ts`), no hace falta disparar otra si ya hay una
  * activa: va a recoger el trabajo nuevo sola.
+ *
+ * Solo cuentan las corridas RECIENTES. Bug confirmado en producción el
+ * 26/8/2026: la corrida #1434 quedó zombi en `queued` desde las 15:14 UTC y,
+ * como esta función solo miraba `total_count`, devolvió `true` durante horas —
+ * `triggerWorkerNow()` dejó de disparar por completo y publicar solo dependía
+ * del horario, que además se espació a ~2 horas por el mismo grupo de
+ * concurrencia trabado. Una corrida más vieja que el límite del job
+ * (`timeout-minutes: 25` en worker.yml) ya no puede estar viva.
  */
+const MAX_ACTIVE_RUN_AGE_MS = 30 * 60 * 1000;
+
 async function isWorkerAlreadyActive(
   token: string,
   repo: string,
@@ -28,8 +38,14 @@ async function isWorkerAlreadyActive(
         { headers: GITHUB_API_HEADERS(token) },
       );
       if (!res.ok) continue; // si la consulta falla, no bloqueamos el disparo por las dudas
-      const data = (await res.json()) as { total_count?: number };
-      if ((data.total_count ?? 0) > 0) return true;
+      const data = (await res.json()) as {
+        workflow_runs?: { created_at?: string }[];
+      };
+      const run = data.workflow_runs?.[0];
+      if (!run) continue;
+      const createdAt = run.created_at ? Date.parse(run.created_at) : NaN;
+      if (Number.isNaN(createdAt)) return true;
+      if (Date.now() - createdAt < MAX_ACTIVE_RUN_AGE_MS) return true;
     } catch {
       // Ignorar y seguir revisando (o disparar de todos modos si ninguna
       // consulta pudo confirmar que ya hay una corrida activa).

@@ -4,6 +4,9 @@ import { getCurrentUserId } from "@/lib/current-user";
 import { canUseSocialModule } from "@/lib/social-access";
 import { triggerSocialWorkerNow } from "@/lib/trigger-worker";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function POST(request: NextRequest) {
   try {
     const userId = await getCurrentUserId();
@@ -39,10 +42,17 @@ export async function POST(request: NextRequest) {
       "x",
       "linkedin",
       "facebook-page",
+      "facebook-story",
+      "pinterest",
+      "tumblr",
+      "bluesky",
+      "mastodon",
+      "devto",
       "instagram-carousel",
       "instagram-reel-image",
       "instagram-story",
       "instagram-infografia",
+      "instagram-post",
     ];
     if (!supported.includes(opp.platform)) {
       return NextResponse.json(
@@ -64,11 +74,30 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (opp.platform === "facebook-page") {
+    if (opp.platform === "threads") {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true, allowThreadsPublishing: true },
+      });
+      if (user?.role !== "admin" && !user?.allowThreadsPublishing) {
+        return NextResponse.json(
+          { error: "No tienes permiso para publicar en Threads. Contacta al administrador." },
+          { status: 403 },
+        );
+      }
+    }
+
+    if (opp.platform.startsWith("facebook-")) {
       const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
       if (user?.role !== "admin") {
         return NextResponse.json({ error: "Facebook Pages está disponible solo para usuarios administradores." }, { status: 403 });
       }
+    }
+
+    if (opp.platform === "pinterest" || opp.platform === "tumblr" || opp.platform === "bluesky" || opp.platform === "mastodon" || opp.platform === "devto") {
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true, allowPinterestPublishing: true, allowTumblrPublishing: true, allowBlueskyPublishing: true, allowMastodonPublishing: true, allowDevToPublishing: true } });
+      const allowed = opp.platform === "pinterest" ? user?.role === "admin" || user?.allowPinterestPublishing : opp.platform === "tumblr" ? user?.role === "admin" || user?.allowTumblrPublishing : opp.platform === "bluesky" ? user?.role === "admin" || user?.allowBlueskyPublishing : opp.platform === "mastodon" ? user?.role === "admin" || user?.allowMastodonPublishing : user?.role === "admin" || user?.allowDevToPublishing;
+      if (!allowed) return NextResponse.json({ error: `No tienes permiso para publicar en ${opp.platform}. Contacta al administrador.` }, { status: 403 });
     }
 
     await prisma.socialOpportunity.update({
@@ -91,6 +120,16 @@ export async function POST(request: NextRequest) {
         ? "Publicación encolada. El sistema publicará en LinkedIn en segundo plano."
         : opp.platform === "facebook-page"
         ? "Publicación encolada. El sistema publicará en Facebook Pages en segundo plano."
+        : opp.platform === "facebook-story"
+        ? "Publicación encolada. El sistema generará la imagen y publicará la Historia en Facebook en segundo plano."
+        : opp.platform === "pinterest"
+        ? "Publicación encolada. El sistema publicará el Pin en Pinterest en segundo plano."
+        : opp.platform === "tumblr"
+        ? "Publicación encolada. El sistema publicará el post en Tumblr en segundo plano."
+        : opp.platform === "bluesky"
+        ? "Publicación encolada. El sistema publicará en Bluesky en segundo plano."
+        : opp.platform === "devto"
+        ? "Publicación encolada. El sistema adaptará y publicará el artículo en DEV.to en segundo plano."
         : "Publicación encolada. El sistema generará la imagen y publicará en Threads en segundo plano.",
     });
   } catch {

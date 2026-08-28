@@ -8,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
       "Crea artículos en secuencia. Herramienta de posicionamiento web para creación de contenido en secuencia.",
     start_url: "/",
     display: "standalone",
-    background_color: "#031537",
-    theme_color: "#031537",
+    background_color: "#1d1d1f",
+    theme_color: "#1d1d1f",
     icons: [
       {
         src: "/icon-192.png",

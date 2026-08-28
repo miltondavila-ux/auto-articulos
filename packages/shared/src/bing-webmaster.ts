@@ -120,54 +120,6 @@ export interface BingSite {
   IsVerified: boolean;
 }
 
-/** Métricas agregadas de una consulta o página devueltas por Bing. */
-export interface BingQueryStat {
-  Query: string;
-  Impressions: number;
-  Clicks: number;
-  AvgClickPosition?: number;
-  AvgImpressionPosition?: number;
-}
-
-async function getBingStats(
-  endpoint: "GetPageStats" | "GetPageQueryStats",
-  accessToken: string,
-  parameters: Record<string, string>,
-): Promise<BingQueryStat[]> {
-  const url = new URL(`${API_BASE}/${endpoint}`);
-  for (const [key, value] of Object.entries(parameters)) {
-    url.searchParams.set(key, value);
-  }
-  const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  const data = (await response.json().catch(() => ({}))) as {
-    d?: BingQueryStat[];
-    Message?: string;
-  };
-  if (!response.ok) {
-    throw new Error(data.Message ?? `Bing Webmaster Tools respondió ${response.status}.`);
-  }
-  return data.d ?? [];
-}
-
-/** Páginas con tráfico en Bing; Bing actualiza estas métricas semanalmente. */
-export function getBingPageStats(
-  accessToken: string,
-  siteUrl: string,
-): Promise<BingQueryStat[]> {
-  return getBingStats("GetPageStats", accessToken, { siteUrl });
-}
-
-/** Consultas reales asociadas por Bing a una página concreta del sitio. */
-export function getBingPageQueryStats(
-  accessToken: string,
-  siteUrl: string,
-  page: string,
-): Promise<BingQueryStat[]> {
-  return getBingStats("GetPageQueryStats", accessToken, { siteUrl, page });
-}
-
 export async function listBingSites(accessToken: string): Promise<BingSite[]> {
   const response = await fetch(`${API_BASE}/GetUserSites`, {
     headers: { Authorization: `Bearer ${accessToken}` },

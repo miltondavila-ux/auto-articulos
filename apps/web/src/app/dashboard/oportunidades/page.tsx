@@ -18,9 +18,6 @@ interface OpportunityTitle {
   id: string;
   text: string;
   rationale: string | null;
-  searchIntent: string | null;
-  clusterRole: string | null;
-  cluster: { topic: string; primaryIntent: string | null } | null;
 }
 
 interface OpportunityGroup {
@@ -33,6 +30,7 @@ interface OpportunityGroup {
 }
 
 const DEFAULT_MAX_TITLES_PER_BATCH = 20;
+const IMAGE_CREDITS_CONFIRMED_KEY = "auto-articulos:image-credits-confirmed";
 
 function formatDateTime(value: string | Date) {
   return new Date(value).toLocaleString("es-US", {
@@ -96,8 +94,6 @@ export default function OportunidadesPage() {
   // Para marca blanca (tagcrush): PreValidationGuard necesita el servidor
   // de la cuenta para no mostrar "10minutesWebsite" ni enlaces equivocados.
   const [platformDomain, setPlatformDomain] = useState<string>("net");
-  const [prompts, setPrompts] = useState<{ id: string; name: string; prompt: string }[]>([]);
-  const [selectedPromptId, setSelectedPromptId] = useState("");
 
   const load = useCallback(async () => {
     const [
@@ -106,32 +102,17 @@ export default function OportunidadesPage() {
       languagesResponse,
       googleResponse,
       categoriesResponse,
-      promptsResponse,
     ] = await Promise.all([
       fetch("/api/opportunities", { cache: "no-store" }),
       fetch("/api/me", { cache: "no-store" }),
       fetch("/api/languages", { cache: "no-store" }),
       fetch("/api/search-integrations/google", { cache: "no-store" }),
       fetch("/api/categories", { cache: "no-store" }),
-      fetch("/api/prompts", { cache: "no-store" }),
     ]);
     const data = await opportunitiesResponse.json().catch(() => ({}));
     if (opportunitiesResponse.ok) {
       setGroups(data.groups ?? []);
       setLastAnalysisAt(data.lastAnalysisAt ?? null);
-      if (data.noNewOpportunities) {
-        const nextDate = data.nextAvailableAt
-          ? formatDateTime(data.nextAvailableAt)
-          : null;
-        setMessage({
-          kind: "info",
-          text: `Con la información actual de Search Console no encontramos nuevas oportunidades para publicar. Te recomendamos esperar al menos 3 días antes de repetir el análisis${nextDate ? ` (podrás volver a intentarlo a partir del ${nextDate})` : ""}, para darle tiempo a Google de reflejar cambios en tus datos. Si prefieres, puedes intentarlo de todas formas ahora mismo.`,
-        });
-        if (data.canForce) setCanForce(true);
-      } else {
-        setMessage(null);
-        setCanForce(false);
-      }
     }
     if (meResponse.ok) {
       const me = await meResponse.json();
@@ -146,18 +127,14 @@ export default function OportunidadesPage() {
         setContentLanguage(me.contentLanguage);
       }
       if (typeof me.hasImageCredits === "boolean") {
-        setHasImageCredits(me.hasImageCredits);
-      }
-      if (typeof me.defaultPromptId === "string" && me.defaultPromptId) {
-        setSelectedPromptId(me.defaultPromptId);
+        setHasImageCredits(
+          me.hasImageCredits ||
+            window.localStorage.getItem(IMAGE_CREDITS_CONFIRMED_KEY) === "true",
+        );
       }
       if (typeof me.platformDomain === "string") {
         setPlatformDomain(me.platformDomain);
       }
-    }
-    if (promptsResponse.ok) {
-      const promptsData = await promptsResponse.json().catch(() => ({}));
-      setPrompts(promptsData.prompts ?? []);
     }
     if (languagesResponse.ok) {
       const langs = await languagesResponse.json().catch(() => ({}));
@@ -181,6 +158,15 @@ export default function OportunidadesPage() {
     setAvailablePanels(panels);
     setSelectedPanel((prev) => (prev && panels.includes(prev) ? prev : panels[0] ?? ""));
     setLoading(false);
+  }, []);
+
+  const confirmImageCredits = useCallback(() => {
+    window.localStorage.setItem(IMAGE_CREDITS_CONFIRMED_KEY, "true");
+    setHasImageCredits(true);
+    setMessage({
+      kind: "info",
+      text: "Has indicado que ya recibiste créditos. Puedes intentar continuar; si aún no están activos, vuelve aquí y solicítalos.",
+    });
   }, []);
 
   async function acceptDisclosure() {
@@ -299,11 +285,17 @@ export default function OportunidadesPage() {
     const response = await fetch("/api/opportunities/execute-all", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ disableIndexing, contentLanguage, promptId: selectedPromptId || null }),
+      body: JSON.stringify({
+        disableIndexing,
+        contentLanguage,
+        confirmedImageCredits: hasImageCredits,
+      }),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       if (data.code === "NO_IMAGE_CREDITS") {
+        window.localStorage.removeItem(IMAGE_CREDITS_CONFIRMED_KEY);
+        setHasImageCredits(false);
         setShowImageCreditsModal(true);
       }
       setMessage({
@@ -322,8 +314,8 @@ export default function OportunidadesPage() {
         ? `Se publicarán ${publishedCount} títulos según tu cupo. Quedaron ${pendingCount} títulos pendientes en Oportunidades.`
         : `Se publicarán ${publishedCount} títulos. No quedaron títulos pendientes.`,
     });
-    await load();
     setBusyId(null);
+    router.push("/dashboard/publicaciones-en-curso");
     router.refresh();
   }
 
@@ -344,11 +336,19 @@ export default function OportunidadesPage() {
     const response = await fetch("/api/opportunities/execute", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type, id, disableIndexing, contentLanguage, promptId: selectedPromptId || null }),
+      body: JSON.stringify({
+        type,
+        id,
+        disableIndexing,
+        contentLanguage,
+        confirmedImageCredits: hasImageCredits,
+      }),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       if (data.code === "NO_IMAGE_CREDITS") {
+        window.localStorage.removeItem(IMAGE_CREDITS_CONFIRMED_KEY);
+        setHasImageCredits(false);
         setShowImageCreditsModal(true);
       }
       setMessage({ kind: "error", text: data.error ?? "No se pudo ejecutar." });
@@ -363,30 +363,17 @@ export default function OportunidadesPage() {
     router.refresh();
   }
 
-  if (loading) {
-    return (
-      <div style={{ display: "grid", gap: 16 }}>
-        <section style={sectionStyle}>
-          <div style={{ height: 26, width: 220, background: "rgba(0,0,0,0.06)", borderRadius: 6, marginBottom: 12 }} />
-          <div style={{ height: 14, width: "85%", background: "rgba(0,0,0,0.04)", borderRadius: 4, marginBottom: 8 }} />
-          <div style={{ height: 14, width: "60%", background: "rgba(0,0,0,0.04)", borderRadius: 4, marginBottom: 20 }} />
-          <div style={{ height: 42, width: 190, background: "rgba(0,0,0,0.06)", borderRadius: 11 }} />
-        </section>
-      </div>
-    );
-  }
-
-  if (disclosureAcceptedAt === null) {
+  if (!loading && disclosureAcceptedAt === null) {
     return (
       <section style={sectionStyle}>
         <h2 style={h2Style}>Aviso importante sobre Oportunidades</h2>
-        <p style={{ color: "#1d1d1f", fontSize: 14, lineHeight: 1.6 }}>
+        <p style={{ color: "#16181d", fontSize: 14, lineHeight: 1.6 }}>
           Las oportunidades que vas a ver aquí son generadas mediante un
           algoritmo automatizado conectado a fuentes como Google Search
           Console y Bing, y los resultados son producidos con inteligencia
           artificial.
         </p>
-        <p style={{ color: "#1d1d1f", fontSize: 14, lineHeight: 1.6 }}>
+        <p style={{ color: "#16181d", fontSize: 14, lineHeight: 1.6 }}>
           Cada usuario es responsable de revisar el contenido y decidir si
           desea publicarlo o no. El administrador del programa no asume
           responsabilidad por las decisiones de publicación ni por los
@@ -433,6 +420,7 @@ export default function OportunidadesPage() {
         hasGoogleSiteUrl={Boolean(setupStatus?.hasSiteUrl)}
         platformDomain={platformDomain}
         onOpenImageCreditsModal={() => setShowImageCreditsModal(true)}
+        loading={loading}
         onConfirmImageCredits={() => {
           setHasImageCredits(true);
           setMessage({
@@ -443,7 +431,7 @@ export default function OportunidadesPage() {
       >
         <section style={sectionStyle}>
         <h2 style={h2Style}>Oportunidades SEO</h2>
-        <p style={{ color: "#6e6e73", fontSize: 14, lineHeight: 1.55 }}>
+        <p style={{ color: "#6b7280", fontSize: 14, lineHeight: 1.55 }}>
           Analiza impresiones, tendencias, posiciones, consultas y páginas de tu
           propiedad de Google Search Console. El sistema selecciona hasta 10
           categorías y crea 9 oportunidades long tail únicas para cada una,
@@ -451,7 +439,7 @@ export default function OportunidadesPage() {
         </p>
         {availablePanels.length > 1 && (
           <div style={{ marginTop: 12 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: "#1d1d1f" }}>
+            <label style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>
               ¿Para cuál sitio generar oportunidades?
               <select
                 value={selectedPanel}
@@ -488,7 +476,7 @@ export default function OportunidadesPage() {
                 : "Analizar oportunidades"}
           </button>
           {lastAnalysisAt && (
-            <span style={{ fontSize: 12, color: "#6e6e73" }}>
+            <span style={{ fontSize: 12, color: "#6b7280" }}>
               Último análisis: {formatDateTime(lastAnalysisAt)}
             </span>
           )}
@@ -500,9 +488,9 @@ export default function OportunidadesPage() {
             style={{
               marginTop: 16,
               padding: 16,
-              border: "1px solid rgba(0, 113, 227, 0.25)",
+              border: "1px solid #b8caf7",
               borderRadius: 10,
-              background: "#e8f2ff",
+              background: "#f3f6ff",
             }}
           >
             <div
@@ -514,7 +502,7 @@ export default function OportunidadesPage() {
                 marginBottom: 10,
               }}
             >
-              <strong style={{ fontSize: 14, color: "#0071e3" }}>
+              <strong style={{ fontSize: 14, color: "#24458f" }}>
                 {analysisStages[currentStage]}
               </strong>
               <span
@@ -523,8 +511,8 @@ export default function OportunidadesPage() {
                   textAlign: "center",
                   padding: "4px 8px",
                   borderRadius: 999,
-                  background: "rgba(0, 113, 227, 0.15)",
-                  color: "#0071e3",
+                  background: "#dfe8ff",
+                  color: "#24458f",
                   fontSize: 12,
                   fontVariantNumeric: "tabular-nums",
                   fontWeight: 700,
@@ -538,7 +526,7 @@ export default function OportunidadesPage() {
               style={{
                 height: 8,
                 borderRadius: 999,
-                background: "rgba(0, 113, 227, 0.15)",
+                background: "#dfe5f2",
                 overflow: "hidden",
               }}
             >
@@ -547,7 +535,7 @@ export default function OportunidadesPage() {
                   width: `${analysisProgress}%`,
                   height: "100%",
                   borderRadius: 999,
-                  background: "#0071e3",
+                  background: "linear-gradient(90deg, #2f5fdb, #4dd8e8)",
                   transition: "width 1s linear",
                 }}
               />
@@ -570,10 +558,10 @@ export default function OportunidadesPage() {
                     fontSize: 12,
                     color:
                       index < currentStage
-                        ? "#16803c"
+                        ? "#15803d"
                         : index === currentStage
-                          ? "#0071e3"
-                          : "#6e6e73",
+                          ? "#24458f"
+                          : "#8a97ab",
                     fontWeight: index === currentStage ? 600 : 400,
                   }}
                 >
@@ -588,7 +576,7 @@ export default function OportunidadesPage() {
                 </div>
               ))}
             </div>
-            <p style={{ margin: "12px 0 0", color: "#6e6e73", fontSize: 12 }}>
+            <p style={{ margin: "12px 0 0", color: "#5e6b83", fontSize: 12 }}>
               El tiempo depende de la cantidad de datos. No cierres esta página
               mientras termina el análisis.
             </p>
@@ -604,8 +592,8 @@ export default function OportunidadesPage() {
                 marginTop: 12,
                 padding: "10px 14px",
                 borderRadius: 8,
-                background: "#fff4e5",
-                color: "#8a4b08",
+                background: "#fef3c7",
+                color: "#92400e",
                 fontSize: 13,
                 display: "flex",
                 flexDirection: "column",
@@ -618,7 +606,7 @@ export default function OportunidadesPage() {
                   <li>
                     <Link
                       href="/dashboard/configuracion?tab=integrations#google"
-                      style={{ color: "#0071e3", fontWeight: 600 }}
+                      style={{ color: "#2563eb", fontWeight: 600 }}
                     >
                       {!setupStatus.googleConnected
                         ? "Conectar Google Search Console"
@@ -630,7 +618,7 @@ export default function OportunidadesPage() {
                   <li>
                     <Link
                       href="/dashboard/configuracion?tab=platform#categories"
-                      style={{ color: "#0071e3", fontWeight: 600 }}
+                      style={{ color: "#2563eb", fontWeight: 600 }}
                     >
                       Sincronizar tus categorías
                     </Link>
@@ -640,7 +628,7 @@ export default function OportunidadesPage() {
                   <li>
                     <Link
                       href="/dashboard/configuracion?tab=platform#language"
-                      style={{ color: "#0071e3", fontWeight: 600 }}
+                      style={{ color: "#2563eb", fontWeight: 600 }}
                     >
                       Configurar tu idioma de redacción
                     </Link>
@@ -656,8 +644,10 @@ export default function OportunidadesPage() {
               marginTop: 12,
               padding: "10px 14px",
               borderRadius: 8,
-              background: "#fff4e5",
-              color: "#8a4b08",
+              background: "#ffffff",
+              border: "1px solid #e5e5ea",
+              boxShadow: "0 6px 18px rgba(0, 0, 0, 0.04)",
+              color: "#1d1d1f",
               fontSize: 13,
               display: "flex",
               alignItems: "center",
@@ -667,27 +657,60 @@ export default function OportunidadesPage() {
             }}
           >
             <span>
-              ⚠️ Tu cuenta no tiene créditos de imagen disponibles.
+              ⚠️ Tu cuenta de 10minutesWebsite no tiene créditos de imagen disponibles.
             </span>
-            <button
-              type="button"
-              onClick={() => setShowImageCreditsModal(true)}
+            <div
               style={{
-                background: "#ff9500",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: 6,
-                padding: "6px 12px",
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                flexWrap: "wrap",
               }}
             >
-              Solicitar créditos gratuitos
-            </button>
+              <button
+                type="button"
+                onClick={confirmImageCredits}
+                style={{
+                  background: "#1d1d1f",
+                  color: "#ffffff",
+                  border: "1px solid #1d1d1f",
+                  padding: "7px 14px",
+                  minWidth: 170,
+                  height: 36,
+                  borderRadius: 18,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  lineHeight: "20px",
+                  whiteSpace: "nowrap",
+                  cursor: "pointer",
+                }}
+              >
+                Ya recibí mis créditos
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowImageCreditsModal(true)}
+                style={{
+                  background: "#ffffff",
+                  color: "#1d1d1f",
+                  border: "1px solid #d2d2d7",
+                  padding: "7px 14px",
+                  minWidth: 170,
+                  height: 36,
+                  borderRadius: 18,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  lineHeight: "20px",
+                  whiteSpace: "nowrap",
+                  cursor: "pointer",
+                }}
+              >
+                Solicitar créditos gratuitos
+              </button>
+            </div>
           </div>
         )}
-        <p style={{ color: "#6e6e73", fontSize: 12 }}>
+        <p style={{ color: "#6b7280", fontSize: 12 }}>
           Tu máximo permitido es de {maxTitlesPerBatch} títulos por lote.
         </p>
         <label
@@ -696,7 +719,7 @@ export default function OportunidadesPage() {
             alignItems: "center",
             gap: 8,
             fontSize: 13,
-            color: "#6e6e73",
+            color: "#6b7280",
             margin: "10px 0 0",
           }}
         >
@@ -706,7 +729,7 @@ export default function OportunidadesPage() {
             onChange={(e) => setDisableIndexing(e.target.checked)}
           />
           Desactivar indexación en buscadores al ejecutar (por defecto queda
-          activada, como en la plataforma)
+          activada, como en 10minutesWebsite)
         </label>
 
         <div style={{ marginTop: 16 }}>
@@ -714,7 +737,7 @@ export default function OportunidadesPage() {
             style={{
               display: "block",
               fontSize: 13,
-              color: "#6e6e73",
+              color: "#6b7280",
               marginBottom: 6,
             }}
           >
@@ -737,31 +760,6 @@ export default function OportunidadesPage() {
                 </option>
               ))
             )}
-          </select>
-        </div>
-
-        <div style={{ marginTop: 12 }}>
-          <label
-            style={{
-              display: "block",
-              fontSize: 13,
-              color: "#6b7280",
-              marginBottom: 6,
-            }}
-          >
-            Estilo de escritura (Prompt) con el que se generarán los artículos de estas oportunidades.
-          </label>
-          <select
-            value={selectedPromptId}
-            onChange={(e) => setSelectedPromptId(e.target.value)}
-            style={{ ...inputStyle, width: "100%", maxWidth: 320 }}
-          >
-            <option value="">STANDARD (Estilo predeterminado de la plataforma)</option>
-            {prompts.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
           </select>
         </div>
 
@@ -798,7 +796,7 @@ export default function OportunidadesPage() {
                       style={{
                         margin: "6px 0 0",
                         fontSize: 12,
-                        color: "#ff3b30",
+                        color: "#d64545",
                       }}
                     >
                       Se publicarán hasta {maxTitlesPerBatch} títulos por cupo.
@@ -811,7 +809,7 @@ export default function OportunidadesPage() {
                       style={{
                         margin: "6px 0 0",
                         fontSize: 12,
-                        color: "#ff3b30",
+                        color: "#d64545",
                       }}
                     >
                       Debes seleccionar o configurar un idioma de redacción antes de publicar.
@@ -899,7 +897,7 @@ export default function OportunidadesPage() {
               <p style={{ margin: 0, color: "#6e6e73", fontSize: 13 }}>
                 {group.rationale}
               </p>
-              <p style={{ color: "#6e6e73", fontSize: 12, marginTop: 4 }}>
+              <p style={{ color: "#86868b", fontSize: 12, marginTop: 4 }}>
                 {Math.round(group.impressions).toLocaleString("es-US")}{" "}
                 impresiones · {Math.round(group.clicks).toLocaleString("es-US")}{" "}
                 clics
@@ -962,12 +960,6 @@ export default function OportunidadesPage() {
                   <strong style={{ fontSize: 14, color: "#1d1d1f" }}>
                     {index + 1}. {title.text}
                   </strong>
-                  {title.cluster && (
-                    <div style={{ color: "#0071e3", fontSize: 12, marginTop: 3 }}>
-                      {title.clusterRole === "pillar" ? "Artículo pilar" : "Artículo satélite"} · {title.cluster.topic}
-                      {title.searchIntent ? ` · intención ${title.searchIntent}` : ""}
-                    </div>
-                  )}
                   {title.rationale && (
                     <div
                       style={{ color: "#6e6e73", fontSize: 12, marginTop: 3 }}
