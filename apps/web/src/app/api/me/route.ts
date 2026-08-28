@@ -43,6 +43,7 @@ export async function GET() {
       platformDomain: user.platformDomain,
       platformBaseUrl: platformBaseUrl(user.platformDomain),
       contentLanguage: user.contentLanguage,
+      activeSitePanel: user.activeSitePanel,
       articleSignature: user.articleSignature,
       opportunitiesDisclosureAcceptedAt: user.opportunitiesDisclosureAcceptedAt,
       phone: user.phone,

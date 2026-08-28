@@ -5,7 +5,7 @@ import { getCurrentUserId } from "@/lib/current-user";
 export async function GET() {
   const userId = await getCurrentUserId();
 
-  const [categories, lastSyncJob] = await Promise.all([
+  const [categories, lastSyncJob, user] = await Promise.all([
     prisma.category.findMany({
       where: { userId, platform: "10minutesWebsite", source: { not: "archived" } },
       orderBy: { name: "asc" },
@@ -14,9 +14,10 @@ export async function GET() {
       where: { userId },
       orderBy: { createdAt: "desc" },
     }),
+    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { activeSitePanel: true } }),
   ]);
 
-  return NextResponse.json({ categories, lastSyncJob });
+  return NextResponse.json({ categories, lastSyncJob, activeSitePanel: user.activeSitePanel });
 }
 
 export async function POST(request: import("next/server").NextRequest) {

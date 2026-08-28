@@ -52,6 +52,9 @@ model User {
   // apps/worker/src/automation/10minutesWebsite.ts, 4/8/2026). "es" por
   // defecto, sin cambios para nadie existente.
   contentLanguage                   String    @default("es")
+  // Panel/sitio activo elegido por la persona cuando la cuenta remota ofrece
+  // más de un website. Vacío = cuenta de un solo sitio o compatibilidad previa.
+  activeSitePanel                   String    @default("")
   // Texto propio del usuario (ej. firma/aviso legal) que se agrega
   // automáticamente al final del contenido de CADA artículo nuevo — pedido
   // explícito del usuario, 6/8/2026. Null/vacío = no se agrega nada.

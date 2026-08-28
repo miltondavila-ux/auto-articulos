@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
       contentLanguage: true,
       hasImageCredits: true,
       defaultPromptId: true,
+      activeSitePanel: true,
     },
   });
 
@@ -159,6 +160,9 @@ export async function POST(request: NextRequest) {
   });
   if (!category) {
     return NextResponse.json({ error: "Categoría inválida" }, { status: 400 });
+  }
+  if (category.panel !== user.activeSitePanel) {
+    return NextResponse.json({ error: "Selecciona una categoría del sitio activo." }, { status: 400 });
   }
 
   const existingRunning = await prisma.run.findFirst({

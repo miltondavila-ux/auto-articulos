@@ -27,6 +27,7 @@ export async function getCurrentUser() {
       monthlyArticleLimit: true,
       platformDomain: true,
       contentLanguage: true,
+      activeSitePanel: true,
       articleSignature: true,
       allowInstagramPublishing: true,
       profilePhotoUrl: true,

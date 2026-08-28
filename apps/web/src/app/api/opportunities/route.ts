@@ -16,9 +16,9 @@ function isoDate(date: Date) {
   return date.toISOString().slice(0, 10);
 }
 
-async function list(userId: string) {
+async function list(userId: string, panel: string) {
   return prisma.opportunityGroup.findMany({
-    where: { userId },
+    where: { userId, category: { panel } },
     orderBy: [{ impressions: "desc" }, { createdAt: "desc" }],
     include: { category: true, titles: { orderBy: { createdAt: "asc" } } },
   });
@@ -28,10 +28,10 @@ export async function GET() {
   const userId = await getCurrentUserId();
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { lastOpportunityAnalysisAt: true },
+    select: { lastOpportunityAnalysisAt: true, activeSitePanel: true },
   });
   return NextResponse.json({
-    groups: await list(userId),
+    groups: await list(userId, user.activeSitePanel),
     lastAnalysisAt: user.lastOpportunityAnalysisAt,
   });
 }
@@ -50,9 +50,14 @@ export async function POST(request: Request) {
   // cambios) o panel único explícito. Pedido de Milton, 15/8/2026: sin esto,
   // el análisis mezclaba categorías de English y Español en un solo lote sin
   // que la IA tuviera forma de distinguirlas.
-  const { force, panel = "" } = await request
+  const { force } = await request
     .json()
     .catch(() => ({ force: false, panel: "" }));
+  const userSelection = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { activeSitePanel: true },
+  });
+  const panel = userSelection.activeSitePanel;
   const integration = await prisma.searchIntegration.findUnique({
     where: { userId_provider: { userId, provider: "google" } },
   });
@@ -180,7 +185,7 @@ export async function POST(request: Request) {
         data: { lastOpportunityAnalysisAt: now },
       });
       return NextResponse.json({
-        groups: await list(userId),
+        groups: await list(userId, panel),
         lastAnalysisAt: now,
         noNewOpportunities: true,
         nextAvailableAt: new Date(now.getTime() + COOLDOWN_MS),
@@ -211,7 +216,7 @@ export async function POST(request: Request) {
       });
     });
     return NextResponse.json({
-      groups: await list(userId),
+      groups: await list(userId, panel),
       lastAnalysisAt: now,
     });
   } catch (error) {

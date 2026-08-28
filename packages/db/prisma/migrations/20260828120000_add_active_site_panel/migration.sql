@@ -1,0 +1,1 @@
+ALTER TABLE "User" ADD COLUMN "activeSitePanel" TEXT NOT NULL DEFAULT '';
