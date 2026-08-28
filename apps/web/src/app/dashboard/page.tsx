@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { RunRow } from "@/types/dashboard";
 import PerformanceDashboard from "@/components/PerformanceDashboard";
 import OnboardingWizard from "@/components/OnboardingWizard";
+import ComienzaAqui from "@/components/ComienzaAqui";
 import { TRIAL_DAYS } from "@/lib/trial";
 
 interface PublishedNotification {
@@ -134,6 +135,7 @@ export default function InicioPage() {
 
   return (
     <div>
+      <ComienzaAqui />
       {showTrialWelcome && (
         <div
           style={{
