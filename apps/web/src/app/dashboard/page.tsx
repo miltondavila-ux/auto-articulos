@@ -134,7 +134,6 @@ export default function InicioPage() {
 
   return (
     <div>
-      <ComienzaAqui />
       {showTrialWelcome && (
         <div
           style={{
