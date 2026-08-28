@@ -443,7 +443,7 @@ export default function OportunidadesPage() {
               ¿Para cuál sitio generar oportunidades?
               <select
                 value={selectedPanel}
-                onChange={(e) => setSelectedPanel(e.target.value)}
+                onChange={async (e) => { const panel = e.target.value; const response = await fetch("/api/site-selection", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ panel }) }); if (response.ok) { setSelectedPanel(panel); setGroups([]); } }}
                 style={{ ...inputStyle, marginTop: 4, maxWidth: 260 }}
               >
                 {availablePanels.map((p) => (

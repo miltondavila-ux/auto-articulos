@@ -49,6 +49,8 @@ export default function PublicarPage() {
   // servidor de la cuenta para no mostrar "10minutesWebsite" ni enlaces de
   // ayuda equivocados. Ver packages/shared/src/platform-servers.ts.
   const [platformDomain, setPlatformDomain] = useState<string>("net");
+  const [activeSitePanel, setActiveSitePanel] = useState("");
+  const [sitePanels, setSitePanels] = useState<string[]>([]);
 
   const loadUserLimits = useCallback(async () => {
     const res = await fetch("/api/me", { cache: "no-store" });
@@ -101,10 +103,18 @@ export default function PublicarPage() {
   }, []);
 
   const loadCategories = useCallback(async () => {
-    const res = await fetch("/api/categories");
+    const [res, siteRes] = await Promise.all([fetch("/api/categories"), fetch("/api/site-selection")]);
     if (res.ok) {
       const data = await res.json();
       setCategories(data.categories);
+    }
+    if (siteRes.ok) {
+      const data = await siteRes.json();
+      const panels = Array.isArray(data.panels) ? data.panels : [];
+      setSitePanels(panels);
+      const active = data.activeSitePanel || panels[0] || "";
+      setActiveSitePanel(active);
+      if (!data.activeSitePanel && active) await fetch("/api/site-selection", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ panel: active }) });
     }
   }, []);
 
@@ -141,8 +151,9 @@ export default function PublicarPage() {
   // secuencia" — por defecto solo se ofrecen las regulares; las de
   // secuencia quedan en una lista aparte, para usarlas solo si se elige
   // explícitamente (pedido del usuario, 5/8/2026).
-  const regularCategories = categories.filter((c) => !c.isSequence);
-  const sequenceCategories = categories.filter((c) => c.isSequence);
+  const siteCategories = categories.filter((c) => c.panel === activeSitePanel);
+  const regularCategories = siteCategories.filter((c) => !c.isSequence);
+  const sequenceCategories = siteCategories.filter((c) => c.isSequence);
   const visibleCategories = useSequenceCategory
     ? sequenceCategories
     : regularCategories;
@@ -320,6 +331,7 @@ export default function PublicarPage() {
 
         <section style={readySectionStyle(Boolean(selectedCategoryId))}>
           <h2 style={h2Style}>Categoría</h2>
+          {sitePanels.length > 1 && <select value={activeSitePanel} disabled={hasActiveRun} onChange={async (e) => { const panel = e.target.value; const res = await fetch("/api/site-selection", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ panel }) }); if (res.ok) { setActiveSitePanel(panel); setSelectedCategoryId(""); } }} style={{ ...inputStyle, width: "100%", marginBottom: 12 }}>{sitePanels.map((p) => <option key={p} value={p}>{p}</option>)}</select>}
           <p style={{ fontSize: 13, color: "#6e6e73", margin: "0 0 12px" }}>
             Elige primero la categoría bajo la que se publicarán los artículos de
             esta ejecución.
