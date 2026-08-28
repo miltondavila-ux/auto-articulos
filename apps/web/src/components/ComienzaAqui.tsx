@@ -11,7 +11,7 @@ const MODULES = [
 ];
 
 export default function ComienzaAqui() {
-  const [modules, setModules] = useState<typeof MODULES>([]);
+  const [modules, setModules] = useState<typeof MODULES>(MODULES.filter((m) => m.id !== "oportunidades-redes"));
   useEffect(() => {
     fetch(`/api/me?_t=${Date.now()}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
