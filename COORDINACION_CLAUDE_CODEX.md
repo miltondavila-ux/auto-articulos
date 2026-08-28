@@ -171,6 +171,107 @@ Acción inmediata: ninguna de mi parte — árbol de trabajo limpio (confirmado 
 Responsable siguiente: Codex, para la migración pendiente ya declarada arriba.
 Capitanía de migración: no — no tengo ninguna migración propia pendiente.
 
+## LIBERACIÓN Y ENTREGA SEPARADA DE PENDIENTES — 2026-08-28
+
+Se revisaron las áreas solicitadas. Ninguna se mezcla con otra; las áreas sin
+commit o sin worktree identificable quedan expresamente pendientes y liberadas.
+
+### CODEX - GPT-5 - PROBLEMA CON TUMBLR
+Proyecto: conexión y publicación Tumblr.
+Motivo/objetivo: separar estado OAuth de permiso de publicación.
+Alcance/exclusiones: endpoint de estado e interfaz; sin migraciones ni otras redes.
+Archivos y commits: rutas Tumblr y `TumblrSection.tsx`; `c35b3a8`, `03aeffe`.
+Rama/worktree: `codex/problema-con-tumblr-fix` / `/private/tmp/auto-articulos-tumblr-fix`.
+Migraciones: `20260823150000_add_tumblr_integration`, aplicación no verificada.
+Pruebas: `git diff --check`; typecheck bloqueado por dependencias ausentes.
+Estado/producción: terminado; commit funcional está en `origin/main`; deployment no verificado directamente.
+Conversaciones relacionadas: integración Tumblr y correcciones `b04b0e9`, `22e6054`, `1c645ae`, `99da8fd`.
+Responsable: Codex. Siguiente acción: prueba real de conexión y publicación. Decisión de Milton: conservar.
+
+### CODEX - GPT-5 - INTEGRACION GOOGLE ANALYTICS
+Proyecto: integración GA4.
+Motivo/objetivo: extraer únicamente GA4 y rebasarlo sobre `origin/main` actual sin eliminar integraciones.
+Alcance/exclusiones: OAuth/listado/señales GA4; excluir cualquier cambio ajeno.
+Archivos y commits: rama `codex/integracion-google-analytics`; relacionados `82300bc`, `d7eb1f4`, `4af73b7`; extracción pendiente.
+Rama/worktree: rama remota disponible; worktree exclusivo de extracción aún no creado.
+Migraciones: las que acompañen exclusivamente GA4, por identificar; no aplicar.
+Pruebas: no ejecutar hasta extraer sobre `origin/main` y revisar diff.
+Estado/producción: pendiente; no publicar la rama completa.
+Conversaciones relacionadas: `codex/ga4-production-clean` y documentación GA4.
+Responsable: integrador designado por Milton. Siguiente acción: crear worktree limpio desde `origin/main`, extraer solo GA4. Decisión de Milton: conservar integraciones existentes.
+
+### CODEX - GPT-5 - BLUESKY
+Proyecto: conexión y publicación Bluesky.
+Motivo/objetivo: mantener integración disponible para oportunidades sociales.
+Alcance/exclusiones: código y migración Bluesky; sin cambios de otras redes.
+Archivos y commits: `packages/shared/src/bluesky-api.ts`, rutas/componentes Bluesky; `e34fe4f` y cambios posteriores de producción.
+Rama/worktree: integrado en `origin/main`; worktree de origen no identificado.
+Migraciones: `20260823170000_add_bluesky_integration`, estado de producción no verificado.
+Pruebas: no hay prueba de producción registrada.
+Estado/producción: código integrado; conexión/publicación real pendiente de verificación.
+Conversaciones relacionadas: oportunidades sociales.
+Responsable: responsable de redes sociales. Siguiente acción: prueba real y confirmar migración. Decisión de Milton: conservar.
+
+### CODEX - GPT-5 - DEV.TO
+Proyecto: conexión y publicación DEV.to.
+Motivo/objetivo: preservar publicación por cuenta y cuerpo editorial completo.
+Alcance/exclusiones: integración DEV.to; sin reabrir cambios de contenido ajenos.
+Archivos y commits: código DEV.to; `2e5d2ba`, `8dcd14b`, `bb1236b`, `f6c6122`, `7c4d4e1`, `679d7c3`, `1086e4f`, `0789fec`.
+Rama/worktree: integrado en `origin/main`; origen aislado no identificado.
+Migraciones: ninguna nueva identificada.
+Pruebas: no hay prueba de publicación real registrada.
+Estado/producción: integrado; producción pendiente de verificación funcional.
+Conversaciones relacionadas: publicaciones sociales.
+Responsable: responsable de redes sociales. Siguiente acción: probar conexión y publicación. Decisión de Milton: conservar.
+
+### CODEX - GPT-5 - MASTODON
+Proyecto: conexión y publicación Mastodon.
+Motivo/objetivo: conservar URL de instancia y solicitudes de oportunidades.
+Alcance/exclusiones: integración Mastodon; sin cambios en OAuth ajeno.
+Archivos y commits: código Mastodon; `c6f3ccc`, `a2c42c2`, `7180008`, `0bb709d`.
+Rama/worktree: integrado en `origin/main`; origen aislado no identificado.
+Migraciones: ninguna identificada.
+Pruebas: no hay prueba real registrada.
+Estado/producción: integrado; producción pendiente de verificación.
+Conversaciones relacionadas: oportunidades sociales.
+Responsable: responsable de redes sociales. Siguiente acción: prueba real. Decisión de Milton: conservar.
+
+### CODEX - GPT-5 - PINTEREST
+Proyecto: conexión y publicación Pinterest.
+Motivo/objetivo: preservar permiso por usuario y selección de tablero.
+Alcance/exclusiones: integración Pinterest; sin cambios en Tumblr.
+Archivos y commits: código Pinterest; `40f41c7`, `ff06269`, `e3557e2`, `99da8fd`.
+Rama/worktree: integrado en `origin/main`; origen aislado no identificado.
+Migraciones: ninguna pendiente identificada.
+Pruebas: no hay prueba real registrada.
+Estado/producción: integrado; producción pendiente de verificación.
+Conversaciones relacionadas: redes sociales y configuración.
+Responsable: responsable de redes sociales. Siguiente acción: verificar conexión/publicación. Decisión de Milton: conservar.
+
+### CODEX - GPT-5 - CONFIGURACION Y OPORTUNIDADES
+Proyecto: páginas de configuración y oportunidades sociales/SEO.
+Motivo/objetivo: liberar trabajo pendiente sin absorber cambios ajenos.
+Alcance/exclusiones: únicamente auditoría documental; no se modificó código de ramas activas.
+Archivos y commits: ramas `codex/configuracion-paginas-independientes-20260828`, `codex/configuracion-paginas-reales`, `codex/arreglo-configuracion-release` y áreas de oportunidades; revisar diffs individualmente.
+Rama/worktree: worktrees existentes `/private/tmp/arreglo-configuracion-limpio` y otros registrados por `git worktree list`.
+Migraciones: no aplicar ninguna durante esta liberación.
+Pruebas: no consolidar ni probar hasta que cada responsable entregue su diff.
+Estado/producción: pendientes y liberados; no se declara producción.
+Conversaciones relacionadas: doble instrucción, configuración Apple, oportunidades sociales.
+Responsable: cada responsable de rama. Siguiente acción: entregar diff y pruebas por separado. Decisión de Milton: no mezclar.
+
+### CODEX - GPT-5 - MIGRACIONES PRISMA
+Proyecto: inventario y capitanía de migraciones.
+Motivo/objetivo: liberar migraciones pendientes sin aplicarlas unilateralmente.
+Alcance/exclusiones: identificar migraciones y estado; no ejecutar SQL.
+Archivos y commits: `packages/db/prisma/schema.prisma` y migraciones `20260823150000_add_tumblr_integration`, `20260823170000_add_bluesky_integration`, `20260824010000_add_opportunity_intelligence_history`, `20260824090000_remove_prompt_box_system` y GA4 por confirmar.
+Rama/worktree: auditoría documental en `codex/liberar-inventario-20260828` / `/private/tmp/auto-articulos-liberar-inventario`.
+Migraciones: ninguna aplicada desde esta entrega; capitanía no reclamada.
+Pruebas: revisión de nombres/historial; no conexión ni ejecución contra Supabase.
+Estado/producción: pendientes de confirmación individual.
+Conversaciones relacionadas: GA4, Tumblr, Bluesky, generador IA y oportunidades.
+Responsable: Milton debe designar capitán. Siguiente acción: comparar schema/diffs y confirmar aplicación en producción. Decisión de Milton: no aplicar hasta autorización explícita.
+
 ## 2026-08-26 — Auditoría y corrección de PROBLEMA CON TUMBLR
 
 **CODEX - GPT-5 - PROBLEMA CON TUMBLR**
