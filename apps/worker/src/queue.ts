@@ -17,71 +17,6 @@ async function markTitleError(titleId: string, message: string) {
   });
 }
 
-const OPPORTUNITY_RETRY_NOTE =
-  "No se publicó en el primer intento y quedó disponible en Oportunidades para reintentarlo.";
-
-/**
- * Reincorpora al módulo Oportunidades los títulos que ya no pueden avanzar en
- * este Run. Al iniciar una publicación el grupo original se convierte en Run
- * y se elimina; sin esta compensación, un fallo definitivo hacía desaparecer
- * la oportunidad aunque el artículo nunca hubiera sido publicado.
- */
-async function restoreUnfinishedTitlesToOpportunities(
-  runId: string,
-  onlyTitleId?: string,
-) {
-  await prisma.$transaction(async (tx) => {
-    const run = await tx.run.findUnique({
-      where: { id: runId },
-      select: { userId: true, categoryId: true },
-    });
-    if (!run) return;
-
-    const titles = await tx.title.findMany({
-      where: {
-        runId,
-        ...(onlyTitleId ? { id: onlyTitleId } : {}),
-        status: { in: ["pending", "error"] },
-      },
-      orderBy: { order: "asc" },
-      select: { text: true },
-    });
-    if (titles.length === 0) return;
-
-    const group = await tx.opportunityGroup.upsert({
-      where: { userId_categoryId: { userId: run.userId, categoryId: run.categoryId } },
-      create: {
-        userId: run.userId,
-        categoryId: run.categoryId,
-        rationale: "Títulos pendientes de publicación; puedes reintentarlos desde aquí.",
-      },
-      update: {},
-      select: { id: true },
-    });
-
-    for (const title of titles) {
-      const existing = await tx.opportunityTitle.findFirst({
-        where: { groupId: group.id, text: title.text },
-        select: { id: true },
-      });
-      if (existing) {
-        await tx.opportunityTitle.update({
-          where: { id: existing.id },
-          data: { rationale: OPPORTUNITY_RETRY_NOTE },
-        });
-      } else {
-        await tx.opportunityTitle.create({
-          data: {
-            groupId: group.id,
-            text: title.text,
-            rationale: OPPORTUNITY_RETRY_NOTE,
-          },
-        });
-      }
-    }
-  });
-}
-
 /**
  * Procesa un único título de algún run activo. Devuelve true si hizo algo.
  *
@@ -90,9 +25,9 @@ async function restoreUnfinishedTitlesToOpportunities(
  * por otro lane, para que distintos usuarios avancen en paralelo sin que dos
  * lanes abran sesión en la MISMA cuenta de 10minutesWebsite al mismo tiempo.
  */
-export async function processNext(filterUserId?: string): Promise<boolean> {
+export async function processNext(): Promise<boolean> {
   const candidates = await prisma.run.findMany({
-    where: { status: "running", ...(filterUserId ? { userId: filterUserId } : {}) },
+    where: { status: "running" },
     orderBy: { createdAt: "asc" },
     include: {
       category: true,
@@ -104,7 +39,6 @@ export async function processNext(filterUserId?: string): Promise<boolean> {
           articleSignature: true,
           phone: true,
           country: true,
-          name: true,
           firstName: true,
           lastName: true,
         },
@@ -145,7 +79,6 @@ async function processRunTitle(
           articleSignature: true;
           phone: true;
           country: true;
-          name: true;
           firstName: true;
           lastName: true;
         };
@@ -203,7 +136,6 @@ async function processRunTitle(
       where: { id: run.id, status: { in: ["pending", "running"] } },
       data: { status: "halted", finishedAt: new Date() },
     });
-    await restoreUnfinishedTitlesToOpportunities(run.id);
     return true;
   }
 
@@ -286,7 +218,6 @@ async function processRunTitle(
         where: { id: run.id, status: { in: ["pending", "running"] } },
         data: { status: "halted", finishedAt: new Date() },
       });
-      await restoreUnfinishedTitlesToOpportunities(run.id);
       return true;
     }
 
@@ -303,9 +234,7 @@ async function processRunTitle(
         userPhone: run.user.phone,
         userCountry: run.user.country,
         authorName:
-          [run.user.firstName, run.user.lastName].filter(Boolean).join(" ") ||
-          run.user.name ||
-          null,
+          [run.user.firstName, run.user.lastName].filter(Boolean).join(" ") || null,
         promptText: run.prompt?.prompt || null,
       },
       nextTitle.text,
@@ -331,7 +260,6 @@ async function processRunTitle(
         articleUrl: result.articleUrl,
         finalTitle: result.finalTitle,
         summary: result.summary,
-        publishedAt: new Date(),
         processedAt: new Date(),
         errorMessage: null,
       },
@@ -342,18 +270,6 @@ async function processRunTitle(
     // await notifyThreads(nextTitle.id, run.userId); // Desactivado por solicitud: las publicaciones a redes ahora se controlan desde el módulo de Oportunidades Redes.
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    // El cuerpo real de la respuesta del servidor (capturado en
-    // generateImage()) llega tal cual lo mandó PHP, con las tildes escapadas
-    // como "é" en vez del carácter real — un response.text() nunca las
-    // decodifica. Bug confirmado el 21/8/2026: el mensaje real del sitio
-    // ("Se han agotado los créditos de tu imagen...") no matcheaba NUNCA
-    // el string con tilde literal de abajo, así que el popup de "sin
-    // créditos" nunca se disparaba para el caso real (solo para la
-    // suposición del fallback sin datos de red). Se normaliza antes de
-    // buscar la señal.
-    const normalizedMessage = message.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) =>
-      String.fromCharCode(parseInt(hex, 16)),
-    );
     const [fresh, freshRun] = await Promise.all([
       prisma.title.findUniqueOrThrow({ where: { id: nextTitle.id } }),
       prisma.run.findUniqueOrThrow({ where: { id: run.id } }),
@@ -372,9 +288,8 @@ async function processRunTitle(
       // puede modificar como máximo 20 artículos. El siguiente lote requiere
       // una nueva orden y retomará los pendientes de forma idempotente.
     } else if (
-      normalizedMessage.includes("acabado los tokens/créditos") ||
-      normalizedMessage.includes("créditos de la cuenta") ||
-      /agotado los cr[ée]ditos/i.test(normalizedMessage)
+      message.includes("acabado los tokens/créditos") ||
+      message.includes("créditos de la cuenta")
     ) {
       await prisma.user.update({
         where: { id: run.userId },
@@ -385,7 +300,6 @@ async function processRunTitle(
         where: { id: run.id, status: { in: ["pending", "running"] } },
         data: { status: "halted", finishedAt: new Date() },
       });
-      await restoreUnfinishedTitlesToOpportunities(run.id);
     } else if (err instanceof DailyLimitReachedError) {
       // Límite diario de artículos confirmado por el propio sitio (no una
       // hipótesis): NINGÚN otro título de este lote puede avanzar hoy, así
@@ -398,12 +312,10 @@ async function processRunTitle(
         where: { id: run.id, status: { in: ["pending", "running"] } },
         data: { status: "halted", finishedAt: new Date() },
       });
-      await restoreUnfinishedTitlesToOpportunities(run.id);
     } else if (fresh.attempts >= MAX_ATTEMPTS) {
       // Se acabaron los intentos para ESTE título, pero el lote sigue: el
       // worker continúa con los demás títulos pendientes del mismo run.
       await markTitleError(nextTitle.id, message);
-      await restoreUnfinishedTitlesToOpportunities(run.id, nextTitle.id);
     } else {
       // Vuelve a "pending" para reintentar desde el inicio en el próximo ciclo.
       await prisma.title.update({
