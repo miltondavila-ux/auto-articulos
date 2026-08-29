@@ -20,7 +20,11 @@ import { prisma } from "@auto-articulos/db";
 // runner de GitHub Actions se cae) sin liberar la reserva, otro shard puede
 // tomarla de nuevo pasado ese tiempo en vez de dejar al usuario bloqueado
 // para siempre.
-const LOCK_TTL_MS = 5 * 60 * 1000;
+// Una publicación puede tardar más de cinco minutos entre generación de
+// contenido, imagen y validación del sitio externo. El TTL se mantiene como
+// salvavidas para procesos muertos, pero los workers vivos lo renuevan
+// periódicamente mientras conservan la sesión.
+const LOCK_TTL_MS = 10 * 60 * 1000;
 
 export async function tryReserveUser(userId: string): Promise<boolean> {
   const now = new Date();
@@ -41,5 +45,18 @@ export async function releaseUser(userId: string): Promise<void> {
   await prisma.user.updateMany({
     where: { id: userId },
     data: { workerBusyUntil: null },
+  });
+}
+
+
+/** Renueva el lease de un worker que sigue ejecutando una unidad de trabajo. */
+export async function renewUserReservation(userId: string): Promise<void> {
+  const now = new Date();
+  await prisma.user.updateMany({
+    where: {
+      id: userId,
+      workerBusyUntil: { gt: now },
+    },
+    data: { workerBusyUntil: new Date(now.getTime() + LOCK_TTL_MS) },
   });
 }

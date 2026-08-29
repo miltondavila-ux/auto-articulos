@@ -4,7 +4,11 @@ import {
   publishArticle,
   DailyLimitReachedError,
 } from "./automation/10minutesWebsite";
-import { tryReserveUser, releaseUser } from "./reservation";
+import {
+  tryReserveUser,
+  releaseUser,
+  renewUserReservation,
+} from "./reservation";
 import { notifyGoogle } from "./googleIndexing";
 import { notifyBing } from "./bingIndexing";
 import { runPatriciaFix } from "./fix-patricia";
@@ -126,9 +130,19 @@ export async function processNext(filterUserId?: string): Promise<boolean> {
   }
   if (!run) return false;
 
+  // Una publicación real puede superar el TTL original de cinco minutos.
+  // Renovar el lease evita que otro shard abra una segunda sesión en la misma
+  // cuenta mientras este worker todavía está generando o guardando el artículo.
+  const reservationHeartbeat = setInterval(() => {
+    void renewUserReservation(run!.userId).catch((err) => {
+      console.error("No se pudo renovar la reserva del usuario:", err);
+    });
+  }, 60_000);
+
   try {
     return await processRunTitle(run);
   } finally {
+    clearInterval(reservationHeartbeat);
     await releaseUser(run.userId);
   }
 }
@@ -207,9 +221,17 @@ async function processRunTitle(
     return true;
   }
 
-  const updated = await prisma.title.update({
-    where: { id: nextTitle.id },
+  // Reclamo atómico: varios lanes pueden haber leído el mismo título
+  // pendiente antes de llegar aquí. Solo el primero que todavía lo encuentre
+  // en pending puede cambiarlo a processing y aumentar los intentos.
+  const claimed = await prisma.title.updateMany({
+    where: { id: nextTitle.id, status: "pending" },
     data: { status: "processing", attempts: { increment: 1 } },
+  });
+  if (claimed.count !== 1) return false;
+
+  const updated = await prisma.title.findUniqueOrThrow({
+    where: { id: nextTitle.id },
   });
 
   const onStep = async (message: string) => {
