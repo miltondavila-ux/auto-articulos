@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import ModuleIntro, { IntroP, Modulo } from "@/components/ModuleIntro";
+import { useRouter } from "next/navigation";
 import {
   sectionStyle,
   h2Style,
@@ -630,6 +631,7 @@ function HistoryEntry({
   run: RunRow;
   onRetried: () => void;
 }) {
+  const router = useRouter();
   const successCount = run.titles.filter((t) => t.status === "success").length;
   const hasErrors = run.status === "halted";
   const publicationAt = latestPublicationAt(run.titles);
@@ -640,8 +642,12 @@ function HistoryEntry({
     e.stopPropagation();
     setRetrying(true);
     try {
-      await fetch(`/api/runs/${run.id}/retry`, { method: "POST" });
+      const response = await fetch(`/api/runs/${run.id}/retry`, { method: "POST" });
+      if (!response.ok) {
+        throw new Error("No se pudo iniciar el reintento.");
+      }
       onRetried();
+      router.push("/dashboard/publicaciones-en-curso");
     } finally {
       setRetrying(false);
     }
