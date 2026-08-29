@@ -382,6 +382,22 @@ async function processRunTitle(
     ]);
     await onStep(`Error: ${message}`);
 
+    // El mensaje real de la respuesta llega en el idioma que responda
+    // 10minutesWebsite (visto tanto en español como en inglés, p. ej.
+    // "Insufficient credits"). Antes solo se reconocía el español, así que
+    // el usuario veía el volcado técnico crudo en vez de un aviso claro, y
+    // el 500 en inglés ni siquiera se identificaba como falta de créditos
+    // (caía en el reintento genérico 3 veces).
+    const isImageCreditIssue =
+      /insufficient\s*credit/i.test(normalizedMessage) ||
+      /(?:→|status\s*)\s*402\b/i.test(normalizedMessage) ||
+      /(?:no tiene|agotad[oa]s?|sin) (?:los )?(?:tokens|cr[ée]ditos)/i.test(
+        normalizedMessage,
+      );
+    const displayMessage = isImageCreditIssue
+      ? "Sin créditos de imagen en 10minutesWebsite. Pide más créditos a tu proveedor del sitio; no hace falta hacer nada más aquí, el próximo intento funcionará solo."
+      : message;
+
     if (freshRun.status === "cancelled") {
       // El usuario canceló el run mientras este título estaba en curso: no
       // lo reintentamos ni lo marcamos como error, queda como cancelado.
@@ -393,23 +409,14 @@ async function processRunTitle(
       // Un lote administrativo nunca se reintenta automáticamente: cada orden
       // puede modificar como máximo 20 artículos. El siguiente lote requiere
       // una nueva orden y retomará los pendientes de forma idempotente.
-    } else if (
-      // Solo una respuesta explícita de falta de saldo debe cambiar el estado
-      // global de la cuenta. Un 500 con texto "Insufficient credits" puede ser
-      // un fallo del endpoint o de la sesión; no hay saldo numérico verificable
-      // en nuestro modelo para convertirlo en un bloqueo permanente.
-      /(?:→|status\s*)\s*402\b/i.test(normalizedMessage) ||
-      /(?:no tiene|agotad[oa]s?|sin) (?:los )?(?:tokens|cr[ée]ditos)/i.test(normalizedMessage)
-    ) {
-      // El saldo no se controla en nuestra base: el sitio externo decide
-      // durante la generación de imagen. El error queda en el artículo,
-      // pero nunca convierte la cuenta completa en "sin créditos".
-      await markTitleError(nextTitle.id, message);
-      await prisma.run.updateMany({
-        where: { id: run.id, status: { in: ["pending", "running"] } },
-        data: { status: "halted", finishedAt: new Date() },
-      });
-      await restoreUnfinishedTitlesToOpportunities(run.id);
+    } else if (isImageCreditIssue) {
+      // Orden directa de Milton (29/8/2026): sin créditos de imagen no se
+      // bloquea nada del lado de Auto Artículos. Solo este título queda en
+      // error con un aviso claro; el resto del lote sigue normal, y el
+      // próximo intento (cuando haya créditos) funciona solo, sin estado
+      // que resetear a mano.
+      await markTitleError(nextTitle.id, displayMessage);
+      await restoreUnfinishedTitlesToOpportunities(run.id, nextTitle.id);
     } else if (err instanceof DailyLimitReachedError) {
       // Límite diario de artículos confirmado por el propio sitio (no una
       // hipótesis): NINGÚN otro título de este lote puede avanzar hoy, así
