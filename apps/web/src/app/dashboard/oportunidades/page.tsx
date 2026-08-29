@@ -126,12 +126,6 @@ export default function OportunidadesPage() {
       if (typeof me.contentLanguage === "string") {
         setContentLanguage(me.contentLanguage);
       }
-      if (typeof me.hasImageCredits === "boolean") {
-        setHasImageCredits(
-          me.hasImageCredits ||
-            window.localStorage.getItem(IMAGE_CREDITS_CONFIRMED_KEY) === "true",
-        );
-      }
       if (typeof me.platformDomain === "string") {
         setPlatformDomain(me.platformDomain);
       }
@@ -269,10 +263,6 @@ export default function OportunidadesPage() {
   }
 
   async function executeAll() {
-    if (!hasImageCredits) {
-      setShowImageCreditsModal(true);
-      return;
-    }
     if (!contentLanguage.trim()) {
       setMessage({
         kind: "error",
@@ -293,11 +283,6 @@ export default function OportunidadesPage() {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      if (data.code === "NO_IMAGE_CREDITS") {
-        window.localStorage.removeItem(IMAGE_CREDITS_CONFIRMED_KEY);
-        setHasImageCredits(false);
-        setShowImageCreditsModal(true);
-      }
       setMessage({
         kind: "error",
         text: data.error ?? "No se pudo publicar todas las categorías.",
@@ -323,10 +308,6 @@ export default function OportunidadesPage() {
   }
 
   async function execute(type: "group" | "title", id: string) {
-    if (!hasImageCredits) {
-      setShowImageCreditsModal(true);
-      return;
-    }
     if (!contentLanguage.trim()) {
       setMessage({
         kind: "error",
@@ -349,11 +330,6 @@ export default function OportunidadesPage() {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      if (data.code === "NO_IMAGE_CREDITS") {
-        window.localStorage.removeItem(IMAGE_CREDITS_CONFIRMED_KEY);
-        setHasImageCredits(false);
-        setShowImageCreditsModal(true);
-      }
       setMessage({ kind: "error", text: data.error ?? "No se pudo ejecutar." });
       // Si el servidor dice que ya no existe, la lista en pantalla está
       // desactualizada (p. ej. otra pestaña ya la ejecutó/eliminó) —

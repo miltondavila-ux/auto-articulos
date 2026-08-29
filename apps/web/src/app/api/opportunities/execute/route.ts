@@ -61,16 +61,6 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
-  if (!user.hasImageCredits && confirmedImageCredits !== true) {
-    return NextResponse.json(
-      {
-        error:
-          "Tu cuenta de 10minutesWebsite no tiene créditos de imagen disponibles. Solicita más créditos gratuitos en https://www.10minuteswebsite.com/ayuda",
-        code: "NO_IMAGE_CREDITS",
-      },
-      { status: 400 },
-    );
-  }
   const effectiveLanguage =
     typeof contentLanguage === "string" && contentLanguage.trim()
       ? contentLanguage.trim()
