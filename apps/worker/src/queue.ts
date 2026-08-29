@@ -409,14 +409,6 @@ async function processRunTitle(
       // Un lote administrativo nunca se reintenta automáticamente: cada orden
       // puede modificar como máximo 20 artículos. El siguiente lote requiere
       // una nueva orden y retomará los pendientes de forma idempotente.
-    } else if (isImageCreditIssue) {
-      // Orden directa de Milton (29/8/2026): sin créditos de imagen no se
-      // bloquea nada del lado de Auto Artículos. Solo este título queda en
-      // error con un aviso claro; el resto del lote sigue normal, y el
-      // próximo intento (cuando haya créditos) funciona solo, sin estado
-      // que resetear a mano.
-      await markTitleError(nextTitle.id, displayMessage);
-      await restoreUnfinishedTitlesToOpportunities(run.id, nextTitle.id);
     } else if (err instanceof DailyLimitReachedError) {
       // Límite diario de artículos confirmado por el propio sitio (no una
       // hipótesis): NINGÚN otro título de este lote puede avanzar hoy, así
@@ -433,7 +425,15 @@ async function processRunTitle(
     } else if (fresh.attempts >= MAX_ATTEMPTS) {
       // Se acabaron los intentos para ESTE título, pero el lote sigue: el
       // worker continúa con los demás títulos pendientes del mismo run.
-      await markTitleError(nextTitle.id, message);
+      //
+      // Confirmado el 29/8/2026 (Milton reintentó a mano y sí había
+      // créditos): "Insufficient credits" puede ser una respuesta falsa/
+      // pasajera de 10minutesWebsite, no una falta real. Por eso ya no se
+      // corta en el primer intento — se deja agotar los MAX_ATTEMPTS
+      // normales (se puede resolver solo en el segundo o tercero) y recién
+      // acá, si de verdad se agotaron, se usa el aviso claro en vez del
+      // volcado técnico.
+      await markTitleError(nextTitle.id, isImageCreditIssue ? displayMessage : message);
       await restoreUnfinishedTitlesToOpportunities(run.id, nextTitle.id);
     } else {
       // Vuelve a "pending" para reintentar desde el inicio en el próximo ciclo.

@@ -145,8 +145,7 @@ export default function CreditsQrAlert() {
           }}
         >
           10minutesWebsite se quedó sin créditos generales para generar
-          imágenes. Escanea el código con el celular para recargar por
-          WhatsApp, o toca el enlace desde este mismo dispositivo.
+          imágenes. Escanea con tu móvil.
         </p>
         {qrDataUrl && (
           // eslint-disable-next-line @next/next/no-img-element
