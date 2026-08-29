@@ -398,7 +398,7 @@ async function processRunTitle(
       // global de la cuenta. Un 500 con texto "Insufficient credits" puede ser
       // un fallo del endpoint o de la sesión; no hay saldo numérico verificable
       // en nuestro modelo para convertirlo en un bloqueo permanente.
-      /(?:→|status\\s*)\\s*402\\b/i.test(normalizedMessage) ||
+      /(?:→|status\s*)\s*402\b/i.test(normalizedMessage) ||
       /(?:no tiene|agotad[oa]s?|sin) (?:los )?(?:tokens|cr[ée]ditos)/i.test(normalizedMessage)
     ) {
       await prisma.user.update({
