@@ -2171,17 +2171,28 @@ async function saveAndGetUrl(
   };
 
   const revalidateTitleAndForm = async () => {
-    // La plataforma usa jQuery Validate y la regla remota del título. Los
-    // eventos nativos no siempre invalidan el resultado remoto anterior;
-    // se usan los eventos jQuery que consume realmente el formulario.
+    // La plataforma usa jQuery Validate con una regla remota en #titlees.
+    // Después de un duplicado, el error y previousValue quedan en caché y
+    // el manejador de #type vuelve a bloquear #save_art aun con un título
+    // nuevo. Se limpia exclusivamente el estado de validación del título,
+    // se fuerza una consulta remota nueva y luego se reevalúa el formulario.
     await page.evaluate(() => {
       const jq = (window as unknown as {
         jQuery?: (selector: string) => {
+          removeData: (key: string) => unknown;
           trigger: (eventName: string) => unknown;
           valid?: () => boolean;
         };
       }).jQuery;
+      const validator = (window as unknown as {
+        jQuery?: (selector: string) => {
+          data: (key: string) => { resetForm?: () => void } | undefined;
+        };
+      }).jQuery?.("#form_buyer_seller_articles").data("validator");
       if (!jq) return;
+      jq("#titlees").removeData("previousValue");
+      jq("#titlees").removeData("remote");
+      validator?.resetForm?.();
       for (const eventName of ["input", "keyup", "change", "blur", "focusout"]) {
         jq("#titlees").trigger(eventName);
       }
@@ -2207,7 +2218,6 @@ async function saveAndGetUrl(
       jq?.("#type").trigger("change");
     }).catch(() => {});
   };
-
   for (let saveAttempt = 1; saveAttempt <= MAX_SAVE_ATTEMPTS; saveAttempt++) {
     await onStep("Guardando y publicando el artículo...");
     await revalidateTitleAndForm();
