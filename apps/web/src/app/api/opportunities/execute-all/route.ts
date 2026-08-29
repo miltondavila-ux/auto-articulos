@@ -18,7 +18,7 @@ import { hasTrialAccess } from "@/lib/trial";
 // se le pierda de vista el resto.
 export async function POST(request: NextRequest) {
   const userId = await getCurrentUserId();
-  const { disableIndexing, contentLanguage, promptId, confirmedImageCredits } = (await request
+  const { disableIndexing, contentLanguage, promptId } = (await request
     .json()
     .catch(() => ({}))) as {
     disableIndexing?: boolean;

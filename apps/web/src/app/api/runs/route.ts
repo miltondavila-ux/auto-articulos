@@ -49,7 +49,6 @@ export async function POST(request: NextRequest) {
     disableIndexing,
     contentLanguage,
     promptId,
-    confirmedImageCredits,
   } = await request.json();
 
   if (typeof titlesText !== "string") {

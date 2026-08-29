@@ -6,7 +6,7 @@ import { hasTrialAccess } from "@/lib/trial";
 
 export async function POST(request: NextRequest) {
   const userId = await getCurrentUserId();
-  const { type, id, ids, disableIndexing, contentLanguage, promptId, confirmedImageCredits } =
+  const { type, id, ids, disableIndexing, contentLanguage, promptId } =
     (await request.json()) as {
       type?: string;
       id?: string;
