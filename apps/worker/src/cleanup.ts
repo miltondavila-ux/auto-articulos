@@ -1,5 +1,4 @@
 import { prisma } from "@auto-articulos/db";
-import { MAX_ATTEMPTS } from "@auto-articulos/shared";
 
 // El usuario pidió explícitamente (31/7/2026) mantener la base lo más
 // liviana posible: el log completo (con capturas de diagnóstico en base64)
@@ -31,6 +30,55 @@ export async function cleanupOldEvents(): Promise<number> {
 // títulos "processing" cuyo último evento es de hace rato y se recuperan:
 // se reintentan si quedan intentos, o se marcan como error si no.
 const STUCK_PROCESSING_MS = 10 * 60 * 1000; // 10 minutos
+const OPPORTUNITY_RETRY_NOTE =
+  "No se publicó en el primer intento y quedó disponible en Oportunidades para reintentarlo.";
+
+async function finalizeStuckTitle(titleId: string, message: string) {
+  await prisma.$transaction(async (tx) => {
+    const title = await tx.title.findUnique({
+      where: { id: titleId },
+      select: { runId: true, text: true },
+    });
+    if (!title) return;
+
+    const run = await tx.run.findUnique({
+      where: { id: title.runId },
+      select: { userId: true, categoryId: true },
+    });
+    if (!run) return;
+
+    const group = await tx.opportunityGroup.upsert({
+      where: { userId_categoryId: { userId: run.userId, categoryId: run.categoryId } },
+      create: {
+        userId: run.userId,
+        categoryId: run.categoryId,
+        rationale: "Títulos pendientes de publicación; puedes reintentarlos desde aquí.",
+      },
+      update: {},
+      select: { id: true },
+    });
+
+    const existing = await tx.opportunityTitle.findFirst({
+      where: { groupId: group.id, text: title.text },
+      select: { id: true },
+    });
+    if (existing) {
+      await tx.opportunityTitle.update({
+        where: { id: existing.id },
+        data: { rationale: OPPORTUNITY_RETRY_NOTE },
+      });
+    } else {
+      await tx.opportunityTitle.create({
+        data: { groupId: group.id, text: title.text, rationale: OPPORTUNITY_RETRY_NOTE },
+      });
+    }
+
+    await tx.title.update({
+      where: { id: titleId },
+      data: { status: "error", errorMessage: message, processedAt: new Date() },
+    });
+  });
+}
 
 export async function recoverStuckTitles(): Promise<number> {
   const stuckTitles = await prisma.title.findMany({
@@ -51,23 +99,18 @@ export async function recoverStuckTitles(): Promise<number> {
     const message =
       "El proceso se interrumpió de forma inesperada (posible caída de la base de datos o del worker) y quedó atascado; se recupera automáticamente.";
 
-    if (title.attempts >= MAX_ATTEMPTS) {
-      await prisma.title.update({
-        where: { id: title.id },
-        data: {
-          status: "error",
-          errorMessage: message,
-          processedAt: new Date(),
-        },
-      });
+    // Un proceso huérfano ya no tiene una sesión que pueda continuar. Se
+    // cierra como error recuperable y se conserva la oportunidad para que el
+    // usuario decida cuándo reintentarlo, evitando un estado "running"
+    // infinito o una oportunidad desaparecida.
+    await finalizeStuckTitle(title.id, message);
+    const remaining = await prisma.title.count({
+      where: { runId: title.runId, status: { in: ["pending", "processing"] } },
+    });
+    if (remaining === 0) {
       await prisma.run.updateMany({
         where: { id: title.runId, status: { in: ["pending", "running"] } },
         data: { status: "halted", finishedAt: new Date() },
-      });
-    } else {
-      await prisma.title.update({
-        where: { id: title.id },
-        data: { status: "pending", errorMessage: message },
       });
     }
     await prisma.titleEvent.create({
@@ -88,11 +131,7 @@ export async function recoverStuckTitles(): Promise<number> {
 // existente en estado "pending"/"running" en vez de crear uno nuevo, así que
 // un job muerto bloquea TODOS los reintentos futuros del usuario (cada click
 // en "Sincronizar" vuelve a mostrar el mismo job que nunca va a terminar).
-// Debe coincidir con STUCK_SYNC_JOB_MS en apps/web/src/lib/sync-jobs.ts —
-// subido de 3 a 20 minutos el 18/8/2026 (caso Wendy Chawa: un sync
-// genuinamente en curso, no muerto, tardó 8.3 min y se marcó "atascado"
-// antes de terminar; ver comentario completo en ese archivo).
-const STUCK_SYNC_JOB_MS = 20 * 60 * 1000; // 20 minutos
+const STUCK_SYNC_JOB_MS = 3 * 60 * 1000; // 3 minutos
 
 export async function recoverStuckSyncJobs(): Promise<number> {
   const cutoff = new Date(Date.now() - STUCK_SYNC_JOB_MS);
