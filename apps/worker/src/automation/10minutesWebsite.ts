@@ -2171,21 +2171,41 @@ async function saveAndGetUrl(
   };
 
   const revalidateTitleAndForm = async () => {
-    // El sitio usa jQuery Validate con una regla remota en #titlees.
-    // Cambiar el valor no siempre limpia el error anterior ni vuelve a
-    // habilitar #save_art, por lo que se fuerzan los eventos del formulario
-    // y una validación explícita antes de consultar el botón.
+    // La plataforma usa jQuery Validate y la regla remota del título. Los
+    // eventos nativos no siempre invalidan el resultado remoto anterior;
+    // se usan los eventos jQuery que consume realmente el formulario.
     await page.evaluate(() => {
-      const title = document.querySelector("#titlees") as HTMLInputElement | null;
-      const jq = (window as unknown as { jQuery?: (selector: string) => { valid?: () => boolean } }).jQuery;
-      if (!title) return;
+      const jq = (window as unknown as {
+        jQuery?: (selector: string) => {
+          trigger: (eventName: string) => unknown;
+          valid?: () => boolean;
+        };
+      }).jQuery;
+      if (!jq) return;
       for (const eventName of ["input", "keyup", "change", "blur", "focusout"]) {
-        title.dispatchEvent(new Event(eventName, { bubbles: true }));
+        jq("#titlees").trigger(eventName);
       }
-      jq?.("#titlees").valid?.();
+      jq("#titlees").valid?.();
     }).catch(() => {});
-    await page.waitForTimeout(1200);
-    await page.dispatchEvent("#type", "change").catch(() => {});
+    await page.waitForFunction(
+      () => {
+        const jq = (window as unknown as {
+          jQuery?: (selector: string) => {
+            data: (key: string) => { pending?: Record<string, unknown> } | undefined;
+          };
+        }).jQuery;
+        const validator = jq?.("#form_buyer_seller_articles").data("validator");
+        return Object.keys(validator?.pending ?? {}).length === 0;
+      },
+      undefined,
+      { timeout: 15_000 },
+    ).catch(() => {});
+    await page.evaluate(() => {
+      const jq = (window as unknown as {
+        jQuery?: (selector: string) => { trigger: (eventName: string) => unknown };
+      }).jQuery;
+      jq?.("#type").trigger("change");
+    }).catch(() => {});
   };
 
   for (let saveAttempt = 1; saveAttempt <= MAX_SAVE_ATTEMPTS; saveAttempt++) {
