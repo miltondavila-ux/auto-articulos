@@ -352,18 +352,28 @@ async function logFormFieldsSnapshot(
   onStep: OnStep,
   checkpoint: string,
 ): Promise<void> {
+  // Sin función interna con nombre: el runtime real (tsx/esbuild, ver
+  // apps/worker/package.json "run-once") le inyecta un helper `__name` que
+  // solo existe dentro del bundle empaquetado, no en el contexto aislado
+  // del navegador al que Playwright serializa este callback — una función
+  // nombrada adentro de `page.evaluate` rompía con "__name is not defined"
+  // en TODAS las corridas reales (visto en vivo el 29/8/2026). Inline puro.
   const snapshot = await page
     .evaluate(() => {
-      const read = (selector: string) => {
-        const el = document.querySelector(selector) as
-          | HTMLInputElement
-          | HTMLTextAreaElement
-          | HTMLSelectElement
-          | null;
-        if (!el) return "no existe";
-        return `${el.value?.length ?? 0} chars`;
-      };
-      return `#type=${read("#type")} #titlees=${read("#titlees")} #excerptes=${read("#excerptes")}`;
+      const typeEl = document.querySelector("#type") as
+        | HTMLSelectElement
+        | HTMLInputElement
+        | null;
+      const titleEl = document.querySelector("#titlees") as
+        | HTMLInputElement
+        | null;
+      const excerptEl = document.querySelector("#excerptes") as
+        | HTMLTextAreaElement
+        | null;
+      const typeState = typeEl ? `${typeEl.value?.length ?? 0} chars` : "no existe";
+      const titleState = titleEl ? `${titleEl.value?.length ?? 0} chars` : "no existe";
+      const excerptState = excerptEl ? `${excerptEl.value?.length ?? 0} chars` : "no existe";
+      return `#type=${typeState} #titlees=${titleState} #excerptes=${excerptState}`;
     })
     .catch((e: unknown) => `error leyendo el snapshot: ${e instanceof Error ? e.message : String(e)}`);
   await onStep(`DIAGNÓSTICO [${checkpoint}]: ${snapshot}`);
