@@ -279,6 +279,8 @@ function resolveBaseUrl(platformDomain?: string | null): string {
 
 const ARTICLE_TYPE_NOTICIAS = "2";
 const NAV_TIMEOUT_MS = 30_000;
+// Evita que una sesión externa o una validación bloqueada deje un lane ocupado indefinidamente.
+const ARTICLE_HARD_TIMEOUT_MS = 6 * 60 * 1000;
 const CONTENT_GENERATION_TIMEOUT_MS = 90_000;
 const IMAGE_GENERATION_TIMEOUT_MS = 90_000;
 const SAVE_VERIFICATION_TIMEOUT_MS = 90_000;
@@ -359,8 +361,10 @@ export async function publishArticle(
 ): Promise<PublishResult> {
   const baseUrl = resolveBaseUrl(credentials.platformDomain);
   const browser = await chromium.launch({ headless: true });
+  let watchdog: NodeJS.Timeout | undefined;
   try {
-    const page = await browser.newPage();
+    const flow = async (): Promise<PublishResult> => {
+      const page = await browser.newPage();
 
     await login(page, baseUrl, credentials, onStep);
     if (categoryPanel) {
@@ -391,8 +395,19 @@ export async function publishArticle(
       onStep,
     );
 
-    return { articleUrl, finalTitle: titleUsed, summary };
+      return { articleUrl, finalTitle: titleUsed, summary };
+    };
+
+    const timeout = new Promise<PublishResult>((_, reject) => {
+      watchdog = setTimeout(() => {
+        void browser.close().catch(() => {});
+        reject(new Error("El artículo superó el tiempo máximo de procesamiento y se devuelve a Oportunidades para reintentarlo."));
+      }, ARTICLE_HARD_TIMEOUT_MS);
+    });
+
+    return await Promise.race([flow(), timeout]);
   } finally {
+    if (watchdog) clearTimeout(watchdog);
     await browser.close();
   }
 }
