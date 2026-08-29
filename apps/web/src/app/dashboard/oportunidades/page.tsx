@@ -308,10 +308,6 @@ export default function OportunidadesPage() {
   }
 
   async function execute(type: "group" | "title", id: string) {
-    if (!hasImageCredits) {
-      setShowImageCreditsModal(true);
-      return;
-    }
     if (!contentLanguage.trim()) {
       setMessage({
         kind: "error",
