@@ -401,10 +401,9 @@ async function processRunTitle(
       /(?:→|status\s*)\s*402\b/i.test(normalizedMessage) ||
       /(?:no tiene|agotad[oa]s?|sin) (?:los )?(?:tokens|cr[ée]ditos)/i.test(normalizedMessage)
     ) {
-      await prisma.user.update({
-        where: { id: run.userId },
-        data: { hasImageCredits: false },
-      });
+      // El saldo no se controla en nuestra base: el sitio externo decide
+      // durante la generación de imagen. El error queda en el artículo,
+      // pero nunca convierte la cuenta completa en "sin créditos".
       await markTitleError(nextTitle.id, message);
       await prisma.run.updateMany({
         where: { id: run.id, status: { in: ["pending", "running"] } },
