@@ -2274,11 +2274,18 @@ async function saveAndGetUrl(
                   !el.value.trim(),
               )
             : [];
+          const blockingErrors = (validator?.errorList ?? []).filter((entry: unknown) => {
+            const element = (entry as { element?: HTMLElement }).element;
+            // El único error tolerable aquí es el duplicado histórico del
+            // título: ya fue reemplazado por una variante única antes de
+            // llegar a este punto. Cualquier otro error sigue bloqueando.
+            return element?.id !== "titlees";
+          });
           if (
             !save ||
             !form ||
             visibleEmpty.length > 0 ||
-            (validator?.errorList?.length ?? 0) > 0 ||
+            blockingErrors.length > 0 ||
             Object.keys(validator?.pending ?? {}).length > 0
           ) {
             return false;
