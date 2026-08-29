@@ -337,6 +337,39 @@ const TEXT_AVISO_IMAGENES_IA = bilingual(
 );
 
 /**
+ * Diagnóstico agregado el 29/8/2026: reportado por Milton un caso donde
+ * "Usar contenido" sí transfiere título/resumen/tipo (no aparece el aviso de
+ * "no llegó al campo"), pero al guardar el validador real del sitio dice que
+ * esos mismos tres campos (#type, #titlees, #excerptes) están vacíos. Entre
+ * el momento en que se confirman llenos y el guardado corren la generación
+ * de imagen y el widget de FAQ — no se sabe todavía cuál de los dos borra el
+ * formulario. Esto solo LEE y registra el estado real (sin tocar nada) en
+ * los puntos intermedios, para que el próximo fallo diga exactamente en qué
+ * paso se vacían en vez de tener que adivinar.
+ */
+async function logFormFieldsSnapshot(
+  page: Page,
+  onStep: OnStep,
+  checkpoint: string,
+): Promise<void> {
+  const snapshot = await page
+    .evaluate(() => {
+      const read = (selector: string) => {
+        const el = document.querySelector(selector) as
+          | HTMLInputElement
+          | HTMLTextAreaElement
+          | HTMLSelectElement
+          | null;
+        if (!el) return "no existe";
+        return `${el.value?.length ?? 0} chars`;
+      };
+      return `#type=${read("#type")} #titlees=${read("#titlees")} #excerptes=${read("#excerptes")}`;
+    })
+    .catch((e: unknown) => `error leyendo el snapshot: ${e instanceof Error ? e.message : String(e)}`);
+  await onStep(`DIAGNÓSTICO [${checkpoint}]: ${snapshot}`);
+}
+
+/**
  * Automatiza la creación y publicación de un artículo en 10minutesWebsite a
  * partir de un título, usando las credenciales guardadas del usuario.
  * `onStep` se llama en cada paso relevante para poder mostrar una línea de
@@ -386,8 +419,11 @@ export async function publishArticle(
       onStep,
       credentials.promptText,
     );
+    await logFormFieldsSnapshot(page, onStep, "tras crear el borrador, antes de la imagen");
     await generateImage(page, finalTitle, summary, onStep);
+    await logFormFieldsSnapshot(page, onStep, "tras generar la imagen, antes del FAQ");
     await fillFaqWidget(page, finalTitle, summary, contentHtml, onStep);
+    await logFormFieldsSnapshot(page, onStep, "tras el FAQ, antes de guardar");
     const { url: articleUrl, titleUsed } = await saveAndGetUrl(
       page,
       baseUrl,
