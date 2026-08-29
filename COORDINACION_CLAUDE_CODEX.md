@@ -69,6 +69,123 @@ Acción inmediata: liberar este lote y no realizar cambios, migraciones ni despl
 Responsable siguiente: responsable del siguiente lote identificado en este documento; cualquier cambio nuevo debe usar su propia rama o worktree.
 Capitanía de migración: no.
 
+## 2026-08-29 — Reparación de corridas sin worker
+
+**CODEX - GPT-5 - EL SISTEMA NO PUBLICA ARTÍCULOS**
+
+Problema observado en producción con Nélida: una ejecución de un solo artículo
+quedó en `0/1`, mostrando “El worker está iniciando” durante más de 190
+segundos. La auditoría de GitHub Actions confirmó que varios shards terminaron
+con `trabajo=false` y el título específico no fue reclamado.
+
+Corrección integrada: se eliminó de `triggerWorkerNow()` el bloqueo global que
+evitaba enviar un nuevo `workflow_dispatch` cuando existía cualquier corrida
+reciente. El `main` actual ya separaba cada disparo manual por `github.run_id`,
+por lo que las reservas atómicas por usuario protegen contra procesamiento
+duplicado sin impedir que otro disparo recoja trabajo pendiente. También se
+retiraron tres bindings obsoletos de `confirmedImageCredits` que impedían el
+typecheck del `main` posterior a la eliminación de la validación previa de
+créditos.
+
+Worktree aislado: `/private/tmp/fix-worker-queue-race`.
+Rama funcional: `codex/fix-worker-queue-race`.
+Commits de preparación: `c9bcd69` y `db0021e`.
+PR: `#18`.
+Commit fusionado en `main`: `5e2862c24201bb9c4b5ea08d8ce9452ab2248e74`.
+
+Archivos funcionales modificados:
+- `apps/web/src/lib/trigger-worker.ts`
+- `apps/web/src/app/api/opportunities/execute/route.ts`
+- `apps/web/src/app/api/opportunities/execute-all/route.ts`
+- `apps/web/src/app/api/runs/route.ts`
+
+### Inventario exacto de auditorías y pruebas ya ejecutadas
+
+Claude no debe repetir estas pruebas salvo que `main` avance después de
+`5e2862c` o aparezca una evidencia nueva que contradiga los resultados.
+
+1. **Inspección de la corrida afectada en GitHub Actions.** Se consultó la
+   corrida `33259574730` (`#1528`) y sus diez jobs. Ocho shards terminaron en
+   `success` indicando `trabajo=false` y “No había trabajo pendiente”. Los dos
+   jobs que aún estaban `in_progress` no entregaban logs en ese momento. Se
+   descargaron y filtraron los logs completos de los ocho jobs terminados: el
+   título “Beneficios de las ayudas para el down payment en Miami para nuevos
+   residentes colombianos” no aparecía en ninguno. Resultado: confirmado que
+   el trabajo no había sido reclamado; no era todavía un fallo de contenido,
+   imagen ni guardado en 10MinutesWebsite.
+
+2. **Auditoría estática del disparador y la cola.** Se revisaron
+   `trigger-worker.ts`, `worker.yml`, `run-once.ts`, `queue.ts` y
+   `reservation.ts`. Se confirmó que `triggerWorkerNow()` podía devolver
+   `alreadyActive` por cualquier workflow reciente y omitir el dispatch. Al
+   mismo tiempo, `main` ya contenía grupos independientes por `github.run_id`
+   para los dispatches manuales y reservas atómicas por usuario. Resultado:
+   eliminar el bloqueo global es compatible con la protección existente y no
+   permite dos publicaciones simultáneas en la misma cuenta.
+
+3. **Aislamiento y alcance.** El cambio se desarrolló exclusivamente en
+   `/private/tmp/fix-worker-queue-race`. Se ejecutaron `git status --short`,
+   `git diff --check`, `git diff --stat` y revisión de nombres de archivos
+   antes de cada commit. El diff final frente al `main` real contiene cuatro
+   archivos, cero archivos eliminados, cero migraciones y ningún cambio en el
+   algoritmo de publicación, Playwright, imágenes, historial o redes.
+
+4. **Actualización contra el `main` real.** El primer borrador partió de
+   `d2fa802`, pero antes de fusionar se hizo `git fetch origin main` y se
+   detectó que producción había avanzado a `ac5a7ed`. Se rebasó la rama. Los
+   conflictos se resolvieron conservando la implementación de concurrencia por
+   `github.run_id` ya presente en `main`; por eso `worker.yml` no forma parte
+   del diff final. No se desplegó la base anterior ni el commit preliminar
+   `3f3c80c`.
+
+5. **Generación de Prisma.** `npm run generate --workspace=packages/db`
+   terminó correctamente con Prisma `5.22.0`. El primer intento dentro del
+   sandbox había fallado por `EPERM` sobre la caché de Prisma; se repitió con
+   el permiso correcto. No fue un fallo del código ni requiere volver a
+   investigarse.
+
+6. **Build del worker.** `npm run build --workspace=apps/worker` terminó sin
+   errores después de generar Prisma.
+
+7. **Pruebas automatizadas del worker.** `npm test --workspace=apps/worker`
+   terminó con `10 tests`, `10 pass`, `0 fail`, `0 skipped`. Cubrió botones de
+   WhatsApp/llamada, normalización telefónica, marcadores codificados, descarte
+   de CTAs generados, etiquetas huérfanas, distribución de botones, marcadores
+   recuperables, eliminación de scripts/JSON-LD y conversión de tablas.
+
+8. **Build web y typecheck.** El build con Turbopack no pudo ejecutarse dentro
+   del entorno porque Turbopack intentó abrir un puerto y recibió `EPERM`; no
+   era un error del proyecto. Se ejecutó `npx next build --webpack`: compiló,
+   completó TypeScript y generó `78/78` rutas. En la primera pasada el
+   typecheck detectó tres bindings obsoletos `confirmedImageCredits` dejados
+   por el cambio de créditos de `main`; se retiraron sin modificar la forma de
+   la petición ni su comportamiento. La segunda pasada terminó correctamente.
+
+9. **Verificación del PR.** PR `#18`, head final
+   `db0021e0bfeef2e6762368e4d6e40b81a2132c23`, fusionado por squash. GitHub
+   confirmó `merged: true`; commit resultante
+   `5e2862c24201bb9c4b5ea08d8ce9452ab2248e74`.
+
+10. **Verificación de despliegue.** El estado combinado del commit mostró
+    `Vercel – auto-articulos-web: success`. La comprobación directa
+    `GET /login?verify=5e2862c` respondió `HTTP/2 200`, `age: 0`,
+    `cache-control: no-store` y servidor `Vercel`. Esto confirma despliegue y
+    respuesta del dominio; no sustituye las dos pruebas funcionales reales
+    pendientes indicadas abajo.
+
+Producción: Vercel `auto-articulos-web` reportó `success` para el commit
+`5e2862c`; `/login?verify=5e2862c` respondió HTTP 200, `age: 0`.
+
+Pruebas reales pendientes, en este orden:
+1. Nélida: ejecutar una oportunidad nueva de un solo artículo y confirmar que
+   el worker la reclama sin quedar indefinidamente en “iniciando”.
+2. Historial: usar `Reintentar` sobre un artículo no publicado y confirmar que
+   navega a Publicaciones en Curso, crea el disparo y el worker lo reclama.
+
+No se canceló ni modificó la corrida que estaba activa durante la auditoría.
+Responsable siguiente: Codex o Claude debe acompañar ambas pruebas y registrar
+el resultado real; no declarar el incidente culminado hasta aprobar las dos.
+
 ## ENTREGA FORMAL Y LIBERACIÓN — 2026-08-28
 
 Identidad exacta:
