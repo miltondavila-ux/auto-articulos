@@ -2489,7 +2489,16 @@ async function saveAndGetUrl(
       // Forzar también el cambio evita que el botón conserve el error remoto
       // del título anterior y permanezca deshabilitado indefinidamente.
       await titleField.press("Tab").catch(() => {});
-      await revalidateTitleAndForm();
+      // Bug real encontrado el 30/8/2026: acá se llamaba a
+      // `revalidateTitleAndForm()` y el `continue` de abajo hacía que el
+      // TOPE del loop la llamara OTRA VEZ de inmediato para el mismo título
+      // mutado. Cada llamada borra la caché del chequeo remoto
+      // (`removeData("remote")`) y dispara una consulta AJAX nueva — la
+      // segunda invalidación pisaba el resultado que la primera acababa de
+      // conseguir, justo antes de intentar guardar, dejando una carrera
+      // real contra el propio manejador de `#type` del sitio (que
+      // deshabilita `#save_art` mientras esa consulta está en vuelo). Se
+      // llama una sola vez, al tope del loop, para el título ya mutado.
       titleInUse = mutatedTitle;
       await onStep(
         `El título "${expectedTitle}" ya existe en la cuenta. Reintentando guardar con "${mutatedTitle}".`,
