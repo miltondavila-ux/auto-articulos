@@ -319,7 +319,7 @@ async function normalizeSocialImage(imageUrl: string, targetAspect = 3 / 4): Pro
  * confiable. Si algo falla acá, se usa igual el enlace directo del artículo
  * como respaldo (mismo comportamiento que antes de este cambio).
  */
-type ThreadsImageResult = { url: string; source: "blob" | "direct" };
+type ThreadsImageResult = { url: string; source: "blob" | "direct"; fallbackReason?: string };
 
 async function getRehostedThreadsImage(titleId: string, articleUrl: string): Promise<ThreadsImageResult | null> {
   const ogImageUrl = await getArticleOpenGraphImage(articleUrl);
@@ -327,7 +327,9 @@ async function getRehostedThreadsImage(titleId: string, articleUrl: string): Pro
 
   try {
     const response = await fetchWithRetry(ogImageUrl, { signal: AbortSignal.timeout(15000) });
-    if (!response.ok) return { url: ogImageUrl, source: "direct" };
+    if (!response.ok) {
+      return { url: ogImageUrl, source: "direct", fallbackReason: `descarga de la imagen OG devolvió HTTP ${response.status}` };
+    }
 
     // Threads rechaza algunas OG en WebP/AVIF/SVG o con dimensiones/peso
     // incompatibles. Es la misma imagen del artículo, solo normalizada a JPEG.
@@ -340,10 +342,12 @@ async function getRehostedThreadsImage(titleId: string, articleUrl: string): Pro
       contentType: "image/jpeg",
     });
     const publicCheck = await fetchWithRetry(blob.url, { method: "HEAD", signal: AbortSignal.timeout(10000) });
-    return publicCheck.ok ? { url: blob.url, source: "blob" } : { url: ogImageUrl, source: "direct" };
+    if (publicCheck.ok) return { url: blob.url, source: "blob" };
+    return { url: ogImageUrl, source: "direct", fallbackReason: `el Blob subido no respondió público (HTTP ${publicCheck.status})` };
   } catch (error) {
-    console.warn(`No se pudo re-alojar la imagen OG para Threads, se usa el enlace directo: ${describeFetchError(error)}`);
-    return { url: ogImageUrl, source: "direct" };
+    const reason = describeFetchError(error);
+    console.warn(`No se pudo re-alojar la imagen OG para Threads, se usa el enlace directo: ${reason}`);
+    return { url: ogImageUrl, source: "direct", fallbackReason: reason };
   }
 }
 
@@ -408,7 +412,10 @@ async function processThreadsJob(job: {
   }
 
   const imageUrl = imageResult.url;
-  const imageSourceLabel = imageResult.source === "blob" ? "re-alojada en Blob" : "enlace directo del artículo";
+  const imageSourceLabel =
+    imageResult.source === "blob"
+      ? "re-alojada en Blob"
+      : `enlace directo del artículo${imageResult.fallbackReason ? ` — no se pudo re-alojar: ${imageResult.fallbackReason}` : ""}`;
 
   let result;
   try {
