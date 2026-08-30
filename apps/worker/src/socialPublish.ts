@@ -242,7 +242,7 @@ export async function getArticleBodyMarkdown(articleUrl: string): Promise<string
 /** Quita barras negras incorporadas en la imagen OG antes de subirla a redes. */
 async function normalizeSocialImage(imageUrl: string, targetAspect = 3 / 4): Promise<string> {
   try {
-    const response = await fetch(imageUrl, { signal: AbortSignal.timeout(15000) });
+    const response = await fetchWithRetry(imageUrl, { signal: AbortSignal.timeout(15000) });
     if (!response.ok) return imageUrl;
     const source = Buffer.from(await response.arrayBuffer());
     const image = sharp(source);

@@ -170,6 +170,26 @@ export async function refreshLinkedInToken(
  * artículo se incluye como texto plano dentro del comentario en vez de como
  * adjunto ARTICLE.
  */
+/**
+ * Reintenta un fetch ante cortes de conexión pasajeros (mismo patrón usado
+ * para Threads en apps/worker/src/socialPublish.ts). 3 intentos con espera
+ * creciente antes de rendirse.
+ */
+async function fetchWithRetry(url: string, init: RequestInit, attempts = 3): Promise<Response> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await fetch(url, init);
+    } catch (err) {
+      lastError = err;
+      if (attempt < attempts) {
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
+      }
+    }
+  }
+  throw lastError;
+}
+
 export async function uploadLinkedInImage(
   accessToken: string,
   linkedinUserId: string,
@@ -177,7 +197,7 @@ export async function uploadLinkedInImage(
 ): Promise<string | null> {
   try {
     // Paso 1: registrar la subida
-    const registerRes = await fetch("https://api.linkedin.com/v2/assets?action=registerUpload", {
+    const registerRes = await fetchWithRetry("https://api.linkedin.com/v2/assets?action=registerUpload", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -215,14 +235,14 @@ export async function uploadLinkedInImage(
     const asset = registerData.value.asset;
 
     // Paso 2: descargar la imagen generada y subir los bytes a LinkedIn
-    const imageRes = await fetch(imageUrl);
+    const imageRes = await fetchWithRetry(imageUrl, {});
     if (!imageRes.ok) {
       console.warn("No se pudo descargar la imagen para subir a LinkedIn:", imageUrl);
       return null;
     }
     const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
 
-    const uploadRes = await fetch(uploadUrl, {
+    const uploadRes = await fetchWithRetry(uploadUrl, {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${accessToken}`,
