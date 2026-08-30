@@ -310,6 +310,41 @@ async function normalizeSocialImage(imageUrl: string, targetAspect = 3 / 4): Pro
 
 // ─── THREADS ──────────────────────────────────────────────────────────────
 
+/**
+ * Descarga la imagen og:image del artículo y la re-aloja en Vercel Blob antes
+ * de dársela a Meta. Meta procesa el contenedor descargando la imagen desde
+ * la URL que le pasamos — si esa URL es el hosting del propio artículo (a
+ * veces inestable), el procesamiento de Meta puede quedarse esperando y
+ * agotar el tiempo. Alojarla en nuestro Blob le da a Meta un origen rápido y
+ * confiable. Si algo falla acá, se usa igual el enlace directo del artículo
+ * como respaldo (mismo comportamiento que antes de este cambio).
+ */
+async function getRehostedThreadsImage(titleId: string, articleUrl: string): Promise<string | null> {
+  const ogImageUrl = await getArticleOpenGraphImage(articleUrl);
+  if (!ogImageUrl) return null;
+
+  try {
+    const response = await fetchWithRetry(ogImageUrl, { signal: AbortSignal.timeout(15000) });
+    if (!response.ok) return ogImageUrl;
+
+    // Threads rechaza algunas OG en WebP/AVIF/SVG o con dimensiones/peso
+    // incompatibles. Es la misma imagen del artículo, solo normalizada a JPEG.
+    const normalized = await sharp(Buffer.from(await response.arrayBuffer()))
+      .rotate()
+      .jpeg({ quality: 90, mozjpeg: true })
+      .toBuffer();
+    const blob = await put(`threads/${titleId}-og.jpg`, normalized, {
+      access: "public",
+      contentType: "image/jpeg",
+    });
+    const publicCheck = await fetchWithRetry(blob.url, { method: "HEAD", signal: AbortSignal.timeout(10000) });
+    return publicCheck.ok ? blob.url : ogImageUrl;
+  } catch (error) {
+    console.warn(`No se pudo re-alojar la imagen OG para Threads, se usa el enlace directo: ${describeFetchError(error)}`);
+    return ogImageUrl;
+  }
+}
+
 async function processThreadsJob(job: {
   id: string;
   userId: string;
@@ -360,9 +395,11 @@ async function processThreadsJob(job: {
     finalPost = `${finalPost}\n\n${job.articleUrl}`;
   }
 
-  // Igual que en el último commit funcional: Threads recibe directamente la
-  // imagen pública og:image declarada por el artículo.
-  const imageUrl = (await getArticleOpenGraphImage(job.articleUrl)) ?? undefined;
+  // Re-alojada en nuestro Blob (ver getRehostedThreadsImage) para que Meta no
+  // dependa del hosting del propio artículo al procesar el contenedor.
+  const imageUrl = job.titleId
+    ? (await getRehostedThreadsImage(job.titleId, job.articleUrl)) ?? undefined
+    : (await getArticleOpenGraphImage(job.articleUrl)) ?? undefined;
 
   if (!imageUrl) {
     throw new Error("El artículo no tiene una imagen og:image pública para Threads. La publicación se detuvo para no enviar un hilo sin imagen.");
