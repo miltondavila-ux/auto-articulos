@@ -485,9 +485,9 @@ function HistorialRedes() {
   // helpers (localDayKey, publicationDayLabel) en vez de inventar un
   // formato nuevo. La fecha usada por fila es la misma que ya se mostraba:
   // publishedAt || finishedAt || createdAt.
-  const opportunitiesByDay = useMemo(() => {
+  function groupOpportunitiesByDay(list: SocialOpportunity[]): [string, SocialOpportunity[]][] {
     const map = new Map<string, SocialOpportunity[]>();
-    for (const opp of opportunities) {
+    for (const opp of list) {
       const at = opp.publishedAt || opp.finishedAt || opp.createdAt;
       const dayKey = localDayKey(at);
       if (!map.has(dayKey)) map.set(dayKey, []);
@@ -503,7 +503,29 @@ function HistorialRedes() {
           return new Date(bAt).getTime() - new Date(aAt).getTime();
         }),
       ] as [string, SocialOpportunity[]]);
-  }, [opportunities]);
+  }
+
+  // Mismo estándar que Artículos: "Publicadas" solo cuenta lo que de verdad
+  // se publicó; lo demás (error, en cola, procesando) va en su propia
+  // sección "Sin publicar" (misma idea que "Ejecuciones sin publicación
+  // confirmada" en Artículos), para no mezclar publicaciones reales con
+  // intentos fallidos/pendientes en el mismo conteo.
+  const publishedOpportunities = useMemo(
+    () => opportunities.filter((o) => o.status === "published"),
+    [opportunities],
+  );
+  const unconfirmedOpportunities = useMemo(
+    () => opportunities.filter((o) => o.status !== "published"),
+    [opportunities],
+  );
+  const opportunitiesByDay = useMemo(
+    () => groupOpportunitiesByDay(publishedOpportunities),
+    [publishedOpportunities],
+  );
+  const unconfirmedByDay = useMemo(
+    () => groupOpportunitiesByDay(unconfirmedOpportunities),
+    [unconfirmedOpportunities],
+  );
 
   async function loadSocialEvents(titleId: string) {
     if (socialEvents[titleId]) return;
@@ -582,6 +604,7 @@ function HistorialRedes() {
   }
 
   return (
+    <>
     <details open={false} className="panel" style={sectionStyle}>
       <summary
         style={{
@@ -600,7 +623,7 @@ function HistorialRedes() {
         </div>
         {!loading && (
           <span className="muted" style={{ fontSize: 13 }}>
-            {opportunities.length} publicación{opportunities.length !== 1 ? "es" : ""}
+            {publishedOpportunities.length} publicación{publishedOpportunities.length !== 1 ? "es" : ""}
           </span>
         )}
       </summary>
@@ -667,7 +690,7 @@ function HistorialRedes() {
             {error && (
               <p style={{ fontSize: 12, color: "#ff3b30", marginTop: 6 }}>{error}</p>
             )}
-            {opportunities.length === 0 ? (
+            {publishedOpportunities.length === 0 ? (
               <p className="muted" style={{ fontSize: 13 }}>
                 Aún no hay publicaciones en el historial.
               </p>
@@ -921,6 +944,225 @@ function HistorialRedes() {
         )}
       </div>
     </details>
+    {unconfirmedOpportunities.length > 0 && (
+      <details className="panel" style={{ ...sectionStyle, borderColor: "#ffd8a8" }}>
+        <summary
+          style={{
+            cursor: "pointer",
+            listStyle: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 10,
+            userSelect: "none",
+          }}
+        >
+          <div>
+            <p className="eyebrow" style={{ margin: "0 0 2px", color: "#8a4b08" }}>
+              Sin publicar
+            </p>
+            <h2 style={{ ...h2Style, margin: 0 }}>
+              Publicaciones en redes sin confirmar
+            </h2>
+          </div>
+          <span className="muted" style={{ fontSize: 13 }}>
+            {unconfirmedOpportunities.length} publicación{unconfirmedOpportunities.length !== 1 ? "es" : ""}
+          </span>
+        </summary>
+        <div style={{ marginTop: 14 }}>
+          <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
+            Con error, en cola, o procesándose todavía. Desde aquí puedes
+            reintentarlas cuando corresponda.
+          </p>
+          {unconfirmedByDay.map(([dayKey, dayOpps]) => (
+            <details
+              key={dayKey}
+              className="row"
+              style={{
+                marginBottom: 10,
+                background: "#ffffff",
+                border: "1px solid #e5e5ea",
+                borderRadius: 12,
+                overflow: "hidden",
+              }}
+            >
+              <summary
+                style={{
+                  cursor: "pointer",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "#1d1d1f",
+                  listStyle: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "12px 16px",
+                  userSelect: "none",
+                }}
+              >
+                <span>{publicationDayLabel(dayKey)}</span>
+                <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+                  — {dayOpps.length} publicación{dayOpps.length !== 1 ? "es" : ""}
+                </span>
+              </summary>
+              <div style={{ padding: "0 16px 16px 16px", display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
+            {dayOpps.map((opp) => (
+              <details
+                key={opp.id}
+                open={false}
+                className="row"
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #e5e5ea",
+                  borderRadius: 12,
+                  padding: "12px 16px",
+                }}
+              >
+                <summary
+                  style={{
+                    cursor: "pointer",
+                    fontSize: 13,
+                    listStyle: "none",
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                    <span style={{ color: "#1d1d1f", fontWeight: 600 }}>
+                      {new Date(opp.publishedAt || opp.finishedAt || opp.createdAt).toLocaleString("es-US", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                    <span className="muted">—</span>
+                    <span style={{ fontWeight: 600, color: "#1d1d1f", textTransform: "uppercase", fontSize: 11 }}>
+                      {opp.platform}
+                    </span>
+                    <span className="muted">—</span>
+                    <span style={{ color: "#1d1d1f", fontWeight: 500 }}>
+                      {opp.articleTitle}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    {opp.status === "processing" ? (
+                      <span style={{ color: "#1d1d1f", fontWeight: 600, fontSize: 12 }}>
+                        Procesando...{opp.progressPercent ? ` (${opp.progressPercent}%)` : ""}
+                      </span>
+                    ) : opp.status === "queued" ? (
+                      <span style={{ color: "#8a4b08", fontWeight: 600, fontSize: 12 }}>En cola</span>
+                    ) : (
+                      <>
+                        <span style={{ color: "#ff3b30", fontWeight: 600, fontSize: 12 }}>✕ Error</span>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleRetryOpportunity(opp.id);
+                          }}
+                          disabled={retryingOppId === opp.id}
+                          className="secondary"
+                          style={{
+                            ...secondaryButtonStyle,
+                            padding: "3px 10px",
+                            fontSize: 11,
+                          }}
+                        >
+                          {retryingOppId === opp.id ? "Reintentando..." : "Reintentar"}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </summary>
+                <div style={{ marginTop: 12, paddingLeft: 12, borderLeft: "2px solid #e5e5ea" }}>
+                  <p style={{ margin: "0 0 6px 0", color: "#1d1d1f", fontSize: 13, fontWeight: 500 }}>
+                    Copy publicado:
+                  </p>
+                  <blockquote style={{ margin: "0 0 12px 0", color: "#6e6e73", fontSize: 13, lineHeight: "1.5" }}>
+                    &ldquo;{opp.suggestedText}&rdquo;
+                  </blockquote>
+                  <div style={{ display: "flex", gap: 15, fontSize: 12, flexWrap: "wrap", marginTop: 10 }}>
+                    <a
+                      href={opp.articleUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="link-button"
+                    >
+                      Ver artículo original &rarr;
+                    </a>
+                  </div>
+                  {opp.errorLog && (
+                    <div
+                      style={{
+                        marginTop: 12,
+                        padding: 10,
+                        background: "#fff2f1",
+                        color: "#ff3b30",
+                        borderRadius: 8,
+                        fontSize: 12,
+                        border: "1px solid rgba(255, 59, 48, 0.2)",
+                      }}
+                    >
+                      <strong>Error:</strong> {opp.errorLog}
+                    </div>
+                  )}
+                  {opp.titleId && (
+                    <details
+                      style={{ marginTop: 12 }}
+                      onToggle={(e) => {
+                        if ((e.target as HTMLDetailsElement).open) loadSocialEvents(opp.titleId!);
+                      }}
+                    >
+                      <summary style={{ cursor: "pointer", color: "#6e6e73", fontSize: 12 }}>
+                        Ver log del proceso
+                      </summary>
+                      {loadingSocialEvent === opp.titleId && !socialEvents[opp.titleId] && (
+                        <p className="muted" style={{ fontSize: 12, marginTop: 6 }}>Cargando...</p>
+                      )}
+                      {socialEvents[opp.titleId] && (() => {
+                        const start = opp.startedAt ? new Date(opp.startedAt).getTime() - 2000 : null;
+                        const end = start
+                          ? (opp.finishedAt ? new Date(opp.finishedAt).getTime() : Date.now()) + 2000
+                          : null;
+                        const filtered = start !== null && end !== null
+                          ? socialEvents[opp.titleId].filter((e) => {
+                              const t = new Date(e.createdAt).getTime();
+                              return t >= start && t <= end;
+                            })
+                          : [];
+                        if (filtered.length === 0) {
+                          return (
+                            <p className="muted" style={{ fontSize: 12, marginTop: 6 }}>
+                              Sin eventos registrados para este intento de publicación.
+                            </p>
+                          );
+                        }
+                        return (
+                          <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: "#6e6e73", fontSize: 12 }}>
+                            {filtered.map((e) => (
+                              <li key={e.id} style={{ marginBottom: 3 }}>
+                                <span>{new Date(e.createdAt).toLocaleTimeString()}</span> — {e.message}
+                              </li>
+                            ))}
+                          </ul>
+                        );
+                      })()}
+                    </details>
+                  )}
+                </div>
+              </details>
+            ))}
+              </div>
+            </details>
+          ))}
+        </div>
+      </details>
+    )}
+    </>
   );
 }
 
