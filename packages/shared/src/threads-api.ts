@@ -219,6 +219,7 @@ export async function publishThread(
     let attempts = 0;
     const maxAttempts = 45; // Hasta 90 segundos: Meta puede tardar en procesar la imagen OG.
     let finished = false;
+    let lastPollStatus = "sin ninguna respuesta de Meta todavía";
 
     while (attempts < maxAttempts && !finished) {
       attempts++;
@@ -236,6 +237,8 @@ export async function publishThread(
             error_message?: string;
           };
 
+          lastPollStatus = `status_code=${statusData.status_code}`;
+
           if (statusData.status_code === "FINISHED") {
             finished = true;
           } else if (statusData.status_code === "ERROR") {
@@ -243,17 +246,21 @@ export async function publishThread(
               `El procesamiento de la imagen en Threads falló: ${statusData.error_message || "Error desconocido"}`
             );
           }
+        } else {
+          const errorText = await statusRes.text().catch(() => "");
+          lastPollStatus = `Meta respondió ${statusRes.status} al consultar el estado: ${errorText.slice(0, 300)}`;
         }
       } catch (err: any) {
         if (err.message && err.message.includes("procesamiento de la imagen")) {
           throw err;
         }
+        lastPollStatus = `fallo de red al consultar el estado: ${err?.message || String(err)}`;
         console.warn(`Intento ${attempts} de consultar estado del contenedor falló. Reintentando...`, err);
       }
     }
 
     if (!finished) {
-      throw new Error("Tiempo de espera agotado: Meta Threads tardó demasiado en procesar la imagen.");
+      throw new Error(`Tiempo de espera agotado: Meta Threads tardó demasiado en procesar la imagen (último estado tras ${attempts} intentos: ${lastPollStatus}).`);
     }
   } else {
     // Si es solo texto, una pausa básica de seguridad de 500ms
