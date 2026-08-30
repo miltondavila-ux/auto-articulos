@@ -227,23 +227,28 @@ export async function publishThread(
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       try {
+        // El campo correcto del contenedor de Threads es "status" (EXPIRED,
+        // ERROR, FINISHED, IN_PROGRESS, PUBLISHED) — "status_code" no existe
+        // en este objeto y Meta responde 400 "Tried accessing nonexisting
+        // field" en cada intento, lo que hacía que el polling nunca detectara
+        // FINISHED y siempre agotara los 90 segundos completos.
         const statusRes = await fetch(
-          `https://graph.threads.net/v1.0/${creationId}?fields=status_code,error_message&access_token=${accessToken}`
+          `https://graph.threads.net/v1.0/${creationId}?fields=status,error_message&access_token=${accessToken}`
         );
 
         if (statusRes.ok) {
           const statusData = (await statusRes.json()) as {
-            status_code: string;
+            status: string;
             error_message?: string;
           };
 
-          lastPollStatus = `status_code=${statusData.status_code}`;
+          lastPollStatus = `status=${statusData.status}`;
 
-          if (statusData.status_code === "FINISHED") {
+          if (statusData.status === "FINISHED" || statusData.status === "PUBLISHED") {
             finished = true;
-          } else if (statusData.status_code === "ERROR") {
+          } else if (statusData.status === "ERROR" || statusData.status === "EXPIRED") {
             throw new Error(
-              `El procesamiento de la imagen en Threads falló: ${statusData.error_message || "Error desconocido"}`
+              `El procesamiento de la imagen en Threads falló: ${statusData.error_message || statusData.status}`
             );
           }
         } else {

@@ -337,9 +337,13 @@ async function getRehostedThreadsImage(titleId: string, articleUrl: string): Pro
       .rotate()
       .jpeg({ quality: 90, mozjpeg: true })
       .toBuffer();
+    // allowOverwrite: en un reintento (mismo titleId) el archivo ya existe en
+    // Blob de un intento anterior; sin esto, put() lanza un error y toda la
+    // re-alojada caía en silencio al enlace directo del artículo.
     const blob = await put(`threads/${titleId}-og.jpg`, normalized, {
       access: "public",
       contentType: "image/jpeg",
+      allowOverwrite: true,
     });
     const publicCheck = await fetchWithRetry(blob.url, { method: "HEAD", signal: AbortSignal.timeout(10000) });
     if (publicCheck.ok) return { url: blob.url, source: "blob" };
