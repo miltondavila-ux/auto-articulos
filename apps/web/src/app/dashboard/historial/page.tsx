@@ -481,6 +481,30 @@ function HistorialRedes() {
   const [loadingSocialEvent, setLoadingSocialEvent] = useState<string | null>(null);
   const [retryingOppId, setRetryingOppId] = useState<string | null>(null);
 
+  // Mismo estándar que Artículos: agrupado por día usando los mismos
+  // helpers (localDayKey, publicationDayLabel) en vez de inventar un
+  // formato nuevo. La fecha usada por fila es la misma que ya se mostraba:
+  // publishedAt || finishedAt || createdAt.
+  const opportunitiesByDay = useMemo(() => {
+    const map = new Map<string, SocialOpportunity[]>();
+    for (const opp of opportunities) {
+      const at = opp.publishedAt || opp.finishedAt || opp.createdAt;
+      const dayKey = localDayKey(at);
+      if (!map.has(dayKey)) map.set(dayKey, []);
+      map.get(dayKey)!.push(opp);
+    }
+    return Array.from(map.entries())
+      .sort(([dayA], [dayB]) => dayB.localeCompare(dayA))
+      .map(([dayKey, dayOpps]) => [
+        dayKey,
+        [...dayOpps].sort((a, b) => {
+          const aAt = a.publishedAt || a.finishedAt || a.createdAt;
+          const bAt = b.publishedAt || b.finishedAt || b.createdAt;
+          return new Date(bAt).getTime() - new Date(aAt).getTime();
+        }),
+      ] as [string, SocialOpportunity[]]);
+  }, [opportunities]);
+
   async function loadSocialEvents(titleId: string) {
     if (socialEvents[titleId]) return;
     setLoadingSocialEvent(titleId);
@@ -648,8 +672,39 @@ function HistorialRedes() {
                 Aún no hay publicaciones en el historial.
               </p>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
-                {opportunities.map((opp) => (
+              opportunitiesByDay.map(([dayKey, dayOpps]) => (
+                <details
+                  key={dayKey}
+                  className="row"
+                  style={{
+                    marginBottom: 10,
+                    background: "#ffffff",
+                    border: "1px solid #e5e5ea",
+                    borderRadius: 12,
+                    overflow: "hidden",
+                  }}
+                >
+                  <summary
+                    style={{
+                      cursor: "pointer",
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: "#1d1d1f",
+                      listStyle: "none",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: "12px 16px",
+                      userSelect: "none",
+                    }}
+                  >
+                    <span>{publicationDayLabel(dayKey)}</span>
+                    <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+                      — {dayOpps.length} publicación{dayOpps.length !== 1 ? "es" : ""}
+                    </span>
+                  </summary>
+                  <div style={{ padding: "0 16px 16px 16px", display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
+                {dayOpps.map((opp) => (
                   <details
                     key={opp.id}
                     open={false}
@@ -858,7 +913,9 @@ function HistorialRedes() {
                     </div>
                   </details>
                 ))}
-              </div>
+                  </div>
+                </details>
+              ))
             )}
           </>
         )}
