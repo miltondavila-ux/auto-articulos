@@ -224,6 +224,26 @@ function HistorialEjecuciones() {
  * enlaces reales a lo que ya existe, tal como pidió Milton.
  */
 function DuplicateTitlesSection({ items }: { items: TitleRow[] }) {
+  // Pedido directo de Milton (30/8/2026): que también diga "Hoy", "Ayer",
+  // etc. para ubicarse en el tiempo, igual que la lista principal de
+  // Historial — se reutilizan los mismos helpers (localDayKey,
+  // publicationDayLabel) en vez de inventar un formato nuevo.
+  const groups = useMemo(() => {
+    const map = new Map<string, TitleRow[]>();
+    for (const title of items) {
+      const dayKey = title.processedAt
+        ? localDayKey(title.processedAt)
+        : "no-confirmada";
+      if (!map.has(dayKey)) map.set(dayKey, []);
+      map.get(dayKey)!.push(title);
+    }
+    return Array.from(map.entries()).sort(([dayA], [dayB]) => {
+      if (dayA === "no-confirmada") return 1;
+      if (dayB === "no-confirmada") return -1;
+      return dayB.localeCompare(dayA);
+    });
+  }, [items]);
+
   return (
     <details className="panel" style={{ ...sectionStyle, borderColor: "#ffd8a8" }}>
       <summary
@@ -255,21 +275,51 @@ function DuplicateTitlesSection({ items }: { items: TitleRow[] }) {
           en 10minutesWebsite. Reintentarlos con el mismo tema no los va a
           publicar — usa un título o tema distinto.
         </p>
-        {items.map((title) => (
-          <div
-            key={title.id}
-            style={{
-              padding: 12,
-              marginBottom: 8,
-              border: "1px solid #ffd8a8",
-              borderRadius: 10,
-              background: "#fff8ef",
-            }}
-          >
-            <strong style={{ fontSize: 13 }}>{title.text}</strong>
-            <p style={{ fontSize: 12, color: "#6e6e73", margin: "4px 0 0" }}>
-              {linkifyMessage(title.errorMessage ?? "")}
+        {groups.map(([dayKey, dayItems]) => (
+          <div key={dayKey} style={{ marginBottom: 14 }}>
+            <p
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: "#8a4b08",
+                margin: "0 0 8px",
+                textTransform: "uppercase",
+                letterSpacing: "0.02em",
+              }}
+            >
+              {publicationDayLabel(dayKey)}
             </p>
+            {dayItems.map((title) => (
+              <div
+                key={title.id}
+                style={{
+                  padding: 12,
+                  marginBottom: 8,
+                  border: "1px solid #ffd8a8",
+                  borderRadius: 10,
+                  background: "#fff8ef",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <strong style={{ fontSize: 13 }}>{title.text}</strong>
+                  {title.processedAt && (
+                    <span style={{ fontSize: 11, color: "#8a4b08" }}>
+                      {formatDateTime(title.processedAt)}
+                    </span>
+                  )}
+                </div>
+                <p style={{ fontSize: 12, color: "#6e6e73", margin: "4px 0 0" }}>
+                  {linkifyMessage(title.errorMessage ?? "")}
+                </p>
+              </div>
+            ))}
           </div>
         ))}
       </div>
