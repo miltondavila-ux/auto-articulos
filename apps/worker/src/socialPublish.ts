@@ -38,11 +38,41 @@ async function updateSocialProgress(
   await prisma.socialOpportunity.update({ where: { id }, data });
 }
 
+function describeFetchError(err: unknown): string {
+  if (err instanceof Error) {
+    const cause = (err as Error & { cause?: unknown }).cause;
+    const causeMsg = cause instanceof Error ? cause.message : cause ? String(cause) : null;
+    return causeMsg ? `${err.message}: ${causeMsg}` : err.message;
+  }
+  return String(err);
+}
+
+/**
+ * Reintenta un fetch a un sitio externo ante cortes de conexión pasajeros
+ * (el hosting de algunos artículos corta la conexión antes de completar el
+ * TLS de forma intermitente, no por artículo caído). 3 intentos con espera
+ * creciente antes de rendirse.
+ */
+async function fetchWithRetry(url: string, init: RequestInit, attempts = 3): Promise<Response> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await fetch(url, init);
+    } catch (err) {
+      lastError = err;
+      if (attempt < attempts) {
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
+      }
+    }
+  }
+  throw lastError;
+}
+
 async function validateArticleUrl(url: string): Promise<void> {
   if (!url) throw new Error("La oportunidad no tiene URL de artículo.");
 
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithRetry(url, {
       redirect: "follow",
       signal: AbortSignal.timeout(10000),
       // Algunos hostings bloquean o frenan pedidos sin User-Agent de
@@ -56,7 +86,7 @@ async function validateArticleUrl(url: string): Promise<void> {
     });
     if (!res.ok) throw new Error(`La URL del artículo devuelve error ${res.status}. Verifica que el artículo siga publicado en tu blog.`);
   } catch (err) {
-    throw new Error(`No se pudo validar la URL del artículo (${url}): ${err instanceof Error ? err.message : String(err)}. Verifica que el artículo siga publicado.`);
+    throw new Error(`No se pudo validar la URL del artículo (${url}): ${describeFetchError(err)}. Verifica que el artículo siga publicado.`);
   }
 }
 
@@ -67,7 +97,7 @@ async function validateArticleUrl(url: string): Promise<void> {
  */
 export async function getArticleOpenGraphImage(articleUrl: string): Promise<string | null> {
   try {
-    const res = await fetch(articleUrl, {
+    const res = await fetchWithRetry(articleUrl, {
       redirect: "follow",
       signal: AbortSignal.timeout(10000),
       headers: { Accept: "text/html,application/xhtml+xml" },
@@ -84,7 +114,7 @@ export async function getArticleOpenGraphImage(articleUrl: string): Promise<stri
 
     return new URL(match[1].replace(/&amp;/g, "&"), res.url).toString();
   } catch (error) {
-    console.warn("No se pudo obtener og:image del artículo para LinkedIn:", error);
+    console.warn(`No se pudo obtener og:image del artículo: ${describeFetchError(error)}`);
     return null;
   }
 }
@@ -280,6 +310,41 @@ async function normalizeSocialImage(imageUrl: string, targetAspect = 3 / 4): Pro
 
 // ─── THREADS ──────────────────────────────────────────────────────────────
 
+/**
+ * Descarga la imagen og:image del artículo y la re-aloja en Vercel Blob antes
+ * de dársela a Meta. Meta procesa el contenedor descargando la imagen desde
+ * la URL que le pasamos — si esa URL es el hosting del propio artículo (a
+ * veces inestable), el procesamiento de Meta puede quedarse esperando y
+ * agotar el tiempo. Alojarla en nuestro Blob le da a Meta un origen rápido y
+ * confiable. Si algo falla acá, se usa igual el enlace directo del artículo
+ * como respaldo (mismo comportamiento que antes de este cambio).
+ */
+async function getRehostedThreadsImage(titleId: string, articleUrl: string): Promise<string | null> {
+  const ogImageUrl = await getArticleOpenGraphImage(articleUrl);
+  if (!ogImageUrl) return null;
+
+  try {
+    const response = await fetchWithRetry(ogImageUrl, { signal: AbortSignal.timeout(15000) });
+    if (!response.ok) return ogImageUrl;
+
+    // Threads rechaza algunas OG en WebP/AVIF/SVG o con dimensiones/peso
+    // incompatibles. Es la misma imagen del artículo, solo normalizada a JPEG.
+    const normalized = await sharp(Buffer.from(await response.arrayBuffer()))
+      .rotate()
+      .jpeg({ quality: 90, mozjpeg: true })
+      .toBuffer();
+    const blob = await put(`threads/${titleId}-og.jpg`, normalized, {
+      access: "public",
+      contentType: "image/jpeg",
+    });
+    const publicCheck = await fetchWithRetry(blob.url, { method: "HEAD", signal: AbortSignal.timeout(10000) });
+    return publicCheck.ok ? blob.url : ogImageUrl;
+  } catch (error) {
+    console.warn(`No se pudo re-alojar la imagen OG para Threads, se usa el enlace directo: ${describeFetchError(error)}`);
+    return ogImageUrl;
+  }
+}
+
 async function processThreadsJob(job: {
   id: string;
   userId: string;
@@ -330,9 +395,11 @@ async function processThreadsJob(job: {
     finalPost = `${finalPost}\n\n${job.articleUrl}`;
   }
 
-  // Igual que en el último commit funcional: Threads recibe directamente la
-  // imagen pública og:image declarada por el artículo.
-  const imageUrl = (await getArticleOpenGraphImage(job.articleUrl)) ?? undefined;
+  // Re-alojada en nuestro Blob (ver getRehostedThreadsImage) para que Meta no
+  // dependa del hosting del propio artículo al procesar el contenedor.
+  const imageUrl = job.titleId
+    ? (await getRehostedThreadsImage(job.titleId, job.articleUrl)) ?? undefined
+    : (await getArticleOpenGraphImage(job.articleUrl)) ?? undefined;
 
   if (!imageUrl) {
     throw new Error("El artículo no tiene una imagen og:image pública para Threads. La publicación se detuvo para no enviar un hilo sin imagen.");

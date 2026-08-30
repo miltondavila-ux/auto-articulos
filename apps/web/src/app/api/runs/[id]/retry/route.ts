@@ -4,11 +4,15 @@ import { getCurrentUserId } from "@/lib/current-user";
 import { triggerWorkerNow } from "@/lib/trigger-worker";
 
 /**
- * Reintenta de una vez TODOS los títulos con error de un run terminado
- * ("halted"): los vuelve a "pending" y reabre el run a "running" para que
- * el worker los retome. Complementa el reintento individual por título
- * (POST /api/titles/[id]/retry) para cuando hay varios títulos con error
- * en el mismo lote.
+ * Reintenta de una vez TODOS los títulos con error (o cancelados por el
+ * usuario) de un run terminado: los vuelve a "pending" y reabre el run a
+ * "running" para que el worker los retome. Complementa el reintento
+ * individual por título (POST /api/titles/[id]/retry) para cuando hay
+ * varios títulos con error en el mismo lote.
+ *
+ * Pedido directo de Milton (30/8/2026): un run cancelado no tenía forma de
+ * reintentarse desde Historial — este endpoint solo buscaba títulos con
+ * error, ignorando los cancelados aunque cancelar no borra nada.
  */
 export async function POST(
   _request: NextRequest,
@@ -26,12 +30,12 @@ export async function POST(
   }
 
   const errorTitles = await prisma.title.findMany({
-    where: { runId: run.id, status: "error" },
+    where: { runId: run.id, status: { in: ["error", "cancelled"] } },
     select: { id: true },
   });
   if (errorTitles.length === 0) {
     return NextResponse.json(
-      { error: "Esta ejecución no tiene títulos con error." },
+      { error: "Esta ejecución no tiene títulos con error o cancelados." },
       { status: 400 },
     );
   }

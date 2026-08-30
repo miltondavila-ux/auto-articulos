@@ -277,12 +277,31 @@ export type OnStep = (message: string) => Promise<void>;
  */
 export class DailyLimitReachedError extends Error {}
 
+/**
+ * Pedido directo de Milton (30/8/2026): cuando el sitio rechaza el guardado
+ * porque ya existe un artículo con ese título (o una variante), el mensaje
+ * genérico "no aparece en el listado tras guardar" no ayuda a entender qué
+ * pasó de verdad ni qué hacer. Este error trae el título real que chocó y,
+ * si se pudieron encontrar, los artículos existentes parecidos con su
+ * enlace real, para que el mensaje al usuario sea concreto y verificable.
+ */
+export class DuplicateTitleError extends Error {
+  constructor(
+    message: string,
+    public readonly similarArticles: { title: string; href: string }[],
+  ) {
+    super(message);
+  }
+}
+
 function resolveBaseUrl(platformDomain?: string | null): string {
   return platformBaseUrl(platformDomain);
 }
 
 const ARTICLE_TYPE_NOTICIAS = "2";
 const NAV_TIMEOUT_MS = 30_000;
+// Evita que una sesión externa o una validación bloqueada deje un lane ocupado indefinidamente.
+const ARTICLE_HARD_TIMEOUT_MS = 6 * 60 * 1000;
 const CONTENT_GENERATION_TIMEOUT_MS = 90_000;
 const IMAGE_GENERATION_TIMEOUT_MS = 90_000;
 const SAVE_VERIFICATION_TIMEOUT_MS = 90_000;
@@ -339,6 +358,49 @@ const TEXT_AVISO_IMAGENES_IA = bilingual(
 );
 
 /**
+ * Diagnóstico agregado el 29/8/2026: reportado por Milton un caso donde
+ * "Usar contenido" sí transfiere título/resumen/tipo (no aparece el aviso de
+ * "no llegó al campo"), pero al guardar el validador real del sitio dice que
+ * esos mismos tres campos (#type, #titlees, #excerptes) están vacíos. Entre
+ * el momento en que se confirman llenos y el guardado corren la generación
+ * de imagen y el widget de FAQ — no se sabe todavía cuál de los dos borra el
+ * formulario. Esto solo LEE y registra el estado real (sin tocar nada) en
+ * los puntos intermedios, para que el próximo fallo diga exactamente en qué
+ * paso se vacían en vez de tener que adivinar.
+ */
+async function logFormFieldsSnapshot(
+  page: Page,
+  onStep: OnStep,
+  checkpoint: string,
+): Promise<void> {
+  // Sin función interna con nombre: el runtime real (tsx/esbuild, ver
+  // apps/worker/package.json "run-once") le inyecta un helper `__name` que
+  // solo existe dentro del bundle empaquetado, no en el contexto aislado
+  // del navegador al que Playwright serializa este callback — una función
+  // nombrada adentro de `page.evaluate` rompía con "__name is not defined"
+  // en TODAS las corridas reales (visto en vivo el 29/8/2026). Inline puro.
+  const snapshot = await page
+    .evaluate(() => {
+      const typeEl = document.querySelector("#type") as
+        | HTMLSelectElement
+        | HTMLInputElement
+        | null;
+      const titleEl = document.querySelector("#titlees") as
+        | HTMLInputElement
+        | null;
+      const excerptEl = document.querySelector("#excerptes") as
+        | HTMLTextAreaElement
+        | null;
+      const typeState = typeEl ? `${typeEl.value?.length ?? 0} chars` : "no existe";
+      const titleState = titleEl ? `${titleEl.value?.length ?? 0} chars` : "no existe";
+      const excerptState = excerptEl ? `${excerptEl.value?.length ?? 0} chars` : "no existe";
+      return `#type=${typeState} #titlees=${titleState} #excerptes=${excerptState}`;
+    })
+    .catch((e: unknown) => `error leyendo el snapshot: ${e instanceof Error ? e.message : String(e)}`);
+  await onStep(`DIAGNÓSTICO [${checkpoint}]: ${snapshot}`);
+}
+
+/**
  * Automatiza la creación y publicación de un artículo en 10minutesWebsite a
  * partir de un título, usando las credenciales guardadas del usuario.
  * `onStep` se llama en cada paso relevante para poder mostrar una línea de
@@ -363,8 +425,10 @@ export async function publishArticle(
 ): Promise<PublishResult> {
   const baseUrl = resolveBaseUrl(credentials.platformDomain);
   const browser = await chromium.launch({ headless: true });
+  let watchdog: NodeJS.Timeout | undefined;
   try {
-    const page = await browser.newPage();
+    const flow = async (): Promise<PublishResult> => {
+      const page = await browser.newPage();
 
     await login(page, baseUrl, credentials, onStep);
     if (categoryPanel) {
@@ -386,8 +450,11 @@ export async function publishArticle(
       onStep,
       credentials.promptText,
     );
+    await logFormFieldsSnapshot(page, onStep, "tras crear el borrador, antes de la imagen");
     await generateImage(page, finalTitle, summary, onStep);
+    await logFormFieldsSnapshot(page, onStep, "tras generar la imagen, antes del FAQ");
     await fillFaqWidget(page, finalTitle, summary, contentHtml, onStep);
+    await logFormFieldsSnapshot(page, onStep, "tras el FAQ, antes de guardar");
     const { url: articleUrl, titleUsed } = await saveAndGetUrl(
       page,
       baseUrl,
@@ -395,8 +462,19 @@ export async function publishArticle(
       onStep,
     );
 
-    return { articleUrl, finalTitle: titleUsed, summary };
+      return { articleUrl, finalTitle: titleUsed, summary };
+    };
+
+    const timeout = new Promise<PublishResult>((_, reject) => {
+      watchdog = setTimeout(() => {
+        void browser.close().catch(() => {});
+        reject(new Error("El artículo superó el tiempo máximo de procesamiento y se devuelve a Oportunidades para reintentarlo."));
+      }, ARTICLE_HARD_TIMEOUT_MS);
+    });
+
+    return await Promise.race([flow(), timeout]);
   } finally {
+    if (watchdog) clearTimeout(watchdog);
     await browser.close();
   }
 }
@@ -1247,7 +1325,105 @@ async function createArticleDraft(
     }
   }
 
-  return { summary, contentHtml, finalTitle };
+  // Pedido directo de Milton (30/8/2026): antes, el título duplicado solo
+  // se descubría al momento de guardar — después de gastar tiempo real y
+  // un crédito de generación de imagen en un artículo que de todos modos
+  // no se iba a poder guardar con ese título. Se corre la MISMA validación
+  // remota que usa el sitio (no una búsqueda aproximada, que daría falsos
+  // positivos con títulos parecidos pero distintos) ahora, antes de la
+  // imagen, para mutar el título desde el inicio si ya existe.
+  const resolvedTitle = await resolveDuplicateTitleEarly(page, finalTitle, onStep);
+
+  return { summary, contentHtml, finalTitle: resolvedTitle };
+}
+
+/**
+ * Corre la regla `remote` real de jQuery Validate sobre `#titlees` (ya
+ * lleno en este punto) para saber, ANTES de generar la imagen, si el
+ * título va a chocar con uno existente — en vez de descubrirlo recién al
+ * guardar. Usa el mismo mecanismo exacto que el sitio (no una búsqueda
+ * aproximada en el listado, que marcaría como duplicados títulos parecidos
+ * pero distintos). Si detecta el choque, muta el título y lo vuelve a
+ * escribir en el campo antes de continuar.
+ */
+/**
+ * Un número incremental no basta: puede existir ya porque otro intento
+ * anterior o una publicación manual usó exactamente el mismo sufijo. La
+ * marca corta de tiempo evita que el validador remoto vuelva a rechazar la
+ * segunda oportunidad del mismo artículo. Función de módulo (antes vivía
+ * solo dentro de saveAndGetUrl) para poder mutar el título temprano, antes
+ * de generar la imagen, y no solo al momento final de guardar.
+ */
+function makeUniqueTitle(baseTitle: string, attempt: number): string {
+  const uniqueness = ` — versión ${Date.now().toString().slice(-7)}-${attempt}`;
+  return `${baseTitle.slice(0, 200 - uniqueness.length)}${uniqueness}`;
+}
+
+async function resolveDuplicateTitleEarly(
+  page: Page,
+  title: string,
+  onStep: OnStep,
+): Promise<string> {
+  // Pedido directo de Milton (30/8/2026): que se vea que el sistema está
+  // revisando esto, no solo enterarse cuando encuentra un choque.
+  await onStep("Validando si el artículo está repetido...");
+  await page
+    .evaluate(() => {
+      const jq = (window as unknown as {
+        jQuery?: (selector: string) => {
+          trigger: (eventName: string) => unknown;
+          valid?: () => boolean;
+        };
+      }).jQuery;
+      if (!jq) return;
+      for (const eventName of ["input", "keyup", "change", "blur", "focusout"]) {
+        jq("#titlees").trigger(eventName);
+      }
+      jq("#titlees").valid?.();
+    })
+    .catch(() => {});
+  await page
+    .waitForFunction(
+      () => {
+        const jq = (window as unknown as {
+          jQuery?: (selector: string) => {
+            data: (key: string) => { pending?: Record<string, unknown> } | undefined;
+          };
+        }).jQuery;
+        const validator = jq?.("#form_buyer_seller_articles").data("validator");
+        return Object.keys(validator?.pending ?? {}).length === 0;
+      },
+      undefined,
+      { timeout: 15_000 },
+    )
+    .catch(() => {});
+
+  const isDuplicate = await page
+    .evaluate(() => {
+      const jq = (window as unknown as {
+        jQuery?: (selector: string) => {
+          data: (key: string) => {
+            errorList?: { element: HTMLElement; message: string }[];
+          } | undefined;
+        };
+      }).jQuery;
+      const validator = jq?.("#form_buyer_seller_articles").data("validator");
+      return (validator?.errorList ?? []).some(
+        (entry) => entry.element?.id === "titlees" && /existe/i.test(entry.message),
+      );
+    })
+    .catch(() => false);
+
+  if (!isDuplicate) return title;
+
+  const mutatedTitle = makeUniqueTitle(title, 1);
+  const titleField = page.locator("#titlees");
+  await titleField.fill(mutatedTitle).catch(() => {});
+  await titleField.press("Tab").catch(() => {});
+  await onStep(
+    `El título "${title}" ya existe en la cuenta. Se usa "${mutatedTitle}" desde ahora, antes de generar la imagen.`,
+  );
+  return mutatedTitle;
 }
 
 async function diagnoseEditorState(page: Page): Promise<{
@@ -2147,6 +2323,71 @@ async function findArticleByTitle(
   return row?.href ?? null;
 }
 
+/**
+ * Busca en el listado real de 10minutesWebsite artículos existentes cuyo
+ * título coincida (aunque sea parcialmente) con `searchText`. Reutiliza el
+ * mismo buscador por servidor de `findArticleByTitle`, pero en vez de
+ * quedarse solo con la fila más nueva, junta hasta `limit` filas visibles
+ * con su título y enlace real — pensado para mostrarle al usuario POR QUÉ
+ * el sitio rechazó el guardado por título duplicado, con evidencia
+ * verificable en vez de un mensaje genérico.
+ */
+async function findSimilarArticleLinks(
+  page: Page,
+  baseUrl: string,
+  searchText: string,
+  limit = 3,
+): Promise<{ title: string; href: string }[]> {
+  try {
+    await page.goto(`${baseUrl}/dashboard/user_buyer_seller_articles.php`, {
+      waitUntil: "domcontentloaded",
+      timeout: NAV_TIMEOUT_MS,
+    });
+    await page
+      .waitForFunction(
+        () => {
+          const firstCell = document.querySelector("table tbody tr td");
+          const text = (firstCell?.textContent ?? "").trim();
+          return text.length > 0 && !/loading/i.test(text);
+        },
+        undefined,
+        { timeout: 15_000 },
+      )
+      .catch(() => {});
+    await page.evaluate((text) => {
+      const jq = (
+        window as unknown as {
+          jQuery?: (s: string) => {
+            DataTable: () => { search: (s: string) => { draw: () => void } };
+          };
+        }
+      ).jQuery;
+      jq?.("table").DataTable().search(text).draw();
+    }, searchText);
+    await page.waitForTimeout(2000);
+
+    const rows = page.locator("table tbody tr");
+    const count = Math.min(await rows.count(), limit);
+    const results: { title: string; href: string }[] = [];
+    for (let i = 0; i < count; i++) {
+      const row = rows.nth(i);
+      const href = await row
+        .locator("a.consultar")
+        .first()
+        .getAttribute("href")
+        .catch(() => null);
+      // El texto del enlace "a.consultar" es solo un ícono/acción ("Ver"),
+      // no el título — se usa el texto completo de la fila (que sí incluye
+      // el título real de la tabla) como etiqueta, recortado.
+      const rowText = (await row.innerText().catch(() => "")).replace(/\s+/g, " ").trim();
+      if (href) results.push({ title: rowText.slice(0, 120) || searchText, href });
+    }
+    return results;
+  } catch {
+    return [];
+  }
+}
+
 async function saveAndGetUrl(
   page: Page,
   baseUrl: string,
@@ -2178,35 +2419,76 @@ async function saveAndGetUrl(
   // al título y se reintenta el guardado (sin regenerar contenido de nuevo)
   // antes de darse por vencido.
   let titleInUse = expectedTitle;
+  // Pedido directo de Milton (30/8/2026): si el motivo real de fondo es que
+  // el título ya existe en el sitio, el mensaje final debe decirlo así de
+  // claro (con enlaces reales a lo existente), no un genérico "no aparece
+  // en el listado" — aunque el intento que finalmente se agote ya no
+  // muestre el error de duplicado (p. ej. porque el botón nunca se
+  // habilitó a tiempo para el título mutado).
+  let hitDuplicateTitle = false;
   const MAX_SAVE_ATTEMPTS = 3;
 
-  const makeUniqueTitle = (baseTitle: string, attempt: number) => {
-    // Un número incremental no basta: puede existir ya porque otro intento
-    // anterior o una publicación manual usó exactamente el mismo sufijo.
-    // La marca corta de tiempo evita que el validador remoto vuelva a
-    // rechazar la segunda oportunidad del mismo artículo.
-    const uniqueness = ` — versión ${Date.now().toString().slice(-7)}-${attempt}`;
-    return `${baseTitle.slice(0, 200 - uniqueness.length)}${uniqueness}`;
-  };
-
   const revalidateTitleAndForm = async () => {
-    // El sitio usa jQuery Validate con una regla remota en #titlees.
-    // Cambiar el valor no siempre limpia el error anterior ni vuelve a
-    // habilitar #save_art, por lo que se fuerzan los eventos del formulario
-    // y una validación explícita antes de consultar el botón.
+    // La plataforma usa jQuery Validate con una regla remota en #titlees.
+    // Después de un duplicado, el error y previousValue quedan en caché y
+    // el manejador de #type vuelve a bloquear #save_art aun con un título
+    // nuevo. Se limpia exclusivamente el estado de validación del título,
+    // se fuerza una consulta remota nueva y luego se reevalúa el formulario.
     await page.evaluate(() => {
-      const title = document.querySelector("#titlees") as HTMLInputElement | null;
-      const jq = (window as unknown as { jQuery?: (selector: string) => { valid?: () => boolean } }).jQuery;
-      if (!title) return;
+      const jq = (window as unknown as {
+        jQuery?: (selector: string) => {
+          removeData: (key: string) => unknown;
+          trigger: (eventName: string) => unknown;
+          valid?: () => boolean;
+        };
+      }).jQuery;
+      const validator = (window as unknown as {
+        jQuery?: (selector: string) => {
+          data: (
+            key: string,
+          ) => { resetForm?: () => void; hideErrors?: () => void } | undefined;
+        };
+      }).jQuery?.("#form_buyer_seller_articles").data("validator");
+      if (!jq) return;
+      jq("#titlees").removeData("previousValue");
+      jq("#titlees").removeData("remote");
+      // Causa raíz real encontrada el 30/8/2026 (confirmado con el
+      // diagnóstico de campos agregado el 29/8/2026): `validator.resetForm()`
+      // de jQuery Validate no solo limpia el estado de validación — por
+      // dentro llama al `reset()` nativo del <form>, que BORRA los valores
+      // de TODOS los campos (título, resumen, tipo), no solo los mensajes de
+      // error. En cada intento real de guardado, el formulario llegaba lleno
+      // hasta este punto exacto y quedaba vacío justo después — nunca fue
+      // intermitente, pasaba siempre que se llegaba a guardar. Se usa
+      // `hideErrors()` en su lugar: limpia únicamente los mensajes de error
+      // visibles (el propósito real de esta línea, para el reintento por
+      // título duplicado) sin tocar los valores de los campos.
+      validator?.hideErrors?.();
       for (const eventName of ["input", "keyup", "change", "blur", "focusout"]) {
-        title.dispatchEvent(new Event(eventName, { bubbles: true }));
+        jq("#titlees").trigger(eventName);
       }
-      jq?.("#titlees").valid?.();
+      jq("#titlees").valid?.();
     }).catch(() => {});
-    await page.waitForTimeout(1200);
-    await page.dispatchEvent("#type", "change").catch(() => {});
+    await page.waitForFunction(
+      () => {
+        const jq = (window as unknown as {
+          jQuery?: (selector: string) => {
+            data: (key: string) => { pending?: Record<string, unknown> } | undefined;
+          };
+        }).jQuery;
+        const validator = jq?.("#form_buyer_seller_articles").data("validator");
+        return Object.keys(validator?.pending ?? {}).length === 0;
+      },
+      undefined,
+      { timeout: 15_000 },
+    ).catch(() => {});
+    await page.evaluate(() => {
+      const jq = (window as unknown as {
+        jQuery?: (selector: string) => { trigger: (eventName: string) => unknown };
+      }).jQuery;
+      jq?.("#type").trigger("change");
+    }).catch(() => {});
   };
-
   for (let saveAttempt = 1; saveAttempt <= MAX_SAVE_ATTEMPTS; saveAttempt++) {
     await onStep("Guardando y publicando el artículo...");
     await revalidateTitleAndForm();
@@ -2230,13 +2512,40 @@ async function saveAndGetUrl(
       await page.dispatchEvent("#type", "change").catch(() => {});
       await page.waitForTimeout(250);
     }
+    // El "desbloqueo forzado" que estuvo acá (forzar save.disabled=false a
+    // mano por JS) se agregó la noche del 28/8/2026 como parche de
+    // emergencia para el bug real que ya se corrigió (resetForm() vaciando
+    // el formulario, ver revalidateTitleAndForm). No existía en la versión
+    // que funcionaba antes de esa noche. Manipular el DOM a mano en vez de
+    // dejar que el propio manejador de #type del sitio decida cuándo el
+    // formulario es válido dejaba una carrera real (el sitio podía volver a
+    // deshabilitar el botón milisegundos después). Se retira y se vuelve a
+    // depender únicamente de la espera natural de abajo, como antes.
     if (!saveBtnEnabled) {
       await onStep(
         "El botón de guardar no se habilitó a tiempo (probable chequeo de título duplicado todavía en curso).",
       );
     }
 
-    await saveBtn.click({ timeout: 5000 }).catch(() => {});
+    // Diagnóstico agregado el 30/8/2026: el resultado real del clic se
+    // tragaba en silencio (`.catch(() => {})`), así que no se podía saber si
+    // Playwright de verdad hizo clic o si sus propios chequeos de
+    // "actionability" (visible, estable, sin overlays, no disabled) lo
+    // bloquearon — que es indistinguible, en los logs de más abajo, de un
+    // clic que sí ocurrió pero el sitio rechazó. Se registra explícitamente
+    // cuál de los dos pasó, más el estado del botón INMEDIATAMENTE después
+    // del clic (antes de esperar red inactiva), para separar "nunca hizo
+    // clic" de "hizo clic y el sitio volvió a bloquear el botón".
+    const clickError = await saveBtn
+      .click({ timeout: 5000 })
+      .then(() => null)
+      .catch((e: unknown) => (e instanceof Error ? e.message : String(e)));
+    const disabledRightAfterClick = await saveBtn.isDisabled().catch(() => null);
+    await onStep(
+      `DIAGNÓSTICO [clic de guardar]: ${
+        clickError ? `Playwright NO pudo hacer clic: ${clickError.slice(0, 200)}` : "clic ejecutado sin error"
+      }, botón deshabilitado inmediatamente después=${disabledRightAfterClick}`,
+    );
     await page
       .waitForLoadState("networkidle", { timeout: NAV_TIMEOUT_MS })
       .catch(() => {});
@@ -2331,6 +2640,10 @@ async function saveAndGetUrl(
     const isDuplicateTitle =
       /titlees/i.test(validatorErrors) && /existe/i.test(validatorErrors);
 
+    if (isDuplicateTitle) {
+      hitDuplicateTitle = true;
+    }
+
     if (isDuplicateTitle && saveAttempt < MAX_SAVE_ATTEMPTS) {
       const mutatedTitle = makeUniqueTitle(expectedTitle, saveAttempt + 1);
       const titleField = page.locator("#titlees");
@@ -2339,7 +2652,16 @@ async function saveAndGetUrl(
       // Forzar también el cambio evita que el botón conserve el error remoto
       // del título anterior y permanezca deshabilitado indefinidamente.
       await titleField.press("Tab").catch(() => {});
-      await revalidateTitleAndForm();
+      // Bug real encontrado el 30/8/2026: acá se llamaba a
+      // `revalidateTitleAndForm()` y el `continue` de abajo hacía que el
+      // TOPE del loop la llamara OTRA VEZ de inmediato para el mismo título
+      // mutado. Cada llamada borra la caché del chequeo remoto
+      // (`removeData("remote")`) y dispara una consulta AJAX nueva — la
+      // segunda invalidación pisaba el resultado que la primera acababa de
+      // conseguir, justo antes de intentar guardar, dejando una carrera
+      // real contra el propio manejador de `#type` del sitio (que
+      // deshabilita `#save_art` mientras esa consulta está en vuelo). Se
+      // llama una sola vez, al tope del loop, para el título ya mutado.
       titleInUse = mutatedTitle;
       await onStep(
         `El título "${expectedTitle}" ya existe en la cuenta. Reintentando guardar con "${mutatedTitle}".`,
@@ -2348,6 +2670,23 @@ async function saveAndGetUrl(
     }
 
     if (stillOnForm) {
+      if (hitDuplicateTitle) {
+        // Pedido directo de Milton (30/8/2026): decir la causa real en vez
+        // de un genérico "no aparece en el listado", y mostrar evidencia
+        // verificable (enlaces reales a lo que ya existe) en vez de pedirle
+        // que confíe en la palabra del sistema.
+        // `href` ya viene absoluto (el mismo dato que usa el resto del
+        // archivo como `articleUrl` real, renderizado tal cual en el
+        // Historial) — no se antepone `baseUrl` de nuevo.
+        const similar = await findSimilarArticleLinks(page, baseUrl, expectedTitle);
+        const links = similar.map((a) => `"${a.title}" → ${a.href}`).join(" | ");
+        throw new DuplicateTitleError(
+          `No se publicó porque en la página ya existe un artículo con este título (o muy parecido).${
+            links ? ` Artículos existentes encontrados: ${links}` : ""
+          }`,
+          similar,
+        );
+      }
       // Si el sitio no habilitó el guardado, no tiene sentido navegar y
       // esperar 90 segundos buscando una publicación que nunca se envió.
       // Devuelve inmediatamente para que queue.ts registre el intento y,

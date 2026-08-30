@@ -28,6 +28,7 @@ export default function PublicacionesEnCursoPage() {
   // agotados. Ver platform-servers.ts.
   const [platformDomain, setPlatformDomain] = useState("net");
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [workerWarning, setWorkerWarning] = useState<string | null>(null);
 
   const cancelSocialRun = async (id: string) => {
     setCancellingId(id);
@@ -42,6 +43,14 @@ export default function PublicacionesEnCursoPage() {
       setCancellingId(null);
     }
   };
+
+  useEffect(() => {
+    const warning = window.sessionStorage.getItem("auto-articulos-worker-warning");
+    if (warning) {
+      setWorkerWarning(warning);
+      window.sessionStorage.removeItem("auto-articulos-worker-warning");
+    }
+  }, []);
 
   useEffect(() => {
     fetch("/api/me", { cache: "no-store" })
@@ -100,6 +109,12 @@ export default function PublicacionesEnCursoPage() {
           Cuando un trabajo termina, desaparece de esta lista y queda guardado en <Modulo id="historial" /> con su enlace.
         </IntroP>
       </ModuleIntro>
+      {workerWarning && (
+        <section style={{ ...sectionStyle, border: "1px solid #ff9500", background: "#fffaf2", color: "#6b3d00" }}>
+          <strong>Publicación encolada</strong>
+          <p style={{ margin: "6px 0 0", fontSize: 13 }}>{workerWarning}</p>
+        </section>
+      )}
       {activeRuns.length > 0 || socialRuns.length > 0 ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {activeRuns.map((run) => (

@@ -6,11 +6,27 @@ on:
   workflow_dispatch: {}
 
 concurrency:
-  # Las reservas atómicas en la base de datos ya impiden que dos procesos
-  # trabajen sobre la misma cuenta. Separar por SHA permite que una corrección
-  # recién publicada arranque sin esperar a que termine la versión anterior;
-  # las corridas de la misma versión siguen compartiendo una sola cola.
-  group: auto-articulos-worker-${{ github.sha }}
+  # Causa raíz confirmada el 30/8/2026: las corridas programadas (cron cada
+  # 5 min) compartían UN SOLO grupo por SHA entre sí. En un día de mucha
+  # actividad, una corrida programada que tarda más de 5 min en terminar
+  # deja a la siguiente en cola detrás de ella en ese mismo grupo — y
+  # GitHub Actions puede directamente DESCARTAR un disparo de `schedule`
+  # cuando el anterior con el mismo grupo sigue activo (comportamiento
+  # documentado de GitHub, no un bug de este archivo). Evidencia en vivo:
+  # ninguna corrida (ni programada ni manual) se disparó durante casi 1
+  # hora seguida mientras 3 lotes reales corrían en paralelo.
+  #
+  # Las reservas atómicas en la base de datos (reservation.ts,
+  # User.workerBusyUntil) ya impiden que dos procesos trabajen sobre la
+  # MISMA cuenta a la vez, sin importar cuántas corridas se superpongan —
+  # por eso ya no hace falta que las corridas programadas compartan grupo
+  # entre sí. Cada corrida (programada o manual) obtiene ahora su propio
+  # grupo único por `run_id`, así que ninguna espera detrás de otra y
+  # ningún tick del cron se pierde. El límite real de paralelismo lo pone
+  # el tope de 20 jobs concurrentes del plan Free de GitHub Actions: si se
+  # superponen varias corridas, el exceso queda en cola de verdad (no se
+  # descarta), que es un resultado muchísimo mejor que perder el disparo.
+  group: auto-articulos-worker-${{ github.run_id }}
   cancel-in-progress: false
 
 jobs:

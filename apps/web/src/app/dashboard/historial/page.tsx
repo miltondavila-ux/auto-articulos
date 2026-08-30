@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import ModuleIntro, { IntroP, Modulo } from "@/components/ModuleIntro";
+import { useRouter } from "next/navigation";
 import {
   sectionStyle,
   h2Style,
@@ -77,23 +78,53 @@ function HistorialEjecuciones() {
     (r) => r.status !== "pending" && r.status !== "running",
   );
 
+  // Pedido directo de Milton (30/8/2026): los títulos que no se publican
+  // porque ya existe un artículo igual (o muy parecido) en 10minutesWebsite
+  // nunca van a lograrlo reintentando el mismo tema — se agrupan aparte,
+  // con nombre propio, en vez de mezclarse con errores normales.
+  const duplicateTitles = useMemo(() => {
+    const items: TitleRow[] = [];
+    for (const run of runs) {
+      for (const title of run.titles) {
+        if (title.errorMessage?.includes("ya existe un artículo")) {
+          items.push(title);
+        }
+      }
+    }
+    return items;
+  }, [runs]);
+
+  // Pedido directo de Milton (30/8/2026): las ejecuciones sin publicación
+  // confirmada (canceladas, con error, o atascadas) vivían adentro de
+  // "Artículos publicados" — confuso, porque justamente no se publicó
+  // nada. Se separan en su propia sección, fuera del conteo/panel de
+  // publicados.
   const runsByPublicationDay = useMemo(() => {
     const map = new Map<string, RunRow[]>();
     for (const run of runs) {
       const publicationAt = latestPublicationAt(run.titles);
-      const dayKey = publicationAt ? localDayKey(publicationAt) : "no-confirmada";
+      if (!publicationAt) continue;
+      const dayKey = localDayKey(publicationAt);
       if (!map.has(dayKey)) map.set(dayKey, []);
       map.get(dayKey)!.push(run);
     }
-    return Array.from(map.entries()).sort(([dayA], [dayB]) => {
-      if (dayA === "no-confirmada") return 1;
-      if (dayB === "no-confirmada") return -1;
-      return dayB.localeCompare(dayA);
-    });
+    return Array.from(map.entries()).sort(([dayA], [dayB]) =>
+      dayB.localeCompare(dayA),
+    );
   }, [runs]);
 
+  const unconfirmedRuns = useMemo(
+    () => runs.filter((run) => !latestPublicationAt(run.titles)),
+    [runs],
+  );
+  const publishedRunsCount = runs.length - unconfirmedRuns.length;
+
   return (
-    <details className="panel" style={sectionStyle}>
+    <>
+      {duplicateTitles.length > 0 && (
+        <DuplicateTitlesSection items={duplicateTitles} />
+      )}
+      <details className="panel" style={sectionStyle}>
       <summary
         style={{
           cursor: "pointer",
@@ -110,7 +141,7 @@ function HistorialEjecuciones() {
           <h2 style={{ ...h2Style, margin: 0 }}>Artículos publicados</h2>
         </div>
         <span className="muted" style={{ fontSize: 13 }}>
-          {runs.length} ejecución{runs.length !== 1 ? "es" : ""}
+          {publishedRunsCount} ejecución{publishedRunsCount !== 1 ? "es" : ""}
         </span>
       </summary>
       <div style={{ marginTop: 14 }}>
@@ -175,9 +206,9 @@ function HistorialEjecuciones() {
             {deleteError}
           </p>
         )}
-        {runs.length === 0 ? (
+        {publishedRunsCount === 0 ? (
           <p className="muted" style={{ fontSize: 13 }}>
-            Aún no hay ejecuciones en el historial.
+            Aún no hay ejecuciones publicadas en el historial.
           </p>
         ) : (
           runsByPublicationDay.map(([dayKey, dayRuns]) => (
@@ -190,7 +221,171 @@ function HistorialEjecuciones() {
           ))
         )}
       </div>
+      </details>
+      {unconfirmedRuns.length > 0 && (
+        <details className="panel" style={{ ...sectionStyle, borderColor: "#ffd8a8" }}>
+          <summary
+            style={{
+              cursor: "pointer",
+              listStyle: "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 10,
+              userSelect: "none",
+            }}
+          >
+            <div>
+              <p className="eyebrow" style={{ margin: "0 0 2px", color: "#8a4b08" }}>
+                Sin publicar
+              </p>
+              <h2 style={{ ...h2Style, margin: 0 }}>
+                Ejecuciones sin publicación confirmada
+              </h2>
+            </div>
+            <span className="muted" style={{ fontSize: 13 }}>
+              {unconfirmedRuns.length} ejecución
+              {unconfirmedRuns.length !== 1 ? "es" : ""}
+            </span>
+          </summary>
+          <div style={{ marginTop: 14 }}>
+            <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
+              Canceladas, con error, o sin ningún título publicado todavía.
+              Desde aquí puedes reintentarlas.
+            </p>
+            <PublicationDayGroup
+              dayKey="no-confirmada"
+              runs={unconfirmedRuns}
+              onRetried={loadRuns}
+            />
+          </div>
+        </details>
+      )}
+    </>
+  );
+}
+
+/**
+ * Sección propia, separada de "Artículos publicados", para títulos que
+ * chocaron contra un artículo ya existente en 10minutesWebsite. Reintentar
+ * no los va a resolver (mismo tema, título parecido, mismo choque), así que
+ * no se mezclan con errores normales — se muestran con nombre propio y los
+ * enlaces reales a lo que ya existe, tal como pidió Milton.
+ */
+function DuplicateTitlesSection({ items }: { items: TitleRow[] }) {
+  // Pedido directo de Milton (30/8/2026): que también diga "Hoy", "Ayer",
+  // etc. para ubicarse en el tiempo, igual que la lista principal de
+  // Historial — se reutilizan los mismos helpers (localDayKey,
+  // publicationDayLabel) en vez de inventar un formato nuevo.
+  const groups = useMemo(() => {
+    const map = new Map<string, TitleRow[]>();
+    for (const title of items) {
+      const dayKey = title.processedAt
+        ? localDayKey(title.processedAt)
+        : "no-confirmada";
+      if (!map.has(dayKey)) map.set(dayKey, []);
+      map.get(dayKey)!.push(title);
+    }
+    return Array.from(map.entries()).sort(([dayA], [dayB]) => {
+      if (dayA === "no-confirmada") return 1;
+      if (dayB === "no-confirmada") return -1;
+      return dayB.localeCompare(dayA);
+    });
+  }, [items]);
+
+  return (
+    <details className="panel" style={{ ...sectionStyle, borderColor: "#ffd8a8" }}>
+      <summary
+        style={{
+          cursor: "pointer",
+          listStyle: "none",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 10,
+          userSelect: "none",
+        }}
+      >
+        <div>
+          <p className="eyebrow" style={{ margin: "0 0 2px", color: "#8a4b08" }}>
+            No se publicarán
+          </p>
+          <h2 style={{ ...h2Style, margin: 0 }}>
+            Artículos repetidos que no se publicarán
+          </h2>
+        </div>
+        <span className="muted" style={{ fontSize: 13 }}>
+          {items.length} título{items.length !== 1 ? "s" : ""}
+        </span>
+      </summary>
+      <div style={{ marginTop: 14 }}>
+        <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
+          Estos títulos ya existen (o son muy parecidos a uno que ya existe)
+          en 10minutesWebsite. Reintentarlos con el mismo tema no los va a
+          publicar — usa un título o tema distinto.
+        </p>
+        {groups.map(([dayKey, dayItems]) => (
+          <div key={dayKey} style={{ marginBottom: 14 }}>
+            <p
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: "#8a4b08",
+                margin: "0 0 8px",
+                textTransform: "uppercase",
+                letterSpacing: "0.02em",
+              }}
+            >
+              {publicationDayLabel(dayKey)}
+            </p>
+            {dayItems.map((title) => (
+              <div
+                key={title.id}
+                style={{
+                  padding: 12,
+                  marginBottom: 8,
+                  border: "1px solid #ffd8a8",
+                  borderRadius: 10,
+                  background: "#fff8ef",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <strong style={{ fontSize: 13 }}>{title.text}</strong>
+                  {title.processedAt && (
+                    <span style={{ fontSize: 11, color: "#8a4b08" }}>
+                      {formatDateTime(title.processedAt)}
+                    </span>
+                  )}
+                </div>
+                <p style={{ fontSize: 12, color: "#6e6e73", margin: "4px 0 0" }}>
+                  {linkifyMessage(title.errorMessage ?? "")}
+                </p>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
     </details>
+  );
+}
+
+function linkifyMessage(message: string) {
+  const parts = message.split(/(https?:\/\/\S+)/g);
+  return parts.map((part, i) =>
+    /^https?:\/\//.test(part) ? (
+      <a key={i} href={part} target="_blank" rel="noopener noreferrer">
+        {part}
+      </a>
+    ) : (
+      <span key={i}>{part}</span>
+    ),
   );
 }
 
@@ -282,6 +477,7 @@ function HistorialRedes() {
   const [error, setError] = useState<string | null>(null);
   const [socialEvents, setSocialEvents] = useState<Record<string, TitleEventRow[]>>({});
   const [loadingSocialEvent, setLoadingSocialEvent] = useState<string | null>(null);
+  const [retryingOppId, setRetryingOppId] = useState<string | null>(null);
 
   async function loadSocialEvents(titleId: string) {
     if (socialEvents[titleId]) return;
@@ -317,6 +513,28 @@ function HistorialRedes() {
   useEffect(() => {
     loadOpportunities();
   }, []);
+
+  async function handleRetryOpportunity(id: string) {
+    setRetryingOppId(id);
+    setError(null);
+    try {
+      const res = await fetch("/api/social-opportunities/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        loadOpportunities();
+      } else {
+        setError(data.error || "No se pudo reintentar la publicación.");
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setRetryingOppId(null);
+    }
+  }
 
   async function handleDeleteHistory() {
     setDeletingHistory(true);
@@ -471,11 +689,29 @@ function HistorialRedes() {
                           {opp.articleTitle}
                         </span>
                       </div>
-                      <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         {opp.status === "published" ? (
                           <span style={{ color: "#16803c", fontWeight: 600, fontSize: 12 }}>✓ Publicado</span>
                         ) : (
-                          <span style={{ color: "#ff3b30", fontWeight: 600, fontSize: 12 }}>✕ Error</span>
+                          <>
+                            <span style={{ color: "#ff3b30", fontWeight: 600, fontSize: 12 }}>✕ Error</span>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleRetryOpportunity(opp.id);
+                              }}
+                              disabled={retryingOppId === opp.id}
+                              className="secondary"
+                              style={{
+                                ...secondaryButtonStyle,
+                                padding: "3px 10px",
+                                fontSize: 11,
+                              }}
+                            >
+                              {retryingOppId === opp.id ? "Reintentando..." : "Reintentar"}
+                            </button>
+                          </>
                         )}
                       </div>
                     </summary>
@@ -630,8 +866,12 @@ function HistoryEntry({
   run: RunRow;
   onRetried: () => void;
 }) {
+  const router = useRouter();
   const successCount = run.titles.filter((t) => t.status === "success").length;
-  const hasErrors = run.status === "halted";
+  // Pedido directo de Milton (30/8/2026): un run cancelado por el propio
+  // usuario no mostraba el botón de reintentar en ningún lado, aunque los
+  // títulos cancelados siguen ahí y ahora sí se pueden retomar.
+  const hasErrors = run.status === "halted" || run.status === "cancelled";
   const publicationAt = latestPublicationAt(run.titles);
   const [retrying, setRetrying] = useState(false);
 
@@ -640,8 +880,12 @@ function HistoryEntry({
     e.stopPropagation();
     setRetrying(true);
     try {
-      await fetch(`/api/runs/${run.id}/retry`, { method: "POST" });
+      const response = await fetch(`/api/runs/${run.id}/retry`, { method: "POST" });
+      if (!response.ok) {
+        throw new Error("No se pudo iniciar el reintento.");
+      }
       onRetried();
+      router.push("/dashboard/publicaciones-en-curso");
     } finally {
       setRetrying(false);
     }

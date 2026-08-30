@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import CreditsQrAlert from "@/components/CreditsQrAlert";
 import DashboardNav from "@/components/DashboardNav";
 import FloatingAssistant from "@/components/FloatingAssistant";
 import LogoutButton from "@/components/LogoutButton";
@@ -210,6 +211,7 @@ export default async function DashboardLayout({
           <DashboardNav />
           <ModuleGuard>{children}</ModuleGuard>
           <FloatingAssistant />
+          <CreditsQrAlert />
         </>
       )}
     </main>

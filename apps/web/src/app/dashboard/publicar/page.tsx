@@ -63,12 +63,6 @@ export default function PublicarPage() {
       if (typeof data.contentLanguage === "string") {
         setContentLanguage(data.contentLanguage);
       }
-      if (typeof data.hasImageCredits === "boolean") {
-        setHasImageCredits(
-          data.hasImageCredits ||
-            window.localStorage.getItem(IMAGE_CREDITS_CONFIRMED_KEY) === "true",
-        );
-      }
       if (typeof data.platformDomain === "string") {
         setPlatformDomain(data.platformDomain);
       }
@@ -154,10 +148,6 @@ export default function PublicarPage() {
   const overLimit = titleCount > maxTitlesPerBatch;
 
   async function handleIniciar() {
-    if (!hasImageCredits) {
-      setShowImageCreditsModal(true);
-      return;
-    }
     if (!contentLanguage.trim()) {
       setBanner({
         type: "error",
@@ -181,16 +171,14 @@ export default function PublicarPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        if (data.code === "NO_IMAGE_CREDITS") {
-          window.localStorage.removeItem(IMAGE_CREDITS_CONFIRMED_KEY);
-          setHasImageCredits(false);
-          setShowImageCreditsModal(true);
-        }
-        setBanner({
+          setBanner({
           type: "error",
           text: data.error ?? "Error al iniciar la ejecución",
         });
         return;
+      }
+      if (typeof data.workerWarning === "string") {
+        window.sessionStorage.setItem("auto-articulos-worker-warning", data.workerWarning);
       }
       router.push("/dashboard/publicaciones-en-curso");
     } finally {

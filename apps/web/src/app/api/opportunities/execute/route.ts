@@ -6,7 +6,7 @@ import { hasTrialAccess } from "@/lib/trial";
 
 export async function POST(request: NextRequest) {
   const userId = await getCurrentUserId();
-  const { type, id, ids, disableIndexing, contentLanguage, promptId, confirmedImageCredits } =
+  const { type, id, ids, disableIndexing, contentLanguage, promptId } =
     (await request.json()) as {
       type?: string;
       id?: string;
@@ -61,16 +61,6 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
-  if (!user.hasImageCredits && confirmedImageCredits !== true) {
-    return NextResponse.json(
-      {
-        error:
-          "Tu cuenta de 10minutesWebsite no tiene créditos de imagen disponibles. Solicita más créditos gratuitos en https://www.10minuteswebsite.com/ayuda",
-        code: "NO_IMAGE_CREDITS",
-      },
-      { status: 400 },
-    );
-  }
   const effectiveLanguage =
     typeof contentLanguage === "string" && contentLanguage.trim()
       ? contentLanguage.trim()
@@ -121,42 +111,45 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
-  if (selected.length > user.maxTitlesPerBatch) {
-    return NextResponse.json(
-      {
-        error: `Puedes ejecutar como máximo ${user.maxTitlesPerBatch} títulos por lote (esta categoría tiene ${selected.length}). Elimina algunos títulos o pide al administrador que aumente tu máximo.`,
-      },
-      { status: 400 },
-    );
+  // Un grupo grande no se rechaza ni desaparece: se divide en Runs de como
+  // máximo el cupo permitido. Así una categoría con 33 títulos puede empezar
+  // con dos Runs (por ejemplo 20 + 13) y todos sus títulos siguen trazables.
+  const chunks: (typeof selected)[] = [];
+  for (let offset = 0; offset < selected.length; offset += user.maxTitlesPerBatch) {
+    chunks.push(selected.slice(offset, offset + user.maxTitlesPerBatch));
   }
 
-  const run = await prisma.$transaction(async (tx) => {
-    const created = await tx.run.create({
-      data: {
-        userId,
-        categoryId: group.categoryId,
-        status: "running",
-        disableIndexing: Boolean(disableIndexing),
-        // Ver POST /api/runs: vacío deja NULL y el worker usa el idioma
-        // configurado del usuario.
-        contentLanguage:
-          typeof contentLanguage === "string" && contentLanguage.trim()
-            ? contentLanguage.trim()
-            : null,
-        promptId:
-          typeof promptId === "string" && promptId.trim()
-            ? promptId.trim()
-            : user.defaultPromptId,
-        titles: {
-          create: selected.map((title, order) => ({
-            text: title.text,
-            order,
-            opportunityCreatedAt: group.createdAt,
-          })),
+  const runs = await prisma.$transaction(async (tx) => {
+    const createdRuns: { id: string }[] = [];
+    for (const chunk of chunks) {
+      const created = await tx.run.create({
+        data: {
+          userId,
+          categoryId: group.categoryId,
+          status: "running",
+          disableIndexing: Boolean(disableIndexing),
+          // Ver POST /api/runs: vacío deja NULL y el worker usa el idioma
+          // configurado del usuario.
+          contentLanguage:
+            typeof contentLanguage === "string" && contentLanguage.trim()
+              ? contentLanguage.trim()
+              : null,
+          promptId:
+            typeof promptId === "string" && promptId.trim()
+              ? promptId.trim()
+              : user.defaultPromptId,
+          titles: {
+            create: chunk.map((title, order) => ({
+              text: title.text,
+              order,
+              opportunityCreatedAt: group.createdAt,
+            })),
+          },
         },
-      },
-      select: { id: true },
-    });
+        select: { id: true },
+      });
+      createdRuns.push(created);
+    }
     if (type === "group") {
       await tx.opportunityGroup.delete({ where: { id: group.id } });
     } else {
@@ -167,8 +160,17 @@ export async function POST(request: NextRequest) {
       if (remaining === 0)
         await tx.opportunityGroup.delete({ where: { id: group.id } });
     }
-    return created;
+    return createdRuns;
   });
-  await triggerWorkerNow();
-  return NextResponse.json({ ok: true, runId: run.id });
+  const worker = await triggerWorkerNow();
+  return NextResponse.json({
+    ok: true,
+    runId: runs[0].id,
+    runIds: runs.map((run) => run.id),
+    workerStarted: worker.started,
+    workerAlreadyActive: worker.alreadyActive ?? false,
+    workerWarning: worker.reason
+      ? "La publicación quedó creada, pero el worker no pudo iniciarse de inmediato. El sistema la retomará en el próximo ciclo automático."
+      : null,
+  });
 }

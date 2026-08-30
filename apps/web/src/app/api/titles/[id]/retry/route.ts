@@ -5,9 +5,14 @@ import { triggerWorkerNow } from "@/lib/trigger-worker";
 
 /**
  * Reintento manual de un título atascado ("processing" por una caída
- * externa) o con error. Lo vuelve a "pending" para que el worker lo tome de
- * nuevo, y reabre el run si ya estaba detenido/cancelado/terminado — si no,
- * processNext() nunca lo vuelve a mirar (solo busca runs "running").
+ * externa), con error, o cancelado por el propio usuario. Lo vuelve a
+ * "pending" para que el worker lo tome de nuevo, y reabre el run si ya
+ * estaba detenido/cancelado/terminado — si no, processNext() nunca lo
+ * vuelve a mirar (solo busca runs "running").
+ *
+ * Pedido directo de Milton (30/8/2026): un título cancelado no tenía
+ * ninguna forma de retomarse desde Historial — el endpoint lo rechazaba
+ * igual que si fuera un estado inválido, aunque cancelar no borra nada.
  */
 export async function POST(
   _request: NextRequest,
@@ -22,9 +27,16 @@ export async function POST(
   if (!title) {
     return NextResponse.json({ error: "No encontrado" }, { status: 404 });
   }
-  if (title.status !== "error" && title.status !== "processing") {
+  if (
+    title.status !== "error" &&
+    title.status !== "processing" &&
+    title.status !== "cancelled"
+  ) {
     return NextResponse.json(
-      { error: "Solo se puede reintentar un título con error o atascado." },
+      {
+        error:
+          "Solo se puede reintentar un título con error, atascado o cancelado.",
+      },
       { status: 400 },
     );
   }

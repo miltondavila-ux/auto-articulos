@@ -55,7 +55,6 @@ export async function POST(request: NextRequest) {
     disableIndexing,
     contentLanguage,
     promptId,
-    confirmedImageCredits,
   } = await request.json();
 
   if (typeof titlesText !== "string") {
@@ -110,16 +109,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!user.hasImageCredits && confirmedImageCredits !== true) {
-    return NextResponse.json(
-      {
-        error:
-          "Tu cuenta de 10minutesWebsite no tiene créditos de imagen disponibles. Solicita más créditos gratuitos en https://www.10minuteswebsite.com/ayuda",
-        code: "NO_IMAGE_CREDITS",
-      },
-      { status: 400 },
-    );
-  }
 
   const effectiveLanguage =
     typeof contentLanguage === "string" && contentLanguage.trim()
@@ -271,11 +260,20 @@ export async function POST(request: NextRequest) {
     include: { titles: true, category: true },
   });
 
-  await triggerWorkerNow();
+  const worker = await triggerWorkerNow();
 
   // `avisoDeCupo` va con la respuesta correcta (no como error): la publicación
   // sí ocurrió, solo que recortada. La pantalla lo muestra tal cual.
-  return NextResponse.json({ run, avisoDeCupo, descartados });
+  return NextResponse.json({
+    run,
+    avisoDeCupo,
+    descartados,
+    workerStarted: worker.started,
+    workerAlreadyActive: worker.alreadyActive ?? false,
+    workerWarning: worker.reason
+      ? "La publicación quedó creada, pero el worker no pudo iniciarse de inmediato. El sistema la retomará en el próximo ciclo automático."
+      : null,
+  });
 }
 
 // Borra el historial del usuario (los Title/TitleEvent caen en cascada). Se

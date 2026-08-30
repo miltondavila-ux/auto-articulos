@@ -3,8 +3,13 @@ import { decryptSecret, MAX_ATTEMPTS } from "@auto-articulos/shared";
 import {
   publishArticle,
   DailyLimitReachedError,
+  DuplicateTitleError,
 } from "./automation/10minutesWebsite";
-import { tryReserveUser, releaseUser } from "./reservation";
+import {
+  tryReserveUser,
+  releaseUser,
+  renewUserReservation,
+} from "./reservation";
 import { notifyGoogle } from "./googleIndexing";
 import { notifyBing } from "./bingIndexing";
 import { runPatriciaFix } from "./fix-patricia";
@@ -14,6 +19,71 @@ async function markTitleError(titleId: string, message: string) {
   await prisma.title.update({
     where: { id: titleId },
     data: { status: "error", errorMessage: message, processedAt: new Date() },
+  });
+}
+
+const OPPORTUNITY_RETRY_NOTE =
+  "No se publicó en el primer intento y quedó disponible en Oportunidades para reintentarlo.";
+
+/**
+ * Reincorpora al módulo Oportunidades los títulos que ya no pueden avanzar en
+ * este Run. Al iniciar una publicación el grupo original se convierte en Run
+ * y se elimina; sin esta compensación, un fallo definitivo hacía desaparecer
+ * la oportunidad aunque el artículo nunca hubiera sido publicado.
+ */
+async function restoreUnfinishedTitlesToOpportunities(
+  runId: string,
+  onlyTitleId?: string,
+) {
+  await prisma.$transaction(async (tx) => {
+    const run = await tx.run.findUnique({
+      where: { id: runId },
+      select: { userId: true, categoryId: true },
+    });
+    if (!run) return;
+
+    const titles = await tx.title.findMany({
+      where: {
+        runId,
+        ...(onlyTitleId ? { id: onlyTitleId } : {}),
+        status: { in: ["pending", "error"] },
+      },
+      orderBy: { order: "asc" },
+      select: { text: true },
+    });
+    if (titles.length === 0) return;
+
+    const group = await tx.opportunityGroup.upsert({
+      where: { userId_categoryId: { userId: run.userId, categoryId: run.categoryId } },
+      create: {
+        userId: run.userId,
+        categoryId: run.categoryId,
+        rationale: "Títulos pendientes de publicación; puedes reintentarlos desde aquí.",
+      },
+      update: {},
+      select: { id: true },
+    });
+
+    for (const title of titles) {
+      const existing = await tx.opportunityTitle.findFirst({
+        where: { groupId: group.id, text: title.text },
+        select: { id: true },
+      });
+      if (existing) {
+        await tx.opportunityTitle.update({
+          where: { id: existing.id },
+          data: { rationale: OPPORTUNITY_RETRY_NOTE },
+        });
+      } else {
+        await tx.opportunityTitle.create({
+          data: {
+            groupId: group.id,
+            text: title.text,
+            rationale: OPPORTUNITY_RETRY_NOTE,
+          },
+        });
+      }
+    }
   });
 }
 
@@ -61,9 +131,19 @@ export async function processNext(filterUserId?: string): Promise<boolean> {
   }
   if (!run) return false;
 
+  // Una publicación real puede superar el TTL original de cinco minutos.
+  // Renovar el lease evita que otro shard abra una segunda sesión en la misma
+  // cuenta mientras este worker todavía está generando o guardando el artículo.
+  const reservationHeartbeat = setInterval(() => {
+    void renewUserReservation(run!.userId).catch((err) => {
+      console.error("No se pudo renovar la reserva del usuario:", err);
+    });
+  }, 60_000);
+
   try {
     return await processRunTitle(run);
   } finally {
+    clearInterval(reservationHeartbeat);
     await releaseUser(run.userId);
   }
 }
@@ -138,12 +218,21 @@ async function processRunTitle(
       where: { id: run.id, status: { in: ["pending", "running"] } },
       data: { status: "halted", finishedAt: new Date() },
     });
+    await restoreUnfinishedTitlesToOpportunities(run.id);
     return true;
   }
 
-  const updated = await prisma.title.update({
-    where: { id: nextTitle.id },
+  // Reclamo atómico: varios lanes pueden haber leído el mismo título
+  // pendiente antes de llegar aquí. Solo el primero que todavía lo encuentre
+  // en pending puede cambiarlo a processing y aumentar los intentos.
+  const claimed = await prisma.title.updateMany({
+    where: { id: nextTitle.id, status: "pending" },
     data: { status: "processing", attempts: { increment: 1 } },
+  });
+  if (claimed.count !== 1) return false;
+
+  const updated = await prisma.title.findUniqueOrThrow({
+    where: { id: nextTitle.id },
   });
 
   const onStep = async (message: string) => {
@@ -220,6 +309,7 @@ async function processRunTitle(
         where: { id: run.id, status: { in: ["pending", "running"] } },
         data: { status: "halted", finishedAt: new Date() },
       });
+      await restoreUnfinishedTitlesToOpportunities(run.id);
       return true;
     }
 
@@ -293,6 +383,22 @@ async function processRunTitle(
     ]);
     await onStep(`Error: ${message}`);
 
+    // El mensaje real de la respuesta llega en el idioma que responda
+    // 10minutesWebsite (visto tanto en español como en inglés, p. ej.
+    // "Insufficient credits"). Antes solo se reconocía el español, así que
+    // el usuario veía el volcado técnico crudo en vez de un aviso claro, y
+    // el 500 en inglés ni siquiera se identificaba como falta de créditos
+    // (caía en el reintento genérico 3 veces).
+    const isImageCreditIssue =
+      /insufficient\s*credit/i.test(normalizedMessage) ||
+      /(?:→|status\s*)\s*402\b/i.test(normalizedMessage) ||
+      /(?:no tiene|agotad[oa]s?|sin) (?:los )?(?:tokens|cr[ée]ditos)/i.test(
+        normalizedMessage,
+      );
+    const displayMessage = isImageCreditIssue
+      ? "Sin créditos de imagen en 10minutesWebsite. Pide más créditos a tu proveedor del sitio; no hace falta hacer nada más aquí, el próximo intento funcionará solo."
+      : message;
+
     if (freshRun.status === "cancelled") {
       // El usuario canceló el run mientras este título estaba en curso: no
       // lo reintentamos ni lo marcamos como error, queda como cancelado.
@@ -304,20 +410,6 @@ async function processRunTitle(
       // Un lote administrativo nunca se reintenta automáticamente: cada orden
       // puede modificar como máximo 20 artículos. El siguiente lote requiere
       // una nueva orden y retomará los pendientes de forma idempotente.
-    } else if (
-      normalizedMessage.includes("acabado los tokens/créditos") ||
-      normalizedMessage.includes("créditos de la cuenta") ||
-      /agotado los cr[ée]ditos/i.test(normalizedMessage)
-    ) {
-      await prisma.user.update({
-        where: { id: run.userId },
-        data: { hasImageCredits: false },
-      });
-      await markTitleError(nextTitle.id, message);
-      await prisma.run.updateMany({
-        where: { id: run.id, status: { in: ["pending", "running"] } },
-        data: { status: "halted", finishedAt: new Date() },
-      });
     } else if (err instanceof DailyLimitReachedError) {
       // Límite diario de artículos confirmado por el propio sitio (no una
       // hipótesis): NINGÚN otro título de este lote puede avanzar hoy, así
@@ -330,10 +422,41 @@ async function processRunTitle(
         where: { id: run.id, status: { in: ["pending", "running"] } },
         data: { status: "halted", finishedAt: new Date() },
       });
+      await restoreUnfinishedTitlesToOpportunities(run.id);
     } else if (fresh.attempts >= MAX_ATTEMPTS) {
       // Se acabaron los intentos para ESTE título, pero el lote sigue: el
       // worker continúa con los demás títulos pendientes del mismo run.
-      await markTitleError(nextTitle.id, message);
+      //
+      // Confirmado el 29/8/2026 (Milton reintentó a mano y sí había
+      // créditos): "Insufficient credits" puede ser una respuesta falsa/
+      // pasajera de 10minutesWebsite, no una falta real. Por eso ya no se
+      // corta en el primer intento — se deja agotar los MAX_ATTEMPTS
+      // normales (se puede resolver solo en el segundo o tercero) y recién
+      // acá, si de verdad se agotaron, se usa el aviso claro en vez del
+      // volcado técnico.
+      // Pedido directo de Milton (30/8/2026): cuando la causa real es un
+      // título duplicado en el sitio, `message` ya trae la explicación
+      // exacta y los enlaces reales a lo que ya existe (armado en
+      // saveAndGetUrl); se usa tal cual, ignorando el detector de créditos
+      // (que no debería matchear este texto, pero se prioriza explícito
+      // para no depender de esa coincidencia).
+      await markTitleError(
+        nextTitle.id,
+        err instanceof DuplicateTitleError
+          ? message
+          : isImageCreditIssue
+            ? displayMessage
+            : message,
+      );
+      if (!(err instanceof DuplicateTitleError)) {
+        // Un título duplicado permanente nunca va a publicarse reintentando
+        // el mismo tema: la IA vuelve a generar un título parecido y choca
+        // otra vez, en un ciclo sin salida. Se deja en Historial marcado
+        // como error (con el mensaje y los enlaces reales), sin volver a
+        // ofrecerlo en Oportunidades para un reintento que ya sabemos que
+        // va a fallar igual.
+        await restoreUnfinishedTitlesToOpportunities(run.id, nextTitle.id);
+      }
     } else {
       // Vuelve a "pending" para reintentar desde el inicio en el próximo ciclo.
       await prisma.title.update({
