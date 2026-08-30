@@ -197,3 +197,187 @@ con evidencia capturada en vivo (no suposiciones), y preferir retirar un parche 
 dirigido antes que agregar uno nuevo encima. Ver los commits `cbd8b09` y `e89ea97` como ejemplo
 directo de esto.
 Estado: DESPLEGADA / VERIFICADA
+
+## PUNTO SEGURO DE RETROCESO — 2026-08-30 17:18 EDT — antes del wizard de dominio por cuenta
+
+Fecha y hora: 2026-08-30 17:18 EDT (hora de este registro; el commit es de
+2026-08-30 17:07:39-04:00, según su timestamp de autor/merge en GitHub).
+Versión/commit: `1f9a374784087b6e8a7fb18f372b169af6785186`
+Rama: `main` (`origin/main`, verificado con `git fetch origin main` justo antes
+de este registro).
+Worktree: checkout principal, `/Users/miltondavila/Creador de articulos`.
+Conversación/proyecto: N/A — este es el ESTADO DE PRODUCCIÓN ACTUAL, punto de
+referencia para poder retroceder si el próximo despliegue (wizard de dominio
+por cuenta) causa un problema.
+
+Por qué se registra ahora: antes de fusionar y publicar el proyecto "wizard de
+dominio por cuenta" (ver `COORDINACION_CLAUDE_CODEX.md`, rama
+`codex/wizard-dominio-por-cuenta`), Milton pidió explícitamente dejar guardado
+este punto exacto, con lujo de detalle, para no perder nada de lo ya logrado y
+poder volver aquí si algo sale mal.
+
+Commits más recientes incluidos en este estado (los últimos 10, de más nuevo a
+más viejo):
+```
+1f9a374 Merge pull request #20 from miltondavila-ux/claude/threads-rehost-image
+46a3405 feat: botón "Reintentar" para publicaciones sociales fallidas
+3f3e60c fix: re-alojar imagen OG de Threads en Vercel Blob antes de publicar
+57d55d4 fix: reintentar validación de URL e imagen OG en publicación social
+2d9d54b feat(historial): separar ejecuciones sin publicacion confirmada de "Articulos publicados"
+5a0a109 fix(historial): permitir reintentar titulos y runs cancelados
+4001a83 fix(ci): dejar de compartir grupo de concurrencia entre corridas programadas
+b3c8c50 docs: registrar version estable de guardado de articulos y metodologia
+ea2a0da feat(historial): agrupar por fecha (Hoy/Ayer) los articulos repetidos
+dbf99a6 feat(worker): mostrar aviso "Validando si el articulo esta repetido..."
+```
+
+Schema de Prisma y migraciones en este punto: sin ningún cambio respecto al
+commit `d2fa802` (base desde la que arrancó el proyecto del wizard el
+28/8/2026) — confirmado con `git diff d2fa802 origin/main -- packages/db/prisma/schema.prisma packages/db/prisma/migrations` (diff vacío, 0 líneas). Es decir,
+**ninguna migración nueva se aplicó a producción entre esos dos puntos**; el
+esquema real de Supabase hoy corresponde exactamente al de `d2fa802`.
+
+Cambios incluidos desde la versión base anterior (`279ee468`) hasta aquí:
+integraciones y arreglos de redes sociales (Threads: re-alojar imagen OG en
+Vercel Blob antes de publicar, reintento de validación de URL/imagen,
+reintentar publicaciones fallidas), reorganización de Historial (separar
+ejecuciones no confirmadas, agrupar por fecha, permitir reintentar
+cancelados), y un fix de CI (dejar de compartir grupo de concurrencia entre
+corridas programadas del worker). Ninguno de estos cambios toca
+`schema.prisma`, `Category`, `SearchIntegration`, `User.selectedSiteDomain` ni
+ningún archivo que el wizard de dominio por cuenta vaya a modificar — no hay
+superposición de área.
+
+Archivos modificados desde la versión base: ver los commits listados arriba;
+no se re-auditan aquí en detalle porque no son responsabilidad de este
+proyecto y no se tocarán.
+Archivos eliminados: ninguno identificado en este rango.
+Migraciones creadas: ninguna en este rango.
+Migraciones aplicadas: ninguna en este rango (confirmado, ver arriba).
+
+Auditoría 1 (identidad del commit): aprobada — `origin/main` obtenido con
+`git fetch` en vivo inmediatamente antes de registrar esta entrada; el hash
+`1f9a374...` es el HEAD real de GitHub en ese momento, no una copia local
+potencialmente desactualizada.
+Auditoría 2 (schema/migraciones): aprobada — diff vacío confirmado contra la
+base de todas las migraciones nuevas que trae el wizard.
+Auditoría 3 (Vercel/producción en vivo): NO EJECUTADA desde este entorno —
+esta sesión de Claude no tiene acceso a la consola de Vercel ni a Supabase.
+Se asume, sin verificación directa propia, que este commit es el que Vercel
+tiene desplegado como producción `READY` (comportamiento normal del proyecto:
+cada push a `main` dispara deploy automático). Milton debe confirmar en el
+dashboard de Vercel que el deployment activo corresponde a `1f9a374` antes de
+tratar este punto como retroceso 100% verificado.
+
+Deployment/Vercel: se asume el deployment automático correspondiente a
+`1f9a374` está `READY` (sin verificación directa desde esta sesión).
+Estado de Vercel: no verificado directamente por esta sesión.
+Dominio verificado: no verificado directamente por esta sesión.
+Logs verificados: no verificado directamente por esta sesión.
+Producción verificada: NO — este registro documenta el commit exacto, no una
+verificación en vivo del deployment. Milton puede verificarlo en el dashboard
+de Vercel comparando el hash de commit del deployment `READY` actual contra
+`1f9a374784087b6e8a7fb18f372b169af6785186`.
+
+Cómo retroceder desde aquí si el despliegue del wizard falla:
+1. En Vercel: promover/re-desplegar el deployment `READY` anterior cuyo commit
+   sea `1f9a374784087b6e8a7fb18f372b169af6785186` (o el commit inmediatamente
+   anterior al merge del wizard, si Vercel ya generó uno nuevo para ese
+   merge).
+2. En git: `git revert` del/de los commit(s) de merge del wizard sobre `main`
+   (nunca `reset --hard` sobre una rama compartida) y volver a desplegar.
+3. En base de datos: NO es necesario revertir la migración del wizard para
+   volver a este estado funcional — las columnas nuevas (`User.selectedSiteDomain`,
+   `selectedSitePanel`, `siteSelectionConfirmed`, `Category.siteDomain`,
+   `SearchIntegration.siteDomain`, `CategorySyncJob.mode`/`detectedPanels`) son
+   aditivas y el código de este punto (`1f9a374`) nunca las lee ni las
+   escribe: pueden quedarse en la base sin efecto mientras el código vuelve a
+   esta versión. Solo revertir el schema si Milton decide explícitamente
+   deshacer también la migración.
+Problemas conocidos: ninguno nuevo identificado en este punto por esta sesión;
+ver auditorías anteriores de cada proyecto individual en
+`COORDINACION_CLAUDE_CODEX.md` para el detalle de cada uno.
+Responsable: Claude (registro de este punto de retroceso, a pedido explícito
+de Milton, antes de publicar el wizard de dominio por cuenta).
+Siguiente acción: fusionar y publicar `codex/wizard-dominio-por-cuenta` sobre
+este mismo commit (`1f9a374`) tras resolver el único conflicto de texto en
+`COORDINACION_CLAUDE_CODEX.md`; registrar esa publicación como una nueva
+entrada de este documento inmediatamente después del commit y del deploy.
+Estado: REFERENCIA DE RETROCESO — PRODUCCIÓN ACTUAL ANTES DEL WIZARD DE
+DOMINIO POR CUENTA.
+
+## Versión — 2026-08-30 17:37 EDT — wizard de dominio por cuenta
+
+Fecha y hora: 2026-08-30 17:37 EDT.
+Versión/commit: `c7420da` (fast-forward de `main`, merge de
+`codex/wizard-dominio-por-cuenta` commit `5f08193` sobre `1f9a374`).
+Rama: `main` (push directo `codex/wizard-dominio-por-cuenta:main`).
+Worktree: `/private/tmp/wizard-dominio-por-cuenta`.
+Conversación/proyecto: wizard de dominio por cuenta (detección real de
+sitios/paneles antes de sincronizar, un solo dominio por cuenta para
+siempre).
+Cambios incluidos: ver detalle completo en `COORDINACION_CLAUDE_CODEX.md`
+("RESOLUCIÓN: UNA SOLA SOLUCIÓN..." y "TRES AUDITORÍAS Y CORRECCIONES").
+Resumen: `User.selectedSiteDomain/selectedSitePanel/siteSelectionConfirmed`,
+`Category.siteDomain`, `SearchIntegration.siteDomain` (unicidad
+`userId+provider+siteDomain`), `CategorySyncJob.mode/detectedPanels`, job de
+detección real de paneles en el worker, endpoint `/api/site-selection` (y
+`/detect`) reescrito para exigir coincidencia con paneles reales detectados
+(nunca texto libre), wizard rediseñado (bloque de confirmación ya no queda
+oculto), ~20 endpoints de Search Console/GA4/Bing/oportunidades/runs
+filtrados por dominio quedan sin efecto para cuentas sin dominio confirmado.
+Archivos modificados: 36 archivos (ver `git show --stat c7420da` o el commit
+`5f08193` en el worktree del wizard).
+Archivos eliminados: ninguno.
+Migraciones creadas: `20260828150000_add_selected_site_domain`,
+`20260829120000_add_site_detection`.
+Migraciones aplicadas: SÍ, ambas, ejecutadas por Milton directamente en el
+SQL Editor de Supabase ANTES de este push (orden verificado: migración →
+push de código, para evitar que el código nuevo pidiera columnas
+inexistentes). Verificación post-migración: 64 cuentas confirmadas
+automáticamente (históricas), 17 pendientes (nunca conectaron credenciales
+todavía), total 81 — coherente con lo esperado. Además se ejecutó un
+`UPDATE` acotado solo a la cuenta de prueba real (`esteerealtor@gmail.com`)
+para resetear su confirmación y que vea el flujo nuevo de detección.
+Auditoría 1 (schema/datos/compatibilidad): aprobada — columnas aditivas,
+migración de compatibilidad probada localmente con usuario histórico
+sintético, verificada en producción con la cuenta real (64/17/81).
+Auditoría 2 (wizard/API/detección/UX): aprobada — probada en vivo en local
+contra el servidor real de 10minutesWebsite (login real, falló solo por
+credenciales falsas de prueba); flujo de 2 paneles simulado y confirmado
+inmutable. Pendiente real: primera prueba de extremo a extremo con la cuenta
+real de Estee, ya habilitada para intentarlo.
+Auditoría 3 (worker/categorías/integraciones/regresiones): aprobada — todas
+las consultas de `SearchIntegration`/`Category` revisadas, patrón
+consistente de "filtra si hay dominio, si no comportamiento histórico sin
+cambios"; se corrigió en el camino un bug real de atomicidad (confirmación
+de dominio y adopción de categorías históricas ahora en una sola
+transacción) y dos bugs de mezcla de jobs `sync`/`detect`.
+Diff revisado: sí — se construyó y compiló el resultado real de fusionar
+este trabajo con los ~60 commits que `main` acumuló mientras tanto (`git
+merge-tree`, materializado en un worktree aparte): un solo conflicto, de
+texto, en `COORDINACION_CLAUDE_CODEX.md`; cero conflictos de código.
+`git diff --check` limpio sobre el commit final antes del push.
+Deployment/Vercel: disparado automáticamente por el push a `main`; NO
+verificado directamente desde esta sesión (sin acceso a la consola de
+Vercel). Milton debe confirmar `READY` y el commit desplegado.
+Estado de Vercel: pendiente de verificación por Milton.
+Dominio verificado: pendiente de verificación por Milton.
+Logs verificados: pendiente.
+Producción verificada: pendiente — falta la prueba real con la cuenta de
+Estee (correo `esteerealtor@gmail.com`): entrar, ver el bloque de
+confirmación de sitio, correr la detección real, elegir un panel si aparece
+más de uno, confirmar que sincronizar categorías funciona después.
+Problemas conocidos: la rama vieja `codex/problemas-usuarios-doble-idioma-final`
+(intento anterior con selector posterior, rechazado por Milton) y la rama
+desactualizada `codex/problemas-usuarios-doble-idioma-20260828` fueron
+eliminadas — ver `COORDINACION_CLAUDE_CODEX.md`. Sin problemas de código
+conocidos pendientes en este punto.
+Responsable: Claude (capitanía asignada explícitamente por Milton el
+30/8/2026).
+Siguiente acción: Milton confirma en Vercel que el deployment de `c7420da`
+quedó `READY`, y prueba el flujo real con la cuenta de Estee. Si algo falla,
+usar el "PUNTO SEGURO DE RETROCESO — 2026-08-30 17:18 EDT" registrado arriba
+(commit `1f9a374`).
+Estado: DESPLEGADA — PENDIENTE DE VERIFICACIÓN EN VERCEL Y PRUEBA REAL CON
+ESTEE.
