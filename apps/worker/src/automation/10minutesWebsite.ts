@@ -2300,68 +2300,15 @@ async function saveAndGetUrl(
       await page.dispatchEvent("#type", "change").catch(() => {});
       await page.waitForTimeout(250);
     }
-    if (!saveBtnEnabled && saveAttempt > 1) {
-      // En algunos formularios la validación remota ya terminó sin errores,
-      // pero el manejador de #type no vuelve a retirar el atributo disabled
-      // del botón. En este punto ya se corrigió el título duplicado y los
-      // campos obligatorios fueron comprobados; liberar solo el botón permite
-      // que el submit normal del sitio haga sus validaciones finales.
-      const unlocked = await page
-        .evaluate(() => {
-          const save = document.querySelector<HTMLButtonElement>("#save_art");
-          const form = document.querySelector<HTMLFormElement>(
-            "#form_buyer_seller_articles",
-          );
-          const jq = (window as unknown as {
-            jQuery?: (selector: string) => {
-              data: (key: string) => {
-                errorList?: unknown[];
-                pending?: Record<string, unknown>;
-              } | undefined;
-              valid?: () => boolean;
-            };
-          }).jQuery;
-          const validator = jq?.("#form_buyer_seller_articles").data("validator");
-          const visibleEmpty = form
-            ? Array.from(
-                form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
-                  "input[required], textarea[required], select[required], [aria-required='true']",
-                ),
-              ).filter(
-                (el) =>
-                  (el as HTMLElement).offsetParent !== null &&
-                  !el.value.trim(),
-              )
-            : [];
-          const blockingErrors = (validator?.errorList ?? []).filter((entry: unknown) => {
-            const element = (entry as { element?: HTMLElement }).element;
-            // El único error tolerable aquí es el duplicado histórico del
-            // título: ya fue reemplazado por una variante única antes de
-            // llegar a este punto. Cualquier otro error sigue bloqueando.
-            return element?.id !== "titlees";
-          });
-          if (
-            !save ||
-            !form ||
-            visibleEmpty.length > 0 ||
-            blockingErrors.length > 0 ||
-            Object.keys(validator?.pending ?? {}).length > 0
-          ) {
-            return false;
-          }
-          save.disabled = false;
-          save.classList.remove("disabled");
-          save.removeAttribute("aria-disabled");
-          return true;
-        })
-        .catch(() => false);
-      if (unlocked) {
-        saveBtnEnabled = true;
-        await onStep(
-          "La validación terminó sin errores, pero el botón quedó bloqueado. Se habilitó para completar el guardado.",
-        );
-      }
-    }
+    // El "desbloqueo forzado" que estuvo acá (forzar save.disabled=false a
+    // mano por JS) se agregó la noche del 28/8/2026 como parche de
+    // emergencia para el bug real que ya se corrigió (resetForm() vaciando
+    // el formulario, ver revalidateTitleAndForm). No existía en la versión
+    // que funcionaba antes de esa noche. Manipular el DOM a mano en vez de
+    // dejar que el propio manejador de #type del sitio decida cuándo el
+    // formulario es válido dejaba una carrera real (el sitio podía volver a
+    // deshabilitar el botón milisegundos después). Se retira y se vuelve a
+    // depender únicamente de la espera natural de abajo, como antes.
     if (!saveBtnEnabled) {
       await onStep(
         "El botón de guardar no se habilitó a tiempo (probable chequeo de título duplicado todavía en curso).",
