@@ -2368,7 +2368,25 @@ async function saveAndGetUrl(
       );
     }
 
-    await saveBtn.click({ timeout: 5000 }).catch(() => {});
+    // Diagnóstico agregado el 30/8/2026: el resultado real del clic se
+    // tragaba en silencio (`.catch(() => {})`), así que no se podía saber si
+    // Playwright de verdad hizo clic o si sus propios chequeos de
+    // "actionability" (visible, estable, sin overlays, no disabled) lo
+    // bloquearon — que es indistinguible, en los logs de más abajo, de un
+    // clic que sí ocurrió pero el sitio rechazó. Se registra explícitamente
+    // cuál de los dos pasó, más el estado del botón INMEDIATAMENTE después
+    // del clic (antes de esperar red inactiva), para separar "nunca hizo
+    // clic" de "hizo clic y el sitio volvió a bloquear el botón".
+    const clickError = await saveBtn
+      .click({ timeout: 5000 })
+      .then(() => null)
+      .catch((e: unknown) => (e instanceof Error ? e.message : String(e)));
+    const disabledRightAfterClick = await saveBtn.isDisabled().catch(() => null);
+    await onStep(
+      `DIAGNÓSTICO [clic de guardar]: ${
+        clickError ? `Playwright NO pudo hacer clic: ${clickError.slice(0, 200)}` : "clic ejecutado sin error"
+      }, botón deshabilitado inmediatamente después=${disabledRightAfterClick}`,
+    );
     await page
       .waitForLoadState("networkidle", { timeout: NAV_TIMEOUT_MS })
       .catch(() => {});
