@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { processNext } from "./queue";
-import { processNextCategorySync } from "./categorySync";
+import { processNextCategorySync, processNextSiteDetection } from "./categorySync";
 import { processNextLanguageSync } from "./languageSync";
 import { processNextBusinessProfilePost } from "./businessProfilePublish";
 import { processNextSocialPublish } from "./socialPublish";
@@ -142,6 +142,7 @@ async function main() {
       ...Array.from({ length: CATEGORY_SYNC_LANE_CONCURRENCY }, () =>
         runLane("categorías", processNextCategorySync, deadline),
       ),
+      runLane("detección de sitios", processNextSiteDetection, deadline),
       ...Array.from({ length: SYNC_LANE_CONCURRENCY }, () =>
         runLane("idiomas", processNextLanguageSync, deadline),
       ),

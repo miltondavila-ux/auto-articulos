@@ -10,7 +10,8 @@ export type GoogleAnalyticsSignals = {
 
 /** Consulta GA4 de forma opcional: ningún fallo de Analytics debe bloquear oportunidades. */
 export async function getGoogleAnalyticsSignals(userId: string): Promise<GoogleAnalyticsSignals> {
-  const integration = await prisma.searchIntegration.findUnique({ where: { userId_provider: { userId, provider: "google-analytics" } } });
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
+  const integration = await prisma.searchIntegration.findFirst({ where: { userId, provider: "google-analytics", ...(user.selectedSiteDomain ? { siteDomain: user.selectedSiteDomain } : {}) } });
   if (!integration?.siteUrl || !integration.encryptedRefreshToken) return { connected: false, rows: [] };
   try {
     const accessToken = await getGoogleAnalyticsAccessToken(decryptSecret(integration.encryptedRefreshToken));

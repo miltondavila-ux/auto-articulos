@@ -12,8 +12,9 @@ async function contextFor(userId: string, titleId: string) {
     where: { id: titleId, run: { userId } },
     select: { id: true, articleUrl: true },
   });
-  const integration = await prisma.searchIntegration.findUnique({
-    where: { userId_provider: { userId, provider: "google" } },
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
+  const integration = await prisma.searchIntegration.findFirst({
+    where: { userId, provider: "google", ...(user.selectedSiteDomain ? { siteDomain: user.selectedSiteDomain } : {}) },
   });
   return { title, integration };
 }

@@ -135,9 +135,8 @@ async function generateGPTCopy(
 }
 
 async function selectArticlesWithGSC(userId: string): Promise<ArticleCandidate[]> {
-  const gsc = await prisma.searchIntegration.findUnique({
-    where: { userId_provider: { userId, provider: "google" } },
-  });
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
+  const gsc = await prisma.searchIntegration.findFirst({ where: { userId, provider: "google", ...(user.selectedSiteDomain ? { siteDomain: user.selectedSiteDomain } : {}) } });
   if (!gsc?.siteUrl || !gsc.encryptedRefreshToken) return [];
 
   try {
@@ -401,9 +400,8 @@ export async function POST(request: Request) {
       }
     }
 
-    const source = await prisma.searchIntegration.findUnique({
-      where: { userId_provider: { userId, provider: "google" } },
-    });
+    const account = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
+    const source = await prisma.searchIntegration.findFirst({ where: { userId, provider: "google", ...(account.selectedSiteDomain ? { siteDomain: account.selectedSiteDomain } : {}) } });
 
     if (createdOpportunities.length === 0) {
       return NextResponse.json(

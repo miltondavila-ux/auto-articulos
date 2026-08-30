@@ -14,6 +14,7 @@ import { hasTrialAccess } from "@/lib/trial";
 // cuando alguien expande "Ver todos los pasos" (ver /api/titles/[id]/events).
 export async function GET() {
   const userId = await getCurrentUserId();
+  const account = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
   const runs = await prisma.run.findMany({
     where: {
       userId,
@@ -21,6 +22,7 @@ export async function GET() {
         name: {
           not: "FIX_PATRICIA",
         },
+        ...(account.selectedSiteDomain ? { siteDomain: account.selectedSiteDomain } : {}),
       },
     },
     orderBy: { createdAt: "desc" },
@@ -43,6 +45,10 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const userId = await getCurrentUserId();
+  const account = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { selectedSiteDomain: true },
+  });
   const {
     titlesText,
     categoryId,
@@ -155,7 +161,12 @@ export async function POST(request: NextRequest) {
   }
 
   const category = await prisma.category.findFirst({
-    where: { id: categoryId, userId, source: { not: "archived" } },
+    where: {
+      id: categoryId,
+      userId,
+      source: { not: "archived" },
+      ...(account.selectedSiteDomain ? { siteDomain: account.selectedSiteDomain } : {}),
+    },
   });
   if (!category) {
     return NextResponse.json({ error: "Categoría inválida" }, { status: 400 });

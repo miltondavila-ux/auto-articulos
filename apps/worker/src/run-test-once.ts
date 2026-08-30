@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { prisma } from "@auto-articulos/db";
 import { processNext } from "./queue";
-import { processNextCategorySync } from "./categorySync";
+import { processNextCategorySync, processNextSiteDetection } from "./categorySync";
 import { processNextLanguageSync } from "./languageSync";
 import { processNextBusinessProfilePost } from "./businessProfilePublish";
 import { processNextSocialPublish } from "./socialPublish";
@@ -75,6 +75,7 @@ async function main() {
 
   const results = await Promise.all([
     runLane("categorías", () => processNextCategorySync(user.id), deadline),
+    runLane("detección de sitios", () => processNextSiteDetection(user.id), deadline),
     runLane("idiomas", () => processNextLanguageSync(user.id), deadline),
     runLane("perfil de negocio", () => processNextBusinessProfilePost(user.id), deadline),
     runLane("títulos", () => processNext(user.id), deadline),

@@ -113,9 +113,11 @@ export async function sendDailySitemaps(): Promise<SitemapResult[]> {
       encryptedRefreshToken: true,
       siteUrl: true,
       sitemapUrl: true,
+      siteDomain: true,
+      user: { select: { selectedSiteDomain: true } },
     },
     orderBy: { userId: "asc" },
-  });
+  }).then((rows) => rows.filter((row) => !row.user.selectedSiteDomain || row.siteDomain === row.user.selectedSiteDomain));
 
   console.log(
     `Envío diario: ${integrations.length} sitemap(s) de usuario configurado(s).`,

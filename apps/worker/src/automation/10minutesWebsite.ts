@@ -38,6 +38,10 @@ export interface TenMinutesWebsiteCredentials {
   authorName?: string | null;
   // Prompt de redacción personalizado cargado desde Run.prompt.
   promptText?: string | null;
+  // Panel elegido por la persona durante el wizard. Si está definido, solo
+  // se leen categorías de ese panel; las cuentas antiguas siguen leyendo su
+  // único panel como antes.
+  selectedPanel?: string | null;
 }
 
 function escapeHtml(value: string): string {
@@ -451,14 +455,44 @@ export async function fetchCategories(
       return cats.map((c) => ({ ...c, panel: "" }));
     }
 
+    const selectedPanels = credentials.selectedPanel
+      ? panels.filter((label) => label === credentials.selectedPanel)
+      : panels;
+    if (credentials.selectedPanel && selectedPanels.length === 0) {
+      throw new Error(`El panel seleccionado "${credentials.selectedPanel}" ya no está disponible en la cuenta.`);
+    }
     const result: RemoteCategory[] = [];
-    for (const label of panels) {
+    for (const label of selectedPanels) {
       await selectPanel(page, baseUrl, label);
       await gotoWithRetry(page, `${baseUrl}/dashboard/direct-articles`);
       const cats = await readCategoriesFromCurrentPanel(page);
       result.push(...cats.map((c) => ({ ...c, panel: label })));
     }
     return result;
+  } finally {
+    await browser.close();
+  }
+}
+
+/**
+ * Inicia sesión y devuelve los paneles/sitios REALES que ofrece el selector
+ * de la cuenta (ver listPanelLabels), sin leer categorías ni tocar nada más.
+ * Lo usa el wizard para mostrarle a la persona los sitios de verdad
+ * detectados en su cuenta antes de que elija uno — nunca se le pide escribir
+ * un dominio a mano sin verificar contra la cuenta real.
+ *
+ * Array vacío = la cuenta no tiene la función de paneles activada: solo
+ * expone un sitio real, no hace falta elegir nada.
+ */
+export async function detectSites(
+  credentials: TenMinutesWebsiteCredentials,
+): Promise<string[]> {
+  const baseUrl = resolveBaseUrl(credentials.platformDomain);
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await login(page, baseUrl, credentials, async () => {});
+    return await listPanelLabels(page, baseUrl);
   } finally {
     await browser.close();
   }

@@ -10,6 +10,7 @@ function startOfDay(d: Date) {
 
 export async function GET() {
   const userId = await getCurrentUserId();
+  const account = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
   const now = new Date();
   const today = startOfDay(now);
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -59,7 +60,7 @@ export async function GET() {
       select: { processedAt: true },
     }),
     prisma.opportunityGroup.findMany({
-      where: { userId },
+      where: { userId, ...(account.selectedSiteDomain ? { category: { siteDomain: account.selectedSiteDomain } } : {}) },
       select: {
         impressions: true,
         clicks: true,
@@ -69,8 +70,8 @@ export async function GET() {
       orderBy: { impressions: "desc" },
       take: 5,
     }),
-    prisma.searchIntegration.findUnique({
-      where: { userId_provider: { userId, provider: "google" } },
+    prisma.searchIntegration.findFirst({
+      where: { userId, provider: "google", ...(account.selectedSiteDomain ? { siteDomain: account.selectedSiteDomain } : {}) },
       select: { siteUrl: true, updatedAt: true },
     }),
     prisma.opportunityTitle.count({ where: { group: { userId } } }),

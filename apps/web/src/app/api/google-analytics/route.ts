@@ -7,7 +7,8 @@ const PROVIDER = "google-analytics";
 
 export async function GET() {
   const userId = await getCurrentUserId();
-  const integration = await prisma.searchIntegration.findUnique({ where: { userId_provider: { userId, provider: PROVIDER } } });
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
+  const integration = await prisma.searchIntegration.findFirst({ where: { userId, provider: PROVIDER, ...(user.selectedSiteDomain ? { siteDomain: user.selectedSiteDomain } : {}) } });
   if (!integration?.encryptedRefreshToken) return NextResponse.json({ connected: false, properties: [] });
   try {
     const accessToken = await getGoogleAnalyticsAccessToken(decryptSecret(integration.encryptedRefreshToken));
@@ -20,9 +21,10 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
   const userId = await getCurrentUserId();
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
   const body = (await request.json().catch(() => ({}))) as { propertyId?: string };
   if (!body.propertyId?.trim()) return NextResponse.json({ error: "Selecciona una propiedad GA4." }, { status: 400 });
-  const integration = await prisma.searchIntegration.findUnique({ where: { userId_provider: { userId, provider: PROVIDER } } });
+  const integration = await prisma.searchIntegration.findFirst({ where: { userId, provider: PROVIDER, ...(user.selectedSiteDomain ? { siteDomain: user.selectedSiteDomain } : {}) } });
   if (!integration?.encryptedRefreshToken) return NextResponse.json({ error: "Conecta Google Analytics antes de elegir una propiedad." }, { status: 400 });
   const accessToken = await getGoogleAnalyticsAccessToken(decryptSecret(integration.encryptedRefreshToken));
   const properties = await listGoogleAnalyticsProperties(accessToken);

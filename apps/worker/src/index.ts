@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { processNext } from "./queue";
-import { processNextCategorySync } from "./categorySync";
+import { processNextCategorySync, processNextSiteDetection } from "./categorySync";
 import { processNextSocialPublish } from "./socialPublish";
 
 const POLL_INTERVAL_MS = 3000;
@@ -16,14 +16,15 @@ async function loop() {
       break;
     }
     try {
+      const didDetectWork = await processNextSiteDetection();
       const didSyncWork = await processNextCategorySync();
       const didRunWork = await processNext();
       const didSocialPublish = await processNextSocialPublish();
-      if (didSyncWork || didRunWork || didSocialPublish) {
+      if (didDetectWork || didSyncWork || didRunWork || didSocialPublish) {
         lastWorkTime = Date.now();
       }
       await sleep(
-        didSyncWork || didRunWork || didSocialPublish
+        didDetectWork || didSyncWork || didRunWork || didSocialPublish
           ? 500
           : POLL_INTERVAL_MS,
       );

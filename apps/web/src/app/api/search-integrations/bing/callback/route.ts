@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
   // el secreto ni el token.
   let detalle = "";
   try {
+    const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
     const { clientId, clientSecret, redirectUri } = bingOAuthConfig();
     const tokenResponse = await fetch(
       "https://www.bing.com/webmasters/oauth/token",
@@ -70,15 +71,10 @@ export async function GET(request: NextRequest) {
       accessToken: token.access_token,
       expiresAt: Date.now() + Math.max(((token.expires_in ?? 3600) - 300) * 1000, 60000),
     });
-    await prisma.searchIntegration.upsert({
-      where: { userId_provider: { userId, provider: "bing" } },
-      create: {
-        userId,
-        provider: "bing",
-        encryptedRefreshToken: encryptSecret(payload),
-      },
-      update: { encryptedRefreshToken: encryptSecret(payload) },
-    });
+    const siteDomain = user.selectedSiteDomain ?? "";
+    const existing = await prisma.searchIntegration.findFirst({ where: { userId, provider: "bing", siteDomain } });
+    if (existing) await prisma.searchIntegration.update({ where: { id: existing.id }, data: { encryptedRefreshToken: encryptSecret(payload) } });
+    else await prisma.searchIntegration.create({ data: { userId, provider: "bing", siteDomain, encryptedRefreshToken: encryptSecret(payload) } });
     const response = NextResponse.redirect(
       new URL("/dashboard/configuracion?bing=connected", request.url),
     );

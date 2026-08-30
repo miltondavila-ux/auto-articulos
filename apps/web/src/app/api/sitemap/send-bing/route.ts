@@ -11,9 +11,8 @@ import { getBingTokenForIntegration } from "@/lib/bing-token";
  */
 export async function POST() {
   const userId = await getCurrentUserId();
-  const integration = await prisma.searchIntegration.findUnique({
-    where: { userId_provider: { userId, provider: "bing" } },
-  });
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
+  const integration = await prisma.searchIntegration.findFirst({ where: { userId, provider: "bing", ...(user.selectedSiteDomain ? { siteDomain: user.selectedSiteDomain } : {}) } });
   if (!integration?.siteUrl || !integration.sitemapUrl) {
     return NextResponse.json(
       { error: "Conecta Bing Webmaster Tools y configura el sitemap primero." },

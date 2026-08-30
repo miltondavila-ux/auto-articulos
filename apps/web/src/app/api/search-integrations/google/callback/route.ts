@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
     );
   }
   try {
+    const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
     const { clientId, clientSecret, redirectUri } = googleOAuthConfig();
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
@@ -35,15 +36,10 @@ export async function GET(request: NextRequest) {
     const token = (await tokenResponse.json()) as { refresh_token?: string };
     if (!tokenResponse.ok || !token.refresh_token)
       throw new Error("Google no entregó refresh token.");
-    await prisma.searchIntegration.upsert({
-      where: { userId_provider: { userId, provider: "google" } },
-      create: {
-        userId,
-        provider: "google",
-        encryptedRefreshToken: encryptSecret(token.refresh_token),
-      },
-      update: { encryptedRefreshToken: encryptSecret(token.refresh_token) },
-    });
+    const siteDomain = user.selectedSiteDomain ?? "";
+    const existing = await prisma.searchIntegration.findFirst({ where: { userId, provider: "google", siteDomain } });
+    if (existing) await prisma.searchIntegration.update({ where: { id: existing.id }, data: { encryptedRefreshToken: encryptSecret(token.refresh_token) } });
+    else await prisma.searchIntegration.create({ data: { userId, provider: "google", siteDomain, encryptedRefreshToken: encryptSecret(token.refresh_token) } });
     let returnTo = "/dashboard";
     try {
       const parsedState = JSON.parse(Buffer.from(state, "base64url").toString("utf8"));

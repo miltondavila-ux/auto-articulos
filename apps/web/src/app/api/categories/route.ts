@@ -11,7 +11,7 @@ export async function GET() {
       orderBy: { name: "asc" },
     }),
     prisma.categorySyncJob.findFirst({
-      where: { userId },
+      where: { userId, mode: "sync" },
       orderBy: { createdAt: "desc" },
     }),
   ]);

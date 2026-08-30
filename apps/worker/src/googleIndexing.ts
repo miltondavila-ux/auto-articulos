@@ -11,8 +11,9 @@ import {
  * independiente envía una vez el sitemap configurado de cada usuario.
  */
 export async function notifyGoogle(titleId: string, userId: string) {
-  const integration = await prisma.searchIntegration.findUnique({
-    where: { userId_provider: { userId, provider: "google" } },
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
+  const integration = await prisma.searchIntegration.findFirst({
+    where: { userId, provider: "google", ...(user.selectedSiteDomain ? { siteDomain: user.selectedSiteDomain } : {}) },
   });
   if (!integration?.siteUrl) {
     await prisma.title.update({

@@ -54,8 +54,13 @@ function LoginContent() {
         return;
       }
       const returnTo = searchParams.get("returnTo");
-      router.push(returnTo?.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/dashboard");
-      router.refresh();
+      // La sesión se acaba de crear mediante una cookie httpOnly. Una
+      // navegación completa garantiza que el middleware y el layout del
+      // dashboard lean esa cookie recién emitida, incluso si la pantalla de
+      // login quedó abierta desde una navegación anterior.
+      window.location.assign(
+        returnTo?.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/dashboard",
+      );
     } finally {
       setLoading(false);
     }
@@ -181,6 +186,8 @@ function LoginContent() {
 
         {mode === "login" ? (
           <form
+            action="/api/auth/login"
+            method="post"
             onSubmit={handleSubmit}
             style={{
               flex: "1 1 320px",

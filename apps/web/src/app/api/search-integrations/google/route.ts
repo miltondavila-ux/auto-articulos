@@ -10,8 +10,9 @@ import { getCurrentUserId } from "@/lib/current-user";
 import { validateAndRegisterTrialDomain } from "@/lib/domain-validation";
 
 async function integrationFor(userId: string) {
-  return prisma.searchIntegration.findUnique({
-    where: { userId_provider: { userId, provider: "google" } },
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
+  return prisma.searchIntegration.findFirst({
+    where: { userId, provider: "google", ...(user.selectedSiteDomain ? { siteDomain: user.selectedSiteDomain } : {}) },
   });
 }
 

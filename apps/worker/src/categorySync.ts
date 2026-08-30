@@ -7,10 +7,44 @@ import {
   type PlatformDomain,
 } from "@auto-articulos/shared";
 import {
+  detectSites,
   fetchCategories,
   type RemoteCategory,
 } from "./automation/10minutesWebsite";
 import { tryReserveUser, releaseUser } from "./reservation";
+
+/**
+ * Prueba primero el servidor configurado y, si falla, el resto de
+ * PLATFORM_SERVERS — mismo criterio que fetchCategoriesDetectingServer, pero
+ * genérico para reutilizarlo también en la detección de sitios/paneles.
+ */
+async function withServerDetection<T>(
+  configuredDomain: string | null | undefined,
+  attempt: (platformDomain: PlatformDomain) => Promise<T>,
+): Promise<{ result: T; platformDomain: PlatformDomain }> {
+  const configured = normalizePlatformDomain(configuredDomain);
+  const candidates: PlatformDomain[] = [
+    configured,
+    ...PLATFORM_DOMAIN_VALUES.filter((d) => d !== configured),
+  ];
+
+  let firstError: unknown = null;
+  for (const platformDomain of candidates) {
+    try {
+      const result = await attempt(platformDomain);
+      return { result, platformDomain };
+    } catch (err) {
+      if (firstError === null) firstError = err;
+    }
+  }
+
+  const intentados = candidates.map((d) => PLATFORM_SERVERS[d].label).join(", ");
+  const detalle =
+    firstError instanceof Error ? firstError.message : String(firstError ?? "");
+  throw new Error(
+    `No se pudo iniciar sesión con las credenciales guardadas en ninguno de los servidores disponibles (${intentados}). Lo más probable es que el usuario o la contraseña guardados en Configuración ya no sean válidos: verifícalos entrando a mano a tu plataforma y vuelve a guardarlos.${detalle ? ` Detalle técnico del primer intento: ${detalle}` : ""}`,
+  );
+}
 
 /**
  * Descarga las categorías averiguando, si hace falta, en qué servidor vive
@@ -33,6 +67,7 @@ async function fetchCategoriesDetectingServer(
   username: string,
   password: string,
   configuredDomain: string | null | undefined,
+  selectedPanel: string | null | undefined,
 ): Promise<{ categories: RemoteCategory[]; platformDomain: PlatformDomain }> {
   const configured = normalizePlatformDomain(configuredDomain);
   const candidates: PlatformDomain[] = [
@@ -44,10 +79,11 @@ async function fetchCategoriesDetectingServer(
   for (const platformDomain of candidates) {
     try {
       const categories = await fetchCategories({
-        username,
-        password,
-        platformDomain,
-      });
+          username,
+          password,
+          platformDomain,
+          selectedPanel,
+        });
       return { categories, platformDomain };
     } catch (err) {
       // Se conserva el error del servidor CONFIGURADO: es el que describe el
@@ -85,7 +121,7 @@ async function fetchCategoriesDetectingServer(
  */
 export async function processNextCategorySync(filterUserId?: string): Promise<boolean> {
   const candidates = await prisma.categorySyncJob.findMany({
-    where: { status: "pending", ...(filterUserId ? { userId: filterUserId } : {}) },
+    where: { status: "pending", mode: "sync", ...(filterUserId ? { userId: filterUserId } : {}) },
     orderBy: { createdAt: "asc" },
     take: 20,
   });
@@ -111,7 +147,7 @@ export async function processNextCategorySync(filterUserId?: string): Promise<bo
       }),
       prisma.user.findUnique({
         where: { id: job.userId },
-        select: { platformDomain: true },
+        select: { platformDomain: true, selectedSitePanel: true, selectedSiteDomain: true },
       }),
     ]);
     if (!credential) {
@@ -125,6 +161,7 @@ export async function processNextCategorySync(filterUserId?: string): Promise<bo
         username,
         password,
         user?.platformDomain,
+        user?.selectedSitePanel,
       );
 
     // Si la cuenta resultó vivir en otro servidor, se recuerda: publicar y
@@ -160,6 +197,7 @@ export async function processNextCategorySync(filterUserId?: string): Promise<bo
       list.push(cat);
       byPanel.set(cat.panel, list);
     }
+    const selectedSiteDomain = user?.selectedSiteDomain ?? "";
 
     // 1. Primero upsertamos todas las categorías remotas para asegurarnos de que existan y tengan ID.
     const upsertedCategories = await Promise.all(
@@ -181,8 +219,9 @@ export async function processNextCategorySync(filterUserId?: string): Promise<bo
             name: cat.name,
             isSequence: cat.isSequence,
             source: "sync",
+            siteDomain: selectedSiteDomain,
           },
-          update: { name: cat.name, isSequence: cat.isSequence, source: "sync" },
+          update: { name: cat.name, isSequence: cat.isSequence, source: "sync", siteDomain: selectedSiteDomain },
         }),
       ),
     );
@@ -347,6 +386,85 @@ export async function processNextCategorySync(filterUserId?: string): Promise<bo
     });
     console.log(
       `CategorySyncJob ${job.id} (usuario ${job.userId}): error — ${message}`,
+    );
+  } finally {
+    await releaseUser(job.userId);
+  }
+
+  return true;
+}
+
+/**
+ * Procesa un único job de detección de sitios/paneles pendiente (mode
+ * "detect"). No toca categorías ni ningún otro dato — solo inicia sesión y
+ * lee qué paneles reales ofrece la cuenta, para que el wizard se los muestre
+ * a la persona antes de confirmar con cuál va a trabajar esta cuenta de Auto
+ * Artículos.
+ */
+export async function processNextSiteDetection(filterUserId?: string): Promise<boolean> {
+  const candidates = await prisma.categorySyncJob.findMany({
+    where: { status: "pending", mode: "detect", ...(filterUserId ? { userId: filterUserId } : {}) },
+    orderBy: { createdAt: "asc" },
+    take: 20,
+  });
+
+  let job: (typeof candidates)[number] | null = null;
+  for (const candidate of candidates) {
+    if (await tryReserveUser(candidate.userId)) {
+      job = candidate;
+      break;
+    }
+  }
+  if (!job) return false;
+
+  await prisma.categorySyncJob.update({
+    where: { id: job.id },
+    data: { status: "running" },
+  });
+
+  try {
+    const [credential, user] = await Promise.all([
+      prisma.credential.findUnique({
+        where: { userId_platform: { userId: job.userId, platform: "10minutesWebsite" } },
+      }),
+      prisma.user.findUnique({
+        where: { id: job.userId },
+        select: { platformDomain: true },
+      }),
+    ]);
+    if (!credential) {
+      throw new Error("Primero debes guardar tus credenciales de la plataforma.");
+    }
+
+    const username = decryptSecret(credential.encryptedUsername);
+    const password = decryptSecret(credential.encryptedPassword);
+    const { result: panels, platformDomain: workingDomain } = await withServerDetection(
+      user?.platformDomain,
+      (platformDomain) => detectSites({ username, password, platformDomain }),
+    );
+
+    if (workingDomain !== normalizePlatformDomain(user?.platformDomain)) {
+      await prisma.user.update({
+        where: { id: job.userId },
+        data: { platformDomain: workingDomain },
+      });
+    }
+
+    await prisma.categorySyncJob.update({
+      where: { id: job.id },
+      data: { status: "success", errorMessage: null, detectedPanels: panels, finishedAt: new Date() },
+    });
+    console.log(
+      `CategorySyncJob ${job.id} (usuario ${job.userId}): detección de sitios, ${panels.length} panel(es) [${panels.join(", ") || "sin paneles"}].`,
+    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    await prisma.categorySyncJob.update({
+      where: { id: job.id },
+      data: { status: "error", errorMessage: message, finishedAt: new Date() },
+    });
+    console.log(
+      `CategorySyncJob ${job.id} (usuario ${job.userId}): error de detección — ${message}`,
     );
   } finally {
     await releaseUser(job.userId);

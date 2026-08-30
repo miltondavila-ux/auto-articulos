@@ -5,6 +5,14 @@ import { triggerWorkerNow } from "@/lib/trigger-worker";
 import { hasTrialAccess } from "@/lib/trial";
 import { isStuckSyncJob, STUCK_SYNC_JOB_MESSAGE } from "@/lib/sync-jobs";
 
+/**
+ * Encola (o reutiliza) un job de detección real de sitios/paneles: el
+ * worker inicia sesión con las credenciales guardadas y lee los paneles que
+ * la cuenta ofrece de verdad (ver listPanelLabels/detectSites en el
+ * worker), sin descargar categorías todavía. El wizard usa el resultado
+ * para que la persona elija un único dominio real antes de sincronizar, en
+ * vez de escribirlo a mano sin verificar contra la cuenta.
+ */
 export async function POST() {
   const userId = await getCurrentUserId();
 
@@ -15,6 +23,7 @@ export async function POST() {
       isTrialSignup: true,
       trialStartedAt: true,
       trialUnlocked: true,
+      siteSelectionConfirmed: true,
     },
   });
 
@@ -28,48 +37,53 @@ export async function POST() {
     );
   }
 
+  if (user?.siteSelectionConfirmed) {
+    return NextResponse.json(
+      { error: "El dominio de esta cuenta ya está confirmado y no necesita detectarse de nuevo." },
+      { status: 400 },
+    );
+  }
+
   const credential = await prisma.credential.findUnique({
     where: { userId_platform: { userId, platform: "10minutesWebsite" } },
   });
   if (!credential) {
     return NextResponse.json(
       { error: "Primero debes guardar tus credenciales de la plataforma" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   const existingActive = await prisma.categorySyncJob.findFirst({
-    where: { userId, mode: "sync", status: { in: ["pending", "running"] } },
+    where: { userId, mode: "detect", status: { in: ["pending", "running"] } },
     orderBy: { createdAt: "desc" },
   });
 
   if (existingActive) {
     if (!isStuckSyncJob(existingActive.createdAt)) {
-      // Sigue realmente en curso: se reutiliza en vez de encolar un duplicado.
-      // Se vuelve a empujar al worker porque el disparo anterior pudo perderse
-      // (ver triggerWorkerNow: no dispara si ya había una corrida activa, y esa
-      // corrida puede haber terminado su presupuesto sin llegar a este job).
       await triggerWorkerNow();
       return NextResponse.json({ job: existingActive });
     }
-
-    // Job muerto: se descarta para que este clic pueda crear uno nuevo, en vez
-    // de devolver otra vez el que ya nunca va a terminar.
     await prisma.categorySyncJob.updateMany({
-      where: { userId, mode: "sync", status: { in: ["pending", "running"] } },
-      data: {
-        status: "error",
-        errorMessage: STUCK_SYNC_JOB_MESSAGE,
-        finishedAt: new Date(),
-      },
+      where: { userId, mode: "detect", status: { in: ["pending", "running"] } },
+      data: { status: "error", errorMessage: STUCK_SYNC_JOB_MESSAGE, finishedAt: new Date() },
     });
   }
 
   const job = await prisma.categorySyncJob.create({
-    data: { userId, mode: "sync" },
+    data: { userId, mode: "detect" },
   });
 
   await triggerWorkerNow();
 
+  return NextResponse.json({ job });
+}
+
+export async function GET() {
+  const userId = await getCurrentUserId();
+  const job = await prisma.categorySyncJob.findFirst({
+    where: { userId, mode: "detect" },
+    orderBy: { createdAt: "desc" },
+  });
   return NextResponse.json({ job });
 }

@@ -15,8 +15,9 @@ import { getBingTokenForIntegration } from "./bingToken";
  * artículo como error permanente.
  */
 export async function notifyBing(titleId: string, userId: string) {
-  const integration = await prisma.searchIntegration.findUnique({
-    where: { userId_provider: { userId, provider: "bing" } },
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
+  const integration = await prisma.searchIntegration.findFirst({
+    where: { userId, provider: "bing", ...(user.selectedSiteDomain ? { siteDomain: user.selectedSiteDomain } : {}) },
   });
   if (!integration?.siteUrl) {
     await prisma.title.update({
@@ -46,8 +47,8 @@ export async function notifyBing(titleId: string, userId: string) {
       // Bing rota: el intento anterior pudo haber guardado uno nuevo, y usar
       // el de memoria haría fallar el reintento con "Refresh token is invalid
       // or expired" — justo lo que este reintento intenta remediar.
-      const actual = await prisma.searchIntegration.findUnique({
-        where: { userId_provider: { userId, provider: "bing" } },
+      const actual = await prisma.searchIntegration.findFirst({
+        where: { userId, provider: "bing", ...(user.selectedSiteDomain ? { siteDomain: user.selectedSiteDomain } : {}) },
       });
       if (!actual) throw new Error("La conexión con Bing ya no existe.");
       const token = await getBingTokenForIntegration(actual);

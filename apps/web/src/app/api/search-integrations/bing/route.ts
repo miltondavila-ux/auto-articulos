@@ -6,9 +6,8 @@ import { getBingTokenForIntegration } from "@/lib/bing-token";
 import { validateAndRegisterTrialDomain } from "@/lib/domain-validation";
 
 async function integrationFor(userId: string) {
-  return prisma.searchIntegration.findUnique({
-    where: { userId_provider: { userId, provider: "bing" } },
-  });
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
+  return prisma.searchIntegration.findFirst({ where: { userId, provider: "bing", ...(user.selectedSiteDomain ? { siteDomain: user.selectedSiteDomain } : {}) } });
 }
 
 export async function GET() {

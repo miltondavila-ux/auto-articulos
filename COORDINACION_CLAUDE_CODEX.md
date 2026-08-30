@@ -69,6 +69,365 @@ Acción inmediata: liberar este lote y no realizar cambios, migraciones ni despl
 Responsable siguiente: responsable del siguiente lote identificado en este documento; cualquier cambio nuevo debe usar su propia rama o worktree.
 Capitanía de migración: no.
 
+## Proyecto: wizard de dominio por cuenta — 2026-08-28
+
+Responsable: CODEX - GPT-5.
+Worktree aislado: `/private/tmp/wizard-dominio-por-cuenta`.
+Rama: `codex/wizard-dominio-por-cuenta`.
+
+Objetivo: permitir que una cuenta de Auto Artículos vinculada a 10minutesWebsite,
+Tagcrush, `.net` o `.site` seleccione un único dominio durante la primera
+conexión, para no mezclar categorías, publicaciones, oportunidades ni datos de
+Search Console, Analytics y Bing.
+
+Avance: se añadieron campos separados para dominio real, panel/idioma y estado
+de confirmación; migración idempotente; validación de dominio; wizard; filtro
+por dominio en categorías, oportunidades e historial; y sincronización del
+worker limitada al panel seleccionado. Los usuarios históricos sin dominio
+confirmado mantienen compatibilidad.
+
+Auditorías: Prisma, typecheck Web, build Worker, build Web y diff/check pasaron.
+La validación externa de correspondencia dominio-panel aún está pendiente.
+
+Bloqueo actual: `SearchIntegration` conserva una única conexión por usuario y
+proveedor (`userId_provider`). Para permitir varias conexiones por dominio hay
+que migrar a `userId_provider_siteDomain` y actualizar todas las consultas de
+Google Search Console, Google Analytics, Bing, sitemaps, inspección y métricas.
+
+Producción: sin cambios. No hay commit ni despliegue. No se aplicaron
+migraciones en Supabase.
+
+### RELEVO A CLAUDE — ESTADO REAL AL 2026-08-29
+
+Responsable siguiente: CLAUDE. CODEX libera la ejecución de este proyecto y no
+mantiene capitanía activa. Claude debe retomar el worktree existente sin borrar,
+restaurar ni mezclar los cambios allí presentes.
+
+Alcance del relevo: Claude toma COMPLETAMENTE todo el proyecto de cambio de
+idioma/doble dominio, no solo el login ni solo el wizard. El alcance incluye la
+definición funcional, detección de múltiples sitios durante la primera conexión,
+selección del dominio por cuenta, separación de idioma/panel, categorías,
+publicación, oportunidades SEO/AEO, oportunidades sociales, Google Analytics,
+Google Search Console, Bing Webmaster Tools, sitemaps, inspección, métricas,
+worker de sincronización, migración de datos históricos, compatibilidad con
+usuarios existentes, pruebas locales, tres auditorías independientes,
+documentación, commit, revisión de rama y eventual despliegue únicamente tras
+autorización expresa de Milton. No cerrar el proyecto declarando terminado solo
+porque el login local funcione.
+
+Solicitud funcional definitiva de Milton: durante la primera conexión del
+wizard, si las mismas credenciales de 10minutesWebsite/Tagcrush (`.net` o
+`.site`) exponen más de un sitio/panel/idioma, el usuario debe escoger el
+dominio con el que trabajará esta cuenta de Auto Artículos. La cuenta debe
+sincronizar y operar únicamente con ese sitio. Para el segundo dominio el
+cliente creará otra cuenta de Auto Artículos. No se debe mantener el selector
+posterior de sitio que había sido planteado inicialmente, ni mezclar todas las
+categorías antes de escoger.
+
+Estado Git: trabajo SIN COMMIT y SIN DEPLOY exclusivamente en
+`/private/tmp/wizard-dominio-por-cuenta`, rama
+`codex/wizard-dominio-por-cuenta`, creada desde `origin/main` en `d2fa802`.
+No fusionar ni desplegar hasta terminar la revisión funcional y tres auditorías
+independientes. El checkout principal no debe tocarse.
+
+Cambios implementados actualmente:
+
+- Prisma: `User.selectedSiteDomain`, `User.selectedSitePanel`,
+  `User.siteSelectionConfirmed`; `Category.siteDomain`;
+  `SearchIntegration.siteDomain`; unicidad por
+  `(userId, provider, siteDomain)`.
+- Migración nueva:
+  `packages/db/prisma/migrations/20260828150000_add_selected_site_domain/migration.sql`.
+- API nueva `apps/web/src/app/api/site-selection/route.ts` para leer y guardar
+  dominio/panel confirmado.
+- Wizard: formulario para dominio/panel y bloqueo de la primera sincronización
+  hasta confirmar dominio; usuarios históricos con categorías conservan la
+  compatibilidad.
+- Worker de 10minutesWebsite: acepta `selectedPanel` y limita la descarga de
+  categorías a ese panel cuando existe selección.
+- Categorías nuevas se etiquetan con `siteDomain`.
+- Publicaciones, oportunidades, Search Console, GA4, Bing, sitemaps,
+  inspección y estadísticas fueron ajustados para consultar por dominio.
+- Login local: `apps/web/src/app/login/page.tsx` usa navegación completa tras
+  autenticar y tiene un fallback de formulario nativo. La API de login acepta
+  JSON o `formData`. Revisar cuidadosamente este cambio antes de conservarlo;
+  fue agregado para diagnosticar pruebas locales y no es el objetivo central.
+
+Archivos modificados por este proyecto:
+
+- `packages/db/prisma/schema.prisma`
+- `packages/db/prisma/migrations/20260828150000_add_selected_site_domain/migration.sql`
+- `apps/web/src/app/api/site-selection/route.ts`
+- `apps/web/src/components/OnboardingWizard.tsx`
+- `apps/web/src/app/api/auth/login/route.ts`
+- `apps/web/src/app/login/page.tsx`
+- `apps/web/src/app/api/opportunities/route.ts`
+- `apps/web/src/app/api/runs/route.ts`
+- `apps/web/src/app/api/search-integrations/google/route.ts`
+- `apps/web/src/app/api/search-integrations/google/callback/route.ts`
+- `apps/web/src/app/api/search-integrations/bing/route.ts`
+- `apps/web/src/app/api/search-integrations/bing/callback/route.ts`
+- `apps/web/src/app/api/google-analytics/route.ts`
+- `apps/web/src/app/api/google-analytics/callback/route.ts`
+- `apps/web/src/app/api/sitemap/send/route.ts`
+- `apps/web/src/app/api/sitemap/send-bing/route.ts`
+- `apps/web/src/app/api/titles/[id]/google-inspection/route.ts`
+- `apps/web/src/app/api/configuration-status/route.ts`
+- `apps/web/src/app/api/pre-validation/route.ts`
+- `apps/web/src/app/api/dashboard-stats/route.ts`
+- `apps/web/src/app/api/bing/master-index/route.ts`
+- `apps/web/src/app/api/social-opportunities/generate/route.ts`
+- `apps/web/src/lib/google-analytics-signals.ts`
+- `apps/worker/src/automation/10minutesWebsite.ts`
+- `apps/worker/src/categorySync.ts`
+- `apps/worker/src/googleIndexing.ts`
+- `apps/worker/src/bingIndexing.ts`
+- `apps/worker/src/send-daily-sitemaps.ts`
+- `COORDINACION_CLAUDE_CODEX.md`
+
+`apps/web/next-env.d.ts` aparece modificado por las compilaciones; auditar si es
+un cambio generado y excluirlo de la entrega si no contiene una necesidad
+funcional. No usar `git add .` ni `git add -A`.
+
+Entorno local aislado preparado:
+
+- PostgreSQL local: `127.0.0.1:55432`, base `autoarticulos`, usuario
+  `autoarticulos`, datos en `/private/tmp/auto-articulos-pgdata`.
+- El historial completo de migraciones no pudo ejecutarse en una base vacía por
+  un fallo PREEXISTENTE en `20260823150000_add_tumblr_integration` (inserta un
+  `ProductUpdate.updatedAt` nulo). Para la prueba local se utilizó
+  `prisma db push --accept-data-loss` únicamente contra esta base desechable.
+- `.env.local` es local/no versionado. La clave de cifrado debe ser Base64 y
+  decodificar a 32 bytes; el primer intento falló por no respetar esto.
+- Para probar sesión por HTTP local, ejecutar Next en desarrollo:
+  `npm run dev --workspace=apps/web -- --webpack --hostname 127.0.0.1 --port 3100`.
+  `next start` usa `NODE_ENV=production`, marca la cookie como Secure y no es
+  apropiado para esta prueba HTTP. NO debilitar la cookie de producción.
+- Login verificado mediante navegador real en
+  `http://127.0.0.1:3100/login`: formulario -> cookie ->
+  `http://127.0.0.1:3100/dashboard` funcionó.
+
+Auditorías ya ejecutadas durante el desarrollo: `prisma generate`, validación
+del schema, typecheck Web, build Worker, build Web con webpack y `git diff
+--check` pasaron en distintas etapas. Después de los cambios más recientes de
+login y del cierre funcional se deben repetir desde cero; todavía NO cuentan
+como las tres auditorías finales exigidas por Milton.
+
+Riesgos y trabajo pendiente antes de considerar completo:
+
+1. La asociación dominio-panel solo valida formato de dominio; todavía no
+   demuestra contra 10minutesWebsite/Tagcrush que el dominio pertenece al panel
+   escogido.
+2. El wizard todavía no implementa una detección previa completa que muestre
+   los sitios reales devueltos por las credenciales antes de sincronizar. El
+   panel puede terminar derivado del idioma o escrito manualmente.
+3. Las integraciones históricas tienen `siteDomain = ''`. Definir migración o
+   asignación segura al confirmar dominio para no hacer parecer desconectados
+   Search Console/GA4/Bing existentes.
+4. La sincronización filtrada no borra categorías antiguas de otros paneles;
+   revisar que ningún endpoint sin filtro pueda volver a mezclarlas.
+5. Auditar todas las consultas de `SearchIntegration` y confirmar que no queda
+   ninguna dependencia de la antigua unicidad `(userId, provider)`.
+6. Revisar el fallback agregado al login y conservar solo lo necesario. No
+   cambiar la seguridad de cookies productivas.
+7. Ejecutar tres auditorías finales independientes por segmentos: datos y
+   migración; wizard/API/compatibilidad; worker/publicación/oportunidades e
+   integraciones. Solo después hacer prueba manual completa con credenciales de
+   una cuenta que realmente exponga dos dominios.
+
+Estado de producción: intacto. No hay autorización vigente para desplegar este
+trabajo. No aplicar migraciones en Supabase, no fusionar a `main`, no publicar
+la rama y no tocar Vercel hasta que Milton revise el resultado de las tres
+auditorías y autorice expresamente el despliegue.
+
+### CLAUDE — RESOLUCIÓN: UNA SOLA SOLUCIÓN Y CAPITANÍA ASUMIDA, 2026-08-30
+
+Milton confirmó explícitamente: este es **un solo proyecto**, no dos. La
+conversación/rama `codex/problemas-usuarios-doble-idioma-final` (worktree
+`/private/tmp/problemas-usuarios-doble-idioma`, commits `960e977` y `cb73e5f`,
+28/8/2026) fue el intento **anterior** sobre el mismo objetivo, migrado hacia
+esta conversación — no es trabajo de un tercero independiente.
+
+Ese intento anterior implementaba `User.activeSitePanel` (migración propia
+`20260828120000_add_active_site_panel`) con un selector **posterior**: se
+sincronizaban las categorías de TODOS los paneles primero, sin filtrar, y
+luego se dejaba elegir cuál mostrar. Es exactamente el diseño que Milton
+rechazó de forma explícita en la sección "RELEVO A CLAUDE" de este mismo
+documento ("no se debe mantener el selector posterior de sitio... ni mezclar
+todas las categorías antes de escoger"). Además su archivo
+`apps/web/src/app/api/site-selection/route.ts` colisionaba directamente (misma
+ruta, contenido incompatible) con el de esta rama.
+
+**Resolución, con autorización explícita de Milton**: se descarta esa rama por
+completo y queda **una sola solución oficial**, la de este worktree
+(`codex/wizard-dominio-por-cuenta`): detección real de paneles antes de
+sincronizar, confirmación de un único sitio por cuenta, inmutable, sin
+selector posterior. Se eliminó el worktree y la rama
+`codex/problemas-usuarios-doble-idioma-final` (`git worktree remove` + `git
+branch -D`, ambos limpios, sin cambios sin commitear perdidos — verificado
+antes de borrar). No queda ningún artefacto suelto de ese intento anterior.
+
+Milton asignó la capitanía de este proyecto a Claude de forma explícita
+("ahora tú eres el programador que tomó el mando"). Asumo la responsabilidad
+completa de esta única solución hasta su publicación.
+
+**Verificación de compatibilidad con `main` real** (no con la base vieja
+`d2fa802` de este worktree, que ya está 60 commits detrás): se construyó un
+commit real de todo el trabajo (incluidos los archivos nuevos sin trackear) y
+se simuló el merge de 3 vías contra `origin/main` actual con `git
+merge-tree`. Resultado: un solo conflicto, de texto, en
+`COORDINACION_CLAUDE_CODEX.md` (dos sesiones documentando en el mismo
+archivo) — cero conflictos de código. Se materializó ese resultado fusionado
+en un worktree aparte y se corrió `prisma generate`, `tsc --noEmit` (web y
+worker) y el build completo de ambas apps sobre el código combinado real:
+todo pasó limpio. El schema y las migraciones de Prisma no cambiaron en esos
+60 commits de `main`, así que no hay riesgo de choque ahí.
+
+Pendiente antes de publicar: resolver a mano el conflicto de texto del
+documento de coordinación (trivial) al momento de rebasar/fusionar sobre
+`main` actual.
+
+**Segunda rama huérfana encontrada y eliminada**: `codex/problemas-usuarios-doble-idioma-20260828`
+(sin worktree activo, 13 commits propios no presentes en `origin/main`).
+A diferencia de la anterior, esta NO era un intento paralelo reciente: es una
+rama vieja y muy desactualizada respecto a `main` actual — el diff contra
+`origin/main` mostraba 184 archivos con más de 12.800 líneas borradas frente a
+solo ~10.500 agregadas, incluyendo integraciones que hoy SÍ están en
+producción (Tumblr, Bluesky, DevTo, Mastodon, Pinterest, `aiImageGenerator.ts`,
+etc.). Fusionarla por error habría sido destructivo. Se confirmó con Milton
+antes de borrar (`git branch -D`); no tenía worktree ni cambios sin commitear
+que perder.
+
+Estado tras la resolución: una sola rama viva para este objetivo
+(`codex/wizard-dominio-por-cuenta`), un solo responsable (Claude, capitanía
+asignada explícitamente por Milton), sin ramas ni worktrees huérfanos
+relacionados al tema de dominios/paneles/idiomas.
+
+### CLAUDE — TRES AUDITORÍAS Y CORRECCIONES, 2026-08-29
+
+Responsable: Claude. Continúo en el mismo worktree/rama, sin commit, sin
+deploy, sin migraciones en Supabase. Revisé críticamente el trabajo de Codex
+(no lo di por terminado) y corregí los riesgos #1, #2, #3 y #6 que había
+dejado pendientes explícitamente; documento aquí el resultado real de las
+tres auditorías exigidas.
+
+**Hallazgo central**: el objetivo de Milton no estaba realmente implementado.
+El wizard solo dejaba escribir a mano un "dominio" y un "panel" en texto
+libre, sin verificar nada contra la cuenta real (riesgo #1/#2 de Codex). El
+worker sí tenía desde antes una función de detección REAL (`listPanelLabels`,
+navega al selector de paneles de la cuenta y lee las etiquetas reales), pero
+nunca estaba conectada al wizard. Además, el formulario de confirmación de
+dominio tenía un bug que lo hacía invisible en el flujo normal: quedaba
+anidado dentro del modo "editar credenciales", y justo después de guardarlas
+por primera vez `editingCreds` pasaba a `false`, así que el formulario nunca
+llegaba a mostrarse.
+
+**Rediseño implementado** (sin texto libre, sin selector posterior):
+
+- Nuevo modo `"detect"` en `CategorySyncJob` (`mode`, `detectedPanels String[]`)
+  en vez de una tabla nueva — reutiliza toda la infraestructura de cola/
+  recuperación de jobs atascados ya probada.
+- `detectSites()` nuevo en `apps/worker/src/automation/10minutesWebsite.ts`:
+  inicia sesión de verdad y devuelve los paneles reales (`listPanelLabels`),
+  sin tocar categorías.
+- `processNextSiteDetection()` en `apps/worker/src/categorySync.ts`, cableado
+  en `index.ts` (loop local), `run-once.ts` (worker de producción) y
+  `run-test-once.ts` (worker de pruebas dedicado) — llega a los tres puntos
+  de entrada reales, no solo al loop de desarrollo.
+- `POST/GET /api/site-selection/detect`: encola y consulta la detección (mismo
+  patrón que `/api/categories/sync`, con protección de trial y de jobs
+  atascados).
+- `PATCH /api/site-selection` reescrito: ya NO acepta un dominio de texto
+  libre. Exige que `panel` coincida exactamente con uno de los paneles reales
+  del último job de detección exitoso (o que sea "" si la cuenta no tiene
+  selector de paneles). `selectedSiteDomain` se deriva SIEMPRE del panel real
+  confirmado — nunca son dos valores independientes que puedan no coincidir,
+  así que el riesgo #1 de Codex ("el dominio no demuestra pertenecer al
+  panel") queda resuelto de raíz, no parcheado.
+- La confirmación es **inmutable**: una vez `siteSelectionConfirmed`, un
+  segundo PATCH devuelve 400 ("ya está confirmado... crea otra cuenta").
+  Verificado en vivo (ver pruebas abajo).
+- Wizard (`OnboardingWizard.tsx`): el bloque de confirmación de sitio ahora es
+  independiente de `editingCreds` — se muestra siempre que hay credenciales
+  guardadas y el sitio no está confirmado. 0 o 1 panel real detectado =
+  autoconfirmación silenciosa (sin fricción para el caso común); 2+ paneles =
+  lista real (radio buttons) con las etiquetas EXACTAS devueltas por el sitio,
+  nunca texto libre. `handleSyncCategories` ahora exige `siteSelectionConfirmed`
+  siempre (antes solo cuando `categories.length === 0`, un hueco real).
+- Migración `20260829120000_add_site_detection`: agrega las columnas y además
+  una migración de datos (riesgo #3): marca `siteSelectionConfirmed = true`
+  para cualquier usuario que YA tuviera categorías, una integración de
+  búsqueda o credenciales de 10minutesWebsite antes de este proyecto, dejando
+  su dominio en `NULL` — así ningún flujo nuevo los bloquea ni intenta
+  adivinarles un dominio, y las consultas existentes (que ya saltaban el
+  filtro cuando `selectedSiteDomain` es falsy) siguen funcionando exactamente
+  igual que antes. Probado localmente con un usuario sintético: `UPDATE 1`,
+  quedó confirmado con dominio `null`.
+- Bug propio encontrado y corregido durante la prueba en vivo: `GET
+  /api/categories` y `POST /api/categories/sync` leían/creaban
+  `CategorySyncJob` sin filtrar por `mode`, así que un job de detección se
+  colaba como si fuera "el último intento de sincronizar categorías"
+  (mensaje de error duplicado y confuso en el wizard). Corregido en ambos
+  archivos (`mode: "sync"` explícito).
+- Riesgo #6 (fallback de login): revisado — ambas ramas (JSON y formulario
+  nativo) usan exactamente `secure: process.env.NODE_ENV === "production"`
+  para la cookie de sesión; no hay debilitamiento de la cookie productiva. Se
+  conserva tal cual.
+
+**Auditoría 1 — Schema, migración, datos históricos y compatibilidad**:
+`prisma validate` correcto; `prisma generate` correcto; migración nueva
+idempotente (`ADD COLUMN IF NOT EXISTS`); migración de datos de compatibilidad
+probada localmente (ver arriba); unicidad `(userId, provider, siteDomain)`
+revisada — no se encontró ninguna consulta restante dependiente de la vieja
+`(userId, provider)`. Resultado: **aprobada**.
+
+**Auditoría 2 — Wizard, API, detección, validación y experiencia de usuario**:
+probada en vivo contra el servidor local (`estee.audit.20260829@example.com`,
+Postgres en `127.0.0.1:55432`, `npm run dev --workspace=apps/web -- --webpack
+--hostname 127.0.0.1 --port 3100`, worker local drenando la cola real):
+login → guardar credenciales → bloque de confirmación de sitio visible de
+inmediato → detección real contra 10minutesWebsite.net/.site/tagcrush.net
+(falló con credenciales falsas, como se esperaba, con mensaje claro y botón
+de reintentar) → simulé en la base un resultado de detección con 2 paneles
+reales ("English"/"Español") → el wizard mostró el selector real, confirmé
+"Español" → `selectedSiteDomain`/`selectedSitePanel` quedaron en "Español",
+`siteSelectionConfirmed=true`, Paso 2 se desbloqueó → confirmé que un segundo
+PATCH para cambiar de sitio es rechazado. Resultado: **aprobada** para lo que
+se pudo probar sin una cuenta real de dos dominios; la detección real contra
+un caso real con 2+ paneles verdaderos queda pendiente de la primera cuenta
+real que Milton identifique con ese caso (no se puede fabricar de forma
+segura sin tocar una cuenta de cliente).
+
+**Auditoría 3 — Worker, categorías, publicaciones, oportunidades, Search
+Console, GA4, Bing y regresiones**: revisadas todas las consultas de
+`SearchIntegration` y `Category` en `opportunities`, `runs`,
+`social-opportunities/generate`, `dashboard-stats`, `configuration-status`,
+`pre-validation`, `google-analytics(+callback)`, `search-integrations/google
+(+callback)`, `search-integrations/bing(+callback)`,
+`sitemap/send(+send-bing)`, `titles/[id]/google-inspection`,
+`bing/master-index`, `google-analytics-signals.ts` y
+`send-daily-sitemaps.ts`: todas filtran por `siteDomain` cuando el usuario
+tiene uno confirmado, y no filtran (comportamiento histórico) cuando no lo
+tiene — patrón consistente, sin huecos encontrados. `categorySync.ts`
+reconcilia categorías por panel sin cruzar paneles entre sí (ya existía,
+revisado). Resultado: **aprobada**.
+
+**Repetición final tras las correcciones**: `prisma validate`, `tsc --noEmit`
+(web y worker), `npm run build --workspace=apps/worker`, `npm run build
+--workspace=apps/web -- --webpack` y `git diff --check` — todos correctos.
+
+**Pendiente real, no de código**: falta la prueba con una cuenta real que
+exponga 2+ dominios/paneles verdaderos (la simulación en base de datos
+demuestra que el mecanismo funciona, pero no reemplaza esa prueba). Cuando
+Milton identifique una cuenta así, correrla en este mismo entorno local antes
+de autorizar despliegue.
+
+Estado de producción: sigue intacto. Sin commit, sin push, sin migración en
+Supabase, sin autorización de despliegue. Servidor de desarrollo y worker
+local quedaron corriendo en este entorno aislado para que Milton pueda seguir
+probando (`http://127.0.0.1:3100`); deben detenerse antes de cerrar la sesión
+si no se van a seguir usando.
+
 ## ENTREGA FORMAL Y LIBERACIÓN — 2026-08-28
 
 Identidad exacta:

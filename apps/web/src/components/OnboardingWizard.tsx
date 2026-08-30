@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, type FormEvent } from "react";
+import { useEffect, useState, useCallback, useRef, type FormEvent } from "react";
 import Link from "next/link";
 import {
   sectionStyle,
@@ -35,6 +35,20 @@ export default function OnboardingWizard({
   // Vacío a propósito hasta que /api/me diga el servidor real: mientras
   // tanto el texto usa el término genérico y nunca la marca equivocada.
   const [platformDomain, setPlatformDomain] = useState<string>("");
+  const [selectedSitePanel, setSelectedSitePanel] = useState("");
+  const [siteSelectionConfirmed, setSiteSelectionConfirmed] = useState(false);
+  // Detección REAL de sitios/paneles antes de confirmar dominio (ver
+  // /api/site-selection/detect): nunca se le pide a la persona escribir un
+  // dominio a mano sin verificarlo contra su cuenta.
+  const [detectJob, setDetectJob] = useState<{
+    status: "pending" | "running" | "success" | "error";
+    detectedPanels: string[];
+    errorMessage: string | null;
+  } | null>(null);
+  const [detecting, setDetecting] = useState(false);
+  const [chosenPanel, setChosenPanel] = useState("");
+  const [confirmingSite, setConfirmingSite] = useState(false);
+  const autoConfirmedRef = useRef(false);
   const [selectedLang, setSelectedLang] = useState("");
   const [googleData, setGoogleData] = useState<{
     connected: boolean;
@@ -85,7 +99,7 @@ export default function OnboardingWizard({
   // mensaje que lo decía nunca llegaba a verse.
   const loadAll = useCallback(async (surfaceLastSyncError = false) => {
     try {
-      const [credRes, catRes, langRes, meRes, googleRes, runsRes] =
+      const [credRes, catRes, langRes, meRes, googleRes, runsRes, siteRes, detectRes] =
         await Promise.all([
           fetch("/api/credentials", { cache: "no-store" }),
           fetch("/api/categories", { cache: "no-store" }),
@@ -93,6 +107,8 @@ export default function OnboardingWizard({
           fetch("/api/me", { cache: "no-store" }),
           fetch("/api/search-integrations/google", { cache: "no-store" }),
           fetch("/api/runs", { cache: "no-store" }),
+          fetch("/api/site-selection", { cache: "no-store" }),
+          fetch("/api/site-selection/detect", { cache: "no-store" }),
         ]);
 
       if (credRes.ok) {
@@ -152,6 +168,23 @@ export default function OnboardingWizard({
         const runs: RunRow[] = data.runs || [];
         setHasPublishedAny(runs.some((r) => r.titles.some((t) => t.status === "success")));
       }
+      if (siteRes.ok) {
+        const data = await siteRes.json();
+        setSelectedSitePanel(data.selectedSitePanel || "");
+        setSiteSelectionConfirmed(Boolean(data.siteSelectionConfirmed));
+      }
+      if (detectRes.ok) {
+        const data = await detectRes.json();
+        setDetectJob(
+          data.job
+            ? {
+                status: data.job.status,
+                detectedPanels: data.job.detectedPanels || [],
+                errorMessage: data.job.errorMessage,
+              }
+            : null,
+        );
+      }
     } catch (err) {
       console.error("Error al cargar estado del wizard:", err);
     } finally {
@@ -159,9 +192,95 @@ export default function OnboardingWizard({
     }
   }, []);
 
+  async function handleDetectSites() {
+    setDetecting(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/site-selection/detect", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage({ type: "error", text: data.error || "No se pudo iniciar la detección de sitios" });
+        return;
+      }
+      await loadAll();
+    } finally {
+      setDetecting(false);
+    }
+  }
+
+  const confirmSite = useCallback(
+    async (panel: string) => {
+      setConfirmingSite(true);
+      setMessage(null);
+      try {
+        const res = await fetch("/api/site-selection", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ panel }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setMessage({ type: "error", text: data.error || "No se pudo confirmar el sitio" });
+          return;
+        }
+        setSelectedSitePanel(data.selectedSitePanel || "");
+        setSiteSelectionConfirmed(true);
+        setMessage({
+          type: "success",
+          text: panel
+            ? `Sitio confirmado: ${panel}. Esta cuenta trabajará únicamente con él.`
+            : "Sitio confirmado. Esta cuenta trabajará únicamente con él.",
+        });
+      } finally {
+        setConfirmingSite(false);
+      }
+    },
+    [],
+  );
+
+  async function handleConfirmSite(e: FormEvent) {
+    e.preventDefault();
+    if (!chosenPanel) {
+      setMessage({ type: "error", text: "Elige uno de los sitios detectados." });
+      return;
+    }
+    await confirmSite(chosenPanel);
+  }
+
   useEffect(() => {
     loadAll(true);
   }, [loadAll]);
+
+  const detectInProgress =
+    detectJob?.status === "pending" || detectJob?.status === "running";
+
+  // Igual que el sondeo de categorías: el worker puede tardar varios
+  // minutos en tomar el job (cola de GitHub Actions), así que se consulta
+  // cada 3s mientras siga vivo, sin límite de intentos.
+  useEffect(() => {
+    if (!detectInProgress) return;
+    const interval = setInterval(() => {
+      loadAll();
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [detectInProgress, loadAll]);
+
+  // Cuentas sin selector de paneles (0 detectados) o con uno solo: nada que
+  // elegir, se confirma solo — pedido explícito de Milton de no molestar con
+  // una elección cuando no existe ambigüedad real. `autoConfirmedRef` evita
+  // reintentar en bucle si `confirmSite` llegara a fallar por red.
+  useEffect(() => {
+    if (
+      detectJob?.status === "success" &&
+      detectJob.detectedPanels.length <= 1 &&
+      !siteSelectionConfirmed &&
+      !confirmingSite &&
+      !autoConfirmedRef.current
+    ) {
+      autoConfirmedRef.current = true;
+      confirmSite(detectJob.detectedPanels[0] ?? "");
+    }
+  }, [detectJob, siteSelectionConfirmed, confirmingSite, confirmSite]);
 
   // Un job encolado o corriendo significa que el worker todavía no terminó.
   const categorySyncInProgress =
@@ -253,6 +372,10 @@ export default function OnboardingWizard({
   // saber si algo estaba pasando — el rollo del Paso 2 durante todo el
   // 14/8/2026.
   async function handleSyncCategories() {
+    if (!siteSelectionConfirmed) {
+      setMessage({ type: "error", text: "Confirma primero el sitio con el que trabajará esta cuenta." });
+      return;
+    }
     setSyncingCategories(true);
     setSyncRequested(true);
     setMessage({
@@ -432,7 +555,11 @@ export default function OnboardingWizard({
   const step1Saved = credentialsConfigured;
   const step1Verified =
     step1Saved && (lastSyncStatus === "success" || categories.length > 0);
-  const step1Done = step1Saved;
+  // El paso 1 solo se da por terminado cuando, además de guardar
+  // credenciales, el sitio real con el que va a trabajar esta cuenta quedó
+  // confirmado — si no, Paso 2 podría sincronizar categorías de un sitio
+  // equivocado cuando la cuenta expone más de uno.
+  const step1Done = step1Saved && siteSelectionConfirmed;
   const step2Done = step1Done && categories.length > 0;
   const step3Done = step1Done && step2Done && Boolean(contentLanguage);
   const step4Done = step1Done && step2Done && step3Done && Boolean(googleData?.connected && googleData?.siteUrl);
@@ -658,7 +785,7 @@ export default function OnboardingWizard({
                   : "Paso 1 en curso"
             }
           >
-            {step1Done && !editingCreds ? (
+            {step1Saved && !editingCreds ? (
               <div
                 style={{
                   display: "flex",
@@ -794,7 +921,7 @@ export default function OnboardingWizard({
                     >
                       {savingCreds ? "Guardando..." : "Guardar y Continuar →"}
                     </button>
-                    {step1Done && (
+                    {step1Saved && (
                       <button
                         type="button"
                         onClick={() => setEditingCreds(false)}
@@ -805,6 +932,100 @@ export default function OnboardingWizard({
                     )}
                   </div>
                 </form>
+              </div>
+            )}
+
+            {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+            {/* Confirmación de sitio: detección REAL, nunca texto libre.   */}
+            {/* Pedido explícito de Milton (29/8/2026): si las mismas       */}
+            {/* credenciales exponen 2+ sitios/paneles/idiomas, la persona  */}
+            {/* elige uno solo y la cuenta queda atada a él para siempre —  */}
+            {/* para el otro sitio, otra cuenta de Auto Artículos. Se       */}
+            {/* muestra siempre que haya credenciales guardadas y el sitio  */}
+            {/* todavía no esté confirmado, sin depender de editingCreds:   */}
+            {/* la versión anterior quedaba oculta ahí y nunca se veía.    */}
+            {step1Saved && !siteSelectionConfirmed && (
+              <div style={{ marginTop: 12, padding: 14, border: "1px solid #d2d2d7", borderRadius: 8, background: "#f5f5f7" }}>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, color: "#1d1d1f" }}>
+                  Confirma el sitio con el que trabajará esta cuenta
+                </div>
+                <div style={{ fontSize: 12, color: "#6e6e73", marginBottom: 10 }}>
+                  Si esta cuenta de {productName} da acceso a más de un sitio, elige uno solo: esta cuenta de Auto Artículos trabajará únicamente con él. Para el otro, crea otra cuenta.
+                </div>
+
+                {!detectJob || detectJob.status === "error" ? (
+                  <div>
+                    {detectJob?.status === "error" && (
+                      <div style={{ marginBottom: 10, fontSize: 12, color: "#ff3b30" }}>
+                        ❌ No se pudo detectar tu sitio: {detectJob.errorMessage || "error desconocido"}
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleDetectSites}
+                      disabled={detecting}
+                      style={{
+                        background: "#1d1d1f",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 8,
+                        padding: "9px 16px",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        cursor: detecting ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      {detecting ? "Iniciando detección..." : "Detectar mis sitios reales"}
+                    </button>
+                  </div>
+                ) : detectInProgress ? (
+                  <div style={{ fontSize: 13, color: "#1d1d1f" }}>
+                    Conectando con tu cuenta para detectar tus sitios reales (puede tardar varios minutos)...
+                  </div>
+                ) : detectJob.detectedPanels.length <= 1 ? (
+                  <div style={{ fontSize: 13, color: "#1d1d1f" }}>
+                    {confirmingSite ? "Confirmando..." : "Tu cuenta tiene un único sitio real: confirmando automáticamente..."}
+                  </div>
+                ) : (
+                  <form onSubmit={handleConfirmSite}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
+                      {detectJob.detectedPanels.map((label) => (
+                        <label key={label} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#1d1d1f" }}>
+                          <input
+                            type="radio"
+                            name="chosenPanel"
+                            value={label}
+                            checked={chosenPanel === label}
+                            onChange={() => setChosenPanel(label)}
+                          />
+                          {label}
+                        </label>
+                      ))}
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={confirmingSite || !chosenPanel}
+                      style={{
+                        background: "#1d1d1f",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 8,
+                        padding: "9px 16px",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        cursor: confirmingSite || !chosenPanel ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      {confirmingSite ? "Confirmando..." : "Confirmar este sitio →"}
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
+
+            {step1Saved && siteSelectionConfirmed && (
+              <div style={{ marginTop: 12, fontSize: 12, color: "#16803c" }}>
+                Sitio confirmado{selectedSitePanel ? `: ${selectedSitePanel}` : " (único sitio de la cuenta)"}. Esta cuenta de Auto Artículos trabaja exclusivamente con él.
               </div>
             )}
           </StepCard>

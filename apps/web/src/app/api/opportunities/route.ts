@@ -16,9 +16,9 @@ function isoDate(date: Date) {
   return date.toISOString().slice(0, 10);
 }
 
-async function list(userId: string) {
+async function list(userId: string, siteDomain?: string | null) {
   return prisma.opportunityGroup.findMany({
-    where: { userId },
+    where: { userId, ...(siteDomain ? { category: { siteDomain } } : {}) },
     orderBy: [{ impressions: "desc" }, { createdAt: "desc" }],
     include: { category: true, titles: { orderBy: { createdAt: "asc" } } },
   });
@@ -28,10 +28,10 @@ export async function GET() {
   const userId = await getCurrentUserId();
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { lastOpportunityAnalysisAt: true },
+    select: { lastOpportunityAnalysisAt: true, selectedSiteDomain: true, selectedSitePanel: true },
   });
   return NextResponse.json({
-    groups: await list(userId),
+    groups: await list(userId, user.selectedSiteDomain),
     lastAnalysisAt: user.lastOpportunityAnalysisAt,
   });
 }
@@ -53,8 +53,13 @@ export async function POST(request: Request) {
   const { force, panel = "" } = await request
     .json()
     .catch(() => ({ force: false, panel: "" }));
-  const integration = await prisma.searchIntegration.findUnique({
-    where: { userId_provider: { userId, provider: "google" } },
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { lastOpportunityAnalysisAt: true, selectedSiteDomain: true, selectedSitePanel: true },
+  });
+  const selectedSiteDomain = user.selectedSiteDomain;
+  const integration = await prisma.searchIntegration.findFirst({
+    where: { userId, provider: "google", ...(selectedSiteDomain ? { siteDomain: selectedSiteDomain } : {}) },
   });
   if (!integration?.siteUrl) {
     return NextResponse.json(
@@ -62,8 +67,9 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+  const selectedPanel = user.selectedSitePanel || panel;
   const categories = await prisma.category.findMany({
-    where: { userId, panel, source: { not: "archived" } },
+    where: { userId, panel: selectedPanel, source: { not: "archived" }, ...(selectedSiteDomain ? { siteDomain: selectedSiteDomain } : {}) },
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   });
@@ -74,10 +80,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const user = await prisma.user.findUniqueOrThrow({
-    where: { id: userId },
-    select: { lastOpportunityAnalysisAt: true },
-  });
   // Recomendación (ya NO bloqueo, ver arriba): si la última corrida no
   // encontró nada nuevo y no pasaron 3 días, se le avisa al usuario y se le
   // da la opción de forzarlo bajo su propio criterio (`force: true`) en vez
@@ -180,7 +182,7 @@ export async function POST(request: Request) {
         data: { lastOpportunityAnalysisAt: now },
       });
       return NextResponse.json({
-        groups: await list(userId),
+        groups: await list(userId, selectedSiteDomain),
         lastAnalysisAt: now,
         noNewOpportunities: true,
         nextAvailableAt: new Date(now.getTime() + COOLDOWN_MS),
@@ -191,7 +193,7 @@ export async function POST(request: Request) {
       // Solo las de ESTE panel: un análisis para "English" no debe borrar
       // oportunidades ya generadas para "Español".
       await tx.opportunityGroup.deleteMany({
-        where: { userId, category: { panel } },
+        where: { userId, category: { panel: selectedPanel, ...(selectedSiteDomain ? { siteDomain: selectedSiteDomain } : {}) } },
       });
       for (const group of analysis.groups) {
         await tx.opportunityGroup.create({
@@ -211,7 +213,7 @@ export async function POST(request: Request) {
       });
     });
     return NextResponse.json({
-      groups: await list(userId),
+      groups: await list(userId, selectedSiteDomain),
       lastAnalysisAt: now,
     });
   } catch (error) {

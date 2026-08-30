@@ -18,6 +18,7 @@ export const revalidate = 0;
 
 export async function GET() {
   const userId = await getCurrentUserId();
+  const account = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
 
   // Parallel queries for performance
   const [
@@ -60,13 +61,13 @@ export async function GET() {
       },
     }),
     // 4. Google Search Console
-    prisma.searchIntegration.findUnique({
-      where: { userId_provider: { userId, provider: "google" } },
+    prisma.searchIntegration.findFirst({
+      where: { userId, provider: "google", ...(account.selectedSiteDomain ? { siteDomain: account.selectedSiteDomain } : {}) },
       select: { siteUrl: true, sitemapUrl: true },
     }),
     // 5. Bing Webmaster Tools
-    prisma.searchIntegration.findUnique({
-      where: { userId_provider: { userId, provider: "bing" } },
+    prisma.searchIntegration.findFirst({
+      where: { userId, provider: "bing", ...(account.selectedSiteDomain ? { siteDomain: account.selectedSiteDomain } : {}) },
       select: { siteUrl: true, sitemapUrl: true },
     }),
     // 6. Google Business Profile

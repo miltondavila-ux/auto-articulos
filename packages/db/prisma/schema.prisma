@@ -39,6 +39,11 @@ model User {
   // servidor real de la cuenta. "net" (valor por defecto, sin cambios para
   // nadie existente) o "site".
   platformDomain                    String    @default("net")
+  // Dominio real elegido durante la primera conexión. Es independiente del
+  // servidor de acceso (net/site/tagcrush) y del idioma del panel.
+  selectedSiteDomain                String?
+  selectedSitePanel                 String?
+  siteSelectionConfirmed            Boolean   @default(false)
   // País declarado al CREAR la cuenta (código ISO 3166-1 alpha-2, ej. "ES",
   // "MX") — pedido explícito del usuario, 14/8/2026. Solo se pregunta a las
   // cuentas nuevas (registro de prueba y alta desde Administración); las
@@ -403,6 +408,9 @@ model SearchIntegration {
   id                    String    @id @default(cuid())
   userId                String
   provider              String
+  // Dominio real al que pertenece la conexión; vacío para integraciones
+  // históricas aún no asociadas.
+  siteDomain            String    @default("")
   encryptedRefreshToken String
   siteUrl               String?
   sitemapUrl            String?
@@ -419,7 +427,7 @@ model SearchIntegration {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, provider])
+  @@unique([userId, provider, siteDomain])
   @@index([userId])
 }
 
@@ -472,6 +480,9 @@ model Category {
   // clave única compuesta (@@unique) de forma confiable, ni Postgres lo
   // trata como "igual" entre filas — visto al implementar esto, 15/8/2026.
   panel      String   @default("")
+  // Dominio confirmado para esta categoría. Vacío conserva compatibilidad
+  // con categorías históricas aún no vinculadas.
+  siteDomain String   @default("")
   updatedAt  DateTime @updatedAt
   createdAt  DateTime @default(now())
 
@@ -556,6 +567,15 @@ model CategorySyncJob {
   errorMessage String?
   createdAt    DateTime           @default(now())
   finishedAt   DateTime?
+  // "sync" (default, comportamiento histórico: descarga categorías) o
+  // "detect": solo inicia sesión y lee los paneles/sitios reales de la
+  // cuenta (ver listPanelLabels en el worker), sin tocar categorías. Lo usa
+  // el wizard para mostrar los sitios reales antes de que la persona elija
+  // uno, en vez de dejarlo escribir un dominio a mano sin verificar.
+  mode           String   @default("sync")
+  // Etiquetas reales de panel encontradas por un job mode="detect" exitoso.
+  // Vacío = la cuenta no tiene selector de paneles (un solo sitio real).
+  detectedPanels String[] @default([])
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

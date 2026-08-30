@@ -4,6 +4,7 @@ import { getCurrentUserId } from "@/lib/current-user";
 
 export async function GET() {
   const userId = await getCurrentUserId();
+  const account = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
 
   const [credential, categories, user, googleIntegration] = await Promise.all([
     prisma.credential.findUnique({
@@ -21,8 +22,8 @@ export async function GET() {
         hasImageCredits: true,
       },
     }),
-    prisma.searchIntegration.findUnique({
-      where: { userId_provider: { userId, provider: "google" } },
+    prisma.searchIntegration.findFirst({
+      where: { userId, provider: "google", ...(account.selectedSiteDomain ? { siteDomain: account.selectedSiteDomain } : {}) },
       select: { siteUrl: true },
     }),
   ]);
