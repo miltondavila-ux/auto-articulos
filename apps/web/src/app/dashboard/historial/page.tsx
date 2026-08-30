@@ -78,6 +78,22 @@ function HistorialEjecuciones() {
     (r) => r.status !== "pending" && r.status !== "running",
   );
 
+  // Pedido directo de Milton (30/8/2026): los títulos que no se publican
+  // porque ya existe un artículo igual (o muy parecido) en 10minutesWebsite
+  // nunca van a lograrlo reintentando el mismo tema — se agrupan aparte,
+  // con nombre propio, en vez de mezclarse con errores normales.
+  const duplicateTitles = useMemo(() => {
+    const items: TitleRow[] = [];
+    for (const run of runs) {
+      for (const title of run.titles) {
+        if (title.errorMessage?.includes("ya existe un artículo")) {
+          items.push(title);
+        }
+      }
+    }
+    return items;
+  }, [runs]);
+
   const runsByPublicationDay = useMemo(() => {
     const map = new Map<string, RunRow[]>();
     for (const run of runs) {
@@ -94,7 +110,11 @@ function HistorialEjecuciones() {
   }, [runs]);
 
   return (
-    <details className="panel" style={sectionStyle}>
+    <>
+      {duplicateTitles.length > 0 && (
+        <DuplicateTitlesSection items={duplicateTitles} />
+      )}
+      <details className="panel" style={sectionStyle}>
       <summary
         style={{
           cursor: "pointer",
@@ -191,7 +211,82 @@ function HistorialEjecuciones() {
           ))
         )}
       </div>
+      </details>
+    </>
+  );
+}
+
+/**
+ * Sección propia, separada de "Artículos publicados", para títulos que
+ * chocaron contra un artículo ya existente en 10minutesWebsite. Reintentar
+ * no los va a resolver (mismo tema, título parecido, mismo choque), así que
+ * no se mezclan con errores normales — se muestran con nombre propio y los
+ * enlaces reales a lo que ya existe, tal como pidió Milton.
+ */
+function DuplicateTitlesSection({ items }: { items: TitleRow[] }) {
+  return (
+    <details className="panel" style={{ ...sectionStyle, borderColor: "#ffd8a8" }}>
+      <summary
+        style={{
+          cursor: "pointer",
+          listStyle: "none",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 10,
+          userSelect: "none",
+        }}
+      >
+        <div>
+          <p className="eyebrow" style={{ margin: "0 0 2px", color: "#8a4b08" }}>
+            No se publicarán
+          </p>
+          <h2 style={{ ...h2Style, margin: 0 }}>
+            Artículos repetidos que no se publicarán
+          </h2>
+        </div>
+        <span className="muted" style={{ fontSize: 13 }}>
+          {items.length} título{items.length !== 1 ? "s" : ""}
+        </span>
+      </summary>
+      <div style={{ marginTop: 14 }}>
+        <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
+          Estos títulos ya existen (o son muy parecidos a uno que ya existe)
+          en 10minutesWebsite. Reintentarlos con el mismo tema no los va a
+          publicar — usa un título o tema distinto.
+        </p>
+        {items.map((title) => (
+          <div
+            key={title.id}
+            style={{
+              padding: 12,
+              marginBottom: 8,
+              border: "1px solid #ffd8a8",
+              borderRadius: 10,
+              background: "#fff8ef",
+            }}
+          >
+            <strong style={{ fontSize: 13 }}>{title.text}</strong>
+            <p style={{ fontSize: 12, color: "#6e6e73", margin: "4px 0 0" }}>
+              {linkifyMessage(title.errorMessage ?? "")}
+            </p>
+          </div>
+        ))}
+      </div>
     </details>
+  );
+}
+
+function linkifyMessage(message: string) {
+  const parts = message.split(/(https?:\/\/\S+)/g);
+  return parts.map((part, i) =>
+    /^https?:\/\//.test(part) ? (
+      <a key={i} href={part} target="_blank" rel="noopener noreferrer">
+        {part}
+      </a>
+    ) : (
+      <span key={i}>{part}</span>
+    ),
   );
 }
 

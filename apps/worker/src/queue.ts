@@ -448,7 +448,15 @@ async function processRunTitle(
             ? displayMessage
             : message,
       );
-      await restoreUnfinishedTitlesToOpportunities(run.id, nextTitle.id);
+      if (!(err instanceof DuplicateTitleError)) {
+        // Un título duplicado permanente nunca va a publicarse reintentando
+        // el mismo tema: la IA vuelve a generar un título parecido y choca
+        // otra vez, en un ciclo sin salida. Se deja en Historial marcado
+        // como error (con el mensaje y los enlaces reales), sin volver a
+        // ofrecerlo en Oportunidades para un reintento que ya sabemos que
+        // va a fallar igual.
+        await restoreUnfinishedTitlesToOpportunities(run.id, nextTitle.id);
+      }
     } else {
       // Vuelve a "pending" para reintentar desde el inicio en el próximo ciclo.
       await prisma.title.update({
