@@ -273,6 +273,23 @@ export type OnStep = (message: string) => Promise<void>;
  */
 export class DailyLimitReachedError extends Error {}
 
+/**
+ * Pedido directo de Milton (30/8/2026): cuando el sitio rechaza el guardado
+ * porque ya existe un artículo con ese título (o una variante), el mensaje
+ * genérico "no aparece en el listado tras guardar" no ayuda a entender qué
+ * pasó de verdad ni qué hacer. Este error trae el título real que chocó y,
+ * si se pudieron encontrar, los artículos existentes parecidos con su
+ * enlace real, para que el mensaje al usuario sea concreto y verificable.
+ */
+export class DuplicateTitleError extends Error {
+  constructor(
+    message: string,
+    public readonly similarArticles: { title: string; href: string }[],
+  ) {
+    super(message);
+  }
+}
+
 function resolveBaseUrl(platformDomain?: string | null): string {
   return platformBaseUrl(platformDomain);
 }
@@ -2174,6 +2191,71 @@ async function findArticleByTitle(
   return row?.href ?? null;
 }
 
+/**
+ * Busca en el listado real de 10minutesWebsite artículos existentes cuyo
+ * título coincida (aunque sea parcialmente) con `searchText`. Reutiliza el
+ * mismo buscador por servidor de `findArticleByTitle`, pero en vez de
+ * quedarse solo con la fila más nueva, junta hasta `limit` filas visibles
+ * con su título y enlace real — pensado para mostrarle al usuario POR QUÉ
+ * el sitio rechazó el guardado por título duplicado, con evidencia
+ * verificable en vez de un mensaje genérico.
+ */
+async function findSimilarArticleLinks(
+  page: Page,
+  baseUrl: string,
+  searchText: string,
+  limit = 3,
+): Promise<{ title: string; href: string }[]> {
+  try {
+    await page.goto(`${baseUrl}/dashboard/user_buyer_seller_articles.php`, {
+      waitUntil: "domcontentloaded",
+      timeout: NAV_TIMEOUT_MS,
+    });
+    await page
+      .waitForFunction(
+        () => {
+          const firstCell = document.querySelector("table tbody tr td");
+          const text = (firstCell?.textContent ?? "").trim();
+          return text.length > 0 && !/loading/i.test(text);
+        },
+        undefined,
+        { timeout: 15_000 },
+      )
+      .catch(() => {});
+    await page.evaluate((text) => {
+      const jq = (
+        window as unknown as {
+          jQuery?: (s: string) => {
+            DataTable: () => { search: (s: string) => { draw: () => void } };
+          };
+        }
+      ).jQuery;
+      jq?.("table").DataTable().search(text).draw();
+    }, searchText);
+    await page.waitForTimeout(2000);
+
+    const rows = page.locator("table tbody tr");
+    const count = Math.min(await rows.count(), limit);
+    const results: { title: string; href: string }[] = [];
+    for (let i = 0; i < count; i++) {
+      const row = rows.nth(i);
+      const href = await row
+        .locator("a.consultar")
+        .first()
+        .getAttribute("href")
+        .catch(() => null);
+      // El texto del enlace "a.consultar" es solo un ícono/acción ("Ver"),
+      // no el título — se usa el texto completo de la fila (que sí incluye
+      // el título real de la tabla) como etiqueta, recortado.
+      const rowText = (await row.innerText().catch(() => "")).replace(/\s+/g, " ").trim();
+      if (href) results.push({ title: rowText.slice(0, 120) || searchText, href });
+    }
+    return results;
+  } catch {
+    return [];
+  }
+}
+
 async function saveAndGetUrl(
   page: Page,
   baseUrl: string,
@@ -2205,6 +2287,13 @@ async function saveAndGetUrl(
   // al título y se reintenta el guardado (sin regenerar contenido de nuevo)
   // antes de darse por vencido.
   let titleInUse = expectedTitle;
+  // Pedido directo de Milton (30/8/2026): si el motivo real de fondo es que
+  // el título ya existe en el sitio, el mensaje final debe decirlo así de
+  // claro (con enlaces reales a lo existente), no un genérico "no aparece
+  // en el listado" — aunque el intento que finalmente se agote ya no
+  // muestre el error de duplicado (p. ej. porque el botón nunca se
+  // habilitó a tiempo para el título mutado).
+  let hitDuplicateTitle = false;
   const MAX_SAVE_ATTEMPTS = 3;
 
   const makeUniqueTitle = (baseTitle: string, attempt: number) => {
@@ -2428,6 +2517,10 @@ async function saveAndGetUrl(
     const isDuplicateTitle =
       /titlees/i.test(validatorErrors) && /existe/i.test(validatorErrors);
 
+    if (isDuplicateTitle) {
+      hitDuplicateTitle = true;
+    }
+
     if (isDuplicateTitle && saveAttempt < MAX_SAVE_ATTEMPTS) {
       const mutatedTitle = makeUniqueTitle(expectedTitle, saveAttempt + 1);
       const titleField = page.locator("#titlees");
@@ -2454,6 +2547,23 @@ async function saveAndGetUrl(
     }
 
     if (stillOnForm) {
+      if (hitDuplicateTitle) {
+        // Pedido directo de Milton (30/8/2026): decir la causa real en vez
+        // de un genérico "no aparece en el listado", y mostrar evidencia
+        // verificable (enlaces reales a lo que ya existe) en vez de pedirle
+        // que confíe en la palabra del sistema.
+        // `href` ya viene absoluto (el mismo dato que usa el resto del
+        // archivo como `articleUrl` real, renderizado tal cual en el
+        // Historial) — no se antepone `baseUrl` de nuevo.
+        const similar = await findSimilarArticleLinks(page, baseUrl, expectedTitle);
+        const links = similar.map((a) => `"${a.title}" → ${a.href}`).join(" | ");
+        throw new DuplicateTitleError(
+          `No se publicó porque en la página ya existe un artículo con este título (o muy parecido).${
+            links ? ` Artículos existentes encontrados: ${links}` : ""
+          }`,
+          similar,
+        );
+      }
       // Si el sitio no habilitó el guardado, no tiene sentido navegar y
       // esperar 90 segundos buscando una publicación que nunca se envió.
       // Devuelve inmediatamente para que queue.ts registre el intento y,

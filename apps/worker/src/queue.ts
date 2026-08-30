@@ -3,6 +3,7 @@ import { decryptSecret, MAX_ATTEMPTS } from "@auto-articulos/shared";
 import {
   publishArticle,
   DailyLimitReachedError,
+  DuplicateTitleError,
 } from "./automation/10minutesWebsite";
 import {
   tryReserveUser,
@@ -433,7 +434,20 @@ async function processRunTitle(
       // normales (se puede resolver solo en el segundo o tercero) y recién
       // acá, si de verdad se agotaron, se usa el aviso claro en vez del
       // volcado técnico.
-      await markTitleError(nextTitle.id, isImageCreditIssue ? displayMessage : message);
+      // Pedido directo de Milton (30/8/2026): cuando la causa real es un
+      // título duplicado en el sitio, `message` ya trae la explicación
+      // exacta y los enlaces reales a lo que ya existe (armado en
+      // saveAndGetUrl); se usa tal cual, ignorando el detector de créditos
+      // (que no debería matchear este texto, pero se prioriza explícito
+      // para no depender de esa coincidencia).
+      await markTitleError(
+        nextTitle.id,
+        err instanceof DuplicateTitleError
+          ? message
+          : isImageCreditIssue
+            ? displayMessage
+            : message,
+      );
       await restoreUnfinishedTitlesToOpportunities(run.id, nextTitle.id);
     } else {
       // Vuelve a "pending" para reintentar desde el inicio en el próximo ciclo.
