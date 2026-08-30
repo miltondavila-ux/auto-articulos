@@ -127,7 +127,18 @@ export async function POST(request: NextRequest) {
 
     await prisma.socialOpportunity.update({
       where: { id },
-      data: { status: "queued", progressPercent: 1, progressStage: "En cola, esperando al worker", errorLog: null },
+      data: {
+        status: "queued",
+        progressPercent: 1,
+        progressStage: "En cola, esperando al worker",
+        errorLog: null,
+        // recoverStuckSocialOpportunities() mide "atascado" desde este
+        // momento, no desde la creación original del registro (que en un
+        // reintento de un registro viejo sería de hace días y lo marcaría
+        // como atascado casi al instante). Ver cleanup.ts.
+        startedAt: new Date(),
+        finishedAt: null,
+      },
     });
 
     // Esperar el dispatch garantiza que Vercel no cierre la función antes de

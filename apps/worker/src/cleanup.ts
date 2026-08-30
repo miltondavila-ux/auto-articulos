@@ -154,7 +154,16 @@ export async function recoverStuckSocialOpportunities(): Promise<number> {
     where: {
       OR: [
         { status: "processing", startedAt: { lt: cutoff } },
-        { status: "queued", createdAt: { lt: cutoff } },
+        // "queued" también se mide desde startedAt (el endpoint de publicar
+        // lo actualiza al encolar/reintentar), NO desde createdAt: un
+        // registro viejo reintentado tiene createdAt de hace días, lo que
+        // lo marcaría como "atascado" casi al instante en vez de dejarle
+        // los 10 minutos reales para que el worker lo tome.
+        { status: "queued", startedAt: { lt: cutoff } },
+        // Por si algún registro "queued" nunca llegó a tener startedAt
+        // (no debería pasar con el flujo actual, pero por seguridad se usa
+        // createdAt como respaldo solo quien nunca fue tocado).
+        { status: "queued", startedAt: null, createdAt: { lt: cutoff } },
       ],
     },
     select: { id: true, titleId: true },
