@@ -2232,13 +2232,26 @@ async function saveAndGetUrl(
       }).jQuery;
       const validator = (window as unknown as {
         jQuery?: (selector: string) => {
-          data: (key: string) => { resetForm?: () => void } | undefined;
+          data: (
+            key: string,
+          ) => { resetForm?: () => void; hideErrors?: () => void } | undefined;
         };
       }).jQuery?.("#form_buyer_seller_articles").data("validator");
       if (!jq) return;
       jq("#titlees").removeData("previousValue");
       jq("#titlees").removeData("remote");
-      validator?.resetForm?.();
+      // Causa raíz real encontrada el 30/8/2026 (confirmado con el
+      // diagnóstico de campos agregado el 29/8/2026): `validator.resetForm()`
+      // de jQuery Validate no solo limpia el estado de validación — por
+      // dentro llama al `reset()` nativo del <form>, que BORRA los valores
+      // de TODOS los campos (título, resumen, tipo), no solo los mensajes de
+      // error. En cada intento real de guardado, el formulario llegaba lleno
+      // hasta este punto exacto y quedaba vacío justo después — nunca fue
+      // intermitente, pasaba siempre que se llegaba a guardar. Se usa
+      // `hideErrors()` en su lugar: limpia únicamente los mensajes de error
+      // visibles (el propósito real de esta línea, para el reintento por
+      // título duplicado) sin tocar los valores de los campos.
+      validator?.hideErrors?.();
       for (const eventName of ["input", "keyup", "change", "blur", "focusout"]) {
         jq("#titlees").trigger(eventName);
       }
