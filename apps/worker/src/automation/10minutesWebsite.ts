@@ -1291,7 +1291,102 @@ async function createArticleDraft(
     }
   }
 
-  return { summary, contentHtml, finalTitle };
+  // Pedido directo de Milton (30/8/2026): antes, el título duplicado solo
+  // se descubría al momento de guardar — después de gastar tiempo real y
+  // un crédito de generación de imagen en un artículo que de todos modos
+  // no se iba a poder guardar con ese título. Se corre la MISMA validación
+  // remota que usa el sitio (no una búsqueda aproximada, que daría falsos
+  // positivos con títulos parecidos pero distintos) ahora, antes de la
+  // imagen, para mutar el título desde el inicio si ya existe.
+  const resolvedTitle = await resolveDuplicateTitleEarly(page, finalTitle, onStep);
+
+  return { summary, contentHtml, finalTitle: resolvedTitle };
+}
+
+/**
+ * Corre la regla `remote` real de jQuery Validate sobre `#titlees` (ya
+ * lleno en este punto) para saber, ANTES de generar la imagen, si el
+ * título va a chocar con uno existente — en vez de descubrirlo recién al
+ * guardar. Usa el mismo mecanismo exacto que el sitio (no una búsqueda
+ * aproximada en el listado, que marcaría como duplicados títulos parecidos
+ * pero distintos). Si detecta el choque, muta el título y lo vuelve a
+ * escribir en el campo antes de continuar.
+ */
+/**
+ * Un número incremental no basta: puede existir ya porque otro intento
+ * anterior o una publicación manual usó exactamente el mismo sufijo. La
+ * marca corta de tiempo evita que el validador remoto vuelva a rechazar la
+ * segunda oportunidad del mismo artículo. Función de módulo (antes vivía
+ * solo dentro de saveAndGetUrl) para poder mutar el título temprano, antes
+ * de generar la imagen, y no solo al momento final de guardar.
+ */
+function makeUniqueTitle(baseTitle: string, attempt: number): string {
+  const uniqueness = ` — versión ${Date.now().toString().slice(-7)}-${attempt}`;
+  return `${baseTitle.slice(0, 200 - uniqueness.length)}${uniqueness}`;
+}
+
+async function resolveDuplicateTitleEarly(
+  page: Page,
+  title: string,
+  onStep: OnStep,
+): Promise<string> {
+  await page
+    .evaluate(() => {
+      const jq = (window as unknown as {
+        jQuery?: (selector: string) => {
+          trigger: (eventName: string) => unknown;
+          valid?: () => boolean;
+        };
+      }).jQuery;
+      if (!jq) return;
+      for (const eventName of ["input", "keyup", "change", "blur", "focusout"]) {
+        jq("#titlees").trigger(eventName);
+      }
+      jq("#titlees").valid?.();
+    })
+    .catch(() => {});
+  await page
+    .waitForFunction(
+      () => {
+        const jq = (window as unknown as {
+          jQuery?: (selector: string) => {
+            data: (key: string) => { pending?: Record<string, unknown> } | undefined;
+          };
+        }).jQuery;
+        const validator = jq?.("#form_buyer_seller_articles").data("validator");
+        return Object.keys(validator?.pending ?? {}).length === 0;
+      },
+      undefined,
+      { timeout: 15_000 },
+    )
+    .catch(() => {});
+
+  const isDuplicate = await page
+    .evaluate(() => {
+      const jq = (window as unknown as {
+        jQuery?: (selector: string) => {
+          data: (key: string) => {
+            errorList?: { element: HTMLElement; message: string }[];
+          } | undefined;
+        };
+      }).jQuery;
+      const validator = jq?.("#form_buyer_seller_articles").data("validator");
+      return (validator?.errorList ?? []).some(
+        (entry) => entry.element?.id === "titlees" && /existe/i.test(entry.message),
+      );
+    })
+    .catch(() => false);
+
+  if (!isDuplicate) return title;
+
+  const mutatedTitle = makeUniqueTitle(title, 1);
+  const titleField = page.locator("#titlees");
+  await titleField.fill(mutatedTitle).catch(() => {});
+  await titleField.press("Tab").catch(() => {});
+  await onStep(
+    `El título "${title}" ya existe en la cuenta. Se usa "${mutatedTitle}" desde ahora, antes de generar la imagen.`,
+  );
+  return mutatedTitle;
 }
 
 async function diagnoseEditorState(page: Page): Promise<{
@@ -2295,15 +2390,6 @@ async function saveAndGetUrl(
   // habilitó a tiempo para el título mutado).
   let hitDuplicateTitle = false;
   const MAX_SAVE_ATTEMPTS = 3;
-
-  const makeUniqueTitle = (baseTitle: string, attempt: number) => {
-    // Un número incremental no basta: puede existir ya porque otro intento
-    // anterior o una publicación manual usó exactamente el mismo sufijo.
-    // La marca corta de tiempo evita que el validador remoto vuelva a
-    // rechazar la segunda oportunidad del mismo artículo.
-    const uniqueness = ` — versión ${Date.now().toString().slice(-7)}-${attempt}`;
-    return `${baseTitle.slice(0, 200 - uniqueness.length)}${uniqueness}`;
-  };
 
   const revalidateTitleAndForm = async () => {
     // La plataforma usa jQuery Validate con una regla remota en #titlees.
