@@ -35,7 +35,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!["pending", "error"].includes(existing.status)) {
+    // "skipped" = el usuario la descartó con el botón "Descartar" (no es un
+    // error ni algo atascado); se permite reintentarla igual que Artículos
+    // permite retomar un Run cancelado, por si cambia de opinión.
+    if (!["pending", "error", "skipped"].includes(existing.status)) {
       const statusLabel =
         existing.status === "published"
           ? "ya está publicada"

@@ -515,13 +515,25 @@ function HistorialRedes() {
     () => opportunities.filter((o) => o.status === "published"),
     [opportunities],
   );
+  // "skipped" = el usuario la descartó con el botón "Descartar" — no es un
+  // error ni algo pendiente de resolver, es una decisión deliberada. Se
+  // separa en su propia sección, igual que "Publicadas" y "Sin confirmar",
+  // en vez de mezclarla con errores/en cola/procesando.
+  const skippedOpportunities = useMemo(
+    () => opportunities.filter((o) => o.status === "skipped"),
+    [opportunities],
+  );
   const unconfirmedOpportunities = useMemo(
-    () => opportunities.filter((o) => o.status !== "published"),
+    () => opportunities.filter((o) => o.status !== "published" && o.status !== "skipped"),
     [opportunities],
   );
   const opportunitiesByDay = useMemo(
     () => groupOpportunitiesByDay(publishedOpportunities),
     [publishedOpportunities],
+  );
+  const skippedByDay = useMemo(
+    () => groupOpportunitiesByDay(skippedOpportunities),
+    [skippedOpportunities],
   );
   const unconfirmedByDay = useMemo(
     () => groupOpportunitiesByDay(unconfirmedOpportunities),
@@ -787,7 +799,9 @@ function HistorialRedes() {
                           <span style={{ color: "#8a4b08", fontWeight: 600, fontSize: 12 }}>En cola</span>
                         ) : (
                           <>
-                            <span style={{ color: "#ff3b30", fontWeight: 600, fontSize: 12 }}>✕ Error</span>
+                            <span style={{ color: opp.status === "skipped" ? "#6e6e73" : "#ff3b30", fontWeight: 600, fontSize: 12 }}>
+                              {opp.status === "skipped" ? "Descartada" : "✕ Error"}
+                            </span>
                             <button
                               onClick={(e) => {
                                 e.preventDefault();
@@ -956,6 +970,160 @@ function HistorialRedes() {
         )}
       </div>
     </details>
+    {skippedOpportunities.length > 0 && (
+      <details className="panel" style={{ ...sectionStyle, borderColor: "#d5d5db" }}>
+        <summary
+          style={{
+            cursor: "pointer",
+            listStyle: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 10,
+            userSelect: "none",
+          }}
+        >
+          <div>
+            <p className="eyebrow" style={{ margin: "0 0 2px", color: "#6e6e73" }}>
+              Descartadas
+            </p>
+            <h2 style={{ ...h2Style, margin: 0 }}>
+              Publicaciones en redes descartadas
+            </h2>
+          </div>
+          <span className="muted" style={{ fontSize: 13 }}>
+            {skippedOpportunities.length} publicación{skippedOpportunities.length !== 1 ? "es" : ""}
+          </span>
+        </summary>
+        <div style={{ marginTop: 14 }}>
+          <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
+            Descartadas a propósito con el botón "Descartar" en Oportunidades.
+            Si cambias de opinión, puedes reintentarlas desde aquí.
+          </p>
+          {skippedByDay.map(([dayKey, dayOpps]) => (
+            <details
+              key={dayKey}
+              className="row"
+              style={{
+                marginBottom: 10,
+                background: "#ffffff",
+                border: "1px solid #e5e5ea",
+                borderRadius: 12,
+                overflow: "hidden",
+              }}
+            >
+              <summary
+                style={{
+                  cursor: "pointer",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "#1d1d1f",
+                  listStyle: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "12px 16px",
+                  userSelect: "none",
+                }}
+              >
+                <span>{publicationDayLabel(dayKey)}</span>
+                <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+                  — {dayOpps.length} publicación{dayOpps.length !== 1 ? "es" : ""}
+                </span>
+              </summary>
+              <div style={{ padding: "0 16px 16px 16px", display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
+            {dayOpps.map((opp) => (
+              <details
+                key={opp.id}
+                open={false}
+                className="row"
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #e5e5ea",
+                  borderRadius: 12,
+                  padding: "12px 16px",
+                }}
+              >
+                <summary
+                  style={{
+                    cursor: "pointer",
+                    fontSize: 13,
+                    listStyle: "none",
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                    <span style={{ color: "#1d1d1f", fontWeight: 600 }}>
+                      {new Date(opp.publishedAt || opp.finishedAt || opp.createdAt).toLocaleString("es-US", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                    <span className="muted">—</span>
+                    <span style={{ fontWeight: 600, color: "#1d1d1f", textTransform: "uppercase", fontSize: 11 }}>
+                      {opp.platform}
+                    </span>
+                    <span className="muted">—</span>
+                    <span style={{ color: "#1d1d1f", fontWeight: 500 }}>
+                      {opp.articleTitle}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ color: "#6e6e73", fontWeight: 600, fontSize: 12 }}>Descartada</span>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleRetryOpportunity(opp.id);
+                      }}
+                      disabled={retryingOppId === opp.id}
+                      className="secondary"
+                      style={{
+                        ...secondaryButtonStyle,
+                        padding: "3px 10px",
+                        fontSize: 11,
+                      }}
+                    >
+                      {retryingOppId === opp.id ? "Reintentando..." : "Reintentar"}
+                    </button>
+                    {retryErrors[opp.id] && (
+                      <span style={{ color: "#ff3b30", fontSize: 11, flexBasis: "100%" }}>
+                        {retryErrors[opp.id]}
+                      </span>
+                    )}
+                  </div>
+                </summary>
+                <div style={{ marginTop: 12, paddingLeft: 12, borderLeft: "2px solid #e5e5ea" }}>
+                  <p style={{ margin: "0 0 6px 0", color: "#1d1d1f", fontSize: 13, fontWeight: 500 }}>
+                    Copy publicado:
+                  </p>
+                  <blockquote style={{ margin: "0 0 12px 0", color: "#6e6e73", fontSize: 13, lineHeight: "1.5" }}>
+                    &ldquo;{opp.suggestedText}&rdquo;
+                  </blockquote>
+                  <a
+                    href={opp.articleUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="link-button"
+                    style={{ fontSize: 12 }}
+                  >
+                    Ver artículo original &rarr;
+                  </a>
+                </div>
+              </details>
+            ))}
+              </div>
+            </details>
+          ))}
+        </div>
+      </details>
+    )}
     {unconfirmedOpportunities.length > 0 && (
       <details className="panel" style={{ ...sectionStyle, borderColor: "#ffd8a8" }}>
         <summary
