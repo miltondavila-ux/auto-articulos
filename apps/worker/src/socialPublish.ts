@@ -355,6 +355,42 @@ async function getRehostedThreadsImage(titleId: string, articleUrl: string): Pro
   }
 }
 
+/**
+ * Igual que getRehostedThreadsImage: descarga la og:image del artículo y la
+ * re-aloja en Vercel Blob antes de dársela a Tumblr. Tumblr descarga la
+ * imagen server-side desde la URL que le pasamos (parámetro `source` de la
+ * API legacy de fotos) — si esa URL es el hosting inestable del propio
+ * artículo, la creación del post puede fallar o tardar. Mismo respaldo: si
+ * algo falla, se usa el enlace directo del artículo (comportamiento previo).
+ */
+async function getRehostedImageForTumblr(titleId: string, articleUrl: string): Promise<ThreadsImageResult | null> {
+  const ogImageUrl = await getArticleOpenGraphImage(articleUrl);
+  if (!ogImageUrl) return null;
+
+  try {
+    const response = await fetchWithRetry(ogImageUrl, { signal: AbortSignal.timeout(15000) });
+    if (!response.ok) {
+      return { url: ogImageUrl, source: "direct", fallbackReason: `descarga de la imagen OG devolvió HTTP ${response.status}` };
+    }
+    const normalized = await sharp(Buffer.from(await response.arrayBuffer()))
+      .rotate()
+      .jpeg({ quality: 90, mozjpeg: true })
+      .toBuffer();
+    const blob = await put(`tumblr/${titleId}-og.jpg`, normalized, {
+      access: "public",
+      contentType: "image/jpeg",
+      allowOverwrite: true,
+    });
+    const publicCheck = await fetchWithRetry(blob.url, { method: "HEAD", signal: AbortSignal.timeout(10000) });
+    if (publicCheck.ok) return { url: blob.url, source: "blob" };
+    return { url: ogImageUrl, source: "direct", fallbackReason: `el Blob subido no respondió público (HTTP ${publicCheck.status})` };
+  } catch (error) {
+    const reason = describeFetchError(error);
+    console.warn(`No se pudo re-alojar la imagen OG para Tumblr, se usa el enlace directo: ${reason}`);
+    return { url: ogImageUrl, source: "direct", fallbackReason: reason };
+  }
+}
+
 async function processThreadsJob(job: {
   id: string;
   userId: string;
@@ -677,10 +713,20 @@ async function processTumblrJob(job: {
   if (!integration) throw new Error("Tumblr no está configurado en tu cuenta.");
   if (integration.expiresAt && integration.expiresAt <= new Date()) throw new Error("La autorización de Tumblr expiró. Debes volver a conectar la cuenta.");
   await validateArticleUrl(job.articleUrl);
-  const imageUrl = await getArticleOpenGraphImage(job.articleUrl);
-  if (!imageUrl) throw new Error("El artículo no tiene una imagen OG pública para Tumblr.");
+  const imageResult = job.titleId
+    ? await getRehostedImageForTumblr(job.titleId, job.articleUrl)
+    : (await getArticleOpenGraphImage(job.articleUrl).then((url) => (url ? { url, source: "direct" as const } : null)));
+  if (!imageResult) throw new Error("El artículo no tiene una imagen OG pública para Tumblr.");
+  const imageUrl = imageResult.url;
   const caption = job.suggestedText.includes("[ENLACE]") ? job.suggestedText.replace("[ENLACE]", "") : job.suggestedText;
-  const result = await createTumblrPhotoPost(decryptSecret(integration.accessTokenEncrypted), integration.blogIdentifier, { caption, link: job.articleUrl, imageUrl });
+  let result;
+  try {
+    result = await createTumblrPhotoPost(decryptSecret(integration.accessTokenEncrypted), integration.blogIdentifier, { caption, link: job.articleUrl, imageUrl });
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    const sourceLabel = imageResult.source === "blob" ? "re-alojada en Blob" : `enlace directo del artículo${"fallbackReason" in imageResult && imageResult.fallbackReason ? ` — no se pudo re-alojar: ${imageResult.fallbackReason}` : ""}`;
+    throw new Error(`${errorMsg} (imagen: ${sourceLabel})`);
+  }
   const postId = String(result.response?.id || "");
   const returnedUrl = result.response?.post_url || "";
   const returnedPostMatch = returnedUrl.match(/\/post\/(\d+)(?:\/([^/?#]+))?/i);
