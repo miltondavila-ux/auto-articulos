@@ -470,6 +470,7 @@ interface SocialOpportunity {
 }
 
 function HistorialRedes() {
+  const router = useRouter();
   const [opportunities, setOpportunities] = useState<SocialOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -525,7 +526,7 @@ function HistorialRedes() {
       });
       const data = await res.json();
       if (res.ok) {
-        loadOpportunities();
+        router.push("/dashboard/publicaciones-en-curso");
       } else {
         setError(data.error || "No se pudo reintentar la publicación.");
       }
