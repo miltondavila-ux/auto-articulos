@@ -778,7 +778,10 @@ function HistoryEntry({
 }) {
   const router = useRouter();
   const successCount = run.titles.filter((t) => t.status === "success").length;
-  const hasErrors = run.status === "halted";
+  // Pedido directo de Milton (30/8/2026): un run cancelado por el propio
+  // usuario no mostraba el botón de reintentar en ningún lado, aunque los
+  // títulos cancelados siguen ahí y ahora sí se pueden retomar.
+  const hasErrors = run.status === "halted" || run.status === "cancelled";
   const publicationAt = latestPublicationAt(run.titles);
   const [retrying, setRetrying] = useState(false);
 
