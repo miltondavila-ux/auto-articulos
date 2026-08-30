@@ -88,9 +88,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (opp.platform.startsWith("facebook-")) {
-      const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
-      if (user?.role !== "admin") {
-        return NextResponse.json({ error: "Facebook Pages está disponible solo para usuarios administradores." }, { status: 403 });
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true, allowFacebookPublishing: true } });
+      if (user?.role !== "admin" && !user?.allowFacebookPublishing) {
+        return NextResponse.json({ error: "No tienes permiso para publicar en Facebook. Contacta al administrador." }, { status: 403 });
       }
     }
 
