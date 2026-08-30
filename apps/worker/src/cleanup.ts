@@ -137,6 +137,46 @@ export async function recoverStuckTitles(): Promise<number> {
 // antes de terminar; ver comentario completo en ese archivo).
 const STUCK_SYNC_JOB_MS = 20 * 60 * 1000; // 20 minutos
 
+// Mismo bug de fondo que recoverStuckTitles(), pero nunca se implementó para
+// SocialOpportunity: a diferencia de un Título, si el worker muere a mitad
+// de una publicación social (o si el disparo del worker falla en silencio
+// tras encolarla), queda en "processing"/"queued" para siempre — nada la
+// vuelve a tomar y la fila en Historial se queda mostrando "En proceso"
+// indefinidamente, sin ningún error visible ni forma de reintentar (el botón
+// "Reintentar" solo acepta status "pending"/"error"). Reportado por Milton
+// el 30/8/2026 con un registro de LinkedIn atascado desde el 25/8/2026.
+export async function recoverStuckSocialOpportunities(): Promise<number> {
+  const cutoff = new Date(Date.now() - STUCK_PROCESSING_MS);
+  const message =
+    "El proceso se interrumpió de forma inesperada (posible caída de la base de datos o del worker) y quedó atascado; se recupera automáticamente. Puedes reintentarlo.";
+
+  const stuck = await prisma.socialOpportunity.findMany({
+    where: {
+      OR: [
+        { status: "processing", startedAt: { lt: cutoff } },
+        { status: "queued", createdAt: { lt: cutoff } },
+      ],
+    },
+    select: { id: true, titleId: true },
+  });
+
+  if (stuck.length === 0) return 0;
+
+  await prisma.$transaction([
+    prisma.socialOpportunity.updateMany({
+      where: { id: { in: stuck.map((s) => s.id) } },
+      data: { status: "error", errorLog: message, finishedAt: new Date() },
+    }),
+    prisma.titleEvent.createMany({
+      data: stuck
+        .filter((s): s is { id: string; titleId: string } => Boolean(s.titleId))
+        .map((s) => ({ titleId: s.titleId, message: `Publicación en redes: ${message}` })),
+    }),
+  ]);
+
+  return stuck.length;
+}
+
 export async function recoverStuckSyncJobs(): Promise<number> {
   const cutoff = new Date(Date.now() - STUCK_SYNC_JOB_MS);
   const message =

@@ -8,6 +8,7 @@ import {
   cleanupOldEvents,
   recoverStuckTitles,
   recoverStuckSyncJobs,
+  recoverStuckSocialOpportunities,
 } from "./cleanup";
 
 // Pensado para correr en un runner efímero (GitHub Actions), no como proceso
@@ -130,6 +131,14 @@ async function main() {
     if (recoveredSyncJobs > 0) {
       console.log(
         `Recuperados ${recoveredSyncJobs} job(s) de sincronización atascado(s) en "running".`,
+      );
+    }
+  }
+  if (isMaintenanceShard && !isContentOnly) {
+    const recoveredSocial = await recoverStuckSocialOpportunities();
+    if (recoveredSocial > 0) {
+      console.log(
+        `Recuperadas ${recoveredSocial} publicación(es) social(es) atascada(s).`,
       );
     }
   }
