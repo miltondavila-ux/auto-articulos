@@ -94,20 +94,30 @@ function HistorialEjecuciones() {
     return items;
   }, [runs]);
 
+  // Pedido directo de Milton (30/8/2026): las ejecuciones sin publicación
+  // confirmada (canceladas, con error, o atascadas) vivían adentro de
+  // "Artículos publicados" — confuso, porque justamente no se publicó
+  // nada. Se separan en su propia sección, fuera del conteo/panel de
+  // publicados.
   const runsByPublicationDay = useMemo(() => {
     const map = new Map<string, RunRow[]>();
     for (const run of runs) {
       const publicationAt = latestPublicationAt(run.titles);
-      const dayKey = publicationAt ? localDayKey(publicationAt) : "no-confirmada";
+      if (!publicationAt) continue;
+      const dayKey = localDayKey(publicationAt);
       if (!map.has(dayKey)) map.set(dayKey, []);
       map.get(dayKey)!.push(run);
     }
-    return Array.from(map.entries()).sort(([dayA], [dayB]) => {
-      if (dayA === "no-confirmada") return 1;
-      if (dayB === "no-confirmada") return -1;
-      return dayB.localeCompare(dayA);
-    });
+    return Array.from(map.entries()).sort(([dayA], [dayB]) =>
+      dayB.localeCompare(dayA),
+    );
   }, [runs]);
+
+  const unconfirmedRuns = useMemo(
+    () => runs.filter((run) => !latestPublicationAt(run.titles)),
+    [runs],
+  );
+  const publishedRunsCount = runs.length - unconfirmedRuns.length;
 
   return (
     <>
@@ -131,7 +141,7 @@ function HistorialEjecuciones() {
           <h2 style={{ ...h2Style, margin: 0 }}>Artículos publicados</h2>
         </div>
         <span className="muted" style={{ fontSize: 13 }}>
-          {runs.length} ejecución{runs.length !== 1 ? "es" : ""}
+          {publishedRunsCount} ejecución{publishedRunsCount !== 1 ? "es" : ""}
         </span>
       </summary>
       <div style={{ marginTop: 14 }}>
@@ -196,9 +206,9 @@ function HistorialEjecuciones() {
             {deleteError}
           </p>
         )}
-        {runs.length === 0 ? (
+        {publishedRunsCount === 0 ? (
           <p className="muted" style={{ fontSize: 13 }}>
-            Aún no hay ejecuciones en el historial.
+            Aún no hay ejecuciones publicadas en el historial.
           </p>
         ) : (
           runsByPublicationDay.map(([dayKey, dayRuns]) => (
@@ -212,6 +222,45 @@ function HistorialEjecuciones() {
         )}
       </div>
       </details>
+      {unconfirmedRuns.length > 0 && (
+        <details className="panel" style={{ ...sectionStyle, borderColor: "#ffd8a8" }}>
+          <summary
+            style={{
+              cursor: "pointer",
+              listStyle: "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 10,
+              userSelect: "none",
+            }}
+          >
+            <div>
+              <p className="eyebrow" style={{ margin: "0 0 2px", color: "#8a4b08" }}>
+                Sin publicar
+              </p>
+              <h2 style={{ ...h2Style, margin: 0 }}>
+                Ejecuciones sin publicación confirmada
+              </h2>
+            </div>
+            <span className="muted" style={{ fontSize: 13 }}>
+              {unconfirmedRuns.length} ejecución
+              {unconfirmedRuns.length !== 1 ? "es" : ""}
+            </span>
+          </summary>
+          <div style={{ marginTop: 14 }}>
+            <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
+              Canceladas, con error, o sin ningún título publicado todavía.
+              Desde aquí puedes reintentarlas.
+            </p>
+            <PublicationDayGroup
+              dayKey="no-confirmada"
+              runs={unconfirmedRuns}
+              onRetried={loadRuns}
+            />
+          </div>
+        </details>
+      )}
     </>
   );
 }
