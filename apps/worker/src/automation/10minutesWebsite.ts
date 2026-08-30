@@ -1330,6 +1330,9 @@ async function resolveDuplicateTitleEarly(
   title: string,
   onStep: OnStep,
 ): Promise<string> {
+  // Pedido directo de Milton (30/8/2026): que se vea que el sistema está
+  // revisando esto, no solo enterarse cuando encuentra un choque.
+  await onStep("Validando si el artículo está repetido...");
   await page
     .evaluate(() => {
       const jq = (window as unknown as {
