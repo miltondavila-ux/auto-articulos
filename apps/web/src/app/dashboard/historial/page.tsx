@@ -480,6 +480,7 @@ function HistorialRedes() {
   const [socialEvents, setSocialEvents] = useState<Record<string, TitleEventRow[]>>({});
   const [loadingSocialEvent, setLoadingSocialEvent] = useState<string | null>(null);
   const [retryingOppId, setRetryingOppId] = useState<string | null>(null);
+  const [retryErrors, setRetryErrors] = useState<Record<string, string>>({});
 
   // Mismo estándar que Artículos: agrupado por día usando los mismos
   // helpers (localDayKey, publicationDayLabel) en vez de inventar un
@@ -564,7 +565,11 @@ function HistorialRedes() {
 
   async function handleRetryOpportunity(id: string) {
     setRetryingOppId(id);
-    setError(null);
+    setRetryErrors((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
     try {
       const res = await fetch("/api/social-opportunities/publish", {
         method: "POST",
@@ -575,10 +580,12 @@ function HistorialRedes() {
       if (res.ok) {
         router.push("/dashboard/publicaciones-en-curso");
       } else {
-        setError(data.error || "No se pudo reintentar la publicación.");
+        // El mensaje va junto al botón que se clickeó, no arriba de la
+        // página — Milton reportó que ahí arriba pasaba desapercibido.
+        setRetryErrors((prev) => ({ ...prev, [id]: data.error || "No se pudo reintentar la publicación." }));
       }
     } catch (err: any) {
-      setError(err.message);
+      setRetryErrors((prev) => ({ ...prev, [id]: err.message }));
     } finally {
       setRetryingOppId(null);
     }
@@ -798,6 +805,11 @@ function HistorialRedes() {
                               {retryingOppId === opp.id ? "Reintentando..." : "Reintentar"}
                             </button>
                           </>
+                        )}
+                        {retryErrors[opp.id] && (
+                          <span style={{ color: "#ff3b30", fontSize: 11, flexBasis: "100%" }}>
+                            {retryErrors[opp.id]}
+                          </span>
                         )}
                       </div>
                     </summary>
@@ -1075,6 +1087,11 @@ function HistorialRedes() {
                           {retryingOppId === opp.id ? "Reintentando..." : "Reintentar"}
                         </button>
                       </>
+                    )}
+                    {retryErrors[opp.id] && (
+                      <span style={{ color: "#ff3b30", fontSize: 11, flexBasis: "100%" }}>
+                        {retryErrors[opp.id]}
+                      </span>
                     )}
                   </div>
                 </summary>

@@ -19,16 +19,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "id es requerido" }, { status: 400 });
     }
 
-    const opp = await prisma.socialOpportunity.findFirst({
-      where: { id, userId, status: { in: ["pending", "error"] } },
+    // Se busca primero SIN filtrar por status para poder decir la razón
+    // real si no se puede reintentar (antes decía siempre el mismo mensaje
+    // genérico "no encontrada, ya publicada o en proceso" sin importar cuál
+    // de esas tres causas era, dificultando saber si era un caso legítimo
+    // (ya en cola) o un dato real inconsistente).
+    const existing = await prisma.socialOpportunity.findFirst({
+      where: { id, userId },
     });
 
-    if (!opp) {
+    if (!existing) {
       return NextResponse.json(
-        { error: "Propuesta no encontrada, ya publicada o en proceso" },
+        { error: "Esta propuesta no existe o no pertenece a tu cuenta." },
         { status: 404 }
       );
     }
+
+    if (!["pending", "error"].includes(existing.status)) {
+      const statusLabel =
+        existing.status === "published"
+          ? "ya está publicada"
+          : existing.status === "queued"
+          ? "está en cola, esperando al worker"
+          : existing.status === "processing"
+          ? "se está procesando ahora mismo"
+          : `tiene un estado inesperado ("${existing.status}")`;
+      return NextResponse.json(
+        { error: `No se puede reintentar: ${statusLabel}. Actualiza la página para ver el estado real.` },
+        { status: 409 }
+      );
+    }
+
+    const opp = existing;
 
     if (!opp.articleUrl) {
       return NextResponse.json(
