@@ -319,13 +319,15 @@ async function normalizeSocialImage(imageUrl: string, targetAspect = 3 / 4): Pro
  * confiable. Si algo falla acá, se usa igual el enlace directo del artículo
  * como respaldo (mismo comportamiento que antes de este cambio).
  */
-async function getRehostedThreadsImage(titleId: string, articleUrl: string): Promise<string | null> {
+type ThreadsImageResult = { url: string; source: "blob" | "direct" };
+
+async function getRehostedThreadsImage(titleId: string, articleUrl: string): Promise<ThreadsImageResult | null> {
   const ogImageUrl = await getArticleOpenGraphImage(articleUrl);
   if (!ogImageUrl) return null;
 
   try {
     const response = await fetchWithRetry(ogImageUrl, { signal: AbortSignal.timeout(15000) });
-    if (!response.ok) return ogImageUrl;
+    if (!response.ok) return { url: ogImageUrl, source: "direct" };
 
     // Threads rechaza algunas OG en WebP/AVIF/SVG o con dimensiones/peso
     // incompatibles. Es la misma imagen del artículo, solo normalizada a JPEG.
@@ -338,10 +340,10 @@ async function getRehostedThreadsImage(titleId: string, articleUrl: string): Pro
       contentType: "image/jpeg",
     });
     const publicCheck = await fetchWithRetry(blob.url, { method: "HEAD", signal: AbortSignal.timeout(10000) });
-    return publicCheck.ok ? blob.url : ogImageUrl;
+    return publicCheck.ok ? { url: blob.url, source: "blob" } : { url: ogImageUrl, source: "direct" };
   } catch (error) {
     console.warn(`No se pudo re-alojar la imagen OG para Threads, se usa el enlace directo: ${describeFetchError(error)}`);
-    return ogImageUrl;
+    return { url: ogImageUrl, source: "direct" };
   }
 }
 
@@ -397,15 +399,24 @@ async function processThreadsJob(job: {
 
   // Re-alojada en nuestro Blob (ver getRehostedThreadsImage) para que Meta no
   // dependa del hosting del propio artículo al procesar el contenedor.
-  const imageUrl = job.titleId
-    ? (await getRehostedThreadsImage(job.titleId, job.articleUrl)) ?? undefined
-    : (await getArticleOpenGraphImage(job.articleUrl)) ?? undefined;
+  const imageResult: ThreadsImageResult | null = job.titleId
+    ? await getRehostedThreadsImage(job.titleId, job.articleUrl)
+    : (await getArticleOpenGraphImage(job.articleUrl).then((url) => (url ? { url, source: "direct" as const } : null)));
 
-  if (!imageUrl) {
+  if (!imageResult) {
     throw new Error("El artículo no tiene una imagen og:image pública para Threads. La publicación se detuvo para no enviar un hilo sin imagen.");
   }
 
-  const result = await publishThread(accessToken, integration.threadsUserId, finalPost, imageUrl);
+  const imageUrl = imageResult.url;
+  const imageSourceLabel = imageResult.source === "blob" ? "re-alojada en Blob" : "enlace directo del artículo";
+
+  let result;
+  try {
+    result = await publishThread(accessToken, integration.threadsUserId, finalPost, imageUrl);
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    throw new Error(`${errorMsg} (imagen: ${imageSourceLabel})`);
+  }
 
   await prisma.socialOpportunity.update({
     where: { id: job.id },
