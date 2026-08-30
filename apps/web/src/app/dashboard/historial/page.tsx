@@ -477,6 +477,7 @@ function HistorialRedes() {
   const [error, setError] = useState<string | null>(null);
   const [socialEvents, setSocialEvents] = useState<Record<string, TitleEventRow[]>>({});
   const [loadingSocialEvent, setLoadingSocialEvent] = useState<string | null>(null);
+  const [retryingOppId, setRetryingOppId] = useState<string | null>(null);
 
   async function loadSocialEvents(titleId: string) {
     if (socialEvents[titleId]) return;
@@ -512,6 +513,28 @@ function HistorialRedes() {
   useEffect(() => {
     loadOpportunities();
   }, []);
+
+  async function handleRetryOpportunity(id: string) {
+    setRetryingOppId(id);
+    setError(null);
+    try {
+      const res = await fetch("/api/social-opportunities/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        loadOpportunities();
+      } else {
+        setError(data.error || "No se pudo reintentar la publicación.");
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setRetryingOppId(null);
+    }
+  }
 
   async function handleDeleteHistory() {
     setDeletingHistory(true);
@@ -666,11 +689,29 @@ function HistorialRedes() {
                           {opp.articleTitle}
                         </span>
                       </div>
-                      <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         {opp.status === "published" ? (
                           <span style={{ color: "#16803c", fontWeight: 600, fontSize: 12 }}>✓ Publicado</span>
                         ) : (
-                          <span style={{ color: "#ff3b30", fontWeight: 600, fontSize: 12 }}>✕ Error</span>
+                          <>
+                            <span style={{ color: "#ff3b30", fontWeight: 600, fontSize: 12 }}>✕ Error</span>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleRetryOpportunity(opp.id);
+                              }}
+                              disabled={retryingOppId === opp.id}
+                              className="secondary"
+                              style={{
+                                ...secondaryButtonStyle,
+                                padding: "3px 10px",
+                                fontSize: 11,
+                              }}
+                            >
+                              {retryingOppId === opp.id ? "Reintentando..." : "Reintentar"}
+                            </button>
+                          </>
                         )}
                       </div>
                     </summary>

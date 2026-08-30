@@ -20,12 +20,12 @@ export async function POST(request: NextRequest) {
     }
 
     const opp = await prisma.socialOpportunity.findFirst({
-      where: { id, userId, status: "pending" },
+      where: { id, userId, status: { in: ["pending", "error"] } },
     });
 
     if (!opp) {
       return NextResponse.json(
-        { error: "Propuesta no encontrada o ya publicada" },
+        { error: "Propuesta no encontrada, ya publicada o en proceso" },
         { status: 404 }
       );
     }
