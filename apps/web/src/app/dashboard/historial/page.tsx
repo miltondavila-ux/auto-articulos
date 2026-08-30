@@ -462,6 +462,7 @@ interface SocialOpportunity {
   publishedAt: string | null;
   startedAt: string | null;
   finishedAt: string | null;
+  progressPercent?: number | null;
   // Imagen y prompt exactos usados cuando la publicación usó el generador
   // de imágenes con IA — pedido explícito de Milton (22/8/2026) para ver
   // esto en el histórico sin tener que revisar los logs de GitHub Actions.
@@ -693,6 +694,12 @@ function HistorialRedes() {
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         {opp.status === "published" ? (
                           <span style={{ color: "#16803c", fontWeight: 600, fontSize: 12 }}>✓ Publicado</span>
+                        ) : opp.status === "processing" ? (
+                          <span style={{ color: "#1d1d1f", fontWeight: 600, fontSize: 12 }}>
+                            Procesando...{opp.progressPercent ? ` (${opp.progressPercent}%)` : ""}
+                          </span>
+                        ) : opp.status === "queued" ? (
+                          <span style={{ color: "#8a4b08", fontWeight: 600, fontSize: 12 }}>En cola</span>
                         ) : (
                           <>
                             <span style={{ color: "#ff3b30", fontWeight: 600, fontSize: 12 }}>✕ Error</span>
