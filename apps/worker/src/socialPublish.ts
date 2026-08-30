@@ -38,11 +38,41 @@ async function updateSocialProgress(
   await prisma.socialOpportunity.update({ where: { id }, data });
 }
 
+function describeFetchError(err: unknown): string {
+  if (err instanceof Error) {
+    const cause = (err as Error & { cause?: unknown }).cause;
+    const causeMsg = cause instanceof Error ? cause.message : cause ? String(cause) : null;
+    return causeMsg ? `${err.message}: ${causeMsg}` : err.message;
+  }
+  return String(err);
+}
+
+/**
+ * Reintenta un fetch a un sitio externo ante cortes de conexión pasajeros
+ * (el hosting de algunos artículos corta la conexión antes de completar el
+ * TLS de forma intermitente, no por artículo caído). 3 intentos con espera
+ * creciente antes de rendirse.
+ */
+async function fetchWithRetry(url: string, init: RequestInit, attempts = 3): Promise<Response> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await fetch(url, init);
+    } catch (err) {
+      lastError = err;
+      if (attempt < attempts) {
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
+      }
+    }
+  }
+  throw lastError;
+}
+
 async function validateArticleUrl(url: string): Promise<void> {
   if (!url) throw new Error("La oportunidad no tiene URL de artículo.");
 
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithRetry(url, {
       redirect: "follow",
       signal: AbortSignal.timeout(10000),
       // Algunos hostings bloquean o frenan pedidos sin User-Agent de
@@ -56,7 +86,7 @@ async function validateArticleUrl(url: string): Promise<void> {
     });
     if (!res.ok) throw new Error(`La URL del artículo devuelve error ${res.status}. Verifica que el artículo siga publicado en tu blog.`);
   } catch (err) {
-    throw new Error(`No se pudo validar la URL del artículo (${url}): ${err instanceof Error ? err.message : String(err)}. Verifica que el artículo siga publicado.`);
+    throw new Error(`No se pudo validar la URL del artículo (${url}): ${describeFetchError(err)}. Verifica que el artículo siga publicado.`);
   }
 }
 
@@ -67,7 +97,7 @@ async function validateArticleUrl(url: string): Promise<void> {
  */
 export async function getArticleOpenGraphImage(articleUrl: string): Promise<string | null> {
   try {
-    const res = await fetch(articleUrl, {
+    const res = await fetchWithRetry(articleUrl, {
       redirect: "follow",
       signal: AbortSignal.timeout(10000),
       headers: { Accept: "text/html,application/xhtml+xml" },
@@ -84,7 +114,7 @@ export async function getArticleOpenGraphImage(articleUrl: string): Promise<stri
 
     return new URL(match[1].replace(/&amp;/g, "&"), res.url).toString();
   } catch (error) {
-    console.warn("No se pudo obtener og:image del artículo para LinkedIn:", error);
+    console.warn(`No se pudo obtener og:image del artículo: ${describeFetchError(error)}`);
     return null;
   }
 }
