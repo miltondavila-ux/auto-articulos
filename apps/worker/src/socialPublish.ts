@@ -831,10 +831,12 @@ async function processMastodonJob(job: { id: string; userId: string; titleId: st
   const text = job.suggestedText.includes("[ENLACE]") ? job.suggestedText.replace("[ENLACE]", job.articleUrl) : `${job.suggestedText}\n\n${job.articleUrl}`;
   let mediaId: string | undefined;
   if (imageUrl) {
-    const image = await fetch(imageUrl, { signal: AbortSignal.timeout(15000) });
+    const image = await fetchWithRetry(imageUrl, { signal: AbortSignal.timeout(15000) });
     if (image.ok) mediaId = (await createMastodonMedia(integration.instanceUrl, token, new Uint8Array(await image.arrayBuffer()), image.headers.get("content-type") || "image/jpeg", job.articleTitle)).id;
   }
-  const result = await createMastodonStatus(integration.instanceUrl, token, text, mediaId);
+  // job.id (SocialOpportunity) es estable entre reintentos de la MISMA
+  // publicación — necesario para que Idempotency-Key funcione de verdad.
+  const result = await createMastodonStatus(integration.instanceUrl, token, text, job.id, mediaId);
   const postUrl = result.url || result.uri || `${integration.instanceUrl}/@${integration.username}/${result.id}`;
   await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: postUrl, publishedAt: new Date(), errorLog: null } });
   if (job.titleId) await prisma.titleEvent.create({ data: { titleId: job.titleId, message: `Publicado exitosamente en Mastodon (@${integration.username || "cuenta"}).` } });

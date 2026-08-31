@@ -25,10 +25,24 @@ export async function createMastodonMedia(instanceUrl: string, accessToken: stri
   return request<{ id: string }>(instanceUrl, "/api/v2/media", accessToken, { method: "POST", body: form });
 }
 
-export async function createMastodonStatus(instanceUrl: string, accessToken: string, text: string, mediaId?: string) {
+/**
+ * Auditoría de seguridad anti-SPAM (30/8/2026): idempotencyKey DEBE ser
+ * estable entre reintentos de la MISMA publicación (documentación oficial:
+ * https://docs.joinmastodon.org/methods/statuses/ — Mastodon guarda la clave
+ * hasta 1 hora y descarta silenciosamente un envío repetido con la misma
+ * clave, devolviendo el status ya creado). Antes se generaba un
+ * crypto.randomUUID() nuevo en CADA llamada, lo que anulaba por completo la
+ * protección: un timeout donde Mastodon sí recibió el post pero la
+ * respuesta no llegó a nuestro worker terminaba en una publicación
+ * duplicada real en el siguiente reintento, porque la clave nueva no
+ * coincidía con la anterior. El llamador debe pasar una clave derivada del
+ * id real de la publicación (ej. el id de SocialOpportunity), no generarla
+ * acá.
+ */
+export async function createMastodonStatus(instanceUrl: string, accessToken: string, text: string, idempotencyKey: string, mediaId?: string) {
   return request<MastodonStatus>(instanceUrl, "/api/v1/statuses", accessToken, {
     method: "POST",
-    headers: { "Content-Type": "application/json", "Idempotency-Key": crypto.randomUUID() },
+    headers: { "Content-Type": "application/json", "Idempotency-Key": idempotencyKey },
     body: JSON.stringify({ status: text.slice(0, 500), visibility: "public", ...(mediaId ? { media_ids: [mediaId] } : {}) }),
   });
 }
