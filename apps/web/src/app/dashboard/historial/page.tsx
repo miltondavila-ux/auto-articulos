@@ -614,7 +614,7 @@ function HistorialRedes() {
   async function handleRetryBatch(key: string, ids: string[]) {
     if (ids.length === 0) return;
     setBatchRetryingKey(key);
-    setBatchMessage(`Reintentando ${ids.length} publicación${ids.length !== 1 ? "es" : ""}...`);
+    setBatchMessage(`Publicando ${ids.length} publicación${ids.length !== 1 ? "es" : ""}...`);
     let successCount = 0;
     let failCount = 0;
     for (const id of ids) {
@@ -630,7 +630,7 @@ function HistorialRedes() {
         failCount++;
       }
     }
-    setBatchMessage(`Listo: ${successCount} encoladas, ${failCount} no se pudieron reintentar.`);
+    setBatchMessage(`Listo: ${successCount} encoladas para publicar, ${failCount} no se pudieron encolar.`);
     setBatchRetryingKey(null);
     if (successCount > 0) {
       router.push("/dashboard/publicaciones-en-curso");
@@ -1041,7 +1041,7 @@ function HistorialRedes() {
               className="secondary"
               style={{ ...secondaryButtonStyle, padding: "3px 10px", fontSize: 11 }}
             >
-              {batchRetryingKey === "skipped-all" ? "Reintentando..." : "Reintentar todas"}
+              {batchRetryingKey === "skipped-all" ? "Publicando..." : "Publicar todas"}
             </button>
           </div>
         </summary>
@@ -1093,7 +1093,7 @@ function HistorialRedes() {
                   className="secondary"
                   style={{ ...secondaryButtonStyle, padding: "2px 8px", fontSize: 10 }}
                 >
-                  {batchRetryingKey === `skipped-${dayKey}` ? "Reintentando..." : "Reintentar día"}
+                  {batchRetryingKey === `skipped-${dayKey}` ? "Publicando..." : "Publicar día"}
                 </button>
               </summary>
               <div style={{ padding: "0 16px 16px 16px", display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
@@ -1224,7 +1224,7 @@ function HistorialRedes() {
               className="secondary"
               style={{ ...secondaryButtonStyle, padding: "3px 10px", fontSize: 11 }}
             >
-              {batchRetryingKey === "unconfirmed-all" ? "Reintentando..." : "Reintentar todas"}
+              {batchRetryingKey === "unconfirmed-all" ? "Publicando..." : "Publicar todas"}
             </button>
           </div>
         </summary>
@@ -1276,7 +1276,7 @@ function HistorialRedes() {
                   className="secondary"
                   style={{ ...secondaryButtonStyle, padding: "2px 8px", fontSize: 10 }}
                 >
-                  {batchRetryingKey === `unconfirmed-${dayKey}` ? "Reintentando..." : "Reintentar día"}
+                  {batchRetryingKey === `unconfirmed-${dayKey}` ? "Publicando..." : "Publicar día"}
                 </button>
               </summary>
               <div style={{ padding: "0 16px 16px 16px", display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
