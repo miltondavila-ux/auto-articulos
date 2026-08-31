@@ -787,6 +787,7 @@ function HistorialRedes() {
                       display: "flex",
                       alignItems: "center",
                       gap: 10,
+                      flexWrap: "wrap",
                       padding: "12px 16px",
                       userSelect: "none",
                     }}
@@ -839,7 +840,7 @@ function HistorialRedes() {
                           {opp.articleTitle}
                         </span>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                         {opp.status === "published" ? (
                           <span style={{ color: "#16803c", fontWeight: 600, fontSize: 12 }}>✓ Publicado</span>
                         ) : opp.status === "processing" ? (
@@ -1090,6 +1091,7 @@ function HistorialRedes() {
                   display: "flex",
                   alignItems: "center",
                   gap: 10,
+                  flexWrap: "wrap",
                   padding: "12px 16px",
                   userSelect: "none",
                 }}
@@ -1153,7 +1155,7 @@ function HistorialRedes() {
                       {opp.articleTitle}
                     </span>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                     <span style={{ color: "#6e6e73", fontWeight: 600, fontSize: 12 }}>Descartada</span>
                     <button
                       onClick={(e) => {
@@ -1272,6 +1274,7 @@ function HistorialRedes() {
                   display: "flex",
                   alignItems: "center",
                   gap: 10,
+                  flexWrap: "wrap",
                   padding: "12px 16px",
                   userSelect: "none",
                 }}
@@ -1335,7 +1338,7 @@ function HistorialRedes() {
                       {opp.articleTitle}
                     </span>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                     {opp.status === "processing" ? (
                       <span style={{ color: "#1d1d1f", fontWeight: 600, fontSize: 12 }}>
                         Procesando...{opp.progressPercent ? ` (${opp.progressPercent}%)` : ""}
