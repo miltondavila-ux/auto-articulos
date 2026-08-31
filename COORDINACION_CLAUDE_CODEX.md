@@ -905,3 +905,86 @@ conversación; sin migraciones aplicadas.
 Responsable: Claude. Siguiente acción: Milton confirma visualmente en
 `https://auto-articulos-web.vercel.app/dashboard/oportunidades-redes`.
 Decisión de Milton: pendiente.
+
+## 2026-08-31 — Cierre: TRANSFERIDO DE CODEX - SISTEMA NO PUBLICA ARTÍCULOS
+
+[CLAUDE] - SISTEMA NO PUBLICA ARTÍCULOS
+
+Proyecto: retomar la conversación transferida de Codex sobre el sistema que
+no publicaba artículos, diagnosticar y corregir de raíz, no con parches.
+
+Causa raíz real encontrada (confirmada con `git log -S` y evidencia en vivo,
+no supuesta): el commit `a00c636` (28/8, 22:02) agregó `validator.resetForm()`
+dentro de `revalidateTitleAndForm()` en `10minutesWebsite.ts` — ese método de
+jQuery Validate ejecuta el `reset()` nativo del `<form>`, que borraba
+título/resumen/tipo justo antes de guardar. Los tres parches de emergencia
+escritos esa misma noche (`b0882b8`, `6823b82`) eran para tapar síntomas de
+ese mismo bug, no problemas independientes; se retiraron junto con la causa.
+
+Cambios desplegados en `main` (todos con 3 auditorías y Vercel `success`):
+- `144de95`/`6df3455`: detección de "Insufficient credits" en inglés y
+  popup con QR de WhatsApp para créditos generales agotados.
+- `e6bceb6`: reparado un diagnóstico propio roto por `__name`/esbuild.
+- `cbd8b09`: **fix de la causa raíz** — `resetForm()` → `hideErrors()`.
+- `9d60269`/`e89ea97`: retirada doble invalidación y el desbloqueo forzado
+  del botón (parches de crisis ya innecesarios).
+- `99ea137`/`1840734`/`d83507d`/`dbf99a6`/`ea2a0da`: título duplicado ahora
+  se detecta ANTES de generar la imagen (ahorra tiempo/créditos), mensaje
+  claro con enlaces reales a lo que ya existe, sección propia en Historial
+  ("Artículos repetidos que no se publicarán"), aviso visible "Validando…",
+  agrupado por fecha (Hoy/Ayer/fecha).
+- `4001a83`: el cron de GitHub Actions (`*/5 * * * *`) compartía un solo
+  grupo de concurrencia entre corridas programadas — bajo carga alta,
+  GitHub llegó a descartar disparos completos (confirmado: ~1h sin ninguna
+  corrida mientras 3 lotes reales corrían). Cada corrida ahora tiene su
+  propio grupo por `run_id`; las reservas atómicas por usuario
+  (`reservation.ts`) ya cubrían la seguridad, verificado en el código.
+- `5a0a109`: un run/título cancelado por el usuario no tenía forma de
+  reintentarse desde Historial — habilitado.
+- `f726422`: script + workflow (`Database Write - Bajar limite diario a 5`)
+  para bajar `dailyArticleLimit` a 5 en usuarios no-admin — **PENDIENTE**:
+  preparado pero no ejecutado; requiere disparo manual en la pestaña Actions
+  (o via `gh workflow run`, ahora que `gh auth login` quedó activo).
+- `ec5a70f`/`93dbb37`/`33bef57`: auditoría responsive completa de Historial
+  — 8 encabezados sin `flexWrap` que cortaban botones/enlaces en móvil
+  (confirmado con capturas reales de Milton), corregidos todos; emoji
+  retirado de `CreditsQrAlert` (regla de estilo Apple del usuario).
+
+Verificación en producción: confirmada en vivo por Milton con lotes reales
+(individual, categoría de 4, categoría de 9 en Lorena Álvarez) — artículos
+publicándose de punta a punta, incluidos casos de título duplicado con
+mutación automática y publicación exitosa en el primer intento.
+
+Metodología (dejada explícita en `CONTROLADOR_DE_VERSIONES.md` para que se
+repita si el sistema vuelve a fallar): usar `git log -S` para encontrar el
+commit exacto que rompió el comportamiento, comparar contra la versión
+anterior que funcionaba, diagnosticar con evidencia en vivo — nunca
+apilar un parche nuevo sobre un síntoma sin entender la causa.
+
+Archivos modificados: `apps/worker/src/queue.ts`,
+`apps/worker/src/automation/10minutesWebsite.ts`,
+`apps/web/src/components/CreditsQrAlert.tsx`,
+`apps/web/src/app/dashboard/layout.tsx`,
+`apps/web/src/app/dashboard/historial/page.tsx`,
+`apps/web/src/components/dashboard-ui.tsx`,
+`apps/web/src/app/api/titles/[id]/retry/route.ts`,
+`apps/web/src/app/api/runs/[id]/retry/route.ts`,
+`.github/workflows/worker.yml`,
+`.github/workflows/set-daily-limit.yml`,
+`apps/worker/src/set-daily-limit.ts`.
+Migraciones: ninguna.
+Capitanía de migración: reclamada y liberada varias veces durante esta
+conversación, siempre coordinando con la sesión paralela que trabajaba
+"BOTONES OPORTUNIDADES REDES" en archivos distintos.
+
+Estado: VERIFICADO EN PRODUCCIÓN. Esta conversación se archiva hoy.
+
+Pendiente para quien retome:
+1. Disparar manualmente "Database Write - Bajar limite diario a 5" en
+   Actions (o `gh workflow run set-daily-limit.yml`).
+2. Confirmar visualmente que el botón "Reintentar" para runs cancelados y
+   la nueva sección de Historial se ven bien en el teléfono de Milton tras
+   el último despliegue de responsive.
+
+Responsable siguiente: quien retome, sobre este mismo documento.
+Decisión de Milton: archivar esta conversación.
