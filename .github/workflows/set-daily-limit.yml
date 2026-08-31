@@ -1,0 +1,29 @@
+name: Database Write - Bajar limite diario a 5 (no-admin)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  write:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DIRECT_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Generar cliente de Prisma
+        run: npx prisma generate --schema=packages/db/prisma/schema.prisma
+
+      - name: Bajar dailyArticleLimit a 5 (usuarios no-admin)
+        working-directory: apps/worker
+        run: npx tsx src/set-daily-limit.ts
