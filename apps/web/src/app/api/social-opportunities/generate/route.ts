@@ -204,7 +204,12 @@ async function getConnectedNetworks(userId: string) {
   ]);
   const isAdmin = user?.role === "admin";
   const socialOverride = user?.email?.toLowerCase() === "lorenalvarez30@gmail.com";
-  const activeNetworks = { threads: Boolean(isAdmin || socialOverride || user?.allowThreadsPublishing), x: Boolean(isAdmin || socialOverride || twitter), linkedin: Boolean(isAdmin || socialOverride || user?.allowLinkedInPublishing), instagram: Boolean(isAdmin || socialOverride || user?.allowInstagramPublishing), facebookPage: Boolean(isAdmin || socialOverride || user?.allowFacebookPublishing), pinterest: Boolean(isAdmin || socialOverride || user?.allowPinterestPublishing), tumblr: Boolean(isAdmin || socialOverride || user?.allowTumblrPublishing), bluesky: Boolean(isAdmin || user?.allowBlueskyPublishing), mastodon: Boolean(isAdmin || socialOverride || user?.allowMastodonPublishing), devto: Boolean(isAdmin || socialOverride || user?.allowDevToPublishing) };
+  // X (Twitter) apagada a pedido explícito de Milton (30/8/2026): "no la
+  // usaremos, salvo que la volvamos a solicitar". Se deja el resto del
+  // código de X intacto (integración, publicación, historial) para poder
+  // reactivarla fácil más adelante — solo se fuerza a `false` acá, el único
+  // punto de donde sale si se muestra o no en Oportunidades en Redes.
+  const activeNetworks = { threads: Boolean(isAdmin || socialOverride || user?.allowThreadsPublishing), x: false, linkedin: Boolean(isAdmin || socialOverride || user?.allowLinkedInPublishing), instagram: Boolean(isAdmin || socialOverride || user?.allowInstagramPublishing), facebookPage: Boolean(isAdmin || socialOverride || user?.allowFacebookPublishing), pinterest: Boolean(isAdmin || socialOverride || user?.allowPinterestPublishing), tumblr: Boolean(isAdmin || socialOverride || user?.allowTumblrPublishing), bluesky: Boolean(isAdmin || user?.allowBlueskyPublishing), mastodon: Boolean(isAdmin || socialOverride || user?.allowMastodonPublishing), devto: Boolean(isAdmin || socialOverride || user?.allowDevToPublishing) };
   return { activeNetworks, threads: activeNetworks.threads && Boolean(threads), x: activeNetworks.x && Boolean(twitter), linkedin: activeNetworks.linkedin && Boolean(linkedin), instagram: activeNetworks.instagram && Boolean(instagram), facebookPage: activeNetworks.facebookPage && Boolean(facebookPage), pinterest: activeNetworks.pinterest && Boolean(pinterest && pinterest.boardId && (!pinterest.expiresAt || pinterest.expiresAt > new Date())), tumblr: activeNetworks.tumblr && Boolean(tumblr && (!tumblr.expiresAt || tumblr.expiresAt > new Date())), bluesky: activeNetworks.bluesky && Boolean(bluesky), mastodon: activeNetworks.mastodon && Boolean(mastodon), devto: activeNetworks.devto && Boolean(devto) };
 }
 
