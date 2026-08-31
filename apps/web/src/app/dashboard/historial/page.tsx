@@ -603,6 +603,42 @@ function HistorialRedes() {
     }
   }
 
+  // Reintento en lote — pedido explícito de Milton (30/8/2026) para no
+  // tener que clickear "Reintentar" una por una en Sin confirmar y
+  // Descartadas. Mismo patrón que handlePublishAll en Oportunidades: llama
+  // al mismo endpoint una por una (no en paralelo, para no saturar el
+  // trigger del worker) y navega a Publicaciones en Curso al terminar.
+  const [batchRetryingKey, setBatchRetryingKey] = useState<string | null>(null);
+  const [batchMessage, setBatchMessage] = useState<string | null>(null);
+
+  async function handleRetryBatch(key: string, ids: string[]) {
+    if (ids.length === 0) return;
+    setBatchRetryingKey(key);
+    setBatchMessage(`Reintentando ${ids.length} publicación${ids.length !== 1 ? "es" : ""}...`);
+    let successCount = 0;
+    let failCount = 0;
+    for (const id of ids) {
+      try {
+        const res = await fetch("/api/social-opportunities/publish", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }),
+        });
+        if (res.ok) successCount++;
+        else failCount++;
+      } catch {
+        failCount++;
+      }
+    }
+    setBatchMessage(`Listo: ${successCount} encoladas, ${failCount} no se pudieron reintentar.`);
+    setBatchRetryingKey(null);
+    if (successCount > 0) {
+      router.push("/dashboard/publicaciones-en-curso");
+    } else {
+      loadOpportunities();
+    }
+  }
+
   async function handleDeleteHistory() {
     setDeletingHistory(true);
     setError(null);
@@ -991,15 +1027,32 @@ function HistorialRedes() {
               Publicaciones en redes descartadas
             </h2>
           </div>
-          <span className="muted" style={{ fontSize: 13 }}>
-            {skippedOpportunities.length} publicación{skippedOpportunities.length !== 1 ? "es" : ""}
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span className="muted" style={{ fontSize: 13 }}>
+              {skippedOpportunities.length} publicación{skippedOpportunities.length !== 1 ? "es" : ""}
+            </span>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleRetryBatch("skipped-all", skippedOpportunities.map((o) => o.id));
+              }}
+              disabled={batchRetryingKey === "skipped-all"}
+              className="secondary"
+              style={{ ...secondaryButtonStyle, padding: "3px 10px", fontSize: 11 }}
+            >
+              {batchRetryingKey === "skipped-all" ? "Reintentando..." : "Reintentar todas"}
+            </button>
+          </div>
         </summary>
         <div style={{ marginTop: 14 }}>
           <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
             Descartadas a propósito con el botón "Descartar" en Oportunidades.
             Si cambias de opinión, puedes reintentarlas desde aquí.
           </p>
+          {batchMessage && (
+            <p style={{ fontSize: 12, color: "#8a4b08", marginBottom: 12 }}>{batchMessage}</p>
+          )}
           {skippedByDay.map(([dayKey, dayOpps]) => (
             <details
               key={dayKey}
@@ -1030,6 +1083,18 @@ function HistorialRedes() {
                 <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
                   — {dayOpps.length} publicación{dayOpps.length !== 1 ? "es" : ""}
                 </span>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleRetryBatch(`skipped-${dayKey}`, dayOpps.map((o) => o.id));
+                  }}
+                  disabled={batchRetryingKey === `skipped-${dayKey}`}
+                  className="secondary"
+                  style={{ ...secondaryButtonStyle, padding: "2px 8px", fontSize: 10 }}
+                >
+                  {batchRetryingKey === `skipped-${dayKey}` ? "Reintentando..." : "Reintentar día"}
+                </button>
               </summary>
               <div style={{ padding: "0 16px 16px 16px", display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
             {dayOpps.map((opp) => (
@@ -1145,15 +1210,32 @@ function HistorialRedes() {
               Publicaciones en redes sin confirmar
             </h2>
           </div>
-          <span className="muted" style={{ fontSize: 13 }}>
-            {unconfirmedOpportunities.length} publicación{unconfirmedOpportunities.length !== 1 ? "es" : ""}
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span className="muted" style={{ fontSize: 13 }}>
+              {unconfirmedOpportunities.length} publicación{unconfirmedOpportunities.length !== 1 ? "es" : ""}
+            </span>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleRetryBatch("unconfirmed-all", unconfirmedOpportunities.map((o) => o.id));
+              }}
+              disabled={batchRetryingKey === "unconfirmed-all"}
+              className="secondary"
+              style={{ ...secondaryButtonStyle, padding: "3px 10px", fontSize: 11 }}
+            >
+              {batchRetryingKey === "unconfirmed-all" ? "Reintentando..." : "Reintentar todas"}
+            </button>
+          </div>
         </summary>
         <div style={{ marginTop: 14 }}>
           <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
             Con error, en cola, o procesándose todavía. Desde aquí puedes
             reintentarlas cuando corresponda.
           </p>
+          {batchMessage && (
+            <p style={{ fontSize: 12, color: "#8a4b08", marginBottom: 12 }}>{batchMessage}</p>
+          )}
           {unconfirmedByDay.map(([dayKey, dayOpps]) => (
             <details
               key={dayKey}
@@ -1184,6 +1266,18 @@ function HistorialRedes() {
                 <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
                   — {dayOpps.length} publicación{dayOpps.length !== 1 ? "es" : ""}
                 </span>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleRetryBatch(`unconfirmed-${dayKey}`, dayOpps.map((o) => o.id));
+                  }}
+                  disabled={batchRetryingKey === `unconfirmed-${dayKey}`}
+                  className="secondary"
+                  style={{ ...secondaryButtonStyle, padding: "2px 8px", fontSize: 10 }}
+                >
+                  {batchRetryingKey === `unconfirmed-${dayKey}` ? "Reintentando..." : "Reintentar día"}
+                </button>
               </summary>
               <div style={{ padding: "0 16px 16px 16px", display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
             {dayOpps.map((opp) => (
