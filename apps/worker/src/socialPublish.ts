@@ -68,6 +68,20 @@ async function fetchWithRetry(url: string, init: RequestInit, attempts = 3): Pro
   throw lastError;
 }
 
+/**
+ * Valida que el artículo siga publicado antes de compartirlo. Distingue dos
+ * casos muy distintos que antes se trataban igual (los dos bloqueaban la
+ * publicación):
+ * - El sitio respondió con un error real (404, 410, etc.) → el artículo
+ *   probablemente ya no existe; sí bloquea la publicación.
+ * - No se pudo ni conectar (corte de TLS, timeout, DNS) incluso tras
+ *   reintentar → no es evidencia de que el artículo esté caído, es solo el
+ *   hosting del usuario fallando un instante puntual (confirmado con
+ *   pruebas reales el 30/8/2026: el mismo dominio responde bien la mayoría
+ *   de las veces). Bloquear la publicación completa por esto era el motivo
+ *   más frecuente de que "Reintentar" tuviera que presionarse varias veces
+ *   seguidas — ahora solo se registra un aviso y la publicación continúa.
+ */
 async function validateArticleUrl(url: string): Promise<void> {
   if (!url) throw new Error("La oportunidad no tiene URL de artículo.");
 
@@ -84,9 +98,14 @@ async function validateArticleUrl(url: string): Promise<void> {
         Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
       },
     });
-    if (!res.ok) throw new Error(`La URL del artículo devuelve error ${res.status}. Verifica que el artículo siga publicado en tu blog.`);
+    if (!res.ok) {
+      throw new Error(`La URL del artículo devuelve error ${res.status}. Verifica que el artículo siga publicado en tu blog.`);
+    }
   } catch (err) {
-    throw new Error(`No se pudo validar la URL del artículo (${url}): ${describeFetchError(err)}. Verifica que el artículo siga publicado.`);
+    if (err instanceof Error && err.message.startsWith("La URL del artículo devuelve error")) {
+      throw err;
+    }
+    console.warn(`No se pudo validar la URL del artículo (${url}), se publica igual: ${describeFetchError(err)}`);
   }
 }
 
