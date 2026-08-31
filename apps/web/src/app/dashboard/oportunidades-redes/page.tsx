@@ -358,11 +358,7 @@ export default function OportunidadesRedesPage() {
 
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
               width: "100%",
-              flexWrap: "wrap",
               marginTop: 18,
               paddingTop: 16,
               borderTop: "1px solid #e5e5ea",
@@ -373,31 +369,35 @@ export default function OportunidadesRedesPage() {
                 Preparando las redes conectadas...
               </span>
             ) : (
-              ([
-              ["threads", "threads", "Threads"], ["x", "x", "X (Twitter)"], ["linkedin", "linkedin", "LinkedIn"], ["instagram", "instagram", "Instagram"], ["facebookPage", "facebook-page", "Facebook"], ["pinterest", "pinterest", "Pinterest"], ["tumblr", "tumblr", "Tumblr"], ["bluesky", "bluesky", "Bluesky"], ["mastodon", "mastodon", "Mastodon"], ["devto", "devto", "DEV.to"],
-              ] as const).map(([key, platform, label]) => {
-              if (!activeNetworks[key]) return null;
-              const connected = connectedNetworks[key];
-              // Pedido explícito de Milton (30/8/2026): si la red no está
-              // configurada (conectada), no debe aparecer acá — antes se
-              // mostraba igual como botón gris "· Configurar", lo cual
-              // confundía con el problema real de Tumblr (se desconecta
-              // sola con el tiempo y volvía a aparecer como "Configurar").
-              if (!connected) return null;
-              const busy = Boolean(generatingNetwork);
-              return <button key={key} type="button" onClick={() => handleGenerate(platform)} disabled={busy} className="secondary" style={disabledStyle({ ...secondaryButtonStyle, flex: "1 1 180px", minHeight: 40, padding: "9px 13px", borderRadius: 20, border: "1px solid #d2d2d7", background: "#ffffff", color: "#1d1d1f", justifyContent: "center", fontSize: 13 }, busy)}>
-                {generatingNetwork === platform ? "Analizando..." : "✓ " + label + " · Crear oportunidad"}
-              </button>;
-              })
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 8 }}>
+                {([
+                ["threads", "threads", "Threads"], ["x", "x", "X (Twitter)"], ["linkedin", "linkedin", "LinkedIn"], ["instagram", "instagram", "Instagram"], ["facebookPage", "facebook-page", "Facebook"], ["pinterest", "pinterest", "Pinterest"], ["tumblr", "tumblr", "Tumblr"], ["bluesky", "bluesky", "Bluesky"], ["mastodon", "mastodon", "Mastodon"], ["devto", "devto", "DEV.to"],
+                ] as const).map(([key, platform, label]) => {
+                if (!activeNetworks[key]) return null;
+                const connected = connectedNetworks[key];
+                // Pedido explícito de Milton (30/8/2026): si la red no está
+                // configurada (conectada), no debe aparecer acá — antes se
+                // mostraba igual como botón gris "· Configurar", lo cual
+                // confundía con el problema real de Tumblr (se desconecta
+                // sola con el tiempo y volvía a aparecer como "Configurar").
+                if (!connected) return null;
+                const busy = Boolean(generatingNetwork);
+                return <button key={key} type="button" onClick={() => handleGenerate(platform)} disabled={busy} className="secondary" style={disabledStyle({ ...secondaryButtonStyle, width: "100%", minHeight: 40, padding: "9px 13px", borderRadius: 20, border: "1px solid #d2d2d7", background: "#ffffff", color: "#1d1d1f", justifyContent: "center", fontSize: 13 }, busy)}>
+                  {generatingNetwork === platform ? "Analizando..." : "✓ " + label + " · Crear oportunidad"}
+                </button>;
+                })}
+              </div>
             )}
             {pendingList.length > 0 && (
-              <button
-                onClick={handlePublishAll}
-                disabled={publishingAll}
-                style={{ ...buttonStyle, marginLeft: "auto", marginTop: 0, minHeight: 40, padding: "9px 18px", borderRadius: 20, fontSize: 13, whiteSpace: "nowrap" }}
-              >
-                {publishingAll ? "Publicando..." : "Publicar todo el lote"}
-              </button>
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
+                <button
+                  onClick={handlePublishAll}
+                  disabled={publishingAll}
+                  style={{ ...buttonStyle, marginTop: 0, minHeight: 40, padding: "9px 18px", borderRadius: 20, fontSize: 13, whiteSpace: "nowrap" }}
+                >
+                  {publishingAll ? "Publicando..." : "Publicar todo el lote"}
+                </button>
+              </div>
             )}
           </div>
         </div>
