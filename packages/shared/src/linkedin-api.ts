@@ -2,7 +2,22 @@
  * Módulo de integración con LinkedIn API
  * Documentación oficial: https://learn.microsoft.com/en-us/linkedin/
  * Share on LinkedIn (gratuito): https://learn.microsoft.com/en-us/linkedin/consumer/integrations/self-serve/share-on-linkedin
+ *
+ * Publicación de posts (Fase 3, auditoría anti-spam, 30/8/2026): migrado de
+ * `v2/ugcPosts` (deprecado, LinkedIn anuncia su apagado el 17/8/2026) a la
+ * `Posts API` versionada (`rest/posts` + `rest/images`). Documentación
+ * consultada directamente en Microsoft Learn (fuente oficial de LinkedIn):
+ * https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/posts-api
+ * https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/images-api
  */
+
+/**
+ * Versión de la API versionada de LinkedIn, formato YYYYMM, obligatoria en
+ * el header `Linkedin-Version` de todas las llamadas a `rest/*`. LinkedIn
+ * solo mantiene soporte para los últimos ~12 meses; actualizar este valor
+ * periódicamente (no hace falta usar siempre el mes más reciente).
+ */
+const LINKEDIN_API_VERSION = "202505";
 
 export interface LinkedInTokenExchangeResult {
   accessToken: string;
@@ -196,43 +211,33 @@ export async function uploadLinkedInImage(
   imageUrl: string
 ): Promise<string | null> {
   try {
-    // Paso 1: registrar la subida
-    const registerRes = await fetchWithRetry("https://api.linkedin.com/v2/assets?action=registerUpload", {
+    // Paso 1: registrar la subida (Images API — initializeUpload)
+    const initRes = await fetchWithRetry("https://api.linkedin.com/rest/images?action=initializeUpload", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
         "X-Restli-Protocol-Version": "2.0.0",
+        "Linkedin-Version": LINKEDIN_API_VERSION,
       },
       body: JSON.stringify({
-        registerUploadRequest: {
-          recipes: ["urn:li:digitalmediaRecipe:feedshare-image"],
+        initializeUploadRequest: {
           owner: `urn:li:person:${linkedinUserId}`,
-          serviceRelationships: [
-            { relationshipType: "OWNER", identifier: "urn:li:userGeneratedContent" },
-          ],
         },
       }),
     });
 
-    if (!registerRes.ok) {
-      console.warn("Error al registrar subida de imagen en LinkedIn:", await registerRes.text());
+    if (!initRes.ok) {
+      console.warn("Error al registrar subida de imagen en LinkedIn:", await initRes.text());
       return null;
     }
 
-    const registerData = (await registerRes.json()) as {
-      value: {
-        uploadMechanism: {
-          "com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest": { uploadUrl: string };
-        };
-        asset: string;
-      };
+    const initData = (await initRes.json()) as {
+      value: { uploadUrl: string; image: string };
     };
 
-    const uploadUrl =
-      registerData.value.uploadMechanism["com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"]
-        .uploadUrl;
-    const asset = registerData.value.asset;
+    const uploadUrl = initData.value.uploadUrl;
+    const imageUrn = initData.value.image;
 
     // Paso 2: descargar la imagen generada y subir los bytes a LinkedIn
     const imageRes = await fetchWithRetry(imageUrl, {});
@@ -242,6 +247,7 @@ export async function uploadLinkedInImage(
     }
     const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
 
+    // La Images API exige el token OAuth en el PUT (a diferencia de Videos API).
     const uploadRes = await fetchWithRetry(uploadUrl, {
       method: "PUT",
       headers: {
@@ -256,7 +262,7 @@ export async function uploadLinkedInImage(
       return null;
     }
 
-    return asset;
+    return imageUrn;
   } catch (err) {
     console.error("Error al subir imagen a LinkedIn:", err);
     return null;
@@ -281,50 +287,49 @@ export async function publishLinkedInPost(
   const maxChars = 3000;
   const safeText = text.length > maxChars ? text.substring(0, maxChars - 3) + "..." : text;
 
-  // Construir el body del post
+  // Construir el body del post (Posts API — rest/posts)
   const postBody: Record<string, unknown> = {
     author: `urn:li:person:${linkedinUserId}`,
+    commentary: safeText,
+    visibility: "PUBLIC",
+    distribution: {
+      feedDistribution: "MAIN_FEED",
+      targetEntities: [],
+      thirdPartyDistributionChannels: [],
+    },
     lifecycleState: "PUBLISHED",
-    specificContent: {
-      "com.linkedin.ugc.ShareContent": {
-        shareCommentary: {
-          text: safeText,
-        },
-        shareMediaCategory: imageAssetUrn ? "IMAGE" : articleUrl ? "ARTICLE" : "NONE",
-      },
-    },
-    visibility: {
-      "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC",
-    },
+    isReshareDisabledByAuthor: false,
   };
 
-  // Prioridad: imagen nativa (no se puede combinar con vista previa ARTICLE).
+  // Prioridad: imagen nativa (no se puede combinar con vista previa de artículo).
   // El enlace del artículo ya viene incluido como texto plano en `text`.
   if (imageAssetUrn) {
-    (postBody.specificContent as any)["com.linkedin.ugc.ShareContent"].media = [
-      {
-        status: "READY",
-        media: imageAssetUrn,
+    postBody.content = {
+      media: {
+        id: imageAssetUrn,
+        ...(title ? { altText: title } : {}),
       },
-    ];
+    };
   } else if (articleUrl) {
-    (postBody.specificContent as any)["com.linkedin.ugc.ShareContent"].media = [
-      {
-        status: "READY",
-        originalUrl: articleUrl,
-        title: {
-          text: title || "Artículo",
-        },
+    // Nota (Fase 3, 30/8/2026): la Posts API ya no scrapea la URL para
+    // generar la miniatura automáticamente — requeriría subir un thumbnail
+    // vía Images API. Se mantiene el mismo alcance que la versión anterior
+    // (solo source + title, sin miniatura) para no ampliar el cambio.
+    postBody.content = {
+      article: {
+        source: articleUrl,
+        title: title || "Artículo",
       },
-    ];
+    };
   }
 
-  const res = await fetch("https://api.linkedin.com/v2/ugcPosts", {
+  const res = await fetch("https://api.linkedin.com/rest/posts", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
       "X-Restli-Protocol-Version": "2.0.0",
+      "Linkedin-Version": LINKEDIN_API_VERSION,
     },
     body: JSON.stringify(postBody),
   });
@@ -343,7 +348,7 @@ export async function publishLinkedInPost(
       // fuente principal del identificador.
     }
   }
-  const postId = res.headers.get("X-RestLi-Id") || responseBody.id || responseBody.post || "";
+  const postId = res.headers.get("x-restli-id") || responseBody.id || responseBody.post || "";
   if (!postId) {
     throw new Error("LinkedIn aceptó la solicitud pero no devolvió el identificador de la publicación; se dejó como error para evitar un falso publicado.");
   }
