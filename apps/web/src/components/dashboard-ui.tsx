@@ -79,6 +79,7 @@ export const tdStyle: CSSProperties = {
   padding: "12px",
   fontSize: 14,
   color: "#1d1d1f",
+  wordBreak: "break-word",
 };
 
 export function readySectionStyle(_ready: boolean): CSSProperties {

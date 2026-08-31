@@ -358,14 +358,23 @@ function DuplicateTitlesSection({ items }: { items: TitleRow[] }) {
                     flexWrap: "wrap",
                   }}
                 >
-                  <strong style={{ fontSize: 13 }}>{title.text}</strong>
+                  <strong style={{ fontSize: 13, wordBreak: "break-word" }}>
+                    {title.text}
+                  </strong>
                   {title.processedAt && (
                     <span style={{ fontSize: 11, color: "#8a4b08" }}>
                       {formatDateTime(title.processedAt)}
                     </span>
                   )}
                 </div>
-                <p style={{ fontSize: 12, color: "#6e6e73", margin: "4px 0 0" }}>
+                <p
+                  style={{
+                    fontSize: 12,
+                    color: "#6e6e73",
+                    margin: "4px 0 0",
+                    wordBreak: "break-word",
+                  }}
+                >
                   {linkifyMessage(title.errorMessage ?? "")}
                 </p>
               </div>
