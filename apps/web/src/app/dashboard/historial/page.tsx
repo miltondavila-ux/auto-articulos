@@ -133,6 +133,7 @@ function HistorialEjecuciones() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          flexWrap: "wrap",
           gap: 10,
           userSelect: "none",
         }}
@@ -232,6 +233,7 @@ function HistorialEjecuciones() {
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
+              flexWrap: "wrap",
               gap: 10,
               userSelect: "none",
             }}
@@ -303,6 +305,7 @@ function DuplicateTitlesSection({ items }: { items: TitleRow[] }) {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          flexWrap: "wrap",
           gap: 10,
           userSelect: "none",
         }}
@@ -440,6 +443,7 @@ function PublicationDayGroup({
           display: "flex",
           alignItems: "center",
           gap: 10,
+          flexWrap: "wrap",
           padding: "12px 16px",
           userSelect: "none",
         }}
@@ -678,6 +682,7 @@ function HistorialRedes() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          flexWrap: "wrap",
           gap: 10,
           userSelect: "none",
         }}
@@ -1025,6 +1030,7 @@ function HistorialRedes() {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            flexWrap: "wrap",
             gap: 10,
             userSelect: "none",
           }}
@@ -1037,7 +1043,7 @@ function HistorialRedes() {
               Publicaciones en redes descartadas
             </h2>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             <span className="muted" style={{ fontSize: 13 }}>
               {skippedOpportunities.length} publicación{skippedOpportunities.length !== 1 ? "es" : ""}
             </span>
@@ -1206,6 +1212,7 @@ function HistorialRedes() {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            flexWrap: "wrap",
             gap: 10,
             userSelect: "none",
           }}
@@ -1218,7 +1225,7 @@ function HistorialRedes() {
               Publicaciones en redes sin confirmar
             </h2>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             <span className="muted" style={{ fontSize: 13 }}>
               {unconfirmedOpportunities.length} publicación{unconfirmedOpportunities.length !== 1 ? "es" : ""}
             </span>

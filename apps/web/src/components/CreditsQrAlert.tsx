@@ -125,7 +125,6 @@ export default function CreditsQrAlert() {
           boxShadow: "0 20px 60px rgba(0,0,0,0.35)",
         }}
       >
-        <div style={{ fontSize: 40, marginBottom: 8 }}>⚠️</div>
         <h2
           style={{
             fontSize: 20,
