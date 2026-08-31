@@ -826,3 +826,50 @@ Estado: terminado de mi parte. Confirmado por Codex ("el generador principal ya 
 Acción inmediata: ninguna de mi parte. Pendiente real, no mío: probar en vivo el proveedor `nano` (Nano Banana) con el prompt vigente — no llegué a confirmar un resultado bueno antes de que la sesión pasara a manos de Codex.
 Responsable siguiente: quien continúe las pruebas de calidad de imagen (Codex o Milton directamente).
 Capitanía de migración: no.
+
+## [CLAUDE] - BOTONES OPORTUNIDADES REDES — 31/8/2026
+
+Identidad exacta: CLAUDE - BOTONES OPORTUNIDADES REDES.
+
+Proyecto: pantalla `/dashboard/oportunidades-redes`.
+
+Motivo/objetivo: Milton pidió (1) que solo aparezcan los botones de las
+redes realmente configuradas y listas para usarse, ocultando las demás; (2)
+tras ver la pantalla, que los botones nunca se vean de ancho desigual — deben
+ser uniformes y responsive en todas las pantallas (Apple no mostraría botones
+más largos que otros).
+
+Hallazgo sobre el punto (1): ya estaba resuelto e integrado en `origin/main`
+desde antes de esta conversación (commit `c07f5ab`, sesión anterior) — no
+requirió código nuevo, solo se verificó y se le informó a Milton.
+
+Trabajo nuevo de esta conversación (punto 2): los botones de red usaban
+`flex: "1 1 180px"` dentro de un contenedor `flex-wrap`, así que en la
+última fila con menos elementos cada botón se estiraba para llenar el
+espacio sobrante (Mastodon y DEV.to quedaban el doble de anchos). Se
+cambió a `display: grid` con `gridTemplateColumns: repeat(auto-fill,
+minmax(160px, 1fr))`, que da columnas de ancho igual sin importar cuántos
+botones caigan en la última fila, y se mantiene responsive en móvil.
+
+Archivos: únicamente
+`apps/web/src/app/dashboard/oportunidades-redes/page.tsx`.
+
+Commit `6469b33` (`fix: grid de ancho uniforme para botones de redes en
+Oportunidades`), rama `claude/fix-oportunidades-redes-buttons-width`
+(pusheada, no eliminada). Fusionado a `main` por fast-forward.
+`origin/main` quedó en `6469b33`.
+
+Pruebas: `tsc --noEmit` sobre `apps/web` sin errores nuevos (los 2 errores
+preexistentes de `CreditsQrAlert.tsx` por falta del paquete `qrcode` son
+ajenos a este cambio y no se tocaron).
+
+Estado: DESPLEGADO — pendiente de confirmación visual de Milton en
+producción (no se pudo verificar en vivo desde esta sesión por falta de
+credenciales de la cuenta de prueba Lorena Álvarez).
+
+Capitanía de migración: reclamada y liberada por Claude durante esta
+conversación; sin migraciones aplicadas.
+
+Responsable: Claude. Siguiente acción: Milton confirma visualmente en
+`https://auto-articulos-web.vercel.app/dashboard/oportunidades-redes`.
+Decisión de Milton: pendiente.
