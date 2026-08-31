@@ -11,6 +11,7 @@ import {
   statusLabel,
   runStatusLabel,
   secondaryButtonStyle,
+  buttonStyle,
 } from "@/components/dashboard-ui";
 import type {
   RunRow,
@@ -1038,10 +1039,9 @@ function HistorialRedes() {
                 handleRetryBatch("skipped-all", skippedOpportunities.map((o) => o.id));
               }}
               disabled={batchRetryingKey === "skipped-all"}
-              className="secondary"
-              style={{ ...secondaryButtonStyle, padding: "3px 10px", fontSize: 11 }}
+              style={{ ...buttonStyle, marginTop: 0, minHeight: 40, padding: "9px 18px", borderRadius: 20, fontSize: 13, whiteSpace: "nowrap" }}
             >
-              {batchRetryingKey === "skipped-all" ? "Publicando..." : "Publicar todas"}
+              {batchRetryingKey === "skipped-all" ? "Publicando..." : "Publicar todo el lote"}
             </button>
           </div>
         </summary>
@@ -1090,10 +1090,9 @@ function HistorialRedes() {
                     handleRetryBatch(`skipped-${dayKey}`, dayOpps.map((o) => o.id));
                   }}
                   disabled={batchRetryingKey === `skipped-${dayKey}`}
-                  className="secondary"
-                  style={{ ...secondaryButtonStyle, padding: "2px 8px", fontSize: 10 }}
+                  style={{ ...buttonStyle, marginLeft: "auto", marginTop: 0, padding: "7px 14px", fontSize: 12, whiteSpace: "nowrap" }}
                 >
-                  {batchRetryingKey === `skipped-${dayKey}` ? "Publicando..." : "Publicar día"}
+                  {batchRetryingKey === `skipped-${dayKey}` ? "Publicando..." : "Publicar este día"}
                 </button>
               </summary>
               <div style={{ padding: "0 16px 16px 16px", display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
@@ -1221,10 +1220,9 @@ function HistorialRedes() {
                 handleRetryBatch("unconfirmed-all", unconfirmedOpportunities.map((o) => o.id));
               }}
               disabled={batchRetryingKey === "unconfirmed-all"}
-              className="secondary"
-              style={{ ...secondaryButtonStyle, padding: "3px 10px", fontSize: 11 }}
+              style={{ ...buttonStyle, marginTop: 0, minHeight: 40, padding: "9px 18px", borderRadius: 20, fontSize: 13, whiteSpace: "nowrap" }}
             >
-              {batchRetryingKey === "unconfirmed-all" ? "Publicando..." : "Publicar todas"}
+              {batchRetryingKey === "unconfirmed-all" ? "Publicando..." : "Publicar todo el lote"}
             </button>
           </div>
         </summary>
@@ -1273,10 +1271,9 @@ function HistorialRedes() {
                     handleRetryBatch(`unconfirmed-${dayKey}`, dayOpps.map((o) => o.id));
                   }}
                   disabled={batchRetryingKey === `unconfirmed-${dayKey}`}
-                  className="secondary"
-                  style={{ ...secondaryButtonStyle, padding: "2px 8px", fontSize: 10 }}
+                  style={{ ...buttonStyle, marginLeft: "auto", marginTop: 0, padding: "7px 14px", fontSize: 12, whiteSpace: "nowrap" }}
                 >
-                  {batchRetryingKey === `unconfirmed-${dayKey}` ? "Publicando..." : "Publicar día"}
+                  {batchRetryingKey === `unconfirmed-${dayKey}` ? "Publicando..." : "Publicar este día"}
                 </button>
               </summary>
               <div style={{ padding: "0 16px 16px 16px", display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
