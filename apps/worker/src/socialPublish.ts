@@ -16,6 +16,7 @@ import {
   publishFacebookPageStory,
   createPinterestPin,
   createTumblrPhotoPost,
+  refreshTumblrToken,
   createBlueskySession,
   createBlueskyPost,
   getBlueskyPostUrl,
@@ -730,7 +731,49 @@ async function processTumblrJob(job: {
 }): Promise<boolean> {
   const integration = await prisma.tumblrIntegration.findUnique({ where: { userId: job.userId } });
   if (!integration) throw new Error("Tumblr no está configurado en tu cuenta.");
-  if (integration.expiresAt && integration.expiresAt <= new Date()) throw new Error("La autorización de Tumblr expiró. Debes volver a conectar la cuenta.");
+
+  // A diferencia de Threads, Tumblr nunca se renovaba en el worker — solo al
+  // cargar la página de Configuración (visita manual). Si el usuario no
+  // entraba ahí a tiempo, el token vencía sin que nada lo renovara y la
+  // cuenta aparecía "desconectada" pese a haber funcionado antes. Reportado
+  // por Milton el 30/8/2026: "publico bien un rato y en algún momento se
+  // desconecta sola". Mismo patrón de renovación proactiva que ya usa
+  // Threads (processThreadsJob).
+  let accessToken = decryptSecret(integration.accessTokenEncrypted);
+  const daysUntilExpiration = integration.expiresAt
+    ? (integration.expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+    : Infinity;
+
+  if (daysUntilExpiration < 7 && integration.refreshTokenEncrypted) {
+    try {
+      const [idSetting, secretSetting] = await Promise.all([
+        prisma.systemSetting.findUnique({ where: { key: "tumblr_client_id" } }),
+        prisma.systemSetting.findUnique({ where: { key: "tumblr_client_secret" } }),
+      ]);
+      const clientId = idSetting ? decryptSecret(idSetting.encryptedValue) : process.env.TUMBLR_CLIENT_ID;
+      const clientSecret = secretSetting ? decryptSecret(secretSetting.encryptedValue) : process.env.TUMBLR_CLIENT_SECRET;
+      if (!clientId || !clientSecret) throw new Error("Tumblr no está configurado (App ID/Secret).");
+
+      const refreshed = await refreshTumblrToken(decryptSecret(integration.refreshTokenEncrypted), { clientId, clientSecret });
+      accessToken = refreshed.access_token;
+      await prisma.tumblrIntegration.update({
+        where: { userId: job.userId },
+        data: {
+          accessTokenEncrypted: encryptSecret(refreshed.access_token),
+          refreshTokenEncrypted: refreshed.refresh_token ? encryptSecret(refreshed.refresh_token) : undefined,
+          expiresAt: refreshed.expires_in ? new Date(Date.now() + refreshed.expires_in * 1000) : null,
+        },
+      });
+    } catch (error) {
+      console.warn("No se pudo autorrefrescar token de Tumblr, usando el actual.");
+      if (daysUntilExpiration <= 0) {
+        throw new Error(`La autorización de Tumblr expiró y no pudo renovarse: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+  } else if (daysUntilExpiration <= 0) {
+    throw new Error("La autorización de Tumblr expiró. Debes volver a conectar la cuenta.");
+  }
+
   await validateArticleUrl(job.articleUrl);
   const imageResult = job.titleId
     ? await getRehostedImageForTumblr(job.titleId, job.articleUrl)
@@ -740,7 +783,7 @@ async function processTumblrJob(job: {
   const caption = job.suggestedText.includes("[ENLACE]") ? job.suggestedText.replace("[ENLACE]", "") : job.suggestedText;
   let result;
   try {
-    result = await createTumblrPhotoPost(decryptSecret(integration.accessTokenEncrypted), integration.blogIdentifier, { caption, link: job.articleUrl, imageUrl });
+    result = await createTumblrPhotoPost(accessToken, integration.blogIdentifier, { caption, link: job.articleUrl, imageUrl });
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     const sourceLabel = imageResult.source === "blob" ? "re-alojada en Blob" : `enlace directo del artículo${"fallbackReason" in imageResult && imageResult.fallbackReason ? ` — no se pudo re-alojar: ${imageResult.fallbackReason}` : ""}`;
