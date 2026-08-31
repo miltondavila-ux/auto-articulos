@@ -988,3 +988,13 @@ Pendiente para quien retome:
 
 Responsable siguiente: quien retome, sobre este mismo documento.
 Decisión de Milton: archivar esta conversación.
+
+### Actualización — 2026-08-31 (mismo día)
+
+`gh auth login` quedó activo en la máquina (otra sesión lo hizo). Con eso se
+disparó manualmente el workflow pendiente: "Database Write - Bajar limite
+diario a 5 (no-admin)" — run
+`https://github.com/miltondavila-ux/auto-articulos/actions/runs/33449131800`,
+`completed / success`. Confirmado por el propio log: 79 usuarios no-admin
+actualizados a `dailyArticleLimit = 5`, 3 administradores sin tocar. Ya no
+queda pendiente.
