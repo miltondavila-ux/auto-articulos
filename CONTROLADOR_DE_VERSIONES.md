@@ -381,3 +381,42 @@ usar el "PUNTO SEGURO DE RETROCESO — 2026-08-30 17:18 EDT" registrado arriba
 (commit `1f9a374`).
 Estado: DESPLEGADA — PENDIENTE DE VERIFICACIÓN EN VERCEL Y PRUEBA REAL CON
 ESTEE.
+
+### Eliminación del popup QR de créditos de imagen — 2026-08-31
+
+```text
+Fecha y hora: 2026-08-31 (sesión de Milton)
+Versión/commit: ced3fe4
+Rama: main
+```
+
+Pedido de Milton: eliminar de raíz el popup "Créditos de imagen agotados"
+(modal con QR a WhatsApp, ver captura suya) que aparecía sobre
+Oportunidades, sin dañar nada más.
+
+Cambios: se borró `apps/web/src/components/CreditsQrAlert.tsx` (el
+componente creado en `6df3455` y ajustado en `973e78f`/`93dbb37`, ver
+línea 149 de este mismo archivo) y su uso en
+`apps/web/src/app/dashboard/layout.tsx`; se quitó la dependencia `qrcode`
+(y `@types/qrcode`) de `apps/web/package.json` por quedar sin ningún otro
+uso en el repo, y se corrió `npm install` para actualizar
+`package-lock.json`.
+
+No tocado a propósito: el mensaje de error real del worker ("Sin créditos
+de imagen en 10minutesWebsite" en `apps/worker/src/queue.ts`, que decide
+reintentos) y el gate `hasImageCredits` de `PreValidationGuard`/
+`ImageCreditsModal` (validación distinta, por créditos de la cuenta del
+usuario, no la del popup de la captura).
+
+Conflicto de rebase: otra sesión (Codex, commit `93dbb37`) había tocado el
+mismo archivo minutos antes (le quitaba el emoji ⚠️). Se resolvió
+conservando el borrado, siguiendo el pedido explícito de Milton.
+
+Verificación: `tsc --noEmit` y `next build` sobre `apps/web` sin errores,
+ambos antes de pushear. Deployment de Vercel (`auto-articulos-web`)
+confirmado `success` vía API de commit status de GitHub para `ced3fe4`.
+Producción verificada: pendiente — no se pudo iniciar sesión en producción
+desde esta sesión (sin credenciales de la cuenta de prueba Lorena Álvarez).
+Responsable: Claude. Siguiente acción: Milton confirma visualmente que el
+popup ya no aparece.
+Estado: DESPLEGADA — PENDIENTE DE CONFIRMACIÓN VISUAL DE MILTON.

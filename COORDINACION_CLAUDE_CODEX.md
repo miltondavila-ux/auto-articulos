@@ -1,3 +1,35 @@
+## ELIMINACIÓN POPUP QR DE CRÉDITOS DE IMAGEN (2026-08-31)
+
+Identidad exacta: Claude Sonnet 5 (sesión de Milton en su árbol local).
+
+Motivo: Milton pidió eliminar de raíz el popup "Créditos de imagen
+agotados" (QR a WhatsApp) que veía en Oportunidades, sin dañar nada más.
+
+Cambios: se borró `apps/web/src/components/CreditsQrAlert.tsx` (polling a
+`/api/runs` cada 8s + modal con QR de wa.link/ohi9ut) y su uso en
+`apps/web/src/app/dashboard/layout.tsx`; se quitó la dependencia `qrcode`
+(y `@types/qrcode`) de `apps/web/package.json` por quedar sin uso.
+
+No se tocó el mensaje de error real del worker ("Sin créditos de imagen en
+10minutesWebsite" en `apps/worker/src/queue.ts`) ni el gate
+`hasImageCredits` de `PreValidationGuard`/`ImageCreditsModal` (validación
+distinta, por cuenta de usuario, no es la que aparecía en la captura de
+Milton).
+
+Conflicto detectado al hacer rebase: otra sesión (Codex/Milton) había
+tocado el mismo archivo minutos antes (`93dbb37` le quitaba el emoji ⚠️,
+`973e78f` y `6df3455` lo habían creado). Se resolvió manteniendo el
+borrado, ya que el pedido explícito de Milton fue eliminar la validación,
+no ajustarla.
+
+Capitanía de migración: reclamada y liberada por Claude; sin migraciones
+aplicadas.
+
+Estado: DESPLEGADO — commit `ced3fe4` en `origin/main`, deploy de Vercel
+(`auto-articulos-web`) confirmado en éxito vía API de GitHub. No se pudo
+verificar visualmente en producción por falta de credenciales de la
+cuenta de prueba Lorena Álvarez en esta sesión.
+
 ## INVENTARIO DE CONVERSACIONES
 
 Identidad exacta:
