@@ -5,6 +5,7 @@ import {
   decryptSecret,
   encryptSecret,
   DEFAULT_PLATFORM_DOMAIN,
+  DEFAULT_DAILY_ARTICLE_LIMIT,
   isPlatformDomain,
   PLATFORM_DOMAIN_VALUES,
 } from "@auto-articulos/shared";
@@ -544,7 +545,7 @@ export async function POST(request: NextRequest) {
     phone,
     role = "user",
     monthlyArticleLimit = 300,
-    dailyArticleLimit = 20,
+    dailyArticleLimit = DEFAULT_DAILY_ARTICLE_LIMIT,
     maxTitlesPerBatch = 20,
     platformDomain: requestedPlatformDomain,
   } = await request.json();

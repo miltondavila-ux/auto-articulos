@@ -1902,3 +1902,106 @@ RLS para tablas futuras agregada al workflow de migración, sin hallazgos
 nuevos en Storage/Auth/Advisor. Nadie más tiene la capitanía tomada.
 
 Estado: **PR abierto, pendiente de merge por Milton.**
+
+## [CLAUDE] - LÍMITE DIARIO DE ARTÍCULOS A 5 — 31/8/2026
+
+Identidad exacta: CLAUDE - LÍMITE EN LOS ARTICULOS.
+
+Motivo: Milton pidió aplicar el límite de 5 artículos diarios por usuario
+que había pedido días antes (30/8/2026) y no estaba seguro de haber
+aplicado, y auditar que todo lo que el sistema muestra al usuario sobre ese
+límite sea dinámico (lea el número real, no un valor fijo en el código).
+
+Hallazgo: el código para bajar el límite ya existía desde el 30/8/2026
+(`apps/worker/src/set-daily-limit.ts`, workflow
+`.github/workflows/set-daily-limit.yml`, commit `f726422`), pero el workflow
+nunca se había disparado — confirmado con 0 ejecuciones vía API de GitHub
+Actions antes de hoy. Auditoría de superficies de cara al usuario
+(`PerformanceDashboard.tsx`, mensaje de cupo agotado en
+`apps/web/src/app/api/runs/route.ts`, panel `/dashboard/usuarios`): las tres
+ya leen `user.dailyArticleLimit` en vivo desde la base; no había ningún
+número hardcodeado que corregir. Los "20" que aparecen en otras partes del
+código (`ConfiguracionView.tsx`, `fix-patricia`) son del tamaño de lote de
+la reparación de Patricia Coy, una función distinta, no tocada.
+
+Acción ejecutada: Milton conectó `gh` en esta sesión (yo no tenía token ni
+autenticación previa) y autorizó explícitamente dejar a los administradores
+fuera del cambio. Disparé el workflow existente
+(`gh workflow run set-daily-limit.yml`). Run `33448876466`, conclusión
+`success`. Log confirma: 79 usuarios no-admin con `dailyArticleLimit`
+actualizado de sus valores previos (20 o 10 según el caso) a **5**; 3
+administradores sin tocar.
+
+Nota de coordinación: otra sesión, en paralelo, no vio que yo ya lo había
+disparado y lo corrió de nuevo minutos después (run `33449131800`, ver
+entrada arriba). El script hace un `updateMany` incondicional al mismo
+valor, así que es idempotente — las dos corridas dejaron exactamente el
+mismo resultado (79 no-admin en 5, 3 admin sin tocar), sin conflicto ni
+efecto acumulativo.
+
+Archivos: ninguno modificado en esta parte de la sesión (solo
+documentación); el código que hizo el cambio ya estaba en `main` desde el
+30/8/2026.
+
+Estado: DESPLEGADO y APLICADO — es un cambio de datos ya vigente en la base
+de datos real de producción, no solo código pendiente de ejecutar.
+
+Capitanía de migración: no aplica a esta parte (no es una migración de
+Prisma, es un `UPDATE` de datos vía script ya existente).
+
+### Continuación — huecos de "cara al usuario" NO dinámicos, encontrados y corregidos
+
+Milton preguntó explícitamente si el límite era dinámico "con respecto a lo
+que diga en Configuración", y pidió que no quedaran números repetidos que no
+correspondan. Auditoría más profunda de rutas de creación de usuarios (no
+solo de usuarios ya existentes) encontró tres valores por defecto
+desalineados, todos para cuentas **nuevas**, ninguno afectando a las 79 ya
+corregidas:
+
+1. `apps/web/src/app/dashboard/usuarios/page.tsx` — el formulario de "crear
+   usuario" en Administración pre-llenaba el campo con `"95"` (arrastrado
+   desde antes del cambio a 20 del 6/8/2026).
+2. `apps/web/src/app/api/admin/users/route.ts` — si esa llamada llegaba sin
+   el campo, la API usaba `20` como respaldo.
+3. `packages/db/prisma/schema.prisma` — el registro de prueba gratuita
+   (`trial-signup/route.ts`) crea usuarios sin fijar `dailyArticleLimit`
+   explícitamente, así que heredaba el `@default(20)` de la columna.
+
+Corrección: una sola constante compartida,
+`DEFAULT_DAILY_ARTICLE_LIMIT` en `packages/shared/src/article-limits.ts`
+(exportada desde `packages/shared/src/index.ts`), usada en los tres lugares
+— cambiar el número ahí alcanza para las tres superficies de "cuenta nueva".
+Además, nueva migración
+`packages/db/prisma/migrations/20260831230000_set_daily_limit_5_default/`
+que solo cambia el `DEFAULT` de la columna a 5 (no hace `UPDATE` de filas
+existentes — esas ya quedaron correctas por el script, sin tocar admins).
+
+Desarrollado en worktree aislado `/private/tmp/auto-articulos-daily-limit-dynamic-defaults`,
+rama `claude/daily-limit-dynamic-defaults`, creada desde `origin/main` en
+`7d44c25` (ya incluye el cierre de "SISTEMA NO PUBLICA ARTÍCULOS" y el
+responsive de Historial). Tres auditorías independientes documentadas abajo
+antes de fusionar a `main`.
+
+Responsable siguiente: cualquier sesión futura que necesite cambiar el
+número — basta con editar `DEFAULT_DAILY_ARTICLE_LIMIT` en
+`packages/shared/src/article-limits.ts` (para cuentas nuevas) y, si además
+hay que tocar cuentas ya existentes, correr un script como
+`set-daily-limit.ts` con el nuevo valor. El resto del sistema (dashboard,
+mensajes de error, panel admin) ya lo refleja solo, sin cambios de código
+adicionales.
+
+## 2026-08-31 — Reautenticación de GitHub CLI (sin cambios de código)
+
+[CLAUDE] - GITHUB CLI EXPIRADO
+Proyecto: ninguno de código. Milton reportó el mensaje "La autenticación de
+GitHub CLI expiró. Ejecuta `gh auth login` para actualizar el estado del
+pull request." — mensaje generado por `gh`, no por el proyecto.
+Diagnóstico: `gh auth status` confirmó sesión cerrada (`You are not logged
+into any GitHub hosts`).
+Acción: se indicó a Milton correr `gh auth login` manualmente (login
+interactivo por navegador, no ejecutable por el agente). Milton lo hizo y
+se verificó `gh auth status`: sesión activa como `miltondavila-ux`, scopes
+`gist, read:org, repo, workflow`.
+Archivos: ninguno modificado. Sin commits, sin despliegue, sin migraciones.
+Estado: resuelto. Esta conversación se archiva.
+Responsable siguiente: ninguno pendiente sobre este tema.

@@ -1854,3 +1854,40 @@ Para backfills de datos (no requieren exponer un endpoint HTTP), es más
 simple correr un script `node -e "..."` local usando `@prisma/client` con
 `DATABASE_URL` apuntando al transaction pooler de producción — así se hizo
 para teléfono y nombre/apellido de los 42 usuarios bulk-creados.
+
+## Límite diario de artículos bajado a 5 (usuarios no-admin) — 31/8/2026 (Claude)
+
+Milton había pedido días antes (30/8/2026) bajar `dailyArticleLimit` a 5 para
+todos los usuarios no-admin. Ese pedido ya tenía código listo desde esa fecha
+(`apps/worker/src/set-daily-limit.ts` + workflow `.github/workflows/set-daily-limit.yml`,
+commit `f726422`), pero el workflow nunca se había disparado (confirmado vía
+API de GitHub Actions: 0 ejecuciones antes de hoy).
+
+Auditoría de "cara al usuario" pedida por Milton: revisé todo lo que muestra
+el límite diario al usuario o al administrador — `PerformanceDashboard.tsx`
+("Publicados hoy" / "Límite {stats.dailyArticleLimit}"), el mensaje de error
+al agotar cupo en `apps/web/src/app/api/runs/route.ts` ("Has alcanzado
+{tope}..."), y el campo editable en `/dashboard/usuarios`. Los tres leen
+siempre `user.dailyArticleLimit` desde la base de datos; no hay ningún número
+fijo escrito en el código de cara al usuario. Los únicos "20" hardcodeados
+que aparecen en el repo (`ConfiguracionView.tsx`, `fix-patricia`, `queue.ts`)
+son del tamaño de lote de la herramienta de reparación de Patricia Coy — una
+función completamente distinta, no el límite diario de artículos.
+
+Conclusión: el sistema ya era dinámico como pidió Milton; solo faltaba
+ejecutar el workflow. Milton conectó `gh` en esta sesión y autorizó correrlo
+(dejando a los admins fuera, como ya hacía el script). Ejecutado con éxito:
+run `33448876466`, **79 usuarios no-admin actualizados a `dailyArticleLimit = 5`**,
+**3 administradores sin tocar**. Confirmado en el log de la propia corrida
+(estado "antes" con valores 20/10 por usuario, "Filas actualizadas: 79",
+"Administradores NO tocados: 3").
+
+Estado: DESPLEGADO y APLICADO en la base de datos real de producción (no es
+solo código — es un cambio de datos ya vigente). Sin código nuevo, sin
+migración, sin commit de esta sesión (el script y el workflow ya estaban en
+`main` desde el 30/8/2026).
+
+Para el futuro: si Milton pide otro número, basta con volver a correr
+`gh workflow run set-daily-limit.yml` tras editar `NEW_DAILY_LIMIT` en
+`apps/worker/src/set-daily-limit.ts` (o pedir un script nuevo con el valor
+que corresponda) — el resto del sistema ya lo reflejará solo por ser dinámico.

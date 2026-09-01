@@ -25,6 +25,7 @@ import {
   PLATFORM_DOMAIN_VALUES,
   PLATFORM_SERVERS,
   platformProductName,
+  DEFAULT_DAILY_ARTICLE_LIMIT,
   type PlatformDomain,
 } from "@auto-articulos/shared";
 import { trialDaysRemaining } from "@/lib/trial";
@@ -244,7 +245,9 @@ export default function UsuariosPage() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"admin" | "user">("user");
   const [monthlyArticleLimit, setMonthlyArticleLimit] = useState("300");
-  const [dailyArticleLimit, setDailyArticleLimit] = useState("95");
+  const [dailyArticleLimit, setDailyArticleLimit] = useState(
+    String(DEFAULT_DAILY_ARTICLE_LIMIT),
+  );
   const [maxTitlesPerBatch, setMaxTitlesPerBatch] = useState("20");
   // Servidor de la cuenta nueva. Antes se pedía el país y de él se derivaba
   // el servidor (Europa -> .site, resto del mundo -> .net); pedido de
