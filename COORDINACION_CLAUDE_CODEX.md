@@ -1497,4 +1497,20 @@ prompt personalizado y generar el FAQ en el idioma del artículo. Sin
 migraciones ni ejecución de una publicación de prueba desde esta sesión sin
 confirmación inmediata de Milton.
 
-Estado: EN CURSO. Producción sin cambios desde este worktree.
+Resultado: corregido y publicado en `main` mediante `5e56502`, `535b690` y
+merge `f59fcc4`, preservando el cambio concurrente `64097c6`. El worker de
+producción toma este código desde `main` en su siguiente ejecución programada.
+No se ejecutó una publicación real de prueba por parte de Codex.
+
+Auditorías completadas: tests del worker 14/14; build del worker; typecheck y
+build web (80/80 páginas); diff estático; comprobación manual del selector
+English=`en_VI`; y HTTP 200 de la URL web productiva. No hubo migración.
+Vercel compiló el proyecto, pero sus intentos manuales fallaron únicamente al
+subir artefactos después del build; ningún deployment fallido fue promovido.
+
+Archivos liberados el 2026-09-01: todos los archivos reservados arriba. El
+worktree queda como registro reproducible de la tarea; no quedan reservas
+activas sobre esos archivos.
+
+Estado: DESPLEGADO EN MAIN — pendiente de la prueba operativa iniciada por
+Milton.

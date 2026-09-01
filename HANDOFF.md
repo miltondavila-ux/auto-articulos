@@ -1615,6 +1615,44 @@ producción, **siempre pedir el log crudo real primero** (`vercel logs ...
 hipótesis equivocada (env vars) habría hecho perder tiempo revisando algo
 que ya estaba bien.
 
+## RESUELTO (1/9/2026): artículo de MPM REALTY mezclaba inglés y español
+
+**Caso auditado:** el artículo público de MPM REALTY GROUP, `How to Find
+Seller Leads in South Florida as a Real Estate Agent`, mostraba una apertura
+en inglés y luego `Respuesta rápida`, encabezados y FAQ en español. La cuenta
+MPM REALTY GROUP (usuario 7455) tiene interfaz y sitio configurados en inglés;
+el formulario de 10minutesWebsite usa el valor remoto `en_VI` para English.
+
+**Causa confirmada:** el worker aceptaba códigos antiguos o abreviados (`en`,
+`es`) frente a valores actuales como `en_VI`/`es_ES`, ignoraba errores del
+selector y podía continuar con el idioma por defecto. Además, el prompt
+personalizado y el prompt de FAQ incluían instrucciones en español sin exigir
+que todo el resultado quedara en el idioma solicitado.
+
+**Fix:** `10minutesWebsite.ts` ahora resuelve el idioma contra las opciones
+vivas del formulario, verifica el valor aplicado y se detiene antes de generar
+si no puede aplicarlo. El prompt personalizado y el FAQ reciben el idioma
+objetivo y exigen título, resumen, HTML, preguntas y respuestas íntegramente
+en ese idioma, sin mezclarlo con el idioma del tema.
+
+**Auditorías independientes completadas antes de publicar:** tests del worker
+14/14, build del worker, typecheck web, build web con 80/80 páginas, revisión
+estática del diff y comprobación manual del selector English=`en_VI` en la
+interfaz. No se cambió el schema ni se ejecutó una publicación real de prueba.
+
+**Producción:** los cambios quedaron en `main` mediante `5e56502`,
+`535b690` y merge preservando `64097c6`, con HEAD `f59fcc4`. El worker
+productivo toma el código desde `main` en su siguiente ejecución programada.
+La URL web productiva actual responde HTTP 200. Los despliegues manuales de
+Vercel desde la raíz compilaron correctamente, pero fallaron después del build
+durante la subida de artefactos por un error del servicio/CLI; no se promovió
+ningún deployment fallido. El intento recomendado por documentación histórica
+desde `apps/web` no se ejecutó porque omite los workspaces del monorepo.
+
+**Siguiente paso:** Milton debe iniciar la prueba operativa de MPM y confirmar
+que el nuevo artículo en English no contiene segmentos en español. La IA no
+debe disparar esa publicación por iniciativa propia.
+
 ## Pendiente / próximos pasos
 
 0. ~~Construir módulo **Oportunidades**~~ — **HECHO** en commits `05d8d6b` y
