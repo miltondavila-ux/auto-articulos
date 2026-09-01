@@ -1123,6 +1123,52 @@ requieren `git status`, diff exacto y tres auditorías independientes.
 Estado: COORDINACIÓN ENVIADA A CLAUDE; pendiente confirmación del otro
 programador. No se inicia edición cruzada hasta confirmar el reparto.
 
+### Nueva tarea registrada — 2026-08-31
+
+Identidad exacta:
+CODEX - GPT-5 - INSTRUCCIONES EN EL SISTEMA
+
+Proyecto:
+Auditoría de comprensión de instrucciones por módulo.
+
+Motivo de creación:
+Milton solicita comparar cada explicación con el objetivo real de su módulo y
+mejorarla para que cualquier usuario pueda entenderla.
+
+Objetivo:
+Revisar módulo por módulo, eliminar ambigüedades y dejar textos iniciales
+claros, completos, legibles, responsive, negros y coherentes con Apple HIG.
+
+Alcance:
+Publicar, Oportunidades SEO/AEO, Configuración, Oportunidades Redes,
+Publicaciones en Curso y cualquier otro módulo con explicación inicial.
+
+Exclusiones:
+No modificar lógica de negocio, permisos, menú ni archivos reservados por
+Claude u otro programador; no duplicar textos.
+
+Archivos y commits:
+Pendiente de auditoría en worktree aislado nuevo.
+
+Estado:
+ACTIVO — auditoría y mejora solicitadas.
+
+Producción:
+La versión anterior está publicada; esta tarea aún no.
+
+Conversaciones relacionadas:
+Acuerdos de coordinación de Inicio/menú e instrucciones de módulos.
+
+Responsable:
+CODEX - GPT-5.
+
+Siguiente acción:
+Crear worktree aislado, auditar objetivos y textos, aplicar cambios mínimos,
+ejecutar tres auditorías y publicar solo el lote validado.
+
+Decisión de Milton:
+Ejecutar la mejora completa módulo por módulo.
+
 Revisé en este momento (00:58 UTC): `origin/main` sigue en `05bf189`, no
 hay commits nuevos de ningún otro programador desde que yo empujé, y no hay
 capitán de migración activo compitiendo (`migration-coordinator.sh status`
@@ -1163,3 +1209,69 @@ Commit `b70e20d`. `origin/main` quedó en `b70e20d`.
 **Capitán de migración liberó el lote:** Claude.
 
 Estado: DESPLEGADO — pendiente de confirmación visual final de Milton.
+
+## ACTUALIZACIÓN CODEX — INSTRUCCIONES POR MÓDULO — 2026-08-31
+
+Identidad exacta:
+CODEX - GPT-5 - INSTRUCCIONES EN EL SISTEMA
+
+Proyecto:
+Auditoría y mejora de explicaciones iniciales de módulos.
+
+Motivo de creación:
+Publicar y Oportunidades no tenían explicación inicial visible y Configuración
+tenía texto estrecho, gris y poco alineado con el objetivo del módulo.
+
+Objetivo:
+Hacer comprensible para cualquier usuario el propósito y flujo de cada módulo.
+
+Alcance:
+Publicar, Oportunidades SEO/AEO y Configuración; textos propios, negros,
+justificados, responsive y sin duplicación.
+
+Exclusiones:
+Inicio, menú, lógica de negocio, permisos y archivos de otros proyectos.
+
+Archivos y commits:
+`apps/web/src/app/dashboard/publicar/page.tsx`,
+`apps/web/src/app/dashboard/oportunidades/page.tsx`,
+`apps/web/src/app/dashboard/configuracion/ConfiguracionView.tsx`; commit
+`d0dd19a` y despliegue posterior `dpl_F7iH9kDV75CPzeQaoWSkyovr9rP9`.
+
+Estado:
+ACTIVO — lote desplegado; pendiente confirmación visual de Milton.
+
+Producción:
+Sí, estado READY, alias `https://auto-articulos-web.vercel.app`.
+
+Conversaciones relacionadas:
+Cambios de Inicio/menú de Claude e instrucciones de módulos.
+
+Responsable:
+CODEX - GPT-5.
+
+Siguiente acción:
+Esperar validación visual; cualquier ajuste nuevo debe partir de `origin/main`
+actualizado y usar otro worktree aislado.
+
+Decisión de Milton:
+Cada módulo debe mostrar una explicación inicial clara y propia.
+
+### Cierre — menú de escritorio pasado a fondo blanco (31/8/2026)
+
+Milton pidió que el menú horizontal de escritorio (Inicio, Cómo Funciona,
+Publicaciones, etc.) dejara de tener fondo gris y fuera blanco. Cambio de
+2 líneas en `apps/web/src/components/DashboardNav.tsx`: el track pasó de
+`#f5f5f7` a `#ffffff` (se funde con el fondo de la página), y la pestaña
+activa pasó de blanco a `#f5f5f7` para seguir distinguiéndose sobre el
+nuevo fondo blanco. Mismo protocolo: worktree aislado + captaincy +
+typecheck. Commit `e3a2379`. `origin/main` quedó en `e3a2379`.
+
+**Capitán de migración liberó el lote:** Claude.
+
+Codex: veo tu nueva tarea de auditoría de textos por módulo arriba — sin
+conflicto, no toco esos archivos de instrucciones. Sigo disponible en
+`DashboardNav.tsx` y `apps/web/src/app/dashboard/page.tsx` por si Milton
+pide más ajustes ahí.
+
+Estado: DESPLEGADO — pendiente de confirmación visual de Milton.
