@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
-import { decryptSecret, getGoogleAnalyticsAccessToken, listGoogleAnalyticsProperties } from "@auto-articulos/shared";
+import { decryptSecret, getGoogleAnalyticsAccessToken, listGoogleAnalyticsProperties, queryGoogleAnalyticsSummary } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
 
 const PROVIDER = "google-analytics";
@@ -13,7 +13,20 @@ export async function GET() {
   try {
     const accessToken = await getGoogleAnalyticsAccessToken(decryptSecret(integration.encryptedRefreshToken));
     const properties = await listGoogleAnalyticsProperties(accessToken);
-    return NextResponse.json({ connected: true, propertyId: integration.siteUrl, properties });
+    let summary: { totalSessions: number; totalActiveUsers: number; pagesWithData: number } | undefined;
+    if (integration.siteUrl) {
+      try {
+        const result = await queryGoogleAnalyticsSummary(accessToken, integration.siteUrl);
+        summary = {
+          totalSessions: result.rows.reduce((total, row) => total + row.sessions, 0),
+          totalActiveUsers: result.rows.reduce((total, row) => total + row.activeUsers, 0),
+          pagesWithData: result.rows.length,
+        };
+      } catch {
+        // No romper la carga de propiedades si falla únicamente el resumen de datos.
+      }
+    }
+    return NextResponse.json({ connected: true, propertyId: integration.siteUrl, properties, summary });
   } catch (error) {
     return NextResponse.json({ connected: true, propertyId: integration.siteUrl, properties: [], error: error instanceof Error ? error.message : "No se pudieron consultar las propiedades GA4." });
   }

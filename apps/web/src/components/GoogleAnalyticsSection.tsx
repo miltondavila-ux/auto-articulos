@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { inputStyle, secondaryButtonStyle, sectionStyle, h2Style } from "./dashboard-ui";
 
 type Property = { propertyId: string; displayName: string; accountName?: string };
+type Summary = { totalSessions: number; totalActiveUsers: number; pagesWithData: number };
 
 export default function GoogleAnalyticsSection() {
-  const [data, setData] = useState<{ connected: boolean; propertyId?: string | null; properties: Property[]; error?: string } | null>(null);
+  const [data, setData] = useState<{ connected: boolean; propertyId?: string | null; properties: Property[]; summary?: Summary; error?: string } | null>(null);
   const [selected, setSelected] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -47,6 +48,25 @@ export default function GoogleAnalyticsSection() {
         <option value="">Selecciona tu propiedad GA4</option>
         {data.properties.map((property) => <option key={property.propertyId} value={property.propertyId}>{property.displayName} ({property.propertyId})</option>)}
       </select>
+      {data.propertyId && (() => {
+        const property = data.properties.find((item) => item.propertyId === data.propertyId);
+        return (
+          <p style={{ fontSize: 13, color: "#16803c", margin: 0 }}>
+            ✓ Propiedad conectada: {property ? `${property.displayName} (${property.propertyId})` : data.propertyId}
+          </p>
+        );
+      })()}
+      {data.propertyId && data.summary && (
+        data.summary.totalSessions > 0 ? (
+          <p style={{ fontSize: 12, color: "#16803c", margin: 0 }}>
+            ✓ Recibiendo datos reales: {data.summary.totalSessions.toLocaleString("es-US")} sesiones y {data.summary.totalActiveUsers.toLocaleString("es-US")} usuarios activos en los últimos 12 meses, en {data.summary.pagesWithData} páginas.
+          </p>
+        ) : (
+          <p className="muted" style={{ fontSize: 12, margin: 0 }}>
+            Conectado, pero todavía no hay datos registrados en esta propiedad en los últimos 12 meses.
+          </p>
+        )
+      )}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <button onClick={save} disabled={busy || !selected} style={secondaryButtonStyle}>{busy ? "Guardando..." : "Guardar propiedad"}</button>
         <a href="/api/google-analytics/connect?returnTo=/dashboard/configuracion" style={{ ...secondaryButtonStyle, textDecoration: "none" }}>Reconectar Google Analytics</a>
