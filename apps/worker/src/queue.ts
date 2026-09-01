@@ -1,5 +1,5 @@
 import { prisma, Prisma } from "@auto-articulos/db";
-import { decryptSecret, MAX_ATTEMPTS } from "@auto-articulos/shared";
+import { decryptSecret, MAX_ATTEMPTS, platformProductNameOrNeutral } from "@auto-articulos/shared";
 import {
   publishArticle,
   DailyLimitReachedError,
@@ -212,7 +212,7 @@ async function processRunTitle(
     // título por título el mismo error.
     await markTitleError(
       nextTitle.id,
-      "No se encontraron credenciales de 10minutesWebsite para este usuario.",
+      `No se encontraron credenciales de ${platformProductNameOrNeutral(run.user.platformDomain)} para este usuario.`,
     );
     await prisma.run.updateMany({
       where: { id: run.id, status: { in: ["pending", "running"] } },
@@ -396,7 +396,7 @@ async function processRunTitle(
         normalizedMessage,
       );
     const displayMessage = isImageCreditIssue
-      ? "Sin créditos de imagen en 10minutesWebsite. Pide más créditos a tu proveedor del sitio; no hace falta hacer nada más aquí, el próximo intento funcionará solo."
+      ? `Sin créditos de imagen en ${platformProductNameOrNeutral(run.user.platformDomain)}. Pide más créditos a tu proveedor del sitio; no hace falta hacer nada más aquí, el próximo intento funcionará solo.`
       : message;
 
     if (freshRun.status === "cancelled") {

@@ -3,7 +3,7 @@ import {
   type Page,
   type Response as PlaywrightResponse,
 } from "playwright";
-import { platformBaseUrl } from "@auto-articulos/shared";
+import { platformBaseUrl, platformProductNameOrNeutral } from "@auto-articulos/shared";
 import { buildImagePrompt, isImageRelevant } from "../imagePrompt";
 import { generateFaqs, type Faq } from "../faqPrompt";
 import { translateText } from "../translateText";
@@ -424,6 +424,7 @@ export async function publishArticle(
   categoryPanel: string = "",
 ): Promise<PublishResult> {
   const baseUrl = resolveBaseUrl(credentials.platformDomain);
+  const productName = platformProductNameOrNeutral(credentials.platformDomain);
   const browser = await chromium.launch({ headless: true });
   let watchdog: NodeJS.Timeout | undefined;
   try {
@@ -447,11 +448,12 @@ export async function publishArticle(
       credentials.userPhone,
       credentials.userCountry,
       credentials.authorName,
+      productName,
       onStep,
       credentials.promptText,
     );
     await logFormFieldsSnapshot(page, onStep, "tras crear el borrador, antes de la imagen");
-    await generateImage(page, finalTitle, summary, onStep);
+    await generateImage(page, finalTitle, summary, onStep, productName);
     await logFormFieldsSnapshot(page, onStep, "tras generar la imagen, antes del FAQ");
     await fillFaqWidget(
       page,
@@ -660,7 +662,7 @@ async function login(
   credentials: TenMinutesWebsiteCredentials,
   onStep: OnStep,
 ): Promise<void> {
-  await onStep("Iniciando sesión en 10minutesWebsite...");
+  await onStep(`Iniciando sesión en ${platformProductNameOrNeutral(credentials.platformDomain)}...`);
   await page.goto(`${baseUrl}/dashboard/start.php`, {
     waitUntil: "domcontentloaded",
     timeout: NAV_TIMEOUT_MS,
@@ -734,6 +736,7 @@ async function createArticleDraft(
   userPhone: string | null | undefined,
   userCountry: string | null | undefined,
   authorName: string | null | undefined,
+  productName: string,
   onStep: OnStep,
   promptText?: string | null,
 ): Promise<{ summary: string; contentHtml: string; finalTitle: string }> {
@@ -775,10 +778,9 @@ async function createArticleDraft(
     // en vez de reintentar título por título contra el mismo límite.
     if (/límite diario/i.test(alertText)) {
       throw new DailyLimitReachedError(
-        `Se alcanzó el límite diario de artículos de esta cuenta en 10minutesWebsite: "${alertText}". ` +
+        `Se alcanzó el límite diario de artículos de esta cuenta en ${productName}: "${alertText}". ` +
           "Esto no debería aplicar a cuentas del programa de posicionamiento — " +
-          "escribe al servicio al cliente de 10minutesWebsite " +
-          "(https://www.10minuteswebsite.com/ayuda) para que eliminen esa " +
+          "escribe al servicio al cliente de tu plataforma para que eliminen esa " +
           "restricción para esta cuenta. Mientras tanto, el resto de los " +
           "artículos de este lote no se pueden crear hoy.",
       );
@@ -789,10 +791,10 @@ async function createArticleDraft(
         'mostró el campo "Tipo" a tiempo)' +
         (alertText ? `. Mensaje visible en el sitio: "${alertText}"` : ".") +
         " Es posible que la cuenta haya alcanzado un límite diario de " +
-        "artículos en 10minutesWebsite (por ejemplo, 10 por día), algo que " +
+        `artículos en ${productName} (por ejemplo, 10 por día), algo que ` +
         "no debería aplicar para cuentas del programa de posicionamiento. " +
         "Si este error se repite, solicita al servicio al cliente de " +
-        "10minutesWebsite que revise y elimine esa restricción para esta " +
+        `${productName} que revise y elimine esa restricción para esta ` +
         "cuenta.",
     );
   }
@@ -1723,6 +1725,7 @@ const IMAGE_DISCLAIMER_CHECK_TIMEOUT_MS = 4_000;
 async function dismissImageGenerationDisclaimer(
   page: Page,
   onStep: OnStep,
+  productName: string,
 ): Promise<void> {
   const dialog = page.locator(".modal", {
     hasText: TEXT_AVISO_IMAGENES_IA,
@@ -1755,11 +1758,11 @@ async function dismissImageGenerationDisclaimer(
 
   if (!checkedOk || !clickedOk) {
     throw new Error(
-      "Apareció el aviso 'Generación de imágenes mediante IA' de 10minutesWebsite y no se pudo cerrar (marcar 'No mostrar este mensaje durante 15 días' y aceptar 'OK'); no se pudo continuar con la generación de la imagen.",
+      `Apareció el aviso 'Generación de imágenes mediante IA' de ${productName} y no se pudo cerrar (marcar 'No mostrar este mensaje durante 15 días' y aceptar 'OK'); no se pudo continuar con la generación de la imagen.`,
     );
   }
   await onStep(
-    "Aviso de 'Generación de imágenes mediante IA' de 10minutesWebsite cerrado (no volverá a salir por 15 días).",
+    `Aviso de 'Generación de imágenes mediante IA' de ${productName} cerrado (no volverá a salir por 15 días).`,
   );
 }
 
@@ -1768,13 +1771,14 @@ async function generateImage(
   title: string,
   summary: string,
   onStep: OnStep,
+  productName: string,
 ): Promise<void> {
   await onStep(
     "Generando imagen con inteligencia artificial (puede tardar un minuto)...",
   );
-  await dismissImageGenerationDisclaimer(page, onStep);
+  await dismissImageGenerationDisclaimer(page, onStep, productName);
   const generarImagenBtn = await openImageSection(page);
-  await dismissImageGenerationDisclaimer(page, onStep);
+  await dismissImageGenerationDisclaimer(page, onStep, productName);
 
   // Diagnóstico agregado el 10/8/2026: reportado por el usuario que el error
   // "es posible que se hayan acabado los tokens..." es solo una SUPOSICIÓN
@@ -1874,7 +1878,7 @@ async function generateImage(
     // que siga visible/estable en ese instante exacto.
     await generarImagenBtn.scrollIntoViewIfNeeded().catch(() => {});
     await generarImagenBtn.click({ force: true });
-    await dismissImageGenerationDisclaimer(page, onStep);
+    await dismissImageGenerationDisclaimer(page, onStep, productName);
 
     // La generación de imagen es asíncrona: hay que esperar a que aparezca la
     // vista previa dentro del recorte de foto antes de continuar.
@@ -2015,7 +2019,7 @@ async function generateImage(
       const message = err instanceof Error ? err.message : String(err);
       const causaReal = networkLog.length
         ? ` Respuesta real del servidor: ${networkLog.slice(-2).join(" ; ")}`
-        : " No se detectó ninguna respuesta de red del servidor para la generación de imagen; es posible que se hayan acabado los tokens/créditos de la cuenta en 10minutesWebsite, o que la petición nunca haya llegado a enviarse.";
+        : ` No se detectó ninguna respuesta de red del servidor para la generación de imagen; es posible que se hayan acabado los tokens/créditos de la cuenta en ${productName}, o que la petición nunca haya llegado a enviarse.`;
       page.off("response", onImageNetworkResponse);
       throw new Error(`${message}${causaReal}`);
     }

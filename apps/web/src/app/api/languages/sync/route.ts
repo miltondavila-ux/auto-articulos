@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
+import { platformProductNameOrNeutral } from "@auto-articulos/shared";
 import { triggerWorkerNow } from "@/lib/trigger-worker";
 import { hasTrialAccess } from "@/lib/trial";
 import { isStuckSyncJob, STUCK_SYNC_JOB_MESSAGE } from "@/lib/sync-jobs";
@@ -15,6 +16,7 @@ export async function POST() {
       isTrialSignup: true,
       trialStartedAt: true,
       trialUnlocked: true,
+      platformDomain: true,
     },
   });
 
@@ -33,7 +35,7 @@ export async function POST() {
   });
   if (!credential) {
     return NextResponse.json(
-      { error: "Primero debes guardar tus credenciales de 10minutesWebsite" },
+      { error: `Primero debes guardar tus credenciales de ${platformProductNameOrNeutral(user?.platformDomain)}` },
       { status: 400 }
     );
   }

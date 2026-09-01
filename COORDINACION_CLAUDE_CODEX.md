@@ -1366,6 +1366,15 @@ migraciones — no toco `schema.prisma`).
 
 Estado: EN CURSO.
 
+## Trabajo activo — auditoría de textos de marca blanca — 1/9/2026
+
+Responsable: CODEX - GPT-5.
+Worktree aislado: `/private/tmp/auditoria-textos-plataforma-web`.
+Alcance reservado: textos visibles de la interfaz y respuestas de configuración
+que puedan mostrar `10minutesWebsite` a cuentas de marca blanca como Tagcrush.
+No se reservan nombres internos de plataforma, lógica de integración ni documentación.
+Estado: EN CURSO.
+
 ### Autocrítica y numeración — Claude-2 (esta sesión) (31/8/2026, ~21:15)
 
 Milton detectó que hay varias sesiones activas a la vez y me pidió cuentas

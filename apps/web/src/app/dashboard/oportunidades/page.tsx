@@ -13,6 +13,7 @@ import {
 } from "@/components/dashboard-ui";
 import ImageCreditsModal from "@/components/ImageCreditsModal";
 import PreValidationGuard from "@/components/PreValidationGuard";
+import { platformProductNameOrNeutral } from "@auto-articulos/shared";
 
 interface OpportunityTitle {
   id: string;
@@ -658,7 +659,7 @@ export default function OportunidadesPage() {
             }}
           >
             <span>
-              ⚠️ Tu cuenta de 10minutesWebsite no tiene créditos de imagen disponibles.
+              ⚠️ Tu cuenta de {platformProductNameOrNeutral(platformDomain)} no tiene créditos de imagen disponibles.
             </span>
             <div
               style={{
@@ -730,7 +731,7 @@ export default function OportunidadesPage() {
             onChange={(e) => setDisableIndexing(e.target.checked)}
           />
           Desactivar indexación en buscadores al ejecutar (por defecto queda
-          activada, como en 10minutesWebsite)
+              activada de forma predeterminada)
         </label>
 
         <div style={{ marginTop: 16 }}>

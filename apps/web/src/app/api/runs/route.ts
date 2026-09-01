@@ -14,7 +14,7 @@ import { hasTrialAccess } from "@/lib/trial";
 // cuando alguien expande "Ver todos los pasos" (ver /api/titles/[id]/events).
 export async function GET() {
   const userId = await getCurrentUserId();
-  const account = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
+  const account = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true, platformDomain: true } });
   const runs = await prisma.run.findMany({
     where: {
       userId,
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
   const userId = await getCurrentUserId();
   const account = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { selectedSiteDomain: true },
+    select: { selectedSiteDomain: true, platformDomain: true },
   });
   const {
     titlesText,
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
   });
   if (!credential) {
     return NextResponse.json(
-      { error: "Primero debes guardar tus credenciales de 10minutesWebsite" },
+      { error: `Primero debes guardar tus credenciales de ${account.platformDomain === "tagcrush" ? "tu plataforma" : "10minutesWebsite"}` },
       { status: 400 },
     );
   }

@@ -24,6 +24,7 @@ import {
   normalizePlatformDomain,
   PLATFORM_DOMAIN_VALUES,
   PLATFORM_SERVERS,
+  platformProductName,
   type PlatformDomain,
 } from "@auto-articulos/shared";
 import { trialDaysRemaining } from "@/lib/trial";
@@ -2315,7 +2316,7 @@ function UserCard({
                   color: "#ff3b30",
                   border: "1px solid rgba(255, 59, 48, 0.3)",
                 }}
-                title="Esta cuenta se quedó sin créditos de imagen en 10minutesWebsite."
+                title={`Esta cuenta se quedó sin créditos de imagen en ${platformProductName(user.platformDomain)}.`}
               >
                 SIN CRÉDITOS IMAGEN
               </span>
@@ -2378,7 +2379,7 @@ function UserCard({
             </span>
           </Field>
 
-          <Field label="Cuenta 10minutesWebsite">
+          <Field label={`Cuenta ${platformProductName(user.platformDomain)}`}>
             <span style={{ fontSize: 13, color: user.tenMinutesUsername ? "#1d1d1f" : "#6e6e73", wordBreak: "break-all" }}>
               {user.tenMinutesUsername ? `${user.tenMinutesUsername}` : "Sin credenciales guardadas"}
             </span>
@@ -2510,7 +2511,7 @@ function UserCard({
                   disabled={savingPermissions}
                   style={{ accentColor: "#ff9500", width: 16, height: 16 }}
                 />
-                Créditos de imagen disponibles (10minutesWebsite)
+                Créditos de imagen disponibles ({platformProductName(user.platformDomain)})
               </label>
 
               <div

@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
+import { platformHelpUrl, platformProductNameOrNeutral } from "@auto-articulos/shared";
 
 export async function GET() {
   const userId = await getCurrentUserId();
-  const account = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
+  const account = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true, platformDomain: true } });
+  const productName = platformProductNameOrNeutral(account.platformDomain);
 
   const [credential, categories, user, googleIntegration] = await Promise.all([
     prisma.credential.findUnique({
@@ -58,10 +60,10 @@ export async function GET() {
   if (!credentialsConfigured) {
     const credItem = {
       id: "credentials",
-      label: "10minutesWebsite no conectado",
-      description: "Primero debes conectar tus credenciales de 10minutesWebsite para poder publicar.",
+      label: `${productName} no conectado`,
+      description: `Primero debes conectar tus credenciales de ${productName} para poder publicar.`,
       actionUrl: "/dashboard/configuracion?tab=platform#credentials",
-      actionLabel: "Conectar 10minutesWebsite",
+      actionLabel: `Conectar ${productName}`,
     };
     missingForPublish.push(credItem);
     missingForOpportunities.push(credItem);
@@ -71,7 +73,7 @@ export async function GET() {
     const catItem = {
       id: "categories",
       label: "Sin categorías sincronizadas",
-      description: "Debes sincronizar al menos una categoría desde 10minutesWebsite para organizar tus artículos.",
+      description: `Debes sincronizar al menos una categoría desde ${productName} para organizar tus artículos.`,
       actionUrl: "/dashboard/configuracion?tab=platform#categories",
       actionLabel: "Sincronizar categorías",
     };
@@ -95,8 +97,8 @@ export async function GET() {
     const imgCreditItem = {
       id: "image-credits",
       label: "Créditos de imagen agotados",
-      description: "Tu cuenta de 10minutesWebsite no tiene créditos para generar imágenes con IA.",
-      actionUrl: "https://www.10minuteswebsite.com/ayuda",
+      description: `Tu cuenta de ${productName} no tiene créditos para generar imágenes con IA.`,
+      actionUrl: platformHelpUrl(account.platformDomain) ?? "#",
       actionLabel: "Solicitar créditos de imagen gratuitos",
     };
     missingForPublish.push(imgCreditItem);
