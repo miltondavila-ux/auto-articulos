@@ -153,6 +153,9 @@ export default function InicioPage() {
         <IntroP>
           Si no sabes por dónde empezar, <Modulo id="como-funciona" /> lo explica entero en tres pasos.
         </IntroP>
+        <IntroP>
+          Justo abajo tienes 4 botones: elige el que corresponda a lo que quieres hacer ahora.
+        </IntroP>
       </ModuleIntro>
       <Grid numItemsSm={2} numItemsLg={4} className="gap-4" style={{ marginTop: 20, marginBottom: 20 }}>
         {QUICK_LINKS.map((l, i) => (
