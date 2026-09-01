@@ -1,0 +1,13 @@
+.git
+.github
+.env*
+*.md
+docker
+docker-compose.yml
+scripts
+diagnose-*.js
+start-auto-shutdown.sh
+apps/web/.next
+apps/web/.vercel
+apps/web/tsconfig.tsbuildinfo
+apps/worker/dist

@@ -1477,6 +1477,8 @@ Archivos reservados exclusivamente por esta tarea:
 - `apps/worker/src/automation/contentLanguage.test.ts`
 - `apps/worker/src/automation/generateCustomArticle.ts`
 - `apps/worker/src/faqPrompt.ts`
+- `.vercelignore`
+- `vercel.json`
 - `COORDINACION_CLAUDE_CODEX.md`
 - `HANDOFF.md`
 
