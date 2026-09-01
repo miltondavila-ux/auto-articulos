@@ -74,6 +74,9 @@ export async function GET() {
         monthlyArticleLimit: true,
         dailyArticleLimit: true,
         maxTitlesPerBatch: true,
+        monthlyArticleLimitOverride: true,
+        dailyArticleLimitOverride: true,
+        maxTitlesPerBatchOverride: true,
         platformDomain: true,
         contentLanguage: true,
         allowInstagramPublishing: true,
@@ -208,6 +211,7 @@ export async function PATCH(request: NextRequest) {
     trialUnlocked,
     disabledModules,
     moduleOverrides,
+    inheritArticleLimits,
   } = body;
 
   if (typeof userId !== "string" || !userId) {
@@ -218,6 +222,9 @@ export async function PATCH(request: NextRequest) {
     monthlyArticleLimit?: number | null;
     dailyArticleLimit?: number | null;
     maxTitlesPerBatch?: number;
+    monthlyArticleLimitOverride?: number | null;
+    dailyArticleLimitOverride?: number | null;
+    maxTitlesPerBatchOverride?: number | null;
     platformDomain?: string;
     email?: string;
     name?: string;
@@ -244,6 +251,12 @@ export async function PATCH(request: NextRequest) {
     disabledModules?: string | null;
     hasImageCredits?: boolean;
   } = {};
+
+  if (inheritArticleLimits === true) {
+    data.monthlyArticleLimitOverride = null;
+    data.dailyArticleLimitOverride = null;
+    data.maxTitlesPerBatchOverride = null;
+  }
 
   if ("role" in body) {
     if (role !== "admin" && role !== "user") {
@@ -298,6 +311,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
     data.monthlyArticleLimit = monthlyArticleLimit;
+    data.monthlyArticleLimitOverride = monthlyArticleLimit;
   }
 
   if ("dailyArticleLimit" in body) {
@@ -314,6 +328,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
     data.dailyArticleLimit = dailyArticleLimit;
+    data.dailyArticleLimitOverride = dailyArticleLimit;
   }
 
   if ("maxTitlesPerBatch" in body) {
@@ -327,6 +342,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
     data.maxTitlesPerBatch = maxTitlesPerBatch;
+    data.maxTitlesPerBatchOverride = maxTitlesPerBatch;
   }
 
   if ("platformDomain" in body) {
@@ -543,9 +559,9 @@ export async function POST(request: NextRequest) {
     lastName,
     phone,
     role = "user",
-    monthlyArticleLimit = 300,
-    dailyArticleLimit = 20,
-    maxTitlesPerBatch = 20,
+    monthlyArticleLimit,
+    dailyArticleLimit,
+    maxTitlesPerBatch,
     platformDomain: requestedPlatformDomain,
   } = await request.json();
 
@@ -569,6 +585,10 @@ export async function POST(request: NextRequest) {
   const platformDomain = isPlatformDomain(requestedPlatformDomain)
     ? requestedPlatformDomain
     : DEFAULT_PLATFORM_DOMAIN;
+  const globalLimits = await prisma.articleLimitsConfig.findUnique({ where: { platformDomain } });
+  const effectiveMonthlyArticleLimit = monthlyArticleLimit ?? globalLimits?.monthlyArticleLimit ?? 300;
+  const effectiveDailyArticleLimit = dailyArticleLimit ?? globalLimits?.dailyArticleLimit ?? 20;
+  const effectiveMaxTitlesPerBatch = maxTitlesPerBatch ?? globalLimits?.maxTitlesPerBatch ?? 20;
 
   const normalizedEmail = typeof email === "string" ? email.trim() : "";
   const normalizedFirstName =
@@ -619,7 +639,7 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
-  if (!isValidArticleLimit(monthlyArticleLimit)) {
+  if (!isValidArticleLimit(effectiveMonthlyArticleLimit)) {
     return NextResponse.json(
       {
         error: "El límite mensual debe ser un número entero mayor o igual a 0",
@@ -627,13 +647,13 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
-  if (!isValidArticleLimit(dailyArticleLimit)) {
+  if (!isValidArticleLimit(effectiveDailyArticleLimit)) {
     return NextResponse.json(
       { error: "El límite diario debe ser un número entero mayor o igual a 0" },
       { status: 400 },
     );
   }
-  if (!isValidMaxTitlesPerBatch(maxTitlesPerBatch)) {
+  if (!isValidMaxTitlesPerBatch(effectiveMaxTitlesPerBatch)) {
     return NextResponse.json(
       {
         error:
@@ -668,9 +688,9 @@ export async function POST(request: NextRequest) {
       passwordHash,
       initialPasswordEncrypted,
       role,
-      monthlyArticleLimit,
-      dailyArticleLimit,
-      maxTitlesPerBatch,
+      monthlyArticleLimit: effectiveMonthlyArticleLimit,
+      dailyArticleLimit: effectiveDailyArticleLimit,
+      maxTitlesPerBatch: effectiveMaxTitlesPerBatch,
       platformDomain,
     },
     select: {

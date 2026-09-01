@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { prisma } from "@auto-articulos/db";
+import { getEffectiveArticleLimits } from "@/lib/article-limits";
 
 /** Solo válido dentro de rutas protegidas por proxy.ts */
 export async function getCurrentUserId(): Promise<string> {
@@ -13,7 +14,7 @@ export async function getCurrentUserId(): Promise<string> {
 
 export async function getCurrentUser() {
   const userId = await getCurrentUserId();
-  return prisma.user.findUniqueOrThrow({
+  const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
     select: {
       id: true,
@@ -23,6 +24,9 @@ export async function getCurrentUser() {
       lastName: true,
       role: true,
       maxTitlesPerBatch: true,
+      monthlyArticleLimitOverride: true,
+      dailyArticleLimitOverride: true,
+      maxTitlesPerBatchOverride: true,
       dailyArticleLimit: true,
       monthlyArticleLimit: true,
       platformDomain: true,
@@ -55,6 +59,8 @@ export async function getCurrentUser() {
       allowDevToPublishing: true,
     },
   });
+  const limits = await getEffectiveArticleLimits(user);
+  return { ...user, ...limits };
 }
 
 export function displayName(user: {

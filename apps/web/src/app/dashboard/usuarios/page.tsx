@@ -29,6 +29,7 @@ import {
 } from "@auto-articulos/shared";
 import { trialDaysRemaining } from "@/lib/trial";
 import { SYSTEM_MODULES } from "@/lib/modules";
+import ArticleLimitsPanel from "@/components/ArticleLimitsPanel";
 
 interface UserRow {
   id: string;
@@ -126,6 +127,7 @@ function Field({
 }) {
   return (
     <div style={filaCompleta ? { gridColumn: "1 / -1" } : undefined}>
+      <ArticleLimitsPanel />
       <div
         style={{
           fontSize: 11,
@@ -243,9 +245,9 @@ export default function UsuariosPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"admin" | "user">("user");
-  const [monthlyArticleLimit, setMonthlyArticleLimit] = useState("300");
-  const [dailyArticleLimit, setDailyArticleLimit] = useState("95");
-  const [maxTitlesPerBatch, setMaxTitlesPerBatch] = useState("20");
+  const [monthlyArticleLimit, setMonthlyArticleLimit] = useState("");
+  const [dailyArticleLimit, setDailyArticleLimit] = useState("");
+  const [maxTitlesPerBatch, setMaxTitlesPerBatch] = useState("");
   // Servidor de la cuenta nueva. Antes se pedía el país y de él se derivaba
   // el servidor (Europa -> .site, resto del mundo -> .net); pedido de
   // Milton (15/8/2026): "no hemos debido preguntar por país sino por
@@ -2028,6 +2030,15 @@ function UserCard({
     }
   }
 
+  async function handleInheritArticleLimits() {
+    await fetch("/api/admin/users", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: user.id, inheritArticleLimits: true }),
+    });
+    onUpdated();
+  }
+
   async function handleSaveRole() {
     setSavingRole(true);
     setRoleError(null);
@@ -2792,6 +2803,15 @@ function UserCard({
               </button>
             </div>
           </Field>
+
+          <div style={{ gridColumn: "1 / -1" }}>
+            <button onClick={handleInheritArticleLimits} style={{ ...secondaryButtonStyle, padding: "6px 10px", fontSize: 12 }}>
+              Usar límites globales
+            </button>
+            <span style={{ marginLeft: 8, fontSize: 12, color: "#6e6e73" }}>
+              La cuenta dejará de usar excepciones individuales.
+            </span>
+          </div>
 
           <Field label="Límite diario">
             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>

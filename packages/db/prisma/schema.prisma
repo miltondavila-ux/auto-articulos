@@ -31,6 +31,11 @@ model User {
   monthlyArticleLimit               Int?      @default(300)
   dailyArticleLimit                 Int?      @default(20)
   maxTitlesPerBatch                 Int       @default(20)
+  // Null significa que la cuenta hereda el límite global. Un valor definido
+  // es una excepción individual configurada por Administración.
+  monthlyArticleLimitOverride       Int?
+  dailyArticleLimitOverride         Int?
+  maxTitlesPerBatchOverride         Int?
   // Encontrado el 2/8/2026: usuarios en Europa (ej. Lidia Capdevila) tienen
   // su cuenta real en 10minutesWebsite.site en vez de .net. El login/las
   // acciones generales funcionan igual en ambos, pero la generación de
@@ -724,6 +729,17 @@ model SystemSetting {
   encryptedValue String
   updatedAt      DateTime @updatedAt
   createdAt      DateTime @default(now())
+}
+
+// Fuente central de límites para toda la aplicación. Se mantiene una fila por
+// servidor para permitir administrar .net, .site y tagcrush por separado.
+model ArticleLimitsConfig {
+  platformDomain       String   @id
+  monthlyArticleLimit  Int?
+  dailyArticleLimit    Int?
+  maxTitlesPerBatch    Int
+  updatedAt            DateTime @updatedAt
+  createdAt            DateTime @default(now())
 }
 
 model SocialOpportunity {

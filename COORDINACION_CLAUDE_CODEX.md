@@ -1514,3 +1514,18 @@ activas sobre esos archivos.
 
 Estado: DESPLEGADO EN MAIN — pendiente de la prueba operativa iniciada por
 Milton.
+## Trabajo activo — límites globales y personalizados de artículos — 2026-09-01
+
+Responsable: CODEX - GPT-5.
+Worktree aislado: `/private/tmp/limites-globales-articulos`.
+Rama: `codex/limites-globales-articulos`.
+Objetivo: crear una fuente central para límite diario, límite mensual y máximo
+por lote; permitir excepciones por usuario; hacer que toda la aplicación use
+el límite efectivo sin valores fijos.
+Archivos reservados para esta tarea: `packages/db/prisma/schema.prisma`,
+migración nueva en `packages/db/prisma/migrations/`, rutas/API de administración
+de límites y usuarios, pantallas de Administración/Publicar/Oportunidades,
+worker y documentación de versiones.
+Exclusiones: archivos reclamados por Claude para Google Analytics y cualquier
+trabajo activo ajeno.
+Estado: EN CURSO — reserva registrada antes de editar.
