@@ -1064,3 +1064,23 @@ Estado: DESPLEGADO y CONFIRMADO — Milton lo vio en vivo en
 conversación.
 
 Responsable siguiente: nadie, cerrado.
+
+### Actualización — 2026-08-31 (mismo día, tras ver la captura en producción)
+
+Milton vio las cajas en vivo y pidió dos ajustes: (1) que fueran idénticas
+en tamaño a las 4 tarjetas de métricas de abajo ("Publicados este mes" /
+"Publicados hoy" / "Total publicado" / "Oportunidades listas"), y (2) quitar
+el botón píldora negro "Comienza aquí" que quedaba redundante con los 4
+accesos nuevos.
+
+Se reemplazó el grid a medida por los mismos componentes Tremor
+(`Card`/`Grid numItemsSm={2} numItemsLg={4}`) que usa `PerformanceDashboard`
+para esas 4 tarjetas — mismo tamaño/padding/sombra por construcción, no por
+imitación de valores. Se quitó el bloque completo del botón "Comienza aquí".
+
+Mismo protocolo: worktree aislado + captaincy + typecheck. Commit `26cf0ef`
+(`fix: cajas de Inicio identicas a las tarjetas de metricas`). `origin/main`
+quedó en `26cf0ef`.
+
+Estado: DESPLEGADO — pendiente de que Milton confirme visualmente esta
+segunda iteración.
