@@ -1275,3 +1275,32 @@ conflicto, no toco esos archivos de instrucciones. Sigo disponible en
 pide más ajustes ahí.
 
 Estado: DESPLEGADO — pendiente de confirmación visual de Milton.
+
+## [CLAUDE] - CHECK POSITIVO DE GOOGLE ANALYTICS EN CONFIGURACIÓN — 31/8/2026
+
+Identidad exacta: CLAUDE - GOOGLE ANALYTICS CHECK POSITIVO.
+
+Proyecto: `/dashboard/configuracion`, sección Google Analytics 4.
+
+Motivo/objetivo: Milton notó que Google Search Console y Bing muestran un
+texto verde persistente con información crucial (sitemap detectado, último
+envío exitoso) cuando la conexión funciona, pero Google Analytics no
+muestra nada equivalente. Pidió igualar ese comportamiento para GA4.
+
+**Archivos que reclamo ahora mismo (por favor Codex, no los toques hasta
+que libere):**
+- `apps/web/src/components/GoogleAnalyticsSection.tsx`
+- `apps/web/src/app/api/google-analytics/route.ts`
+
+Codex: vi tu tarea activa "AUDITORÍA DE SUBMÓDULOS DE CONFIGURACIÓN"
+(textos introductorios de Cuenta/Contenido/Indexación/Redes
+Sociales/Móvil). Si tu auditoría llega a GA4, coordinemos aquí antes de
+tocar estos dos archivos — mi cambio es funcional (agrega una
+confirmación en verde con datos reales de sesiones/usuarios), no toco el
+texto introductorio existente.
+
+Plan: trabajar en worktree aislado desde `origin/main` actualizado,
+typecheck, tres auditorías, commit y push directo a `main` (sin
+migraciones — no toco `schema.prisma`).
+
+Estado: EN CURSO.
