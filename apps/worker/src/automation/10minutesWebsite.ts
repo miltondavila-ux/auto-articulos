@@ -11,6 +11,7 @@ import {
   normalizePhonePlaceholders,
   replacePhonePlaceholders,
 } from "../phonePlaceholders";
+import { resolveContentLanguageOption } from "./contentLanguage";
 import { generateCustomArticle } from "./generateCustomArticle";
 
 export interface TenMinutesWebsiteCredentials {
@@ -20,11 +21,10 @@ export interface TenMinutesWebsiteCredentials {
   // PLATFORM_SERVERS en @auto-articulos/shared ("net", "site", "tagcrush").
   // Si no se especifica, se usa .net (comportamiento original).
   platformDomain?: string | null;
-  // "es" o "en" — ver User.contentLanguage. Idioma en el que la IA debe
+  // Valor del selector real de 10minutesWebsite (por ejemplo `es_ES` o
+  // `en_VI`) — ver User.contentLanguage. Es el idioma en el que la IA debe
   // redactar el artículo, independiente del idioma de la interfaz de la
-  // cuenta (ver bilingual() más abajo, que es lo que arregla los
-  // selectores de botón rotos por ESE otro problema). Por defecto "es",
-  // sin cambios para nadie existente.
+  // cuenta (ver bilingual() más abajo, que resuelve ese otro problema).
   contentLanguage?: string | null;
   // Texto propio del usuario (ver User.articleSignature) que se agrega al
   // final del contenido de CADA artículo nuevo, antes de guardar — pedido
@@ -453,7 +453,14 @@ export async function publishArticle(
     await logFormFieldsSnapshot(page, onStep, "tras crear el borrador, antes de la imagen");
     await generateImage(page, finalTitle, summary, onStep);
     await logFormFieldsSnapshot(page, onStep, "tras generar la imagen, antes del FAQ");
-    await fillFaqWidget(page, finalTitle, summary, contentHtml, onStep);
+    await fillFaqWidget(
+      page,
+      finalTitle,
+      summary,
+      contentHtml,
+      credentials.contentLanguage,
+      onStep,
+    );
     await logFormFieldsSnapshot(page, onStep, "tras el FAQ, antes de guardar");
     const { url: articleUrl, titleUsed } = await saveAndGetUrl(
       page,
@@ -797,6 +804,13 @@ async function createArticleDraft(
   await page.dispatchEvent("#user_label_list_article", "change");
   await onStep("Categoría seleccionada.");
 
+  const requestedContentLanguage = contentLanguage?.trim();
+  if (!requestedContentLanguage) {
+    throw new Error(
+      "No se recibió un idioma de redacción para este artículo; se detiene antes de generar contenido.",
+    );
+  }
+
   // #activate_indexing es un checkbox real disfrazado de switch (Materialize):
   // viene marcado (indexación activada) por defecto, igual que en el sitio.
   // Se verificó en vivo que el checkbox queda con opacity:0 y width:0 (el
@@ -812,11 +826,10 @@ async function createArticleDraft(
   if (promptText) {
     await onStep("Usando estilo de redacción personalizado con prompt propio.");
     await onStep("Generando contenido del artículo con OpenAI...");
-    const lang = contentLanguage || "es";
     const customArticle = await generateCustomArticle(
       title,
       promptText,
-      lang,
+      requestedContentLanguage,
       authorName,
     );
     await onStep(`✓ Artículo generado con éxito por OpenAI. Título: "${customArticle.title}"`);
@@ -842,7 +855,7 @@ async function createArticleDraft(
     // Inyección de firma
     const trimmedSignature = articleSignature?.trim();
     if (trimmedSignature) {
-      const signatureText = await translateText(trimmedSignature, lang);
+      const signatureText = await translateText(trimmedSignature, requestedContentLanguage);
       if (signatureText !== trimmedSignature) {
         await onStep("Tu texto propio fue traducido al idioma del artículo.");
       }
@@ -856,8 +869,8 @@ async function createArticleDraft(
     if (userPhone?.replace(/\D/g, "")) {
       contentHtml = removeGeneratedContactLinks(contentHtml);
       const [whatsappLabel, callLabel] = await Promise.all([
-        translateText("CONTACTA AHORA", lang),
-        translateText("LLAMA AHORA", lang),
+        translateText("CONTACTA AHORA", requestedContentLanguage),
+        translateText("LLAMA AHORA", requestedContentLanguage),
       ]);
       const whatsappButton = buildContactButtonsHtml(
         userPhone,
@@ -961,52 +974,49 @@ async function createArticleDraft(
   await dialog.waitFor({ state: "visible", timeout: NAV_TIMEOUT_MS });
 
   // Selector real "Lucy habla diferentes idiomas, selecciona el que más te
-  // guste" (visto en vivo el 5/8/2026, ver fetchLanguages()). El sitio ya lo
-  // deja en español por defecto, así que solo se toca si el usuario
-  // sincronizó y eligió explícitamente otro idioma en Configuración —
-  // User.contentLanguage guarda el value real de esa opción, no un código
-  // inventado. Si no hay sincronización (valor no coincide con ninguna
-  // opción real), se deja el valor por defecto del sitio en vez de fallar
-  // la publicación completa por esto.
-  if (contentLanguage) {
-    const languageSelect = dialog.locator("select").first();
-    const languageOptions = await languageSelect
-      .locator("option")
-      .evaluateAll((options) =>
-        options.map((option) => ({
-          value: (option as HTMLOptionElement).value,
-          text: (option.textContent ?? "").trim(),
-        })),
-      )
-      .catch(() => [] as { value: string; text: string }[]);
-    const normalizedRequestedLanguage = contentLanguage.toLowerCase().split("_")[0];
-    const matchingLanguage = languageOptions.find(
-      (option) =>
-        option.value === contentLanguage ||
-        option.value.toLowerCase().split("_")[0] === normalizedRequestedLanguage ||
-        option.text.toLowerCase().split(" ")[0] === normalizedRequestedLanguage,
-    );
-    if (matchingLanguage?.value) {
-      // Evita esperar el timeout completo cuando la cuenta usa valores como
-      // "es_ES" y Auto Artículos guarda el código corto "es".
-      await languageSelect.selectOption(matchingLanguage.value, { timeout: 5000 }).catch(() => {});
-    }
-    // Bug real encontrado el 6/8/2026 (cuenta de Gustavo Torres, contentLanguage
-    // en inglés): a diferencia del selector de categoría (#user_label_list_article),
-    // este también parece estar reforzado por un widget visual que necesita el
-    // evento "change" disparado a mano para sincronizarse de verdad — sin esto,
-    // la generación de contenido se quedaba colgada 90s sin producir nada
-    // (page.waitForFunction timeout), probablemente porque el sitio nunca
-    // terminaba de aplicar el cambio de idioma antes de "Generar". Mismo
-    // tratamiento que ya funciona para la categoría.
-    await dialog.locator("select").first().dispatchEvent("change").catch(() => {});
-    const appliedLanguage = await languageSelect.inputValue().catch(() => "");
-    await onStep(
-      appliedLanguage === contentLanguage
-        ? `Idioma del contenido aplicado: ${appliedLanguage}.`
-        : `Aviso: no se pudo confirmar el idioma seleccionado (se esperaba "${contentLanguage}", quedó en "${appliedLanguage}"). Se continúa igual.`,
+  // guste" (visto en vivo el 5/8/2026, ver fetchLanguages()). 10minutesWebsite
+  // usa valores como `en_VI`, mientras que algunos registros históricos de
+  // Auto Artículos guardan `en` o el nombre visible. Resolvemos esos formatos
+  // contra las opciones reales antes de generar.
+  const languageSelect = dialog.locator("select").first();
+  const languageOptions = await languageSelect
+    .locator("option")
+    .evaluateAll((options) =>
+      options.map((option) => ({
+        value: (option as HTMLOptionElement).value,
+        text: (option.textContent ?? "").trim(),
+      })),
+    )
+    .catch(() => [] as { value: string; text: string }[]);
+  const matchingLanguage = resolveContentLanguageOption(
+    requestedContentLanguage,
+    languageOptions,
+  );
+  if (!matchingLanguage) {
+    throw new Error(
+      `El idioma de redacción "${requestedContentLanguage}" no existe entre las opciones reales de 10minutesWebsite; se detiene antes de generar contenido para no publicar otro idioma.`,
     );
   }
+
+  // Evita esperar el timeout completo cuando la cuenta usa valores como
+  // "es_ES" y Auto Artículos guarda el código corto "es".
+  await languageSelect.selectOption(matchingLanguage.value, { timeout: 5000 });
+  // Bug real encontrado el 6/8/2026 (cuenta de Gustavo Torres, contentLanguage
+  // en inglés): a diferencia del selector de categoría (#user_label_list_article),
+  // este también parece estar reforzado por un widget visual que necesita el
+  // evento "change" disparado a mano para sincronizarse de verdad — sin esto,
+  // la generación de contenido se quedaba colgada 90s sin producir nada
+  // (page.waitForFunction timeout), probablemente porque el sitio nunca
+  // terminaba de aplicar el cambio de idioma antes de "Generar". Mismo
+  // tratamiento que ya funciona para la categoría.
+  await languageSelect.dispatchEvent("change");
+  const appliedLanguage = await languageSelect.inputValue();
+  if (appliedLanguage !== matchingLanguage.value) {
+    throw new Error(
+      `10minutesWebsite no confirmó el idioma "${matchingLanguage.value}" (quedó "${appliedLanguage || "vacío"}"); se detiene antes de generar contenido.`,
+    );
+  }
+  await onStep(`Idioma del contenido aplicado: ${appliedLanguage}.`);
 
   const ideaTextarea = dialog.locator("textarea").first();
   await ideaTextarea.fill(title);
@@ -2134,10 +2144,22 @@ async function fillFaqWidget(
   title: string,
   summary: string,
   contentHtml: string,
+  contentLanguage: string | null | undefined,
   onStep: OnStep,
 ): Promise<void> {
+  const requestedLanguage = contentLanguage?.trim();
+  if (!requestedLanguage) {
+    await onStep("No se generó FAQ porque no hay un idioma de redacción confirmado.");
+    return;
+  }
+
   const plainContent = stripHtml(contentHtml);
-  const faqs = await generateFaqs(title, summary, plainContent);
+  const faqs = await generateFaqs(
+    title,
+    summary,
+    plainContent,
+    requestedLanguage,
+  );
 
   if (faqs.length === 0) {
     await onStep(

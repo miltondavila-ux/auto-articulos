@@ -1459,3 +1459,31 @@ con una cuenta que tenga Google Analytics conectado.
 
 Estado: DESPLEGADO — pendiente de confirmación visual de Milton.
 Responsable siguiente: nadie, cerrado de mi parte.
+## Trabajo activo — ERROR CON IDIOMA ARTÍCULOS — 2026-09-01
+
+Responsable: CODEX - GPT-5.
+
+Worktree aislado: `/private/tmp/error-idioma-articulos`.
+
+Rama: `codex/error-idioma-articulos`.
+
+Objetivo: auditar y corregir la publicación de artículos cuyo idioma de
+redacción no coincide con el idioma solicitado, evitando mezclas de idiomas
+como el artículo de MPM REALTY GROUP.
+
+Archivos reservados exclusivamente por esta tarea:
+- `apps/worker/src/automation/10minutesWebsite.ts`
+- `apps/worker/src/automation/contentLanguage.ts`
+- `apps/worker/src/automation/contentLanguage.test.ts`
+- `apps/worker/src/automation/generateCustomArticle.ts`
+- `apps/worker/src/faqPrompt.ts`
+- `COORDINACION_CLAUDE_CODEX.md`
+- `HANDOFF.md`
+
+Alcance: resolver de forma determinista los valores de idioma reales de
+10minutesWebsite, fallar de forma segura si no se pueden aplicar, reforzar el
+prompt personalizado y generar el FAQ en el idioma del artículo. Sin
+migraciones ni ejecución de una publicación de prueba desde esta sesión sin
+confirmación inmediata de Milton.
+
+Estado: EN CURSO. Producción sin cambios desde este worktree.

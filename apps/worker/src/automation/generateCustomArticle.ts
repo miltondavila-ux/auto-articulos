@@ -1,3 +1,5 @@
+import { describeContentLanguage } from "./contentLanguage";
+
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
 
@@ -100,28 +102,32 @@ export async function generateCustomArticle(
   const customInstructions = promptTemplate
     .replace(/{title}/gi, titleText)
     .replace(/{keyword}/gi, titleText);
-  const userPrompt = `${customInstructions}\n\nTEMA OBLIGATORIO: "${titleText}". Escribe únicamente sobre este tema, aunque las instrucciones personalizadas no incluyan {title} ni {keyword}.`;
+  const targetLanguage = describeContentLanguage(contentLanguage);
+  const userPrompt = `${customInstructions}\n\nMANDATORY TOPIC: "${titleText}". Write only about this topic, even if the custom instructions do not include {title} or {keyword}. The topic may be written in another language; translate it internally and do not copy its language into the output.`;
 
-  const systemPrompt = `Eres un redactor experto en SEO y marketing digital.
-Tu tarea es escribir un artículo de blog completo de alta calidad en el idioma "${contentLanguage}", siguiendo de manera estricta las instrucciones dadas por el usuario.
+  const systemPrompt = `You are an expert SEO and digital marketing writer.
+Write a complete, high-quality blog article in ${targetLanguage} (platform language code: "${contentLanguage}") while following the user's custom instructions strictly.
 
-Debes responder ÚNICAMENTE en formato JSON con la siguiente estructura exacta:
+LANGUAGE REQUIREMENT: Every user-visible word in the title, summary, and contentHtml MUST be written in ${targetLanguage}. The topic, brand names, proper names, and custom instructions may be written in another language; translate them internally. Do not mix languages, do not quote the language of the input instructions, and do not add a translation or language note. Only retain an unavoidable proper name or official brand name in its original form.
+
+Respond ONLY as JSON with exactly this structure:
 {
-  "title": "El título final u optimizado para el artículo (máximo 200 caracteres)",
-  "summary": "Un resumen/extracto corto y atractivo para SEO, de 150 a 280 caracteres",
-  "contentHtml": "El cuerpo del artículo redactado en formato HTML limpio. Utiliza etiquetas semánticas como <h2>, <h3>, <p>, <strong>, <em>, <ul>, <ol>, <li>. Para datos comparativos usa listas con etiquetas en negrita; NO uses <table>, <tr>, <th> ni <td>. NO incluyas etiquetas estructurales de documento completo como <html>, <head>, <body>, <!DOCTYPE>, ni bloques de código markdown como \`\`\`html."
+  "title": "The final or optimized article title (maximum 200 characters)",
+  "summary": "A short, engaging SEO excerpt from 150 to 280 characters",
+  "contentHtml": "The article body as clean HTML. Use semantic tags such as <h2>, <h3>, <p>, <strong>, <em>, <ul>, <ol>, <li>. For comparisons use lists with bold labels; do NOT use <table>, <tr>, <th>, or <td>. Do NOT include full-document tags such as <html>, <head>, <body>, <!DOCTYPE>, or markdown code fences such as \`\`\`html."
 }
 
-Asegúrate de que el HTML generado sea válido y esté limpio.`;
+Make sure the generated HTML is valid and clean.`;
 
   const safetyRules = `
 
-Límites obligatorios para que el resultado pueda guardarse correctamente:
-- Escribe un máximo de 1.200 palabras en contentHtml.
-- No incluyas <script>, JSON-LD, CSS, códigos QR, botones de contacto ni enlaces tel:/wa.me: Auto Artículos añade los datos de contacto reales de forma segura.
-- No uses tablas HTML. Si quieres destacar datos, redacta una lista de puntos breves y claros, con el dato en <strong> y su explicación a continuación.
-- No uses marcadores de datos personales; Auto Artículos los resuelve de forma segura si aparecieran.
-- Escapa correctamente cualquier comilla dentro del valor JSON de contentHtml.`;
+Mandatory limits so the result can be saved safely:
+- Write no more than 1,200 words in contentHtml.
+- Do not include <script>, JSON-LD, CSS, QR codes, contact buttons, or tel:/wa.me links; Auto Artículos adds real contact data safely.
+- Do not use HTML tables. If you need to highlight data, write a short, clear list with the datum in <strong> followed by its explanation.
+- Do not use personal-data markers; Auto Artículos resolves them safely if they appear.
+- Escape every quote inside the JSON contentHtml value correctly.
+- Keep every user-visible word in title, summary, and contentHtml in ${targetLanguage}, except unavoidable proper names or official brand names.`;
 
   let lastError = "";
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -141,7 +147,7 @@ Límites obligatorios para que el resultado pueda guardarse correctamente:
             content:
               attempt === 0
                 ? userPrompt
-                : `${userPrompt}\n\nReintento: responde con un artículo más conciso y JSON completo, sin marcadores ni código estructurado.`,
+                : `${userPrompt}\n\nRetry: return a more concise article as complete JSON, without markers or structured code.`,
           },
         ],
         temperature: 0.5,

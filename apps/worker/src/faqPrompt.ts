@@ -1,3 +1,5 @@
+import { describeContentLanguage } from "./automation/contentLanguage";
+
 // Genera preguntas frecuentes (FAQ) reales a partir del contenido real del
 // artículo, usando OpenAI (gpt-4o-mini, costo prácticamente nulo por
 // artículo). Pedido explícito del usuario (31/7/2026, en dos vueltas):
@@ -33,45 +35,35 @@ export async function generateFaqs(
   title: string,
   summary: string,
   plainContent: string,
+  contentLanguage = "es",
 ): Promise<Faq[]> {
   if (!OPENAI_API_KEY) return [];
 
+  const targetLanguage = describeContentLanguage(contentLanguage);
   const prompt = [
-    "Sos un experto en SEO y en AEO (Answer Engine Optimization: redactar " +
-      "para que un buscador o una IA como ChatGPT, Perplexity o Google AI " +
-      "Overview pueda citar tu respuesta directamente como LA respuesta) " +
-      "para artículos en español dirigidos a un público hispanohablante en " +
-      "Estados Unidos (el mercado principal de esta plataforma es Florida), " +
-      "sobre bienes raíces y seguros de salud/vida/incapacidad.",
-    `Te doy el título y el contenido real de un artículo: "${title}".`,
-    "Generá entre 4 y 6 preguntas frecuentes (FAQ). Usá patrones de alta " +
-      "intención de búsqueda que la gente realmente escribe en Google o le " +
-      "pregunta a una IA — por ejemplo (adaptalos SIEMPRE al tema concreto " +
-      'del artículo, nunca los dejes genéricos): "¿Qué debo saber sobre ' +
-      '[tema concreto del artículo] en Florida y en Estados Unidos?", "¿Qué ' +
-      "opciones tengo disponibles respecto a [tema concreto]?\", \"¿Cómo " +
-      'puedo tomar la mejor decisión en mi caso respecto a [tema concreto]?"' +
-      ", además de 1-3 preguntas más específicas que surjan directamente " +
-      "del contenido particular de este artículo (comparaciones, " +
-      "diferencias, requisitos, etc. si el artículo las trata).",
-    "Incluí el contexto geográfico (Estados Unidos, y Florida cuando " +
-      "corresponda) en al menos la primera pregunta y donde ayude a que la " +
-      "pregunta suene a una búsqueda real localizada — pero no lo repitas " +
-      "de forma forzada en todas.",
-    "Las respuestas son la parte más importante: escribilas vos mismo, bien " +
-      "redactadas, completas (3 a 5 oraciones), respondiendo la pregunta de " +
-      "forma directa y clara desde la primera oración (para que un motor de " +
-      "búsqueda o una IA la pueda citar tal cual), y agregando después el " +
-      "contexto relevante del artículo. NO cortes ni copies oraciones " +
-      "textuales del contenido — redactá la respuesta de nuevo, con tu " +
-      "propio criterio experto, aunque basada estrictamente en los hechos " +
-      "del resumen y el contenido de abajo. No inventes datos, cifras, " +
-      "nombres, leyes ni afirmaciones que no estén respaldadas por ese " +
-      "contenido. Si el artículo no da suficiente información para responder " +
-      "algo con precisión, no incluyas esa pregunta.",
-    "Respondé ÚNICAMENTE con un array JSON de objetos con las claves \"q\" " +
-      "y \"a\" (strings), sin texto adicional antes ni después, sin markdown " +
-      "ni bloques de código.",
+    "You are an expert SEO and AEO (Answer Engine Optimization) writer. " +
+      `Write every question and answer entirely in ${targetLanguage}. ` +
+      "Do not mix languages or copy the language of the source content. " +
+      "Use the article's facts only; never invent data, names, laws, or claims.",
+    `Article title: "${title}".`,
+    "Generate 4 to 6 FAQs using high-intent search patterns adapted to the " +
+      "specific topic, plus 1 to 3 specific questions grounded directly in " +
+      "the article (comparisons, differences, requirements, or other details " +
+      "when covered).",
+    "Include the relevant geographic context (the United States and Florida " +
+      "when appropriate) in at least the first question and wherever it makes " +
+      "the query sound like a real localized search, without forcing it into " +
+      "every question.",
+    "The answers are most important: write them yourself as complete 3-to-5 " +
+      "sentence answers that respond directly from the first sentence, so a " +
+      "search engine or AI can cite them. Base them strictly on the summary " +
+      "and content below. Do not copy sentences verbatim. If the article does " +
+      "not contain enough information to answer precisely, omit that question.",
+    `LANGUAGE RULE: The q and a values must be entirely in ${targetLanguage}. ` +
+      "Only unavoidable proper names or official brand names may remain in " +
+      "their original form.",
+    "Respond ONLY with a JSON array of objects containing the string keys " +
+      "q and a, with no text before or after it, no markdown, and no code fences.",
     "",
     `Resumen: ${summary}`,
     "",
