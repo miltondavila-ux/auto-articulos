@@ -27,6 +27,7 @@ Ruta: /dashboard
 Inicio es tu centro de operaciones:
 - **Para cuentas nuevas (sin artículos aún):** Muestra de forma prioritaria el Asistente de Configuración Inicial para que completes tu puesta a punto sin distracciones.
 - **Para cuentas con artículos publicados:** Muestra el panel de métricas de rendimiento (artículos publicados hoy, en el mes, límites y gráfico de actividad).
+- Justo debajo de la explicación de Inicio hay cuatro accesos directos numerados (01-04) a **Publicaciones propias**, **Oportunidades SEO/AEO**, **Oportunidades para Redes Sociales** y **Publicaciones en Curso**, para ir directo a cualquiera de esas cuatro pantallas sin pasar por el menú.
 - Desde el menú superior tienes acceso a: Cómo Funciona, Publicaciones, Historial, Actualizaciones y Configuración.
 
 ## Cada módulo se explica solo
