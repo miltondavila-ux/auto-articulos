@@ -1151,3 +1151,15 @@ Si estás trabajando en otro archivo/módulo, adelante — no hay conflicto.
 Si necesitas tocar `page.tsx` o `apps/web/src/content/manual-usuario.ts`
 (también tocado en este lote), avisa aquí antes y espera mi liberación para
 evitar un commit simultáneo sobre el mismo archivo.
+
+### Cierre — texto de instrucciones actualizado (31/8/2026)
+
+Milton pidió agregar una línea en las instrucciones de Inicio ("Antes de
+avanzar, lee esto") avisando explícitamente que abajo hay 4 botones para
+elegir. Cambio de un solo párrafo (`IntroP`) dentro de `ModuleIntro`,
+100% aditivo. Mismo protocolo: worktree aislado + captaincy + typecheck.
+Commit `b70e20d`. `origin/main` quedó en `b70e20d`.
+
+**Capitán de migración liberó el lote:** Claude.
+
+Estado: DESPLEGADO — pendiente de confirmación visual final de Milton.
