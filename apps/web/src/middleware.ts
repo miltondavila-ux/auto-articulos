@@ -20,6 +20,9 @@ const PUBLIC_PATHS = [
   "/api/debug/activate-instagram",
   "/api/oauth2/authorize",
   "/api/oauth2/token",
+  "/api/meta/threads/deauthorize",
+  "/api/meta/threads/data-deletion",
+  "/api/meta/threads/data-deletion/status",
   "/.well-known/oauth-authorization-server",
   // Documento de descubrimiento OAuth del servidor MCP: por definición se
   // consulta SIN token (es lo que le dice al cliente dónde autenticarse).

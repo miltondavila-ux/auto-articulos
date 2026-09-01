@@ -1796,3 +1796,29 @@ Para backfills de datos (no requieren exponer un endpoint HTTP), es más
 simple correr un script `node -e "..."` local usando `@prisma/client` con
 `DATABASE_URL` apuntando al transaction pooler de producción — así se hizo
 para teléfono y nombre/apellido de los 42 usuarios bulk-creados.
+
+## Auditoría Meta Threads — 2026-09-01
+
+Durante la revisión de `AUTO ARTICULOS THREADS` (App ID
+`1068586309091676`) se detectó que la URL de devolución de OAuth estaba vacía
+en la configuración del caso de uso. La aplicación usa
+`https://auto-articulos-web.vercel.app/api/search-integrations/threads/callback`.
+
+Meta no permitió guardar esa URL por sí sola porque las URLs de desinstalación
+y eliminación de datos también estaban vacías. Se preparó en la rama aislada
+`codex/meta-threads-callbacks`:
+
+- `apps/web/src/lib/threads-meta-callback.ts`: verificación HMAC-SHA256 de
+  `signed_request` sin registrar secretos ni tokens.
+- `apps/web/src/app/api/meta/threads/deauthorize/route.ts`: elimina la
+  vinculación y el token cifrado de Threads del usuario afectado.
+- `apps/web/src/app/api/meta/threads/data-deletion/route.ts` y `status/route.ts`:
+  procesan la eliminación de datos propios de Threads y entregan código de
+  confirmación.
+- `apps/web/src/middleware.ts`: publica esos endpoints sin exigir sesión.
+
+Verificaciones: `npm run build --workspace=apps/web`, `npm run typecheck
+--workspace=apps/web` y pruebas HTTP locales de GET, POST inválido y página de
+confirmación pasaron. Pendiente: publicar la rama y configurar en Meta las
+tres URLs exactas, después completar la llamada de prueba de
+`threads_content_publish`.
