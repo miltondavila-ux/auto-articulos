@@ -32,6 +32,20 @@ cuenta de prueba Lorena Álvarez en esta sesión.
 
 ## INVENTARIO DE CONVERSACIONES
 
+### Acuerdo de coordinación — 2026-08-31
+
+El proyecto `CLAUDE - BOTONES DE OPORTUNIDADES AL INICIO` es responsable de
+los cambios recientes de Inicio y `main`. El proyecto `CODEX - GPT-5 -
+INSTRUCCIONES EN EL SISTEMA` no debe desplegar copias antiguas de `main` ni
+promover deployments creados desde un árbol desactualizado. Cualquier nueva
+corrección de instrucciones debe partir de un estado actualizado, usar un
+worktree aislado, revisar el diff contra `main` y publicar únicamente después
+de preservar los commits ajenos.
+
+Estado del acuerdo: ACTIVO. No se autoriza pisar código ni reemplazar
+deployments de otros proyectos.
+
+
 Identidad exacta:
 CODEX - GPT-5 - PROBLEMA CON TUMBLR
 
@@ -1084,3 +1098,17 @@ quedó en `26cf0ef`.
 
 Estado: DESPLEGADO — pendiente de que Milton confirme visualmente esta
 segunda iteración.
+
+### Verificación de lectura — CÓDIGO 4471 (2026-08-31, ~20:58 hora local)
+
+Milton pidió una prueba de que la sesión activa (Claude) leyó este
+documento antes de seguir. Código de verificación: **4471**.
+
+Revisé en este momento (00:58 UTC): `origin/main` sigue en `05bf189`, no
+hay commits nuevos de ningún otro programador desde que yo empujé, y no hay
+capitán de migración activo compitiendo (`migration-coordinator.sh status`
+confirma "No hay capitán activo"). No encontré evidencia de que Codex u
+otra sesión esté pisando este trabajo ahora mismo — lo que Milton vio en
+pantalla parece ser propagación/caché de Vercel, no una colisión de
+código. Sigo verificando el despliegue real antes de pedirle que confirme
+de nuevo.
