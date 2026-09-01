@@ -21,6 +21,9 @@
     "start": "bash start-auto-shutdown.sh",
     "stop": "docker-compose down"
   },
+  "devDependencies": {
+    "next": "16.3.0-canary.32"
+  },
   "allowScripts": {
     "@prisma/client@5.22.0": true,
     "@prisma/engines@5.22.0": true,

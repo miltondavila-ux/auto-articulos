@@ -1641,13 +1641,13 @@ estática del diff y comprobación manual del selector English=`en_VI` en la
 interfaz. No se cambió el schema ni se ejecutó una publicación real de prueba.
 
 **Producción:** los cambios quedaron en `main` mediante `5e56502`,
-`535b690` y merge preservando `64097c6`, con HEAD `f59fcc4`. El worker
-productivo toma el código desde `main` en su siguiente ejecución programada.
-La URL web productiva actual responde HTTP 200. Los despliegues manuales de
-Vercel desde la raíz compilaron correctamente, pero fallaron después del build
-durante la subida de artefactos por un error del servicio/CLI; no se promovió
-ningún deployment fallido. El intento recomendado por documentación histórica
-desde `apps/web` no se ejecutó porque omite los workspaces del monorepo.
+`535b690` y merge preservando `64097c6`. Para resolver el bloqueo de Vercel
+se fijó `next@16.3.0-canary.32` (la versión indicada por el error) y se hizo
+visible también en la raíz del monorepo para su detección. El deployment
+productivo `dpl_8k7sUVpUBUvgN8kKYHiTowArzJr9` terminó `READY` en
+`web-lbozs2jdf-luna-portex-intelligence.vercel.app`; la URL productiva
+responde HTTP 200. El worker productivo toma el código desde `main` en su
+siguiente ejecución programada.
 
 **Siguiente paso:** Milton debe iniciar la prueba operativa de MPM y confirmar
 que el nuevo artículo en English no contiene segmentos en español. La IA no

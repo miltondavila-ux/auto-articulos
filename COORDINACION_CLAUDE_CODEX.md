@@ -1505,8 +1505,9 @@ No se ejecutó una publicación real de prueba por parte de Codex.
 Auditorías completadas: tests del worker 14/14; build del worker; typecheck y
 build web (80/80 páginas); diff estático; comprobación manual del selector
 English=`en_VI`; y HTTP 200 de la URL web productiva. No hubo migración.
-Vercel compiló el proyecto, pero sus intentos manuales fallaron únicamente al
-subir artefactos después del build; ningún deployment fallido fue promovido.
+Vercel quedó desplegado en `READY` mediante `dpl_8k7sUVpUBUvgN8kKYHiTowArzJr9`
+tras fijar `next@16.3.0-canary.32` y declararlo en la raíz para la detección
+del monorepo.
 
 Archivos liberados el 2026-09-01: todos los archivos reservados arriba. El
 worktree queda como registro reproducible de la tarea; no quedan reservas
