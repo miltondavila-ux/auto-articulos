@@ -8,6 +8,7 @@ import {
 import { getCurrentUserId } from "@/lib/current-user";
 import { analyzeSeoOpportunities } from "@/lib/opportunity-analysis";
 import { getGoogleAnalyticsSignals, summarizeGoogleAnalyticsSignals } from "@/lib/google-analytics-signals";
+import { platformProductNameOrNeutral } from "@auto-articulos/shared";
 
 const COOLDOWN_DAYS = 3;
 const COOLDOWN_MS = COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
@@ -28,7 +29,7 @@ export async function GET() {
   const userId = await getCurrentUserId();
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { lastOpportunityAnalysisAt: true, selectedSiteDomain: true, selectedSitePanel: true },
+    select: { lastOpportunityAnalysisAt: true, selectedSiteDomain: true, selectedSitePanel: true, platformDomain: true },
   });
   return NextResponse.json({
     groups: await list(userId, user.selectedSiteDomain),
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
     .catch(() => ({ force: false, panel: "" }));
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { lastOpportunityAnalysisAt: true, selectedSiteDomain: true, selectedSitePanel: true },
+    select: { lastOpportunityAnalysisAt: true, selectedSiteDomain: true, selectedSitePanel: true, platformDomain: true },
   });
   const selectedSiteDomain = user.selectedSiteDomain;
   const integration = await prisma.searchIntegration.findFirst({
@@ -75,7 +76,7 @@ export async function POST(request: Request) {
   });
   if (categories.length === 0) {
     return NextResponse.json(
-      { error: "Sincroniza tus categorías de 10minutesWebsite primero." },
+      { error: `Sincroniza tus categorías de ${platformProductNameOrNeutral(user.platformDomain)} primero.` },
       { status: 400 },
     );
   }

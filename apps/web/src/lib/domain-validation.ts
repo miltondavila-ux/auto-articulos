@@ -48,7 +48,7 @@ export async function validateAndRegisterTrialCredentials(
 ): Promise<{ ok: boolean; error?: string }> {
   const normalizedUsername = rawUsername.trim().toLowerCase();
   if (!normalizedUsername) {
-    return { ok: false, error: "El usuario de 10minutesWebsite es requerido." };
+    return { ok: false, error: "El usuario de la plataforma web es requerido." };
   }
 
   const currentUser = await prisma.user.findUnique({

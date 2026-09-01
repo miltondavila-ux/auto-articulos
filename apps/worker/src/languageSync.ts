@@ -1,5 +1,5 @@
 import { prisma } from "@auto-articulos/db";
-import { decryptSecret } from "@auto-articulos/shared";
+import { decryptSecret, platformProductNameOrNeutral } from "@auto-articulos/shared";
 import { fetchLanguages } from "./automation/10minutesWebsite";
 import { tryReserveUser, releaseUser } from "./reservation";
 
@@ -41,7 +41,7 @@ export async function processNextLanguageSync(filterUserId?: string): Promise<bo
       }),
     ]);
     if (!credential) {
-      throw new Error("Primero debes guardar tus credenciales de 10minutesWebsite.");
+      throw new Error(`Primero debes guardar tus credenciales de ${platformProductNameOrNeutral(user?.platformDomain)}.`);
     }
 
     const username = decryptSecret(credential.encryptedUsername);

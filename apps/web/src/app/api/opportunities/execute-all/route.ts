@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
+import { platformProductNameOrNeutral } from "@auto-articulos/shared";
 import { triggerWorkerNow } from "@/lib/trigger-worker";
 import { hasTrialAccess } from "@/lib/trial";
 
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
         contentLanguage: true,
         hasImageCredits: true,
         defaultPromptId: true,
+        platformDomain: true,
       },
     }),
   ]);
@@ -62,7 +64,7 @@ export async function POST(request: NextRequest) {
   }
   if (!credential) {
     return NextResponse.json(
-      { error: "Primero guarda tus credenciales de 10minutesWebsite." },
+      { error: `Primero guarda tus credenciales de ${platformProductNameOrNeutral(user.platformDomain)}.` },
       { status: 400 },
     );
   }

@@ -476,7 +476,7 @@ export default function PublicarPage() {
               onChange={(e) => setDisableIndexing(e.target.checked)}
             />
             Desactivar indexación en buscadores para este lote (por defecto queda
-            activada, como en 10minutesWebsite)
+            activada de forma predeterminada)
           </label>
           <button
             onClick={handleIniciar}

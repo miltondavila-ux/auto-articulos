@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
+import { platformHelpUrl } from "@auto-articulos/shared";
 
 interface ConfigurationCheck {
   id: string;
@@ -18,7 +19,8 @@ export const revalidate = 0;
 
 export async function GET() {
   const userId = await getCurrentUserId();
-  const account = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
+  const account = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true, platformDomain: true } });
+  const productName = account.platformDomain === "tagcrush" ? "tu plataforma" : "10minutesWebsite";
 
   // Parallel queries for performance
   const [
@@ -108,11 +110,11 @@ export async function GET() {
     // ━━━ MÍNIMO PARA PUBLICAR ━━━
     {
       id: "credentials",
-      label: "Credenciales de 10minutesWebsite",
+      label: `Credenciales de ${productName}`,
       configured: Boolean(credential),
       required: true,
       section: "platform",
-      description: "Tu usuario y contraseña de 10minutesWebsite para publicar artículos automáticamente.",
+      description: `Tu usuario y contraseña de ${productName} para publicar artículos automáticamente.`,
       actionUrl: "/dashboard/configuracion?tab=platform#credentials",
       actionLabel: "Configurar credenciales",
     },
@@ -122,7 +124,7 @@ export async function GET() {
       configured: categories.length > 0,
       required: true,
       section: "platform",
-      description: "Al menos una categoría sincronizada desde 10minutesWebsite para clasificar tus artículos.",
+      description: `Al menos una categoría sincronizada desde ${productName} para clasificar tus artículos.`,
       actionUrl: "/dashboard/configuracion?tab=platform#categories",
       actionLabel: "Sincronizar categorías",
     },
@@ -142,8 +144,8 @@ export async function GET() {
       configured: Boolean(user?.hasImageCredits ?? true),
       required: true,
       section: "platform",
-      description: "Disponibilidad de créditos de generación de imágenes con IA en 10minutesWebsite.",
-      actionUrl: "https://www.10minuteswebsite.com/ayuda",
+      description: `Disponibilidad de créditos de generación de imágenes con IA en ${productName}.`,
+      actionUrl: platformHelpUrl(account.platformDomain) ?? "#",
       actionLabel: "Solicitar créditos de imagen",
     },
 
