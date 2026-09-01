@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import ModuleIntro, { IntroP, Modulo } from "@/components/ModuleIntro";
 import Link from "next/link";
+import { Card, Grid, Text } from "@tremor/react";
 import type { RunRow } from "@/types/dashboard";
 import PerformanceDashboard from "@/components/PerformanceDashboard";
 import OnboardingWizard from "@/components/OnboardingWizard";
@@ -153,40 +154,18 @@ export default function InicioPage() {
           Si no sabes por dónde empezar, <Modulo id="como-funciona" /> lo explica entero en tres pasos.
         </IntroP>
       </ModuleIntro>
-      <div
-        style={{
-          marginTop: 20,
-          marginBottom: 20,
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-          gap: 12,
-        }}
-      >
+      <Grid numItemsSm={2} numItemsLg={4} className="gap-4" style={{ marginTop: 20, marginBottom: 20 }}>
         {QUICK_LINKS.map((l, i) => (
-          <Link
-            key={l.href}
-            href={l.href}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 8,
-              padding: "18px 20px",
-              borderRadius: 14,
-              textDecoration: "none",
-              color: "#1d1d1f",
-              background: "#ffffff",
-              border: "1px solid #d2d2d7",
-            }}
-          >
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#86868b" }}>
-              {String(i + 1).padStart(2, "0")}
-            </span>
-            <span style={{ fontSize: 15, fontWeight: 500, lineHeight: 1.4 }}>
-              {l.label}
-            </span>
+          <Link key={l.href} href={l.href} style={{ textDecoration: "none" }}>
+            <Card>
+              <Text>{String(i + 1).padStart(2, "0")}</Text>
+              <p style={{ marginTop: 8, fontSize: 15, fontWeight: 600, color: "#1d1d1f", lineHeight: 1.4 }}>
+                {l.label}
+              </p>
+            </Card>
           </Link>
         ))}
-      </div>
+      </Grid>
       {showTrialWelcome && (
         <div
           style={{
@@ -294,33 +273,7 @@ export default function InicioPage() {
       {wizardComplete === false ? (
         <OnboardingWizard onUpdated={checkWizardStatus} />
       ) : wizardComplete === true ? (
-        <>
-          {/* Pedido explícito del usuario (23/8/2026): "Comienza aquí" vive
-              acá, no en Cómo Funciona — solo tiene sentido una vez que el
-              asistente de configuración ya desapareció y esta pantalla
-              muestra el panel de rendimiento en su lugar. */}
-          <div style={{ marginTop: 20, marginBottom: 20 }}>
-            <Link
-              href="/dashboard/oportunidades"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "11px 20px",
-                borderRadius: 980,
-                fontSize: 15,
-                fontWeight: 500,
-                textDecoration: "none",
-                color: "#ffffff",
-                background: "#1d1d1f",
-              }}
-            >
-              Comienza aquí
-              <span aria-hidden="true">›</span>
-            </Link>
-          </div>
-          <PerformanceDashboard />
-        </>
+        <PerformanceDashboard />
       ) : null}
 
       {activeRun && (
