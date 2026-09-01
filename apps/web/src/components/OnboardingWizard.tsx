@@ -46,6 +46,8 @@ export default function OnboardingWizard({
     errorMessage: string | null;
   } | null>(null);
   const [detecting, setDetecting] = useState(false);
+  const [detectionStartedAt, setDetectionStartedAt] = useState<number | null>(null);
+  const [detectionElapsedSeconds, setDetectionElapsedSeconds] = useState(0);
   const [chosenPanel, setChosenPanel] = useState("");
   const [confirmingSite, setConfirmingSite] = useState(false);
   const autoConfirmedRef = useRef(false);
@@ -194,6 +196,8 @@ export default function OnboardingWizard({
 
   async function handleDetectSites() {
     setDetecting(true);
+    setDetectionStartedAt(Date.now());
+    setDetectionElapsedSeconds(0);
     setMessage(null);
     try {
       const res = await fetch("/api/site-selection/detect", { method: "POST" });
@@ -253,6 +257,22 @@ export default function OnboardingWizard({
 
   const detectInProgress =
     detectJob?.status === "pending" || detectJob?.status === "running";
+
+  // La detección corre en el worker y puede tardar varios minutos. El tiempo
+  // transcurrido evita que el Paso 1 parezca congelado mientras esperamos.
+  useEffect(() => {
+    if (!detectInProgress) return;
+    if (!detectionStartedAt) {
+      setDetectionStartedAt(Date.now());
+      return;
+    }
+    const updateElapsed = () => setDetectionElapsedSeconds(
+      Math.max(0, Math.floor((Date.now() - detectionStartedAt) / 1000)),
+    );
+    updateElapsed();
+    const interval = setInterval(updateElapsed, 1000);
+    return () => clearInterval(interval);
+  }, [detectInProgress, detectionStartedAt]);
 
   // Igual que el sondeo de categorías: el worker puede tardar varios
   // minutos en tomar el job (cola de GitHub Actions), así que se consulta
@@ -597,6 +617,7 @@ export default function OnboardingWizard({
 
   return (
     <div style={{ marginBottom: 24 }}>
+      <style>{`@keyframes wizard-detection-progress { 0% { transform: translateX(-110%); } 100% { transform: translateX(290%); } }`}</style>
       {/* Invitación a leer "Cómo Funciona" antes de empezar. Pedido explícito
           del usuario (23/8/2026): quien recién llega debe poder entender el
           panorama completo antes de meterse en los 4 pasos, y volver aquí
@@ -957,7 +978,7 @@ export default function OnboardingWizard({
                   <div>
                     {detectJob?.status === "error" && (
                       <div style={{ marginBottom: 10, fontSize: 12, color: "#ff3b30" }}>
-                        ❌ No se pudo detectar tu sitio: {detectJob.errorMessage || "error desconocido"}
+                        ❌ No pudimos conectar con tu plataforma. Verifica el usuario y la contraseña en Configuración y vuelve a intentarlo.
                       </div>
                     )}
                     <button
@@ -979,8 +1000,17 @@ export default function OnboardingWizard({
                     </button>
                   </div>
                 ) : detectInProgress ? (
-                  <div style={{ fontSize: 13, color: "#1d1d1f" }}>
-                    Conectando con tu cuenta para detectar tus sitios reales (puede tardar varios minutos)...
+                  <div style={{ fontSize: 13, color: "#1d1d1f" }} role="status" aria-live="polite">
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
+                      <strong>Buscando tus sitios reales…</strong>
+                      <span style={{ color: "#6e6e73", whiteSpace: "nowrap" }}>{detectionElapsedSeconds}s</span>
+                    </div>
+                    <div style={{ height: 7, overflow: "hidden", borderRadius: 999, background: "#e5e5ea" }}>
+                      <div style={{ width: "38%", height: "100%", borderRadius: 999, background: "#1d1d1f", animation: "wizard-detection-progress 1.4s ease-in-out infinite" }} />
+                    </div>
+                    <div style={{ marginTop: 8, color: "#6e6e73", fontSize: 12 }}>
+                      Estamos comprobando tu cuenta. Puede tardar unos minutos; no cierres esta pantalla.
+                    </div>
                   </div>
                 ) : detectJob.detectedPanels.length <= 1 ? (
                   <div style={{ fontSize: 13, color: "#1d1d1f" }}>
