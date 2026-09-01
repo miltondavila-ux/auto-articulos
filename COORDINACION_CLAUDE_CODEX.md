@@ -998,3 +998,69 @@ diario a 5 (no-admin)" — run
 `completed / success`. Confirmado por el propio log: 79 usuarios no-admin
 actualizados a `dailyArticleLimit = 5`, 3 administradores sin tocar. Ya no
 queda pendiente.
+
+## [CLAUDE] - BOTONES DE OPORTUNIDADES AL INICIO — 31/8/2026
+
+Identidad exacta: CLAUDE - BOTONES DE OPORTUNIDADES AL INICIO.
+
+Proyecto: pantalla `/dashboard` (Inicio).
+
+Motivo/objetivo: Milton pidió agregar, debajo de las instrucciones de
+Inicio, 4 accesos directos a Publicar, Oportunidades SEO, Oportunidades
+Redes y Publicaciones en Curso — en formato Apple (sin iconos, puro texto,
+minimalista), en fila y responsive. Iteró el diseño en vivo: primero
+píldoras, luego pidió cajas cuadradas, luego numeradas — aprobado con una
+vista previa (Artifact) antes de tocar código en producción.
+
+**Capitán de migración:** Claude — reclamado antes del push. Motivo: push
+de botones numerados en Inicio (/dashboard). Nadie más ejecuta Prisma hasta
+su liberación.
+
+Trabajo: cajas cuadradas sin iconos, numeradas 01-04, en
+`display: grid` con `repeat(auto-fill, minmax(200px, 1fr))` (mismo patrón
+responsive que ya se usó en oportunidades-redes), insertadas justo debajo
+de `</ModuleIntro>` en `apps/web/src/app/dashboard/page.tsx`. Bloque
+100% aditivo — ninguna línea existente tocada.
+
+Corrección de proceso durante la sesión: el primer commit se hizo
+directamente sobre el árbol de Milton (violación del protocolo de
+worktree aislado). Se detectó a tiempo (antes del push), se deshizo con
+`git reset --soft`, y se rehizo todo en un worktree limpio desde
+`origin/main` con node_modules propio (symlinks individuales +
+`@auto-articulos/*` apuntando al worktree, no al repo principal, por el
+gotcha ya documentado en el manual).
+
+Tres auditorías antes del push:
+1. `tsc --noEmit` en el worktree aislado — 0 errores.
+2. Revisión estructural del diff — 100% aditivo, ninguna funcionalidad
+   existente tocada (confirmado línea por línea contra `git diff`).
+3. Paridad visual — valores del JSX (grid, padding, radius, colores)
+   cotejados uno a uno contra el Artifact de vista previa ya aprobado por
+   Milton; coinciden exactamente.
+
+No se pudo correr `next build` completo ni levantar el dev server contra
+datos reales por falta de `DATABASE_URL`/credenciales en este entorno; se
+compensó con las tres auditorías de arriba en vez de una prueba en
+navegador con la cuenta de Lorena Álvarez.
+
+Archivos: únicamente `apps/web/src/app/dashboard/page.tsx`.
+
+Commit `5c858a2` (`feat: agregar accesos directos numerados en Inicio del
+dashboard`), pusheado directo desde el worktree (rama temporal
+`claude/inicio-botones-numerados`, ya borrada) a `origin/main` por
+fast-forward. `origin/main` quedó en `5c858a2`.
+
+**Capitán de migración liberó el lote:** Claude. Resultado: botones
+numerados en Inicio desplegados en origin/main (5c858a2), sin migraciones
+aplicadas.
+
+Manual del asistente actualizado en el mismo lote (regla fija de Milton,
+[[siempre-actualizar-el-manual]]): commit `93fa48e` sobre
+`apps/web/src/content/manual-usuario.ts`, mismo protocolo de worktree
+aislado + captaincy + typecheck. `origin/main` quedó en `93fa48e`.
+
+Estado: DESPLEGADO y CONFIRMADO — Milton lo vio en vivo en
+`https://auto-articulos-web.vercel.app/dashboard` durante la misma
+conversación.
+
+Responsable siguiente: nadie, cerrado.
