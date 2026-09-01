@@ -1169,6 +1169,20 @@ ejecutar tres auditorías y publicar solo el lote validado.
 Decisión de Milton:
 Ejecutar la mejora completa módulo por módulo.
 
+Actualización de cierre técnico — 2026-08-31:
+Se auditó Configuración y se añadieron explicaciones iniciales específicas para
+Configuración Inicial, Indexación y SEO, Redes Sociales, Cuenta, Contenido y
+App Móvil. El lote se ejecutó en la rama aislada
+`codex/auditoria-configuracion-submodulos`, commit `0d935ac`, y se publicó en
+producción como deployment `dpl_3WJvuVbFHnr1mDb8LgS8XyZMwJLn` con estado READY.
+
+### Regla reforzada por Milton — 2026-08-31
+
+Codex debe comprobar antes de trabajar que el archivo no esté siendo usado por
+otro programador, partir del `main` actualizado y revisar el diff exacto. Si
+existe cruce, reserva o desarrollo simultáneo, debe esperar y coordinar; no
+puede pisar código, desplegar una copia antigua ni reemplazar cambios ajenos.
+
 Revisé en este momento (00:58 UTC): `origin/main` sigue en `05bf189`, no
 hay commits nuevos de ningún otro programador desde que yo empujé, y no hay
 capitán de migración activo compitiendo (`migration-coordinator.sh status`
@@ -1257,6 +1271,53 @@ actualizado y usar otro worktree aislado.
 Decisión de Milton:
 Cada módulo debe mostrar una explicación inicial clara y propia.
 
+## NUEVA TAREA CODEX — AUDITORÍA DE SUBMÓDULOS DE CONFIGURACIÓN — 2026-08-31
+
+Identidad exacta:
+CODEX - GPT-5 - INSTRUCCIONES EN EL SISTEMA
+
+Proyecto:
+Auditoría de instrucciones de cada submódulo de Configuración.
+
+Motivo de creación:
+Milton solicita que todos los submódulos de Configuración cumplan el estándar
+de explicaciones claras, completas y visualmente consistentes.
+
+Objetivo:
+Revisar Cuenta, Contenido, Indexación, Redes Sociales, Móvil y Configuración
+Inicial; mejorar únicamente las explicaciones que no comuniquen bien su
+propósito y uso.
+
+Alcance:
+Textos introductorios y ayudas visibles de los submódulos de Configuración;
+color negro, justificación, responsive, Apple HIG y ausencia de duplicados.
+
+Exclusiones:
+No modificar lógica, permisos, conexiones, menú, Inicio ni archivos reservados
+por otro programador.
+
+Archivos y commits:
+Pendientes de auditoría en un worktree aislado nuevo.
+
+Estado:
+ACTIVO.
+
+Producción:
+La versión existente permanece publicada; esta auditoría aún no.
+
+Conversaciones relacionadas:
+Instrucciones por módulo y cambios de Inicio/menú.
+
+Responsable:
+CODEX - GPT-5.
+
+Siguiente acción:
+Auditar los submódulos, aplicar cambios mínimos, ejecutar tres auditorías y
+publicar solo el lote validado.
+
+Decisión de Milton:
+Todos los submódulos deben ser comprensibles para cualquier usuario.
+
 ### Cierre — menú de escritorio pasado a fondo blanco (31/8/2026)
 
 Milton pidió que el menú horizontal de escritorio (Inicio, Cómo Funciona,
@@ -1304,3 +1365,36 @@ typecheck, tres auditorías, commit y push directo a `main` (sin
 migraciones — no toco `schema.prisma`).
 
 Estado: EN CURSO.
+
+### Autocrítica y numeración — Claude-2 (esta sesión) (31/8/2026, ~21:15)
+
+Milton detectó que hay varias sesiones activas a la vez y me pidió cuentas
+por si pisé trabajo ajeno. Reviewé con `git reflog` (30 entradas) y
+`git log`: **ningún commit de ninguna sesión se perdió** — todos siguen en
+`origin/main` (incluido `43b53a8`, de la sesión Claude que trabaja ahora
+en Google Analytics de Configuración, y `0d935ac` de Codex en
+`codex/auditoria-configuracion-submodulos`). No hubo force-push ni reset
+de historial remoto en ningún momento de esta conversación.
+
+Riesgo real que sí cometí: varias veces en esta conversación usé
+`git checkout -- <archivo>` y `git stash` directo sobre el árbol de
+trabajo compartido de Milton (no en worktree) para deshacer ediciones
+propias hechas por error fuera de protocolo. Si otra sesión tenía en ese
+instante cambios sin commitear en el mismo archivo, se habrían perdido sin
+dejar rastro. Revisé: los archivos que toqué así fueron
+`apps/web/src/app/dashboard/page.tsx`, `apps/web/src/components/DashboardNav.tsx`
+y `apps/web/src/content/manual-usuario.ts` — ninguno coincide con lo que
+las otras dos sesiones activas reportan estar tocando ahora
+(`GoogleAnalyticsSection.tsx`, `api/google-analytics/route.ts`, textos de
+submódulos de Configuración). No encontré evidencia de daño, pero no
+puedo garantizar el pasado con certeza absoluta porque un cambio sin
+commitear no deja rastro si se sobreescribe.
+
+**Me numero como pide la regla:** esta sesión pasa a firmar como
+**Claude-2** en este documento y en la capitanía desde ahora, para no
+confundirme con la otra sesión Claude activa (Google Analytics).
+
+**Corrección de conducta inmediata:** de aquí en adelante, todo cambio de
+esta sesión (código y también este documento) se hace exclusivamente en
+worktree aislado — cero excepciones, incluida la documentación — para no
+volver a tocar el árbol de trabajo compartido de Milton.
