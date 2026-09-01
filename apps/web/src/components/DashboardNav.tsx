@@ -155,7 +155,7 @@ export default function DashboardNav() {
     fontWeight: active ? 600 : 500,
     textDecoration: "none",
     color: active ? "#1d1d1f" : "#6e6e73",
-    background: active ? "#ffffff" : "transparent",
+    background: active ? "#f5f5f7" : "transparent",
     borderRadius: 10,
     boxShadow: "none",
     whiteSpace: "nowrap",
@@ -304,7 +304,7 @@ export default function DashboardNav() {
         style={{
           display: "none",
           gap: 4,
-          background: "#f5f5f7",
+          background: "#ffffff",
           border: "1px solid rgba(0, 0, 0, 0.06)",
           borderRadius: 14,
           padding: 4,
