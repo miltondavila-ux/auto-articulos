@@ -14,6 +14,13 @@ interface PublishedNotification {
   url: string | null;
 }
 
+const QUICK_LINKS = [
+  { href: "/dashboard/publicar", label: "Publicaciones propias" },
+  { href: "/dashboard/oportunidades", label: "Oportunidades SEO/AEO" },
+  { href: "/dashboard/oportunidades-redes", label: "Oportunidades para Redes Sociales" },
+  { href: "/dashboard/publicaciones-en-curso", label: "Publicaciones en Curso" },
+];
+
 export default function InicioPage() {
   const [runs, setRuns] = useState<RunRow[]>([]);
   const [notifications, setNotifications] = useState<PublishedNotification[]>(
@@ -146,6 +153,40 @@ export default function InicioPage() {
           Si no sabes por dónde empezar, <Modulo id="como-funciona" /> lo explica entero en tres pasos.
         </IntroP>
       </ModuleIntro>
+      <div
+        style={{
+          marginTop: 20,
+          marginBottom: 20,
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+          gap: 12,
+        }}
+      >
+        {QUICK_LINKS.map((l, i) => (
+          <Link
+            key={l.href}
+            href={l.href}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+              padding: "18px 20px",
+              borderRadius: 14,
+              textDecoration: "none",
+              color: "#1d1d1f",
+              background: "#ffffff",
+              border: "1px solid #d2d2d7",
+            }}
+          >
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#86868b" }}>
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <span style={{ fontSize: 15, fontWeight: 500, lineHeight: 1.4 }}>
+              {l.label}
+            </span>
+          </Link>
+        ))}
+      </div>
       {showTrialWelcome && (
         <div
           style={{
