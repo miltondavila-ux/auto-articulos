@@ -1398,3 +1398,64 @@ confundirme con la otra sesión Claude activa (Google Analytics).
 esta sesión (código y también este documento) se hace exclusivamente en
 worktree aislado — cero excepciones, incluida la documentación — para no
 volver a tocar el árbol de trabajo compartido de Milton.
+
+## [CLAUDE] - GOOGLE ANALYTICS CHECK POSITIVO — CIERRE — 31/8/2026
+
+Identidad exacta: CLAUDE - GOOGLE ANALYTICS CHECK POSITIVO.
+
+Archivos ya liberados (Codex puede tocarlos si su auditoría de submódulos
+lo requiere, sin conflicto con este trabajo):
+- `apps/web/src/components/GoogleAnalyticsSection.tsx`
+- `apps/web/src/app/api/google-analytics/route.ts`
+
+Trabajo: `GET /api/google-analytics` ahora consulta también un resumen
+real de GA4 (`queryGoogleAnalyticsSummary`, ya usado por Oportunidades)
+cuando hay propiedad seleccionada, en un try/catch propio que no rompe la
+carga de propiedades si falla. `GoogleAnalyticsSection.tsx` muestra dos
+líneas verdes persistentes una vez conectado — "✓ Propiedad conectada:
+..." y "✓ Recibiendo datos reales: N sesiones y N usuarios activos en los
+últimos 12 meses..." (o un aviso neutro si la propiedad aún no tiene
+datos) — igualando el patrón que ya tenían Google Search Console y Bing
+(sitemap detectado / último envío exitoso). 100% aditivo, no se tocó
+ningún botón ni flujo existente.
+
+Corrección de proceso durante la sesión: los dos archivos de código se
+editaron primero por error directo sobre el árbol de Milton. Se detectó
+antes de cualquier commit, se revirtieron con `git checkout --` y se
+rehizo todo en worktree aislado (`/private/tmp/ga4-check-positivo`,
+node_modules propio incluyendo los symlinks de `.prisma`/`.bin`, gotcha
+ya documentado). Aparte, un primer intento de commit de este mismo
+documento (`git commit -- COORDINACION_CLAUDE_CODEX.md`) absorbió sin
+querer un hunk de Codex que estaba sin commitear en disco — detectado de
+inmediato (comparando insertions del commit contra lo staged), revertido
+con `git reset --soft` antes de push y rehecho con `git add -p` +
+`git commit` sin pathspec, dejando el hunk de Codex intacto y sin
+commitear como estaba. Nunca llegó a pushearse la versión mezclada.
+
+Migración: ninguna. Capitanía reclamada y liberada en este mismo lote
+(`migration-coordinator.sh claim`/`release`).
+
+Auditorías antes de publicar (en el worktree aislado):
+1. `tsc --noEmit` sobre `apps/web` — 0 errores.
+2. `next build --webpack` — compiló y generó todas las rutas sin errores.
+3. Revisión estructural del diff — `apps/web/src/app/api/google-analytics/route.ts`
+   (+15/-2) y `apps/web/src/components/GoogleAnalyticsSection.tsx` (+21/-1),
+   sin tocar lógica de guardar/desconectar/reconectar existente.
+
+Commit `ff322d8` (`feat: mostrar confirmacion verde con datos reales en
+Google Analytics`), rama `claude/ga4-check-positivo` (pusheada, no
+eliminada), fast-forward sobre `origin/main`. `origin/main` quedó en
+`ff322d8`. Vercel (`auto-articulos-web`) confirmado `success` vía API de
+GitHub; `GET /login?verify=ff322d8` respondió `HTTP/2 200`.
+
+Manual: no requiere actualización — ni Search Console ni Bing documentan
+ese texto verde de confirmación en `manual-usuario.ts`, así que este
+ajuste sigue el mismo criterio ya establecido.
+
+Pendiente real: no se pudo verificar visualmente con una cuenta GA4 real
+conectada por falta de credenciales de prueba en esta sesión. Milton debe
+confirmar en `https://auto-articulos-web.vercel.app/dashboard/configuracion`
+con una cuenta que tenga Google Analytics conectado.
+
+Estado: DESPLEGADO — pendiente de confirmación visual de Milton.
+Responsable siguiente: nadie, cerrado de mi parte.
