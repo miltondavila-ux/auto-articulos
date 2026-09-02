@@ -437,9 +437,10 @@ export default function OportunidadesPage() {
         <h2 style={h2Style}>Oportunidades SEO</h2>
         <p style={{ color: "#6b7280", fontSize: 14, lineHeight: 1.55 }}>
           Analiza impresiones, tendencias, posiciones, consultas y páginas de tu
-          propiedad de Google Search Console. El sistema selecciona hasta 10
-          categorías y crea 9 oportunidades long tail únicas para cada una,
-          evitando duplicados y canibalización.
+          propiedad de Google Search Console, Google Analytics y Bing Webmaster
+          Tools (cuando estén conectados). El sistema cubre todas tus categorías
+          con evidencia real y crea oportunidades long tail únicas para cada
+          una, sin duplicados ni canibalización.
         </p>
         {availablePanels.length > 1 && (
           <div style={{ marginTop: 12 }}>

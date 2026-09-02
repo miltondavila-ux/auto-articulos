@@ -56,8 +56,14 @@ function normalizeTitle(value: string) {
 function isFullyStocked(
   groupsByCategory: Map<string, OpportunityAnalysisGroup>,
   maxTitlesPerCategory: number,
+  totalCategories: number,
 ): boolean {
-  if (groupsByCategory.size < 10) return false;
+  // Pedido explícito de Milton (2/9/2026): antes esto paraba apenas se
+  // llenaban 10 categorías cualquiera, aunque la cuenta tuviera más
+  // categorías reales con oportunidades sin explorar todavía en lotes
+  // posteriores. Ahora solo se considera "lleno" cuando se llenaron TODAS
+  // las categorías reales de la cuenta, no un número fijo arbitrario.
+  if (groupsByCategory.size < totalCategories) return false;
   for (const group of groupsByCategory.values()) {
     if (group.titles.length < maxTitlesPerCategory) return false;
   }
@@ -79,6 +85,16 @@ const PROMPT_HEADER = [
   "- PROHIBIDO mezclar o combinar en un mismo titulo el tema de dos categorias distintas, y PROHIBIDO poner un titulo en una categoria solo porque una consulta comparte una palabra generica con su nombre.",
   "- Si una consulta real de los datos no encaja tematicamente con NINGUNA categoria permitida, descartala: no la fuerces en la categoria que mas se le parezca.",
   "- PROHIBIDO inventar un titulo que no se pueda justificar con evidencia real presente en RENDIMIENTO ACTUAL (Search Console), SEÑALES DE GOOGLE ANALYTICS o SEÑALES DE BING que se te dan mas abajo. El 'rationale' de cada titulo debe nombrar la consulta, pagina, tendencia o señal concreta que lo respalda.",
+  "",
+  "REGLA OBLIGATORIA DE CERO CANIBALIZACION (ESTRICTA, sin excepciones):",
+  "- Canibalizar significa que dos titulos (nuevo contra nuevo, O nuevo contra uno de TITULOS YA EXISTENTES / EJEMPLOS DE TITULOS YA PUBLICADOS / OPORTUNIDADES YA CREADAS EN ESTA CORRIDA) apuntan a la MISMA intencion de busqueda real, aunque esten redactados con palabras distintas. Esto es distinto de simplemente compartir palabras: dos titulos long tail que comparten palabras pero cubren angulos, ubicaciones o perfiles de cliente DIFERENTES y REALES no son canibalizacion, son diversidad long tail valida.",
+  "- Antes de proponer un titulo para una categoria, revisa TODOS los titulos ya existentes y ya propuestos para ESA categoria (te los damos explicitamente). Si tu candidato apunta a la misma intencion que alguno de ellos, descartalo o cambiale el angulo real hasta que cubra una intencion genuinamente distinta.",
+  "- El 'rationale' de cada titulo debe indicar, en una frase, la intencion de busqueda especifica y distinta que cubre (que lo diferencia de los demas titulos de su categoria).",
+  "- CERO canibalizacion es un requisito absoluto: ante la duda entre proponer un titulo parecido a uno existente o no proponerlo, NO LO PROPONGAS.",
+  "",
+  "REGLA OBLIGATORIA DE LONG TAIL AL 100% (ESTRICTA, sin excepciones):",
+  "- PROHIBIDO proponer titulos genericos o de 'cabeza' (head terms cortos, 1-3 palabras, sin especificidad). Todo titulo debe ser long tail: especifico, con intencion clara y, cuando la evidencia lo permita, triple segmentacion (ver mas abajo).",
+  "- Revisa la evidencia PAGINA POR PAGINA y CONSULTA POR CONSULTA de Search Console, Google Analytics y Bing (no te quedes solo con las primeras filas que veas): cada pagina/consulta real con evidencia de oportunidad debe 'exprimirse' en tantas variantes long tail unicas y no canibalizadas como la evidencia real sostenga.",
   "",
   "ANALISIS INTELIGENTE REQUERIDO:",
   "",
@@ -112,13 +128,11 @@ const PROMPT_HEADER = [
   "- Proponer intenciones de busqueda nuevas que se infieran de los patrones de las consultas existentes, siempre dentro del tema de la categoria (ver REGLA OBLIGATORIA DE CATEGORIA arriba)",
   "",
   "PRECAUCIONES (no restricciones):",
-  "- Evita repetir titulos existentes o canibalizarlos internamente",
-  "- Cada titulo debe ser UNICO y no superponerse con otros",
   "- Si no tienes evidencia directa para un detalle muy especifico (precio exacto, cifra concreta), mantenlo generico pero relevante",
   "",
   "SOLO EVITA:",
   "- Copiar exactamente titulos que ya existen en TITULOS YA EXISTENTES",
-  "- Crear 2+ titulos dentro del mismo grupo que compitan por la misma intencion de busqueda",
+  "- Canibalizar (ver REGLA OBLIGATORIA DE CERO CANIBALIZACION arriba)",
   "- Datos completamente falsos sin ninguna base en los datos",
   "- Mezclar el tema de dos categorias en un mismo titulo (ver REGLA OBLIGATORIA DE CATEGORIA)",
   "",
@@ -137,10 +151,10 @@ const PROMPT_HEADER = [
   "REGLA DE ORO: La triple segmentacion debe sonar NATURAL, no forzada. Si la evidencia no respalda un nivel, omítelo pero mantén los otros dos.",
   "",
   "REGLAS OBLIGATORIAS:",
-  "- Selecciona como maximo 10 categorias (prioriza por volumen total de oportunidad)",
-  "- Devuelve 5-9 titulos por categoria (calidad sobre cantidad fija)",
-  "- Cada titulo debe tener una justificacion basada en datos reales",
-  "- Evita canibalizacion entre titulos del MISMO grupo",
+  "- Cubre TODAS las categorias de CATEGORIAS PERMITIDAS que tengan evidencia real de oportunidad en este lote de datos. NO te limites a un numero fijo de categorias: si hay evidencia real para 15 o 25 categorias distintas, devuelve las 15 o 25.",
+  "- Devuelve tantos titulos long tail unicos y no canibalizados por categoria como la evidencia real sostenga (calidad y evidencia real, no una cantidad fija) hasta el tope indicado en TOPE DE TITULOS POR CATEGORIA.",
+  "- Cada titulo debe tener una justificacion basada en datos reales que nombre la intencion de busqueda distinta que cubre",
+  "- CERO canibalizacion, ni dentro del mismo grupo ni contra TITULOS YA EXISTENTES ni contra OPORTUNIDADES YA CREADAS EN ESTA CORRIDA (ver REGLA OBLIGATORIA DE CERO CANIBALIZACION)",
   "- Usa unicamente categoryId existentes en la lista permitida",
   "- impressions y clicks del grupo deben ser representativos de la evidencia usada",
   "",
@@ -162,7 +176,10 @@ async function callOpenAi(prompt: string, apiKey: string): Promise<string> {
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.4,
-      max_tokens: 10000,
+      // Subido de 10000 a 16000 (tope real de salida de gpt-4o-mini) porque
+      // ahora un lote puede devolver muchas mas categorias/titulos que antes
+      // (ya no hay techo fijo de 10 categorias) — pedido de Milton, 2/9/2026.
+      max_tokens: 16000,
       response_format: { type: "json_object" },
     }),
   });
@@ -319,16 +336,34 @@ export async function analyzeSeoOpportunities(input: {
   // buenos de lotes posteriores solo porque un lote anterior llegó primero.
   // Ahora cada categoría acumula títulos de TODOS los lotes (hasta el tope
   // por categoría de abajo), no solo del primero que la mencionó.
-  const MAX_TITLES_PER_CATEGORY = 9;
+  // Subido de 9 a 20 (pedido de Milton, 2/9/2026: "exprimir" cada categoría
+  // con tantas variantes long tail reales como la evidencia sostenga, en
+  // vez de un tope chico fijo).
+  const MAX_TITLES_PER_CATEGORY = 20;
   const groupsByCategory = new Map<string, OpportunityAnalysisGroup>();
   const allResult: OpportunityAnalysisGroup[] = [];
+  const validCategoryIds = new Set(input.categories.map((item) => item.id));
 
   for (let batchIndex = 0; batchIndex < batchesToProcess.length; batchIndex++) {
     const batch = batchesToProcess[batchIndex];
 
+    // Pedido de Milton (2/9/2026): visibilidad completa de lo ya propuesto
+    // EN ESTA CORRIDA, por categoría, para que el chequeo de canibalización
+    // cruzado entre lotes sea real y no dependa de una ventana rotativa que
+    // podía perder títulos de lotes anteriores.
+    const alreadyProposedByCategory = input.categories
+      .map((category) => ({
+        categoryId: category.id,
+        name: category.name,
+        titles: groupsByCategory.get(category.id)?.titles.map((t) => t.text) ?? [],
+      }))
+      .filter((entry) => entry.titles.length > 0);
+
     const prompt = `${PROMPT_HEADER}
 
-CATEGORIAS PERMITIDAS:
+TOPE DE TITULOS POR CATEGORIA EN ESTA CORRIDA: ${MAX_TITLES_PER_CATEGORY}
+
+CATEGORIAS PERMITIDAS (con EJEMPLOS DE TITULOS YA PUBLICADOS por categoria):
 ${JSON.stringify(input.categories)}
 
 DISTRIBUCION GEOGRAFICA REAL POR PAIS:
@@ -343,11 +378,11 @@ ${JSON.stringify(input.bingSummary ?? { connected: false })}
 RENDIMIENTO ACTUAL Y COMPARACION (lote ${batchIndex + 1} de ${batchesToProcess.length}):
 ${JSON.stringify(batch)}
 
-TITULOS YA EXISTENTES:
+TITULOS YA EXISTENTES (publicados, en toda la cuenta):
 ${JSON.stringify(input.existingTitles.slice(0, 800))}
 
-TITULOS YA PROPUESTOS EN ESTA SESION (NO REPETIR):
-${JSON.stringify(Array.from(seen).slice(-200))}`;
+OPORTUNIDADES YA CREADAS EN ESTA CORRIDA, POR CATEGORIA (NO CANIBALIZAR, NO REPETIR):
+${JSON.stringify(alreadyProposedByCategory)}`;
 
     let parsed: Record<string, unknown>;
     try {
@@ -360,9 +395,7 @@ ${JSON.stringify(Array.from(seen).slice(-200))}`;
     const opportunities = parsed.opportunities;
     if (!Array.isArray(opportunities)) continue;
 
-    const validCategoryIds = new Set(input.categories.map((item) => item.id));
-
-    for (const item of opportunities.slice(0, 10)) {
+    for (const item of opportunities) {
       if (!item || typeof item !== "object") continue;
       const group = item as Record<string, unknown>;
       if (
@@ -373,10 +406,6 @@ ${JSON.stringify(Array.from(seen).slice(-200))}`;
         continue;
 
       const existingGroup = groupsByCategory.get(group.categoryId);
-      // Categoría nueva (no vista todavía) pero ya llegamos al máximo de 10
-      // categorías distintas: no la agregamos. Si YA existe, sí seguimos
-      // sumándole títulos de este lote aunque ya hayamos llegado a 10.
-      if (!existingGroup && groupsByCategory.size >= 10) continue;
 
       const remainingSlots =
         MAX_TITLES_PER_CATEGORY - (existingGroup?.titles.length ?? 0);
@@ -418,7 +447,7 @@ ${JSON.stringify(Array.from(seen).slice(-200))}`;
       }
     }
 
-    if (isFullyStocked(groupsByCategory, MAX_TITLES_PER_CATEGORY)) break;
+    if (isFullyStocked(groupsByCategory, MAX_TITLES_PER_CATEGORY, input.categories.length)) break;
   }
 
   if (allResult.length === 0) {
