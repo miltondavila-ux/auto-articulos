@@ -1,3 +1,104 @@
+## RESERVA — CATEGORIAS MAL ELEGIDAS (2026-09-02)
+
+Identidad exacta: Claude Sonnet 5 (conversación "CATEGORIAS MAL ELEGIDAS" de Milton).
+
+Worktree aislado: `/private/tmp/categorias-mal-elegidas`.
+Rama: `claude/categorias-mal-elegidas`, creada desde `origin/main` en `94affdf`.
+
+Motivo: Milton reportó que al usuario Guillermo Martínez el botón "Actualizar
+análisis" de Oportunidades (`/dashboard/oportunidades`) le generó títulos
+long tail que no correspondían a la categoría a la que quedaron asignados —
+el algoritmo mezcló temas de categorías distintas.
+
+Causa raíz encontrada: el prompt de `apps/web/src/lib/opportunity-analysis.ts`
+le decía explícitamente a la IA que podía "combinar temas de diferentes
+categorías cuando tenga sentido" e "inferir temas relacionados" sin exigir
+que el título se quedara dentro del tema real de la categoría asignada.
+Además solo se le pasaba `{id, name}` de cada categoría, sin ningún ejemplo
+real de qué cubre esa categoría.
+
+Alcance autorizado por Milton: (1) prohibir la mezcla de categorías y exigir
+que cada título esté anclado en evidencia real de Search Console/GA4/Bing
+(no inventado); (2) agregar señales de Bing Webmaster Tools al análisis, que
+hoy no se usan en este flujo (solo GSC + GA4).
+
+Archivos reservados por esta tarea:
+- `apps/web/src/lib/opportunity-analysis.ts`
+- `apps/web/src/app/api/opportunities/route.ts`
+- `packages/shared/src/bing-webmaster.ts`
+- `packages/shared/src/index.ts` (solo el export nuevo de Bing, si aplica)
+- posible archivo nuevo `apps/web/src/lib/bing-signals.ts`
+
+Sin migraciones de Prisma previstas (no se toca `schema.prisma`). Estado:
+EN PROGRESO. No hay commit ni push todavía.
+
+### Cambios implementados
+
+- `apps/web/src/lib/opportunity-analysis.ts`: se agregó una "REGLA
+  OBLIGATORIA DE CATEGORIA" al prompt (prohíbe mezclar el tema de dos
+  categorías en un mismo título, prohíbe forzar una consulta ajena en la
+  categoría más parecida, prohíbe inventar títulos sin evidencia real en
+  GSC/GA4/Bing) y se eliminó la línea que autorizaba explícitamente
+  "combinar temas de diferentes categorías cuando tenga sentido". Se agregó
+  una sección de señales de Bing al prompt, igual que ya existía para GA4.
+- `apps/web/src/app/api/opportunities/route.ts`: ahora arma, por categoría,
+  hasta 8 ejemplos reales de títulos ya publicados en ella (vía
+  `Title -> Run.categoryId`) y se los pasa a la IA junto al nombre, para que
+  la afinidad temática se ancle en contenido real y no solo en el nombre.
+  Se agregó la consulta en paralelo a `getBingSignals()` (nueva) y se pasa
+  como `bingSummary` al análisis.
+- `packages/shared/src/bing-webmaster.ts`: nueva función
+  `getBingQueryStats()` que consulta `GetQueryStats` de Bing Webmaster Tools
+  (única fuente de consultas reales que expone esa API; no admite rango de
+  fechas propio) y agrega por consulta (clics/impresiones sumados, posición
+  ponderada por impresiones).
+- `apps/web/src/lib/bing-signals.ts` (nuevo): mismo patrón que
+  `google-analytics-signals.ts` — nunca bloquea el análisis; si el usuario no
+  tiene Bing conectado devuelve `{connected:false, rows:[]}` sin llamar a la
+  API; si Bing falla, devuelve `{connected:true, rows:[], error}` en vez de
+  lanzar.
+
+### Tres auditorías independientes
+
+**1) Funcional**: `prisma generate` correcto; `tsc --noEmit` limpio en
+`apps/web` y `apps/worker`; `next build --webpack` completó `78/78` rutas
+sin errores. Revisión manual del prompt final: la regla de categoría queda
+antes de "ANALISIS INTELIGENTE REQUERIDO", el permiso de mezclar categorías
+fue eliminado (no quedó ninguna otra mención equivalente en el resto del
+prompt), y las tres fuentes (Search Console, GA4, Bing) quedan explícitas
+en el texto que ve la IA. Pendiente real (no de código): no hay forma de
+verificar en este entorno que OpenAI efectivamente obedezca la regla nueva
+sin correr un análisis real contra una cuenta con categorías mezcladas
+(candidato: la propia cuenta de Guillermo Martínez, con supervisión de
+Milton, después de desplegar).
+
+**2) Regresión**: `categories` en `analyzeSeoOpportunities` sigue aceptando
+`{id, name}` (el campo nuevo `publishedExamples` es opcional), por lo que la
+firma es retrocompatible. `getBingSignals()`/`getGoogleAnalyticsSignals()`
+están ambas envueltas en try/catch propio: si Bing no está conectado o falla,
+el análisis sigue funcionando exactamente igual que antes (antes ni se
+intentaba consultar Bing). No se tocó la lógica de cooldown, paneles,
+dominios, borrado/creación de `OpportunityGroup`, ni el endpoint `GET`. No se
+tocó `schema.prisma` — cero migraciones. El `select` nuevo de
+`prisma.title.findMany` solo agrega `run.categoryId`, no cambia qué filas se
+traen ni el orden.
+
+**3) Integración/producción**: usuarios sin Bing Webmaster Tools conectado
+(la gran mayoría hoy) nunca llegan a llamar `bingConfig()`/OAuth de Bing —
+`getBingSignals` corta apenas no encuentra `SearchIntegration` con
+`provider: "bing"`. Usuarios con Bing conectado pero cuyo token expiró o
+cuya cuenta no tiene aún datos en `GetQueryStats`: el error queda contenido
+(no lanza), el análisis sigue sin Bing. No se tocó Vercel, middleware,
+variables de entorno ni autenticación — cambio puramente de lógica de
+negocio en un endpoint ya autenticado (`getCurrentUserId()` sin cambios).
+`package-lock.json` se había modificado por el `npm install` necesario para
+poder testear en este worktree nuevo; se descartó (`git checkout --
+package-lock.json`) porque no es parte del cambio.
+
+Estado: EN PROGRESO — auditorías completas, pendiente de que Milton revise
+y autorice publicar a `main`/Vercel. No hay commit todavía de los archivos
+de código (solo esta reserva quedó pusheada).
+
 ## ELIMINACIÓN POPUP QR DE CRÉDITOS DE IMAGEN (2026-08-31)
 
 Identidad exacta: Claude Sonnet 5 (sesión de Milton en su árbol local).
