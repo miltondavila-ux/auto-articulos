@@ -55,6 +55,20 @@ jobs:
           DATABASE_URL="$MIGRATION_DATABASE_URL" DIRECT_URL="$MIGRATION_DATABASE_URL" \
             npx prisma db push --schema=packages/db/prisma/schema.prisma \
             ${{ inputs.accept_data_loss && '--accept-data-loss' || '' }}
+      - name: Forzar RLS en tablas públicas (salvaguarda, idempotente)
+        # Este proyecto aplica el esquema con `prisma db push`, que no lee
+        # las migraciones SQL versionadas ni activa RLS por sí solo. Sin este
+        # paso, cualquier tabla nueva en `public` queda expuesta por
+        # completo vía PostgREST hasta que alguien la active a mano (así
+        # quedaron expuestas 26 tablas hasta 2026-09-02, ver
+        # COORDINACION_CLAUDE_CODEX.md). Corre siempre, sin política nueva,
+        # solo activa RLS donde falte.
+        shell: bash
+        run: |
+          MIGRATION_DATABASE_URL="${DATABASE_URL/:6543/:5432}"
+          MIGRATION_DATABASE_URL="${MIGRATION_DATABASE_URL/?pgbouncer=true/}"
+          DATABASE_URL="$MIGRATION_DATABASE_URL" DIRECT_URL="$MIGRATION_DATABASE_URL" \
+            npm run enforce-rls --workspace=packages/db
       - name: Reponer Actualizaciones históricas (idempotente)
         if: ${{ inputs.seed_product_updates }}
         run: npx tsx scripts/seed-product-updates.ts

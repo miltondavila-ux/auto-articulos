@@ -9,7 +9,8 @@
     "migrate": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
     "studio": "prisma studio",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "enforce-rls": "tsx scripts/enforce-rls.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
