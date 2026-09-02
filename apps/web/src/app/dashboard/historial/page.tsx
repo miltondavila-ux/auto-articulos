@@ -20,6 +20,7 @@ import type {
   TitleRow,
 } from "@/types/dashboard";
 import GoogleIndexingStatus from "@/components/GoogleIndexingStatus";
+import { normalizeConnectionError } from "@/lib/connection-error";
 
 export default function HistorialPage() {
   return (
@@ -378,7 +379,7 @@ function DuplicateTitlesSection({ items }: { items: TitleRow[] }) {
                     wordBreak: "break-word",
                   }}
                 >
-                  {linkifyMessage(title.errorMessage ?? "")}
+                  {linkifyMessage(normalizeConnectionError(title.errorMessage) ?? "")}
                 </p>
               </div>
             ))}
@@ -1843,7 +1844,7 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
           </div>
         ) : (
           <span style={{ color: title.errorMessage ? "#ff3b30" : "inherit" }}>
-            {title.errorMessage ?? "—"}
+            {normalizeConnectionError(title.errorMessage) ?? "—"}
           </span>
         )}
       </td>

@@ -5,6 +5,7 @@ import { sectionStyle, h2Style, secondaryButtonStyle } from "@/components/dashbo
 import type { RunRow, TitleEventRow, TitleRow } from "@/types/dashboard";
 import GoogleIndexingStatus from "@/components/GoogleIndexingStatus";
 import { platformHelpUrl, platformProductName } from "@auto-articulos/shared";
+import { normalizeConnectionError } from "@/lib/connection-error";
 
 const TITLE_PROGRESS_STEPS: {
   match: (msg: string) => boolean;
@@ -280,7 +281,7 @@ function TitleProgressRow({
             </div>
           ) : (
             <p style={{ fontSize: 13, color: "#ff3b30", margin: 0 }}>
-              {title.errorMessage}
+              {normalizeConnectionError(title.errorMessage)}
             </p>
           )}
           <button

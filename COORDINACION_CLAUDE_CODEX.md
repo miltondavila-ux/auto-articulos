@@ -31,6 +31,30 @@ segundo dry-run y el deployment corregido pasaron; producción quedó verificada
 en `dpl_DtSuo4iXAHWgrfJez48DhAvQ2usf`. Ambos dominios devolvieron 200 para la
 ruta de resolución y `/login`, sin redirecciones ni `MIDDLEWARE_INVOCATION_FAILED`.
 
+## Trabajo activo — normalización de errores antiguos en historial — 2026-09-02
+
+Responsable: CODEX - GPT-5.
+Worktree aislado: `/private/tmp/auto-articulos-resolucion-conexion-web`.
+Rama: `codex/resolucion-conexion-web-20260902`.
+Archivos reservados: `apps/web/src/lib/connection-error.ts`,
+`apps/web/src/app/dashboard/historial/page.tsx`,
+`apps/web/src/components/LiveRunProgress.tsx` y este documento.
+Objetivo: que los mensajes históricos antiguos de conexión se presenten con
+la guía de resolución actual; no editar registros de producción ni ocultar
+errores distintos. Los títulos con publicación exitosa seguirán mostrando
+éxito y no el error histórico.
+Estado: IMPLEMENTADO Y AUDITADO; reserva activa hasta commit y despliegue.
+Auditoría funcional: completada; el texto antiguo se transforma solo cuando
+coincide con el patrón de error de inicio de sesión, conserva el servidor para
+el enlace correcto y no altera otros errores. Los títulos exitosos no muestran
+`errorMessage` en el historial.
+Auditoría de regresión: completada; typecheck web, build worker, build web y
+`git diff --check` correctos.
+Auditoría integración/producción: pendiente de dry-run y deploy de esta
+corrección; la consulta de usuarios afectados no fue posible porque las
+variables de base de datos entregadas por Vercel llegaron vacías. No se
+editarán registros de producción.
+
 ## ELIMINACIÓN POPUP QR DE CRÉDITOS DE IMAGEN (2026-08-31)
 
 Identidad exacta: Claude Sonnet 5 (sesión de Milton en su árbol local).
