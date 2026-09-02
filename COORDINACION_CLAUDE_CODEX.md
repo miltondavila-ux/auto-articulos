@@ -1398,3 +1398,59 @@ confundirme con la otra sesión Claude activa (Google Analytics).
 esta sesión (código y también este documento) se hace exclusivamente en
 worktree aislado — cero excepciones, incluida la documentación — para no
 volver a tocar el árbol de trabajo compartido de Milton.
+
+## LOTE CODEX — migración mínima de dominio para Meta — 2026-09-02
+
+Responsable: CODEX - GPT-5.
+Worktree aislado: `/private/tmp/auto-articulos-domain-worktree`.
+Rama: `codex/meta-domain-migration`.
+
+Reserva documentada antes de continuar con las auditorías:
+
+- `apps/web/src/app/api/assistant/chat/route.ts`
+- `apps/web/src/app/dashboard/usuarios/page.tsx`
+- `apps/web/src/app/layout.tsx`
+- `apps/web/vercel.json`
+
+Objetivo: reemplazar únicamente los enlaces generales de la aplicación que
+todavía apuntan al alias de Vercel, para que la revisión de Meta vea el dominio
+propio `https://seototal.lasolucionweb.com`. Los callbacks de Instagram y
+Threads se generan dinámicamente a partir del host de la solicitud, por lo que
+no se modifica su lógica.
+
+Exclusiones: no tocar middleware, autenticación, secretos, Prisma, permisos,
+configuración remota de Vercel, rutas de callback, ni trabajo ajeno del checkout
+principal. El checkout principal conserva cambios locales de otros lotes y no
+se usa para commit o publicación.
+
+Estado de reserva: ACTIVA durante auditorías; se liberará al cerrar este lote
+o detenerlo. Publicación bloqueada hasta verificar el Root Directory real de
+Vercel y completar las tres auditorías independientes.
+
+### Auditorías de publicación — estado al 2026-09-02
+
+Auditoría funcional: APROBADA. Se generó Prisma usando binarios copiados a una
+caché temporal del worktree, `npm run typecheck` pasó sin errores y el build
+de producción pasó completamente con `npx next build --webpack`. El build
+Turbopack no pudo ejecutarse en el sandbox porque intenta abrir un puerto
+interno; no es un fallo del código. El warning de middleware es informativo y
+no fue modificado.
+
+Auditoría de regresión: APROBADA en alcance estático. El diff contiene solo
+tres archivos funcionales, `apps/web/vercel.json` y este registro;
+`git diff --check` pasa. No hay cambios en middleware, autenticación,
+secretos, Prisma, permisos ni rutas de callback. Instagram y Threads
+conservan callbacks dinámicos basados en el host de la solicitud. El nuevo
+`apps/web/vercel.json` contiene exactamente `buildCommand: npm run build` y
+`outputDirectory: .next`.
+
+Auditoría de integración/producción: PENDIENTE DE PREVIEW. En el navegador
+interno se confirmó el proyecto Vercel `auto-articulos-web` y el Root
+Directory real `apps/web`. La configuración de build se dejó en el archivo
+correcto dentro de ese directorio. Falta desplegar el branch como preview,
+revisar sus logs completos, probar dominio y rutas críticas, y solo entonces
+considerar producción. Hasta ese control, producción queda intacta.
+
+Decisión: no promover a producción hasta completar el preview y la auditoría
+de integración. La reserva se mantiene activa para los cuatro archivos del
+lote durante la preparación del preview. El checkout principal no se modificó.

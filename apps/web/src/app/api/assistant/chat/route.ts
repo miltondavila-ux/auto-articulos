@@ -4,7 +4,7 @@ import { getUserManualKnowledge } from "@/lib/user-manual";
 
 const OPENAI_URL = "https://api.openai.com/v1/responses";
 const MODEL = process.env.ASSISTANT_MODEL ?? "gpt-5-mini";
-const APP_URL = "https://auto-articulos-web.vercel.app";
+const APP_URL = "https://seototal.lasolucionweb.com";
 
 type OpenAiResponse = {
   output_text?: string;

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://auto-articulos-web.vercel.app"),
+  metadataBase: new URL("https://seototal.lasolucionweb.com"),
   title: "Creador de artículos en secuencia",
   description:
     "Crea artículos en secuencias. Herramienta de posicionamiento web para creación de contenido en secuencia.",

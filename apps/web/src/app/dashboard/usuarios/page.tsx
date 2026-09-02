@@ -69,7 +69,7 @@ interface UserRow {
   connectedDomain?: string | null;
 }
 
-const PLATFORM_URL = "https://auto-articulos-web.vercel.app/login";
+const PLATFORM_URL = "https://seototal.lasolucionweb.com/login";
 
 const permissionLabelStyle: CSSProperties = {
   display: "flex",
