@@ -1374,31 +1374,48 @@ de Vercel o cualquier despliegue.
 
 El valor de Vercel **Root Directory** y las rutas de `vercel.json` deben tratarse
 como un solo sistema. Nunca se deben mezclar rutas relativas a la raíz del
-repositorio con rutas relativas al `Root Directory`.
+repositorio con rutas relativas al `Root Directory`. Los dominios
+`auto-articulos-web.vercel.app` y `seototal.lasolucionweb.com` son únicamente
+dominios/alias: no cambian el `Root Directory` ni autorizan rutas duplicadas.
 
-Para el proyecto actual, cuyo `Root Directory` es `apps/web`, la configuración
-compatible es:
+Para el proyecto actual, cuyo `Root Directory` real es `apps/web`,
+`vercel.json` debe vivir físicamente en `apps/web/vercel.json`; no debe existir
+otro `vercel.json` en la raíz del repositorio. La configuración compatible es:
 
 ```json
 {
+  "framework": "nextjs",
   "buildCommand": "npm run build",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "installCommand": "npm install --legacy-peer-deps"
 }
 ```
 
-Solo si Vercel se configura para usar la raíz del repositorio se pueden usar
-comandos o rutas como `--workspace=apps/web` y `apps/web/.next`. Si alguien
-cambia el `Root Directory`, debe actualizar de forma coherente la configuración
-completa y dejar constancia del motivo.
+Solo si Vercel se configura deliberadamente para usar la raíz del repositorio se
+pueden usar comandos o rutas como `--workspace=apps/web` y `apps/web/.next`;
+esa migración requiere coordinación explícita, cambio coherente de ubicación y
+contenido de `vercel.json`, y registro del motivo. Nunca se debe mezclar una
+configuración de raíz con `Root Directory=apps/web`.
 
 Antes de publicar, el agente debe:
 
-1. Confirmar el `Root Directory` real en Vercel.
-2. Ejecutar el build desde ese mismo directorio, con exactamente el comando que
-   Vercel utilizará.
-3. Verificar que el directorio de salida exista en la ruta esperada.
-4. Revisar `git diff`, `git status` y los logs completos del despliegue.
-5. Ejecutar las auditorías obligatorias antes de promover a producción.
+1. Confirmar el `Root Directory` real en el proyecto de Vercel; no confiar en
+   documentación antigua, memoria o supuestos.
+2. Confirmar que `vercel.json` esté dentro de ese directorio y que no haya una
+   segunda configuración en la raíz.
+3. Ejecutar el build desde ese mismo directorio, con exactamente el comando que
+   Vercel utilizará; para el estado actual: `cd apps/web && npm run build`.
+4. Verificar que exista `apps/web/.next` y que el dry-run desde la raíz del
+   repositorio no incluya secretos, scripts operativos ni rutas duplicadas.
+5. Revisar `git status`, el diff completo, el diff preparado y los logs completos
+   del despliegue antes de hacer commit o publicar.
+6. Ejecutar las tres auditorías independientes obligatorias antes de promover a
+   producción y comprobar después los dos dominios públicos.
+
+Condiciones de detención inmediata: si el Root Directory real contradice el
+documento o el repositorio, si la ruta del build/salida no coincide, si el
+deployment actual contiene trabajo más nuevo de otro agente o si los logs
+muestran cualquier error, no se publica y se coordina primero.
 
 Incidente que esta regla previene: el commit `535b690`, seguido por `dbbe75f`,
 configuró comandos de monorepo mientras Vercel ya estaba dentro de `apps/web`.
@@ -1617,3 +1634,30 @@ Objetivo: documentar una regla permanente para prevenir configuraciones
 incompatibles entre Vercel, `Root Directory` y `vercel.json`.
 
 Estado: COMPLETADO. Archivo liberado el 2026-09-02; no queda reserva activa.
+
+## Trabajo activo — corrección Vercel Root Directory — 2026-09-02
+
+Responsable: CODEX - GPT-5.
+
+Worktree aislado: `/private/tmp/error-idioma-articulos-20260902`.
+
+Archivos reservados exclusivamente por esta tarea:
+- `vercel.json`
+- `apps/web/vercel.json`
+- `COORDINACION_CLAUDE_CODEX.md`
+
+Objetivo: mantener `Root Directory=apps/web` y colocar la configuración de
+Vercel dentro de ese directorio, evitando rutas duplicadas y `No workspaces
+found`.
+
+Auditorías completadas: (1) configuración real y dry-run sin rutas duplicadas ni
+archivos sensibles; (2) tests worker 14/14 y typecheck web limpio; (3) build
+exacto desde `apps/web`, con salida `.next`, 80/80 páginas y logs completos de
+Vercel sin errores de build.
+
+Deployment productivo: `dpl_EgL5VDit137SEQqPPhoHxcgh5rwd` en estado READY,
+generado desde `main` con `d802ac2`; Vercel asignó `auto-articulos-web.vercel.app`
+y `seototal.lasolucionweb.com` y ambos respondieron HTTP 200.
+
+Estado: COMPLETADO. Archivos liberados el 2026-09-02. No se ejecutó una
+publicación real de artículos.
