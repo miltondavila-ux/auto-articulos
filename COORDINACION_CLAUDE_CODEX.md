@@ -1454,3 +1454,15 @@ considerar producción. Hasta ese control, producción queda intacta.
 Decisión: no promover a producción hasta completar el preview y la auditoría
 de integración. La reserva se mantiene activa para los cuatro archivos del
 lote durante la preparación del preview. El checkout principal no se modificó.
+
+### Bloqueo de publicación — 2026-09-02
+
+El commit aislado `d35c8f8` contiene exclusivamente este lote. El remoto
+`origin` del checkout aislado apunta accidentalmente al directorio local del
+proyecto y rechazó el push por permisos. Se identificó como posible remoto del
+proyecto el repositorio GitHub `miltondavila-ux/auto-articulos`, pero no se
+subió código porque requiere autorización explícita del destino externo.
+
+Estado: SIN PREVIEW, SIN PUSH y SIN PRODUCCIÓN. La reserva de los cuatro
+archivos queda LIBERADA mientras se espera esa autorización; el commit local
+permanece recuperable en la rama `codex/meta-domain-migration`.
