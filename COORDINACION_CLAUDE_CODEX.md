@@ -95,9 +95,24 @@ negocio en un endpoint ya autenticado (`getCurrentUserId()` sin cambios).
 poder testear en este worktree nuevo; se descartó (`git checkout --
 package-lock.json`) porque no es parte del cambio.
 
-Estado: EN PROGRESO — auditorías completas, pendiente de que Milton revise
-y autorice publicar a `main`/Vercel. No hay commit todavía de los archivos
-de código (solo esta reserva quedó pusheada).
+Estado: **DESPLEGADO**. Milton autorizó publicar; PR
+[`#24`](https://github.com/miltondavila-ux/auto-articulos/pull/24) mergeado
+a `main` como fast-forward (sin conflictos, sin migraciones) en el commit
+`e0cf15bda5892b4e344438a545fcbd82edef1243`. Ambos checks de Vercel
+(`auto-articulos-web` y `cambio-boton-comienza-aqui-clean`) reportaron
+`success` para ese commit; `GET https://auto-articulos-web.vercel.app/login`
+respondió `HTTP 200` después del deploy.
+
+Pendiente real, no de código: correr "Actualizar análisis" en una cuenta
+real (idealmente la de Guillermo Martínez) para confirmar en vivo que ya no
+mezcla categorías — no se puede verificar sin ejecutar el algoritmo contra
+datos reales de una cuenta con el problema.
+
+Reserva liberada: quedan liberados `apps/web/src/lib/opportunity-analysis.ts`,
+`apps/web/src/app/api/opportunities/route.ts`,
+`packages/shared/src/bing-webmaster.ts` y `apps/web/src/lib/bing-signals.ts`.
+El worktree `/private/tmp/categorias-mal-elegidas` puede eliminarse cuando
+se confirme la prueba real pendiente de arriba.
 
 ## ELIMINACIÓN POPUP QR DE CRÉDITOS DE IMAGEN (2026-08-31)
 
