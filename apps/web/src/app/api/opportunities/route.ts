@@ -8,6 +8,7 @@ import {
 import { getCurrentUserId } from "@/lib/current-user";
 import { analyzeSeoOpportunities } from "@/lib/opportunity-analysis";
 import { getGoogleAnalyticsSignals, summarizeGoogleAnalyticsSignals } from "@/lib/google-analytics-signals";
+import { getBingSignals, summarizeBingSignals } from "@/lib/bing-signals";
 import { platformProductNameOrNeutral } from "@auto-articulos/shared";
 
 const COOLDOWN_DAYS = 3;
@@ -149,7 +150,7 @@ export async function POST(request: Request) {
           status: "success",
           articleUrl: { not: null },
         },
-        select: { text: true, finalTitle: true },
+        select: { text: true, finalTitle: true, run: { select: { categoryId: true } } },
         orderBy: { processedAt: "desc" },
         take: 1000,
       }),
@@ -163,9 +164,32 @@ export async function POST(request: Request) {
         { status: 422 },
       );
     }
-    const googleAnalyticsSignals = await getGoogleAnalyticsSignals(userId);
+    // Ejemplos reales de lo que YA se publicó en cada categoría (pedido de
+    // Milton, 2/9/2026, caso Guillermo Martínez): el nombre de la categoría
+    // sola no basta para que la IA sepa qué tema cubre de verdad. Con hasta
+    // 8 títulos ya publicados por categoría, la IA tiene evidencia real del
+    // tema exacto en vez de adivinar por el nombre o mezclar categorías.
+    const MAX_EXAMPLES_PER_CATEGORY = 8;
+    const examplesByCategory = new Map<string, string[]>();
+    for (const title of existing) {
+      const categoryId = title.run.categoryId;
+      const list = examplesByCategory.get(categoryId) ?? [];
+      if (list.length < MAX_EXAMPLES_PER_CATEGORY) {
+        list.push(title.finalTitle || title.text);
+        examplesByCategory.set(categoryId, list);
+      }
+    }
+    const categoriesWithExamples = categories.map((category) => ({
+      ...category,
+      publishedExamples: examplesByCategory.get(category.id) ?? [],
+    }));
+
+    const [googleAnalyticsSignals, bingSignals] = await Promise.all([
+      getGoogleAnalyticsSignals(userId),
+      getBingSignals(userId),
+    ]);
     const analysis = await analyzeSeoOpportunities({
-      categories,
+      categories: categoriesWithExamples,
       currentRows,
       previousRows,
       countryRows,
@@ -173,6 +197,7 @@ export async function POST(request: Request) {
         title.finalTitle ? [title.text, title.finalTitle] : [title.text],
       ),
       googleAnalyticsSummary: summarizeGoogleAnalyticsSignals(googleAnalyticsSignals),
+      bingSummary: summarizeBingSignals(bingSignals),
     });
 
     const now = new Date();

@@ -191,6 +191,77 @@ export async function submitBingSitemap(
   }
 }
 
+export interface BingQueryStat {
+  query: string;
+  clicks: number;
+  impressions: number;
+  position: number;
+}
+
+/**
+ * Consultas reales del sitio en Bing (últimos ~6 meses, es lo único que
+ * expone GetQueryStats — no admite rango de fechas propio como Search
+ * Console). Se usa como evidencia adicional para el análisis de
+ * oportunidades (pedido explícito de Milton, 2/9/2026: el algoritmo de
+ * oportunidades solo miraba Search Console y GA4, nunca Bing). Cada consulta
+ * puede aparecer varias veces (una fila por fecha); se agregan sumando
+ * clics/impresiones y promediando la posición ponderada por impresiones.
+ */
+export async function getBingQueryStats(
+  accessToken: string,
+  siteUrl: string,
+): Promise<BingQueryStat[]> {
+  const response = await fetch(
+    `${API_BASE}/GetQueryStats?siteUrl=${encodeURIComponent(siteUrl)}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  const data = (await response.json().catch(() => ({}))) as {
+    d?: Array<{
+      Query?: string;
+      Clicks?: number;
+      Impressions?: number;
+      AvgImpressionPosition?: number;
+      AvgClickPosition?: number;
+    }>;
+    Message?: string;
+  };
+  if (!response.ok) {
+    throw new Error(
+      data.Message ?? "No se pudieron obtener las consultas de Bing Webmaster Tools.",
+    );
+  }
+
+  const byQuery = new Map<
+    string,
+    { clicks: number; impressions: number; weightedPosition: number }
+  >();
+  for (const row of data.d ?? []) {
+    const query = row.Query?.trim();
+    if (!query) continue;
+    const clicks = row.Clicks ?? 0;
+    const impressions = row.Impressions ?? 0;
+    const position = row.AvgImpressionPosition ?? row.AvgClickPosition ?? 0;
+    const existing = byQuery.get(query) ?? {
+      clicks: 0,
+      impressions: 0,
+      weightedPosition: 0,
+    };
+    existing.clicks += clicks;
+    existing.impressions += impressions;
+    existing.weightedPosition += position * impressions;
+    byQuery.set(query, existing);
+  }
+
+  return Array.from(byQuery.entries())
+    .map(([query, agg]) => ({
+      query,
+      clicks: agg.clicks,
+      impressions: agg.impressions,
+      position: agg.impressions > 0 ? agg.weightedPosition / agg.impressions : 0,
+    }))
+    .sort((a, b) => b.impressions - a.impressions);
+}
+
 export interface BingUrlQuota {
   daily: number;
   monthly: number;

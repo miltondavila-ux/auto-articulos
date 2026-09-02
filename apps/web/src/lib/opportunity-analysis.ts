@@ -74,6 +74,12 @@ const PROMPT_HEADER = [
   "- Piensa como un usuario real: que mas buscaria alguien que ya busco esto?",
   "- La meta es VOLUMEN de oportunidades reales, no solo las mas faciles",
   "",
+  "REGLA OBLIGATORIA DE CATEGORIA (ESTRICTA, sin excepciones):",
+  "- Cada titulo que propongas para una categoria debe tratar el MISMO tema que esa categoria, segun su nombre y sus EJEMPLOS DE TITULOS YA PUBLICADOS (van junto a cada categoria en CATEGORIAS PERMITIDAS).",
+  "- PROHIBIDO mezclar o combinar en un mismo titulo el tema de dos categorias distintas, y PROHIBIDO poner un titulo en una categoria solo porque una consulta comparte una palabra generica con su nombre.",
+  "- Si una consulta real de los datos no encaja tematicamente con NINGUNA categoria permitida, descartala: no la fuerces en la categoria que mas se le parezca.",
+  "- PROHIBIDO inventar un titulo que no se pueda justificar con evidencia real presente en RENDIMIENTO ACTUAL (Search Console), SEÑALES DE GOOGLE ANALYTICS o SEÑALES DE BING que se te dan mas abajo. El 'rationale' de cada titulo debe nombrar la consulta, pagina, tendencia o señal concreta que lo respalda.",
+  "",
   "ANALISIS INTELIGENTE REQUERIDO:",
   "",
   "1. CONSULTAS DE ALTO POTENCIAL (prioridad maxima):",
@@ -103,8 +109,7 @@ const PROMPT_HEADER = [
   "- Crear variaciones long tail de consultas exitosas",
   "- Identificar nichos no explotados basados en datos reales",
   "- Usar ubicaciones y perfiles de cliente que aparezcan en las consultas, paginas o titulos existentes",
-  "- Combinar temas de diferentes categorias cuando tenga sentido",
-  "- Proponer intenciones de busqueda nuevas que se infieran de los patrones de las consultas existentes",
+  "- Proponer intenciones de busqueda nuevas que se infieran de los patrones de las consultas existentes, siempre dentro del tema de la categoria (ver REGLA OBLIGATORIA DE CATEGORIA arriba)",
   "",
   "PRECAUCIONES (no restricciones):",
   "- Evita repetir titulos existentes o canibalizarlos internamente",
@@ -115,6 +120,7 @@ const PROMPT_HEADER = [
   "- Copiar exactamente titulos que ya existen en TITULOS YA EXISTENTES",
   "- Crear 2+ titulos dentro del mismo grupo que compitan por la misma intencion de busqueda",
   "- Datos completamente falsos sin ninguna base en los datos",
+  "- Mezclar el tema de dos categorias en un mismo titulo (ver REGLA OBLIGATORIA DE CATEGORIA)",
   "",
   "TRIPLE SEGMENTACION (REGLA CLAVE - aplicar en TODOS los titulos):",
   "Cada titulo debe combinar naturalmente 3 niveles cuando la evidencia lo permita:",
@@ -272,12 +278,13 @@ function buildPerformanceBatches(
 }
 
 export async function analyzeSeoOpportunities(input: {
-  categories: Array<{ id: string; name: string }>;
+  categories: Array<{ id: string; name: string; publishedExamples?: string[] }>;
   currentRows: GoogleSearchAnalyticsRow[];
   previousRows: GoogleSearchAnalyticsRow[];
   countryRows: GoogleSearchAnalyticsRow[];
   existingTitles: string[];
   googleAnalyticsSummary?: unknown;
+  bingSummary?: unknown;
 }): Promise<OpportunityAnalysisResult> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("OPENAI_API_KEY no esta configurada.");
@@ -329,6 +336,9 @@ ${JSON.stringify(topCountries)}
 
 SEÑALES OPCIONALES DE GOOGLE ANALYTICS 4:
 ${JSON.stringify(input.googleAnalyticsSummary ?? { connected: false })}
+
+SEÑALES OPCIONALES DE BING WEBMASTER TOOLS:
+${JSON.stringify(input.bingSummary ?? { connected: false })}
 
 RENDIMIENTO ACTUAL Y COMPARACION (lote ${batchIndex + 1} de ${batchesToProcess.length}):
 ${JSON.stringify(batch)}
