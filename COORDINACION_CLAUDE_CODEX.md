@@ -1,3 +1,37 @@
+## RESERVA — CATEGORIAS MAL ELEGIDAS (2026-09-02)
+
+Identidad exacta: Claude Sonnet 5 (conversación "CATEGORIAS MAL ELEGIDAS" de Milton).
+
+Worktree aislado: `/private/tmp/categorias-mal-elegidas`.
+Rama: `claude/categorias-mal-elegidas`, creada desde `origin/main` en `94affdf`.
+
+Motivo: Milton reportó que al usuario Guillermo Martínez el botón "Actualizar
+análisis" de Oportunidades (`/dashboard/oportunidades`) le generó títulos
+long tail que no correspondían a la categoría a la que quedaron asignados —
+el algoritmo mezcló temas de categorías distintas.
+
+Causa raíz encontrada: el prompt de `apps/web/src/lib/opportunity-analysis.ts`
+le decía explícitamente a la IA que podía "combinar temas de diferentes
+categorías cuando tenga sentido" e "inferir temas relacionados" sin exigir
+que el título se quedara dentro del tema real de la categoría asignada.
+Además solo se le pasaba `{id, name}` de cada categoría, sin ningún ejemplo
+real de qué cubre esa categoría.
+
+Alcance autorizado por Milton: (1) prohibir la mezcla de categorías y exigir
+que cada título esté anclado en evidencia real de Search Console/GA4/Bing
+(no inventado); (2) agregar señales de Bing Webmaster Tools al análisis, que
+hoy no se usan en este flujo (solo GSC + GA4).
+
+Archivos reservados por esta tarea:
+- `apps/web/src/lib/opportunity-analysis.ts`
+- `apps/web/src/app/api/opportunities/route.ts`
+- `packages/shared/src/bing-webmaster.ts`
+- `packages/shared/src/index.ts` (solo el export nuevo de Bing, si aplica)
+- posible archivo nuevo `apps/web/src/lib/bing-signals.ts`
+
+Sin migraciones de Prisma previstas (no se toca `schema.prisma`). Estado:
+EN PROGRESO. No hay commit ni push todavía.
+
 ## ELIMINACIÓN POPUP QR DE CRÉDITOS DE IMAGEN (2026-08-31)
 
 Identidad exacta: Claude Sonnet 5 (sesión de Milton en su árbol local).
