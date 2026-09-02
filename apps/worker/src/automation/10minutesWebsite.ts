@@ -696,30 +696,11 @@ async function login(
       timeout: NAV_TIMEOUT_MS,
     });
   } catch {
-    // Mensaje más claro que el timeout crudo de Playwright: esto casi
-    // siempre pasa por usuario/contraseña incorrectos guardados en
-    // Configuración, no por un problema del código. Si el sitio muestra
-    // algún texto de error visible, se incluye también.
-    const alertText = await page
-      .evaluate(() => {
-        const candidates = Array.from(
-          document.querySelectorAll(
-            '[class*="alert" i], [class*="error" i], [role="alert"]',
-          ),
-        ).filter((el) => (el as HTMLElement).offsetParent !== null);
-        return candidates
-          .map((el) => (el.textContent ?? "").trim())
-          .filter((t) => t.length > 0)
-          .slice(0, 3)
-          .join(" | ");
-      })
-      .catch(() => "");
-    // Se nombra el servidor concreto: desde que hay varios (ver
-    // PLATFORM_SERVERS), un login que falla puede deberse a que la cuenta
-    // vive en otro dominio y no a credenciales mal escritas, y sin este dato
-    // los dos casos se veían idénticos en el mensaje.
+    // Mantener el error corto y accionable. La página contiene las
+    // instrucciones completas y evita exponer nombres de servidores o
+    // detalles técnicos en Historial y en la pantalla de publicación.
     throw new Error(
-      `No se pudo iniciar sesión en ${baseUrl}. Verifica que el usuario y la contraseña guardados en Configuración sean correctos, y que esa cuenta realmente exista en ${baseUrl} (si vive en otro servidor, un administrador debe corregirlo en Administración → Usuarios)${alertText ? `. Mensaje visible en el sitio: "${alertText}"` : "."}`,
+      `No pude publicar, tienes un problema de conexión que debes resolver aquí: https://auto-articulos-web.vercel.app/resolucion-conexion?server=${encodeURIComponent(credentials.platformDomain ?? "")}`,
     );
   }
   await onStep("Sesión iniciada correctamente.");

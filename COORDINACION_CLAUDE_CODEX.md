@@ -1,3 +1,30 @@
+## Trabajo activo — resolución guiada de errores de conexión — 2026-09-02
+
+Responsable: CODEX - GPT-5.
+Worktree aislado: `/private/tmp/auto-articulos-resolucion-conexion-web`.
+Rama: `codex/resolucion-conexion-web-20260902`.
+Archivos reservados: `apps/worker/src/automation/10minutesWebsite.ts`,
+`apps/web/src/app/resolucion-conexion/page.tsx` y este documento.
+Objetivo: reemplazar el mensaje técnico de credenciales inválidas por un
+enlace corto a una página de resolución, con instrucciones genéricas y
+enlaces de recuperación configurables por servidor. No modificar Vercel,
+autenticación, secretos ni producción.
+Estado: IMPLEMENTADO Y AUDITADO; reserva activa hasta commit y despliegue.
+Resultado funcional: el fallo de inicio de sesión durante la publicación
+ahora devuelve un mensaje corto con enlace a `/resolucion-conexion`; la página
+explica el restablecimiento y la resincronización de credenciales, y obtiene
+el enlace de recuperación desde `platform-servers.ts` según el servidor.
+Auditoría funcional: completada; mensaje breve, página paso a paso, enlace
+por servidor y texto visible neutral verificados.
+Auditoría de regresión: completada; `git diff --check`, typecheck web y build
+worker correctos. No se cambiaron versiones, middleware, autenticación,
+secretos, esquema ni migraciones.
+Auditoría integración/producción: completada en dry-run desde la raíz; el
+proyecto correcto confirma `rootDirectory: apps/web`, el build ejecutado fue
+`npm run build`, `apps/web/.next` fue generado y la ruta nueva quedó incluida.
+El primer dry-run fue detenido al detectar un proyecto Vercel incorrecto;
+se corrigió el enlace local y no se creó ningún deployment en esa prueba.
+
 ## ELIMINACIÓN POPUP QR DE CRÉDITOS DE IMAGEN (2026-08-31)
 
 Identidad exacta: Claude Sonnet 5 (sesión de Milton en su árbol local).
