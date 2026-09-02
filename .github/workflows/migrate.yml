@@ -18,6 +18,11 @@ on:
         required: false
         default: false
         type: boolean
+      safe_daily_limit_default:
+        description: "Aplicar solo el nuevo valor por defecto (5) de dailyArticleLimit, sin tocar nada mas del schema"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   migrar:
@@ -46,8 +51,17 @@ jobs:
           npx prisma db execute \
             --url "$MIGRATION_DATABASE_URL" \
             --file packages/db/prisma/migrations/20260827130000_add_opportunity_publication_dates/migration.sql
+      - name: Aplicar migracion segura de limite diario por defecto
+        if: ${{ inputs.safe_daily_limit_default }}
+        shell: bash
+        run: |
+          MIGRATION_DATABASE_URL="${DATABASE_URL/:6543/:5432}"
+          MIGRATION_DATABASE_URL="${MIGRATION_DATABASE_URL/?pgbouncer=true/}"
+          npx prisma db execute \
+            --url "$MIGRATION_DATABASE_URL" \
+            --file packages/db/prisma/migrations/20260831230000_set_daily_limit_5_default/migration.sql
       - name: Aplicar migraciones con Session pooler
-        if: ${{ !inputs.safe_opportunity_dates }}
+        if: ${{ !inputs.safe_opportunity_dates && !inputs.safe_daily_limit_default }}
         shell: bash
         run: |
           MIGRATION_DATABASE_URL="${DATABASE_URL/:6543/:5432}"
