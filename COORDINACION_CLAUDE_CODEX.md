@@ -44,6 +44,100 @@ Archivos reservados por esta tarea:
 
 Sin migraciones de Prisma. Estado: EN PROGRESO.
 
+### Cambios implementados
+
+- `apps/web/src/lib/opportunity-analysis.ts`:
+  - Nueva sección obligatoria "REGLA OBLIGATORIA DE CERO CANIBALIZACION" en
+    el prompt: define canibalización como apuntar a la MISMA intención de
+    búsqueda (no solo compartir palabras — aclara explícitamente que
+    variantes long tail con ángulo/ubicación/perfil distintos NO son
+    canibalización), exige revisar todo lo ya existente y ya propuesto por
+    categoría antes de proponer, y exige que el `rationale` declare la
+    intención distinta que cubre cada título.
+  - Nueva sección obligatoria "REGLA OBLIGATORIA DE LONG TAIL AL 100%":
+    prohíbe títulos genéricos/cortos, exige revisión página por página y
+    consulta por consulta de GSC/GA4/Bing.
+  - Se quitó el texto débil de "PRECAUCIONES (no restrictivas)" que
+    mencionaba canibalización — quedó reemplazado por la regla obligatoria.
+  - Se quitó el techo fijo de "máximo 10 categorías" y "5-9 títulos por
+    categoría" del texto del prompt; ahora dice explícitamente que debe
+    cubrir TODAS las categorías con evidencia real.
+  - Código: `isFullyStocked()` ahora recibe `totalCategories` (número real
+    de categorías de la cuenta) en vez de un `10` hardcodeado — solo corta
+    el loop cuando TODAS las categorías reales quedaron con el tope de
+    títulos, no un número arbitrario.
+  - Código: se eliminó el `if (!existingGroup && groupsByCategory.size >= 10) continue`
+    (el único gate real era `validCategoryIds`, que ya limita naturalmente
+    a las categorías reales de la cuenta — el `10` era un tope artificial
+    por debajo de ese límite natural).
+  - Código: se eliminó el `opportunities.slice(0, 10)` que truncaba la
+    respuesta de cada lote a 10 grupos antes de procesarlos.
+  - `MAX_TITLES_PER_CATEGORY` subido de 9 a 20.
+  - `max_tokens` de la llamada a OpenAI subido de 10000 a 16000 (tope real
+    de salida de gpt-4o-mini), porque una respuesta con más categorías/
+    títulos por lote necesita más espacio.
+  - Nuevo bloque `OPORTUNIDADES YA CREADAS EN ESTA CORRIDA, POR CATEGORIA`,
+    reconstruido en cada lote desde `groupsByCategory` (reemplaza la ventana
+    rotativa `TITULOS YA PROPUESTOS EN ESTA SESION` de los últimos 200
+    títulos mezclados entre categorías) — da visibilidad completa y sin
+    pérdida de lo ya propuesto para CADA categoría específica, para que el
+    chequeo de canibalización cruzado entre lotes sea real.
+  - El dedup exacto por texto normalizado (`seen`/`normalizeTitle`) se
+    mantiene sin cambios como garantía de código (no depende de que la IA
+    obedezca) contra duplicados textuales exactos.
+- `apps/web/src/app/dashboard/oportunidades/page.tsx`: texto descriptivo
+  actualizado para reflejar el comportamiento real (ya no dice "hasta 10
+  categorías... 9 oportunidades"; menciona las tres fuentes de datos).
+
+### Decisión de diseño explicada: no se agregó un filtro de similitud de texto en código
+
+Se evaluó agregar, además del dedup exacto, un chequeo de similitud
+(ej. superposición de palabras) para bloquear en código títulos "parecidos".
+Se descartó a propósito: dos títulos long tail legítimos y deseados por
+Milton (ej. "...en Miami" vs "...en Los Ángeles", mismo resto de palabras)
+comparten la mayoría de las palabras pero NO son canibalización — son
+exactamente la diversidad long tail pedida. Un filtro de similitud de texto
+habría bloqueado variantes válidas. La prevención de canibalización real
+(misma intención, no mismas palabras) requiere criterio semántico, por eso
+se reforzó a nivel de prompt (regla obligatoria + visibilidad completa por
+categoría) en vez de a nivel de código.
+
+### Tres auditorías independientes
+
+**1) Funcional**: `prisma generate` correcto; `tsc --noEmit` limpio en
+`apps/web` y `apps/worker`; `next build --webpack` completó todas las rutas
+sin errores. Revisión manual del prompt final: la regla de cero
+canibalización y la regla de long tail al 100% quedan como obligatorias
+antes de "ANALISIS INTELIGENTE REQUERIDO"; no quedó ninguna mención residual
+de "máximo 10 categorías" ni "5-9 títulos" en el texto del prompt. Pendiente
+real (no de código): no hay forma de verificar en este entorno que OpenAI
+efectivamente cubra todas las categorías y evite canibalización sin correr
+un análisis real contra una cuenta con muchas categorías.
+
+**2) Regresión**: la firma de `analyzeSeoOpportunities` no cambió (mismos
+campos de entrada); `route.ts` (de la tarea anterior) sigue funcionando sin
+modificaciones porque no se tocó su contrato. El dedup exacto por texto
+normalizado sigue intacto — ningún título duplicado textual puede colarse,
+igual que antes. No se tocó `schema.prisma`, cooldown, paneles, dominios,
+ni el endpoint `GET`. El único archivo de UI tocado (`oportunidades/page.tsx`)
+solo cambia un párrafo descriptivo, no lógica; no toca
+`DEFAULT_MAX_TITLES_PER_BATCH` del PR #31 (concepto distinto: lote de
+publicación de artículos, no de este análisis).
+
+**3) Integración/producción**: el techo de llamadas a OpenAI por corrida
+sigue siendo como máximo 20 (mismo `MAX_BATCHES` de antes, sin cambios) —
+subir el techo por categoría y quitar el corte en 10 categorías no agrega
+llamadas nuevas por encima de ese máximo ya existente, solo hace que se
+usen más seguido las que ya estaban permitidas. Cuentas con pocas
+categorías o poca evidencia real no notan cambio de comportamiento (menos
+lotes se siguen ejecutando igual, `isFullyStocked` corta temprano si ya no
+hay más categorías por llenar). No se tocó Vercel, middleware, variables de
+entorno ni autenticación. Riesgo de costo/duración documentado arriba y
+comunicado a Milton antes de implementar.
+
+Estado: EN PROGRESO — auditorías completas, pendiente de autorización para
+publicar a `main`/Vercel.
+
 ## RESERVA — CATEGORIAS MAL ELEGIDAS (2026-09-02)
 
 Identidad exacta: Claude Sonnet 5 (conversación "CATEGORIAS MAL ELEGIDAS" de Milton).
