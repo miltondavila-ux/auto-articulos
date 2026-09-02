@@ -135,8 +135,28 @@ hay más categorías por llenar). No se tocó Vercel, middleware, variables de
 entorno ni autenticación. Riesgo de costo/duración documentado arriba y
 comunicado a Milton antes de implementar.
 
-Estado: EN PROGRESO — auditorías completas, pendiente de autorización para
-publicar a `main`/Vercel.
+Estado: **DESPLEGADO**. Milton autorizó publicar; PR
+[`#32`](https://github.com/miltondavila-ux/auto-articulos/pull/32) mergeado
+a `main` como fast-forward (sin conflictos, sin migraciones) en el commit
+`de27a65435a232232628219a87c0d8ff64d7a769`. Ambos checks de Vercel
+(`auto-articulos-web` y `cambio-boton-comienza-aqui-clean`) reportaron
+`success`; `GET https://auto-articulos-web.vercel.app/login` respondió
+`HTTP 200` después del deploy.
+
+Costo de OpenAI: se le dio a Milton una estimación (no medición real) del
+impacto en costo por corrida basada en el tamaño del prompt y la
+tarificación pública de `gpt-4o-mini` — de ~$0.03-$0.05 a ~$0.05-$0.17 por
+click en "Actualizar análisis" en el peor caso, sin superar el techo de 20
+lotes que ya existía. Se le indicó a Milton que la medición real está en
+platform.openai.com/usage, comparando antes/después del deploy.
+
+Pendiente real, no de código: no se puede verificar sin datos reales que
+OpenAI efectivamente cubra todas las categorías y logre cero canibalización
+en una cuenta real con muchas categorías — pendiente de una prueba en vivo.
+
+Reserva liberada: quedan liberados `apps/web/src/lib/opportunity-analysis.ts`
+y `apps/web/src/app/dashboard/oportunidades/page.tsx`. El worktree
+`/private/tmp/cero-canibalizacion-longtail` puede eliminarse.
 
 ## RESERVA — CATEGORIAS MAL ELEGIDAS (2026-09-02)
 
