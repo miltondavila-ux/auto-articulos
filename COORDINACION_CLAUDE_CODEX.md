@@ -148,6 +148,45 @@ cuenta de prueba Lorena Álvarez en esta sesión.
 
 ## INVENTARIO DE CONVERSACIONES
 
+### `TABLA PUBLICA ACCESIBLE GRAVE`
+
+Identidad exacta:
+Claude Sonnet 5 (sesión de Milton en su árbol local).
+
+Proyecto: aviso de seguridad crítico de Supabase (`rls_disabled_in_public`)
+en el proyecto Auto Articulos.
+Motivo de creación: Supabase notificó por correo que había tablas
+públicamente accesibles — cualquiera con la URL del proyecto podía leer,
+editar y borrar datos vía la API REST automática (PostgREST) sin pasar por
+el backend.
+Objetivo: cerrar la exposición existente y evitar que vuelva a pasar con
+tablas futuras.
+Alcance: investigación en Supabase (Security Advisor, `pg_tables`,
+`pg_roles`, Storage, Auth) con navegador logueado como
+`10minuteswebsite@gmail.com`; fix de RLS en las 26 tablas expuestas;
+salvaguarda automática para tablas nuevas en el workflow de migración.
+Exclusiones: no se tocaron políticas de RLS (no hacían falta, sin acceso
+legítimo vía anon key en este proyecto); no se modificó Storage ni Auth de
+Supabase (revisados, sin hallazgos); no se tocó el trabajo sin commitear
+de otra sesión en el árbol local de Milton.
+Archivos y commits: migración
+`packages/db/prisma/migrations/20260902113123_enable_rls_public_tables`;
+`packages/db/scripts/enforce-rls.ts`; `.github/workflows/migrate.yml`;
+`HANDOFF.md`; este documento. Mergeado a `main` vía PR #22, #23 y #25.
+Estado: **CERRADO**. Security Advisor de Supabase en 0 errores/0 warnings
+(antes 26 errores críticos); producción verificada (`/login` 200 OK en
+ambos dominios); salvaguarda para tablas futuras activa en el workflow de
+migración.
+Producción: sin incidentes, sin caídas, sin regresiones detectadas.
+Conversaciones relacionadas: ninguna previa sobre este tema.
+Responsable: Claude, con aprobación y ejecución manual de Milton en los
+pasos que el clasificador de seguridad de Claude Code bloqueó (SQL directo
+contra producción, push a `main`, creación de PR).
+Siguiente acción: ninguna pendiente. Si se agrega una tabla nueva sin usar
+el workflow normal de migración, recordar correr
+`npm run enforce-rls --workspace=packages/db` a mano.
+Decisión de Milton: cerrar la conversación.
+
 ### Acuerdo de coordinación — 2026-08-31
 
 El proyecto `CLAUDE - BOTONES DE OPORTUNIDADES AL INICIO` es responsable de

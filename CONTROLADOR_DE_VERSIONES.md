@@ -420,3 +420,65 @@ desde esta sesión (sin credenciales de la cuenta de prueba Lorena Álvarez).
 Responsable: Claude. Siguiente acción: Milton confirma visualmente que el
 popup ya no aparece.
 Estado: DESPLEGADA — PENDIENTE DE CONFIRMACIÓN VISUAL DE MILTON.
+
+## Versión — 2026-09-02 — TABLA PUBLICA ACCESIBLE GRAVE
+
+Fecha y hora: 2026-09-02
+Versión/commit: `de5309e` (fix RLS 26 tablas) + `6f3c5fc` (cierre) + `bbbc662`
+(salvaguarda tablas futuras), mergeados como `84b7dd9` (PR #22), `94affdf`
+(PR #23) y `e52bd87` (PR #25).
+Rama: `claude/tabla-publica-rls-20260902` (y copias `-v2`,
+`-cierre-20260902`, `futuras-tablas-rls-20260902`)
+Worktree: `/private/tmp/tabla-publica-rls`
+Conversación/proyecto: `TABLA PUBLICA ACCESIBLE GRAVE`
+Cambios incluidos: activación de Row-Level Security en las 26 tablas
+públicas que Supabase reportó como expuestas (`rls_disabled_in_public`),
+sin políticas nuevas (no hay acceso legítimo vía anon key en este
+proyecto); salvaguarda automática para que cualquier tabla futura quede
+protegida sin depender de que alguien se acuerde.
+Archivos modificados: `.github/workflows/migrate.yml`, `HANDOFF.md`,
+`packages/db/package.json`, `COORDINACION_CLAUDE_CODEX.md`.
+Archivos eliminados: ninguno.
+Migraciones creadas:
+`packages/db/prisma/migrations/20260902113123_enable_rls_public_tables`
+(documental — este proyecto despliega esquema con `prisma db push`, que no
+ejecuta migraciones SQL versionadas; el fix real se aplicó a mano contra
+producción, ver abajo).
+Migraciones aplicadas: el bloque de 26 `ALTER TABLE ... ENABLE ROW LEVEL
+SECURITY` se ejecutó directamente contra producción en el SQL Editor de
+Supabase (Milton lo ejecutó él mismo, guiado paso a paso, porque el
+clasificador de seguridad de Claude Code bloquea la ejecución automática
+de SQL de producción vía navegador).
+Auditoría 1: exactitud — los 26 nombres de tabla se tomaron literal de una
+consulta `pg_tables` contra la base real, no de memoria; `ENABLE ROW LEVEL
+SECURITY` es idempotente.
+Auditoría 2: impacto — `grep` en todo `apps/` y `packages/` confirmó que
+el código no usa `supabase-js`/anon key en ningún lugar (todo el acceso es
+vía Prisma con el rol `postgres`, que bypassa RLS); confirmado además que
+la barra del SQL Editor de Supabase muestra "Role: postgres".
+Auditoría 3: verificación posterior — Security Advisor de Supabase pasó de
+26 errores a 0 errores/0 warnings; consulta `pg_tables` confirmó 0 tablas
+sin RLS; `curl -I` a `/login` devolvió 200 en `auto-articulos-web.vercel.app`
+y `seototal.lasolucionweb.com` después del cambio.
+Diff revisado: sí, archivo por archivo, sin `git add -A`, revisando que no
+se incluyera trabajo sin commitear de otra sesión en el árbol local.
+Deployment/Vercel: sin redeploy necesario — el cambio es de base de datos,
+no de código de aplicación; producción verificada igual con `curl`.
+Estado de Vercel: sin cambios, sin incidentes.
+Dominio verificado: `auto-articulos-web.vercel.app` y
+`seototal.lasolucionweb.com`, ambos 200 OK tras el cambio.
+Logs verificados: Security Advisor de Supabase (0 errores) como fuente de
+verdad del propio proveedor, no solo consulta propia.
+Producción verificada: SÍ — Security Advisor en 0 errores, `pg_tables` sin
+tablas expuestas, `/login` respondiendo normal en ambos dominios.
+Problemas conocidos: ninguno detectado. El workflow `migrate.yml` usa
+`prisma db push`, no `migrate deploy`, así que las migraciones SQL
+versionadas de este repo no se ejecutan solas — quedó documentado en
+`HANDOFF.md` para que nadie asuma lo contrario a futuro.
+Responsable: Claude, con Milton ejecutando manualmente los pasos que el
+clasificador de seguridad bloqueó (SQL en producción, push a `main`,
+creación de los tres PR).
+Siguiente acción: ninguna pendiente. Si se agrega una tabla nueva sin usar
+el workflow normal de migración de GitHub Actions, correr a mano
+`npm run enforce-rls --workspace=packages/db` con las credenciales reales.
+Estado: DESPLEGADA Y VERIFICADA.
