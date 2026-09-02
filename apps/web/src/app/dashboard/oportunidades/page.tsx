@@ -13,7 +13,10 @@ import {
 } from "@/components/dashboard-ui";
 import ImageCreditsModal from "@/components/ImageCreditsModal";
 import PreValidationGuard from "@/components/PreValidationGuard";
-import { platformProductNameOrNeutral } from "@auto-articulos/shared";
+import {
+  platformProductNameOrNeutral,
+  DEFAULT_MAX_TITLES_PER_BATCH,
+} from "@auto-articulos/shared";
 
 interface OpportunityTitle {
   id: string;
@@ -30,7 +33,6 @@ interface OpportunityGroup {
   titles: OpportunityTitle[];
 }
 
-const DEFAULT_MAX_TITLES_PER_BATCH = 20;
 const IMAGE_CREDITS_CONFIRMED_KEY = "auto-articulos:image-credits-confirmed";
 
 function formatDateTime(value: string | Date) {
