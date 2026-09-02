@@ -1470,3 +1470,16 @@ Estado: preview creado y listo; aún SIN PRODUCCIÓN. La reserva de los cuatro
 archivos permanece activa hasta finalizar la promoción y verificación. Los
 commits locales `d35c8f8` y `c3969e1` son recuperables en la rama
 `codex/meta-domain-migration`.
+
+### Cierre verificado — 2026-09-02
+
+Deployment productivo promovido y verificado: `319e9is9JMiToJ3SmoJ5xYe8Uwom`,
+estado `Ready`, fuente `codex/meta-domain-migration`, con
+`seototal.lasolucionweb.com` como dominio actual. En el navegador interno
+cargaron `/login`, `/privacidad` y `/terminos` en el dominio propio; también
+se confirmó que `auto-articulos-web.vercel.app/login` continúa operativo como
+respaldo. No se ejecutaron publicaciones sociales, OAuth ni migraciones.
+
+Estado final: PUBLICADO Y VERIFICADO. La reserva de los cuatro archivos queda
+LIBERADA. El checkout principal no fue modificado y no quedan acciones de
+producción pendientes para este lote.
