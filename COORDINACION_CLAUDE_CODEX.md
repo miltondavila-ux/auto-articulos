@@ -1366,6 +1366,47 @@ migraciones — no toco `schema.prisma`).
 
 Estado: EN CURSO.
 
+## REGLA PERMANENTE — VERCEL, ROOT DIRECTORY Y `vercel.json`
+
+Esta regla debe ser leída y cumplida por **todas las conversaciones y agentes**
+(Claude, Codex y Antigravity) antes de modificar `vercel.json`, la configuración
+de Vercel o cualquier despliegue.
+
+El valor de Vercel **Root Directory** y las rutas de `vercel.json` deben tratarse
+como un solo sistema. Nunca se deben mezclar rutas relativas a la raíz del
+repositorio con rutas relativas al `Root Directory`.
+
+Para el proyecto actual, cuyo `Root Directory` es `apps/web`, la configuración
+compatible es:
+
+```json
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next"
+}
+```
+
+Solo si Vercel se configura para usar la raíz del repositorio se pueden usar
+comandos o rutas como `--workspace=apps/web` y `apps/web/.next`. Si alguien
+cambia el `Root Directory`, debe actualizar de forma coherente la configuración
+completa y dejar constancia del motivo.
+
+Antes de publicar, el agente debe:
+
+1. Confirmar el `Root Directory` real en Vercel.
+2. Ejecutar el build desde ese mismo directorio, con exactamente el comando que
+   Vercel utilizará.
+3. Verificar que el directorio de salida exista en la ruta esperada.
+4. Revisar `git diff`, `git status` y los logs completos del despliegue.
+5. Ejecutar las auditorías obligatorias antes de promover a producción.
+
+Incidente que esta regla previene: el commit `535b690`, seguido por `dbbe75f`,
+configuró comandos de monorepo mientras Vercel ya estaba dentro de `apps/web`.
+Eso produjo `No workspaces found`, una ruta duplicada de salida y el mensaje
+engañoso `MIDDLEWARE_INVOCATION_FAILED` en producción. El middleware y las
+variables secretas no eran la causa.
+
+
 ## Trabajo activo — auditoría de textos de marca blanca — 1/9/2026
 
 Responsable: CODEX - GPT-5.
@@ -1563,3 +1604,16 @@ Verificación productiva completada: `/login` respondió correctamente y
 
 Archivos liberados el 2026-09-02: `vercel.json` y
 `COORDINACION_CLAUDE_CODEX.md`. No quedan reservas activas de esta tarea.
+## Trabajo activo — REGLA PERMANENTE VERCEL/ROOT DIRECTORY — 2026-09-02
+
+Responsable: CODEX - GPT-5.
+
+Worktree aislado: `/private/tmp/this-routing-middleware`.
+
+Archivos reservados exclusivamente por esta tarea:
+- `COORDINACION_CLAUDE_CODEX.md`
+
+Objetivo: documentar una regla permanente para prevenir configuraciones
+incompatibles entre Vercel, `Root Directory` y `vercel.json`.
+
+Estado: COMPLETADO. Archivo liberado el 2026-09-02; no queda reserva activa.
