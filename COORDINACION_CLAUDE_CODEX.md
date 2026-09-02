@@ -10,25 +10,26 @@ Objetivo: reemplazar el mensaje técnico de credenciales inválidas por un
 enlace corto a una página de resolución, con instrucciones genéricas y
 enlaces de recuperación configurables por servidor. No modificar Vercel,
 autenticación, secretos ni producción.
-Estado: IMPLEMENTACIÓN CORREGIDA; nueva auditoría requerida; reserva activa.
+Estado: COMPLETADO Y VERIFICADO EN PRODUCCIÓN; reserva liberada.
 Resultado funcional: el fallo de inicio de sesión durante la publicación
 ahora devuelve un mensaje corto con enlace a `/resolucion-conexion`; la página
 explica el restablecimiento y la resincronización de credenciales, y obtiene
 el enlace de recuperación desde `platform-servers.ts` según el servidor.
-Auditoría funcional inicial: completada; mensaje breve, página paso a paso,
-enlace por servidor y texto visible neutral verificados. Se detectó en la
-verificación productiva que el middleware redirigía la página a login; se
-añadió exclusivamente la ruta de resolución a las rutas públicas.
-Auditoría de regresión inicial: completada; `git diff --check`, typecheck web
-y build worker correctos. Repetir tras la corrección del middleware. No se
-cambiaron versiones, autenticación, secretos, esquema ni migraciones.
-Auditoría integración/producción inicial: completada en dry-run desde la raíz; el
+Auditoría funcional: completada; mensaje breve, página paso a paso, enlace
+por servidor y texto visible neutral verificados. Se corrigió la redirección
+inicial haciendo pública exclusivamente la ruta de resolución.
+Auditoría de regresión: completada; `git diff --check`, typecheck web y build
+worker correctos. No se cambiaron versiones, autenticación, secretos, esquema
+ni migraciones.
+Auditoría integración/producción: completada en dry-run desde la raíz; el
 proyecto correcto confirma `rootDirectory: apps/web`, el build ejecutado fue
 `npm run build`, `apps/web/.next` fue generado y la ruta nueva quedó incluida.
 El primer dry-run fue detenido al detectar un proyecto Vercel incorrecto;
 se corrigió el enlace local y no se creó ningún deployment en esa prueba. El
-deployment posterior fue retirado del flujo al detectar la redirección, por lo
-que esta corrección requiere un nuevo dry-run y deployment.
+deployment posterior fue retirado del flujo al detectar la redirección. El
+segundo dry-run y el deployment corregido pasaron; producción quedó verificada
+en `dpl_DtSuo4iXAHWgrfJez48DhAvQ2usf`. Ambos dominios devolvieron 200 para la
+ruta de resolución y `/login`, sin redirecciones ni `MIDDLEWARE_INVOCATION_FAILED`.
 
 ## ELIMINACIÓN POPUP QR DE CRÉDITOS DE IMAGEN (2026-08-31)
 
