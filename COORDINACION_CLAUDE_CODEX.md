@@ -1525,9 +1525,10 @@ Worktree aislado: `/private/tmp/this-routing-middleware`.
 Rama: `codex/this-routing-middleware`.
 
 Objetivo: corregir el fallo de despliegue de Vercel que dejó producción con
-`MIDDLEWARE_INVOCATION_FAILED`. El log de Vercel confirmó que la causa es de
-build: con Root Directory `apps/web`, `vercel.json` ordena ejecutar
-`npm run build --workspace=apps/web`, y npm responde `No workspaces found`.
+`MIDDLEWARE_INVOCATION_FAILED`. Los logs de Vercel confirmaron dos errores de
+configuración: con Root Directory `apps/web`, `vercel.json` ordenaba ejecutar
+`npm run build --workspace=apps/web` (`No workspaces found`) y luego buscaba la
+salida en `apps/web/apps/web/.next`.
 
 Archivos reservados exclusivamente por esta tarea:
 - `vercel.json`
@@ -1537,10 +1538,11 @@ Alcance: corregir únicamente el comando de build incompatible con el Root
 Directory actual. No modificar middleware, autenticación, variables secretas,
 migraciones ni funcionalidades de la aplicación.
 
-Estado: EN CURSO. Sin commit, sin push, sin despliegue y sin cambios en la
-configuración remota de Vercel.
+Estado: EN CURSO. El primer ajuste (`9f4a330`) fue publicado y falló solo por
+el `outputDirectory` duplicado; este segundo ajuste aún está sin commit, push
+ni despliegue. No se modificó la configuración remota de Vercel.
 
-Auditorías completadas antes de publicar:
+Auditorías completadas antes del primer ajuste:
 1. Build web con `--webpack`: Prisma, compilación Next, TypeScript y 80 rutas
    generadas correctamente.
 2. Integridad: JSON válido, `git diff --check`, typecheck web y typecheck
@@ -1551,5 +1553,8 @@ Auditorías completadas antes de publicar:
    de migración de `middleware` a `proxy` no bloquea el build y queda fuera
    del alcance de esta corrección.
 
-Resultado de auditorías: APROBADAS. Pendiente: commit, push y despliegue de
-este único cambio; después se debe comprobar la URL productiva.
+Resultado de auditorías del primer ajuste: APROBADAS, pero Vercel reveló el
+segundo error de salida descrito arriba. Las tres auditorías del segundo ajuste
+también quedaron APROBADAS: build con webpack, integridad y typechecks, y
+build exacto de Vercel con Turbopack; `.next` quedó presente en `apps/web`.
+Pendiente: commit, push y nueva verificación productiva.
