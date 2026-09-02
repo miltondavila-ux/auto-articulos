@@ -4,26 +4,31 @@ Responsable: CODEX - GPT-5.
 Worktree aislado: `/private/tmp/auto-articulos-resolucion-conexion-web`.
 Rama: `codex/resolucion-conexion-web-20260902`.
 Archivos reservados: `apps/worker/src/automation/10minutesWebsite.ts`,
-`apps/web/src/app/resolucion-conexion/page.tsx` y este documento.
+`apps/web/src/app/resolucion-conexion/page.tsx`, `apps/web/src/middleware.ts`
+y este documento.
 Objetivo: reemplazar el mensaje técnico de credenciales inválidas por un
 enlace corto a una página de resolución, con instrucciones genéricas y
 enlaces de recuperación configurables por servidor. No modificar Vercel,
 autenticación, secretos ni producción.
-Estado: IMPLEMENTADO Y AUDITADO; reserva activa hasta commit y despliegue.
+Estado: IMPLEMENTACIÓN CORREGIDA; nueva auditoría requerida; reserva activa.
 Resultado funcional: el fallo de inicio de sesión durante la publicación
 ahora devuelve un mensaje corto con enlace a `/resolucion-conexion`; la página
 explica el restablecimiento y la resincronización de credenciales, y obtiene
 el enlace de recuperación desde `platform-servers.ts` según el servidor.
-Auditoría funcional: completada; mensaje breve, página paso a paso, enlace
-por servidor y texto visible neutral verificados.
-Auditoría de regresión: completada; `git diff --check`, typecheck web y build
-worker correctos. No se cambiaron versiones, middleware, autenticación,
-secretos, esquema ni migraciones.
-Auditoría integración/producción: completada en dry-run desde la raíz; el
+Auditoría funcional inicial: completada; mensaje breve, página paso a paso,
+enlace por servidor y texto visible neutral verificados. Se detectó en la
+verificación productiva que el middleware redirigía la página a login; se
+añadió exclusivamente la ruta de resolución a las rutas públicas.
+Auditoría de regresión inicial: completada; `git diff --check`, typecheck web
+y build worker correctos. Repetir tras la corrección del middleware. No se
+cambiaron versiones, autenticación, secretos, esquema ni migraciones.
+Auditoría integración/producción inicial: completada en dry-run desde la raíz; el
 proyecto correcto confirma `rootDirectory: apps/web`, el build ejecutado fue
 `npm run build`, `apps/web/.next` fue generado y la ruta nueva quedó incluida.
 El primer dry-run fue detenido al detectar un proyecto Vercel incorrecto;
-se corrigió el enlace local y no se creó ningún deployment en esa prueba.
+se corrigió el enlace local y no se creó ningún deployment en esa prueba. El
+deployment posterior fue retirado del flujo al detectar la redirección, por lo
+que esta corrección requiere un nuevo dry-run y deployment.
 
 ## ELIMINACIÓN POPUP QR DE CRÉDITOS DE IMAGEN (2026-08-31)
 
