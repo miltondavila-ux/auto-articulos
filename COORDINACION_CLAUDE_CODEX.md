@@ -43,17 +43,18 @@ Objetivo: que los mensajes históricos antiguos de conexión se presenten con
 la guía de resolución actual; no editar registros de producción ni ocultar
 errores distintos. Los títulos con publicación exitosa seguirán mostrando
 éxito y no el error histórico.
-Estado: IMPLEMENTADO Y AUDITADO; reserva activa hasta commit y despliegue.
+Estado: COMPLETADO Y VERIFICADO EN PRODUCCIÓN; reserva liberada.
 Auditoría funcional: completada; el texto antiguo se transforma solo cuando
 coincide con el patrón de error de inicio de sesión, conserva el servidor para
 el enlace correcto y no altera otros errores. Los títulos exitosos no muestran
 `errorMessage` en el historial.
 Auditoría de regresión: completada; typecheck web, build worker, build web y
 `git diff --check` correctos.
-Auditoría integración/producción: pendiente de dry-run y deploy de esta
-corrección; la consulta de usuarios afectados no fue posible porque las
-variables de base de datos entregadas por Vercel llegaron vacías. No se
-editarán registros de producción.
+Auditoría integración/producción: completada; dry-run y deployment
+`dpl_4zQxFScv1udzmHdig6SNWwEsEa2y` correctos. Ambos dominios devolvieron 200
+para `/login` y `/resolucion-conexion`, sin redirecciones. La consulta de
+usuarios afectados no fue posible porque las variables de base de datos
+entregadas por Vercel llegaron vacías; no se editaron registros de producción.
 
 ## ELIMINACIÓN POPUP QR DE CRÉDITOS DE IMAGEN (2026-08-31)
 
