@@ -1733,3 +1733,52 @@ desde esta sesión).
 
 Estado: **CERRADO — desplegado y verificado en producción.** Capitanía
 liberada, sin captura pendiente.
+
+### Extensión — proteger tablas futuras (2026-09-02, mismo día)
+
+Milton pidió extender la auditoría a otros posibles problemas, existentes y
+futuros. Capitán de migración: Claude (reclamado de nuevo para esto).
+
+Revisado y sin hallazgos nuevos:
+- Security Advisor completo (Errors/Warnings/Info) tras el fix: 0/0/37, los
+  37 "info" son "RLS Enabled No Policy" en las 37 tablas — esperado y
+  correcto dado que no hay acceso legítimo vía PostgREST en este proyecto.
+- Storage de Supabase: **sin buckets** — la app usa Vercel Blob, no
+  Supabase Storage. Sin riesgo ahí.
+- Supabase Auth: la app no lo usa (login propio con tabla `User` +
+  bcryptjs), confirmado por el `grep` de `supabase-js` ya hecho antes.
+
+Hallazgo real (el motivo de esta extensión): `.github/workflows/migrate.yml`
+aplica el esquema con **`prisma db push`**, no `prisma migrate deploy`. Eso
+significa que las migraciones SQL versionadas (incluida la que activó RLS
+en las 26 tablas) **nunca se ejecutan solas contra producción** — `db push`
+solo compara `schema.prisma` contra la base y no tiene ningún concepto de
+RLS. Conclusión: cualquier tabla nueva que se agregue a futuro nacerá
+expuesta otra vez, exactamente igual que las 26 de hoy, salvo que alguien
+se acuerde de activarle RLS a mano. Postgres no tiene un "RLS por defecto"
+para tablas nuevas.
+
+Fix: `packages/db/scripts/enforce-rls.ts` (nuevo) + un paso nuevo en
+`.github/workflows/migrate.yml` que corre automáticamente después de cada
+`db push`: activa RLS (sin políticas) en cualquier tabla de `public` que no
+lo tenga. Idempotente — no hace nada si ya está todo bien. Documentado en
+`HANDOFF.md` (sección "Seguridad: RLS obligatorio en tablas públicas").
+
+Auditorías: TypeScript del script compila limpio (`tsc --noEmit`); YAML del
+workflow validado (`python3 -c "import yaml..."`); diff revisado archivo
+por archivo antes de commitear (sin `git add -A`).
+
+Nota importante para quien lea esto después: este paso corre la **próxima
+vez** que alguien dispare el workflow "Migración manual de base de datos"
+en GitHub Actions — no se ejecutó todavía contra producción como parte de
+esta tarea (no hacía falta: las 26 tablas ya se corrigieron a mano el
+mismo día). Si se agrega una tabla nueva y se aplica sin correr ese
+workflow (por ejemplo con `prisma db push` manual desde una laptop), esta
+salvaguarda no se dispara solita — sigue haciendo falta correr el workflow
+o `npm run enforce-rls --workspace=packages/db` a mano.
+
+Pendiente para Milton: mergear el PR de este cambio (mismo mecanismo de
+"un clic" que los anteriores, bloqueado para Claude por el clasificador de
+seguridad al tratarse de un archivo de CI/CD).
+
+Estado: **PR abierto, pendiente de merge por Milton.**
