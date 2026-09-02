@@ -14,8 +14,8 @@ import {
 import ImageCreditsModal from "@/components/ImageCreditsModal";
 import PreValidationGuard from "@/components/PreValidationGuard";
 import type { CategoryRow } from "@/types/dashboard";
+import { DEFAULT_MAX_TITLES_PER_BATCH } from "@auto-articulos/shared";
 
-const DEFAULT_MAX_TITLES_PER_BATCH = 20;
 const IMAGE_CREDITS_CONFIRMED_KEY = "auto-articulos:image-credits-confirmed";
 
 export default function PublicarPage() {
