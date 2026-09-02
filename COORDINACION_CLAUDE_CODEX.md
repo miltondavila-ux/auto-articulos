@@ -1,3 +1,49 @@
+## RESERVA — CERO CANIBALIZACION Y COBERTURA LONGTAIL COMPLETA (2026-09-02)
+
+Identidad exacta: Claude Sonnet 5 (misma conversación "CATEGORIAS MAL
+ELEGIDAS" de Milton, continuación tras el despliegue del PR #24/#26).
+
+Worktree aislado: `/private/tmp/cero-canibalizacion-longtail`.
+Rama: `claude/cero-canibalizacion-longtail`, creada desde `origin/main` en
+`01f40fc` (incluye el fix de `DEFAULT_MAX_TITLES_PER_BATCH` del PR #31 de
+otra sesión, sin relación con este cambio).
+
+Motivo: auditoría pedida por Milton sobre canibalización/repetición en el
+algoritmo de oportunidades reveló que la única regla de "no canibalizar
+contra lo YA PUBLICADO" estaba en la sección "PRECAUCIONES (no
+restrictivas)" del prompt — es decir, era una sugerencia débil, no una
+prohibición. Milton pidió además: cero canibalización real, títulos 100%
+long tail, y cobertura completa de Search Console/GA4/Bing "página por
+página" en vez de detenerse en las primeras 10 categorías.
+
+Alcance autorizado por Milton:
+1. Promover la regla de no-canibalización (contra lo publicado Y contra lo
+   ya propuesto en la misma corrida) a obligatoria, con definición explícita
+   de qué es canibalizar (misma intención de búsqueda, no solo mismas
+   palabras).
+2. Dar visibilidad completa por categoría de lo ya publicado + lo ya
+   propuesto en la corrida actual (no una ventana rotativa de 200 títulos
+   mezclados entre categorías).
+3. Quitar el techo artificial de 10 categorías / 9 títulos por categoría;
+   cubrir TODAS las categorías con evidencia real, hasta agotar
+   oportunidades reales, dentro del mismo techo de hasta 20 lotes de OpenAI
+   que ya existía (no se agregan más lotes; el cambio es que ahora sí se
+   recorren todos en vez de parar temprano).
+
+Aviso de riesgo comunicado a Milton: al no parar temprano en 10 categorías,
+la mayoría de las corridas van a usar más de los hasta 20 lotes de OpenAI
+que ya eran el techo — mismo techo de costo/duración de antes, pero se va a
+alcanzar más seguido. No es un riesgo de caída de producción.
+
+Archivos reservados por esta tarea:
+- `apps/web/src/lib/opportunity-analysis.ts`
+- `apps/web/src/app/dashboard/oportunidades/page.tsx` (solo el texto
+  descriptivo de "hasta 10 categorías... 9 oportunidades", sin tocar la
+  constante `DEFAULT_MAX_TITLES_PER_BATCH` del PR #31, que es de publicación
+  de artículos, no de este análisis)
+
+Sin migraciones de Prisma. Estado: EN PROGRESO.
+
 ## RESERVA — CATEGORIAS MAL ELEGIDAS (2026-09-02)
 
 Identidad exacta: Claude Sonnet 5 (conversación "CATEGORIAS MAL ELEGIDAS" de Milton).
