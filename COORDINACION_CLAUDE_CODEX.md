@@ -1781,4 +1781,8 @@ Pendiente para Milton: mergear el PR de este cambio (mismo mecanismo de
 "un clic" que los anteriores, bloqueado para Claude por el clasificador de
 seguridad al tratarse de un archivo de CI/CD).
 
+**Capitán de migración liberó el lote:** Claude. Resultado: salvaguarda de
+RLS para tablas futuras agregada al workflow de migración, sin hallazgos
+nuevos en Storage/Auth/Advisor. Nadie más tiene la capitanía tomada.
+
 Estado: **PR abierto, pendiente de merge por Milton.**
