@@ -208,6 +208,26 @@ Cadenas de conexión actuales: guardadas únicamente en Vercel
 workflow reutiliza para `DATABASE_URL`/`DIRECT_URL`. No copiar contraseñas,
 tokens ni URLs con credenciales dentro de archivos del repo.
 
+### Seguridad: RLS obligatorio en tablas públicas (2026-09-02)
+
+El despliegue real de esquema usa `prisma db push` (workflow
+`.github/workflows/migrate.yml`), que **no** lee las migraciones SQL
+versionadas ni activa Row-Level Security por sí solo. El 2026-09-02, 26
+tablas de `public` quedaron expuestas por completo vía la API REST de
+Supabase (PostgREST) — cualquiera con la URL del proyecto podía leer,
+editar y borrar sus datos — porque nunca se activó RLS (ver
+`COORDINACION_CLAUDE_CODEX.md`, "TABLA PUBLICA ACCESIBLE GRAVE").
+
+Salvaguarda agregada: el workflow de migración corre
+`npm run enforce-rls --workspace=packages/db`
+(`packages/db/scripts/enforce-rls.ts`) después de cada `db push`. Activa
+RLS (sin políticas — no hay acceso legítimo vía anon key en este proyecto,
+todo pasa por Prisma con el rol `postgres`, que bypassa RLS) en cualquier
+tabla pública que no lo tenga. Es idempotente: no hace nada si ya está
+todo correcto. **Cualquier tabla nueva sigue necesitando que alguien corra
+este workflow (o el script) para quedar protegida** — no hay forma de que
+Postgres active RLS solo al crear una tabla.
+
 ### Proceso para aplicar una migración nueva contra producción
 
 ```bash
