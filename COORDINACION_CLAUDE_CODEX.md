@@ -1538,9 +1538,10 @@ Alcance: corregir únicamente el comando de build incompatible con el Root
 Directory actual. No modificar middleware, autenticación, variables secretas,
 migraciones ni funcionalidades de la aplicación.
 
-Estado: EN CURSO. El primer ajuste (`9f4a330`) fue publicado y falló solo por
-el `outputDirectory` duplicado; este segundo ajuste aún está sin commit, push
-ni despliegue. No se modificó la configuración remota de Vercel.
+Estado: DESPLEGADO. El primer ajuste (`9f4a330`) fue publicado y falló solo
+por el `outputDirectory` duplicado; el segundo ajuste (`fbb0a30`) corrigió
+ambos valores y quedó Ready en Vercel. No se modificó la configuración remota
+de Vercel fuera del código versionado.
 
 Auditorías completadas antes del primer ajuste:
 1. Build web con `--webpack`: Prisma, compilación Next, TypeScript y 80 rutas
@@ -1557,4 +1558,8 @@ Resultado de auditorías del primer ajuste: APROBADAS, pero Vercel reveló el
 segundo error de salida descrito arriba. Las tres auditorías del segundo ajuste
 también quedaron APROBADAS: build con webpack, integridad y typechecks, y
 build exacto de Vercel con Turbopack; `.next` quedó presente en `apps/web`.
-Pendiente: commit, push y nueva verificación productiva.
+Verificación productiva completada: `/login` respondió correctamente y
+`/dashboard/publicar` cargó el dashboard sin `MIDDLEWARE_INVOCATION_FAILED`.
+
+Archivos liberados el 2026-09-02: `vercel.json` y
+`COORDINACION_CLAUDE_CODEX.md`. No quedan reservas activas de esta tarea.
