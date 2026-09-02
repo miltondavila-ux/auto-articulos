@@ -38,6 +38,13 @@ jobs:
           node-version: "20"
           cache: "npm"
       - run: npm ci
+      - name: Generar cliente de Prisma
+        # Necesario explícitamente: cuando corre una ruta "safe_*" (que solo
+        # hace `prisma db execute`, sin `db push`), nada más en este job
+        # genera el cliente, y el paso de RLS de más abajo lo necesita
+        # (usa @prisma/client). `db push` también lo regenera por su cuenta,
+        # así que correrlo aquí es redundante pero inofensivo en esa ruta.
+        run: npx prisma generate --schema=packages/db/prisma/schema.prisma
       # Prisma Migrate necesita una sesión estable para prepared statements y
       # advisory locks. El runtime serverless usa el Transaction pooler :6543,
       # pero una migración aislada debe usar el Session pooler :5432 (una sola
