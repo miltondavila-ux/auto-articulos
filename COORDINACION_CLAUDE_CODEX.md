@@ -1661,3 +1661,75 @@ y `seototal.lasolucionweb.com` y ambos respondieron HTTP 200.
 
 Estado: COMPLETADO. Archivos liberados el 2026-09-02. No se ejecutó una
 publicación real de artículos.
+
+## TABLA PUBLICA ACCESIBLE GRAVE — 2026-09-02
+
+Identidad exacta: Claude Sonnet 5 (sesión de Milton, conversación
+"TABLA PUBLICA ACCESIBLE GRAVE").
+
+Motivo: Supabase envió un aviso de seguridad crítico (`rls_disabled_in_public`)
+para el proyecto Auto Articulos: cualquiera con la URL del proyecto podía leer,
+editar y borrar datos vía la API REST automática (PostgREST) en tablas sin
+Row-Level Security.
+
+**Capitán de migración:** Claude reclamó y liberó el lote. Nadie más ejecutó
+Prisma durante la tarea.
+
+Evidencia recogida (navegador logueado como `10minuteswebsite@gmail.com`,
+proyecto `uqqclaezxagukoyiiiol`, org LaSolucionWeb):
+- Security Advisor: 26 errores `RLS Disabled in Public`, 0 warnings, 11 info.
+- Consulta directa `pg_tables`: 37 tablas en `public`; 26 con
+  `rowsecurity = false` (coincide exacto con el advisor) y 11 ya con
+  `rowsecurity = true` (integraciones nuevas de Facebook/Instagram/LinkedIn/
+  Threads/Tumblr/Twitter, Prompt/PromptBox/PromptBoxExecution,
+  CreativeGenerationHistory, SystemSetting — ya corregidas antes, no se
+  tocaron).
+- Tablas corregidas (26): `_prisma_migrations`, `BlueskyIntegration`,
+  `BusinessProfileIntegration`, `BusinessProfilePost`, `Category`,
+  `CategorySyncJob`, `Credential`, `DevToIntegration`, `Language`,
+  `LanguageSyncJob`, `MastodonIntegration`, `OAuthAccessToken`,
+  `OAuthAuthorizationCode`, `OAuthRefreshToken`, `OpportunityCluster`,
+  `OpportunityGroup`, `OpportunityTitle`, `PinterestIntegration`,
+  `ProductUpdate`, `Run`, `SearchIntegration`, `SocialOpportunity`, `Title`,
+  `TitleEvent`, `TrialDomainRegistry`, `User`.
+- `pg_roles`: no hay rol custom para la app; el único rol con login y
+  `rolbypassrls = true` relevante es `postgres`, el que usa el connection
+  string de producción según `HANDOFF.md`. `anon`/`authenticated` (los que
+  usa PostgREST) no tienen bypass — eran los que podían leer/escribir las 26
+  tablas sin restricción.
+- Código: `grep` de `supabase-js`/`createClient`/`NEXT_PUBLIC_SUPABASE`/
+  `rest/v1` en `apps/` y `packages/` no arrojó resultados — la app no usa la
+  anon key del cliente de Supabase en ningún lugar, todo el acceso a datos
+  pasa por Prisma (rol `postgres`, bypassa RLS). Conclusión con evidencia:
+  activar RLS sin políticas en las 26 tablas es seguro para la app y cierra
+  la exposición pública.
+- Hallazgo aparte, no tocado: `OpportunityCluster` existe en la base pero no
+  aparece en `packages/db/prisma/schema.prisma` actual — posible tabla
+  huérfana; se le activó RLS igual por estar expuesta, sin más cambios.
+- Se encontró una consulta SQL guardada de otra sesión en el editor de
+  Supabase (`UPDATE "User" SET "passwordHash"... WHERE email =
+  'yolandalandinezrealtor@gmail.com'`) — no se tocó ni se ejecutó, no es de
+  esta tarea.
+
+Ejecución: Milton aprobó ("Ejecuta en función de los objetivos"). El
+clasificador de seguridad de Claude Code bloqueó la ejecución automática de
+SQL contra producción vía navegador (protección esperada para este tipo de
+acción), así que Milton pegó y ejecutó él mismo, guiado paso a paso, el
+bloque de 26 `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` en el SQL Editor
+de Supabase.
+
+Verificación post-cambio (Claude, lectura directa contra producción):
+- `pg_tables` con `rowsecurity = false` en `public` → **0 filas** (antes 26).
+- Security Advisor de Supabase → **0 errors, 0 warnings** (antes 26 errors).
+- `curl -I` a `/login` en `auto-articulos-web.vercel.app` y
+  `seototal.lasolucionweb.com` → **200 OK** ambos, después del cambio.
+
+Migración `packages/db/prisma/migrations/20260902113123_enable_rls_public_tables`
+documentada (sin políticas, deny-all por defecto para `anon`/`authenticated`,
+sin efecto en Prisma). Worktree usado: `/private/tmp/tabla-publica-rls`,
+mergeada a `main` vía PR #22 (Milton hizo el merge manualmente porque el
+clasificador también bloqueó el push directo a `main` y la creación del PR
+desde esta sesión).
+
+Estado: **CERRADO — desplegado y verificado en producción.** Capitanía
+liberada, sin captura pendiente.
