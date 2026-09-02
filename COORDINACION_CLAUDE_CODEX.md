@@ -1515,3 +1515,41 @@ activas sobre esos archivos.
 
 Estado: DESPLEGADO EN MAIN — pendiente de la prueba operativa iniciada por
 Milton.
+
+## Trabajo activo — THIS ROUTING MIDDLEWARE — 2026-09-02
+
+Responsable: CODEX - GPT-5.
+
+Worktree aislado: `/private/tmp/this-routing-middleware`.
+
+Rama: `codex/this-routing-middleware`.
+
+Objetivo: corregir el fallo de despliegue de Vercel que dejó producción con
+`MIDDLEWARE_INVOCATION_FAILED`. El log de Vercel confirmó que la causa es de
+build: con Root Directory `apps/web`, `vercel.json` ordena ejecutar
+`npm run build --workspace=apps/web`, y npm responde `No workspaces found`.
+
+Archivos reservados exclusivamente por esta tarea:
+- `vercel.json`
+- `COORDINACION_CLAUDE_CODEX.md`
+
+Alcance: corregir únicamente el comando de build incompatible con el Root
+Directory actual. No modificar middleware, autenticación, variables secretas,
+migraciones ni funcionalidades de la aplicación.
+
+Estado: EN CURSO. Sin commit, sin push, sin despliegue y sin cambios en la
+configuración remota de Vercel.
+
+Auditorías completadas antes de publicar:
+1. Build web con `--webpack`: Prisma, compilación Next, TypeScript y 80 rutas
+   generadas correctamente.
+2. Integridad: JSON válido, `git diff --check`, typecheck web y typecheck
+   directo del worker sin errores; únicamente `vercel.json` y este registro
+   fueron modificados.
+3. Build exacto de Vercel (`npm run build` desde `apps/web`): Prisma,
+   Turbopack, TypeScript y 80 rutas generadas correctamente. La advertencia
+   de migración de `middleware` a `proxy` no bloquea el build y queda fuera
+   del alcance de esta corrección.
+
+Resultado de auditorías: APROBADAS. Pendiente: commit, push y despliegue de
+este único cambio; después se debe comprobar la URL productiva.
