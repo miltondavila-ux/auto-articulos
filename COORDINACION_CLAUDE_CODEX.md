@@ -1990,6 +1990,41 @@ hay que tocar cuentas ya existentes, correr un script como
 mensajes de error, panel admin) ya lo refleja solo, sin cambios de código
 adicionales.
 
+### Re-auditoría tras rebase — 2/9/2026 (misma conversación)
+
+Entre crear el PR #21 y conseguir el merge, `main` avanzó muchísimo por
+otras sesiones concurrentes (RLS en 26 tablas, fix de categorías mezcladas +
+señales de Bing, y toda la cadena de incidente/recuperación de Vercel:
+`535b690`→`dbbe75f`→...→`bbff27d`). El PR quedó `CONFLICTING`. Se rebasó
+la rama `claude/daily-limit-dynamic-defaults` sobre el `main` real
+(`e0cf15b`) en el mismo worktree aislado
+(`/private/tmp/auto-articulos-daily-limit-dynamic-defaults`, sin tocar el
+checkout principal de Milton). Dos conflictos de texto, ambos triviales
+(agregar mi import junto al de otra sesión en `usuarios/page.tsx`; agregar
+mi sección de coordinación después de la de otra sesión) — cero conflictos
+de lógica.
+
+Verificación explícita del punto crítico de Vercel señalado por Milton:
+`apps/web/vercel.json` (`buildCommand: "npm run build"`,
+`outputDirectory: ".next"`, sin `--workspace`, sin archivo en la raíz) se
+comparó byte a byte contra `origin/main` tras el rebase — idéntico, mi
+cambio no lo toca en absoluto.
+
+Tres auditorías repetidas sobre la base actualizada:
+1. **Estática**: `prisma generate`, `tsc --noEmit` (web y worker),
+   `git diff --check` — limpio.
+2. **Build/integración**: `next build --webpack` (todas las rutas,
+   incluida `/dashboard/usuarios`) y build del worker — sin errores.
+3. **Regresión**: diff exacto contra `origin/main` limitado a los 8
+   archivos de este cambio (ninguno de RLS/categorías/Bing/Vercel tocado);
+   14/14 tests del worker pasan (subieron de 10 a 14 por trabajo de otras
+   sesiones, todos verdes); `dailyArticleLimit` sigue sin ningún valor
+   hardcodeado fuera de la constante compartida.
+
+Capitanía de migración: reclamada únicamente sobre los archivos de esta
+lista (nunca sobre `opportunities/route.ts`, `bing-signals.ts`, RLS ni
+`vercel.json`, que son de otras sesiones); liberada al fusionar.
+
 ## 2026-08-31 — Reautenticación de GitHub CLI (sin cambios de código)
 
 [CLAUDE] - GITHUB CLI EXPIRADO
