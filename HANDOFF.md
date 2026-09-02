@@ -1891,3 +1891,29 @@ Para el futuro: si Milton pide otro número, basta con volver a correr
 `gh workflow run set-daily-limit.yml` tras editar `NEW_DAILY_LIMIT` en
 `apps/worker/src/set-daily-limit.ts` (o pedir un script nuevo con el valor
 que corresponda) — el resto del sistema ya lo reflejará solo por ser dinámico.
+
+## Cierre 2/9/2026 — default de dailyArticleLimit aplicado en la base real
+
+El código del PR anterior (constante `DEFAULT_DAILY_ARTICLE_LIMIT` +
+migración `20260831230000_set_daily_limit_5_default`) quedó fusionado sin
+aplicar contra producción. Al intentar aplicarlo con `migrate.yml` normal
+(`prisma db push`), el push completo del schema arrastraba un `DROP` de
+limpieza de código ya decidida pero nunca ejecutada (retiro de PromptBox
+del 24/8, columna `activeSitePanel` de un diseño rechazado el 30/8) —
+datos reales (83+83+8+238 filas/valores) sin relación con este cambio.
+
+Se agregó a `migrate.yml` un input `safe_daily_limit_default` (mismo
+patrón que `safe_opportunity_dates`) que aplica solo el `ALTER COLUMN`
+necesario vía `prisma db execute`, sin tocar el resto del schema. De paso
+se encontró y corrigió un bug preexistente: ninguna ruta "safe_*" corría
+`prisma generate`, así que el paso de RLS que siempre corre después
+fallaba con `@prisma/client did not initialize yet` la primera vez que se
+usó una ruta segura desde que ese paso existe. Ambos fixes en PRs
+separados (#28, #29), cada uno en worktree aislado con sus propias
+auditorías. Verificación final: corrida `33694565259`, success completo.
+
+Estado real confirmado: columna `dailyArticleLimit` con `DEFAULT 5` en la
+base de datos de producción (no solo en el schema del repo); `/login`
+responde 200 en ambos dominios después de la migración;
+`activeSitePanel`/`PromptBox` y relacionados quedaron intactos, pendientes
+de una decisión aparte de Milton sobre si borrarlos.

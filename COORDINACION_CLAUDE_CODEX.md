@@ -2079,3 +2079,88 @@ se verificó `gh auth status`: sesión activa como `miltondavila-ux`, scopes
 Archivos: ninguno modificado. Sin commits, sin despliegue, sin migraciones.
 Estado: resuelto. Esta conversación se archiva.
 Responsable siguiente: ninguno pendiente sobre este tema.
+
+## [CLAUDE] - CIERRE: LÍMITE EN LOS ARTICULOS — 2/9/2026
+
+Identidad exacta: CLAUDE - LÍMITE EN LOS ARTICULOS.
+
+Cierre final del proyecto de límite diario dinámico (`dailyArticleLimit`),
+que quedó pendiente de aplicar en la base de datos real tras fusionarse el
+código (PR #21, sección "LÍMITE DIARIO DE ARTÍCULOS A 5" más arriba en
+este documento).
+
+**Bloqueo encontrado al aplicar la migración**: el workflow `migrate.yml`
+en su ruta normal (`prisma db push`) aplica TODO el diff del schema contra
+producción de una sola vez. Eso incluía borrar columnas/tablas de limpieza
+de código ya decidida en sesiones anteriores pero nunca ejecutada contra
+producción — `usePromptBoxPipeline` + `PromptBox`/`PromptBoxExecution`/
+`CreativeGenerationHistory` (retiro del experimento de 8 cajas, commit
+`148205b`, 24/8/2026) y la columna `activeSitePanel` (diseño de un
+selector posterior que Milton rechazó explícitamente el 30/8/2026, pero
+cuya migración sí había llegado a aplicarse en producción). Sin código
+vivo que las use hoy, pero con datos reales (83 usuarios con
+`activeSitePanel` no nulo, 83 con `usePromptBoxPipeline`, 8 filas en
+`PromptBox`, 238 en `PromptBoxExecution`). El `db push` se detuvo pidiendo
+`--accept-data-loss`.
+
+**Decisión**: no aceptar esa bandera sin autorización explícita separada
+de la tarea de hoy. Milton, consultado en el momento, eligió aplicar
+únicamente el cambio de hoy sin tocar lo viejo. Queda pendiente, para
+quien retome, decidir si autoriza el borrado de esos datos huérfanos
+(`activeSitePanel`, `PromptBox` y relacionados) en una tarea aparte.
+
+**Solución implementada** (dos PRs, cada uno en worktree aislado propio,
+con sus propias auditorías, sin tocar código de otras sesiones activas
+en paralelo — RLS, categorías/Bing — verificado con diff exacto contra
+`origin/main` en cada paso):
+
+- PR #28 (`claude/safe-daily-limit-migration`, commit `8def2c5`, fusionado
+  como `55a9915`): agrega el input `safe_daily_limit_default` a
+  `migrate.yml`, siguiendo el mismo patrón ya usado por
+  `safe_opportunity_dates` — aplica únicamente el `ALTER TABLE "User"
+  ALTER COLUMN "dailyArticleLimit" SET DEFAULT 5;` de la migración
+  `20260831230000_set_daily_limit_5_default` vía `prisma db execute`,
+  sin tocar el resto del schema. El comportamiento por defecto del
+  workflow (sin flags) no cambió.
+- Al correrlo por primera vez (run `33694363993`), el `ALTER COLUMN` tuvo
+  éxito, pero el paso siguiente de RLS (`enforce-rls.ts`, que corre
+  siempre, sin condición) falló con `@prisma/client did not initialize
+  yet` — hueco preexistente: solo `db push` regeneraba el cliente de
+  rebote, y ninguna ruta "safe_*" lo hacía explícitamente (mismo hueco ya
+  existía latente para `safe_opportunity_dates`, nunca antes ejercitado
+  desde que se agregó el paso de RLS el 2/9). PR #29
+  (`claude/safe-daily-limit-migration`, commit `220a95a`, fusionado como
+  `567641e`): agrega `npx prisma generate` explícito justo después de
+  `npm ci`, incondicional — cubre ambas rutas seguras, redundante pero
+  inofensivo en la ruta normal.
+- Verificación final: run `33694565259`, **success** completo — el
+  `ALTER COLUMN` (idempotente, ya en 5) y el paso de RLS ambos en verde.
+
+**Estado real de producción confirmado**:
+- 79 usuarios no-admin en `dailyArticleLimit = 5`, 3 administradores sin
+  tocar (aplicado antes, en la sección "LÍMITE DIARIO..." de este mismo
+  documento).
+- Columna `dailyArticleLimit` con `DEFAULT 5` en la base de datos real
+  (no solo en el schema del repo) — cuentas nuevas (registro de prueba
+  gratuita, alta desde Administración) heredan 5 automáticamente.
+- `curl -I` a `/login` en `auto-articulos-web.vercel.app` y
+  `seototal.lasolucionweb.com` → **200 OK** ambos, después de las dos
+  corridas de migración.
+- `activeSitePanel`, `usePromptBoxPipeline`, `PromptBox`,
+  `PromptBoxExecution`, `CreativeGenerationHistory`: intactos, sin tocar,
+  con sus datos originales — decisión de borrarlos queda para una tarea
+  aparte con autorización explícita.
+
+Nota de permisos de esta sesión: Milton autorizó agregar una regla al
+clasificador de modo automático (`.claude/settings.local.json`, ámbito de
+proyecto) para permitir sin confirmación manual el comando puntual
+`gh workflow run migrate.yml --repo miltondavila-ux/auto-articulos`. No
+se autorizó ningún otro comando (merges de PR, otros workflows) de forma
+permanente.
+
+Estado: **CERRADO — desplegado, migrado y verificado en producción.**
+Capitanía de migración liberada, sin captura pendiente.
+
+Responsable siguiente: quien decida sobre el borrado de `activeSitePanel`/
+`PromptBox` y relacionados, si Milton lo autoriza en el futuro. Nada más
+queda pendiente de este proyecto.
