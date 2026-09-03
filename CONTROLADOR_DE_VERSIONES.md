@@ -702,3 +702,52 @@ Referencia técnica revisada: documentación oficial de Google Blogger Posts
 insert, que define el campo `content` como HTML y el endpoint de inserción.
 No se cambiaron versiones, Vercel, secretos, middleware, autenticación ni
 base de datos.
+
+## Cierre final — formato e imagen Blogger — 2026-09-03
+
+Estado: DESPLEGADA Y VERIFICADA.
+Worktree: `/private/tmp/auto-articulos-blogger-fix-20260903`
+Rama de trabajo: `codex/conexion-blogger-produccion-20260903`
+Commit publicado en `origin/main`: `20866b2`.
+
+Cambios publicados: la ruta web acepta Blogger para las oportunidades y el
+worker envía a Blogger HTML editorial limpio con encabezados, listas, enlaces
+e imagen destacada `og:image`; se mantienen intactas las rutas de Threads,
+LinkedIn, DEV.to y las demás redes. No se eliminaron ni editaron entradas
+anteriores, no se cambiaron versiones, secretos, middleware ni configuración
+de Vercel.
+
+Triple auditoría independiente completada y aprobada:
+1. Funcional: payload real del artículo con HTML, 11 encabezados, 2 listas y
+   la imagen pública; sin encabezados ni enlaces Markdown.
+2. Regresión: build del worker, 19/19 pruebas, typecheck web y build web con
+   83/83 rutas generadas; `git diff --check` en verde.
+3. Integración/producción: Root Directory `apps/web`, único
+   `apps/web/vercel.json` con `buildCommand: npm run build` y
+   `outputDirectory: .next`; dry-run correcto desde la raíz sin deployment
+   adicional ni rutas duplicadas.
+
+Despliegue Vercel: `dpl_2vJcxGcz8S8gpzpjMeqWokamhhoe`, estado `Ready`, con los
+aliases `https://seototal.lasolucionweb.com` y
+`https://auto-articulos-web.vercel.app`. El worker de producción ejecutó el
+workflow `33790036588`, hizo checkout de `20866b2` y sus tres shards terminaron
+en `success`.
+
+Prueba única solicitada: se generaron 3 propuestas Blogger y se pulsó solo el
+primer botón individual `Publicar`; el botón `Publicar todo el lote` no se
+usó. Quedaron 2 propuestas pendientes. La entrada publicada es
+`Cambio de Seguro de Salud al Mudarte en Florida` y quedó visible en
+`https://segurosdesaludyvida.blogspot.com/2026/09/cambio-de-seguro-de-salud-al-mudarte-en.html`
+con título, imagen destacada, HTML renderizado, 18 encabezados, 5 listas y
+ningún Markdown visible.
+
+Verificación postdespliegue: `/login` devolvió 200 en ambos dominios, la ruta
+protegida devolvió 307 a `/login`, el blog público respondió y los logs
+completos recientes de Vercel y GitHub Actions no mostraron errores de
+aplicación, `MIDDLEWARE_INVOCATION_FAILED` ni `No workspaces found`. El aviso
+preexistente de vulnerabilidades/deprecaciones no provocó cambios de versión.
+
+Reservas liberadas: `apps/worker/src/socialPublish.ts`,
+`apps/web/src/app/api/social-opportunities/publish/route.ts`,
+`COORDINACION_CLAUDE_CODEX.md` y `CONTROLADOR_DE_VERSIONES.md`. No quedan
+archivos reservados en este worktree.

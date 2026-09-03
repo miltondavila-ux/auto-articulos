@@ -2655,3 +2655,33 @@ formulario administrativo y los respaldos fijos de creación de usuarios
 
 No quedan archivos reservados por esta auditoría. Worktree de revisión:
 `/private/tmp/auditoria-limites-release`; reserva liberada.
+
+### Cierre de despliegue autorizado — Blogger HTML e imagen — 2026-09-03
+
+Se publicó `20866b2` en `origin/main` desde el worktree aislado
+`/private/tmp/auto-articulos-blogger-fix-20260903`. Vercel creó
+`dpl_2vJcxGcz8S8gpzpjMeqWokamhhoe` en estado `Ready`, conservando
+`Root Directory = apps/web` y `apps/web/vercel.json` con exactamente
+`buildCommand: npm run build` y `outputDirectory: .next`. No se modificaron
+Vercel, middleware, autenticación, secretos, versiones ni otras redes.
+
+Las tres auditorías independientes fueron aprobadas: funcional (HTML
+editorial real, imagen `og:image`, encabezados/listas y cero Markdown),
+regresión (worker 19/19, typecheck web, build web 83/83 rutas) e
+integración/producción (dry-run sin rutas duplicadas, aliases y logs
+verificados). El workflow del worker `33790036588` hizo checkout del commit
+publicado y terminó `success` en sus tres shards.
+
+Se ejecutó exactamente una publicación individual desde Oportunidades para
+Redes: de 3 propuestas Blogger se publicó solo la primera y quedaron 2
+pendientes. La entrada
+`Cambio de Seguro de Salud al Mudarte en Florida` quedó visible en el blog de
+pruebas con su título, imagen destacada, encabezados/listas renderizados y
+sin Markdown. Las tres entradas Blogger antiguas con formato defectuoso no
+se tocaron ni eliminaron; quedan fuera del alcance de esta liberación.
+
+Producción postdespliegue: ambos dominios alias responden `/login` con 200,
+la ruta protegida responde 307, el blog público responde y los logs completos
+no muestran errores de aplicación, `MIDDLEWARE_INVOCATION_FAILED` ni
+`No workspaces found`. Reservas liberadas al cerrar: worker, ruta web y ambos
+documentos de coordinación/versiones. No quedan reservas activas.
