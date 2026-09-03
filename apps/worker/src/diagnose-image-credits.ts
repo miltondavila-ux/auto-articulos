@@ -17,9 +17,8 @@ async function main() {
   );
 
   const usersWithCredits = await prisma.user.count({ where: { hasImageCredits: true } });
-  const usersNull = await prisma.user.count({ where: { hasImageCredits: null } });
   console.log(
-    `Resumen: hasImageCredits=true -> ${usersWithCredits}, =false -> ${usersWithoutCredits.length}, =null -> ${usersNull}`,
+    `Resumen: hasImageCredits=true -> ${usersWithCredits}, =false -> ${usersWithoutCredits.length}`,
   );
 
   const lorena = await prisma.user.findUnique({
