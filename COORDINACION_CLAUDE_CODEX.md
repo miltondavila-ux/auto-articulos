@@ -2459,7 +2459,8 @@ con Root Directory `apps/web`; `apps/web/vercel.json` conserva exactamente
 `npm run build` y `.next`; no se cambiaron variables remotas ni se desplegó.
 Reservas liberadas. Estado: PREPARADA, pendiente de autorización de publicación.
 
-Commit local: `03d837e`.
+Commit local antes del rebase: `c9dd6f0`; la serie rebasada continúa en
+`03cc2f0`, `3f618a`, `b56e9f3` y `46227d7`.
 Reserva liberada al cerrar esta fase: `COORDINACION_CLAUDE_CODEX.md` e
 `INVENTARIO_CONVERSACIONES.md`. No quedan archivos de código reservados.
 El hook informativo de actualizaciones no pudo consultar Prisma por falta de
@@ -2469,5 +2470,12 @@ El hook informativo de actualizaciones no pudo consultar Prisma por falta de
 
 La reserva exclusiva de `CONTROLADOR_DE_VERSIONES.md` se utilizó únicamente
 para registrar la versión preparada y quedó liberada al terminar. El registro
-se incorporó en el commit `f3f6b6d`; el hook informativo volvió a mostrar la
-limitación preexistente de `DATABASE_URL` ausente, sin impedir el commit.
+se incorporó en los commits rebasados `b56e9f3` y `46227d7`; el hook
+informativo volvió a mostrar la limitación preexistente de `DATABASE_URL`
+ausente, sin impedir los commits.
+
+### Reserva activa — corrección de referencias post-rebase
+
+Se reservó temporalmente este archivo para corregir únicamente los hashes
+reescritos por el rebase de la rama aislada de Blogger. Reserva liberada tras
+la corrección; no quedan archivos de código o documentación reservados.

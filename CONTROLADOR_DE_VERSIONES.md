@@ -53,7 +53,7 @@ Estado: REFERENCIA HISTÓRICA — NO DECLARAR COMO PRODUCCIÓN ACTUAL SIN VERIFI
 ## Versión — 2026-09-03 12:22 EDT — integración Blogger preparada
 
 Fecha y hora: 2026-09-03 12:22 EDT
-Versión/commit: `f3f6b6d` (cadena `5fa13fe` → `3e8c851` → `d637eb7` → `f3f6b6d`)
+Versión/commit: serie rebasada `c9dd6f0` → `03cc2f0` → `3f618a` → `b56e9f3` → `46227d7`
 Rama: `codex/conexion-blogger-produccion-20260903`
 Worktree: `/private/tmp/auto-articulos-blogger-fix-20260903`
 Conversación/proyecto: `CONEXION BLOGGER`
