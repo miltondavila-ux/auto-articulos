@@ -219,7 +219,7 @@ export async function POST(request: NextRequest) {
         : "";
     return NextResponse.json(
       {
-        error: `Has alcanzado ${cupoMasEstrecho.tope}, que es ${cupoMasEstrecho.motivo} asignado por el administrador de Auto Artículos. Regresa mañana y tendrás la cuota renovada.${contextoMensual}`,
+        error: `Has alcanzado ${cupoMasEstrecho.tope}, que es ${cupoMasEstrecho.motivo} asignado por el administrador de Auto Artículos. El cupo se renovará según ese límite.${contextoMensual}`,
       },
       { status: 403 },
     );
@@ -230,7 +230,7 @@ export async function POST(request: NextRequest) {
   const titulosAPublicar = titles.slice(0, permitidos);
   const avisoDeCupo =
     descartados.length > 0
-      ? `Seleccionaste ${titles.length} artículos y tu máximo es de ${cupoMasEstrecho.tope}. Se enviaron a publicar ${permitidos}. Los ${descartados.length} restantes quedaron escritos abajo: podrás publicarlos mañana, cuando se te renueve la cuota.`
+      ? `Seleccionaste ${titles.length} artículos y tu cupo disponible era de ${cupoMasEstrecho.disponible}. Se enviaron a publicar ${permitidos}. Los ${descartados.length} restantes quedaron pendientes para cuando se renueve ese cupo.`
       : null;
 
   const run = await prisma.run.create({

@@ -2324,3 +2324,11 @@ Capitanía de migración liberada, sin captura pendiente.
 Responsable siguiente: quien decida sobre el borrado de `activeSitePanel`/
 `PromptBox` y relacionados, si Milton lo autoriza en el futuro. Nada más
 queda pendiente de este proyecto.
+## Trabajo activo — límites dinámicos UX — 2026-09-03
+
+Responsable: CODEX - GPT-5.
+Worktree: `/private/tmp/limites-ux-dinamicos`.
+Rama: `codex/limites-ux-dinamicos`.
+Archivos reservados exclusivamente en este worktree: `apps/web/src/app/api/opportunities/execute-all/route.ts`, `apps/web/src/app/api/runs/route.ts`, `apps/web/src/app/dashboard/como-funciona/page.tsx`, `apps/web/src/app/dashboard/oportunidades/page.tsx`, `apps/web/src/app/dashboard/publicar/page.tsx`, `apps/worker/src/automation/10minutesWebsite.ts`.
+Alcance: hacer que los mensajes y cálculos de cupo visible dependan de los límites reales del usuario; no tocar Vercel, middleware, autenticación, schema ni migraciones.
+Estado: en auditoría final; no desplegar hasta completar tres auditorías y build compatible con la configuración de Vercel.

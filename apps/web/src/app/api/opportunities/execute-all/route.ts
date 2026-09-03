@@ -45,6 +45,8 @@ export async function POST(request: NextRequest) {
         trialStartedAt: true,
         trialUnlocked: true,
         maxTitlesPerBatch: true,
+        monthlyArticleLimit: true,
+        dailyArticleLimit: true,
         contentLanguage: true,
         hasImageCredits: true,
         defaultPromptId: true,
@@ -88,6 +90,18 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const now = new Date();
+  const startOfDay = new Date(now);
+  startOfDay.setHours(0, 0, 0, 0);
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const [publishedToday, publishedThisMonth] = await Promise.all([
+    prisma.title.count({ where: { run: { userId }, status: "success", processedAt: { gte: startOfDay } } }),
+    prisma.title.count({ where: { run: { userId }, status: "success", processedAt: { gte: startOfMonth } } }),
+  ]);
+  const availableDaily = user.dailyArticleLimit === null ? Infinity : Math.max(0, user.dailyArticleLimit - publishedToday);
+  const availableMonthly = user.monthlyArticleLimit === null ? Infinity : Math.max(0, user.monthlyArticleLimit - publishedThisMonth);
+  const available = Math.min(user.maxTitlesPerBatch, availableDaily, availableMonthly);
+
   let groups = await prisma.opportunityGroup.findMany({
     where: { userId },
     include: { titles: { orderBy: { createdAt: "asc" } } },
@@ -113,7 +127,7 @@ export async function POST(request: NextRequest) {
   let acumulado = 0;
   let pendingCount = 0;
   for (const grupo of groups) {
-    const capacidad = Math.max(0, user.maxTitlesPerBatch - acumulado);
+    const capacidad = Math.max(0, available - acumulado);
     const titles = grupo.titles.slice(0, capacidad);
     if (titles.length > 0) {
       gruposQueCaben.push({ group: grupo, titles });
@@ -124,14 +138,14 @@ export async function POST(request: NextRequest) {
 
   if (gruposQueCaben.length === 0) {
     return NextResponse.json(
-      { error: "No hay títulos que quepan en el máximo permitido para este lote." },
+      { error: "No hay títulos disponibles dentro de tu cupo actual. Revisa tu límite diario, mensual y por lote." },
       { status: 400 },
     );
   }
 
   const avisoDeCupo =
     pendingCount > 0
-      ? `Se enviaron a publicar ${acumulado} títulos porque tu máximo es de ${user.maxTitlesPerBatch} por lote. Los ${pendingCount} restantes quedaron pendientes en Oportunidades para publicarlos después.`
+      ? `Se enviaron a publicar ${acumulado} títulos porque tu cupo disponible actual es de ${available} artículos. Los ${pendingCount} restantes quedaron pendientes en Oportunidades.`
       : null;
 
   const normalizedContentLanguage =

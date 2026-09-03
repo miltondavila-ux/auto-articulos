@@ -791,7 +791,7 @@ async function createArticleDraft(
         'mostró el campo "Tipo" a tiempo)' +
         (alertText ? `. Mensaje visible en el sitio: "${alertText}"` : ".") +
         " Es posible que la cuenta haya alcanzado un límite diario de " +
-        `artículos en ${productName} (por ejemplo, 10 por día), algo que ` +
+        `artículos en ${productName}, independiente del cupo configurado en Auto Artículos. ` +
         "no debería aplicar para cuentas del programa de posicionamiento. " +
         "Si este error se repite, solicita al servicio al cliente de " +
         `${productName} que revise y elimine esa restricción para esta ` +
