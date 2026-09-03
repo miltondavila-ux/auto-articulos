@@ -2499,3 +2499,15 @@ el paso idempotente de RLS.
 Reserva liberada tras esta revisión: `.github/workflows/migrate.yml` y
 `packages/db/prisma/migrations/20260902150000_add_blogger_integration/migration.sql`.
 No quedan archivos reservados.
+
+## Auditoría y liberación — límites dinámicos de artículos — 2026-09-03
+
+Se ejecutó una triple auditoría de solo lectura contra `origin/main` publicado.
+Las pantallas de Publicar, Oportunidades, Dashboard y las rutas de ejecución
+usan los límites y saldos dinámicos del usuario. Quedaron identificados para
+una futura corrección autorizada los valores históricos de reinicio del
+formulario administrativo y los respaldos fijos de creación de usuarios
+(`300`, `95` y `20`). Esta revisión no modificó código.
+
+No quedan archivos reservados por esta auditoría. Worktree de revisión:
+`/private/tmp/auditoria-limites-release`; reserva liberada.
