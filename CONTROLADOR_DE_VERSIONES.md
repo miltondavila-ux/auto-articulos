@@ -518,3 +518,48 @@ Siguiente acción: ninguna pendiente. Si se agrega una tabla nueva sin usar
 el workflow normal de migración de GitHub Actions, correr a mano
 `npm run enforce-rls --workspace=packages/db` con las credenciales reales.
 Estado: DESPLEGADA Y VERIFICADA.
+
+## Cierre y recuperación — 2026-09-03 — integración Blogger
+
+Fecha y hora: 2026-09-03 13:04 EDT
+Versión/commit: `5d0e729` (PR #34, integración) y `cf52d0e` (PR #35,
+migración segura)
+Rama: `codex/conexion-blogger-produccion-20260903`
+Worktree: `/private/tmp/auto-articulos-blogger-fix-20260903`
+Conversación/proyecto: `CONEXION BLOGGER`
+Cambios incluidos: publicación Blogger preparada y esquema Blogger aplicado
+de forma exclusiva mediante `safe_blogger_integration`.
+Archivos eliminados: ninguno.
+Migraciones aplicadas: `20260902150000_add_blogger_integration`, workflow run
+`33782195118`, conclusión `success`; sin `accept_data_loss` y sin `db push`
+general.
+Auditoría funcional: APROBADA — la pantalla de Redes Sociales muestra
+`Blogger API` y el botón administrativo `Configurar credenciales`.
+Auditoría de regresión: APROBADA — `/login` devuelve 200 en ambos dominios,
+el dashboard sin sesión redirige 307 a `/login`, y no se modificaron las
+variables existentes de GSC/GA.
+Auditoría de integración/producción: APROBADA — deployment final
+`dpl_DS9BsWLdNEDG2DZ4DpwrGJK7oTuY` quedó `Ready`; el SQL fue idempotente y el
+workflow ejecutó RLS correctamente.
+Incidente detectado y corregido: durante el intervalo entre el primer
+deployment (`dpl_45pNF6zTVLUM3jn6HDSrEVAHjR5M`) y la migración, las rutas que
+consultaban `allowBloggerPublishing` registraron `P2022` y devolvieron 500.
+La migración terminó correctamente y, tras ella, no aparecieron nuevos 500
+en los logs consultados; no hubo `MIDDLEWARE_INVOCATION_FAILED` ni
+`No workspaces found`.
+Diff revisado: sí, solo cambios de Blogger, workflow seguro y documentación;
+sin archivos eliminados ni versiones alteradas.
+Deployment/Vercel: `dpl_DS9BsWLdNEDG2DZ4DpwrGJK7oTuY`.
+Estado de Vercel: `Ready`.
+Dominio verificado: `https://auto-articulos-web.vercel.app` y
+`https://seototal.lasolucionweb.com`; ambos `/login` 200.
+Logs verificados: completos del deployment y errores recientes; solo se
+observaron los P2022 previos a la migración.
+Producción verificada: SÍ — la ruta solicitada recarga y muestra Blogger API.
+Pendiente funcional: el administrador debe introducir sus credenciales de la
+App de Google en `Configurar credenciales`; no se guardó ningún secreto sin
+una acción explícita del administrador.
+Responsable: Codex - GPT-5.
+Siguiente acción: configurar Client ID/Secret desde el botón visible y luego
+conectar cada cuenta final mediante OAuth.
+Estado: DESPLEGADA / VERIFICADA — configuración de credenciales pendiente.

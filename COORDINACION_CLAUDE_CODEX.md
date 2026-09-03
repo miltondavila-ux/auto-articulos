@@ -2499,3 +2499,17 @@ el paso idempotente de RLS.
 Reserva liberada tras esta revisión: `.github/workflows/migrate.yml` y
 `packages/db/prisma/migrations/20260902150000_add_blogger_integration/migration.sql`.
 No quedan archivos reservados.
+
+### Reserva activa — cierre de verificación Blogger
+
+Se reservan temporalmente `COORDINACION_CLAUDE_CODEX.md` y
+`CONTROLADOR_DE_VERSIONES.md` para registrar el deployment, la migración
+aplicada y la recuperación observada. Se documenta que el primer deployment
+produjo `P2022` temporal porque el schema llegó antes que la base de datos;
+PR #35 y el workflow run `33782195118` aplicaron únicamente la migración
+idempotente de Blogger. El deployment final `dpl_DS9BsWLdNEDG2DZ4DpwrGJK7oTuY`
+quedó `Ready`, `/login` responde 200 en ambos dominios, el dashboard sin
+sesión redirige 307 y la pantalla muestra Blogger API. No hay nuevos 500
+después de la migración ni errores `MIDDLEWARE_INVOCATION_FAILED` o
+`No workspaces found`. Reserva liberada al terminar esta entrada; no quedan
+archivos reservados.
