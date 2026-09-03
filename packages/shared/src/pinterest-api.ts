@@ -65,7 +65,8 @@ export async function createPinterestPin(
     body: JSON.stringify({
       board_id: payload.boardId,
       title: payload.title.slice(0, 100),
-      description: payload.description.slice(0, 800),
+      // Límite oficial de descripción de Pin: 500 caracteres (era 800).
+      description: payload.description.slice(0, 500),
       link: payload.link,
       media_source: { source_type: "image_url", url: payload.imageUrl },
     }),

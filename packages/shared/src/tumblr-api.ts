@@ -1,4 +1,10 @@
+import { truncatePlainCaption } from "./caption-limits";
+
 const TUMBLR_API = "https://api.tumblr.com/v2";
+
+// Límite oficial de un bloque de texto NPF: 4096 code points de Unicode.
+// https://github.com/tumblr/docs/blob/master/npf-spec.md
+const TUMBLR_TEXT_BLOCK_MAX_CHARS = 4096;
 
 export interface TumblrAppCredentials {
   clientId: string;
@@ -87,6 +93,12 @@ export async function createTumblrPhotoPost(
   blogIdentifier: string,
   payload: { caption: string; link: string; imageUrl: string },
 ) {
+  // El link HTML se agrega siempre completo al final; el recorte (si hace
+  // falta) se aplica solo al caption, nunca al link. Antes no había ningún
+  // límite aplicado (auditoría 31/8/2026).
+  const linkHtml = `\n\n<a href="${payload.link}">Leer el artículo completo</a>`;
+  const safeCaption = truncatePlainCaption(payload.caption, TUMBLR_TEXT_BLOCK_MAX_CHARS - linkHtml.length);
+
   const response = await fetch(`${TUMBLR_API}/blog/${encodeURIComponent(blogIdentifier)}/post`, {
     method: "POST",
     headers: {
@@ -97,7 +109,7 @@ export async function createTumblrPhotoPost(
       type: "photo",
       state: "published",
       source: payload.imageUrl,
-      caption: `${payload.caption}\n\n<a href="${payload.link}">Leer el artículo completo</a>`,
+      caption: `${safeCaption}${linkHtml}`,
       link: payload.link,
     }),
   });

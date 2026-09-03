@@ -12,6 +12,7 @@ export * from "./pinterest-api";
 export * from "./tumblr-api";
 export * from "./bluesky-api";
 export * from "./devto-api";
+export * from "./caption-limits";
 export * from "./image-prompt";
 export * from "./social-image";
 export * from "./platform-servers";

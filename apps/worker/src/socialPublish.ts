@@ -22,6 +22,8 @@ import {
   getBlueskyPostUrl,
   createDevToArticle,
   getDevToArticleUrl,
+  buildSafeCaption,
+  truncatePlainCaption,
 } from "@auto-articulos/shared";
 import { put } from "@vercel/blob";
 import sharp from "sharp";
@@ -452,12 +454,9 @@ async function processThreadsJob(job: {
 
   await validateArticleUrl(job.articleUrl);
 
-  let finalPost = job.suggestedText;
-  if (finalPost.includes("[ENLACE]")) {
-    finalPost = finalPost.replace("[ENLACE]", job.articleUrl);
-  } else {
-    finalPost = `${finalPost}\n\n${job.articleUrl}`;
-  }
+  // Recorte seguro: si el texto generado excede el límite de Threads, se
+  // recorta el texto y el link SIEMPRE queda completo (auditoría 31/8/2026).
+  const finalPost = buildSafeCaption(job.suggestedText, job.articleUrl, { maxChars: 500 });
 
   // Re-alojada en nuestro Blob (ver getRehostedThreadsImage) para que Meta no
   // dependa del hosting del propio artículo al procesar el contenedor.
@@ -547,12 +546,9 @@ async function processTwitterJob(job: {
   }
 
   await validateArticleUrl(job.articleUrl);
-  let finalPost = job.suggestedText;
-  if (finalPost.includes("[ENLACE]")) {
-    finalPost = finalPost.replace("[ENLACE]", job.articleUrl);
-  } else {
-    finalPost = `${finalPost}\n\n${job.articleUrl}`;
-  }
+  // X siempre cuenta cualquier link como 23 caracteres (t.co), sin importar
+  // su largo real — usar el largo real acá recortaría texto de más.
+  const finalPost = buildSafeCaption(job.suggestedText, job.articleUrl, { maxChars: 280, linkCostOverride: 23 });
 
   let imageUrl: string | undefined = undefined;
   if (!imageUrl && job.titleId) {
@@ -617,12 +613,7 @@ async function processLinkedInJob(job: {
   }
 
   await validateArticleUrl(job.articleUrl);
-  let finalPost = job.suggestedText;
-  if (finalPost.includes("[ENLACE]")) {
-    finalPost = finalPost.replace("[ENLACE]", job.articleUrl);
-  } else {
-    finalPost = `${finalPost}\n\n${job.articleUrl}`;
-  }
+  const finalPost = buildSafeCaption(job.suggestedText, job.articleUrl, { maxChars: 3000 });
 
   // LinkedIn debe reutilizar la imagen destacada del artículo, no crear una
   // imagen con IA. Si el sitio no expone og:image, publicamos como ARTICLE
@@ -690,9 +681,10 @@ async function processPinterestJob(job: {
   await validateArticleUrl(job.articleUrl);
   const imageUrl = await getArticleOpenGraphImage(job.articleUrl);
   if (!imageUrl) throw new Error("El artículo no tiene una imagen OG pública para Pinterest.");
-  const description = job.suggestedText.includes("[ENLACE]")
-    ? job.suggestedText.replace("[ENLACE]", job.articleUrl)
-    : `${job.suggestedText}\n\n${job.articleUrl}`;
+  // El Pin ya lleva el link del artículo en su propio campo `link` (abajo);
+  // no hace falta repetirlo dentro del texto de la descripción, que tiene
+  // su propio límite de 500 caracteres.
+  const description = truncatePlainCaption(job.suggestedText.replace("[ENLACE]", "").trim(), 500);
   const result = await createPinterestPin(decryptSecret(integration.accessTokenEncrypted), {
     boardId: integration.boardId,
     title: job.articleTitle,
@@ -807,7 +799,10 @@ async function processBlueskyJob(job: {
   const integration = await prisma.blueskyIntegration.findUnique({ where: { userId: job.userId } });
   if (!integration) throw new Error("Bluesky no está configurado en tu cuenta.");
   await validateArticleUrl(job.articleUrl);
-  const text = job.suggestedText.includes("[ENLACE]") ? job.suggestedText.replace("[ENLACE]", job.articleUrl) : `${job.suggestedText}\n\n${job.articleUrl}`;
+  // Bluesky cuenta por "graphemes" (caracteres visibles), no por unidades
+  // UTF-16 de JS — con emojis, un recorte por .length puede partir uno a
+  // la mitad o ser más estricto de lo necesario.
+  const text = buildSafeCaption(job.suggestedText, job.articleUrl, { maxChars: 300, useGraphemes: true });
   const imageUrl = await getArticleOpenGraphImage(job.articleUrl);
   const session = await createBlueskySession(integration.handle, decryptSecret(integration.encryptedAppPassword));
   const result = await createBlueskyPost(session, text, imageUrl);

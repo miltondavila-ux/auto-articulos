@@ -1,3 +1,5 @@
+import { truncateGraphemes } from "./caption-limits";
+
 const BLUESKY_PDS = "https://bsky.social";
 
 type BlueskySession = { accessJwt: string; did: string; handle: string };
@@ -27,12 +29,17 @@ export async function createBlueskySession(handle: string, appPassword: string) 
 }
 
 export async function createBlueskyPost(session: BlueskySession, text: string, imageUrl?: string | null) {
-  const record: Record<string, unknown> = { $type: "app.bsky.feed.post", text: text.slice(0, 300), createdAt: new Date().toISOString() };
+  // Bluesky cuenta por "graphemes" (caracteres visibles), no por unidades
+  // UTF-16 de JS — .slice(0,300) puede partir un emoji a la mitad. El texto
+  // ya debería llegar acá dentro del límite (ver buildSafeCaption en el
+  // worker); esto queda como red de seguridad.
+  const safeText = truncateGraphemes(text, 300);
+  const record: Record<string, unknown> = { $type: "app.bsky.feed.post", text: safeText, createdAt: new Date().toISOString() };
   if (imageUrl) {
     const imageResponse = await fetch(imageUrl, { signal: AbortSignal.timeout(15000) });
     if (imageResponse.ok) {
       const blob = await uploadBlob(session.accessJwt, new Uint8Array(await imageResponse.arrayBuffer()), imageResponse.headers.get("content-type") || "image/jpeg");
-      record.embed = { $type: "app.bsky.embed.images", images: [{ alt: text.slice(0, 300), image: blob.blob }] };
+      record.embed = { $type: "app.bsky.embed.images", images: [{ alt: safeText, image: blob.blob }] };
     }
   }
   return request<{ uri: string; cid: string }>("com.atproto.repo.createRecord", session.accessJwt, { repo: session.did, collection: "app.bsky.feed.post", record });
