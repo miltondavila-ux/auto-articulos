@@ -2537,3 +2537,12 @@ Commit local creado: `11e8fa6`. Reservas liberadas al terminar:
 `apps/web/src/app/api/social-opportunities/publish/route.ts`,
 `COORDINACION_CLAUDE_CODEX.md` y `CONTROLADOR_DE_VERSIONES.md`. No quedan
 archivos reservados en este worktree.
+
+### Reserva activa — cierre de triple auditoría predespliegue — 2026-09-03
+
+Se reservan temporalmente `COORDINACION_CLAUDE_CODEX.md` y
+`CONTROLADOR_DE_VERSIONES.md` para registrar la auditoría previa al
+despliegue autorizado de `11e8fa6`/`d272fa7`. No se modificará código,
+Vercel, middleware, autenticación, secretos ni base de datos durante esta
+documentación. Las reservas se liberarán después del despliegue y de la
+verificación posterior en producción.

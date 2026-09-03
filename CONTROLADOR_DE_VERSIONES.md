@@ -598,16 +598,21 @@ Auditoría de regresión independiente: APROBADA — `npm run typecheck` de web,
 pipe IPC del sandbox, no por código; el lanzador equivalente pasó completo.
 No se tocaron Vercel, middleware, autenticación, secretos, base de datos ni
 las ramas de otras redes.
-Auditoría de integración/producción independiente: PENDIENTE — la corrección
-está únicamente en este worktree y no se ha publicado, conforme a la orden de
-no desplegar sin autorización. Vercel conserva Root Directory `apps/web` y
-`apps/web/vercel.json` no fue modificado; por tanto no existe aún un
-deployment corregido que verificar en producción.
+Auditoría de integración/producción independiente: APROBADA para despliegue —
+Vercel confirma `Root Directory = apps/web`, el único `vercel.json` está en
+`apps/web/vercel.json` con `buildCommand: npm run build` y
+`outputDirectory: .next`, y el proyecto conserva Node.js 24.x. El build web
+se ejecutó desde `apps/web`; el dry-run incorrecto desde ese directorio fue
+descartado porque duplicaba `apps/web`, y el dry-run correcto desde la raíz
+terminó satisfactoriamente sin crear deployment. El listado de producción
+mostró deployments `Ready` y los logs completos de la última hora no
+mostraron errores 4xx/5xx, `MIDDLEWARE_INVOCATION_FAILED` ni
+`No workspaces found`. No se modificaron variables remotas ni secretos.
 
 Commit local: `11e8fa6` (`fix: habilitar publicación de oportunidades en Blogger`).
-Deployment/Vercel: no ejecutado.
-Producción verificada: la integración OAuth/generación quedó verificada en el
-deployment existente; la publicación Blogger con esta corrección requiere un
-deployment posterior autorizado.
-Estado: PREPARADA EN WORKTREE — detenida antes de publicar a producción hasta
-recibir autorización explícita.
+Deployment/Vercel: autorizado y pendiente de ejecución.
+Producción verificada antes del despliegue: la integración OAuth/generación
+quedó verificada en el deployment existente; la verificación de la publicación
+Blogger con esta corrección se hará después del despliegue.
+Estado: AUDITORÍAS PREVIAS APROBADAS — despliegue autorizado, con verificación
+postdespliegue obligatoria.
