@@ -239,6 +239,8 @@ export default function OportunidadesPage() {
   const elapsedTime = `${Math.floor(analysisSeconds / 60)}:${String(
     analysisSeconds % 60,
   ).padStart(2, "0")}`;
+  const hasPendingOpportunities = groups.some((group) => group.titles.length > 0);
+  const analysisButtonDisabled = analyzing || hasPendingOpportunities;
 
   async function analyze(force = false) {
     setAnalyzing(true);
@@ -484,8 +486,13 @@ export default function OportunidadesPage() {
         >
           <button
             onClick={() => analyze()}
-            disabled={analyzing}
-            style={disabledStyle({ ...buttonStyle, marginTop: 0 }, analyzing)}
+            disabled={analysisButtonDisabled}
+            title={
+              hasPendingOpportunities
+                ? "No puedes actualizar el análisis mientras haya oportunidades pendientes. Publícalas o bórralas primero."
+                : undefined
+            }
+            style={disabledStyle({ ...buttonStyle, marginTop: 0 }, analysisButtonDisabled)}
           >
             {analyzing
               ? "Analizando Search Console..."
@@ -493,6 +500,12 @@ export default function OportunidadesPage() {
                 ? "Actualizar análisis"
                 : "Analizar oportunidades"}
           </button>
+          {hasPendingOpportunities && !analyzing && (
+            <span role="status" style={{ fontSize: 12, color: "#6e6e73" }}>
+              No se puede actualizar: hay oportunidades pendientes por publicar.
+              Publícalas o bórralas primero.
+            </span>
+          )}
           {lastAnalysisAt && (
             <span style={{ fontSize: 12, color: "#6b7280" }}>
               Último análisis: {formatDateTime(lastAnalysisAt)}

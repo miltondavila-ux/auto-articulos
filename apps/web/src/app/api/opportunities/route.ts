@@ -40,6 +40,18 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const userId = await getCurrentUserId();
+  const pendingCount = await prisma.opportunityTitle.count({
+    where: { group: { userId } },
+  });
+  if (pendingCount > 0) {
+    return NextResponse.json(
+      {
+        error:
+          "No se puede actualizar el análisis porque hay oportunidades pendientes por publicar. Publícalas o bórralas primero.",
+      },
+      { status: 409 },
+    );
+  }
   // Pedido explícito del usuario (11/8/2026): el enfriamiento de 3 días
   // bloqueaba el análisis por completo — ni siquiera volvía a consultar
   // Search Console — dejando al usuario sin poder intentarlo de nuevo pase
