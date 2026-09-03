@@ -616,3 +616,89 @@ quedó verificada en el deployment existente; la verificación de la publicació
 Blogger con esta corrección se hará después del despliegue.
 Estado: AUDITORÍAS PREVIAS APROBADAS — despliegue autorizado, con verificación
 postdespliegue obligatoria.
+
+## Cierre de despliegue — Blogger — 2026-09-03
+
+Fecha y hora: 2026-09-03
+Versión/commit desplegado: `6c8dcd7` (incluye `11e8fa6` y `d272fa7`)
+Rama: `codex/conexion-blogger-produccion-20260903`
+Worktree: `/private/tmp/auto-articulos-blogger-fix-20260903`
+Conversación/proyecto: `CONEXION BLOGGER`
+Deployment Vercel: `dpl_8iE3qS4WoQ66VutEhPJGGjAe1wWg`
+URL de deployment: `https://auto-articulos-n8h1cgk0m-luna-portex-intelligence.vercel.app`
+Estado: `Ready`
+Aliases: `https://seototal.lasolucionweb.com` y
+`https://auto-articulos-web.vercel.app`
+
+Cambios incluidos: habilitación mínima de `blogger` en la ruta web de
+publicación, permiso individual `allowBloggerPublishing` y mensaje específico
+de encolado. No se tocaron Vercel, middleware, autenticación, secretos,
+versiones, base de datos ni otras redes.
+Archivos eliminados: ninguno.
+Migraciones: ninguna.
+
+Auditoría funcional independiente: APROBADA — OAuth de la cuenta de pruebas,
+conexión del blog `Seguros de Salud y Vida`, tres propuestas Blogger, encolado
+en producción y publicación real confirmada en
+`https://segurosdesaludyvida.blogspot.com/`. El blog muestra las tres
+entradas esperadas.
+
+Auditoría de regresión independiente: APROBADA — build de Vercel completo
+desde `apps/web` con `npm run build`, 83/83 rutas generadas, `/login` 200 en
+ambos dominios, dashboard y rutas críticas cargadas, publicaciones en curso
+vacías y oportunidades pendientes en 0. Logs posteriores revisados sin 4xx,
+5xx, `MIDDLEWARE_INVOCATION_FAILED` ni `No workspaces found`.
+
+Auditoría de integración/producción independiente: APROBADA — Vercel mantuvo
+Root Directory `apps/web`; el único `vercel.json` relevante continúa en
+`apps/web/vercel.json` con exactamente `buildCommand: npm run build` y
+`outputDirectory: .next`; el dry-run desde la raíz fue correcto y no hubo
+rutas duplicadas. Los aliases y el dominio público de Blogger fueron
+verificados después del despliegue.
+
+Incidencia de ejecución: la primera selección automatizada coincidió con
+`Publicar todo el lote` y procesó las 14 propuestas pendientes. No se hicieron
+más publicaciones ni eliminaciones. Historial final: 6 publicaciones exitosas
+del día, 3 Blogger y 3 LinkedIn; ninguna propuesta quedó pendiente. Se deja
+registrado para trazabilidad; no implica cambio adicional de código.
+
+Logs completos de build y runtime revisados. El aviso preexistente de
+`npm audit` no provocó cambio de versiones. El hook informativo de actualización
+no pudo registrar el producto en commits locales por `DATABASE_URL` ausente en
+el worktree, pero los commits se crearon y el deployment fue verificado.
+
+Estado: DESPLEGADA Y VERIFICADA.
+Reservas liberadas: `COORDINACION_CLAUDE_CODEX.md`,
+`CONTROLADOR_DE_VERSIONES.md` y la ruta de publicación. No quedan archivos
+reservados.
+
+## Corrección preparada — formato e imagen Blogger — 2026-09-03
+
+Estado: PREPARADA, NO DESPLEGADA.
+Worktree: `/private/tmp/auto-articulos-blogger-fix-20260903`
+Rama: `codex/conexion-blogger-produccion-20260903`
+Conversación/proyecto: `CONEXION BLOGGER`
+Archivo modificado: `apps/worker/src/socialPublish.ts`
+
+Diagnóstico comprobado: Blogger recibe `content` como HTML, pero la versión
+anterior le enviaba Markdown generado para DEV.to y no incluía `og:image`.
+La captura de la entrada real confirmó exactamente ese fallo: `##`, enlaces
+Markdown sin renderizar y ausencia de imagen.
+
+Corrección preparada: extracción y limpieza HTML reutilizable para DEV.to y
+Blogger; Blogger conserva encabezados, párrafos, listas, citas, enlaces e
+imágenes del artículo, añade la imagen destacada `og:image` al inicio y agrega
+el enlace al artículo original. No se modifican las rutas de otras redes.
+
+Auditoría funcional local: APROBADA — payload contra el artículo real con 11
+encabezados, 7 elementos de lista, 2 imágenes y cero Markdown crudo.
+Auditoría regresión local: APROBADA — build worker, 19/19 tests y
+`git diff --check` en verde.
+Auditoría integración/producción: PENDIENTE — no se desplegó esta corrección,
+no se tocó producción ni se generó otra entrada externa. La producción sigue
+en el deployment anterior; hace falta autorización nueva antes de publicar.
+
+Referencia técnica revisada: documentación oficial de Google Blogger Posts
+insert, que define el campo `content` como HTML y el endpoint de inserción.
+No se cambiaron versiones, Vercel, secretos, middleware, autenticación ni
+base de datos.

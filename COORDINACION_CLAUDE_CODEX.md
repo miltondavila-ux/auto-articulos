@@ -2546,3 +2546,101 @@ despliegue autorizado de `11e8fa6`/`d272fa7`. No se modificará código,
 Vercel, middleware, autenticación, secretos ni base de datos durante esta
 documentación. Las reservas se liberarán después del despliegue y de la
 verificación posterior en producción.
+
+### Despliegue y verificación final Blogger — 2026-09-03
+
+El cambio se desplegó desde la raíz del worktree aislado autorizado mediante
+`vercel --prod --yes --project auto-articulos-web --logs`. Deployment:
+`dpl_8iE3qS4WoQ66VutEhPJGGjAe1wWg`, URL
+`https://auto-articulos-n8h1cgk0m-luna-portex-intelligence.vercel.app`, estado
+`Ready`, aliasados `https://seototal.lasolucionweb.com` y
+`https://auto-articulos-web.vercel.app`. El build completo confirmó 359
+archivos descargados, `npm install --legacy-peer-deps`, `npm run build` desde
+el Root Directory correcto, Prisma generate, TypeScript y 83/83 páginas/rutas
+generadas. La advertencia existente de middleware deprecado no produjo error;
+no se cambiaron versiones pese al aviso preexistente de `npm audit`.
+
+Auditoría funcional independiente: APROBADA — la pantalla de oportunidades
+en producción cargó con Blogger conectado; el historial registró como
+publicadas las tres propuestas Blogger y el blog público
+`https://segurosdesaludyvida.blogspot.com/` mostró las tres entradas con sus
+ títulos. La ruta corregida encoló Blogger y el worker completó la publicación
+real usando el blog de la cuenta de pruebas.
+
+Auditoría de regresión independiente: APROBADA — `/login` devolvió 200 en
+`seototal.lasolucionweb.com` y `auto-articulos-web.vercel.app`; el dashboard,
+`/dashboard/oportunidades-redes`, `/dashboard/publicaciones-en-curso` y
+`/dashboard/historial` cargaron sin error; publicaciones en curso quedó vacío
+ y oportunidades pendientes quedó en 0. Los logs completos posteriores no
+mostraron 4xx/5xx, `MIDDLEWARE_INVOCATION_FAILED` ni `No workspaces found`.
+No se modificaron Vercel, middleware, autenticación, secretos, esquema ni
+las implementaciones de otras redes.
+
+Auditoría de integración/producción independiente: APROBADA — el blog real
+del usuario de pruebas quedó accesible y contiene las entradas publicadas;
+los dos dominios alias responden; el build de producción terminó `Ready` con
+`apps/web/vercel.json`, Root Directory `apps/web`, `buildCommand: npm run
+build` y `outputDirectory: .next`. El dry-run correcto desde la raíz terminó
+sin rutas duplicadas y no creó un deployment adicional.
+
+Incidencia de ejecución documentada: al iniciar la prueba, el selector del
+navegador coincidió con el botón superior `Publicar todo el lote` en vez del
+primer botón individual. La interfaz procesó las 14 propuestas pendientes.
+No se ejecutaron más publicaciones ni borrados. La evidencia final del
+historial muestra 6 éxitos del día: 3 Blogger y 3 LinkedIn; las 14 dejaron de
+estar pendientes y no se reintentó ninguna. Esta incidencia no cambió el
+código desplegado ni afectó la configuración de las integraciones.
+
+Reservas liberadas al cerrar esta entrada: `COORDINACION_CLAUDE_CODEX.md`,
+`CONTROLADOR_DE_VERSIONES.md` y la ruta de publicación. No quedan archivos
+reservados en este worktree.
+
+Estado: DESPLEGADA Y VERIFICADA — triple auditoría completada; no se publica
+ni se modifica nada más en producción sin nueva autorización.
+
+### Reserva activa — corregir formato e imagen de Blogger — 2026-09-03
+
+Se reserva temporalmente `apps/worker/src/socialPublish.ts` para corregir
+únicamente la preparación del contenido Blogger: reutilizar HTML editorial
+limpio del artículo, conservar sus encabezados/listas/enlaces y añadir la
+imagen destacada siguiendo el patrón ya usado por Threads y LinkedIn. No se
+modificarán la ruta web, otras redes, Vercel, middleware, autenticación,
+secretos, esquema ni versiones. La reserva se liberará tras las auditorías
+locales; no se autoriza despliegue de esta corrección sin autorización nueva.
+
+### Corrección Blogger preparada — HTML editorial e imagen — 2026-09-03
+
+Hallazgo confirmado con la documentación oficial de Blogger y el artículo
+real: la API recibe `content` como HTML; la implementación anterior enviaba el
+resultado de `getArticleBodyMarkdown`, pensado para DEV.to, y no añadía la
+imagen `og:image`. Por eso la entrada publicada mostraba `##`, enlaces Markdown
+y ningún encabezado visual de imagen.
+
+Cambio mínimo preparado únicamente en `apps/worker/src/socialPublish.ts`:
+se separó la extracción/limpieza HTML del artículo de la conversión Markdown
+de DEV.to; Blogger usa el HTML editorial limpio, obtiene la `og:image` pública,
+la coloca al inicio con `alt` seguro y conserva el enlace al original. Threads,
+LinkedIn, DEV.to y las demás redes mantienen sus rutas y contratos actuales.
+
+Auditoría funcional local: APROBADA — contra el artículo público real, el
+payload Blogger resultante conserva 11 encabezados, 7 elementos de lista y 2
+imágenes, y no contiene encabezados `##` ni enlaces Markdown. La URL de la
+imagen se obtuvo desde el artículo fuente.
+Auditoría de regresión local: APROBADA — build del worker, 19/19 pruebas del
+worker y `git diff --check` pasan. La conversión Markdown de DEV.to continúa
+usando el mismo contenido limpio y no se modificaron sus contratos.
+Auditoría de integración/producción: NO EJECUTADA A PROPÓSITO — esta corrección
+todavía no se ha desplegado ni ha creado/borrado/actualizado entradas externas.
+La producción continúa en el deployment anterior, que queda identificado en
+la entrada de cierre anterior. No se tocaron Vercel, secretos, autenticación,
+base de datos ni otras redes.
+
+Referencia oficial revisada: documentación de Blogger Posts insert, que
+describe `content` como contenido HTML y el endpoint autorizado de inserción.
+La corrección queda PREPARADA, pendiente de una autorización nueva para
+desplegar y ejecutar una única prueba visual; no se publicará otro contenido
+antes de esa autorización.
+
+Reserva liberada al terminar la preparación local:
+`apps/worker/src/socialPublish.ts`. No quedan archivos de código reservados;
+la documentación queda libre después del commit de esta entrada.

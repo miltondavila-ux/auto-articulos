@@ -197,8 +197,58 @@ function extractDivById(html: string, id: string): string | null {
   return null;
 }
 
-/** Lee el cuerpo real del artículo publicado y lo adapta al Markdown de DEV.to. */
-export async function getArticleBodyMarkdown(articleUrl: string): Promise<string> {
+function extractArticleContentHtml(html: string): string {
+  return extractDivByClass(html, "crayons-article__body")
+    || extractDivById(html, "seo-readmore-container")
+    || html.match(/<article\b[^>]*>([\s\S]*?)<\/article>/i)?.[1]
+    || html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i)?.[1]
+    || html.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i)?.[1]
+    || html;
+}
+
+/**
+ * Limpia el HTML editorial del artículo, conservando el formato que Blogger
+ * debe mostrar (encabezados, párrafos, listas, citas, enlaces e imágenes).
+ * No se convierte a Markdown: esa conversión solo sirve para DEV.to.
+ */
+function cleanArticleContentHtml(container: string): string {
+  let cleaned = container
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<(script|style|nav|header|footer|aside|form)\b[^>]*>[\s\S]*?<\/\1>/gi, "")
+    // El sitio de origen inyecta widgets relacionados y llamadas finales
+    // después del contenido editorial; no deben copiarse al blog externo.
+    .replace(/<h4\b[^>]*>[\s\S]*?Tambi[ée]n podr[íi]a gustarte[\s\S]*$/i, "")
+    .replace(/<h2\b[^>]*>[\s\S]*?TU PR[ÓO]XIMO GRAN PASO[\s\S]*$/i, "")
+    .replace(/<div\b[^>]*id=["']seo-readmore-fade["'][^>]*>[\s\S]*?<\/div>/gi, "")
+    // El generador original dejó una etiqueta HTML visible como bloque de
+    // código y un texto suelto de control en algunos artículos.
+    .replace(/<pre\b[^>]*>[\s\S]*?<\/pre>/gi, "")
+    .replace(/Enter fullscreen mode|Exit fullscreen mode/gi, "")
+    .replace(/<p\b[^>]*>\s*Whatsapp\s*<\/p>/gi, "")
+    // Blogger ya muestra el título en su cabecera; no lo repetimos en el
+    // cuerpo si la plantilla del artículo original lo incluye.
+    .replace(/<h1\b[^>]*>[\s\S]*?<\/h1>\s*<p\b[^>]*>\s*Seguros de Salud y Vida\s*<\/p>\s*<p\b[^>]*>\s*[ÚU]ltima actualizaci[óo]n:[\s\S]*?<\/p>/i, "")
+    .replace(/<p\b[^>]*>\s*-\s*<\/p>/gi, "")
+    .trim();
+
+  // Algunos artículos envuelven todos sus párrafos dentro de un `<p
+  // class="row">`, que deja párrafos anidados e invalida el HTML que recibe
+  // Blogger. Quitamos solo ese envoltorio conocido, no párrafos editoriales.
+  if (/^<p\b[^>]*class=["'][^"']*\brow\b[^"']*["'][^>]*>/i.test(cleaned) && /<\/p>\s*$/i.test(cleaned)) {
+    cleaned = cleaned
+      .replace(/^<p\b[^>]*class=["'][^"']*\brow\b[^"']*["'][^>]*>/i, "")
+      .replace(/<\/p>\s*$/i, "")
+      .trim();
+  }
+
+  return cleaned;
+}
+
+function stripArticleHtml(value: string): string {
+  return decodeHtmlEntities(value.replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
+}
+
+export async function getArticleBodyHtml(articleUrl: string): Promise<string> {
   const response = await fetch(articleUrl, {
     redirect: "follow",
     signal: AbortSignal.timeout(15000),
@@ -209,28 +259,18 @@ export async function getArticleBodyMarkdown(articleUrl: string): Promise<string
   });
   if (!response.ok) throw new Error(`No se pudo leer el contenido del artículo (${response.status}).`);
   const html = await response.text();
-  const container = extractDivByClass(html, "crayons-article__body")
-    || extractDivById(html, "seo-readmore-container")
-    || html.match(/<article\b[^>]*>([\s\S]*?)<\/article>/i)?.[1]
-    || html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i)?.[1]
-    || html.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i)?.[1]
-    || html;
-  let markdown = container
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/<(script|style|nav|header|footer|aside|form)\b[^>]*>[\s\S]*?<\/\1>/gi, "")
-    // El sitio de origen inyecta bloques de navegación, redes y enlaces
-    // relacionados dentro del article. No forman parte del contenido editorial.
-    .replace(/<h4\b[^>]*>[\s\S]*?Tambi[ée]n podr[íi]a gustarte[\s\S]*$/i, "")
-    .replace(/<h2\b[^>]*>[\s\S]*?TU PR[ÓO]XIMO GRAN PASO[\s\S]*$/i, "")
-    // Son separadores vacíos que el sitio original usa para sus componentes.
-    .replace(/<p>\s*-\s*<\/p>/gi, "")
-    .replace(/<div\b[^>]*id=["']seo-readmore-fade["'][^>]*>[\s\S]*?<\/div>/gi, "")
-    // El generador original dejó una etiqueta HTML visible como bloque de código.
-    // Quitamos solamente el bloque <pre>, sin cortar el contenido que viene después.
-    .replace(/<pre\b[^>]*>[\s\S]*?<\/pre>/gi, "")
-    .replace(/Enter fullscreen mode|Exit fullscreen mode/gi, "")
+  const contentHtml = cleanArticleContentHtml(extractArticleContentHtml(html));
+  if (stripArticleHtml(contentHtml).length < 80) {
+    throw new Error("El artículo publicado no devolvió un cuerpo de contenido válido.");
+  }
+  return contentHtml;
+}
+
+/** Lee el cuerpo real del artículo publicado y lo adapta al Markdown de DEV.to. */
+export async function getArticleBodyMarkdown(articleUrl: string): Promise<string> {
+  const contentHtml = await getArticleBodyHtml(articleUrl);
+  let markdown = contentHtml
     // DEV.to ya muestra el título arriba; no lo repetimos en el cuerpo.
-    .replace(/<h1\b[^>]*>[\s\S]*?<\/h1>\s*<p\b[^>]*>\s*Seguros de Salud y Vida\s*<\/p>\s*<p\b[^>]*>\s*[ÚU]ltima actualizaci[óo]n:[\s\S]*?<\/p>/i, "")
     .replace(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi, (_match, level: string, content: string) => `\n\n${"#".repeat(Number(level))} ${stripHtml(content)}\n\n`)
     .replace(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, (_match, href: string, content: string) => {
       const label = stripHtml(content);
@@ -256,7 +296,6 @@ export async function getArticleBodyMarkdown(articleUrl: string): Promise<string
     .replace(/[ \t]+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
-  if (markdown.length < 80) throw new Error("El artículo publicado no devolvió un cuerpo de contenido válido.");
   return markdown;
 }
 
@@ -856,6 +895,14 @@ async function getBloggerAppCredentials() {
   return { clientId, clientSecret };
 }
 
+function escapeHtmlAttribute(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 async function processBloggerJob(job: { id: string; userId: string; titleId: string | null; articleUrl: string; articleTitle: string; suggestedText: string }): Promise<boolean> {
   let integration = await prisma.bloggerIntegration.findUnique({ where: { userId: job.userId } });
   if (!integration) throw new Error("Blogger no está configurado en tu cuenta.");
@@ -869,8 +916,16 @@ async function processBloggerJob(job: { id: string; userId: string; titleId: str
     integration = await prisma.bloggerIntegration.update({ where: { userId: job.userId }, data: { accessTokenEncrypted: encryptSecret(accessToken), expiresAt: token.expires_in ? new Date(Date.now() + token.expires_in * 1000) : null } });
   }
   await validateArticleUrl(job.articleUrl);
-  const body = await getArticleBodyMarkdown(job.articleUrl);
-  const content = `${body}<p><a href="${job.articleUrl}">Leer el artículo original</a></p>`;
+  const [bodyHtml, sourceImage] = await Promise.all([
+    getArticleBodyHtml(job.articleUrl),
+    getArticleOpenGraphImage(job.articleUrl),
+  ]);
+  if (!sourceImage) {
+    throw new Error("El artículo no tiene una imagen og:image pública para Blogger.");
+  }
+  const heroImage = `<p><img src="${escapeHtmlAttribute(sourceImage)}" alt="${escapeHtmlAttribute(job.articleTitle)}" style="display:block;max-width:100%;height:auto;" /></p>`;
+  const originalLink = `<p><a href="${escapeHtmlAttribute(job.articleUrl)}">Leer el artículo original</a></p>`;
+  const content = `${heroImage}${bodyHtml}${originalLink}`;
   const result = await createBloggerPost(accessToken, integration.blogId, { title: job.articleTitle, content });
   if (!result.id) throw new Error("Blogger no devolvió el identificador de la entrada.");
   await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: result.url || result.id, publishedAt: new Date(), errorLog: null } });
