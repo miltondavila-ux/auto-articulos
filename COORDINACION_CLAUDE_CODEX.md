@@ -2340,4 +2340,4 @@ Worktree: `/private/tmp/cupo-renovacion-exacto`.
 Rama: `codex/cupo-renovacion-exacto`.
 Archivos reservados: `apps/web/src/app/api/opportunities/execute-all/route.ts`, `apps/web/src/app/api/runs/route.ts`, `apps/web/src/app/dashboard/oportunidades/page.tsx`, `apps/web/src/app/dashboard/publicar/page.tsx`, `apps/web/src/content/manual-usuario.ts`.
 Alcance: indicar dinámicamente la causa y renovación del cupo agotado; no tocar Vercel, middleware, autenticación, schema ni migraciones.
-Estado: en auditoría; no desplegar hasta completar tres auditorías y validaciones.
+Estado: COMPLETADO Y DESPLEGADO en `origin/main` (commit `0463fdd`). Las tres auditorías, typecheck, build Webpack y verificación HTTP de producción pasaron. Reserva liberada.
