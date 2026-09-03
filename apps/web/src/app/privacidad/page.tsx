@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <PublicInfoPage
-      eyebrow="Última actualización: 31 de julio de 2026"
+      eyebrow="Última actualización: 2 de septiembre de 2026"
       title="Política de Privacidad"
       intro="Esta política explica qué información usa Auto Artículos, para qué se utiliza y qué control conserva cada usuario."
     >
@@ -44,16 +44,39 @@ export default function PrivacyPage() {
         token OAuth revocable y acceso a la lista de propiedades que esa cuenta
         puede administrar. Usamos ese acceso exclusivamente para que el usuario
         seleccione su propiedad, gestione su sitemap y consulte el estado de
-        indexación de sus propias URLs. No solicitamos ni almacenamos la
-        contraseña de Google, ni accedemos a Gmail, Drive, contactos u otros
-        productos de Google.
+        indexación de sus propias URLs.
+      </p>
+      <p>
+        Si el usuario conecta Google Analytics 4, recibimos un token de solo
+        lectura y la lista de propiedades a las que esa cuenta tiene acceso.
+        Consultamos informes agregados (por ejemplo, sesiones, usuarios activos,
+        conversiones y páginas) para mostrar señales de rendimiento y priorizar
+        oportunidades dentro de Auto Artículos. No modificamos datos de
+        Analytics ni solicitamos permisos de escritura.
+      </p>
+      <p>
+        Si el usuario conecta Google Business Profile, recibimos un token
+        revocable para listar sus cuentas y ubicaciones autorizadas. El usuario
+        elige la ubicación y puede aprobar expresamente la preparación y el
+        envío de una publicación estándar; Auto Artículos no publica cada
+        artículo automáticamente.
+      </p>
+      <p>
+        No solicitamos ni almacenamos la contraseña de Google, ni accedemos a
+        Gmail, Drive, contactos u otros productos de Google. Los datos de Google
+        se usan únicamente para las funciones visibles que el usuario activa y
+        no se venden.
       </p>
 
       <h2 style={publicHeadingStyle}>Uso y divulgación</h2>
       <p>
         La información se utiliza únicamente para prestar, proteger y mejorar
         Auto Artículos. No vendemos datos personales, tokens ni información de
-        Google. No compartimos esos datos con anunciantes. Solo intervienen los
+        Google, ni los compartimos con anunciantes. Cuando el usuario solicita
+        generar una propuesta, podemos enviar al proveedor de IA configurado
+        únicamente el contexto mínimo y agregado necesario para producir el
+        texto que se muestra en la aplicación; nunca enviamos tokens OAuth,
+        contraseñas ni identificadores de cuenta. También intervienen los
         proveedores técnicos necesarios para operar el servicio, como el
         alojamiento y la base de datos, sujetos a sus medidas de seguridad.
       </p>
