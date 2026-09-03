@@ -2422,6 +2422,43 @@ Archivos modificados: `apps/web/src/lib/blogger-oauth.ts`,
 Reservas liberadas: todos los archivos anteriores quedan libres al terminar
 esta fase.
 
+### Credenciales globales en Configuración → Redes Sociales — 2026-09-03
+
+Se añadió la configuración administrativa de Blogger siguiendo el patrón de
+Tumblr/Pinterest: el administrador puede guardar Client ID y Client Secret en
+`SystemSetting` cifrados; OAuth web y worker consultan primero esos valores y
+solo usan `BLOGGER_CLIENT_ID`/`BLOGGER_CLIENT_SECRET` como fallback. GSC y GA
+mantienen sus variables y flujos intactos.
+
+Auditoría funcional: APROBADA — ruta `/api/search-integrations/blogger/settings`,
+formulario visible para administrador, guardado cifrado y lectura en connect,
+callback y renovación del worker.
+Auditoría de regresión: APROBADA — build Next completo (83 rutas), build worker,
+typecheck web, 14 tests worker y `git diff --check`.
+Auditoría integración/producción: APROBADA para preparación — Vercel revisado,
+Root Directory `apps/web`, `apps/web/vercel.json` con `npm run build`/`.next`;
+no se modificaron variables remotas ni se desplegó.
+
+Estado: PREPARADA — pendiente de commit/deployment autorizado.
+Reservas liberadas al terminar: todos los archivos modificados quedan libres.
+
+### Corrección final — credenciales administrativas Blogger en UI — 2026-09-03
+
+Se añadió `/api/search-integrations/blogger/settings` y el formulario de
+credenciales globales dentro de `BloggerSection`, siguiendo el patrón de
+Tumblr/Pinterest. El administrador guarda Client ID/Secret cifrados; las
+cuentas de usuario final conectan después mediante OAuth. El worker también
+lee primero esos valores cifrados y no depende de variables GSC/GA.
+
+Auditoría funcional: APROBADA — formulario admin, POST protegido por rol,
+cifrado, fallback de entorno, OAuth web, renovación y worker conectados.
+Auditoría regresión: APROBADA — build web, typecheck web, build worker,
+14 tests worker y `git diff --check`.
+Auditoría integración/producción: APROBADA para preparación — Vercel revisado
+con Root Directory `apps/web`; `apps/web/vercel.json` conserva exactamente
+`npm run build` y `.next`; no se cambiaron variables remotas ni se desplegó.
+Reservas liberadas. Estado: PREPARADA, pendiente de autorización de publicación.
+
 Commit local: `03d837e`.
 Reserva liberada al cerrar esta fase: `COORDINACION_CLAUDE_CODEX.md` e
 `INVENTARIO_CONVERSACIONES.md`. No quedan archivos de código reservados.

@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const userId = await getCurrentUserId();
   if (!(await canPublishToNetwork(userId, "blogger"))) return NextResponse.json({ error: "Blogger no está habilitado para este usuario." }, { status: 403 });
   try {
-    const { clientId } = bloggerOAuthConfig();
+    const { clientId } = await bloggerOAuthConfig();
     const reqUrl = new URL(request.url);
     const redirectUri = `${reqUrl.protocol}//${reqUrl.host}/api/search-integrations/blogger/callback`;
     const state = randomBytes(24).toString("base64url");

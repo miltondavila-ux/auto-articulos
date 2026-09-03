@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
   if (!state || state !== cookieStore.get(BLOGGER_STATE_COOKIE)?.value || !code) return NextResponse.redirect(new URL("/dashboard/configuracion?blogger=error", request.url));
   try {
-    const { clientId, clientSecret } = bloggerOAuthConfig();
+    const { clientId, clientSecret } = await bloggerOAuthConfig();
     const redirectUri = `${request.nextUrl.protocol}//${request.nextUrl.host}/api/search-integrations/blogger/callback`;
     const tokens = await exchangeCodeForBloggerTokens(code, redirectUri, clientId, clientSecret);
     const blogs = await getBloggerBlogs(tokens.access_token);

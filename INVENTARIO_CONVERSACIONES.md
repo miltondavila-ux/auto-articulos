@@ -15,6 +15,14 @@ aprobadas para preparación local. Vercel confirmó `Root Directory = apps/web`
 y configuración segura `.next`; no se modificaron variables GSC/GA ni se
 desplegó producción. Reservas liberadas tras la revisión.
 
+La pantalla administrativa ahora permite guardar Client ID y Client Secret de
+Blogger cifrados, igual que las demás redes; no requiere pegar credenciales en
+Vercel y no reutiliza las variables de GSC/GA.
+
+Corrección final verificada: el administrador configura Blogger desde
+Configuración → Redes Sociales; el usuario final solo autoriza su propia cuenta
+por OAuth. Estado: preparada, sin despliegue.
+
 - Responsable: CODEX - GPT-5.
 - Proyecto: integración oficial de Blogger en Auto Artículos.
 - Objetivo: permitir que cada usuario conecte su propia cuenta Google/Blogger

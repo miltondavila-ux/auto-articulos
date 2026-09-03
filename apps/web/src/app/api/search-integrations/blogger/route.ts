@@ -14,7 +14,7 @@ export async function GET() {
   let integration = await prisma.bloggerIntegration.findUnique({ where: { userId } });
   if (!integration) return NextResponse.json({ connected: false }, { headers: NO_CACHE });
   if (integration.expiresAt && integration.expiresAt <= new Date() && integration.refreshTokenEncrypted) {
-    try { const { clientId, clientSecret } = bloggerOAuthConfig(); const token = await refreshBloggerToken(decryptSecret(integration.refreshTokenEncrypted), clientId, clientSecret); integration = await prisma.bloggerIntegration.update({ where: { userId }, data: { accessTokenEncrypted: encryptSecret(token.access_token), expiresAt: token.expires_in ? new Date(Date.now() + token.expires_in * 1000) : null } }); } catch { /* status remains visible; user can reconnect */ }
+    try { const { clientId, clientSecret } = await bloggerOAuthConfig(); const token = await refreshBloggerToken(decryptSecret(integration.refreshTokenEncrypted), clientId, clientSecret); integration = await prisma.bloggerIntegration.update({ where: { userId }, data: { accessTokenEncrypted: encryptSecret(token.access_token), expiresAt: token.expires_in ? new Date(Date.now() + token.expires_in * 1000) : null } }); } catch { /* status remains visible; user can reconnect */ }
   }
   let blogs = [{ id: integration.blogId, name: integration.blogName || integration.blogId }];
   try { blogs = await getBloggerBlogs(decryptSecret(integration.accessTokenEncrypted)); } catch { /* status remains useful */ }

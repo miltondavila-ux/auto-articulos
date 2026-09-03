@@ -845,14 +845,23 @@ async function processDevToJob(job: {
 
 // ─── BLOGGER ──────────────────────────────────────────────────────────────
 
+async function getBloggerAppCredentials() {
+  const [idSetting, secretSetting] = await Promise.all([
+    prisma.systemSetting.findUnique({ where: { key: "blogger_client_id" } }),
+    prisma.systemSetting.findUnique({ where: { key: "blogger_client_secret" } }),
+  ]);
+  const clientId = idSetting ? decryptSecret(idSetting.encryptedValue) : process.env.BLOGGER_CLIENT_ID;
+  const clientSecret = secretSetting ? decryptSecret(secretSetting.encryptedValue) : process.env.BLOGGER_CLIENT_SECRET;
+  if (!clientId || !clientSecret) throw new Error("Google OAuth no está configurado para Blogger.");
+  return { clientId, clientSecret };
+}
+
 async function processBloggerJob(job: { id: string; userId: string; titleId: string | null; articleUrl: string; articleTitle: string; suggestedText: string }): Promise<boolean> {
   let integration = await prisma.bloggerIntegration.findUnique({ where: { userId: job.userId } });
   if (!integration) throw new Error("Blogger no está configurado en tu cuenta.");
   let accessToken = decryptSecret(integration.accessTokenEncrypted);
   if (integration.expiresAt && integration.expiresAt <= new Date() && integration.refreshTokenEncrypted) {
-    const clientId = process.env.BLOGGER_CLIENT_ID;
-    const clientSecret = process.env.BLOGGER_CLIENT_SECRET;
-    if (!clientId || !clientSecret) throw new Error("Google OAuth no está configurado para renovar Blogger.");
+    const { clientId, clientSecret } = await getBloggerAppCredentials();
     const response = await fetch("https://oauth2.googleapis.com/token", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ client_id: clientId, client_secret: clientSecret, refresh_token: decryptSecret(integration.refreshTokenEncrypted), grant_type: "refresh_token" }) });
     if (!response.ok) throw new Error(`La autorización de Blogger expiró y no pudo renovarse: ${await response.text()}`);
     const token = await response.json() as { access_token: string; expires_in?: number };
