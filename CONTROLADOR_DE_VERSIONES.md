@@ -604,7 +604,7 @@ no desplegar sin autorización. Vercel conserva Root Directory `apps/web` y
 `apps/web/vercel.json` no fue modificado; por tanto no existe aún un
 deployment corregido que verificar en producción.
 
-Commit preparado: pendiente de cierre del diff final.
+Commit local: `11e8fa6` (`fix: habilitar publicación de oportunidades en Blogger`).
 Deployment/Vercel: no ejecutado.
 Producción verificada: la integración OAuth/generación quedó verificada en el
 deployment existente; la publicación Blogger con esta corrección requiere un

@@ -2532,3 +2532,8 @@ la prueba, la corrección mínima y las auditorías realizadas en este worktree.
 No se modificarán archivos de Vercel, middleware, autenticación, secretos,
 base de datos ni integraciones existentes. Ambas reservas se liberarán al
 terminar la documentación y revisar el diff final.
+
+Commit local creado: `11e8fa6`. Reservas liberadas al terminar:
+`apps/web/src/app/api/social-opportunities/publish/route.ts`,
+`COORDINACION_CLAUDE_CODEX.md` y `CONTROLADOR_DE_VERSIONES.md`. No quedan
+archivos reservados en este worktree.
