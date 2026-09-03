@@ -1,3 +1,42 @@
+## CIERRE — CRÉDITOS DE IMAGEN: hasImageCredits solo por creación real + detención de lote (2026-09-03)
+
+Identidad exacta: Claude Sonnet 5 (sesión que recibió el relevo de Codex,
+worktree `/private/tmp/auditoria-creditos-imagen-20260903`, rama
+`codex/auditoria-creditos-imagen-20260903`).
+
+Resultado: push directo a `main` — commit `8115604` (rebasado dos veces
+sobre `origin/main` en movimiento: primero sobre el cierre de Blogger,
+después sobre el fix de LinkedIn `863a51c`, sin conflictos reales de lógica
+propia — solo un merge menor tras `git stash pop` en `publicar/page.tsx` y
+`oportunidades/page.tsx` que se resolvió y verificó línea por línea contra
+`origin/main`).
+
+Cambios:
+1. `apps/worker/src/queue.ts` — `User.hasImageCredits` solo pasa a `false`
+   cuando una creación real de artículo confirma falta de créditos de
+   imagen y el título agota `MAX_ATTEMPTS` (nunca por error ambiguo,
+   validación preventiva o visita a pantalla).
+2. Pedido adicional de Milton: cuando eso se confirma, el lote se detiene
+   de inmediato (`status: "halted"`) en vez de seguir con los demás
+   títulos — mismo tratamiento que el límite diario. Los títulos
+   pendientes vuelven a Oportunidades para reintentar después.
+3. `publicar/page.tsx` y `oportunidades/page.tsx` — se eliminó el bypass
+   persistente de `localStorage` para "Ya recibí mis créditos"; ahora es
+   una confirmación temporal en memoria (permite reintentar de inmediato,
+   pero no enmascara el estado real de la cuenta en recargas futuras).
+4. `manual-usuario.ts` — corregido para reflejar el nuevo comportamiento
+   del botón de confirmación.
+
+Verificación antes de publicar: Root Directory de Vercel confirmado como
+`apps/web` (`vercel project inspect auto-articulos-web`), Build Command
+`npm run build`, Output Directory por defecto (`.next`) — coincide con lo
+exigido, no se tocó. Deployment de producción tras el push quedó en
+`Ready` (`vercel ls auto-articulos-web`). Sin migración nueva
+(`hasImageCredits` ya existía desde antes). Capitanía de migración
+reclamada y liberada correctamente.
+
+Estado: DESPLEGADO — pendiente de confirmación visual de Milton.
+
 ## RESERVA — CERO CANIBALIZACION Y COBERTURA LONGTAIL COMPLETA (2026-09-02)
 
 Identidad exacta: Claude Sonnet 5 (misma conversación "CATEGORIAS MAL
