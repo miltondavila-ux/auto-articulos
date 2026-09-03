@@ -36,6 +36,7 @@ export async function GET() {
     pinterestIntegration,
     tumblrIntegration,
     devToIntegration,
+    bloggerIntegration,
   ] = await Promise.all([
     // 1. Credenciales 10minutesWebsite
     prisma.credential.findUnique({
@@ -60,6 +61,7 @@ export async function GET() {
         allowPinterestPublishing: true,
         allowTumblrPublishing: true,
         allowDevToPublishing: true,
+        allowBloggerPublishing: true,
       },
     }),
     // 4. Google Search Console
@@ -103,6 +105,10 @@ export async function GET() {
     prisma.devToIntegration.findUnique({
       where: { userId },
       select: { username: true },
+    }),
+    prisma.bloggerIntegration.findUnique({
+      where: { userId },
+      select: { blogName: true },
     }),
   ]);
 
@@ -241,6 +247,16 @@ export async function GET() {
       description: "Publica una versión adaptada del artículo con enlace canónico en DEV.to.",
       actionUrl: "/dashboard/configuracion?tab=social",
       actionLabel: "Conectar DEV.to",
+    },
+    {
+      id: "blogger",
+      label: "Blogger",
+      configured: Boolean((user?.role === "admin" || user?.allowBloggerPublishing) && bloggerIntegration),
+      required: false,
+      section: "social",
+      description: "Publica entradas de tus artículos en el blog de Blogger conectado.",
+      actionUrl: "/dashboard/configuracion?tab=social",
+      actionLabel: "Conectar Blogger",
     },
 
     // ━━━ CONTENIDO ━━━

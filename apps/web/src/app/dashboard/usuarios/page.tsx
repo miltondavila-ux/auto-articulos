@@ -52,6 +52,7 @@ interface UserRow {
   allowTumblrPublishing: boolean;
   allowBlueskyPublishing: boolean;
   allowDevToPublishing: boolean;
+  allowBloggerPublishing: boolean;
   aiImageGenerationEnabled: boolean;
   numeroCuenta?: number;
   moduleOverrides?: Record<string, "inherit" | "enabled" | "disabled">;
@@ -1869,6 +1870,7 @@ function UserCard({
   );
   const [permBluesky, setPermBluesky] = useState(Boolean(user.allowBlueskyPublishing));
   const [permDevTo, setPermDevTo] = useState(Boolean(user.allowDevToPublishing));
+  const [permBlogger, setPermBlogger] = useState(Boolean(user.allowBloggerPublishing));
   const [permAiImageGeneration, setPermAiImageGeneration] = useState(
     Boolean(user.aiImageGenerationEnabled),
   );
@@ -1910,6 +1912,7 @@ function UserCard({
     setPermTumblr(Boolean(user.allowTumblrPublishing));
     setPermBluesky(Boolean(user.allowBlueskyPublishing));
     setPermDevTo(Boolean(user.allowDevToPublishing));
+    setPermBlogger(Boolean(user.allowBloggerPublishing));
     setPermAiImageGeneration(Boolean(user.aiImageGenerationEnabled));
     setPermIsTrialSignup(Boolean(user.isTrialSignup));
     setPermTrialUnlocked(Boolean(user.trialUnlocked));
@@ -1926,6 +1929,7 @@ function UserCard({
     permTumblr !== Boolean(user.allowTumblrPublishing) ||
     permBluesky !== Boolean(user.allowBlueskyPublishing) ||
     permDevTo !== Boolean(user.allowDevToPublishing) ||
+    permBlogger !== Boolean(user.allowBloggerPublishing) ||
     permAiImageGeneration !== Boolean(user.aiImageGenerationEnabled) ||
     permIsTrialSignup !== Boolean(user.isTrialSignup) ||
     permTrialUnlocked !== Boolean(user.trialUnlocked) ||
@@ -2121,6 +2125,7 @@ function UserCard({
           allowTumblrPublishing: permTumblr,
           allowBlueskyPublishing: permBluesky,
           allowDevToPublishing: permDevTo,
+          allowBloggerPublishing: permBlogger,
           aiImageGenerationEnabled: permAiImageGeneration,
           isTrialSignup: permIsTrialSignup,
           trialUnlocked: permTrialUnlocked,
@@ -2486,6 +2491,10 @@ function UserCard({
               <label style={permissionLabelStyle}>
                 <input type="checkbox" checked={permDevTo} onChange={(e) => setPermDevTo(e.target.checked)} disabled={savingPermissions} style={{ accentColor: "#1d1d1f", width: 16, height: 16 }} />
                 Conectar y publicar artículos en DEV.to
+              </label>
+              <label style={permissionLabelStyle}>
+                <input type="checkbox" checked={permBlogger} onChange={(e) => setPermBlogger(e.target.checked)} disabled={savingPermissions} style={{ accentColor: "#1d1d1f", width: 16, height: 16 }} />
+                Conectar y publicar artículos en Blogger
               </label>
               <label style={permissionLabelStyle}>
                 <input

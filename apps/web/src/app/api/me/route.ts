@@ -60,6 +60,7 @@ export async function GET() {
       allowThreadsPublishing: user.allowThreadsPublishing,
       allowBlueskyPublishing: user.allowBlueskyPublishing,
       allowDevToPublishing: user.allowDevToPublishing,
+      allowBloggerPublishing: user.allowBloggerPublishing,
       hasImageCredits: user.hasImageCredits,
       disabledModules,
       userDisabledModules,

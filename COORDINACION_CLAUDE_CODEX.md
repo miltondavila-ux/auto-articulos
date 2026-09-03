@@ -2341,3 +2341,54 @@ Rama: `codex/cupo-renovacion-exacto`.
 Archivos reservados: `apps/web/src/app/api/opportunities/execute-all/route.ts`, `apps/web/src/app/api/runs/route.ts`, `apps/web/src/app/dashboard/oportunidades/page.tsx`, `apps/web/src/app/dashboard/publicar/page.tsx`, `apps/web/src/content/manual-usuario.ts`.
 Alcance: indicar dinámicamente la causa y renovación del cupo agotado; no tocar Vercel, middleware, autenticación, schema ni migraciones.
 Estado: COMPLETADO Y DESPLEGADO en `origin/main` (commit `0463fdd`). Las tres auditorías, typecheck, build Webpack y verificación HTTP de producción pasaron. Reserva liberada.
+
+## Trabajo activo — conexión Blogger — 2026-09-02
+
+Responsable: CODEX - GPT-5.
+Conversación: `CONEXION BLOGGER`.
+Worktree: `/private/tmp/auto-articulos-conexion-blogger`.
+Rama: worktree aislado sobre `origin/main` en `a99040f` (HEAD separado).
+Alcance inicial: investigación y documentación de una futura integración
+oficial de Blogger para que cada usuario conecte su propia cuenta Google y
+publique mediante Blogger API v3, siguiendo los patrones existentes.
+Archivos reservados antes de uso: `COORDINACION_CLAUDE_CODEX.md` y
+`INVENTARIO_CONVERSACIONES.md` (este último será creado en este worktree).
+Archivos de código reservados: ninguno todavía.
+Producción: sin cambios; no se ejecutarán migraciones ni despliegues en esta
+fase.
+Estado: EN CURSO — pendiente de completar investigación y definir el primer
+cambio mínimo de implementación con autorización del usuario.
+
+### Preparación técnica — 2026-09-02
+
+Implementación aislada completada sin tocar producción. Blogger API v3 fue
+confirmada mediante documentación oficial de Google: OAuth 2.0 con scope
+`https://www.googleapis.com/auth/blogger`, listado de blogs del usuario,
+creación de entradas y publicación oficial.
+
+Archivos nuevos principales: módulo compartido Blogger API, rutas OAuth
+`connect`/`callback`/estado, componente de Configuración, helper OAuth y
+migración Prisma. Se añadieron Blogger a permisos por usuario, Oportunidades
+Redes, configuración de estado, panel de administración y worker. Los tokens
+se cifran con el mecanismo existente; la renovación usa el refresh token y el
+cliente Google configurado.
+
+Auditoría funcional: APROBADA — las rutas, el scope, el selector de blog, el
+permiso individual, la generación de oportunidades y la rama de publicación
+del worker están conectados.
+Auditoría de regresión: APROBADA — 14 tests del worker, build del worker,
+typecheck web y build web completo (83 páginas/rutas) en verde.
+Auditoría de integración/producción: APROBADA para preparación local — schema
+Prisma validado con URLs ficticias, migración revisada, diff-check limpio y
+rutas Blogger incluidas en el build. No se verificó producción porque no se
+ha autorizado deployment.
+
+Estado: PREPARADA — pendiente de revisión/commit y autorización explícita de
+Milton para publicar. No se aplicó la migración ni se modificaron secretos,
+Vercel, middleware o configuración de producción.
+
+Commit local: `03d837e`.
+Reserva liberada al cerrar esta fase: `COORDINACION_CLAUDE_CODEX.md` e
+`INVENTARIO_CONVERSACIONES.md`. No quedan archivos de código reservados.
+El hook informativo de actualizaciones no pudo consultar Prisma por falta de
+`DATABASE_URL` en el worktree; el commit sí se creó correctamente.

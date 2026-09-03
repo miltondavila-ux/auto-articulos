@@ -21,6 +21,7 @@ import {
   createBlueskyPost,
   getBlueskyPostUrl,
   createDevToArticle,
+  createBloggerPost,
   getDevToArticleUrl,
   buildSafeCaption,
   truncatePlainCaption,
@@ -842,6 +843,32 @@ async function processDevToJob(job: {
   return true;
 }
 
+// ─── BLOGGER ──────────────────────────────────────────────────────────────
+
+async function processBloggerJob(job: { id: string; userId: string; titleId: string | null; articleUrl: string; articleTitle: string; suggestedText: string }): Promise<boolean> {
+  let integration = await prisma.bloggerIntegration.findUnique({ where: { userId: job.userId } });
+  if (!integration) throw new Error("Blogger no está configurado en tu cuenta.");
+  let accessToken = decryptSecret(integration.accessTokenEncrypted);
+  if (integration.expiresAt && integration.expiresAt <= new Date() && integration.refreshTokenEncrypted) {
+    const clientId = process.env.GOOGLE_SEARCH_CONSOLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET;
+    if (!clientId || !clientSecret) throw new Error("Google OAuth no está configurado para renovar Blogger.");
+    const response = await fetch("https://oauth2.googleapis.com/token", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ client_id: clientId, client_secret: clientSecret, refresh_token: decryptSecret(integration.refreshTokenEncrypted), grant_type: "refresh_token" }) });
+    if (!response.ok) throw new Error(`La autorización de Blogger expiró y no pudo renovarse: ${await response.text()}`);
+    const token = await response.json() as { access_token: string; expires_in?: number };
+    accessToken = token.access_token;
+    integration = await prisma.bloggerIntegration.update({ where: { userId: job.userId }, data: { accessTokenEncrypted: encryptSecret(accessToken), expiresAt: token.expires_in ? new Date(Date.now() + token.expires_in * 1000) : null } });
+  }
+  await validateArticleUrl(job.articleUrl);
+  const body = await getArticleBodyMarkdown(job.articleUrl);
+  const content = `${body}<p><a href="${job.articleUrl}">Leer el artículo original</a></p>`;
+  const result = await createBloggerPost(accessToken, integration.blogId, { title: job.articleTitle, content });
+  if (!result.id) throw new Error("Blogger no devolvió el identificador de la entrada.");
+  await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: result.url || result.id, publishedAt: new Date(), errorLog: null } });
+  if (job.titleId) await prisma.titleEvent.create({ data: { titleId: job.titleId, message: `Publicado exitosamente en Blogger (${integration.blogName || integration.blogId}).` } });
+  return true;
+}
+
 // ─── FACEBOOK PAGES ───────────────────────────────────────────────────────
 
 async function processFacebookPageJob(job: {
@@ -1317,6 +1344,8 @@ export async function processNextSocialPublish(filterUserId?: string, filterArti
       published = await processBlueskyJob(job);
     } else if (job.platform === "devto") {
       published = await processDevToJob(job);
+    } else if (job.platform === "blogger") {
+      published = await processBloggerJob(job);
     } else if (job.platform === "facebook-page") {
       published = await processFacebookPageJob(job);
     } else if (job.platform === "facebook-story") {
