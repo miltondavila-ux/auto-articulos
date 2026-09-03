@@ -40,3 +40,53 @@ por OAuth. Estado: preparada, sin despliegue.
 - Commit local: `03d837e`.
 - Reservas liberadas al cerrar esta fase; no quedan archivos de código
   reservados. Deployment pendiente de autorización.
+
+## `[CLAUDE] - DOCUMENTO DE COORDINACION - SEPT 3`
+
+Identidad exacta de la conversación (dada literalmente por Milton):
+`DOCUMENTO DE COORDINACION - SEPT 3`.
+
+Proyecto: ordenar `COORDINACION_CLAUDE_CODEX.md` a pedido de Milton, sin
+borrar ni reescribir historial y sin mover ninguna entrada de lugar.
+
+Motivo: Milton reportó que el documento principal de coordinación "puede
+estar bastante sucio" y pidió organizarlo, dejando explícito que no se debía
+borrar nada, ni juzgar qué funciona o no, ni tomar decisiones por falta de
+contexto.
+
+Hallazgo previo relevante: el checkout local
+(`/Users/miltondavila/Creador de articulos`) estaba 68 commits detrás de
+`origin/main` y tenía cambios sin commitear en los 4 documentos maestros que
+contradecían la versión real. Milton autorizó explícitamente trabajar sobre
+la versión de `origin/main` (fuente de verdad), dejando los cambios locales
+sin commitear intactos y sin tocar.
+
+Alcance ejecutado (worktree aislado `/private/tmp/doc-coordinacion-sept3`,
+rama `claude/doc-coordinacion-sept3`, creada desde `origin/main` en
+`4b1e5c9`), únicamente sobre `COORDINACION_CLAUDE_CODEX.md`:
+1. Se agregó un índice de navegación al inicio del archivo (enlaces a cada
+   encabezado existente, en el mismo orden, mismo texto). 100% aditivo.
+2. Se reparó una corrupción real de texto (línea 424 original): varios
+   encabezados y párrafos habían quedado pegados en una sola línea gigante
+   sin saltos de línea, con palabras fusionadas (ej. "participantesautorizados").
+   Se reinsertaron únicamente los saltos de línea y espacios obviamente
+   faltantes; verificado con comparación byte a byte sin espacios que ningún
+   carácter de contenido cambió.
+3. Se señaló (sin fusionar ni borrar) la entrada duplicada
+   "Retiro de las 8 cajas de prompts — 24/8/2026" (dos encabezados idénticos
+   consecutivos), dejando una nota en el índice para quien lo revise.
+4. No se movió, reordenó ni resumió ninguna entrada existente. No se tocó
+   `INVENTARIO_CONVERSACIONES.md` salvo agregar esta misma entrada, ni
+   `TO-DO.md`, ni `CONTROLADOR_DE_VERSIONES.md`.
+
+Archivos modificados: `COORDINACION_CLAUDE_CODEX.md`,
+`INVENTARIO_CONVERSACIONES.md` (esta entrada).
+Migraciones: ninguna. Capitanía de migración: no aplica (cambio documental).
+Commit: pendiente de confirmación de Milton antes de push (ver reporte en la
+conversación).
+Estado: EN PROGRESO — pendiente de que Milton revise el resultado y defina el
+protocolo prioritario que quiere establecer para futuras conversaciones que
+lean este documento de coordinación.
+Responsable: Claude.
+Siguiente acción: Milton revisa el diff, autoriza el push/merge, y luego
+entrega el patrón de protocolo a fijar.

@@ -1,3 +1,111 @@
+# ÍNDICE DE NAVEGACIÓN (agregado 2026-09-03 por Claude, sesión "DOCUMENTO DE COORDINACION - SEPT 3")
+
+Este índice es puramente de navegación: enlaza cada encabezado del documento en el mismo orden y con el mismo texto en que ya existía. No se movió, resumió, reordenó ni borró ningún contenido para crearlo — es un agregado al inicio del archivo, nada más.
+
+Nota sobre una entrada duplicada detectada (sin resolver, solo señalada — ver regla de no alterar historial): existen dos encabezados idénticos "## Retiro de las 8 cajas de prompts — 24/8/2026" (líneas 1028 y 1041 en esta versión). Parecen ser un borrador y su versión final (la segunda ya incluye el commit `148205b`). Se conservan ambas tal cual estaban; no se fusionaron ni se borró ninguna.
+
+  - [CIERRE — CRÉDITOS DE IMAGEN: hasImageCredits solo por creación real + detención de lote (2026-09-03)](#cierre-créditos-de-imagen-hasimagecredits-solo-por-creación-real-detención-de-lote-2026-09-03) — línea (ver más abajo)
+  - [RESERVA — CERO CANIBALIZACION Y COBERTURA LONGTAIL COMPLETA (2026-09-02)](#reserva-cero-canibalizacion-y-cobertura-longtail-completa-2026-09-02) — línea 1
+    - [Cambios implementados](#cambios-implementados) — línea 47
+    - [Decisión de diseño explicada: no se agregó un filtro de similitud de texto en código](#decisión-de-diseño-explicada-no-se-agregó-un-filtro-de-similitud-de-texto-en-código) — línea 92
+    - [Tres auditorías independientes](#tres-auditorías-independientes) — línea 105
+  - [RESERVA — CATEGORIAS MAL ELEGIDAS (2026-09-02)](#reserva-categorias-mal-elegidas-2026-09-02) — línea 161
+    - [Cambios implementados](#cambios-implementados-1) — línea 195
+    - [Tres auditorías independientes](#tres-auditorías-independientes-1) — línea 221
+  - [ELIMINACIÓN POPUP QR DE CRÉDITOS DE IMAGEN (2026-08-31)](#eliminación-popup-qr-de-créditos-de-imagen-2026-08-31) — línea 277
+  - [Trabajo activo — Blogger variables aisladas — 2026-09-03](#trabajo-activo-blogger-variables-aisladas-2026-09-03) — línea 279
+  - [INVENTARIO DE CONVERSACIONES](#inventario-de-conversaciones) — línea 320
+    - [`TABLA PUBLICA ACCESIBLE GRAVE`](#tabla-publica-accesible-grave) — línea 322
+    - [Acuerdo de coordinación — 2026-08-31](#acuerdo-de-coordinación-2026-08-31) — línea 361
+- [Coordinación de trabajo: Claude, Codex y Antigravity](#coordinación-de-trabajo-claude-codex-y-antigravity) — línea 424
+  - [`TO-DO.md` — buzón de ideas de Milton (leer, nunca ejecutar sin pedido)](#to-domd-buzón-de-ideas-de-milton-leer-nunca-ejecutar-sin-pedido) — línea 428
+  - [Regla obligatoria antes de iniciar cualquier tarea (OPTIMIZADA PARA MÍNIMO CONSUMO DE TOKENS)](#regla-obligatoria-antes-de-iniciar-cualquier-tarea-optimizada-para-mínimo-consumo-de-tokens) — línea 432
+  - [ORDEN OBLIGATORIA — nadie daña el trabajo de nadie](#orden-obligatoria-nadie-daña-el-trabajo-de-nadie) — línea 442
+  - [Liberación coordinada de main — 23/8/2026](#liberación-coordinada-de-main-2382026) — línea 457
+  - [Proyecto: wizard de dominio por cuenta — 2026-08-28](#proyecto-wizard-de-dominio-por-cuenta-2026-08-28) — línea 470
+    - [RELEVO A CLAUDE — ESTADO REAL AL 2026-08-29](#relevo-a-claude-estado-real-al-2026-08-29) — línea 498
+    - [CLAUDE — RESOLUCIÓN: UNA SOLA SOLUCIÓN Y CAPITANÍA ASUMIDA, 2026-08-30](#claude-resolución-una-sola-solución-y-capitanía-asumida-2026-08-30) — línea 641
+    - [CLAUDE — TRES AUDITORÍAS Y CORRECCIONES, 2026-08-29](#claude-tres-auditorías-y-correcciones-2026-08-29) — línea 704
+  - [2026-08-29 — Reparación de corridas sin worker](#2026-08-29-reparación-de-corridas-sin-worker) — línea 829
+    - [Inventario exacto de auditorías y pruebas ya ejecutadas](#inventario-exacto-de-auditorías-y-pruebas-ya-ejecutadas) — línea 859
+  - [ENTREGA FORMAL Y LIBERACIÓN — 2026-08-28](#entrega-formal-y-liberación-2026-08-28) — línea 946
+  - [2026-08-24 — Codex: visibilidad coherente de redes para Lorena](#2026-08-24-codex-visibilidad-coherente-de-redes-para-lorena) — línea 1003
+  - [Instrucciones de pestañas para conexiones sociales — 24/8/2026](#instrucciones-de-pestañas-para-conexiones-sociales-2482026) — línea 1016
+  - [Retiro de las 8 cajas de prompts — 24/8/2026](#retiro-de-las-8-cajas-de-prompts-2482026) — línea 1028
+  - [Retiro de las 8 cajas de prompts — 24/8/2026](#retiro-de-las-8-cajas-de-prompts-2482026-1) — línea 1041
+  - [Estado visual pendiente de Google Business Profile — 24/8/2026](#estado-visual-pendiente-de-google-business-profile-2482026) — línea 1054
+  - [Respuesta al protocolo de liberación coordinada — 2026-08-24 (Claude-4)](#respuesta-al-protocolo-de-liberación-coordinada-2026-08-24-claude-4) — línea 1067
+  - [Respuesta a liberación coordinada — Creador de Imágenes para Redes Sociales (Claude, trabajo del 22/8/2026)](#respuesta-a-liberación-coordinada-creador-de-imágenes-para-redes-sociales-claude-trabajo-del-2282026) — línea 1081
+  - [LIBERACIÓN Y ENTREGA SEPARADA DE PENDIENTES — 2026-08-28](#liberación-y-entrega-separada-de-pendientes-2026-08-28) — línea 1094
+    - [CODEX - GPT-5 - PROBLEMA CON TUMBLR](#codex---gpt-5---problema-con-tumblr) — línea 1099
+    - [CODEX - GPT-5 - INTEGRACION GOOGLE ANALYTICS](#codex---gpt-5---integracion-google-analytics) — línea 1111
+    - [CODEX - GPT-5 - BLUESKY](#codex---gpt-5---bluesky) — línea 1123
+    - [CODEX - GPT-5 - DEV.TO](#codex---gpt-5---devto) — línea 1135
+    - [CODEX - GPT-5 - MASTODON](#codex---gpt-5---mastodon) — línea 1147
+    - [CODEX - GPT-5 - PINTEREST](#codex---gpt-5---pinterest) — línea 1159
+    - [CODEX - GPT-5 - CONFIGURACION Y OPORTUNIDADES](#codex---gpt-5---configuracion-y-oportunidades) — línea 1171
+    - [CODEX - GPT-5 - MIGRACIONES PRISMA](#codex---gpt-5---migraciones-prisma) — línea 1183
+  - [2026-08-26 — Auditoría y corrección de PROBLEMA CON TUMBLR](#2026-08-26-auditoría-y-corrección-de-problema-con-tumblr) — línea 1195
+  - [Documentación de proyecto — Creador de Imágenes para Redes Sociales — 20-22/8/2026 (Claude)](#documentación-de-proyecto-creador-de-imágenes-para-redes-sociales-20-2282026-claude) — línea 1215
+  - [[CLAUDE] - BOTONES OPORTUNIDADES REDES — 31/8/2026](#claude---botones-oportunidades-redes-3182026) — línea 1228
+  - [2026-08-31 — Cierre: TRANSFERIDO DE CODEX - SISTEMA NO PUBLICA ARTÍCULOS](#2026-08-31-cierre-transferido-de-codex---sistema-no-publica-artículos) — línea 1275
+    - [Actualización — 2026-08-31 (mismo día)](#actualización-2026-08-31-mismo-día) — línea 1358
+  - [[CLAUDE] - BOTONES DE OPORTUNIDADES AL INICIO — 31/8/2026](#claude---botones-de-oportunidades-al-inicio-3182026) — línea 1368
+    - [Actualización — 2026-08-31 (mismo día, tras ver la captura en producción)](#actualización-2026-08-31-mismo-día-tras-ver-la-captura-en-producción) — línea 1434
+    - [Verificación de lectura — CÓDIGO 4471 (2026-08-31, ~20:58 hora local)](#verificación-de-lectura-código-4471-2026-08-31-2058-hora-local) — línea 1454
+    - [Verificación de lectura — CÓDIGO CODEX 5826 (2026-08-31)](#verificación-de-lectura-código-codex-5826-2026-08-31) — línea 1459
+    - [Acuerdo de trabajo conjunto — 2026-08-31](#acuerdo-de-trabajo-conjunto-2026-08-31) — línea 1464
+    - [Nueva tarea registrada — 2026-08-31](#nueva-tarea-registrada-2026-08-31) — línea 1478
+    - [Regla reforzada por Milton — 2026-08-31](#regla-reforzada-por-milton-2026-08-31) — línea 1531
+    - [Coordinación explícita — Claude a Codex (31/8/2026, ~21:00 hora local)](#coordinación-explícita-claude-a-codex-3182026-2100-hora-local) — línea 1547
+    - [Cierre — texto de instrucciones actualizado (31/8/2026)](#cierre-texto-de-instrucciones-actualizado-3182026) — línea 1567
+  - [ACTUALIZACIÓN CODEX — INSTRUCCIONES POR MÓDULO — 2026-08-31](#actualización-codex-instrucciones-por-módulo-2026-08-31) — línea 1579
+  - [NUEVA TAREA CODEX — AUDITORÍA DE SUBMÓDULOS DE CONFIGURACIÓN — 2026-08-31](#nueva-tarea-codex-auditoría-de-submódulos-de-configuración-2026-08-31) — línea 1626
+    - [Cierre — menú de escritorio pasado a fondo blanco (31/8/2026)](#cierre-menú-de-escritorio-pasado-a-fondo-blanco-3182026) — línea 1673
+  - [[CLAUDE] - CHECK POSITIVO DE GOOGLE ANALYTICS EN CONFIGURACIÓN — 31/8/2026](#claude---check-positivo-de-google-analytics-en-configuración-3182026) — línea 1692
+  - [REGLA PERMANENTE — VERCEL, ROOT DIRECTORY Y `vercel.json`](#regla-permanente-vercel-root-directory-y-verceljson) — línea 1721
+  - [Trabajo activo — auditoría de textos de marca blanca — 1/9/2026](#trabajo-activo-auditoría-de-textos-de-marca-blanca-192026) — línea 1779
+    - [Autocrítica y numeración — Claude-2 (esta sesión) (31/8/2026, ~21:15)](#autocrítica-y-numeración-claude-2-esta-sesión-3182026-2115) — línea 1788
+  - [[CLAUDE] - GOOGLE ANALYTICS CHECK POSITIVO — CIERRE — 31/8/2026](#claude---google-analytics-check-positivo-cierre-3182026) — línea 1821
+  - [Trabajo activo — ERROR CON IDIOMA ARTÍCULOS — 2026-09-01](#trabajo-activo-error-con-idioma-artículos-2026-09-01) — línea 1881
+  - [Trabajo activo — THIS ROUTING MIDDLEWARE — 2026-09-02](#trabajo-activo-this-routing-middleware-2026-09-02) — línea 1929
+  - [Trabajo activo — REGLA PERMANENTE VERCEL/ROOT DIRECTORY — 2026-09-02](#trabajo-activo-regla-permanente-vercelroot-directory-2026-09-02) — línea 1976
+  - [Trabajo activo — corrección Vercel Root Directory — 2026-09-02](#trabajo-activo-corrección-vercel-root-directory-2026-09-02) — línea 1990
+  - [TABLA PUBLICA ACCESIBLE GRAVE — 2026-09-02](#tabla-publica-accesible-grave-2026-09-02) — línea 2017
+    - [Extensión — proteger tablas futuras (2026-09-02, mismo día)](#extensión-proteger-tablas-futuras-2026-09-02-mismo-día) — línea 2089
+  - [[CLAUDE] - LÍMITE DIARIO DE ARTÍCULOS A 5 — 31/8/2026](#claude---límite-diario-de-artículos-a-5-3182026) — línea 2142
+    - [Continuación — huecos de "cara al usuario" NO dinámicos, encontrados y corregidos](#continuación-huecos-de-cara-al-usuario-no-dinámicos-encontrados-y-corregidos) — línea 2188
+    - [Re-auditoría tras rebase — 2/9/2026 (misma conversación)](#re-auditoría-tras-rebase-292026-misma-conversación) — línea 2229
+  - [2026-08-31 — Reautenticación de GitHub CLI (sin cambios de código)](#2026-08-31-reautenticación-de-github-cli-sin-cambios-de-código) — línea 2264
+  - [[CLAUDE] - CIERRE: LÍMITE EN LOS ARTICULOS — 2/9/2026](#claude---cierre-límite-en-los-articulos-292026) — línea 2280
+  - [Trabajo activo — límites dinámicos UX — 2026-09-03](#trabajo-activo-límites-dinámicos-ux-2026-09-03) — línea 2364
+  - [Trabajo activo — comunicación exacta de renovación de cupos — 2026-09-03](#trabajo-activo-comunicación-exacta-de-renovación-de-cupos-2026-09-03) — línea 2373
+  - [Trabajo activo — conexión Blogger — 2026-09-02](#trabajo-activo-conexión-blogger-2026-09-02) — línea 2382
+    - [Preparación técnica — 2026-09-02](#preparación-técnica-2026-09-02) — línea 2399
+    - [Corrección de credenciales Blogger separadas — 2026-09-03](#corrección-de-credenciales-blogger-separadas-2026-09-03) — línea 2427
+    - [Credenciales globales en Configuración → Redes Sociales — 2026-09-03](#credenciales-globales-en-configuración-redes-sociales-2026-09-03) — línea 2451
+    - [Corrección final — credenciales administrativas Blogger en UI — 2026-09-03](#corrección-final-credenciales-administrativas-blogger-en-ui-2026-09-03) — línea 2471
+    - [Reserva liberada — registro maestro de versiones](#reserva-liberada-registro-maestro-de-versiones) — línea 2495
+    - [Reserva activa — corrección de referencias post-rebase](#reserva-activa-corrección-de-referencias-post-rebase) — línea 2503
+    - [Reserva activa — migración segura de Blogger](#reserva-activa-migración-segura-de-blogger) — línea 2509
+    - [Reserva activa — cierre de verificación Blogger](#reserva-activa-cierre-de-verificación-blogger) — línea 2529
+    - [Reserva activa — habilitar publicación Blogger en oportunidades — 2026-09-03](#reserva-activa-habilitar-publicación-blogger-en-oportunidades-2026-09-03) — línea 2543
+    - [Reserva activa — documentar auditoría de habilitación Blogger — 2026-09-03](#reserva-activa-documentar-auditoría-de-habilitación-blogger-2026-09-03) — línea 2553
+    - [Reserva activa — cierre de triple auditoría predespliegue — 2026-09-03](#reserva-activa-cierre-de-triple-auditoría-predespliegue-2026-09-03) — línea 2567
+    - [Despliegue y verificación final Blogger — 2026-09-03](#despliegue-y-verificación-final-blogger-2026-09-03) — línea 2576
+    - [Reserva activa — corregir formato e imagen de Blogger — 2026-09-03](#reserva-activa-corregir-formato-e-imagen-de-blogger-2026-09-03) — línea 2627
+    - [Corrección Blogger preparada — HTML editorial e imagen — 2026-09-03](#corrección-blogger-preparada-html-editorial-e-imagen-2026-09-03) — línea 2637
+  - [Auditoría y liberación — límites dinámicos de artículos — 2026-09-03](#auditoría-y-liberación-límites-dinámicos-de-artículos-2026-09-03) — línea 2673
+    - [Cierre de despliegue autorizado — Blogger HTML e imagen — 2026-09-03](#cierre-de-despliegue-autorizado-blogger-html-e-imagen-2026-09-03) — línea 2685
+    - [Reserva activa — adaptar Blogger al patrón editorial de las redes — 2026-09-03](#reserva-activa-adaptar-blogger-al-patrón-editorial-de-las-redes-2026-09-03) — línea 2715
+    - [Traspaso a Claude — CONEXION BLOGGER — 2026-09-03](#traspaso-a-claude-conexion-blogger-2026-09-03) — línea 2728
+      - [Objetivo exacto](#objetivo-exacto) — línea 2737
+      - [Estado real del worktree](#estado-real-del-worktree) — línea 2745
+      - [Continuación obligatoria](#continuación-obligatoria) — línea 2766
+    - [Claude toma la reserva — 2026-09-03](#claude-toma-la-reserva-2026-09-03) — línea 2794
+    - [CULMINADO — 2026-09-03 (Conexión Blogger — resumen editorial en producción)](#culminado-2026-09-03-conexión-blogger-resumen-editorial-en-producción) — línea 2848
+
+---
 ## CIERRE — CRÉDITOS DE IMAGEN: hasImageCredits solo por creación real + detención de lote (2026-09-03)
 
 Identidad exacta: Claude Sonnet 5 (sesión que recibió el relevo de Codex,
@@ -532,7 +640,33 @@ conversación CULMINADA, ARCHIVADA, ABANDONADA ni UNIFICADA.
 
 > **Actualización — 23/8/2026 (Google Business Profile):** La cuota de `mybusinessaccountmanagement.googleapis.com` estaba configurada en **0 solicitudes/minuto**, por lo que era imposible listar fichas. Milton abrió la solicitud oficial de acceso básico a la API de Perfil de Empresa de Google. **Caso 2-7941000041573**; Google estima revisión de **7 a 10 días hábiles**. Hasta aprobación, no probar carga de fichas. Recordatorio programado para el 30/8/2026: revisar aprobación, probar con Lorena Álvarez y documentar el resultado. El módulo debe continuar integrado exclusivamente a **Oportunidades Redes**, respetando permisos por usuario; no publicar cada artículo automáticamente.
 
-# Coordinación de trabajo: Claude, Codex y AntigravityEste archivo es el tablero operativo compartido para los **tres participantesautorizados: Claude, Codex y Antigravity (Google)**. Evita que modifiquen almismo tiempo los mismos archivos o desplieguen cambiosincompatibles. `HANDOFF.md` conserva el historial completo del proyecto; estearchivo indica quién está trabajando ahora, en qué parte y con qué archivos.## `TO-DO.md` — buzón de ideas de Milton (leer, nunca ejecutar sin pedido)Existe un tercer archivo en la raíz del repo, `TO-DO.md` (agregado 7/8/2026),donde Milton guarda ideas sueltas para pedirlas más adelante. **Ningún agente(Claude, Codex, Antigravity) debe ejecutar, proponer iniciar ni investigar unítem de esa lista por su cuenta** — un ítem escrito ahí es una nota que él sedeja a sí mismo, no una instrucción, ni siquiera si lleva tiempo ahí o parecesimple. Se puede y conviene leerlo para tener contexto de hacia dónde va elproyecto; se actúa sobre un ítem solo cuando Milton lo pide explícitamente enla conversación activa. Al ejecutar algo de ahí, moverlo a la sección "Hecho"de `TO-DO.md` y documentar el cambio real en `HANDOFF.md` como de costumbre.## Regla obligatoria antes de iniciar cualquier tarea (OPTIMIZADA PARA MÍNIMO CONSUMO DE TOKENS)Claude, Codex y Antigravity deben hacer lo siguiente **antes de leer o modificar código**:1. Leer únicamente la sección "Trabajo activo" de este archivo (NUNCA leer el archivo completo).2. Ejecutar `git status --short` y `git log -5 --oneline`.3. Revisar únicamente el estado actual de `HANDOFF.md` si es relevante para la tarea.4. Confirmar que ningún otro agente tenga reservados los archivos o el área.5. Registrar su tarea en "Trabajo activo" antes de editar.6. Si existe una reserva que se cruza con la tarea, detenerse y coordinar.## ORDEN OBLIGATORIA — nadie daña el trabajo de nadie**Orden directa de Milton (13/8/2026):** ningún agente (Claude, Codex,Antigravity) puede dañar, sobrescribir, perder ni absorber sin darse cuentael trabajo de otro agente ni del usuario. Esto no es una sugerencia, es unaorden.**Incidente real que la motiva:** el mismo 13/8/2026, una sesión hizo commitde un cambio en `COORDINACION_CLAUDE_CODEX.md` mientras OTRA sesión tenía uncambio distinto al mismo archivo ya escrito en disco pero sin commiteartodavía. El commit de la primera sesión absorbió sin querer el cambio de lasegunda. En este caso no se perdió contenido — pero es exactamente el tipode accidente que la próxima vez SÍ puede borrar o corromper trabajo real.**Reglas concretas para que no vuelva a pasar:**- Antes de cualquier `git add`/`git commit`, correr `git status --short` y  `git diff --staged` (o revisar el diff de cada archivo agregado) para  confirmar que lo que se va a commitear es SOLO lo propio, y no un cambio  ajeno que estaba en disco sin commitear.- Nunca usar `git add .` ni `git add -A` — agregar únicamente las rutas  exactas que el propio agente modificó (regla ya existente, reforzada acá
+# Coordinación de trabajo: Claude, Codex y Antigravity
+
+Este archivo es el tablero operativo compartido para los **tres participantes autorizados: Claude, Codex y Antigravity (Google)**. Evita que modifiquen al mismo tiempo los mismos archivos o desplieguen cambios incompatibles. `HANDOFF.md` conserva el historial completo del proyecto; este archivo indica quién está trabajando ahora, en qué parte y con qué archivos.
+
+## `TO-DO.md` — buzón de ideas de Milton (leer, nunca ejecutar sin pedido)
+
+Existe un tercer archivo en la raíz del repo, `TO-DO.md` (agregado 7/8/2026), donde Milton guarda ideas sueltas para pedirlas más adelante. **Ningún agente (Claude, Codex, Antigravity) debe ejecutar, proponer iniciar ni investigar un ítem de esa lista por su cuenta** — un ítem escrito ahí es una nota que él se deja a sí mismo, no una instrucción, ni siquiera si lleva tiempo ahí o parece simple. Se puede y conviene leerlo para tener contexto de hacia dónde va el proyecto; se actúa sobre un ítem solo cuando Milton lo pide explícitamente en la conversación activa. Al ejecutar algo de ahí, moverlo a la sección "Hecho" de `TO-DO.md` y documentar el cambio real en `HANDOFF.md` como de costumbre.
+
+## Regla obligatoria antes de iniciar cualquier tarea (OPTIMIZADA PARA MÍNIMO CONSUMO DE TOKENS)
+
+Claude, Codex y Antigravity deben hacer lo siguiente **antes de leer o modificar código**:
+1. Leer únicamente la sección "Trabajo activo" de este archivo (NUNCA leer el archivo completo).
+2. Ejecutar `git status --short` y `git log -5 --oneline`.
+3. Revisar únicamente el estado actual de `HANDOFF.md` si es relevante para la tarea.
+4. Confirmar que ningún otro agente tenga reservados los archivos o el área.
+5. Registrar su tarea en "Trabajo activo" antes de editar.
+6. Si existe una reserva que se cruza con la tarea, detenerse y coordinar.
+
+## ORDEN OBLIGATORIA — nadie daña el trabajo de nadie
+
+**Orden directa de Milton (13/8/2026):** ningún agente (Claude, Codex, Antigravity) puede dañar, sobrescribir, perder ni absorber sin darse cuenta el trabajo de otro agente ni del usuario. Esto no es una sugerencia, es una orden.
+
+**Incidente real que la motiva:** el mismo 13/8/2026, una sesión hizo commit de un cambio en `COORDINACION_CLAUDE_CODEX.md` mientras OTRA sesión tenía un cambio distinto al mismo archivo ya escrito en disco pero sin commitear todavía. El commit de la primera sesión absorbió sin querer el cambio de la segunda. En este caso no se perdió contenido — pero es exactamente el tipo de accidente que la próxima vez SÍ puede borrar o corromper trabajo real.
+
+**Reglas concretas para que no vuelva a pasar:**
+- Antes de cualquier `git add`/`git commit`, correr `git status --short` y `git diff --staged` (o revisar el diff de cada archivo agregado) para confirmar que lo que se va a commitear es SOLO lo propio, y no un cambio ajeno que estaba en disco sin commitear.
+- Nunca usar `git add .` ni `git add -A` — agregar únicamente las rutas exactas que el propio agente modificó (regla ya existente, reforzada acá
 - Nunca usar `git add .` ni `git add -A` — agregar únicamente las rutas  exactas
 
 > **Trabajo activo — 23/8/2026 (Tumblr):** Codex implementó la integración Tumblr sin modificar las redes existentes: permiso por usuario, credenciales globales cifradas, OAuth2 (`basic write offline_access`), callback `/api/search-integrations/tumblr/callback`, selección de blog, oportunidades y publicación de posts con imagen OG. El commit `b04b0e9` quedó separado y enviado a `main`. Pendiente: aplicar la migración en Supabase, desplegar y luego ingresar Consumer Key/Secret desde Configuración → Redes Sociales → Tumblr.
