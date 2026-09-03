@@ -399,6 +399,17 @@ async function processRunTitle(
       ? `Sin créditos de imagen en ${platformProductNameOrNeutral(run.user.platformDomain)}. Pide más créditos a tu proveedor del sitio; no hace falta hacer nada más aquí, el próximo intento funcionará solo.`
       : message;
 
+    // Solo persistir la falta de créditos después de agotar los reintentos
+    // del título: 10minutesWebsite puede devolver falsos positivos
+    // transitorios. Este es el único cambio automático del estado de la
+    // cuenta y nace de una creación real de artículo.
+    if (isImageCreditIssue && fresh.attempts >= MAX_ATTEMPTS) {
+      await prisma.user.update({
+        where: { id: run.userId },
+        data: { hasImageCredits: false },
+      });
+    }
+
     if (freshRun.status === "cancelled") {
       // El usuario canceló el run mientras este título estaba en curso: no
       // lo reintentamos ni lo marcamos como error, queda como cancelado.
@@ -423,6 +434,22 @@ async function processRunTitle(
         data: { status: "halted", finishedAt: new Date() },
       });
       await restoreUnfinishedTitlesToOpportunities(run.id);
+    } else if (
+      isImageCreditIssue &&
+      fresh.attempts >= MAX_ATTEMPTS &&
+      !(err instanceof DuplicateTitleError)
+    ) {
+      // Confirmado que 10minutesWebsite se quedó sin créditos de imagen
+      // (mismo chequeo de arriba que marca hasImageCredits: false): pedido
+      // explícito de Milton (3/9/2026), el lote se detiene de inmediato en
+      // vez de seguir con los demás títulos, porque todos van a fallar por
+      // la misma razón — mismo tratamiento que el límite diario.
+      await markTitleError(nextTitle.id, displayMessage);
+      await prisma.run.updateMany({
+        where: { id: run.id, status: { in: ["pending", "running"] } },
+        data: { status: "halted", finishedAt: new Date() },
+      });
+      await restoreUnfinishedTitlesToOpportunities(run.id);
     } else if (fresh.attempts >= MAX_ATTEMPTS) {
       // Se acabaron los intentos para ESTE título, pero el lote sigue: el
       // worker continúa con los demás títulos pendientes del mismo run.
@@ -431,9 +458,10 @@ async function processRunTitle(
       // créditos): "Insufficient credits" puede ser una respuesta falsa/
       // pasajera de 10minutesWebsite, no una falta real. Por eso ya no se
       // corta en el primer intento — se deja agotar los MAX_ATTEMPTS
-      // normales (se puede resolver solo en el segundo o tercero) y recién
-      // acá, si de verdad se agotaron, se usa el aviso claro en vez del
-      // volcado técnico.
+      // normales (se puede resolver solo en el segundo o tercero). Si de
+      // verdad se agotaron por créditos, el bloque de arriba ya detuvo el
+      // lote entero; a este punto solo llegan los fallos NO relacionados a
+      // créditos (o un duplicado, que nunca detiene el lote).
       // Pedido directo de Milton (30/8/2026): cuando la causa real es un
       // título duplicado en el sitio, `message` ya trae la explicación
       // exacta y los enlaces reales a lo que ya existe (armado en

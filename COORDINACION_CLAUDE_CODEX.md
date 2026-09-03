@@ -287,6 +287,78 @@ Archivos reservados: `apps/web/src/lib/blogger-oauth.ts`, `apps/worker/src/socia
 No reservados ni modificados: Vercel, middleware, autenticación general, secretos existentes y producción.
 Estado: en preparación; no desplegar hasta completar auditorías y revisión de Root Directory/logs.
 
+> **Trabajo activo — 2026-09-03 (Auditoría de créditos de imagen):** Codex
+> audita y corrige exclusivamente el flujo de créditos de imagen que afecta
+> la creación real de artículos, incluyendo sus reflejos en web, API, worker,
+> base de datos y pantallas relacionadas. Worktree aislado:
+> `/private/tmp/auditoria-creditos-imagen-20260903`; rama:
+> `codex/auditoria-creditos-imagen-20260903`. Archivos bajo reserva temporal:
+> los que resulten estrictamente necesarios tras la auditoría; se liberarán al
+> terminar. No se modifica ni despliega desde el checkout principal.
+
+> **Resultado de auditoría — 2026-09-03:** el worker ahora persiste
+> `User.hasImageCredits = false` únicamente cuando una creación real de
+> artículo identifica falta de créditos y el título agota sus reintentos;
+> se eliminó el bypass persistente de `localStorage` en Publicar y
+> Oportunidades, manteniendo el botón de confirmación como continuación
+> temporal. Auditorías lógica y estática completadas; typecheck/build
+> pendientes porque el worktree aislado no contiene `node_modules` y `tsc`
+> no está disponible. Sin commit, migración ni despliegue.
+
+> **RELEVO A CLAUDE — 2026-09-03 (créditos de imagen):** Milton solicitó
+> preparar el despliegue, pero el cambio debe continuar bajo control de
+> Claude antes de publicar. El trabajo está aislado en
+> `/private/tmp/auditoria-creditos-imagen-20260903`, rama
+> `codex/auditoria-creditos-imagen-20260903`, partiendo de `f81f53b`.
+>
+> Cambios locales propios, aún sin commit:
+> `apps/worker/src/queue.ts` persiste `User.hasImageCredits = false` solo
+> cuando una creación real detecta falta de créditos y el título agota
+> `MAX_ATTEMPTS`; `apps/web/src/app/dashboard/publicar/page.tsx` y
+> `apps/web/src/app/dashboard/oportunidades/page.tsx` dejan de usar el
+> bypass persistente de `localStorage`, pero conservan el botón “Ya recibí
+> mis créditos” como confirmación temporal para continuar/reintentar.
+>
+> Auditorías realizadas: (1) rastreo completo de lecturas/escrituras de
+> `hasImageCredits`; (2) auditoría lógica del worker y las pantallas; (3)
+> `git diff --check`, build del worker y typecheck web, todos correctos.
+> El build web oficial ejecutado desde `apps/web` (`npm run build`) no pudo
+> completar por un panic de Turbopack al crear procesos/bindear un puerto
+> (`Operation not permitted`), incluso con escalación; no se cambió Next,
+> Prisma, scripts ni versiones. El cliente Prisma se generó correctamente.
+>
+> Estado de publicación: SIN COMMIT, SIN PUSH, SIN MIGRACIÓN Y SIN DEPLOY.
+> No existe `vercel.json` en este checkout; antes de desplegar, Claude debe
+> verificar en Vercel el `Root Directory` real y los logs completos. Si es
+> `apps/web`, debe usar exactamente `npm run build` y salida `.next`, según
+> la advertencia crítica de este documento. Revisar `git status`, diff
+> completo y diff preparado antes del commit; agregar únicamente los cuatro
+> archivos propios, nunca `git add .` ni `git add -A`. Tras asumir, liberar la
+> reserva de este lote en este documento.
+
+> **Cambio adicional de Claude — 2026-09-03:** pedido explícito de Milton —
+> si un título falla por falta de créditos de imagen tras agotar sus
+> reintentos, el lote completo debe detenerse de inmediato (no seguir con
+> los demás títulos), igual que ya pasaba con el límite diario. Se agregó
+> una rama en `apps/worker/src/queue.ts` (mismo chequeo que marca
+> `hasImageCredits: false`) que marca el título con el aviso claro, pone el
+> run en `halted` y devuelve los títulos pendientes a Oportunidades para
+> reintentarlos después. Se corrigió además `apps/web/src/content/manual-usuario.ts`,
+> que afirmaba que la confirmación "Ya recibí mis créditos" sobrevivía al
+> refrescar la pantalla — eso era cierto con el bypass de `localStorage`
+> eliminado en este mismo lote, ya no.
+>
+> Auditorías repetidas tras cada cambio: `git diff --check`, build del
+> worker (`tsc`) y typecheck+build oficial de `apps/web` (`npm run build`
+> desde `apps/web`) — las tres limpias; el build web sí completó esta vez
+> (el panic de Turbopack anterior fue transitorio del entorno, no del
+> código). No existe migración nueva: `hasImageCredits` ya existía desde
+> `20260813210000_add_user_has_image_credits`.
+>
+> **Capitán de migración:** Claude — revisará y aplicará el lote completo.
+> Motivo: auditoría y despliegue de flujo de créditos de imagen. Nadie más
+> ejecuta Prisma hasta su liberación.
+
 Identidad exacta: Claude Sonnet 5 (sesión de Milton en su árbol local).
 
 Motivo: Milton pidió eliminar de raíz el popup "Créditos de imagen

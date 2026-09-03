@@ -15,8 +15,6 @@ import ImageCreditsModal from "@/components/ImageCreditsModal";
 import PreValidationGuard from "@/components/PreValidationGuard";
 import type { CategoryRow } from "@/types/dashboard";
 
-const IMAGE_CREDITS_CONFIRMED_KEY = "auto-articulos:image-credits-confirmed";
-
 export default function PublicarPage() {
   const router = useRouter();
   const [titlesText, setTitlesText] = useState("");
@@ -73,10 +71,7 @@ export default function PublicarPage() {
         setSelectedPromptId(data.defaultPromptId);
       }
       if (typeof data.hasImageCredits === "boolean") {
-        setHasImageCredits(
-          data.hasImageCredits ||
-            window.localStorage.getItem(IMAGE_CREDITS_CONFIRMED_KEY) === "true",
-        );
+        setHasImageCredits(data.hasImageCredits);
       }
       if (typeof data.platformDomain === "string") {
         setPlatformDomain(data.platformDomain);
@@ -99,7 +94,6 @@ export default function PublicarPage() {
       : "Puedes intentarlo en otro lote cuando tengas cupo disponible.";
 
   const confirmImageCredits = useCallback(() => {
-    window.localStorage.setItem(IMAGE_CREDITS_CONFIRMED_KEY, "true");
     setHasImageCredits(true);
     setBanner({
       type: "info",

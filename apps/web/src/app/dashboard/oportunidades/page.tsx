@@ -32,8 +32,6 @@ interface OpportunityGroup {
   titles: OpportunityTitle[];
 }
 
-const IMAGE_CREDITS_CONFIRMED_KEY = "auto-articulos:image-credits-confirmed";
-
 function formatDateTime(value: string | Date) {
   return new Date(value).toLocaleString("es-US", {
     day: "2-digit",
@@ -142,10 +140,7 @@ export default function OportunidadesPage() {
         setSelectedPromptId(me.defaultPromptId);
       }
       if (typeof me.hasImageCredits === "boolean") {
-        setHasImageCredits(
-          me.hasImageCredits ||
-            window.localStorage.getItem(IMAGE_CREDITS_CONFIRMED_KEY) === "true",
-        );
+        setHasImageCredits(me.hasImageCredits);
       }
       if (typeof me.platformDomain === "string") {
         setPlatformDomain(me.platformDomain);
@@ -194,7 +189,6 @@ export default function OportunidadesPage() {
       : "Puedes intentarlo en otro lote cuando tengas cupo disponible.";
 
   const confirmImageCredits = useCallback(() => {
-    window.localStorage.setItem(IMAGE_CREDITS_CONFIRMED_KEY, "true");
     setHasImageCredits(true);
     setMessage({
       kind: "info",

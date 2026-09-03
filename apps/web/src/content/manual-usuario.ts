@@ -260,7 +260,7 @@ La plataforma cuenta con un diseño minimalista y limpio en blanco impecable, si
 
 Tanto en **Publicar** (/dashboard/publicar) como en **Oportunidades SEO** (/dashboard/oportunidades), el sistema cuenta con un panel de protección preventiva (**PreValidationGuard**):
 - Si falta algún requisito previo (credenciales de la plataforma, categorías sincronizadas, idioma de redacción o Search Console), la plataforma te muestra una tarjeta clara con un checklist interactivo indicando exactamente qué falta y un botón directo para resolverlo.
-- **Créditos de imagen:** Si ya recibiste créditos, pulsa **Ya recibí mis créditos**. El sistema recordará la confirmación aunque refresques la pantalla. Si una ejecución real detecta que los créditos siguen agotados, quitará la confirmación y volverá a mostrar el aviso para que solicites créditos.
+- **Créditos de imagen:** Si ya recibiste créditos, pulsa **Ya recibí mis créditos** para intentar publicar de inmediato. Esa confirmación es solo para el intento actual: si refrescas la pantalla o vuelves más tarde, el aviso puede reaparecer hasta que una publicación real confirme que ya hay créditos disponibles. El estado real de tu cuenta solo cambia automáticamente cuando una creación de artículo comprueba, tras agotar los reintentos, que 10minutesWebsite realmente se quedó sin créditos — nunca por errores pasajeros o visitas a la pantalla.
 
 ## Administración
 
