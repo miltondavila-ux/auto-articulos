@@ -2853,3 +2853,7 @@ schema en este cambio.
 Pendiente: que Milton confirme visualmente, publicando una oportunidad
 real de Blogger desde el dashboard, que el resultado se ve como espera
 (resumen corto + imagen + enlace, no el artículo completo).
+
+**Capitán de migración liberó el lote:** Claude. Resultado: Blogger
+publica resumen editorial en producción, commit `e7706fc`/`635833c`, sin
+migración de schema. No quedan reservas activas de esta tarea.
