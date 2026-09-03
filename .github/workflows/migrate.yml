@@ -23,6 +23,11 @@ on:
         required: false
         default: false
         type: boolean
+      safe_blogger_integration:
+        description: "Aplicar únicamente las tablas y columnas nuevas de la integración Blogger"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   migrar:
@@ -67,8 +72,17 @@ jobs:
           npx prisma db execute \
             --url "$MIGRATION_DATABASE_URL" \
             --file packages/db/prisma/migrations/20260831230000_set_daily_limit_5_default/migration.sql
+      - name: Aplicar migración segura de Blogger
+        if: ${{ inputs.safe_blogger_integration }}
+        shell: bash
+        run: |
+          MIGRATION_DATABASE_URL="${DATABASE_URL/:6543/:5432}"
+          MIGRATION_DATABASE_URL="${MIGRATION_DATABASE_URL/?pgbouncer=true/}"
+          npx prisma db execute \
+            --url "$MIGRATION_DATABASE_URL" \
+            --file packages/db/prisma/migrations/20260902150000_add_blogger_integration/migration.sql
       - name: Aplicar migraciones con Session pooler
-        if: ${{ !inputs.safe_opportunity_dates && !inputs.safe_daily_limit_default }}
+        if: ${{ !inputs.safe_opportunity_dates && !inputs.safe_daily_limit_default && !inputs.safe_blogger_integration }}
         shell: bash
         run: |
           MIGRATION_DATABASE_URL="${DATABASE_URL/:6543/:5432}"
