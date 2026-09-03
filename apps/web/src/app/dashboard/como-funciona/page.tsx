@@ -106,8 +106,8 @@ const PASOS = [
         cosa: quién elige el tema.
       </>,
       <>
-        En <Modulo id="publicar" /> eliges tú. Escribes hasta diez
-        títulos de una vez, dices en qué sección va cada uno, y el sistema los
+        En <Modulo id="publicar" /> eliges tú. Escribes títulos dentro del cupo
+        dinámico de tu cuenta, dices en qué sección va cada uno, y el sistema los
         redacta y los publica en tu web.{" "}
         <strong>Es lo que quieres cuando ya sabes de qué necesitas
         hablar.</strong>

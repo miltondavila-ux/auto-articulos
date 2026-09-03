@@ -15,7 +15,6 @@ import ImageCreditsModal from "@/components/ImageCreditsModal";
 import PreValidationGuard from "@/components/PreValidationGuard";
 import type { CategoryRow } from "@/types/dashboard";
 
-const DEFAULT_MAX_TITLES_PER_BATCH = 20;
 const IMAGE_CREDITS_CONFIRMED_KEY = "auto-articulos:image-credits-confirmed";
 
 export default function PublicarPage() {
@@ -35,9 +34,11 @@ export default function PublicarPage() {
   const [starting, setStarting] = useState(false);
   const [hasActiveRun, setHasActiveRun] = useState(false);
   const [disableIndexing, setDisableIndexing] = useState(false);
-  const [maxTitlesPerBatch, setMaxTitlesPerBatch] = useState(
-    DEFAULT_MAX_TITLES_PER_BATCH,
-  );
+  const [maxTitlesPerBatch, setMaxTitlesPerBatch] = useState(0);
+  const [dailyArticleLimit, setDailyArticleLimit] = useState<number | null>(null);
+  const [monthlyArticleLimit, setMonthlyArticleLimit] = useState<number | null>(null);
+  const [publishedToday, setPublishedToday] = useState(0);
+  const [publishedThisMonth, setPublishedThisMonth] = useState(0);
   // Idioma de ESTE lote (pedido del usuario, 7/8/2026: el idioma es del
   // artículo, no del usuario). Arranca en el configurado del usuario, así que
   // quien no lo toque publica exactamente como antes.
@@ -54,6 +55,7 @@ export default function PublicarPage() {
 
   const loadUserLimits = useCallback(async () => {
     const res = await fetch("/api/me", { cache: "no-store" });
+    const statsRes = await fetch("/api/dashboard-stats", { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       if (
@@ -62,6 +64,8 @@ export default function PublicarPage() {
       ) {
         setMaxTitlesPerBatch(data.maxTitlesPerBatch);
       }
+      setDailyArticleLimit(typeof data.dailyArticleLimit === "number" ? data.dailyArticleLimit : null);
+      setMonthlyArticleLimit(typeof data.monthlyArticleLimit === "number" ? data.monthlyArticleLimit : null);
       if (typeof data.contentLanguage === "string") {
         setContentLanguage(data.contentLanguage);
       }
@@ -78,7 +82,16 @@ export default function PublicarPage() {
         setPlatformDomain(data.platformDomain);
       }
     }
+    if (statsRes.ok) {
+      const stats = await statsRes.json().catch(() => ({}));
+      if (typeof stats.publishedToday === "number") setPublishedToday(stats.publishedToday);
+      if (typeof stats.publishedThisMonth === "number") setPublishedThisMonth(stats.publishedThisMonth);
+    }
   }, []);
+
+  const dailyAvailable = dailyArticleLimit === null ? Infinity : Math.max(0, dailyArticleLimit - publishedToday);
+  const monthlyAvailable = monthlyArticleLimit === null ? Infinity : Math.max(0, monthlyArticleLimit - publishedThisMonth);
+  const effectiveAvailable = Math.min(maxTitlesPerBatch || Infinity, dailyAvailable, monthlyAvailable);
 
   const confirmImageCredits = useCallback(() => {
     window.localStorage.setItem(IMAGE_CREDITS_CONFIRMED_KEY, "true");
@@ -166,7 +179,7 @@ export default function PublicarPage() {
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line.length > 0).length;
-  const overLimit = titleCount > maxTitlesPerBatch;
+  const overLimit = Number.isFinite(effectiveAvailable) && titleCount > effectiveAvailable;
 
   async function handleIniciar() {
     if (!contentLanguage.trim()) {
@@ -421,9 +434,8 @@ export default function PublicarPage() {
         <section style={readySectionStyle(titleCount > 0 && !overLimit)}>
           <h2 style={h2Style}>Títulos</h2>
           <p style={{ fontSize: 13, color: "#6e6e73", margin: "0 0 12px" }}>
-            Pega un título por línea. Puedes publicar como máximo{" "}
-            <strong>{maxTitlesPerBatch}</strong> por lote (si tienes más,
-            divídelos en varios lotes).
+            Pega un título por línea. Tu cupo disponible actual es de{" "}
+            <strong>{Number.isFinite(effectiveAvailable) ? effectiveAvailable : "todos"}</strong> artículos. Lote: {maxTitlesPerBatch || "sin límite"}; diario: {dailyArticleLimit ?? "sin límite"}; mensual: {monthlyArticleLimit ?? "sin límite"}.
           </p>
           <textarea
             value={titlesText}
@@ -443,11 +455,11 @@ export default function PublicarPage() {
             }}
           >
             <span>
-              {titleCount} de {maxTitlesPerBatch} títulos
+              {titleCount} de {Number.isFinite(effectiveAvailable) ? effectiveAvailable : "∞"} artículos
             </span>
             {overLimit && (
               <span>
-                Supera el máximo permitido ({titleCount}/{maxTitlesPerBatch})
+                Supera el cupo efectivo ({titleCount}/{effectiveAvailable})
               </span>
             )}
           </div>

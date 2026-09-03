@@ -29,7 +29,6 @@ interface OpportunityGroup {
   titles: OpportunityTitle[];
 }
 
-const DEFAULT_MAX_TITLES_PER_BATCH = 20;
 const IMAGE_CREDITS_CONFIRMED_KEY = "auto-articulos:image-credits-confirmed";
 
 function formatDateTime(value: string | Date) {
@@ -49,9 +48,11 @@ export default function OportunidadesPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisSeconds, setAnalysisSeconds] = useState(0);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [maxTitlesPerBatch, setMaxTitlesPerBatch] = useState(
-    DEFAULT_MAX_TITLES_PER_BATCH,
-  );
+  const [maxTitlesPerBatch, setMaxTitlesPerBatch] = useState(0);
+  const [dailyArticleLimit, setDailyArticleLimit] = useState<number | null>(null);
+  const [monthlyArticleLimit, setMonthlyArticleLimit] = useState<number | null>(null);
+  const [publishedToday, setPublishedToday] = useState(0);
+  const [publishedThisMonth, setPublishedThisMonth] = useState(0);
   const [lastAnalysisAt, setLastAnalysisAt] = useState<string | null>(null);
   const [disableIndexing, setDisableIndexing] = useState(false);
   // Idioma con el que se ejecutará lo que se publique desde aquí (mismo criterio
@@ -105,6 +106,7 @@ export default function OportunidadesPage() {
       googleResponse,
       categoriesResponse,
       promptsResponse,
+      statsResponse,
     ] = await Promise.all([
       fetch("/api/opportunities", { cache: "no-store" }),
       fetch("/api/me", { cache: "no-store" }),
@@ -112,6 +114,7 @@ export default function OportunidadesPage() {
       fetch("/api/search-integrations/google", { cache: "no-store" }),
       fetch("/api/categories", { cache: "no-store" }),
       fetch("/api/prompts", { cache: "no-store" }),
+      fetch("/api/dashboard-stats", { cache: "no-store" }),
     ]);
     const data = await opportunitiesResponse.json().catch(() => ({}));
     if (opportunitiesResponse.ok) {
@@ -126,6 +129,8 @@ export default function OportunidadesPage() {
       ) {
         setMaxTitlesPerBatch(me.maxTitlesPerBatch);
       }
+      setDailyArticleLimit(typeof me.dailyArticleLimit === "number" ? me.dailyArticleLimit : null);
+      setMonthlyArticleLimit(typeof me.monthlyArticleLimit === "number" ? me.monthlyArticleLimit : null);
       setDisclosureAcceptedAt(me.opportunitiesDisclosureAcceptedAt ?? null);
       if (typeof me.contentLanguage === "string") {
         setContentLanguage(me.contentLanguage);
@@ -151,6 +156,11 @@ export default function OportunidadesPage() {
       const promptsData = await promptsResponse.json().catch(() => ({}));
       setPrompts(promptsData.prompts ?? []);
     }
+    if (statsResponse.ok) {
+      const stats = await statsResponse.json().catch(() => ({}));
+      if (typeof stats.publishedToday === "number") setPublishedToday(stats.publishedToday);
+      if (typeof stats.publishedThisMonth === "number") setPublishedThisMonth(stats.publishedThisMonth);
+    }
     const google = await googleResponse.json().catch(() => ({}));
     const categoriesData = await categoriesResponse.json().catch(() => ({}));
     const allCategories: { panel?: string }[] = Array.isArray(
@@ -170,6 +180,10 @@ export default function OportunidadesPage() {
     setSelectedPanel((prev) => (prev && panels.includes(prev) ? prev : panels[0] ?? ""));
     setLoading(false);
   }, []);
+
+  const dailyAvailable = dailyArticleLimit === null ? Infinity : Math.max(0, dailyArticleLimit - publishedToday);
+  const monthlyAvailable = monthlyArticleLimit === null ? Infinity : Math.max(0, monthlyArticleLimit - publishedThisMonth);
+  const effectiveAvailable = Math.min(maxTitlesPerBatch || Infinity, dailyAvailable, monthlyAvailable);
 
   const confirmImageCredits = useCallback(() => {
     window.localStorage.setItem(IMAGE_CREDITS_CONFIRMED_KEY, "true");
@@ -712,7 +726,7 @@ export default function OportunidadesPage() {
           </div>
         )}
         <p style={{ color: "#6b7280", fontSize: 12 }}>
-          Tu máximo permitido es de {maxTitlesPerBatch} títulos por lote.
+          Tu cupo actual permite hasta {Number.isFinite(effectiveAvailable) ? effectiveAvailable : "todos"} artículos. Lote: {maxTitlesPerBatch || "sin límite"}; diario: {dailyArticleLimit ?? "sin límite"}; mensual: {monthlyArticleLimit ?? "sin límite"}.
         </p>
         <label
           style={{
@@ -781,7 +795,7 @@ export default function OportunidadesPage() {
                 (sum, g) => sum + g.titles.length,
                 0,
               );
-              const overLimit = totalTitles > maxTitlesPerBatch;
+              const overLimit = Number.isFinite(effectiveAvailable) && totalTitles > effectiveAvailable;
               const disabled = busyId !== null || !contentLanguage;
               return (
                 <>
@@ -810,9 +824,7 @@ export default function OportunidadesPage() {
                         color: "#d64545",
                       }}
                     >
-                      Se publicarán hasta {maxTitlesPerBatch} títulos por cupo.
-                      Los {Math.max(0, totalTitles - maxTitlesPerBatch)} que
-                      excedan el cupo quedarán pendientes.
+                      Se publicarán hasta {effectiveAvailable} artículos según tu cupo disponible actual. Los {Math.max(0, totalTitles - effectiveAvailable)} que excedan el cupo quedarán pendientes.
                     </p>
                   )}
                   {!contentLanguage && (
@@ -919,25 +931,25 @@ export default function OportunidadesPage() {
                 onClick={() => execute("group", group.id)}
                 disabled={
                   busyId !== null ||
-                  group.titles.length > maxTitlesPerBatch ||
+                  group.titles.length > effectiveAvailable ||
                   !contentLanguage
                 }
                 title={
                   !contentLanguage
                     ? "Debes configurar tu idioma de redacción en Configuración antes de ejecutar."
-                    : group.titles.length > maxTitlesPerBatch
-                      ? `Esta categoría supera tu máximo de ${maxTitlesPerBatch} títulos por lote.`
+                    : group.titles.length > effectiveAvailable
+                      ? `Esta categoría supera tu cupo efectivo actual de ${effectiveAvailable} artículos.`
                       : undefined
                 }
                 style={disabledStyle(
                   { ...buttonStyle, marginTop: 0 },
                   busyId !== null ||
-                    group.titles.length > maxTitlesPerBatch ||
+                    group.titles.length > effectiveAvailable ||
                     !contentLanguage,
                 )}
               >
-                {group.titles.length > maxTitlesPerBatch
-                  ? `Supera el máximo (${group.titles.length}/${maxTitlesPerBatch})`
+                {group.titles.length > effectiveAvailable
+                  ? `Supera tu cupo efectivo (${group.titles.length}/${effectiveAvailable})`
                   : `Ejecutar categoría (${group.titles.length})`}
               </button>
               <button

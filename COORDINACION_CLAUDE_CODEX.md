@@ -1398,3 +1398,12 @@ confundirme con la otra sesión Claude activa (Google Analytics).
 esta sesión (código y también este documento) se hace exclusivamente en
 worktree aislado — cero excepciones, incluida la documentación — para no
 volver a tocar el árbol de trabajo compartido de Milton.
+
+## Trabajo activo — límites dinámicos UX — 2026-09-03
+
+Responsable: CODEX - GPT-5.
+Worktree: `/private/tmp/limites-ux-dinamicos`.
+Rama: `codex/limites-ux-dinamicos`.
+Archivos reservados exclusivamente en este worktree: `apps/web/src/app/api/opportunities/execute-all/route.ts`, `apps/web/src/app/api/runs/route.ts`, `apps/web/src/app/dashboard/como-funciona/page.tsx`, `apps/web/src/app/dashboard/oportunidades/page.tsx`, `apps/web/src/app/dashboard/publicar/page.tsx`, `apps/worker/src/automation/10minutesWebsite.ts`.
+Alcance: hacer que los mensajes y cálculos de cupo visible dependan de los límites reales del usuario; no tocar Vercel, middleware, autenticación, schema ni migraciones.
+Estado: en auditoría final; no desplegar hasta completar tres auditorías y build compatible con la configuración de Vercel.
