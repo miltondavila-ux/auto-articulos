@@ -66,10 +66,13 @@ async function generateGPTCopy(
   const isLinkedIn = platform === "linkedin";
   const isFacebookPage = platform === "facebook-page";
   const isPinterest = platform === "pinterest";
-  const charLimit = isLinkedIn ? 1300 : isFacebookPage ? 700 : isInstagramFeedCaption ? 1000 : isPinterest ? 800 : 360;
-  const maxTokens = isLinkedIn ? 700 : isFacebookPage ? 450 : isInstagramFeedCaption ? 550 : isPinterest ? 500 : 300;
+  const isBlogger = platform === "blogger";
+  const charLimit = isLinkedIn ? 1300 : isFacebookPage ? 700 : isInstagramFeedCaption ? 1000 : isPinterest ? 800 : isBlogger ? 1600 : 360;
+  const maxTokens = isLinkedIn ? 700 : isFacebookPage ? 450 : isInstagramFeedCaption ? 550 : isPinterest ? 500 : isBlogger ? 800 : 300;
   const styleNote = isLinkedIn
     ? "Tono profesional pero cercano (LinkedIn), con más contexto y valor. Puedes usar párrafos cortos separados por saltos de línea."
+    : isBlogger
+    ? "Blogger: escribe un resumen editorial original de 2 a 4 párrafos cortos (separados por saltos de línea dobles) que invite a leer el artículo completo — no es el artículo entero, es un adelanto con valor propio, como una nota de blog independiente."
     : isFacebookPage
     ? "Facebook Page: tono cálido, humano y conversacional; reconoce el problema de la persona, explica el beneficio con claridad y cierra con una invitación cercana. Debe sentirse como una recomendación útil, no como un anuncio."
     : isInstagramFeedCaption

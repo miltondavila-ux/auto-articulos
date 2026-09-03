@@ -29,6 +29,7 @@ import {
 import { put } from "@vercel/blob";
 import sharp from "sharp";
 import { generateAiSocialImage } from "./aiImageGenerator";
+import { formatBloggerSummary } from "./bloggerContent";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
@@ -916,16 +917,13 @@ async function processBloggerJob(job: { id: string; userId: string; titleId: str
     integration = await prisma.bloggerIntegration.update({ where: { userId: job.userId }, data: { accessTokenEncrypted: encryptSecret(accessToken), expiresAt: token.expires_in ? new Date(Date.now() + token.expires_in * 1000) : null } });
   }
   await validateArticleUrl(job.articleUrl);
-  const [bodyHtml, sourceImage] = await Promise.all([
-    getArticleBodyHtml(job.articleUrl),
-    getArticleOpenGraphImage(job.articleUrl),
-  ]);
+  const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
   if (!sourceImage) {
     throw new Error("El artículo no tiene una imagen og:image pública para Blogger.");
   }
   const heroImage = `<p><img src="${escapeHtmlAttribute(sourceImage)}" alt="${escapeHtmlAttribute(job.articleTitle)}" style="display:block;max-width:100%;height:auto;" /></p>`;
-  const originalLink = `<p><a href="${escapeHtmlAttribute(job.articleUrl)}">Leer el artículo original</a></p>`;
-  const content = `${heroImage}${bodyHtml}${originalLink}`;
+  const summaryHtml = formatBloggerSummary(job.suggestedText, job.articleUrl);
+  const content = `${heroImage}${summaryHtml}`;
   const result = await createBloggerPost(accessToken, integration.blogId, { title: job.articleTitle, content });
   if (!result.id) throw new Error("Blogger no devolvió el identificador de la entrada.");
   await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: result.url || result.id, publishedAt: new Date(), errorLog: null } });

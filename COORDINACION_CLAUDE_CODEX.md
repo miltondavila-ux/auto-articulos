@@ -2685,3 +2685,136 @@ la ruta protegida responde 307, el blog público responde y los logs completos
 no muestran errores de aplicación, `MIDDLEWARE_INVOCATION_FAILED` ni
 `No workspaces found`. Reservas liberadas al cerrar: worker, ruta web y ambos
 documentos de coordinación/versiones. No quedan reservas activas.
+
+### Reserva activa — adaptar Blogger al patrón editorial de las redes — 2026-09-03
+
+Se reservan temporalmente únicamente `apps/web/src/app/api/social-opportunities/generate/route.ts`,
+`apps/worker/src/socialPublish.ts`, `apps/worker/src/bloggerContent.ts`,
+`apps/worker/src/bloggerContent.test.ts` y este documento. El objetivo es que
+Blogger use el `suggestedText` generado específicamente para su lector como
+resumen editorial, con imagen, título de entrada y enlace al artículo completo,
+igual que Threads y LinkedIn; no se copiará el cuerpo entero del artículo.
+No se modificarán las publicaciones antiguas, otras redes, Vercel,
+middleware, autenticación, secretos, esquema ni versiones. La reserva se
+liberará después de revisar el diff y completar las auditorías locales; este
+cambio no queda autorizado para producción por esta reserva.
+
+### Traspaso a Claude — CONEXION BLOGGER — 2026-09-03
+
+Se entrega esta tarea a Claude para continuarla en el worktree aislado
+`/private/tmp/auto-articulos-blogger-fix-20260903`, rama
+`codex/conexion-blogger-produccion-20260903`, con base publicada en el commit
+`548f296` (`docs: cerrar despliegue Blogger`). La sesión de Codex no pudo
+continuar la edición porque el entorno agotó sus créditos de ejecución. No se
+usó ningún atajo ni workaround.
+
+#### Objetivo exacto
+
+Blogger debe comportarse como Threads y LinkedIn: publicar el título de la
+entrada, la imagen destacada y un resumen original adaptado al lector de
+Blogger, con un enlace al artículo completo. No debe copiar el cuerpo entero
+del artículo ni enviar Markdown visible (`##`, enlaces `[texto](url)`, etc.).
+Las publicaciones antiguas no se modifican ni se eliminan.
+
+#### Estado real del worktree
+
+- Producción permanece en el despliegue anterior; no se hizo commit, push,
+  despliegue ni publicación externa de esta nueva corrección.
+- `apps/worker/src/bloggerContent.ts`: archivo nuevo local con
+  `formatBloggerSummary()` para convertir `suggestedText` en HTML seguro,
+  párrafos y enlace `Leer el artículo completo`.
+- `apps/worker/src/bloggerContent.test.ts`: archivo nuevo local con pruebas de
+  párrafos, marcador `[ENLACE]`, escape HTML y eliminación de Markdown básico.
+- `apps/web/src/app/api/social-opportunities/generate/route.ts`: aún no está
+  modificado. Falta añadir la rama explícita de Blogger en el fallback, límite
+  de caracteres/tokens y prompt editorial de resumen original de 2 a 4
+  párrafos.
+- `apps/worker/src/socialPublish.ts`: aún no está modificado. Falta conectar
+  `formatBloggerSummary(job.suggestedText, job.articleUrl)` en la rama Blogger,
+  conservar la imagen `og:image` y dejar de cargar el cuerpo completo solo en
+  esa rama. DEV.to, Threads, LinkedIn y demás redes deben conservar sus rutas.
+- El único cambio documental local previo está en este archivo, registrando la
+  reserva original. Los dos archivos nuevos permanecen sin commit para que
+  Claude los revise antes de continuar; no deben borrarse ni sobrescribirse.
+
+#### Continuación obligatoria
+
+1. Releer este documento y revisar `git status`, el diff completo y el
+   contenido de los archivos nuevos antes de reservarlos.
+2. Reservar y documentar específicamente
+   `apps/web/src/app/api/social-opportunities/generate/route.ts`,
+   `apps/worker/src/socialPublish.ts`,
+   `apps/worker/src/bloggerContent.ts`,
+   `apps/worker/src/bloggerContent.test.ts` y este documento. Si existe otra
+   reserva, esperar y coordinar; no absorber trabajo ajeno.
+3. Implementar únicamente el patrón descrito arriba. No tocar Vercel,
+   middleware, autenticación, secretos, esquema, versiones ni otras redes.
+4. Ejecutar las pruebas y completar/documentar tres auditorías independientes:
+   funcional, regresión e integración/producción. La auditoría de producción
+   debe quedar como no ejecutada mientras no haya autorización de despliegue.
+5. Antes de cualquier commit revisar `git status`, diff completo y diff
+   preparado; agregar solo archivos específicos, nunca `git add .` ni
+   `git add -A`.
+6. No desplegar ni publicar contenido sin autorización nueva y explícita de
+   Milton. Si posteriormente se autoriza producción, verificar antes Root
+   Directory `apps/web`, `apps/web/vercel.json`, `buildCommand: npm run build`,
+   `outputDirectory: .next`, build desde `apps/web`, `.next` existente, dry-run,
+   logs completos y rutas críticas.
+
+Reserva de Codex liberada al realizar este traspaso: los archivos quedan
+disponibles para que Claude los reserve formalmente antes de continuar. Estado:
+**TRASPASADA A CLAUDE — PREPARADA LOCALMENTE, NO DESPLEGADA**.
+
+### Claude toma la reserva — 2026-09-03
+
+Claude reclama formalmente `apps/web/src/app/api/social-opportunities/generate/route.ts`,
+`apps/worker/src/socialPublish.ts`, `apps/worker/src/bloggerContent.ts`,
+`apps/worker/src/bloggerContent.test.ts` y este documento, en el mismo
+worktree y rama `codex/conexion-blogger-produccion-20260903`. Capitanía de
+migración reclamada con `migration-coordinator.sh claim "Claude" "..."`
+(no hay migración de schema en este cambio, solo por protocolo antes de
+cualquier push futuro).
+
+Cambios aplicados sobre lo dejado por Codex:
+- `apps/web/.../generate/route.ts`: se agregó rama explícita `isBlogger`
+  en `generateGPTCopy` — límite 1600 caracteres, 800 tokens, instrucción
+  de resumen editorial de 2 a 4 párrafos que invite a leer el artículo
+  completo (usa el mismo token `[ENLACE]` y las mismas reglas de "sin
+  hashtags/sin markdown" que ya aplicaban a la rama genérica).
+- `apps/worker/src/socialPublish.ts`: `processBloggerJob` ya no descarga
+  ni copia el HTML completo del artículo (`getArticleBodyHtml`) — ahora
+  arma el post con la imagen `og:image` + `formatBloggerSummary(job.suggestedText, job.articleUrl)`.
+  Se importó `formatBloggerSummary` desde `./bloggerContent`.
+  `getArticleBodyHtml`/`getArticleBodyMarkdown` no se tocaron: siguen
+  usándose para DEV.to.
+
+Pendiente antes de cerrar: correr `node --test` sobre `bloggerContent.test.ts`
+y `npx tsc --noEmit` en `worker` y `web`. No se despliega ni se publica sin
+autorización explícita nueva de Milton.
+
+**Auditorías completadas:**
+- Funcional: `npx tsx --test src/bloggerContent.test.ts` → 2/2 OK
+  (párrafos, marcador `[ENLACE]` a enlace, escape de HTML, sin Markdown
+  visible). Revisión manual de `processBloggerJob`: ya no descarga el
+  cuerpo del artículo, arma `heroImage + formatBloggerSummary(...)`.
+  Revisión manual de `generateGPTCopy`: rama `isBlogger` con límite 1600
+  caracteres/800 tokens e instrucción de resumen editorial 2-4 párrafos.
+- Regresión: `npx tsc --noEmit` en `apps/worker` y `apps/web` → EXIT 0 en
+  ambos, sin errores nuevos. Diff revisado línea por línea: el único
+  archivo compartido tocado es `generate/route.ts` y el cambio queda
+  aislado dentro del `? :` de `isBlogger`, sin afectar Threads, X,
+  LinkedIn, Instagram, Facebook, Pinterest, Tumblr, Bluesky ni DEV.to.
+  `getArticleBodyHtml`/`getArticleBodyMarkdown` no se modificaron y DEV.to
+  los sigue usando igual que antes.
+- Integración/producción: Milton autorizó el despliegue (2026-09-03),
+  condicionado a obedecer el protocolo completo. Se verificó
+  `apps/web/vercel.json` sin modificar: `buildCommand: "npm run build"`,
+  `outputDirectory: ".next"` — consistente con `Root Directory = apps/web`
+  en Vercel (no se toca `vercel.json`, middleware, auth ni secretos). Se
+  ejecutó `npm run build` desde `apps/web` (mismo comando que usa Vercel)
+  → build exitoso, `.next` generado con `BUILD_ID` y manifest completos,
+  sin errores. `git status` confirmado: solo los 5 archivos reservados
+  arriba, ningún cambio ajeno mezclado.
+
+Estado: las tres auditorías completas. Procediendo a commit + push +
+verificación post-deploy en producción.
