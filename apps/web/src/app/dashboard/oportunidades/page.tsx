@@ -187,6 +187,11 @@ export default function OportunidadesPage() {
   const dailyAvailable = dailyArticleLimit === null ? Infinity : Math.max(0, dailyArticleLimit - publishedToday);
   const monthlyAvailable = monthlyArticleLimit === null ? Infinity : Math.max(0, monthlyArticleLimit - publishedThisMonth);
   const effectiveAvailable = Math.min(maxTitlesPerBatch || Infinity, dailyAvailable, monthlyAvailable);
+  const renewalMessage = dailyAvailable === 0
+    ? "Tu límite diario se renovará mañana."
+    : monthlyAvailable === 0
+      ? "Tu límite mensual se renovará al comenzar el próximo mes."
+      : "Puedes intentarlo en otro lote cuando tengas cupo disponible.";
 
   const confirmImageCredits = useCallback(() => {
     window.localStorage.setItem(IMAGE_CREDITS_CONFIRMED_KEY, "true");
@@ -829,7 +834,7 @@ export default function OportunidadesPage() {
                       }}
                     >
                       {effectiveAvailable === 0
-                        ? `Tu cupo disponible es 0 artículos. Los ${totalTitles} títulos quedaron pendientes. Revisa tu límite diario, mensual y por lote para saber cuándo podrás publicarlos.`
+                        ? `Tu cupo disponible es de 0 artículos. Los ${totalTitles} títulos quedaron pendientes. ${renewalMessage}`
                         : `Se publicarán hasta ${effectiveAvailable} artículos según tu cupo disponible actual. Los ${Math.max(0, totalTitles - effectiveAvailable)} que excedan el cupo quedarán pendientes.`}
                     </p>
                   )}

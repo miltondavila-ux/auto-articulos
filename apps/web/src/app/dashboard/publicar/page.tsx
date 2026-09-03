@@ -92,6 +92,11 @@ export default function PublicarPage() {
   const dailyAvailable = dailyArticleLimit === null ? Infinity : Math.max(0, dailyArticleLimit - publishedToday);
   const monthlyAvailable = monthlyArticleLimit === null ? Infinity : Math.max(0, monthlyArticleLimit - publishedThisMonth);
   const effectiveAvailable = Math.min(maxTitlesPerBatch || Infinity, dailyAvailable, monthlyAvailable);
+  const renewalMessage = dailyAvailable === 0
+    ? "Tu límite diario se renovará mañana."
+    : monthlyAvailable === 0
+      ? "Tu límite mensual se renovará al comenzar el próximo mes."
+      : "Puedes intentarlo en otro lote cuando tengas cupo disponible.";
 
   const confirmImageCredits = useCallback(() => {
     window.localStorage.setItem(IMAGE_CREDITS_CONFIRMED_KEY, "true");
@@ -459,7 +464,9 @@ export default function PublicarPage() {
             </span>
             {overLimit && (
               <span>
-                Supera el cupo efectivo ({titleCount}/{effectiveAvailable})
+                {effectiveAvailable === 0
+                  ? `Tu cupo disponible es de 0 artículos. Los títulos quedaron pendientes. ${renewalMessage}`
+                  : `Supera el cupo efectivo (${titleCount}/${effectiveAvailable})`}
               </span>
             )}
           </div>

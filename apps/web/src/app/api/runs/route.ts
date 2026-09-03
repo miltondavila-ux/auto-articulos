@@ -217,9 +217,14 @@ export async function POST(request: NextRequest) {
       user.monthlyArticleLimit !== null
         ? ` Tu límite mensual es de ${user.monthlyArticleLimit} artículos.`
         : "";
+    const renovacion = cupoMasEstrecho.motivo === "tu límite diario"
+      ? "Tu límite diario se renovará mañana."
+      : cupoMasEstrecho.motivo === "tu límite mensual"
+        ? "Tu límite mensual se renovará al comenzar el próximo mes."
+        : "Puedes intentarlo en otro lote cuando tengas cupo disponible.";
     return NextResponse.json(
       {
-        error: `Has alcanzado ${cupoMasEstrecho.tope}, que es ${cupoMasEstrecho.motivo} asignado por el administrador de Auto Artículos. El cupo se renovará según ese límite.${contextoMensual}`,
+        error: `Tu cupo disponible es de 0 artículos. Has alcanzado ${cupoMasEstrecho.tope}, que es ${cupoMasEstrecho.motivo} asignado por el administrador de Auto Artículos. ${renovacion}${contextoMensual}`,
       },
       { status: 403 },
     );
