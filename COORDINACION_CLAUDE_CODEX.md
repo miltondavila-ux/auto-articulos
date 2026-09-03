@@ -2465,9 +2465,9 @@ Reserva liberada al cerrar esta fase: `COORDINACION_CLAUDE_CODEX.md` e
 El hook informativo de actualizaciones no pudo consultar Prisma por falta de
 `DATABASE_URL` en el worktree; el commit sí se creó correctamente.
 
-### Reserva activa — registro maestro de versiones
+### Reserva liberada — registro maestro de versiones
 
-Antes de actualizar `CONTROLADOR_DE_VERSIONES.md` para registrar la versión
-preparada de Blogger, queda reservado exclusivamente en este worktree:
-`CONTROLADOR_DE_VERSIONES.md`. No se modificarán otros archivos durante esta
-reserva salvo la liberación documentada a continuación.
+La reserva exclusiva de `CONTROLADOR_DE_VERSIONES.md` se utilizó únicamente
+para registrar la versión preparada y quedó liberada al terminar. El registro
+se incorporó en el commit `f3f6b6d`; el hook informativo volvió a mostrar la
+limitación preexistente de `DATABASE_URL` ausente, sin impedir el commit.
