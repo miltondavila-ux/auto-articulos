@@ -41,10 +41,10 @@ export default function TermsPage() {
       <h2 style={publicHeadingStyle}>Cuentas y sitios conectados</h2>
       <p>
         Solo puedes conectar cuentas de tu plataforma de gestión de sitios web,
-        Google Search Console o Bing Webmaster que te pertenezcan o para las
-        cuales tengas autorización suficiente. Debes conservar la propiedad
-        verificada de los sitios y respetar las políticas de cada plataforma y
-        buscador.
+        Google Search Console, Google Analytics 4, Google Business Profile o
+        Bing Webmaster que te pertenezcan o para las cuales tengas autorización
+        suficiente. Debes conservar la propiedad o el acceso verificado de los
+        recursos y respetar las políticas de cada plataforma y buscador.
       </p>
 
       <h2 style={publicHeadingStyle}>Publicación e indexación</h2>

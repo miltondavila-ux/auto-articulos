@@ -20,7 +20,7 @@ const CONTACTO = platformContactEmail(DEFAULT_PLATFORM_DOMAIN);
 export const metadata: Metadata = {
   title: "Acerca de Auto Artículos",
   description:
-    "Información oficial de Auto Artículos y su integración con Google Search Console.",
+    "Información oficial de Auto Artículos y sus integraciones con Google.",
 };
 
 export default function AboutPage() {
@@ -45,6 +45,16 @@ export default function AboutPage() {
         Search Console que ese usuario administra y usa la propiedad que él
         mismo selecciona para gestionar el sitemap y consultar el estado de
         indexación. Auto Artículos nunca solicita la contraseña de Google.
+      </p>
+
+      <h2 style={publicHeadingStyle}>Integraciones con Google Analytics y Business Profile</h2>
+      <p>
+        Si el usuario lo autoriza, Auto Artículos consulta señales agregadas de
+        Google Analytics 4 en modo de solo lectura para priorizar oportunidades
+        de contenido. También permite seleccionar una ubicación de Google
+        Business Profile y preparar publicaciones estándar que el usuario
+        revisa y aprueba. Cada integración se limita a la cuenta conectada y
+        puede revocarse desde Google o desde la configuración de la aplicación.
       </p>
 
       <h2 style={publicHeadingStyle}>Acceso</h2>

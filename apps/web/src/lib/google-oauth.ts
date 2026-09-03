@@ -6,7 +6,7 @@ export function googleOAuthConfig() {
   const clientSecret = process.env.GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET;
   const redirectUri =
     process.env.GOOGLE_SEARCH_CONSOLE_REDIRECT_URI ??
-    "https://auto-articulos-web.vercel.app/api/search-integrations/google/callback";
+    "https://seototal.lasolucionweb.com/api/search-integrations/google/callback";
   if (!clientId || !clientSecret)
     throw new Error("Google OAuth no está configurado.");
   return { clientId, clientSecret, redirectUri };
@@ -25,7 +25,7 @@ export function businessProfileOAuthConfig() {
   const clientSecret = process.env.GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET;
   const redirectUri =
     process.env.GOOGLE_BUSINESS_PROFILE_REDIRECT_URI ??
-    "https://auto-articulos-web.vercel.app/api/business-profile/callback";
+    "https://seototal.lasolucionweb.com/api/business-profile/callback";
   if (!clientId || !clientSecret)
     throw new Error("Google OAuth no está configurado.");
   return { clientId, clientSecret, redirectUri };

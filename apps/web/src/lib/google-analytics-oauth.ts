@@ -5,7 +5,7 @@ export function googleAnalyticsOAuthConfig() {
   const clientId = process.env.GOOGLE_SEARCH_CONSOLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET;
   const redirectUri = process.env.GOOGLE_ANALYTICS_REDIRECT_URI ??
-    "https://auto-articulos-web.vercel.app/api/google-analytics/callback";
+    "https://seototal.lasolucionweb.com/api/google-analytics/callback";
   if (!clientId || !clientSecret) throw new Error("Google OAuth no está configurado.");
   return { clientId, clientSecret, redirectUri };
 }
