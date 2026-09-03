@@ -2,6 +2,19 @@
 
 ## `CONEXION BLOGGER`
 
+### Corrección de aislamiento de credenciales — 2026-09-03
+
+Se detectó que Vercel ya usa `GOOGLE_SEARCH_CONSOLE_CLIENT_ID` y
+`GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET` para GSC/GA. Blogger no debe reutilizarlas.
+El ajuste en curso usa exclusivamente `BLOGGER_CLIENT_ID` y
+`BLOGGER_CLIENT_SECRET`, sin modificar las variables existentes.
+Worktree: `/private/tmp/auto-articulos-blogger-fix-20260903`.
+
+Auditorías de aislamiento: funcional, regresión e integración/producción
+aprobadas para preparación local. Vercel confirmó `Root Directory = apps/web`
+y configuración segura `.next`; no se modificaron variables GSC/GA ni se
+desplegó producción. Reservas liberadas tras la revisión.
+
 - Responsable: CODEX - GPT-5.
 - Proyecto: integración oficial de Blogger en Auto Artículos.
 - Objetivo: permitir que cada usuario conecte su propia cuenta Google/Blogger

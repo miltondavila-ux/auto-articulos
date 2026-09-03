@@ -276,6 +276,17 @@ se confirme la prueba real pendiente de arriba.
 
 ## ELIMINACIÓN POPUP QR DE CRÉDITOS DE IMAGEN (2026-08-31)
 
+## Trabajo activo — Blogger variables aisladas — 2026-09-03
+
+Responsable: Codex.
+Worktree aislado: `/private/tmp/auto-articulos-blogger-fix-20260903`.
+Base: `bcdac28` (`feat: preparar integracion de Blogger`).
+Alcance: separar las credenciales OAuth de Blogger de las variables existentes de GSC/GA.
+Archivos reservados: `apps/web/src/lib/blogger-oauth.ts`, `apps/worker/src/socialPublish.ts`,
+`COORDINACION_CLAUDE_CODEX.md`, `INVENTARIO_CONVERSACIONES.md`.
+No reservados ni modificados: Vercel, middleware, autenticación general, secretos existentes y producción.
+Estado: en preparación; no desplegar hasta completar auditorías y revisión de Root Directory/logs.
+
 Identidad exacta: Claude Sonnet 5 (sesión de Milton en su árbol local).
 
 Motivo: Milton pidió eliminar de raíz el popup "Créditos de imagen
@@ -2386,6 +2397,30 @@ ha autorizado deployment.
 Estado: PREPARADA — pendiente de revisión/commit y autorización explícita de
 Milton para publicar. No se aplicó la migración ni se modificaron secretos,
 Vercel, middleware o configuración de producción.
+
+### Corrección de credenciales Blogger separadas — 2026-09-03
+
+Vercel fue revisado antes de editar: proyecto `auto-articulos-web`, Root
+Directory real `apps/web`, y `apps/web/vercel.json` usa exactamente
+`buildCommand: npm run build` y `outputDirectory: .next`. Las variables
+`GOOGLE_SEARCH_CONSOLE_CLIENT_ID` y `GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET`
+ya existen para GSC/GA y no fueron modificadas. Blogger usa ahora
+`BLOGGER_CLIENT_ID` y `BLOGGER_CLIENT_SECRET` exclusivamente.
+
+Auditoría funcional: APROBADA — ambos puntos de OAuth Blogger (web y worker)
+leen las variables nuevas; GSC/GA conservan sus variables originales.
+Auditoría de regresión: APROBADA — Prisma generate, build worker, typecheck
+web, build Next completo (83 rutas), 14 tests worker y `git diff --check`.
+Auditoría integración/producción: APROBADA para preparación — Root Directory,
+configuración Vercel, rutas de retorno y salida `.next` verificados; no se
+desplegó ni se modificaron variables remotas, por lo que la verificación de
+producción queda pendiente de autorización de deployment.
+
+Estado: PREPARADA — no publicar todavía.
+Archivos modificados: `apps/web/src/lib/blogger-oauth.ts`,
+`apps/worker/src/socialPublish.ts`, esta coordinación e inventario.
+Reservas liberadas: todos los archivos anteriores quedan libres al terminar
+esta fase.
 
 Commit local: `03d837e`.
 Reserva liberada al cerrar esta fase: `COORDINACION_CLAUDE_CODEX.md` e
