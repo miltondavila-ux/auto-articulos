@@ -2818,3 +2818,38 @@ autorización explícita nueva de Milton.
 
 Estado: las tres auditorías completas. Procediendo a commit + push +
 verificación post-deploy en producción.
+
+### CULMINADO — 2026-09-03 (Conexión Blogger — resumen editorial en producción)
+
+Commit `e7706fc` en `main` (fast-forward directo desde `548f296`, sin
+conflictos). Deploy Vercel `auto-articulos-web` (proyecto correcto,
+`7YZN5MDVk2AgQrhfrHeSuQWBgGpF`) en estado `● Ready`, "Build Completed",
+sin `No workspaces found` ni `MIDDLEWARE_INVOCATION_FAILED`. (Hay un
+segundo status de GitHub, "Vercel – cambio-boton-comienza-aqui-clean",
+de un proyecto Vercel viejo/duplicado que también reporta éxito pero no
+es el dominio real; no se tocó.)
+
+Verificación post-deploy: `curl -I /login` → 200 (age: 10, respuesta
+fresca del nuevo build); `curl -I /dashboard` sin sesión → 307 (redirect
+correcto, middleware/auth intactos); `vercel logs` sobre tráfico real
+tras el deploy → solo `GET /login 200`, `GET /login-hero.jpg 200`,
+`HEAD /login 200`, `HEAD /dashboard 307`, sin errores de aplicación.
+
+Resultado funcional: Blogger ahora publica igual que Threads/LinkedIn —
+título de la entrada, imagen `og:image` destacada y un resumen editorial
+de 2-4 párrafos (generado específicamente para el lector de Blogger, sin
+Markdown visible) con enlace "Leer el artículo completo" al artículo real.
+Ya no copia el HTML completo del artículo. Las publicaciones antiguas
+(incluidas las 3 entradas Blogger defectuosas mencionadas en el traspaso
+de Codex) no se tocaron.
+
+Reservas liberadas: `apps/web/.../generate/route.ts`,
+`apps/worker/src/socialPublish.ts`, `apps/worker/src/bloggerContent.ts`,
+`apps/worker/src/bloggerContent.test.ts` y este documento. Capitanía de
+migración liberada con
+`migration-coordinator.sh release "Claude" "..."` — no hubo migración de
+schema en este cambio.
+
+Pendiente: que Milton confirme visualmente, publicando una oportunidad
+real de Blogger desde el dashboard, que el resultado se ve como espera
+(resumen corto + imagen + enlace, no el artículo completo).
