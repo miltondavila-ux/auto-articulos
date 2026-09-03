@@ -2479,3 +2479,23 @@ ausente, sin impedir los commits.
 Se reservó temporalmente este archivo para corregir únicamente los hashes
 reescritos por el rebase de la rama aislada de Blogger. Reserva liberada tras
 la corrección; no quedan archivos de código o documentación reservados.
+
+### Reserva activa — migración segura de Blogger
+
+Para aplicar únicamente el esquema nuevo de Blogger, quedan reservados en
+este worktree `/.github/workflows/migrate.yml` y
+`packages/db/prisma/migrations/20260902150000_add_blogger_integration/migration.sql`.
+No se modificará el flujo general de migraciones ni otro esquema. La reserva
+se liberará después de revisar el diff y documentar la auditoría.
+
+Auditoría funcional de la migración: APROBADA — la ruta nueva ejecuta solo el
+SQL de Blogger y queda protegida por un input explícito; el flujo general no
+se ejecuta cuando se selecciona ese input.
+Auditoría de regresión de la migración: APROBADA — SQL idempotente, sin
+`DROP`, `TRUNCATE`, modificación de datos existentes ni cambios de versiones.
+Auditoría de integración de la migración: APROBADA para ejecución — usa el
+Session pooler, la misma base de datos configurada en el workflow y conserva
+el paso idempotente de RLS.
+Reserva liberada tras esta revisión: `.github/workflows/migrate.yml` y
+`packages/db/prisma/migrations/20260902150000_add_blogger_integration/migration.sql`.
+No quedan archivos reservados.
