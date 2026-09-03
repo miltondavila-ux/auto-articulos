@@ -2513,3 +2513,22 @@ sesión redirige 307 y la pantalla muestra Blogger API. No hay nuevos 500
 después de la migración ni errores `MIDDLEWARE_INVOCATION_FAILED` o
 `No workspaces found`. Reserva liberada al terminar esta entrada; no quedan
 archivos reservados.
+
+### Reserva activa — habilitar publicación Blogger en oportunidades — 2026-09-03
+
+Se reserva temporalmente `apps/web/src/app/api/social-opportunities/publish/route.ts`
+para corregir únicamente el rechazo prematuro de la plataforma `blogger`. La
+generación de oportunidades y el procesador del worker ya reconocen Blogger;
+la ruta web todavía no lo incluía en su lista de plataformas soportadas. No se
+modificarán otras redes, Vercel, middleware, autenticación, secretos ni la base
+de datos. La reserva se liberará tras revisar el diff y completar las
+auditorías de esta corrección.
+
+### Reserva activa — documentar auditoría de habilitación Blogger — 2026-09-03
+
+Se reservan temporalmente `COORDINACION_CLAUDE_CODEX.md` y
+`CONTROLADOR_DE_VERSIONES.md` para registrar el hallazgo reproducido durante
+la prueba, la corrección mínima y las auditorías realizadas en este worktree.
+No se modificarán archivos de Vercel, middleware, autenticación, secretos,
+base de datos ni integraciones existentes. Ambas reservas se liberarán al
+terminar la documentación y revisar el diff final.

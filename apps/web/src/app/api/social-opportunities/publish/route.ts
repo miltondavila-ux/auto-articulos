@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
       "tumblr",
       "bluesky",
       "devto",
+      "blogger",
       "instagram-carousel",
       "instagram-reel-image",
       "instagram-story",
@@ -106,6 +107,19 @@ export async function POST(request: NextRequest) {
       if (user?.role !== "admin" && !user?.allowThreadsPublishing) {
         return NextResponse.json(
           { error: "No tienes permiso para publicar en Threads. Contacta al administrador." },
+          { status: 403 },
+        );
+      }
+    }
+
+    if (opp.platform === "blogger") {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true, allowBloggerPublishing: true },
+      });
+      if (user?.role !== "admin" && !user?.allowBloggerPublishing) {
+        return NextResponse.json(
+          { error: "No tienes permiso para publicar en Blogger. Contacta al administrador." },
           { status: 403 },
         );
       }
@@ -165,6 +179,8 @@ export async function POST(request: NextRequest) {
         ? "Publicación encolada. El sistema publicará en Bluesky en segundo plano."
         : opp.platform === "devto"
         ? "Publicación encolada. El sistema adaptará y publicará el artículo en DEV.to en segundo plano."
+        : opp.platform === "blogger"
+        ? "Publicación encolada. El sistema publicará el artículo en Blogger en segundo plano."
         : "Publicación encolada. El sistema generará la imagen y publicará en Threads en segundo plano.",
     });
   } catch {

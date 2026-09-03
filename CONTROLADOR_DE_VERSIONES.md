@@ -563,3 +563,51 @@ Responsable: Codex - GPT-5.
 Siguiente acción: configurar Client ID/Secret desde el botón visible y luego
 conectar cada cuenta final mediante OAuth.
 Estado: DESPLEGADA / VERIFICADA — configuración de credenciales pendiente.
+
+## Corrección de publicación Blogger en oportunidades — 2026-09-03
+
+Fecha: 2026-09-03
+Rama: `codex/conexion-blogger-produccion-20260903`
+Worktree: `/private/tmp/auto-articulos-blogger-fix-20260903`
+Conversación/proyecto: `CONEXION BLOGGER`
+Cambios incluidos: se habilitó `blogger` en la lista de plataformas que la
+ruta web puede encolar, se añadió la comprobación de permiso individual y se
+añadió el mensaje específico de publicación en segundo plano. El worker ya
+tenía implementado `processBloggerJob`; no se modificaron otras redes.
+Archivos modificados: `apps/web/src/app/api/social-opportunities/publish/route.ts`
+y documentación de coordinación/versiones.
+Archivos eliminados: ninguno.
+Migraciones: ninguna.
+Versiones: ninguna modificada.
+
+Hallazgo reproducido: OAuth con el usuario de pruebas terminó en
+`blogger=connected`, la tarjeta mostró `Conectado: Seguros de Salud y Vida` y
+la generación creó 3 propuestas Blogger sin duplicarlas. La versión de
+producción anterior rechazaba cualquier propuesta `blogger` con
+`Plataforma blogger no soportada todavía.` antes de llegar al worker.
+
+Auditoría funcional independiente: APROBADA para el worktree — se verificó el
+flujo OAuth de la cuenta de pruebas, la conexión del blog y la generación de
+propuestas; la revisión de código confirmó que la ruta corregida acepta
+`blogger`, respeta `allowBloggerPublishing` y entrega la propuesta al worker,
+que ya llama a `createBloggerPost`.
+Auditoría de regresión independiente: APROBADA — `npm run typecheck` de web,
+`npm run build` de web ejecutado desde `apps/web`, `npm run build` del worker,
+19/19 pruebas del worker mediante `node --import tsx --test` y
+`git diff --check`. El primer intento de `npm run test` fue bloqueado por el
+pipe IPC del sandbox, no por código; el lanzador equivalente pasó completo.
+No se tocaron Vercel, middleware, autenticación, secretos, base de datos ni
+las ramas de otras redes.
+Auditoría de integración/producción independiente: PENDIENTE — la corrección
+está únicamente en este worktree y no se ha publicado, conforme a la orden de
+no desplegar sin autorización. Vercel conserva Root Directory `apps/web` y
+`apps/web/vercel.json` no fue modificado; por tanto no existe aún un
+deployment corregido que verificar en producción.
+
+Commit preparado: pendiente de cierre del diff final.
+Deployment/Vercel: no ejecutado.
+Producción verificada: la integración OAuth/generación quedó verificada en el
+deployment existente; la publicación Blogger con esta corrección requiere un
+deployment posterior autorizado.
+Estado: PREPARADA EN WORKTREE — detenida antes de publicar a producción hasta
+recibir autorización explícita.
