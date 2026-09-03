@@ -2464,3 +2464,10 @@ Reserva liberada al cerrar esta fase: `COORDINACION_CLAUDE_CODEX.md` e
 `INVENTARIO_CONVERSACIONES.md`. No quedan archivos de código reservados.
 El hook informativo de actualizaciones no pudo consultar Prisma por falta de
 `DATABASE_URL` en el worktree; el commit sí se creó correctamente.
+
+### Reserva activa — registro maestro de versiones
+
+Antes de actualizar `CONTROLADOR_DE_VERSIONES.md` para registrar la versión
+preparada de Blogger, queda reservado exclusivamente en este worktree:
+`CONTROLADOR_DE_VERSIONES.md`. No se modificarán otros archivos durante esta
+reserva salvo la liberación documentada a continuación.
