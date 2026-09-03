@@ -22,6 +22,7 @@ import PinterestSection from "@/components/PinterestSection";
 import TumblrSection from "@/components/TumblrSection";
 import BlueskySection from "@/components/BlueskySection";
 import DevToSection from "@/components/DevToSection";
+import BloggerSection from "@/components/BloggerSection";
 import BrowserTabsConnectionNotice from "@/components/BrowserTabsConnectionNotice";
 import PhotoLogoUploader, { type UploadType } from "@/components/PhotoLogoUploader";
 import OnboardingWizard from "@/components/OnboardingWizard";
@@ -98,6 +99,7 @@ export default function ConfiguracionView({
   const [allowTumblrPublishing, setAllowTumblrPublishing] = useState(false);
   const [allowBlueskyPublishing, setAllowBlueskyPublishing] = useState(false);
   const [allowDevToPublishing, setAllowDevToPublishing] = useState(false);
+  const [allowBloggerPublishing, setAllowBloggerPublishing] = useState(false);
   const [triggeringFix, setTriggeringFix] = useState(false);
   const [clearingFixHistory, setClearingFixHistory] = useState(false);
   const [fixStatus, setFixStatus] = useState<{
@@ -200,6 +202,7 @@ export default function ConfiguracionView({
         setAllowTumblrPublishing(data.allowTumblrPublishing ?? false);
         setAllowBlueskyPublishing(data.allowBlueskyPublishing ?? false);
         setAllowDevToPublishing(data.allowDevToPublishing ?? false);
+        setAllowBloggerPublishing(data.allowBloggerPublishing ?? false);
         if (typeof data.platformBaseUrl === "string" && data.platformBaseUrl) {
           setPlatformBase(data.platformBaseUrl);
         }
@@ -588,6 +591,7 @@ export default function ConfiguracionView({
     { name: "Tumblr", enabled: isAdmin || allowTumblrPublishing },
     { name: "Bluesky", enabled: isAdmin || allowBlueskyPublishing },
     { name: "DEV.to", enabled: isAdmin || allowDevToPublishing },
+    { name: "Blogger", enabled: isAdmin || allowBloggerPublishing },
   ]
     .filter((network) => network.enabled)
     .map((network) => network.name);
@@ -1008,6 +1012,9 @@ export default function ConfiguracionView({
           )}
           {(allowDevToPublishing || isAdmin || tieneModuloRedes) && (
             <DevToSection allowed={allowDevToPublishing || isAdmin || tieneModuloRedes} />
+          )}
+          {(allowBloggerPublishing || isAdmin || tieneModuloRedes) && (
+            <BloggerSection allowed={allowBloggerPublishing || isAdmin || tieneModuloRedes} />
           )}
         </div>
       )}

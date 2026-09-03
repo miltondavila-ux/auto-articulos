@@ -50,6 +50,42 @@ Siguiente acción: verificar esta referencia contra producción antes de usarla
 Estado: REFERENCIA HISTÓRICA — NO DECLARAR COMO PRODUCCIÓN ACTUAL SIN VERIFICACIÓN
 ```
 
+## Versión — 2026-09-03 12:22 EDT — integración Blogger preparada
+
+Fecha y hora: 2026-09-03 12:22 EDT
+Versión/commit: serie rebasada `c9dd6f0` → `03cc2f0` → `3f618a` → `b56e9f3` → `46227d7`
+Rama: `codex/conexion-blogger-produccion-20260903`
+Worktree: `/private/tmp/auto-articulos-blogger-fix-20260903`
+Conversación/proyecto: `CONEXION BLOGGER`
+Cambios incluidos: integración Blogger API v3; OAuth por usuario; permiso
+individual de publicación; publicación desde el worker; configuración global
+administrativa de Client ID y Client Secret cifrados en Redes Sociales.
+Archivos modificados: 23 archivos, incluidos web, worker, shared, schema,
+migración y documentación de coordinación.
+Archivos eliminados: ninguno
+Migraciones creadas: `20260902150000_add_blogger_integration`
+Migraciones aplicadas: pendientes de ejecución segura en producción.
+Auditoría 1: APROBADA — rutas OAuth, configuración admin, cifrado, selector de
+blog, permiso de usuario y publicación del worker revisados.
+Auditoría 2: APROBADA — build web completo (83 rutas), typecheck web, build del
+worker, 14 tests del worker y `git diff --check`.
+Auditoría 3: APROBADA para preproducción — Root Directory `apps/web`,
+`apps/web/vercel.json` exacto (`npm run build`/`.next`), rutas y salida
+verificadas; deployment y runtime aún pendientes.
+Diff revisado: sí, contra `origin/main`; no hay archivos eliminados ni cambios
+fuera del alcance Blogger/documentación.
+Deployment/Vercel: pendiente de fusión y deployment automático de Vercel.
+Estado de Vercel: pendiente.
+Dominio verificado: pendiente.
+Logs verificados: pendiente.
+Producción verificada: pendiente.
+Problemas conocidos: el hook informativo de actualizaciones no consulta Prisma
+sin `DATABASE_URL`; no afecta la creación de commits ni la aplicación.
+Responsable: Codex - GPT-5.
+Siguiente acción: abrir/fusionar el cambio autorizado, aplicar la migración
+segura y verificar Vercel, dominios, rutas críticas y logs completos.
+Estado: PREPARADA
+
 ### Plantilla obligatoria para cada nueva versión
 
 ```text

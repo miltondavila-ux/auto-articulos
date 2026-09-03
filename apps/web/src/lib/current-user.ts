@@ -52,6 +52,7 @@ export async function getCurrentUser() {
       allowTumblrPublishing: true,
       allowBlueskyPublishing: true,
       allowDevToPublishing: true,
+      allowBloggerPublishing: true,
     },
   });
 }

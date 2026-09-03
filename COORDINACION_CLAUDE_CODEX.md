@@ -276,6 +276,17 @@ se confirme la prueba real pendiente de arriba.
 
 ## ELIMINACIÓN POPUP QR DE CRÉDITOS DE IMAGEN (2026-08-31)
 
+## Trabajo activo — Blogger variables aisladas — 2026-09-03
+
+Responsable: Codex.
+Worktree aislado: `/private/tmp/auto-articulos-blogger-fix-20260903`.
+Base: `bcdac28` (`feat: preparar integracion de Blogger`).
+Alcance: separar las credenciales OAuth de Blogger de las variables existentes de GSC/GA.
+Archivos reservados: `apps/web/src/lib/blogger-oauth.ts`, `apps/worker/src/socialPublish.ts`,
+`COORDINACION_CLAUDE_CODEX.md`, `INVENTARIO_CONVERSACIONES.md`.
+No reservados ni modificados: Vercel, middleware, autenticación general, secretos existentes y producción.
+Estado: en preparación; no desplegar hasta completar auditorías y revisión de Root Directory/logs.
+
 Identidad exacta: Claude Sonnet 5 (sesión de Milton en su árbol local).
 
 Motivo: Milton pidió eliminar de raíz el popup "Créditos de imagen
@@ -2341,3 +2352,130 @@ Rama: `codex/cupo-renovacion-exacto`.
 Archivos reservados: `apps/web/src/app/api/opportunities/execute-all/route.ts`, `apps/web/src/app/api/runs/route.ts`, `apps/web/src/app/dashboard/oportunidades/page.tsx`, `apps/web/src/app/dashboard/publicar/page.tsx`, `apps/web/src/content/manual-usuario.ts`.
 Alcance: indicar dinámicamente la causa y renovación del cupo agotado; no tocar Vercel, middleware, autenticación, schema ni migraciones.
 Estado: COMPLETADO Y DESPLEGADO en `origin/main` (commit `0463fdd`). Las tres auditorías, typecheck, build Webpack y verificación HTTP de producción pasaron. Reserva liberada.
+
+## Trabajo activo — conexión Blogger — 2026-09-02
+
+Responsable: CODEX - GPT-5.
+Conversación: `CONEXION BLOGGER`.
+Worktree: `/private/tmp/auto-articulos-conexion-blogger`.
+Rama: worktree aislado sobre `origin/main` en `a99040f` (HEAD separado).
+Alcance inicial: investigación y documentación de una futura integración
+oficial de Blogger para que cada usuario conecte su propia cuenta Google y
+publique mediante Blogger API v3, siguiendo los patrones existentes.
+Archivos reservados antes de uso: `COORDINACION_CLAUDE_CODEX.md` y
+`INVENTARIO_CONVERSACIONES.md` (este último será creado en este worktree).
+Archivos de código reservados: ninguno todavía.
+Producción: sin cambios; no se ejecutarán migraciones ni despliegues en esta
+fase.
+Estado: EN CURSO — pendiente de completar investigación y definir el primer
+cambio mínimo de implementación con autorización del usuario.
+
+### Preparación técnica — 2026-09-02
+
+Implementación aislada completada sin tocar producción. Blogger API v3 fue
+confirmada mediante documentación oficial de Google: OAuth 2.0 con scope
+`https://www.googleapis.com/auth/blogger`, listado de blogs del usuario,
+creación de entradas y publicación oficial.
+
+Archivos nuevos principales: módulo compartido Blogger API, rutas OAuth
+`connect`/`callback`/estado, componente de Configuración, helper OAuth y
+migración Prisma. Se añadieron Blogger a permisos por usuario, Oportunidades
+Redes, configuración de estado, panel de administración y worker. Los tokens
+se cifran con el mecanismo existente; la renovación usa el refresh token y el
+cliente Google configurado.
+
+Auditoría funcional: APROBADA — las rutas, el scope, el selector de blog, el
+permiso individual, la generación de oportunidades y la rama de publicación
+del worker están conectados.
+Auditoría de regresión: APROBADA — 14 tests del worker, build del worker,
+typecheck web y build web completo (83 páginas/rutas) en verde.
+Auditoría de integración/producción: APROBADA para preparación local — schema
+Prisma validado con URLs ficticias, migración revisada, diff-check limpio y
+rutas Blogger incluidas en el build. No se verificó producción porque no se
+ha autorizado deployment.
+
+Estado: PREPARADA — pendiente de revisión/commit y autorización explícita de
+Milton para publicar. No se aplicó la migración ni se modificaron secretos,
+Vercel, middleware o configuración de producción.
+
+### Corrección de credenciales Blogger separadas — 2026-09-03
+
+Vercel fue revisado antes de editar: proyecto `auto-articulos-web`, Root
+Directory real `apps/web`, y `apps/web/vercel.json` usa exactamente
+`buildCommand: npm run build` y `outputDirectory: .next`. Las variables
+`GOOGLE_SEARCH_CONSOLE_CLIENT_ID` y `GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET`
+ya existen para GSC/GA y no fueron modificadas. Blogger usa ahora
+`BLOGGER_CLIENT_ID` y `BLOGGER_CLIENT_SECRET` exclusivamente.
+
+Auditoría funcional: APROBADA — ambos puntos de OAuth Blogger (web y worker)
+leen las variables nuevas; GSC/GA conservan sus variables originales.
+Auditoría de regresión: APROBADA — Prisma generate, build worker, typecheck
+web, build Next completo (83 rutas), 14 tests worker y `git diff --check`.
+Auditoría integración/producción: APROBADA para preparación — Root Directory,
+configuración Vercel, rutas de retorno y salida `.next` verificados; no se
+desplegó ni se modificaron variables remotas, por lo que la verificación de
+producción queda pendiente de autorización de deployment.
+
+Estado: PREPARADA — no publicar todavía.
+Archivos modificados: `apps/web/src/lib/blogger-oauth.ts`,
+`apps/worker/src/socialPublish.ts`, esta coordinación e inventario.
+Reservas liberadas: todos los archivos anteriores quedan libres al terminar
+esta fase.
+
+### Credenciales globales en Configuración → Redes Sociales — 2026-09-03
+
+Se añadió la configuración administrativa de Blogger siguiendo el patrón de
+Tumblr/Pinterest: el administrador puede guardar Client ID y Client Secret en
+`SystemSetting` cifrados; OAuth web y worker consultan primero esos valores y
+solo usan `BLOGGER_CLIENT_ID`/`BLOGGER_CLIENT_SECRET` como fallback. GSC y GA
+mantienen sus variables y flujos intactos.
+
+Auditoría funcional: APROBADA — ruta `/api/search-integrations/blogger/settings`,
+formulario visible para administrador, guardado cifrado y lectura en connect,
+callback y renovación del worker.
+Auditoría de regresión: APROBADA — build Next completo (83 rutas), build worker,
+typecheck web, 14 tests worker y `git diff --check`.
+Auditoría integración/producción: APROBADA para preparación — Vercel revisado,
+Root Directory `apps/web`, `apps/web/vercel.json` con `npm run build`/`.next`;
+no se modificaron variables remotas ni se desplegó.
+
+Estado: PREPARADA — pendiente de commit/deployment autorizado.
+Reservas liberadas al terminar: todos los archivos modificados quedan libres.
+
+### Corrección final — credenciales administrativas Blogger en UI — 2026-09-03
+
+Se añadió `/api/search-integrations/blogger/settings` y el formulario de
+credenciales globales dentro de `BloggerSection`, siguiendo el patrón de
+Tumblr/Pinterest. El administrador guarda Client ID/Secret cifrados; las
+cuentas de usuario final conectan después mediante OAuth. El worker también
+lee primero esos valores cifrados y no depende de variables GSC/GA.
+
+Auditoría funcional: APROBADA — formulario admin, POST protegido por rol,
+cifrado, fallback de entorno, OAuth web, renovación y worker conectados.
+Auditoría regresión: APROBADA — build web, typecheck web, build worker,
+14 tests worker y `git diff --check`.
+Auditoría integración/producción: APROBADA para preparación — Vercel revisado
+con Root Directory `apps/web`; `apps/web/vercel.json` conserva exactamente
+`npm run build` y `.next`; no se cambiaron variables remotas ni se desplegó.
+Reservas liberadas. Estado: PREPARADA, pendiente de autorización de publicación.
+
+Commit local antes del rebase: `c9dd6f0`; la serie rebasada continúa en
+`03cc2f0`, `3f618a`, `b56e9f3` y `46227d7`.
+Reserva liberada al cerrar esta fase: `COORDINACION_CLAUDE_CODEX.md` e
+`INVENTARIO_CONVERSACIONES.md`. No quedan archivos de código reservados.
+El hook informativo de actualizaciones no pudo consultar Prisma por falta de
+`DATABASE_URL` en el worktree; el commit sí se creó correctamente.
+
+### Reserva liberada — registro maestro de versiones
+
+La reserva exclusiva de `CONTROLADOR_DE_VERSIONES.md` se utilizó únicamente
+para registrar la versión preparada y quedó liberada al terminar. El registro
+se incorporó en los commits rebasados `b56e9f3` y `46227d7`; el hook
+informativo volvió a mostrar la limitación preexistente de `DATABASE_URL`
+ausente, sin impedir los commits.
+
+### Reserva activa — corrección de referencias post-rebase
+
+Se reservó temporalmente este archivo para corregir únicamente los hashes
+reescritos por el rebase de la rama aislada de Blogger. Reserva liberada tras
+la corrección; no quedan archivos de código o documentación reservados.

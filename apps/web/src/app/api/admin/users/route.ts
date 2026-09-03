@@ -85,6 +85,7 @@ export async function GET() {
         allowTumblrPublishing: true,
         allowBlueskyPublishing: true,
         allowDevToPublishing: true,
+        allowBloggerPublishing: true,
         aiImageGenerationEnabled: true,
         profilePhotoUrl: true,
         businessLogoUrl: true,
@@ -200,6 +201,7 @@ export async function PATCH(request: NextRequest) {
     allowPinterestPublishing,
     allowBlueskyPublishing,
     allowDevToPublishing,
+    allowBloggerPublishing,
     aiImageGenerationEnabled,
     profilePhotoUrl,
     businessLogoUrl,
@@ -234,6 +236,7 @@ export async function PATCH(request: NextRequest) {
     allowTumblrPublishing?: boolean;
     allowBlueskyPublishing?: boolean;
     allowDevToPublishing?: boolean;
+    allowBloggerPublishing?: boolean;
     aiImageGenerationEnabled?: boolean;
     profilePhotoUrl?: string | null;
     businessLogoUrl?: string | null;
@@ -364,6 +367,9 @@ export async function PATCH(request: NextRequest) {
   }
   if ("allowDevToPublishing" in body) {
     data.allowDevToPublishing = Boolean(allowDevToPublishing);
+  }
+  if ("allowBloggerPublishing" in body) {
+    data.allowBloggerPublishing = Boolean(allowBloggerPublishing);
   }
   if ("allowBlueskyPublishing" in body) {
     data.allowBlueskyPublishing = Boolean(allowBlueskyPublishing);

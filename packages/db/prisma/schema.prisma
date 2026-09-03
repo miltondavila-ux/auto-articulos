@@ -106,6 +106,7 @@ model User {
   allowMastodonPublishing            Boolean   @default(false)
   // Control de acceso a publicación de artículos adaptados en DEV.to.
   allowDevToPublishing               Boolean   @default(false)
+  allowBloggerPublishing             Boolean   @default(false)
   // Control de acceso al generador de imágenes con IA para redes sociales
   // (20/8/2026, "Creador de Imágenes para Redes Sociales"). Solo el admin
   // puede activarlo por usuario — es un upsell, no un reemplazo forzado.
@@ -172,6 +173,7 @@ model User {
   blueskyIntegration         BlueskyIntegration?
   mastodonIntegration         MastodonIntegration?
   devToIntegration           DevToIntegration?
+  bloggerIntegration         BloggerIntegration?
   socialOpportunities        SocialOpportunity[]
   oauthAuthorizationCodes    OAuthAuthorizationCode[]
   oauthAccessTokens          OAuthAccessToken[]
@@ -400,6 +402,21 @@ model DevToIntegration {
   encryptedApiKey      String
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BloggerIntegration {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  bloggerUserId         String?
+  blogId                String
+  blogName              String?
+  accessTokenEncrypted  String
+  refreshTokenEncrypted String?
+  expiresAt             DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -732,7 +749,7 @@ model SocialOpportunity {
   titleId       String?
   articleUrl    String
   articleTitle  String
-  platform      String // "threads" | "linkedin" | "x" | "instagram" | "facebook" | "pinterest" | "tumblr"
+  platform      String // "threads" | "linkedin" | "x" | "instagram" | "facebook" | "pinterest" | "tumblr" | "blogger"
   suggestedText String    @db.Text
   status        String    @default("pending") // "pending" | "published" | "skipped"
   progressPercent Int       @default(0)
