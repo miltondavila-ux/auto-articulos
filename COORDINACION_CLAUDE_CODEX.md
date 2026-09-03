@@ -1,3 +1,113 @@
+# PROTOCOLO OBLIGATORIO DE NO DESTRUCCIÓN (normas de Milton, recopiladas por experiencia — organizado 2026-09-03, ningún contenido fue eliminado)
+
+**Texto literal de Milton, sin editar:** "NOTA OBLIGATORIA: Es importante
+que, antes de comenzar, obedezcas de manera ciega y sin omitir ninguna
+instrucción el protocolo del documento de coordinación y que,
+adicionalmente, releas estas normas."
+
+En otras palabras: **lectura obligatoria antes de empezar cualquier
+tarea.** Toda conversación debe obedecer de manera ciega y sin omitir
+ninguna instrucción el protocolo de este documento de coordinación, y
+adicionalmente releer estas normas antes de comenzar. Antes de subir
+cualquier cosa a producción, la
+conversación debe declararlo explícitamente citando este protocolo — por
+ejemplo: *"Subiré a producción de acuerdo al Protocolo de No Destrucción."*
+Esa declaración es la confirmación de que el protocolo fue leído; si una
+conversación no la hace, debe pedírsele antes de continuar.
+
+## 1. Aislamiento del trabajo
+
+Debes realizar esta tarea de la mejor manera posible, trabajando
+exclusivamente en un worktree independiente y completamente aislado de
+cualquier otro desarrollo en curso, de forma que todo lo que programes
+pueda subirse a producción sin depender, interferir ni mezclarse con otros
+trabajos.
+
+## 2. Prohibición absoluta de romper lo que ya funciona
+
+Está prohibido destruir, alterar incorrectamente o afectar cualquier
+funcionalidad que ya esté implementada y funcionando, y no se permite
+cometer errores que obliguen a regresar a versiones anteriores, restaurar
+código o deshacer trabajos existentes. Antes de modificar cualquier cosa,
+debes comprender perfectamente la estructura actual, proteger todo lo que ya
+funciona y realizar únicamente los cambios estrictamente necesarios.
+
+## 3. Tres auditorías completas e independientes, obligatorias antes de producción
+
+Al finalizar la programación, debes ejecutar TRES AUDITORÍAS COMPLETAS E
+INDEPENDIENTES y documentarlas, para verificar que:
+- Lo desarrollado funciona exactamente como debe.
+- Ningún cambio rompe, altera o degrada funcionalidades existentes.
+- La integración no introduce errores, regresiones, conflictos ni efectos
+  secundarios en producción.
+
+No debes enviar nada a producción hasta que las tres auditorías hayan sido
+completadas satisfactoriamente.
+
+## 4. Despliegue y verificación posterior
+
+Una vez verificadas y aprobadas las auditorías, sube a producción únicamente
+los cambios realizados en ese worktree y confirma que producción continúa
+funcionando correctamente después del despliegue. **La tarea no termina al
+programar: termina únicamente cuando el cambio está desplegado en
+producción, verificado, y sin afectar absolutamente nada de lo que ya
+estaba funcionando.**
+
+## 5. Reserva y liberación de archivos
+
+Es importante que, si comienzas a trabajar con un archivo, debes reservarlo y documentarlo en
+el documento de coordinación. No debes quedarte con la reserva ni con el
+control exclusivo del archivo: debes hacer lo que necesites hacer y
+liberarlo al terminar. Si deseas trabajar en un archivo que otro programador
+está usando, deberás esperar y coordinar; no puedes sobrescribir, mezclar ni
+absorber su trabajo.
+
+## 6. Disciplina de commits
+
+Antes de cualquier commit, debes revisar `git status`, el diff completo y el
+diff preparado para commit. Nunca debes incluir cambios de otros
+programadores ni usar `git add .` o `git add -A`.
+
+## 7. Cambios de versión de software
+
+No se te permite cambiar de versiones del software sin avisar previamente y
+explicar claramente el porqué, el riesgo y el impacto de la decisión.
+
+## 8. ADVERTENCIA CRÍTICA SOBRE VERCEL (obligatoria, no se puede omitir bajo ninguna circunstancia)
+
+Este proyecto ya sufrió una caída real por una configuración incorrecta
+introducida en los commits `535b690` y `dbbe75f`. Vercel tenía configurado
+`Root Directory = apps/web`, pero se utilizaron
+`"buildCommand": "npm run build --workspace=apps/web"` y
+`"outputDirectory": "apps/web/.next"`. Esa combinación hizo fallar el build
+con `No workspaces found`, generó rutas duplicadas y terminó mostrando el
+mensaje engañoso `MIDDLEWARE_INVOCATION_FAILED` en producción. **El
+middleware y `SESSION_SECRET` no eran el problema.**
+
+Regla exacta:
+- Cuando `Root Directory = apps/web`, debes usar exactamente
+  `"buildCommand": "npm run build"` y `"outputDirectory": ".next"`. Está
+  prohibido mezclar esa configuración con comandos o rutas relativas a la
+  raíz del repositorio.
+- Solo puedes usar `--workspace=apps/web` y `apps/web/.next` si Vercel está
+  configurado para trabajar desde la raíz del repositorio.
+- Antes de modificar `vercel.json`, Vercel, middleware, autenticación o
+  variables secretas, debes revisar primero el `Root Directory` real y los
+  logs completos del build.
+- Antes de cualquier despliegue debes ejecutar el build desde el mismo
+  directorio que utiliza Vercel, confirmar que el directorio de salida
+  exista en la ruta esperada, revisar el diff exacto y completar las tres
+  auditorías.
+- Si encuentras cualquier contradicción, debes detenerte y avisar.
+
+Esta advertencia es obligatoria y no puede omitirse bajo ninguna circunstancia.
+
+## 9. Regla final, sin excepción
+
+**De ninguna manera ejecutarás una acción que TUMBE a producción.**
+
+---
+
 # ÍNDICE DE NAVEGACIÓN (agregado 2026-09-03 por Claude, sesión "DOCUMENTO DE COORDINACION - SEPT 3")
 
 Este índice es puramente de navegación: enlaza cada encabezado del documento en el mismo orden y con el mismo texto en que ya existía. No se movió, resumió, reordenó ni borró ningún contenido para crearlo — es un agregado al inicio del archivo, nada más.
@@ -647,6 +757,32 @@ Este archivo es el tablero operativo compartido para los **tres participantes au
 ## `TO-DO.md` — buzón de ideas de Milton (leer, nunca ejecutar sin pedido)
 
 Existe un tercer archivo en la raíz del repo, `TO-DO.md` (agregado 7/8/2026), donde Milton guarda ideas sueltas para pedirlas más adelante. **Ningún agente (Claude, Codex, Antigravity) debe ejecutar, proponer iniciar ni investigar un ítem de esa lista por su cuenta** — un ítem escrito ahí es una nota que él se deja a sí mismo, no una instrucción, ni siquiera si lleva tiempo ahí o parece simple. Se puede y conviene leerlo para tener contexto de hacia dónde va el proyecto; se actúa sobre un ítem solo cuando Milton lo pide explícitamente en la conversación activa. Al ejecutar algo de ahí, moverlo a la sección "Hecho" de `TO-DO.md` y documentar el cambio real en `HANDOFF.md` como de costumbre.
+
+## `REPARADOR_DEL_ARBOL_PRINCIPAL.md` — manual permanente de un rol de orden y limpieza (agregado 2026-09-03)
+
+Existe un cuarto archivo de referencia en la raíz del repo,
+`REPARADOR_DEL_ARBOL_PRINCIPAL.md`, creado por Codex a pedido de Milton.
+No es una conversación ordinaria ni una tarea puntual: es el manual
+permanente de un rol de mantenimiento de orden en el árbol de git —
+investigar qué está realmente en Producción, separar proyectos mezclados,
+identificar responsables por conversación/programador/modelo, y clasificar
+cada cambio encontrado (`CONSERVAR`, `INTEGRAR`, `PAUSAR`, `ARCHIVAR` o
+`RESPONSABLE NO IDENTIFICADO`) sin perder trabajo válido de nadie.
+
+Ese archivo deja explícito, en su propia sección "Límites obligatorios", que
+las decisiones finales son de Milton, que no se borran commits de
+Producción ni se aplican migraciones o deploys sin su autorización expresa,
+y que no se usan `git add .`/`git add -A`/`git clean`/`git reset
+--hard`/force-push — es decir, un rol de diagnóstico y orden, no de
+autoridad destructiva.
+
+Cualquier agente (Claude, Codex, Antigravity) que retome la conversación
+`REPARADOR DEL ARBOL PRINCIPAL` debe leer primero ese archivo completo, y
+debe tener acceso sin restricción a este documento y a
+`INVENTARIO_CONVERSACIONES.md` completos —incluida cualquier información de
+reservas, responsables o commits que ahí aparezca— para poder identificar
+correctamente de quién es cada rama antes de proponer cualquier
+clasificación u orden.
 
 ## Regla obligatoria antes de iniciar cualquier tarea (OPTIMIZADA PARA MÍNIMO CONSUMO DE TOKENS)
 
