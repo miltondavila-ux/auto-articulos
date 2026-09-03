@@ -21,7 +21,6 @@ import LinkedInSection from "@/components/LinkedInSection";
 import PinterestSection from "@/components/PinterestSection";
 import TumblrSection from "@/components/TumblrSection";
 import BlueskySection from "@/components/BlueskySection";
-import MastodonSection from "@/components/MastodonSection";
 import DevToSection from "@/components/DevToSection";
 import BrowserTabsConnectionNotice from "@/components/BrowserTabsConnectionNotice";
 import PhotoLogoUploader, { type UploadType } from "@/components/PhotoLogoUploader";
@@ -98,7 +97,6 @@ export default function ConfiguracionView({
   const [allowPinterestPublishing, setAllowPinterestPublishing] = useState(false);
   const [allowTumblrPublishing, setAllowTumblrPublishing] = useState(false);
   const [allowBlueskyPublishing, setAllowBlueskyPublishing] = useState(false);
-  const [allowMastodonPublishing, setAllowMastodonPublishing] = useState(false);
   const [allowDevToPublishing, setAllowDevToPublishing] = useState(false);
   const [triggeringFix, setTriggeringFix] = useState(false);
   const [clearingFixHistory, setClearingFixHistory] = useState(false);
@@ -201,7 +199,6 @@ export default function ConfiguracionView({
         setAllowPinterestPublishing(data.allowPinterestPublishing ?? false);
         setAllowTumblrPublishing(data.allowTumblrPublishing ?? false);
         setAllowBlueskyPublishing(data.allowBlueskyPublishing ?? false);
-        setAllowMastodonPublishing(data.allowMastodonPublishing ?? false);
         setAllowDevToPublishing(data.allowDevToPublishing ?? false);
         if (typeof data.platformBaseUrl === "string" && data.platformBaseUrl) {
           setPlatformBase(data.platformBaseUrl);
@@ -580,7 +577,6 @@ export default function ConfiguracionView({
     allowPinterestPublishing ||
     allowTumblrPublishing ||
     allowBlueskyPublishing ||
-    allowMastodonPublishing ||
     allowDevToPublishing;
 
   const redesSocialesDisponibles = [
@@ -591,7 +587,6 @@ export default function ConfiguracionView({
     { name: "Pinterest", enabled: isAdmin || allowPinterestPublishing },
     { name: "Tumblr", enabled: isAdmin || allowTumblrPublishing },
     { name: "Bluesky", enabled: isAdmin || allowBlueskyPublishing },
-    { name: "Mastodon", enabled: isAdmin || allowMastodonPublishing },
     { name: "DEV.to", enabled: isAdmin || allowDevToPublishing },
   ]
     .filter((network) => network.enabled)
@@ -1010,9 +1005,6 @@ export default function ConfiguracionView({
           )}
           {(allowBlueskyPublishing || isAdmin || tieneModuloRedes) && (
             <BlueskySection allowed={allowBlueskyPublishing || isAdmin || tieneModuloRedes} />
-          )}
-          {(allowMastodonPublishing || isAdmin || tieneModuloRedes) && (
-            <MastodonSection allowed={allowMastodonPublishing || isAdmin || tieneModuloRedes} />
           )}
           {(allowDevToPublishing || isAdmin || tieneModuloRedes) && (
             <DevToSection allowed={allowDevToPublishing || isAdmin || tieneModuloRedes} />

@@ -71,7 +71,6 @@ export async function POST(request: NextRequest) {
       "pinterest",
       "tumblr",
       "bluesky",
-      "mastodon",
       "devto",
       "instagram-carousel",
       "instagram-reel-image",
@@ -119,9 +118,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (opp.platform === "pinterest" || opp.platform === "tumblr" || opp.platform === "bluesky" || opp.platform === "mastodon" || opp.platform === "devto") {
-      const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true, allowPinterestPublishing: true, allowTumblrPublishing: true, allowBlueskyPublishing: true, allowMastodonPublishing: true, allowDevToPublishing: true } });
-      const allowed = opp.platform === "pinterest" ? user?.role === "admin" || user?.allowPinterestPublishing : opp.platform === "tumblr" ? user?.role === "admin" || user?.allowTumblrPublishing : opp.platform === "bluesky" ? user?.role === "admin" || user?.allowBlueskyPublishing : opp.platform === "mastodon" ? user?.role === "admin" || user?.allowMastodonPublishing : user?.role === "admin" || user?.allowDevToPublishing;
+    if (opp.platform === "pinterest" || opp.platform === "tumblr" || opp.platform === "bluesky" || opp.platform === "devto") {
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true, allowPinterestPublishing: true, allowTumblrPublishing: true, allowBlueskyPublishing: true, allowDevToPublishing: true } });
+      const allowed = opp.platform === "pinterest" ? user?.role === "admin" || user?.allowPinterestPublishing : opp.platform === "tumblr" ? user?.role === "admin" || user?.allowTumblrPublishing : opp.platform === "bluesky" ? user?.role === "admin" || user?.allowBlueskyPublishing : user?.role === "admin" || user?.allowDevToPublishing;
       if (!allowed) return NextResponse.json({ error: `No tienes permiso para publicar en ${opp.platform}. Contacta al administrador.` }, { status: 403 });
     }
 

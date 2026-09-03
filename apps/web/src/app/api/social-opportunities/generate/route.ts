@@ -189,7 +189,7 @@ async function selectArticlesWithoutGSC(userId: string): Promise<ArticleCandidat
 }
 
 async function getConnectedNetworks(userId: string) {
-  const [threads, twitter, linkedin, instagram, facebookPage, pinterest, tumblr, bluesky, mastodon, devto, user] = await Promise.all([
+  const [threads, twitter, linkedin, instagram, facebookPage, pinterest, tumblr, bluesky, devto, user] = await Promise.all([
     prisma.threadsIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.twitterIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.linkedInIntegration.findUnique({ where: { userId }, select: { id: true } }),
@@ -198,9 +198,8 @@ async function getConnectedNetworks(userId: string) {
     prisma.pinterestIntegration.findUnique({ where: { userId }, select: { id: true, boardId: true, expiresAt: true } }),
     prisma.tumblrIntegration.findUnique({ where: { userId }, select: { id: true, expiresAt: true } }),
     prisma.blueskyIntegration.findUnique({ where: { userId }, select: { id: true } }),
-    prisma.mastodonIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.devToIntegration.findUnique({ where: { userId }, select: { id: true } }),
-    prisma.user.findUnique({ where: { id: userId }, select: { role: true, email: true, allowInstagramPublishing: true, allowLinkedInPublishing: true, allowThreadsPublishing: true, allowFacebookPublishing: true, allowPinterestPublishing: true, allowTumblrPublishing: true, allowBlueskyPublishing: true, allowMastodonPublishing: true, allowDevToPublishing: true } }),
+    prisma.user.findUnique({ where: { id: userId }, select: { role: true, email: true, allowInstagramPublishing: true, allowLinkedInPublishing: true, allowThreadsPublishing: true, allowFacebookPublishing: true, allowPinterestPublishing: true, allowTumblrPublishing: true, allowBlueskyPublishing: true, allowDevToPublishing: true } }),
   ]);
   const isAdmin = user?.role === "admin";
   const socialOverride = user?.email?.toLowerCase() === "lorenalvarez30@gmail.com";
@@ -209,8 +208,8 @@ async function getConnectedNetworks(userId: string) {
   // código de X intacto (integración, publicación, historial) para poder
   // reactivarla fácil más adelante — solo se fuerza a `false` acá, el único
   // punto de donde sale si se muestra o no en Oportunidades en Redes.
-  const activeNetworks = { threads: Boolean(isAdmin || socialOverride || user?.allowThreadsPublishing), x: false, linkedin: Boolean(isAdmin || socialOverride || user?.allowLinkedInPublishing), instagram: Boolean(isAdmin || socialOverride || user?.allowInstagramPublishing), facebookPage: Boolean(isAdmin || socialOverride || user?.allowFacebookPublishing), pinterest: Boolean(isAdmin || socialOverride || user?.allowPinterestPublishing), tumblr: Boolean(isAdmin || socialOverride || user?.allowTumblrPublishing), bluesky: Boolean(isAdmin || user?.allowBlueskyPublishing), mastodon: Boolean(isAdmin || socialOverride || user?.allowMastodonPublishing), devto: Boolean(isAdmin || socialOverride || user?.allowDevToPublishing) };
-  return { activeNetworks, threads: activeNetworks.threads && Boolean(threads), x: activeNetworks.x && Boolean(twitter), linkedin: activeNetworks.linkedin && Boolean(linkedin), instagram: activeNetworks.instagram && Boolean(instagram), facebookPage: activeNetworks.facebookPage && Boolean(facebookPage), pinterest: activeNetworks.pinterest && Boolean(pinterest && pinterest.boardId && (!pinterest.expiresAt || pinterest.expiresAt > new Date())), tumblr: activeNetworks.tumblr && Boolean(tumblr && (!tumblr.expiresAt || tumblr.expiresAt > new Date())), bluesky: activeNetworks.bluesky && Boolean(bluesky), mastodon: activeNetworks.mastodon && Boolean(mastodon), devto: activeNetworks.devto && Boolean(devto) };
+  const activeNetworks = { threads: Boolean(isAdmin || socialOverride || user?.allowThreadsPublishing), x: false, linkedin: Boolean(isAdmin || socialOverride || user?.allowLinkedInPublishing), instagram: Boolean(isAdmin || socialOverride || user?.allowInstagramPublishing), facebookPage: Boolean(isAdmin || socialOverride || user?.allowFacebookPublishing), pinterest: Boolean(isAdmin || socialOverride || user?.allowPinterestPublishing), tumblr: Boolean(isAdmin || socialOverride || user?.allowTumblrPublishing), bluesky: Boolean(isAdmin || user?.allowBlueskyPublishing), devto: Boolean(isAdmin || socialOverride || user?.allowDevToPublishing) };
+  return { activeNetworks, threads: activeNetworks.threads && Boolean(threads), x: activeNetworks.x && Boolean(twitter), linkedin: activeNetworks.linkedin && Boolean(linkedin), instagram: activeNetworks.instagram && Boolean(instagram), facebookPage: activeNetworks.facebookPage && Boolean(facebookPage), pinterest: activeNetworks.pinterest && Boolean(pinterest && pinterest.boardId && (!pinterest.expiresAt || pinterest.expiresAt > new Date())), tumblr: activeNetworks.tumblr && Boolean(tumblr && (!tumblr.expiresAt || tumblr.expiresAt > new Date())), bluesky: activeNetworks.bluesky && Boolean(bluesky), devto: activeNetworks.devto && Boolean(devto) };
 }
 
 export async function GET() {
@@ -230,8 +229,8 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({})) as { networks?: string[] };
     const connected = await getConnectedNetworks(userId);
     const requestedNetworks = Array.isArray(body.networks)
-      ? body.networks.filter((network) => network === "threads" || network === "x" || network === "linkedin" || network === "instagram" || network === "facebook-page" || network === "pinterest" || network === "tumblr" || network === "bluesky" || network === "mastodon" || network === "devto")
-      : ["threads", "x", "linkedin", "instagram", "facebook-page", "pinterest", "tumblr", "bluesky", "mastodon", "devto"];
+      ? body.networks.filter((network) => network === "threads" || network === "x" || network === "linkedin" || network === "instagram" || network === "facebook-page" || network === "pinterest" || network === "tumblr" || network === "bluesky" || network === "devto")
+      : ["threads", "x", "linkedin", "instagram", "facebook-page", "pinterest", "tumblr", "bluesky", "devto"];
 
     const integrations: string[] = [];
     if (requestedNetworks.includes("threads") && connected.threads) {
@@ -255,9 +254,6 @@ export async function POST(request: Request) {
     }
     if (requestedNetworks.includes("bluesky") && connected.bluesky) {
       integrations.push("bluesky");
-    }
-    if (requestedNetworks.includes("mastodon") && connected.mastodon) {
-      integrations.push("mastodon");
     }
     if (requestedNetworks.includes("devto") && connected.devto) {
       integrations.push("devto");

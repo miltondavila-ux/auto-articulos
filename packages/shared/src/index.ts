@@ -11,7 +11,6 @@ export * from "./facebook-pages-api";
 export * from "./pinterest-api";
 export * from "./tumblr-api";
 export * from "./bluesky-api";
-export * from "./mastodon-api";
 export * from "./devto-api";
 export * from "./image-prompt";
 export * from "./social-image";
