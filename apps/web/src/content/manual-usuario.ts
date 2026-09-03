@@ -169,7 +169,7 @@ También explica por qué las redes sociales cuentan para el posicionamiento: qu
 Lo explica en tres pasos:
 
 1. **Configura tu cuenta.** Es lo primero y lo único que no se puede saltar. Si no estás seguro de haberlo dejado todo listo, entra en Configuración y revísalo. Si algo no queda claro, la burbuja de ayuda está en la esquina de todas las pantallas.
-2. **Publica tus artículos.** Hay dos caminos y puedes usar los dos: publicar tus propios títulos, hasta diez a la vez, o dejar que el sistema decida por ti desde Oportunidades, donde consulta Google Search Console y Bing. Cuando la inteligencia artificial haya decidido, publicas de uno en uno o por lotes.
+2. **Publica tus artículos.** Hay dos caminos y puedes usar los dos: publicar tus propios títulos dentro del cupo dinámico de tu cuenta, o dejar que el sistema decida por ti desde Oportunidades, donde consulta Google Search Console y Bing. Cuando la inteligencia artificial haya decidido, publicas de uno en uno o por lotes según el saldo diario, mensual y por lote disponible.
 3. **Lleva lo publicado a las redes.** Desde Oportunidades para Redes Sociales, los artículos más relevantes pasan a tus redes de forma repartida y equilibrada, sin parecer spam.
 
 Cierra explicando para qué sirve todo esto: posicionarte con autoridad en internet. Aparecer en los resultados de la inteligencia artificial, de Google y de Bing es lo más importante que le puede pasar a tu negocio en internet.

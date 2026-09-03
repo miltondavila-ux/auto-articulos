@@ -828,7 +828,9 @@ export default function OportunidadesPage() {
                         color: "#d64545",
                       }}
                     >
-                      Se publicarán hasta {effectiveAvailable} artículos según tu cupo disponible actual. Los {Math.max(0, totalTitles - effectiveAvailable)} que excedan el cupo quedarán pendientes.
+                      {effectiveAvailable === 0
+                        ? `Tu cupo disponible es 0 artículos. Los ${totalTitles} títulos quedaron pendientes. Revisa tu límite diario, mensual y por lote para saber cuándo podrás publicarlos.`
+                        : `Se publicarán hasta ${effectiveAvailable} artículos según tu cupo disponible actual. Los ${Math.max(0, totalTitles - effectiveAvailable)} que excedan el cupo quedarán pendientes.`}
                     </p>
                   )}
                   {!contentLanguage && (

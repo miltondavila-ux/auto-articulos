@@ -137,8 +137,13 @@ export async function POST(request: NextRequest) {
   }
 
   if (gruposQueCaben.length === 0) {
+    const renewal = availableDaily === 0
+      ? "Tu límite diario se renovará mañana."
+      : availableMonthly === 0
+        ? "Tu límite mensual se renovará al comenzar el próximo mes."
+        : "Puedes intentarlo en otro lote cuando tengas cupo disponible.";
     return NextResponse.json(
-      { error: "No hay títulos disponibles dentro de tu cupo actual. Revisa tu límite diario, mensual y por lote." },
+      { error: `Tu cupo disponible es de 0 artículos. Los títulos quedaron pendientes. ${renewal}` },
       { status: 400 },
     );
   }
