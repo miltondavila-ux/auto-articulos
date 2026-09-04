@@ -108,6 +108,34 @@ Esta advertencia es obligatoria y no puede omitirse bajo ninguna circunstancia.
 
 ---
 
+## Decisión de Milton — `stash@{0}` (migración de dominio OAuth de Google) — 2026-09-03
+
+Al revisar los `git stash` sueltos en el checkout principal
+(`/Users/miltondavila/Creador de articulos`), se encontró `stash@{0}`
+("cambios locales desincronizados pre-sync 2026-09-03"): contiene, entre
+otros archivos, una migración de las URLs de redirección OAuth de Google
+por defecto (`apps/web/src/lib/google-oauth.ts`, `bing-oauth.ts`,
+`google-analytics-oauth.ts`) de `auto-articulos-web.vercel.app` hacia
+`seototal.lasolucionweb.com`.
+
+Se detectó que esto coincide en tema con el worktree activo
+`codex/google-api-verification` (commit `7908b01`, "chore: prepare Google
+OAuth domain and verification pages"), donde Milton y Codex están
+trabajando ahora mismo en lo mismo — la migración de dominio para la
+verificación OAuth de las APIs de Google.
+
+**Decisión de Milton**: no tocar `stash@{0}` todavía. Milton está
+trabajando esto ahora mismo junto con Codex; hay que esperar a que esa
+conversación culmine. Si al terminar queda algo suelto o sin resolver de
+`stash@{0}` que no haya sido cubierto por el trabajo de Codex, se le pasa
+al **Reparador del Árbol Principal** (`REPARADOR_DEL_ARBOL_PRINCIPAL.md`)
+para que lo diagnostique y lo integre o descarte de forma ordenada.
+
+Estado: PENDIENTE — no tocar `stash@{0}` hasta que Codex culmine
+`CODEX - GPT-5 - VERIFICACION DE API'S DE GOOGLE`.
+
+---
+
 # ÍNDICE DE NAVEGACIÓN (agregado 2026-09-03 por Claude, sesión "DOCUMENTO DE COORDINACION - SEPT 3")
 
 Este índice es puramente de navegación: enlaza cada encabezado del documento en el mismo orden y con el mismo texto en que ya existía. No se movió, resumió, reordenó ni borró ningún contenido para crearlo — es un agregado al inicio del archivo, nada más.
