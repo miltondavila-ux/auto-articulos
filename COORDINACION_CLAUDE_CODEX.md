@@ -3412,3 +3412,10 @@ Verificación posterior: `/login` respondió HTTP 200 y `/dashboard` HTTP 307
 hacia `/login`; sin errores de middleware observados. El worker productivo
 tomará este SHA en su siguiente corrida cron; no se disparó manualmente para
 no procesar trabajos reales fuera del ciclo normal. Reserva liberada.
+
+### Limpieza y archivo — 2026-09-04
+
+Se eliminaron únicamente artefactos locales generados durante la auditoría:
+`.vercel/`, `apps/web/.env.local`, `.next/`, `dist/` y `node_modules/`.
+`git status` queda limpio tras registrar este cierre; no quedan reservas
+activas ni cambios de código pendientes. La tarea queda lista para archivo.
