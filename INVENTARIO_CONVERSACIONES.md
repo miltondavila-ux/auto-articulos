@@ -113,6 +113,23 @@ agregarla aquí en vez de dejarla solo en Coordinación.
   `lasolucionweb.com`.
 - Estado: EN CURSO — según el worktree vivo `codex/google-api-verification`
   (ver Parte A), parece continuar activa hoy mismo.
+- **Actualización (2026-09-04), agregada por la tarea programada diaria de
+  propagación, sin editar lo anterior:** el código ya fue promovido dos
+  veces a Producción (`7908b01` y luego la rama integrada
+  `codex/google-api-verification-integrated`, deployment
+  `2nHSy4qXgW4zaEmxzHBAr1NY8xqk`, `Ready`) — ver el detalle completo, ya
+  registrado por otra corrida de esta misma tarea automatizada, en
+  `CONTROLADOR_DE_VERSIONES.md`, sección "Promoción a Producción —
+  verificación OAuth de Google y video de demostración — 2026-09-04". Los
+  tres scopes OAuth y la justificación ya están guardados en Google; solo
+  falta cargar el vídeo de demostración provisto por Milton
+  (`https://youtu.be/21wEAhgy7zk`). Google Business Profile sigue bloqueado
+  por cuota `0 QPM` de Google (no es un bug de código). **Verificado en vivo
+  por esta tarea (2026-09-04) contra `origin/main`: ni
+  `codex/google-api-verification` (`7908b01`) ni
+  `codex/google-api-verification-integrated` (`eaf8e90`) están fusionadas
+  en la rama `main` de git, pese a estar ambas corriendo en Producción según
+  Vercel** — anotado como hallazgo en `REPARADOR_DEL_ARBOL_PRINCIPAL.md`.
 
 ### `CODEX - GPT-5 - PROBLEMA CON TUMBLR`
 - Agente: Codex - GPT-5.
