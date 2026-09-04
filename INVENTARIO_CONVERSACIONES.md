@@ -21,6 +21,13 @@ Estructura:
 
 ## PARTE A — ¿Quién tiene qué reservado AHORA MISMO?
 
+**Este es el tablero de reservas rápidas** que exige la "METODOLOGÍA DE
+TRABAJO EN PARALELO Y CAPITÁN DE ARCHIVO" en `COORDINACION_CLAUDE_CODEX.md`
+(agregada 2026-09-04): antes de tocar un archivo, consultar acá; al
+reservar, agregar una línea acá (no hace falta un párrafo largo); al
+liberar, borrar esa línea. El objetivo es poder trabajar en paralelo sin
+pisarse, sin que "puede estar en uso" sea una excusa para no terminar algo.
+
 Verificado el 2026-09-03 (~19:10 hora local) con `git worktree list` +
 `git merge-base --is-ancestor <rama> origin/main` desde
 `/private/tmp/doc-coordinacion-sept3`. Repetir estos dos comandos para

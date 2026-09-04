@@ -162,6 +162,166 @@ Esta advertencia es obligatoria y no puede omitirse bajo ninguna circunstancia.
 
 ---
 
+# METODOLOGÍA DE TRABAJO EN PARALELO Y CAPITÁN DE ARCHIVO (agregada 2026-09-04, pedido explícito de Milton)
+
+**Motivo**: Milton reportó un problema recurrente — programadores (conversaciones)
+que ya tenían el trabajo listo para producción, pero que responden "no puedo
+subir, voy a pisar código que está ahí" y en vez de resolverlo terminan
+creando otra rama independiente nueva, una y otra vez. Milton fue explícito:
+"esto ya lo teníamos resuelto pero cada vez me dicen lo mismo... no me sirve
+que me digan a cada rato que no pueden subir". El objetivo de esta sección es
+que el equipo trabaje **en paralelo de verdad**, sin destruir nada, sin que
+"otro programador puede estar usando esto" sea una excusa para no terminar.
+
+**Diagnóstico real, no supuesto**: en esta misma conversación, hoy
+(2026-09-03/04), pasó tres veces algo que ilustra la causa exacta: otra
+sesión (Codex) dejó texto sin commitear directamente en el checkout
+compartido durante horas mientras seguía trabajando, y mientras tanto
+`origin/main` avanzaba con commits de otras conversaciones. Al momento de
+sincronizar, hubo que resolver dos conflictos de texto. **En los dos casos
+la resolución fue trivial y tomó segundos**: conservar ambos aportes, en
+orden, sin perder una palabra de ninguno de los dos. Eso es la prueba de
+que "puedo pisar código ajeno" casi nunca es un motivo real para bloquear
+una subida — es un motivo para hacer un `rebase` y resolver, no para huir a
+otra rama nueva.
+
+## A. Antes de reservar — consulta rápida obligatoria (segundos, no minutos)
+
+1. `git fetch origin main` y revisar si `origin/main` avanzó.
+2. Abrir `INVENTARIO_CONVERSACIONES.md`, Parte A ("¿Quién tiene qué
+   reservado AHORA MISMO?") — ahí está la verdad en vivo, verificada contra
+   git, no contra memoria de nadie.
+3. Si el archivo que necesitás no aparece reservado ahí, está libre.
+
+## B. Cómo reservar — capitán de archivo
+
+- Quien empieza a trabajar un archivo se convierte en su **capitán** por la
+  duración de esa tarea puntual — mismo concepto que ya existe para
+  "capitán de migración", extendido a cualquier archivo.
+- La reserva se declara con una línea agregada a la Parte A de
+  `INVENTARIO_CONVERSACIONES.md` (archivo, conversación, hora). No hace
+  falta redactar un párrafo largo para reservar — una línea alcanza; el
+  párrafo completo se escribe al cerrar la tarea, como ya indica el
+  protocolo existente.
+- El capitán trabaja en worktree/rama aislada (regla ya vigente, sección 1
+  del Protocolo de No Destrucción) y limita el cambio al alcance
+  estrictamente necesario del archivo reservado.
+
+## C. Antes de subir a producción — el paso que estaba faltando
+
+**Rebasar sobre `origin/main` es siempre el último paso antes de empujar,
+sin importar cuánto haya avanzado `main` mientras tanto.** Un conflicto al
+rebasar NO es "estoy pisando a otro programador" — es la señal normal de
+que dos personas trabajaron en paralelo, y se resuelve ahí mismo:
+
+1. `git fetch origin main` + `git rebase origin/main`.
+2. Si hay conflicto en una sección de texto/documentación (el caso más
+   común): conservar **ambos** aportes, en el orden en que corresponda
+   cronológicamente, sin borrar ni resumir ninguno. Ver el ejemplo real de
+   hoy más abajo en este documento como referencia de cómo se hace.
+3. Si hay conflicto en código: revisar si son cambios en zonas distintas
+   del mismo archivo (caso común y fácil — Git ya lo resuelve solo la
+   mayoría de las veces) o en la misma línea/función (caso raro — ahí sí
+   hay que leer ambos cambios y decidir, nunca descartar uno a ciegas).
+4. Repetir las auditorías que correspondan sobre el resultado ya rebasado
+   (no sobre una base vieja).
+5. Empujar.
+
+**Lo que NO hay que hacer**: crear una rama nueva "por las dudas" en vez de
+terminar el rebase; dejar el cambio sin commitear durante horas en el
+checkout compartido esperando "el momento ideal" (eso es lo que causa los
+conflictos grandes, no los conflictos en sí); ni preguntar si se puede
+subir cuando el propio rebase ya demuestra que no hay pisado real.
+
+## C.1. Autonomía ya otorgada — no esperar permiso especial cada vez
+
+Milton reportó (2026-09-04) que tiene que repetir, conversación tras
+conversación, algo como "te doy la libertad de que busques una solución sin
+destruir nada" para que un programador se anime a ejecutar. Eso es
+fricción que ya no debería existir: **esa libertad ya está otorgada de
+forma permanente por este documento, para cualquier conversación, sin
+necesidad de que Milton la repita cada vez.**
+
+Si una tarea tiene un problema bien identificado y se cumplen las barreras
+ya obligatorias de este Protocolo — worktree aislado, no romper lo que
+funciona, tres auditorías antes de producción, rebase y resolución de
+conflictos antes de subir, aviso automático a Coordinación al terminar —
+el programador **ejecuta directamente**, sin pedir autorización especial
+para "empezar a investigar" o "crear una rama". Pedir permiso para eso es
+redundante: el permiso ya está escrito acá. Lo que sí sigue necesitando
+autorización explícita de Milton en el momento es lo que ya listan las
+reglas existentes de este repositorio (aplicar una migración, promover a
+Producción, cambiar de versión de software, enviar algo a un tercero) — no
+el hecho de ponerse a trabajar en el diagnóstico y la corrección.
+
+## D. Liberar
+
+Al terminar, borrar la línea de reserva de la Parte A del Inventario y
+completar el párrafo de cierre (Norma Suprema 1: informar automáticamente
+al culminar). Un capitán no se queda con un archivo reservado más tiempo
+del que está trabajándolo activamente.
+
+## E. Archivos calientes (mucha contención) — regla especial
+
+Algunos archivos son tocados por muchas conversaciones distintas en poco
+tiempo (el propio `COORDINACION_CLAUDE_CODEX.md` es el caso más claro, pero
+también pasa con archivos de código muy compartidos como
+`apps/web/src/app/api/opportunities/execute-all/route.ts` o
+`apps/web/src/app/dashboard/oportunidades/page.tsx`). Para esos casos:
+
+- **Ventanas cortas**: cambios pequeños y commit/push inmediato, no ramas
+  de larga duración que acumulan divergencia con `main`.
+- **Para el propio documento de Coordinación**: escribir el bloque nuevo,
+  commitear y empujar apenas se termina esa entrada — no dejarlo abierto
+  sin commitear mientras se sigue trabajando en otra cosa. Esa espera es
+  la causa real de los conflictos grandes, no el hecho de que dos personas
+  escriban el mismo día.
+- **Si de verdad hace falta esperar** (dos conversaciones necesitan tocar
+  exactamente la misma función al mismo tiempo): la segunda avisa en la
+  Parte A del Inventario que está "en cola" detrás del capitán actual, y
+  arranca en cuanto el primero libera — no abandona la tarea ni improvisa
+  una tercera rama para evitar coordinar.
+
+### Caso de estudio real — parches acumulados sin dueño de diseño
+
+Milton señaló (2026-09-04) un ejemplo distinto pero relacionado: no es que
+falte reserva, es que un archivo puede acumular **parches puntuales de
+varias conversaciones sucesivas** sin que ninguna tenga la responsabilidad
+del diseño completo. Texto de Milton, preservado tal cual:
+
+> "No es un programador específico. La dificultad está en el diseño actual
+> de estos archivos:
+> - `apps/web/src/lib/opportunity-analysis.ts`: contiene el prompt
+>   principal; el modelo sigue teniendo demasiada libertad para convertir
+>   consultas débiles en variaciones genéricas; la validación de
+>   canibalización es principalmente textual/exacta; no existe una etapa
+>   separada y obligatoria de: tema raíz → ramas temáticas → clasificación
+>   → títulos.
+> - `apps/web/src/app/api/opportunities/route.ts`: solo envía al modelo
+>   hasta 8 ejemplos publicados por categoría; obtiene datos de GSC, GA4 y
+>   Bing, pero no construye previamente un mapa estructurado de temas y
+>   ramas; la categoría se entrega principalmente como nombre, por lo que
+>   el modelo puede asignar mal una consulta.
+> - `apps/web/src/app/api/social-opportunities/generate/route.ts`: solo
+>   genera textos sociales derivados de artículos existentes; no descubre
+>   realmente nuevas temáticas long tail para redes; el cambio aplicado
+>   allí únicamente obliga a usar ángulos diferentes.
+>
+> La limitación principal está en `opportunity-analysis.ts`, apoyada por la
+> forma en que `route.ts` prepara la información. No es un problema de
+> Vercel, del worker ni de un programador concreto."
+
+Esto no se resuelve con más reservas puntuales — cada conversación nueva
+que toque `opportunity-analysis.ts` con un parche aislado (como ya pasó con
+"cero canibalización y longtail", ver más arriba en este documento) alivia
+un síntoma pero no cambia el diseño de fondo. Queda documentado como
+hallazgo pendiente de decisión de Milton: si amerita una conversación
+dedicada de rediseño (`[AGENTE] - REDISEÑO DE OPPORTUNITY-ANALYSIS`, por
+ejemplo) en vez de seguir acumulando parches. No se tocó código para
+escribir esta entrada.
+
+---
+
 ## Decisión de Milton — `stash@{0}` (migración de dominio OAuth de Google) — 2026-09-03
 
 Al revisar los `git stash` sueltos en el checkout principal
