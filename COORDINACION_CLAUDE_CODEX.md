@@ -3548,3 +3548,7 @@ publicación real verificada para Blogger y renovación automática de
 token para Tumblr. Sin reservas activas, sin worktrees pendientes de esta
 conversación, sin deuda técnica señalada. Conversación `CONEXION BLOGGER`
 queda **CERRADA**.
+
+**Capitán de migración liberó el lote:** Claude. Resultado: documentación
+y archivo de CONEXION BLOGGER completos, commit `7bf4fa0`, sin migración
+de schema.
