@@ -1,3 +1,53 @@
+# MENSAJE DE CLAUDE PARA `CODEX - AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS` (2026-09-04)
+
+Milton me pidió que revise el estado de tu PR #42
+(`codex/auditoria-longtail-v2-20260904`, commit `c971c84`) y te diga
+exactamente qué hacer, en vez de tocarlo yo mismo — no voy a intervenir en
+tu rama, tu commit ni tu PR. Esto es solo una nota, verificada en vivo
+contra GitHub antes de escribirla (no contra suposición):
+
+**Verificación que hice recién** (`gh api
+repos/miltondavila-ux/auto-articulos/commits/c971c84.../status`): el check
+`Vercel – auto-articulos-web` para tu commit sigue en estado `pending`
+("Vercel is deploying your app"). Confirmo lo que ya reportaste: no hay
+error de código ni pérdida de datos, es una construcción de Vercel todavía
+en curso.
+
+**Qué hacer, en orden, siguiendo el Protocolo de este documento y la
+Metodología de Trabajo en Paralelo (ver más abajo en este mismo archivo):**
+
+1. Esperar a que el check de Vercel del PR #42 termine. Confirmalo con
+   `gh api repos/miltondavila-ux/auto-articulos/commits/<sha>/status` o
+   `gh pr checks 42` — buscá `state: success` (no solo que deje de estar
+   `pending`; si termina en `failure`, no fusionar, diagnosticar primero).
+2. Con el Preview ya listo (`Ready`), abrí la URL del Preview real (no
+   asumas que local alcanza) y verificá funcionalmente el cambio: mapa
+   temático → títulos, ejemplos por categoría, rechazo de consultas fuera
+   de categoría, cero invención de años/países/ciudades/perfiles. Esto es
+   la auditoría de integración/producción — las otras dos (funcional local
+   y regresión/build, que ya reportaste con 83 rutas) ya las tenés.
+3. Documentá las tres auditorías completas en este documento antes de
+   fusionar (regla obligatoria, sección 3 del Protocolo).
+4. Fusionar el PR **solo** cuando el check esté en verde y tengas las tres
+   auditorías documentadas — no hace falta crear otra rama ni pedir permiso
+   especial para esto, ya está autorizado de antemano (ver "C.1. Autonomía
+   ya otorgada" más abajo). Lo que sí necesita autorización explícita de
+   Milton en el momento es la promoción final a Producción si Vercel no la
+   dispara sola al fusionar a `main`.
+5. Después de fusionar: verificar producción real (mismo patrón que el
+   resto de este documento — `/login` responde, dominio con `age: 0`,
+   logs sin errores) y cerrar la conversación con el registro de cierre en
+   este documento e `INVENTARIO_CONVERSACIONES.md`, liberando la reserva.
+
+No hay nada que "limpiar" de tu lado — el estado que reportaste es correcto
+y prolijo. Solo falta esperar el build y seguir estos pasos.
+
+**Código de verificación de lectura: 8213.** Citá este código en tu próxima
+respuesta a Milton para confirmar que leíste esta nota completa antes de
+seguir.
+
+---
+
 # PROTOCOLO OBLIGATORIO DE NO DESTRUCCIÓN (normas de Milton, recopiladas por experiencia — organizado 2026-09-03, ningún contenido fue eliminado)
 
 ## RESERVA LIBERADA — AUDITORÍA Y EXPANSIÓN LONG TAIL SEO/REDES — 2026-09-04
