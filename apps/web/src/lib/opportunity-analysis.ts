@@ -61,12 +61,23 @@ const INTENT_FILLER_WORDS = new Set([
   "al", "algunas", "como", "completa", "completo", "comunes", "con",
   "consejos", "de", "el", "en", "errores", "guia", "las", "lo", "los",
   "para", "pasos", "practica", "que", "sobre", "todo", "tu", "una", "un",
-  "y", "evitarlos", "evitar", "elegir", "elige", "mejor", "mejores", "salud",
-  "seguro", "seguros", "seguro", "forma", "formas", "necesitas", "hacer",
+  "y", "evitarlos", "evitar", "salud", "forma", "formas", "necesitas", "hacer",
   "despues", "antes", "tras", "cuando", "inmigrantes", "inmigrante",
 ]);
 
 function stemIntentToken(token: string): string {
+  const canonical: Record<string, string> = {
+    elegir: "seleccion",
+    elige: "seleccion",
+    mejor: "seleccion",
+    mejores: "seleccion",
+    opciones: "seleccion",
+    errores: "problema",
+    error: "problema",
+    problemas: "problema",
+    soluciones: "problema",
+  };
+  if (canonical[token]) return canonical[token];
   if (token.length > 5 && token.endsWith("es")) return token.slice(0, -2);
   if (token.length > 4 && token.endsWith("s")) return token.slice(0, -1);
   return token;
@@ -89,7 +100,7 @@ function hasSameIntent(a: string, b: string): boolean {
   // La intersección sobre el conjunto menor detecta variantes que solo
   // agregan formato, ubicación o perfil a la misma necesidad principal.
   const smaller = Math.min(left.size, right.size);
-  return intersection >= 3 && intersection / smaller >= 0.8;
+  return intersection >= 3 && intersection / smaller >= 0.67;
 }
 
 function hasContextualEvidenceForYear(
