@@ -53,6 +53,10 @@ function normalizeTitle(value: string) {
     .trim();
 }
 
+function extractYears(value: string): string[] {
+  return value.match(/\b(?:19|20)\d{2}\b/g) ?? [];
+}
+
 const PROMPT_HEADER = [
   "Actua como estratega SEO experto y analista de datos de busqueda. Tu objetivo es encontrar TODAS las oportunidades posibles para aumentar el trafico organico del usuario, siendo creativo pero siempre basado en evidencia real de los datos proporcionados.",
   "",
@@ -327,6 +331,14 @@ export async function analyzeSeoOpportunities(input: {
   const groupsByCategory = new Map<string, OpportunityAnalysisGroup>();
   const allResult: OpportunityAnalysisGroup[] = [];
   const validCategoryIds = new Set(input.categories.map((item) => item.id));
+  const evidenceText = [
+    ...input.currentRows,
+    ...input.previousRows,
+    ...input.countryRows,
+  ]
+    .map((row) => JSON.stringify(row))
+    .join(" ");
+  const evidencedYears = new Set(extractYears(evidenceText));
 
   for (let batchIndex = 0; batchIndex < batchesToProcess.length; batchIndex++) {
     const batch = batchesToProcess[batchIndex];
@@ -399,6 +411,8 @@ ${JSON.stringify(alreadyProposedByCategory)}`;
         const text = value.text.trim();
         const normalized = normalizeTitle(text);
         if (!text || seen.has(normalized)) continue;
+        // Garantía determinista contra años inventados por la IA.
+        if (extractYears(text).some((year) => !evidencedYears.has(year))) continue;
         seen.add(normalized);
         newTitles.push({
           text,
