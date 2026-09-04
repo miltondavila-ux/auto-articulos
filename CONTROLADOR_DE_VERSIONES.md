@@ -751,3 +751,130 @@ Reservas liberadas: `apps/worker/src/socialPublish.ts`,
 `apps/web/src/app/api/social-opportunities/publish/route.ts`,
 `COORDINACION_CLAUDE_CODEX.md` y `CONTROLADOR_DE_VERSIONES.md`. No quedan
 archivos reservados en este worktree.
+
+## RESUMEN DE VERSIÓN ACTUAL — 2026-09-04 (foto completa de Producción)
+
+Fecha y hora: 2026-09-04, ~11:00 (hora local), a pedido explícito de Milton
+("dejar un buen resumen de la última versión del software a este momento").
+Versión/commit: `f050672f9eb8ecc86a6df5f5e5ba55f1350237c5`.
+Rama: `main` (`origin/main`, confirmado con `git fetch` inmediatamente antes
+de escribir esta entrada).
+Worktree: `/private/tmp/resumen-version-actual` (aislado, solo lectura para
+armar este resumen; no se modificó código).
+Conversación/proyecto: `DOCUMENTO DE COORDINACION - SEPT 3` (continuación).
+
+Este resumen es una **foto del estado completo de la plataforma** en este
+commit, no el registro de un cambio puntual — para el detalle técnico de
+cada proyecto individual, ver `COORDINACION_CLAUDE_CODEX.md` (índice de
+navegación al inicio) e `INVENTARIO_CONVERSACIONES.md` (quién es dueño de
+qué).
+
+### Qué es Auto Artículos, en una frase
+
+Plataforma que automatiza la creación, publicación y distribución de
+artículos SEO/AEO para cuentas de 10minutesWebsite y Tagcrush, y su difusión
+a redes sociales, con detección de oportunidades basada en Google Search
+Console/Analytics/Bing.
+
+### Módulos y funcionalidad activa en producción
+
+- **Publicar / Oportunidades SEO-AEO**: generación de títulos con regla
+  obligatoria de cero canibalización (contra lo publicado y contra lo ya
+  propuesto en la misma corrida) y cobertura completa por categoría, sin
+  techo artificial de categorías/títulos; detección de título duplicado
+  ANTES de generar la imagen; artículos repetidos permanentes apartados en
+  Historial en vez de reintentarse en bucle.
+- **Créditos de imagen**: detección real (español e inglés) del agotamiento
+  de créditos de 10minutesWebsite; el lote se detiene solo cuando una
+  creación real lo confirma (no por error ambiguo ni validación preventiva);
+  administración puede activar/desactivar el permiso por usuario.
+- **Límites de artículos**: `dailyArticleLimit` y `maxTitlesPerBatch`
+  dinámicos por usuario, con valores por defecto configurables desde
+  Administración en vez de números fijos en el código; mensajes de
+  renovación de cupo explicados al usuario.
+- **Oportunidades Redes / Redes Sociales**: generación y publicación de
+  posts sociales derivados de oportunidades que están puntuando en Search
+  Console/GA4; solo se muestran los botones de redes realmente configuradas;
+  límites de caracteres correctos y seguros por red (el enlace del artículo
+  nunca queda cortado).
+- **Generador de imágenes con IA**: proveedor intercambiable
+  (OpenAI/fal.ai-Ideogram/Nano Banana vía `IMAGE_PROVIDER`), prompt de una
+  línea (etiquetas + texto exacto) editable desde Administración sin
+  redeploy; imagen y prompt visibles en Historial.
+- **Wizard de Configuración Inicial**: 10minutesWebsite → categorías →
+  idioma → Google Search Console, con detección real de paneles/sitios
+  antes de sincronizar cuando la cuenta expone más de un dominio.
+- **Historial**: agrupado por fecha, separa ejecuciones no confirmadas y
+  artículos repetidos no publicables, con opción de reintentar títulos y
+  runs cancelados.
+- **Administración**: control de visibilidad de módulos (global y por
+  usuario), gestión de usuarios y sus límites, cuentas de prueba gratuita de
+  7 días, badges de estado (créditos, prueba, límites).
+- **Sistema documental**: 5 documentos maestros — `COORDINACION_CLAUDE_CODEX.md`
+  (diario operativo + Protocolo Obligatorio de No Destrucción),
+  `INVENTARIO_CONVERSACIONES.md` (propiedad/reservas en vivo), `TO-DO.md`
+  (buzón de ideas), `CONTROLADOR_DE_VERSIONES.md` (este documento) y
+  `REPARADOR_DEL_ARBOL_PRINCIPAL.md` (rol de orden/limpieza del árbol git).
+
+### Integraciones de redes sociales activas
+
+Threads, X/Twitter, LinkedIn (migrado a Posts API, ya no usa `v2/ugcPosts`
+deprecado), Instagram, Facebook Pages, Pinterest, Tumblr (renovación
+silenciosa de token), Bluesky, DEV.to y Blogger (API v3, publica HTML
+editorial limpio con imagen destacada, no el artículo completo). **Mastodon
+fue retirado por completo** a pedido de Milton (código eliminado; la tabla
+`MastodonIntegration` queda sin uso en la base de datos, sin migración de
+retiro todavía).
+
+### Integraciones de indexación/analítica activas
+
+Google Search Console, Google Analytics 4, Bing Webmaster Tools — las tres
+con OAuth y sincronización funcionando en producción.
+
+### Bloqueado, pendiente de terceros (no es un bug de código)
+
+- **Google Business Profile**: código listo (`/v4/.../localPosts`), pero la
+  cuota real de `mybusinessaccountmanagement.googleapis.com` en Google Cloud
+  es `0 QPM` — Google no ha concedido acceso/allowlist todavía. No existe
+  modo de prueba que evite este bloqueo.
+- **Verificación OAuth de la app de Google** (Search Console/Analytics/
+  Business Profile): Centro de verificación de Google sigue sin publicar la
+  marca ni verificar el acceso a datos; los usuarios siguen viendo el aviso
+  "Google no ha verificado esta aplicación".
+
+### Trabajo en curso, no promovido a Producción todavía (verificar antes de asumir que ya está)
+
+- Un Preview integrado (`codex/google-api-verification-integrated`, commits
+  `80fdcd9`/`eaf8e90` sobre `f050672`) con la corrección del reintento de
+  Business Profile tras cooldown (`30189c2`) — Preview separado para no
+  sobrescribir Blogger/Tumblr ni el resto de `main`; no promovido.
+- `stash@{0}` en el checkout principal (migración de dominio OAuth de
+  Google): en pausa por decisión de Milton hasta que su trabajo conjunto con
+  Codex sobre este tema culmine; si sobra algo, pasa al Reparador del Árbol
+  Principal.
+
+### Auditoría de esta entrada
+
+Auditoría 1 (identidad del commit): aprobada — `origin/main` obtenido con
+`git fetch` en vivo inmediatamente antes de escribir esta entrada.
+Auditoría 2 (exactitud de la lista de integraciones): aprobada — verificada
+contra `packages/shared/src/index.ts` (exports reales) y
+`packages/db/prisma/migrations` (migraciones reales aplicadas al schema),
+no contra memoria ni suposición.
+Auditoría 3 (consistencia con Coordinación): aprobada — cada bloqueo y cada
+trabajo en curso mencionado aquí tiene su entrada correspondiente y más
+detallada en `COORDINACION_CLAUDE_CODEX.md`.
+
+Deployment/Vercel: producción más reciente confirmada en la propia
+Coordinación como el commit `f050672` de `main` (ver "Auditoría de
+continuidad de Producción — 2026-09-04").
+Producción verificada: sí, de forma indirecta — esta entrada es un resumen
+compilado de verificaciones ya realizadas y documentadas por otras
+conversaciones, no una nueva prueba en vivo de esta sesión.
+Responsable: Claude.
+Siguiente acción: la próxima sesión que agregue un cambio a producción debe
+actualizar este resumen si toca alguno de los módulos aquí descritos, en
+vez de dejarlo desactualizado.
+Estado: VERIFICADA (como fotografía documental del estado real de
+Producción a esta fecha; no reemplaza las auditorías propias de cada
+proyecto individual).
