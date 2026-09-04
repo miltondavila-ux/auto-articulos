@@ -3373,6 +3373,64 @@ Promoción autorizada y verificación — 2026-09-04:
 - `/terminos` responde correctamente, aunque mantiene la fecha legal anterior
   (31 de julio de 2026); queda como ajuste editorial no bloqueante para OAuth.
 
+Reparación GMB — 2026-09-04:
+
+- Auditoría del flujo `BusinessProfileSection` y `/api/business-profile`
+  confirmó que el cooldown de Google se mostraba, pero la interfaz no
+  actualizaba la cuenta atrás ni reintentaba la consulta automáticamente.
+- Se corrigió la cuenta regresiva y el reintento al vencer el cooldown en el
+  commit `30189c2` (`fix: retry Business Profile location lookup after cooldown`).
+- `npm run typecheck --workspace=apps/web` pasó.
+- El commit fue subido a `codex/google-api-verification`; Vercel debe generar
+  un nuevo Preview. El hook de actualización documental avisó que falta
+  `DATABASE_URL`, pero no impidió crear ni subir el commit.
+
+Diagnóstico definitivo de cuota GBP — 2026-09-04:
+
+- En Google Cloud, `mybusinessaccountmanagement.googleapis.com` aparece
+  habilitada, pero su tabla de cuotas muestra `Requests per minute: 0`, uso
+  `0%` y cuota ajustable `Yes`.
+- Esto explica exactamente `Quota exceeded`: no es un fallo del temporizador
+  ni de las credenciales; el proyecto aún no tiene cuota concedida/allowlist
+  para Business Profile. La propia consola enlaza la solicitud de acceso GBP
+  cuando la cuota es 0.
+- No se modificó la cuota ni se envió una solicitud nueva. La corrección
+  requiere que Google apruebe/conceda acceso o que el propietario solicite un
+  aumento de cuota desde la consola.
+
+Triple reauditoría solicitada — 2026-09-04:
+
+1. OAuth/Google Cloud: Centro de verificación continúa con marca no publicada,
+   acceso a datos no verificado y botón de preparación deshabilitado.
+2. Cuotas/APIs: Business Profile Account Management está habilitada, pero la
+   cuota efectiva sigue en `0 QPM`; Analytics y Search Console continúan
+   habilitadas con tráfico observado. GMB no tiene modo de prueba que evite la
+   allowlist.
+3. Producción: el dominio oficial responde, pero la página pública de
+   privacidad todavía muestra el texto anterior (solo Search Console). Vercel
+   registra el commit corregido como Preview/producción reconstruida, pero un
+   despliegue posterior de `main` puede haber vuelto a sustituirlo; se requiere
+   fijar el commit correcto como producción antes de enviar OAuth.
+
+Conclusión: no falta un campo técnico oculto que podamos completar sin Google;
+los bloqueos verificables son cuota/allowlist GBP, verificación OAuth y la
+estabilidad del despliegue correcto en el dominio oficial.
+
+Auditoría de continuidad de Producción — 2026-09-04:
+
+- Vercel muestra como Producción más reciente el commit `f050672` de `main`.
+- La corrección GMB `30189c2` permanece como Preview (`auto-articulos-k2m1whah…`)
+  y no forma parte de la Producción actual.
+- La promoción anterior de `7908b01` fue sustituida por despliegues posteriores
+  de `main`; no se debe promover de nuevo sin coordinar el responsable de
+  `main`, porque podría sobrescribir cambios ajenos.
+
+Validación documental de modo de pruebas — 2026-09-04: la documentación oficial
+indica que una cuota GBP de `0 QPM` significa que el proyecto aún no fue
+aprobado; no existe un modo de usuario de prueba que permita saltar esa
+allowlist. Se puede probar la pantalla OAuth, pero las llamadas reales a
+cuentas/fichas seguirán devolviendo cuota 0 hasta la aprobación.
+
 ## CIERRE — 2026-09-04 (Créditos de imagen de Lorena Alvarez)
 
 Reserva temporal para este cierre: `COORDINACION_CLAUDE_CODEX.md` únicamente;
@@ -3552,3 +3610,15 @@ queda **CERRADA**.
 **Capitán de migración liberó el lote:** Claude. Resultado: documentación
 y archivo de CONEXION BLOGGER completos, commit `7bf4fa0`, sin migración
 de schema.
+
+Solución integrada para evitar sobrescrituras — 2026-09-04:
+
+- Se creó `codex/google-api-verification-integrated` desde `origin/main`
+  (`f050672`).
+- Se aplicaron únicamente las correcciones `7908b01` y `30189c2`, generando
+  los commits integrados `80fdcd9` y `eaf8e90`.
+- `npm run typecheck --workspace=apps/web` pasó en el worktree integrado.
+- La rama fue subida a GitHub y Vercel generó un Preview separado; así se
+  conservan Blogger, Tumblr y los demás cambios recientes de `main`.
+- El Preview integrado está en `Building`; no se ha promovido ni se ha
+  sobrescrito Producción.
