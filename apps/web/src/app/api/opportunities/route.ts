@@ -181,7 +181,7 @@ export async function POST(request: Request) {
     // sola no basta para que la IA sepa qué tema cubre de verdad. Con hasta
     // 8 títulos ya publicados por categoría, la IA tiene evidencia real del
     // tema exacto en vez de adivinar por el nombre o mezclar categorías.
-    const MAX_EXAMPLES_PER_CATEGORY = 8;
+    const MAX_EXAMPLES_PER_CATEGORY = 30;
     const examplesByCategory = new Map<string, string[]>();
     for (const title of existing) {
       const categoryId = title.run.categoryId;

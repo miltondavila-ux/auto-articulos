@@ -142,6 +142,15 @@ Reglas del canal:
 
 # PROTOCOLO OBLIGATORIO DE NO DESTRUCCIÓN (normas de Milton, recopiladas por experiencia — organizado 2026-09-03, ningún contenido fue eliminado)
 
+## RESERVA — CORRECCIÓN V2 DE EXPANSIÓN TEMÁTICA — 2026-09-04
+
+Codex reserva en `/private/tmp/auditoria-longtail-v2-20260904` únicamente
+`apps/web/src/lib/opportunity-analysis.ts`,
+`apps/web/src/app/api/opportunities/route.ts` y
+`apps/web/src/app/api/social-opportunities/generate/route.ts` para corregir
+la clasificación temática, la evidencia y la expansión long tail. No se
+tocarán producción, esquema, secretos ni archivos fuera de esta reserva.
+
 ## RESERVA LIBERADA — AUDITORÍA Y EXPANSIÓN LONG TAIL SEO/REDES — 2026-09-04
 
 Identidad: Codex, conversación "AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS".
