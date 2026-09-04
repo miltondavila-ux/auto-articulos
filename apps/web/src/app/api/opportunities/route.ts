@@ -11,8 +11,6 @@ import { getGoogleAnalyticsSignals, summarizeGoogleAnalyticsSignals } from "@/li
 import { getBingSignals, summarizeBingSignals } from "@/lib/bing-signals";
 import { platformProductNameOrNeutral } from "@auto-articulos/shared";
 
-const COOLDOWN_DAYS = 3;
-const COOLDOWN_MS = COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
 
 function isoDate(date: Date) {
   return date.toISOString().slice(0, 10);
@@ -52,19 +50,12 @@ export async function POST(request: Request) {
       { status: 409 },
     );
   }
-  // Pedido explícito del usuario (11/8/2026): el enfriamiento de 3 días
-  // bloqueaba el análisis por completo — ni siquiera volvía a consultar
-  // Search Console — dejando al usuario sin poder intentarlo de nuevo pase
-  // lo que pase. Ahora es una RECOMENDACIÓN, no un bloqueo: si el usuario
-  // decide forzar un análisis nuevo antes de que pasen los 3 días (bajo su
-  // propio criterio, ver botón "Analizar de todas formas" en el frontend),
-  // se le permite.
   // `panel`: en cuentas con varios paneles (ver Category.panel), a cuál se le
   // generan oportunidades. "" = cuenta sin esta función (comportamiento sin
   // cambios) o panel único explícito. Pedido de Milton, 15/8/2026: sin esto,
   // el análisis mezclaba categorías de English y Español en un solo lote sin
   // que la IA tuviera forma de distinguirlas.
-  const { force, panel = "" } = await request
+  const { panel = "" } = await request
     .json()
     .catch(() => ({ force: false, panel: "" }));
   const user = await prisma.user.findUniqueOrThrow({
@@ -94,30 +85,6 @@ export async function POST(request: Request) {
     );
   }
 
-  // Recomendación (ya NO bloqueo, ver arriba): si la última corrida no
-  // encontró nada nuevo y no pasaron 3 días, se le avisa al usuario y se le
-  // da la opción de forzarlo bajo su propio criterio (`force: true`) en vez
-  // de dejarlo sin poder intentar de nuevo.
-  const existingGroupsCount = await prisma.opportunityGroup.count({
-    where: { userId },
-  });
-  if (
-    !force &&
-    existingGroupsCount === 0 &&
-    user.lastOpportunityAnalysisAt &&
-    Date.now() - user.lastOpportunityAnalysisAt.getTime() < COOLDOWN_MS
-  ) {
-    const nextAvailableAt = new Date(
-      user.lastOpportunityAnalysisAt.getTime() + COOLDOWN_MS,
-    );
-    return NextResponse.json({
-      groups: [],
-      lastAnalysisAt: user.lastOpportunityAnalysisAt,
-      noNewOpportunities: true,
-      nextAvailableAt,
-      canForce: true,
-    });
-  }
 
   try {
     const end = new Date();
@@ -223,7 +190,6 @@ export async function POST(request: Request) {
         groups: await list(userId, selectedSiteDomain),
         lastAnalysisAt: now,
         noNewOpportunities: true,
-        nextAvailableAt: new Date(now.getTime() + COOLDOWN_MS),
       });
     }
 

@@ -71,11 +71,6 @@ export default function OportunidadesPage() {
     kind: "error" | "info" | "success";
     text: string;
   } | null>(null);
-  // Pedido explícito del usuario (11/8/2026): el enfriamiento de 3 días es
-  // ahora solo una recomendación — si el último análisis no encontró nada
-  // nuevo, se ofrece la opción de forzar un análisis nuevo bajo el propio
-  // criterio del usuario, en vez de dejarlo bloqueado sin poder intentar.
-  const [canForce, setCanForce] = useState(false);
   const [hasImageCredits, setHasImageCredits] = useState(true);
   const [showImageCreditsModal, setShowImageCreditsModal] = useState(false);
   // Pedido explícito del usuario (11/8/2026, cuenta de Lorena Álvarez, ya
@@ -245,7 +240,6 @@ export default function OportunidadesPage() {
   async function analyze(force = false) {
     setAnalyzing(true);
     setMessage(null);
-    setCanForce(false);
     try {
       const response = await fetch("/api/opportunities", {
         method: "POST",
@@ -258,16 +252,10 @@ export default function OportunidadesPage() {
       setGroups(data.groups ?? []);
       if (data.lastAnalysisAt) setLastAnalysisAt(data.lastAnalysisAt);
       if (data.noNewOpportunities) {
-        const nextDate = data.nextAvailableAt
-          ? formatDateTime(data.nextAvailableAt)
-          : null;
         setMessage({
           kind: "info",
-          text: force
-            ? "Con la información actual de Search Console no encontramos nuevas oportunidades para publicar, ni siquiera forzando el análisis."
-            : `Con la información actual de Search Console no encontramos nuevas oportunidades para publicar. Te recomendamos esperar al menos 3 días antes de repetir el análisis${nextDate ? ` (podrás volver a intentarlo a partir del ${nextDate})` : ""}, para darle tiempo a Google de reflejar cambios en tus datos. Si prefieres, puedes intentarlo de todas formas ahora mismo.`,
+          text: "Con la información actual de Search Console no encontramos nuevas oportunidades para publicar. Puedes volver a analizar cuando quieras si conectas nuevas fuentes o aparecen datos nuevos.",
         });
-        if (!force && data.canForce) setCanForce(true);
       } else {
         setMessage({
           kind: "success",
@@ -891,21 +879,6 @@ export default function OportunidadesPage() {
           }}
         >
           {message.text}
-          {canForce && (
-            <div style={{ marginTop: 10 }}>
-              <button
-                onClick={() => analyze(true)}
-                disabled={analyzing}
-                className="secondary"
-                style={{
-                  fontSize: 13,
-                  padding: "6px 14px",
-                }}
-              >
-                Analizar de todas formas ahora
-              </button>
-            </div>
-          )}
         </div>
       )}
 
