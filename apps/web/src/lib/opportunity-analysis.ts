@@ -53,30 +53,13 @@ function normalizeTitle(value: string) {
     .trim();
 }
 
-function isFullyStocked(
-  groupsByCategory: Map<string, OpportunityAnalysisGroup>,
-  maxTitlesPerCategory: number,
-  totalCategories: number,
-): boolean {
-  // Pedido explícito de Milton (2/9/2026): antes esto paraba apenas se
-  // llenaban 10 categorías cualquiera, aunque la cuenta tuviera más
-  // categorías reales con oportunidades sin explorar todavía en lotes
-  // posteriores. Ahora solo se considera "lleno" cuando se llenaron TODAS
-  // las categorías reales de la cuenta, no un número fijo arbitrario.
-  if (groupsByCategory.size < totalCategories) return false;
-  for (const group of groupsByCategory.values()) {
-    if (group.titles.length < maxTitlesPerCategory) return false;
-  }
-  return true;
-}
-
 const PROMPT_HEADER = [
   "Actua como estratega SEO experto y analista de datos de busqueda. Tu objetivo es encontrar TODAS las oportunidades posibles para aumentar el trafico organico del usuario, siendo creativo pero siempre basado en evidencia real de los datos proporcionados.",
   "",
   "FILOSOFIA DEL ANALISIS:",
   "- No busques solo lo obvio; analiza patrones, tendencias y oportunidades ocultas",
   "- Infieren temas relacionados basandote en consultas y paginas reales",
-  "- Crea clusters tematicos que generen un efecto bola de nieve",
+  "- Expande cada tema validado hacia un universo de subtemas relacionados que generen un efecto bola de nieve",
   "- Piensa como un usuario real: que mas buscaria alguien que ya busco esto?",
   "- La meta es VOLUMEN de oportunidades reales, no solo las mas faciles",
   "",
@@ -87,14 +70,14 @@ const PROMPT_HEADER = [
   "- PROHIBIDO inventar un titulo que no se pueda justificar con evidencia real presente en RENDIMIENTO ACTUAL (Search Console), SEÑALES DE GOOGLE ANALYTICS o SEÑALES DE BING que se te dan mas abajo. El 'rationale' de cada titulo debe nombrar la consulta, pagina, tendencia o señal concreta que lo respalda.",
   "",
   "REGLA OBLIGATORIA DE CERO CANIBALIZACION (ESTRICTA, sin excepciones):",
-  "- Canibalizar significa que dos titulos (nuevo contra nuevo, O nuevo contra uno de TITULOS YA EXISTENTES / EJEMPLOS DE TITULOS YA PUBLICADOS / OPORTUNIDADES YA CREADAS EN ESTA CORRIDA) apuntan a la MISMA intencion de busqueda real, aunque esten redactados con palabras distintas. Esto es distinto de simplemente compartir palabras: dos titulos long tail que comparten palabras pero cubren angulos, ubicaciones o perfiles de cliente DIFERENTES y REALES no son canibalizacion, son diversidad long tail valida.",
-  "- Antes de proponer un titulo para una categoria, revisa TODOS los titulos ya existentes y ya propuestos para ESA categoria (te los damos explicitamente). Si tu candidato apunta a la misma intencion que alguno de ellos, descartalo o cambiale el angulo real hasta que cubra una intencion genuinamente distinta.",
+  "- Canibalizar significa que dos titulos apuntan a la MISMA pregunta o necesidad principal. NO es canibalizacion pertenecer al mismo universo tematico: un articulo sobre una receta puede abrir subtemas sobre ingredientes, herramientas, tecnicas, errores, conservacion y perfiles de usuario.",
+  "- Primero EXPANDE: por cada consulta, pagina o titulo que demuestre interes, investiga subtemas adyacentes, preguntas derivadas, problemas, comparativas, procesos, herramientas, tendencias y perfiles relacionados. Luego revisa los titulos existentes y propuestos para eliminar solo los que respondan la misma intencion principal.",
   "- El 'rationale' de cada titulo debe indicar, en una frase, la intencion de busqueda especifica y distinta que cubre (que lo diferencia de los demas titulos de su categoria).",
-  "- CERO canibalizacion es un requisito absoluto: ante la duda entre proponer un titulo parecido a uno existente o no proponerlo, NO LO PROPONGAS.",
+  "- CERO duplicacion de intencion es un requisito absoluto; no confundas relacion tematica con repeticion. Ante la duda, cambia el angulo hacia una necesidad complementaria respaldada por evidencia en lugar de abandonar toda la expansion del tema.",
   "",
   "REGLA OBLIGATORIA DE LONG TAIL AL 100% (ESTRICTA, sin excepciones):",
   "- PROHIBIDO proponer titulos genericos o de 'cabeza' (head terms cortos, 1-3 palabras, sin especificidad). Todo titulo debe ser long tail: especifico, con intencion clara y, cuando la evidencia lo permita, triple segmentacion (ver mas abajo).",
-  "- Revisa la evidencia PAGINA POR PAGINA y CONSULTA POR CONSULTA de Search Console, Google Analytics y Bing (no te quedes solo con las primeras filas que veas): cada pagina/consulta real con evidencia de oportunidad debe 'exprimirse' en tantas variantes long tail unicas y no canibalizadas como la evidencia real sostenga.",
+  "- Revisa la evidencia PAGINA POR PAGINA y CONSULTA POR CONSULTA de Search Console, Google Analytics y Bing (no te quedes solo con las primeras filas que veas): cada señal debe servir para descubrir nuevas necesidades long tail relacionadas, no solo variaciones de la misma frase.",
   "",
   "ANALISIS INTELIGENTE REQUERIDO:",
   "",
@@ -105,8 +88,9 @@ const PROMPT_HEADER = [
   "",
   "2. CLUSTERS TEMATICOS:",
   "   - Agrupa consultas relacionadas entre si",
-  "   - Identifica temas paraguas y sus variantes long tail",
-  "   - Crea contenido que cubra un tema desde multiples angulos",
+  "   - Identifica temas paraguas y subtemas long tail complementarios",
+  "   - Crea contenido que cubra un tema desde multiples angulos realmente distintos",
+  "   - Explora la cadena de necesidades: fundamentos, componentes, proceso, errores, comparativas, mantenimiento y preguntas avanzadas",
   "",
   "3. OPORTUNIDADES DE LONG TAIL:",
   "   - Transforma consultas genericas en especificas",
@@ -122,7 +106,7 @@ const PROMPT_HEADER = [
   "SI PUEDES:",
   "- Inferir temas relacionados a partir de patrones en las consultas",
   "- Sugerir contenido que complemente lo que ya existe",
-  "- Crear variaciones long tail de consultas exitosas",
+  "- Crear nuevas tematicas long tail derivadas de consultas exitosas, no solo variaciones de redaccion",
   "- Identificar nichos no explotados basados en datos reales",
   "- Usar ubicaciones y perfiles de cliente que aparezcan en las consultas, paginas o titulos existentes",
   "- Proponer intenciones de busqueda nuevas que se infieran de los patrones de las consultas existentes, siempre dentro del tema de la categoria (ver REGLA OBLIGATORIA DE CATEGORIA arriba)",
@@ -132,7 +116,7 @@ const PROMPT_HEADER = [
   "",
   "SOLO EVITA:",
   "- Copiar exactamente titulos que ya existen en TITULOS YA EXISTENTES",
-  "- Canibalizar (ver REGLA OBLIGATORIA DE CERO CANIBALIZACION arriba)",
+  "- Repetir la misma pregunta principal bajo una redaccion diferente (ver REGLA OBLIGATORIA DE CERO CANIBALIZACION arriba)",
   "- Datos completamente falsos sin ninguna base en los datos",
   "- Mezclar el tema de dos categorias en un mismo titulo (ver REGLA OBLIGATORIA DE CATEGORIA)",
   "",
@@ -152,7 +136,7 @@ const PROMPT_HEADER = [
   "",
   "REGLAS OBLIGATORIAS:",
   "- Cubre TODAS las categorias de CATEGORIAS PERMITIDAS que tengan evidencia real de oportunidad en este lote de datos. NO te limites a un numero fijo de categorias: si hay evidencia real para 15 o 25 categorias distintas, devuelve las 15 o 25.",
-  "- Devuelve tantos titulos long tail unicos y no canibalizados por categoria como la evidencia real sostenga (calidad y evidencia real, no una cantidad fija) hasta el tope indicado en TOPE DE TITULOS POR CATEGORIA.",
+  "- Devuelve tantos titulos long tail unicos y no canibalizados por categoria como la evidencia real sostenga. No existe una cantidad fija por categoria: deja que la evidencia, la creatividad y el limite natural de la respuesta determinen cuantas oportunidades son validas.",
   "- Cada titulo debe tener una justificacion basada en datos reales que nombre la intencion de busqueda distinta que cubre",
   "- CERO canibalizacion, ni dentro del mismo grupo ni contra TITULOS YA EXISTENTES ni contra OPORTUNIDADES YA CREADAS EN ESTA CORRIDA (ver REGLA OBLIGATORIA DE CERO CANIBALIZACION)",
   "- Usa unicamente categoryId existentes en la lista permitida",
@@ -336,10 +320,6 @@ export async function analyzeSeoOpportunities(input: {
   // buenos de lotes posteriores solo porque un lote anterior llegó primero.
   // Ahora cada categoría acumula títulos de TODOS los lotes (hasta el tope
   // por categoría de abajo), no solo del primero que la mencionó.
-  // Subido de 9 a 20 (pedido de Milton, 2/9/2026: "exprimir" cada categoría
-  // con tantas variantes long tail reales como la evidencia sostenga, en
-  // vez de un tope chico fijo).
-  const MAX_TITLES_PER_CATEGORY = 20;
   const groupsByCategory = new Map<string, OpportunityAnalysisGroup>();
   const allResult: OpportunityAnalysisGroup[] = [];
   const validCategoryIds = new Set(input.categories.map((item) => item.id));
@@ -361,7 +341,7 @@ export async function analyzeSeoOpportunities(input: {
 
     const prompt = `${PROMPT_HEADER}
 
-TOPE DE TITULOS POR CATEGORIA EN ESTA CORRIDA: ${MAX_TITLES_PER_CATEGORY}
+NO HAY TOPE FIJO DE TITULOS POR CATEGORIA: devuelve todas las oportunidades que la evidencia real sostenga, sin repetir intencion.
 
 CATEGORIAS PERMITIDAS (con EJEMPLOS DE TITULOS YA PUBLICADOS por categoria):
 ${JSON.stringify(input.categories)}
@@ -379,7 +359,7 @@ RENDIMIENTO ACTUAL Y COMPARACION (lote ${batchIndex + 1} de ${batchesToProcess.l
 ${JSON.stringify(batch)}
 
 TITULOS YA EXISTENTES (publicados, en toda la cuenta):
-${JSON.stringify(input.existingTitles.slice(0, 800))}
+${JSON.stringify(input.existingTitles)}
 
 OPORTUNIDADES YA CREADAS EN ESTA CORRIDA, POR CATEGORIA (NO CANIBALIZAR, NO REPETIR):
 ${JSON.stringify(alreadyProposedByCategory)}`;
@@ -407,13 +387,8 @@ ${JSON.stringify(alreadyProposedByCategory)}`;
 
       const existingGroup = groupsByCategory.get(group.categoryId);
 
-      const remainingSlots =
-        MAX_TITLES_PER_CATEGORY - (existingGroup?.titles.length ?? 0);
-      if (remainingSlots <= 0) continue;
-
       const newTitles: OpportunityAnalysisGroup["titles"] = [];
       for (const candidate of group.titles) {
-        if (newTitles.length >= remainingSlots) break;
         if (!candidate || typeof candidate !== "object") continue;
         const value = candidate as Record<string, unknown>;
         if (typeof value.text !== "string") continue;
@@ -447,7 +422,6 @@ ${JSON.stringify(alreadyProposedByCategory)}`;
       }
     }
 
-    if (isFullyStocked(groupsByCategory, MAX_TITLES_PER_CATEGORY, input.categories.length)) break;
   }
 
   if (allResult.length === 0) {
