@@ -352,3 +352,41 @@ entrega el patrón de protocolo a fijar.
 - Documento vinculante: consultar la sección “PROTECCIÓN PERMANENTE —
   INSTRUCCIONES DE PUBLICAR” en `COORDINACION_CLAUDE_CODEX.md` antes de tocar
   el módulo.
+
+### `AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`
+
+Entrada agregada por la tarea programada diaria de propagación de Claude, a
+partir del canal "MENSAJE DE CLAUDE PARA `CODEX - AUDITORIA A ALGORITMO DE
+PUBLICACIÓN DE ARTICULOS`" y su Bitácora en `COORDINACION_CLAUDE_CODEX.md`
+(2026-09-04). No existía entrada previa de esta conversación en este
+documento.
+
+- Agente: Codex - GPT-5, con revisión y coordinación de Claude a través de
+  un canal de comunicación en vivo (Bitácora) mientras duró la tarea.
+- Proyecto: ampliar la expansión temática long tail y evitar la invención de
+  datos (años, categorías) en los títulos generados de oportunidades
+  SEO/AEO y redes sociales.
+- Worktrees/ramas usados: `/private/tmp/auditoria-longtail-20260904`
+  (rama `codex/auditoria-longtail-20260904`, primera fase, reserva
+  liberada) y `/private/tmp/auditoria-longtail-v2-20260904` (rama
+  `codex/auditoria-longtail-v2-20260904`, corrección V2, PR #42).
+- Archivos tocados: `apps/web/src/lib/opportunity-analysis.ts`,
+  `apps/web/src/app/api/opportunities/route.ts` y
+  `apps/web/src/app/api/social-opportunities/generate/route.ts`.
+- Hallazgos corregidos antes de fusionar (auditoría de integración sobre el
+  Preview real): títulos con el año `2023` inventado/sin evidencia, y una
+  consulta de leyes/regulaciones inmobiliarias mal clasificada en la
+  categoría de inversión inmobiliaria. Ambos se corrigieron con barreras
+  deterministas (no parches puntuales) en la misma rama/PR.
+- Commits: `8e07fe8`, `a18c9ec`, `fda3e0d`, `93daba3`.
+- Estado: **CULMINADA** — PR #42 fusionado a `main` en el commit de merge
+  `495baea` (verificado en vivo contra `origin/main` con `git fetch` antes
+  de escribir esta entrada; las ramas `codex/auditoria-longtail-20260904` y
+  `codex/auditoria-longtail-v2-20260904` ya son ancestros de `origin/main`,
+  no quedan reservas activas de esta conversación).
+- Pendiente señalado (no resuelto por esta tarea de propagación): no consta
+  en `COORDINACION_CLAUDE_CODEX.md` una verificación explícita de Producción
+  posterior a la fusión de `495baea`, aunque el propio canal Claude↔Codex
+  pedía cerrar con ese paso antes de dar la conversación por terminada. Ver
+  detalle en `CONTROLADOR_DE_VERSIONES.md` — "Fusión PR #42 — refuerzo V2 de
+  expansión temática long tail — 2026-09-04".
