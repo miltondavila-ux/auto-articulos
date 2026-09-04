@@ -4436,3 +4436,59 @@ los clientes para aparecer en internet, mejorar presencia y posicionamiento;
 explicar analizar, revisar, elegir y publicar; y aclarar cupo, indexación,
 idioma/estilo y `Forzar análisis`. No reintroducir esperas obligatorias de
 tres días.
+
+## Claude retoma `CODEX - INSTRUCCIONES EN MODULOS` — redacción final de Oportunidades — 2026-09-04
+
+Milton pegó, ya del lado de Claude, el texto que Codex había refinado tras su
+pedido explícito ("aun te falta un tintin... imaginate que es la primer vez
+que alguien lee esto"). Comparando ese texto contra lo realmente commiteado
+en `faf4612`, se confirmó que esa versión refinada **nunca llegó a
+commitearse**: cuando Codex reintrodujo la tarjeta de Oportunidades (tras
+notar que había desaparecido de producción), usó una redacción anterior y
+menos clara, no la última aprobada por Milton.
+
+Corrección aplicada, worktree aislado
+`/private/tmp/instrucciones-oportunidades-texto-20260904`: se reemplazó el
+párrafo de objetivo y los 4 pasos de
+`apps/web/src/app/dashboard/oportunidades/page.tsx` por la redacción final
+("El objetivo de este módulo es ayudarte a encontrar temas que tus posibles
+clientes buscan en internet y convertirlos en artículos para el blog de tu
+página web..."). No se tocaron las "Reglas importantes" (ya cubrían
+pendientes/cupo/Google/idioma-estilo/Forzar análisis con claridad) ni la
+tarjeta protegida de Publicar (`16be4d0`, verificada intacta antes de tocar
+nada).
+
+Tres auditorías:
+1. **Funcional**: cambio 100% de texto visible, sin lógica — revisado que el
+   contenido coincide exactamente con la redacción que Milton había recibido
+   de Codex como versión final.
+2. **Regresión**: `npx next build --webpack` desde `apps/web` (Turbopack
+   falla en este worktree por el symlink de `node_modules` fuera de la raíz
+   del filesystem — limitación conocida del entorno, no del código) — 83/83
+   rutas generadas sin error; `git diff --check` limpio; diff acotado a un
+   solo archivo.
+3. **Integración/producción**: `vercel.json` revisado sin modificar
+   (`buildCommand: npm run build`, `outputDirectory: .next`, Root Directory
+   `apps/web`). Commit `c5b9c37` empujado directo a `main` (fast-forward
+   desde `65f0ff9`, sin conflictos).
+
+**Bloqueo de producción, mismo que ya afecta a los PR #46 y #47**: GitHub
+confirma para `c5b9c37` el check `Vercel – auto-articulos-web` en `failure`,
+`"Deployment rate limited — retry in 24 hours"`
+(`vercel.com/luna-portex-intelligence?upgradeToPro=build-rate-limit`). El
+otro check verde (`Vercel – cambio-boton-comienza-aqui-clean`) es el proyecto
+duplicado/viejo, no el dominio real — no cuenta como verificación. No se
+forzó ningún despliegue manual ni se tocó la configuración de Vercel.
+
+Estado: **código correcto en `main`, producción pendiente de que se libere
+el límite diario de Vercel** (mismo límite, misma ventana de ~24h que ya
+documentaron Codex y la sesión del PR #47). Cuando el límite se libere, el
+próximo push a `main` (de cualquier sesión) debería disparar el build
+automático sin necesitar reintento manual.
+
+Siguiente acción para quien retome: correr
+`curl -s https://api.github.com/repos/miltondavila-ux/auto-articulos/commits/<último sha en main>/status`
+y confirmar `Vercel – auto-articulos-web` en `success`; después verificar
+visualmente `/dashboard/oportunidades` en producción con una cuenta real
+(Lorena Álvarez) para confirmar que aparece la redacción final. No reintentar
+despliegue manual mientras el mensaje siga siendo `rate limited`.

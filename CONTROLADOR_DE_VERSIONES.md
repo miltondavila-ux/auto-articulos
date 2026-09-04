@@ -1147,3 +1147,28 @@ Deployment, dominio, logs y producción: pendientes.
 Responsable: Codex; reconexión siguiente: Claude.
 Siguiente acción: verificar Vercel y producción; no declarar `VERIFICADA` antes.
 Estado: PREPARADA
+
+## Versión preparada — 2026-09-04 — redacción final de Oportunidades (Claude)
+
+Fecha y hora: 2026-09-04
+Versión/commit: `c5b9c37` en `main` (fast-forward desde `65f0ff9`)
+Conversación/proyecto: `CODEX - INSTRUCCIONES EN MODULOS` (continuación de Claude)
+Worktree: `/private/tmp/instrucciones-oportunidades-texto-20260904`
+Cambios: reemplazo del párrafo de objetivo y los 4 pasos de la tarjeta
+"Leer antes de ejecutar" de Oportunidades por la redacción final que Milton
+había aprobado y que `faf4612` no había incorporado.
+Archivos modificados: `apps/web/src/app/dashboard/oportunidades/page.tsx` y
+estos registros documentales. Archivos eliminados: ninguno. Migraciones: ninguna.
+Auditoría 1: APROBADA — cambio de texto puro, contenido verificado contra la
+redacción final aprobada por Milton.
+Auditoría 2: APROBADA — `git diff --check` limpio, diff acotado a un archivo,
+`next build --webpack` desde `apps/web` con 83/83 rutas sin error.
+Auditoría 3: APROBADA para el código (Root Directory/`vercel.json` revisados
+sin modificar); producción PENDIENTE — GitHub confirma
+`Vercel – auto-articulos-web: failure`, `"Deployment rate limited — retry in
+24 hours"` para `c5b9c37`. Mismo límite diario que ya bloquea los PR #46 y #47.
+Deployment, dominio, logs: pendientes de que Vercel libere el límite.
+Responsable: Claude. Siguiente acción: cuando el límite se libere, confirmar
+`state: success` en el commit más reciente de `main` y verificar visualmente
+`/dashboard/oportunidades` en producción antes de declarar `VERIFICADA`.
+Estado: PREPARADA

@@ -379,6 +379,19 @@ entrega el patrón de protocolo a fijar.
 - Worktree: `/private/tmp/restaurar-publicar-main-20260904`.
 - Siguiente acción: verificar Vercel, alias público y logs sin alterar Publicar.
 
+**Continuación — Claude, 2026-09-04:** el texto refinado que Milton había
+aprobado para Oportunidades ("aun te falta un tintin") no había llegado a
+commitearse — `faf4612` usó una redacción anterior. Corregido y desplegado a
+`main` en el commit `c5b9c37` (worktree
+`/private/tmp/instrucciones-oportunidades-texto-20260904`), tres auditorías
+aprobadas. Producción bloqueada por el mismo límite diario de Vercel que ya
+afecta a los PR #46 y #47 (`Deployment rate limited — retry in 24 hours`,
+confirmado vía `api.github.com/.../commits/c5b9c37/status`). Ver detalle
+completo en `COORDINACION_CLAUDE_CODEX.md`, sección "Claude retoma `CODEX -
+INSTRUCCIONES EN MODULOS`...". Siguiente acción: cuando el límite se libere,
+verificar que `Vercel – auto-articulos-web` quede en `success` para el
+último commit de `main` y confirmar visualmente en producción.
+
 ### `AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`
 
 Entrada agregada por la tarea programada diaria de propagación de Claude, a
