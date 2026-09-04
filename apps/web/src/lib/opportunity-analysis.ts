@@ -53,6 +53,34 @@ function normalizeTitle(value: string) {
     .trim();
 }
 
+function extractYears(value: string): string[] {
+  return value.match(/\b(?:19|20)\d{2}\b/g) ?? [];
+}
+
+const INTENT_FILLER_WORDS = new Set([
+  "al", "algunas", "como", "completa", "completo", "comunes", "con",
+  "consejos", "de", "el", "en", "errores", "guia", "las", "lo", "los",
+  "para", "pasos", "practica", "que", "sobre", "todo", "tu", "una",
+  "y",
+]);
+
+function intentTokens(value: string): Set<string> {
+  return new Set(
+    normalizeTitle(value)
+      .split(" ")
+      .filter((token) => token.length > 2 && !INTENT_FILLER_WORDS.has(token)),
+  );
+}
+
+function hasSameIntent(a: string, b: string): boolean {
+  const left = intentTokens(a);
+  const right = intentTokens(b);
+  if (left.size < 3 || right.size < 3) return false;
+  const intersection = [...left].filter((token) => right.has(token)).length;
+  const union = new Set([...left, ...right]).size;
+  return intersection / union >= 0.72;
+}
+
 const PROMPT_HEADER = [
   "Actua como estratega SEO experto y analista de datos de busqueda. Tu objetivo es encontrar TODAS las oportunidades posibles para aumentar el trafico organico del usuario, siendo creativo pero siempre basado en evidencia real de los datos proporcionados.",
   "",
@@ -67,11 +95,14 @@ const PROMPT_HEADER = [
   "- Cada titulo que propongas para una categoria debe tratar el MISMO tema que esa categoria, segun su nombre y sus EJEMPLOS DE TITULOS YA PUBLICADOS (van junto a cada categoria en CATEGORIAS PERMITIDAS).",
   "- PROHIBIDO mezclar o combinar en un mismo titulo el tema de dos categorias distintas, y PROHIBIDO poner un titulo en una categoria solo porque una consulta comparte una palabra generica con su nombre.",
   "- Si una consulta real de los datos no encaja tematicamente con NINGUNA categoria permitida, descartala: no la fuerces en la categoria que mas se le parezca.",
+  "- Las consultas de leyes, regulaciones, impuestos o cumplimiento solo pueden asignarse a una categoria cuyo nombre o ejemplos publicados indiquen explicitamente ese ambito legal/fiscal; si no existe esa categoria, descartalas aunque compartan ciudad, pais o perfil con otra categoria.",
   "- PROHIBIDO inventar un titulo que no se pueda justificar con evidencia real presente en RENDIMIENTO ACTUAL (Search Console), SEÑALES DE GOOGLE ANALYTICS o SEÑALES DE BING que se te dan mas abajo. El 'rationale' de cada titulo debe nombrar la consulta, pagina, tendencia o señal concreta que lo respalda.",
   "",
   "REGLA OBLIGATORIA DE CERO CANIBALIZACION (ESTRICTA, sin excepciones):",
   "- Canibalizar significa que dos titulos apuntan a la MISMA pregunta o necesidad principal. NO es canibalizacion pertenecer al mismo universo tematico: un articulo sobre una receta puede abrir subtemas sobre ingredientes, herramientas, tecnicas, errores, conservacion y perfiles de usuario.",
   "- Primero EXPANDE: por cada consulta, pagina o titulo que demuestre interes, investiga subtemas adyacentes, preguntas derivadas, problemas, comparativas, procesos, herramientas, tendencias y perfiles relacionados. Luego revisa los titulos existentes y propuestos para eliminar solo los que respondan la misma intencion principal.",
+  "- Trabaja en dos fases internas obligatorias: FASE A, construye un mapa de tema raiz y ramas relacionadas a partir de la evidencia; FASE B, convierte solo las ramas respaldadas en titulos y valida categoria, evidencia y duplicacion de intencion.",
+  "- Una rama valida puede cubrir una necesidad complementaria del mismo universo (componentes, preparacion, decision, proceso, riesgos, mantenimiento, resultados o alternativas), aunque no repita las palabras del titulo principal.",
   "- El 'rationale' de cada titulo debe indicar, en una frase, la intencion de busqueda especifica y distinta que cubre (que lo diferencia de los demas titulos de su categoria).",
   "- CERO duplicacion de intencion es un requisito absoluto; no confundas relacion tematica con repeticion. Ante la duda, cambia el angulo hacia una necesidad complementaria respaldada por evidencia en lugar de abandonar toda la expansion del tema.",
   "",
@@ -138,6 +169,8 @@ const PROMPT_HEADER = [
   "- Cubre TODAS las categorias de CATEGORIAS PERMITIDAS que tengan evidencia real de oportunidad en este lote de datos. NO te limites a un numero fijo de categorias: si hay evidencia real para 15 o 25 categorias distintas, devuelve las 15 o 25.",
   "- Devuelve tantos titulos long tail unicos y no canibalizados por categoria como la evidencia real sostenga. No existe una cantidad fija por categoria: deja que la evidencia, la creatividad y el limite natural de la respuesta determinen cuantas oportunidades son validas.",
   "- Cada titulo debe tener una justificacion basada en datos reales que nombre la intencion de busqueda distinta que cubre",
+  "- No inventes años, nacionalidades, ciudades, precios, estadísticas ni perfiles. Un modificador solo puede aparecer en un titulo si está respaldado por una consulta, página o señal real entregada.",
+  "- Si la consulta o rama no encaja claramente en la categoria asignada, descártala; nunca la coloques en la categoria más parecida por una palabra compartida.",
   "- CERO canibalizacion, ni dentro del mismo grupo ni contra TITULOS YA EXISTENTES ni contra OPORTUNIDADES YA CREADAS EN ESTA CORRIDA (ver REGLA OBLIGATORIA DE CERO CANIBALIZACION)",
   "- Usa unicamente categoryId existentes en la lista permitida",
   "- impressions y clicks del grupo deben ser representativos de la evidencia usada",
@@ -323,6 +356,14 @@ export async function analyzeSeoOpportunities(input: {
   const groupsByCategory = new Map<string, OpportunityAnalysisGroup>();
   const allResult: OpportunityAnalysisGroup[] = [];
   const validCategoryIds = new Set(input.categories.map((item) => item.id));
+  const evidenceText = [
+    ...input.currentRows,
+    ...input.previousRows,
+    ...input.countryRows,
+  ]
+    .map((row) => JSON.stringify(row))
+    .join(" ");
+  const evidencedYears = new Set(extractYears(evidenceText));
 
   for (let batchIndex = 0; batchIndex < batchesToProcess.length; batchIndex++) {
     const batch = batchesToProcess[batchIndex];
@@ -388,6 +429,7 @@ ${JSON.stringify(alreadyProposedByCategory)}`;
       const existingGroup = groupsByCategory.get(group.categoryId);
 
       const newTitles: OpportunityAnalysisGroup["titles"] = [];
+      const existingTitlesInCategory = existingGroup?.titles.map((title) => title.text) ?? [];
       for (const candidate of group.titles) {
         if (!candidate || typeof candidate !== "object") continue;
         const value = candidate as Record<string, unknown>;
@@ -395,6 +437,17 @@ ${JSON.stringify(alreadyProposedByCategory)}`;
         const text = value.text.trim();
         const normalized = normalizeTitle(text);
         if (!text || seen.has(normalized)) continue;
+        // Garantía determinista contra años inventados por la IA.
+        if (extractYears(text).some((year) => !evidencedYears.has(year))) continue;
+        // La similitud se evalúa solo dentro de la misma categoría y sobre
+        // tokens de intención, no sobre palabras de formato o ubicación.
+        // Así bloqueamos variantes de la misma necesidad sin bloquear ramas
+        // long tail legítimamente distintas.
+        if (
+          [...existingTitlesInCategory, ...newTitles.map((title) => title.text)].some(
+            (existingTitle) => hasSameIntent(text, existingTitle),
+          )
+        ) continue;
         seen.add(normalized);
         newTitles.push({
           text,

@@ -137,10 +137,26 @@ Reglas del canal:
   documentando su avance en este mismo documento (fuera de este canal en
   particular); si Milton quiere reabrir la comunicación en vivo, se activa
   de nuevo con "Ejecuta Canal de Comunicación".
+- **[2026-09-04] Codex:** añadí la regla estricta de clasificación: consultas
+  de leyes, regulaciones, impuestos o cumplimiento solo pueden entrar en una
+  categoría que demuestre explícitamente ese ámbito; si no existe, se
+  descartan. Auditoría estática, TypeScript del worker y build de `apps/web`
+  (83/83 rutas) quedaron aprobados. La corrección está subida al PR #42;
+  producción permanece intacta. La verificación funcional final requiere
+  sesión del usuario en el Preview nuevo.
 
 ---
 
 # PROTOCOLO OBLIGATORIO DE NO DESTRUCCIÓN (normas de Milton, recopiladas por experiencia — organizado 2026-09-03, ningún contenido fue eliminado)
+
+## RESERVA — CORRECCIÓN V2 DE EXPANSIÓN TEMÁTICA — 2026-09-04
+
+Codex reserva en `/private/tmp/auditoria-longtail-v2-20260904` únicamente
+`apps/web/src/lib/opportunity-analysis.ts`,
+`apps/web/src/app/api/opportunities/route.ts` y
+`apps/web/src/app/api/social-opportunities/generate/route.ts` para corregir
+la clasificación temática, la evidencia y la expansión long tail. No se
+tocarán producción, esquema, secretos ni archivos fuera de esta reserva.
 
 ## RESERVA LIBERADA — AUDITORÍA Y EXPANSIÓN LONG TAIL SEO/REDES — 2026-09-04
 
