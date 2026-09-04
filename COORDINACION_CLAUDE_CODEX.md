@@ -3393,3 +3393,22 @@ cuentas.
 
 Estado final: tarea funcional completada y verificada en producción; lista
 para archivo.
+
+### Despliegue autorizado y cierre — corrección de fechas antiguas — 2026-09-04
+
+Milton autorizó explícitamente la subida a producción. Auditoría funcional:
+14/14 pruebas del worker OK. Auditoría de regresión: `git diff --check` OK,
+diff final limitado a `apps/worker/src/automation/generateCustomArticle.ts`
+conservando los cambios concurrentes de `main`; no se tocaron versiones,
+esquema, Vercel, middleware, autenticación ni secretos. Auditoría de
+integración: `npm run build` ejecutado desde `apps/web` con éxito y `.next`
+generado; el build del worker mantiene errores TypeScript preexistentes en
+otros archivos, fuera del alcance y no relacionados con este cambio.
+
+Commit desplegado: `2e72d02` en `main`. Vercel Production
+`dpl_4Q3xCBrkNMCe6Xspd7y5jLwiDuQq` quedó `Ready`, con aliases
+`https://seototal.lasolucionweb.com` y `https://auto-articulos-web.vercel.app`.
+Verificación posterior: `/login` respondió HTTP 200 y `/dashboard` HTTP 307
+hacia `/login`; sin errores de middleware observados. El worker productivo
+tomará este SHA en su siguiente corrida cron; no se disparó manualmente para
+no procesar trabajos reales fuera del ciclo normal. Reserva liberada.
