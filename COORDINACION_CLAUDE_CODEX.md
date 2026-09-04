@@ -3419,3 +3419,59 @@ Se eliminaron únicamente artefactos locales generados durante la auditoría:
 `.vercel/`, `apps/web/.env.local`, `.next/`, `dist/` y `node_modules/`.
 `git status` queda limpio tras registrar este cierre; no quedan reservas
 activas ni cambios de código pendientes. La tarea queda lista para archivo.
+
+### Reserva activa — auto-renovación de Tumblr en Oportunidades — 2026-09-04
+
+Milton reportó (vía Claude/CONEXION BLOGGER) que el botón "Tumblr · Crear
+oportunidad" desaparece seguido en Oportunidades en Redes. Causa raíz: el
+access token de Tumblr expira cada pocas horas; solo dos rutas lo renuevan
+en silencio con el refresh token (`GET /api/search-integrations/tumblr`,
+usada por la pantalla de Configuración, y el worker al publicar). El
+chequeo `getConnectedNetworks()` en
+`apps/web/src/app/api/social-opportunities/generate/route.ts` —el que
+decide si mostrar el botón— solo lee `expiresAt` de la base de datos sin
+intentar renovar, así que si nadie visitó Configuración recientemente el
+botón desaparece aunque el refresh token siga siendo válido. Milton tuvo
+que reconectar Tumblr por OAuth completo hoy para solucionarlo
+manualmente; ahora se automatiza para que no vuelva a pasar.
+
+Se reserva temporalmente únicamente
+`apps/web/src/app/api/social-opportunities/generate/route.ts` y este
+documento. Objetivo: que `getConnectedNetworks()` intente la misma
+renovación silenciosa de Tumblr (con el refresh token, sin pedir OAuth de
+nuevo) antes de decidir si está "conectado", igual que ya hacen la
+pantalla de Configuración y el worker al publicar. No se toca Pinterest,
+Vercel, middleware, autenticación, esquema ni otras redes. Worktree
+aislado `/private/tmp/auto-articulos-tumblr-autorefresh-20260904`, rama
+`claude/tumblr-autorefresh-20260904`, base `origin/main` (`bd60d32`).
+
+**Cambio aplicado:** nueva función `getFreshTumblrExpiry()` en
+`generate/route.ts`, llamada al inicio de `getConnectedNetworks()` (la
+función que usan tanto `GET` —estado para el botón— como `POST` —creación
+real de la oportunidad—). Si `tumblr.expiresAt` ya venció y hay
+`refreshTokenEncrypted`, intenta renovar con `refreshTumblrToken()` +
+`getStoredTumblrAppCredentials()` (mismas funciones que ya usaba la
+pantalla de Configuración) y persiste el resultado en
+`prisma.tumblrIntegration.update`. Si Tumblr también rechaza la renovación
+silenciosa, conserva el estado vencido (mismo fallback que Configuración:
+el botón sigue oculto hasta reconectar por OAuth, no se rompe nada). Se
+agregó `refreshTokenEncrypted` al `select` de la consulta a
+`tumblrIntegration`.
+
+**Auditorías:**
+- Funcional: revisión línea por línea de los 4 casos de
+  `getFreshTumblrExpiry` (sin integración, no vencido, vencido sin refresh
+  token, vencido con refresh token — éxito y fallo). Confirmado que
+  `GET` y `POST` comparten `getConnectedNetworks()`, así que el arreglo
+  cubre tanto el botón como la creación real de la oportunidad.
+- Regresión: `npx tsc --noEmit` en `apps/web` → 141 errores, idénticos en
+  cantidad y contenido antes y después del cambio (`git stash`/`stash pop`
+  comparados) — todos preexistentes en archivos ajenos (`admin/usage`,
+  `admin/users`, `mcp/tools`, etc.), ninguno introducido por este cambio.
+  Diff revisado: 100% aislado a la función nueva y a la línea de
+  `tumblr:` en el objeto de retorno; ninguna otra red tocada.
+- Integración/producción: `npm run build` desde `apps/web` (mismo comando
+  que Vercel) → build exitoso, `.next` generado. `git status` confirmado:
+  solo los 2 archivos reservados.
+
+Procediendo a commit + push + verificación en producción.

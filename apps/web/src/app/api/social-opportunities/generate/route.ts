@@ -5,10 +5,13 @@ import { canUseSocialModule } from "@/lib/social-access";
 import { triggerSocialWorkerNow } from "@/lib/trigger-worker";
 import {
   decryptSecret,
+  encryptSecret,
   getGoogleAccessToken,
   queryGoogleSearchAnalytics,
+  refreshTumblrToken,
 } from "@auto-articulos/shared";
 import { getGoogleAnalyticsSignals, summarizeGoogleAnalyticsSignals } from "@/lib/google-analytics-signals";
+import { getStoredTumblrAppCredentials } from "@/lib/tumblr-app-config";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
@@ -191,6 +194,42 @@ async function selectArticlesWithoutGSC(userId: string): Promise<ArticleCandidat
   });
 }
 
+/**
+ * Renueva en silencio el access token de Tumblr con el refresh token cuando
+ * ya venció, igual que ya hacen la pantalla de Configuración y el worker al
+ * publicar. Sin esto, el botón "Tumblr" desaparecía de Oportunidades cada
+ * vez que nadie había visitado Configuración recientemente, aunque el
+ * refresh token siguiera siendo válido — pedido explícito de Milton
+ * (4/9/2026) tras tener que reconectar Tumblr por OAuth completo a mano.
+ */
+async function getFreshTumblrExpiry(
+  tumblr: { expiresAt: Date | null; refreshTokenEncrypted: string | null } | null,
+  userId: string,
+): Promise<Date | null> {
+  if (!tumblr) return null;
+  if (!tumblr.expiresAt || tumblr.expiresAt > new Date()) return tumblr.expiresAt;
+  if (!tumblr.refreshTokenEncrypted) return tumblr.expiresAt;
+  try {
+    const credentials = await getStoredTumblrAppCredentials();
+    const refreshed = await refreshTumblrToken(decryptSecret(tumblr.refreshTokenEncrypted), credentials);
+    const expiresAt = refreshed.expires_in ? new Date(Date.now() + refreshed.expires_in * 1000) : null;
+    await prisma.tumblrIntegration.update({
+      where: { userId },
+      data: {
+        accessTokenEncrypted: encryptSecret(refreshed.access_token),
+        refreshTokenEncrypted: refreshed.refresh_token ? encryptSecret(refreshed.refresh_token) : undefined,
+        expiresAt,
+      },
+    });
+    return expiresAt;
+  } catch {
+    // Igual que en la pantalla de Configuración: si Tumblr también rechaza
+    // la renovación silenciosa, se conserva el estado vencido y el botón
+    // sigue oculto hasta que Milton reconecte por OAuth.
+    return tumblr.expiresAt;
+  }
+}
+
 async function getConnectedNetworks(userId: string) {
   const [threads, twitter, linkedin, instagram, facebookPage, pinterest, tumblr, bluesky, devto, blogger, user] = await Promise.all([
     prisma.threadsIntegration.findUnique({ where: { userId }, select: { id: true } }),
@@ -199,12 +238,13 @@ async function getConnectedNetworks(userId: string) {
     prisma.instagramIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.facebookPageIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.pinterestIntegration.findUnique({ where: { userId }, select: { id: true, boardId: true, expiresAt: true } }),
-    prisma.tumblrIntegration.findUnique({ where: { userId }, select: { id: true, expiresAt: true } }),
+    prisma.tumblrIntegration.findUnique({ where: { userId }, select: { id: true, expiresAt: true, refreshTokenEncrypted: true } }),
     prisma.blueskyIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.devToIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.bloggerIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.user.findUnique({ where: { id: userId }, select: { role: true, email: true, allowInstagramPublishing: true, allowLinkedInPublishing: true, allowThreadsPublishing: true, allowFacebookPublishing: true, allowPinterestPublishing: true, allowTumblrPublishing: true, allowBlueskyPublishing: true, allowDevToPublishing: true, allowBloggerPublishing: true } }),
   ]);
+  const tumblrExpiresAt = await getFreshTumblrExpiry(tumblr, userId);
   const isAdmin = user?.role === "admin";
   const socialOverride = user?.email?.toLowerCase() === "lorenalvarez30@gmail.com";
   // X (Twitter) apagada a pedido explícito de Milton (30/8/2026): "no la
@@ -213,7 +253,7 @@ async function getConnectedNetworks(userId: string) {
   // reactivarla fácil más adelante — solo se fuerza a `false` acá, el único
   // punto de donde sale si se muestra o no en Oportunidades en Redes.
   const activeNetworks = { threads: Boolean(isAdmin || socialOverride || user?.allowThreadsPublishing), x: false, linkedin: Boolean(isAdmin || socialOverride || user?.allowLinkedInPublishing), instagram: Boolean(isAdmin || socialOverride || user?.allowInstagramPublishing), facebookPage: Boolean(isAdmin || socialOverride || user?.allowFacebookPublishing), pinterest: Boolean(isAdmin || socialOverride || user?.allowPinterestPublishing), tumblr: Boolean(isAdmin || socialOverride || user?.allowTumblrPublishing), bluesky: Boolean(isAdmin || user?.allowBlueskyPublishing), devto: Boolean(isAdmin || socialOverride || user?.allowDevToPublishing), blogger: Boolean(isAdmin || socialOverride || user?.allowBloggerPublishing) };
-  return { activeNetworks, threads: activeNetworks.threads && Boolean(threads), x: activeNetworks.x && Boolean(twitter), linkedin: activeNetworks.linkedin && Boolean(linkedin), instagram: activeNetworks.instagram && Boolean(instagram), facebookPage: activeNetworks.facebookPage && Boolean(facebookPage), pinterest: activeNetworks.pinterest && Boolean(pinterest && pinterest.boardId && (!pinterest.expiresAt || pinterest.expiresAt > new Date())), tumblr: activeNetworks.tumblr && Boolean(tumblr && (!tumblr.expiresAt || tumblr.expiresAt > new Date())), bluesky: activeNetworks.bluesky && Boolean(bluesky), devto: activeNetworks.devto && Boolean(devto), blogger: activeNetworks.blogger && Boolean(blogger) };
+  return { activeNetworks, threads: activeNetworks.threads && Boolean(threads), x: activeNetworks.x && Boolean(twitter), linkedin: activeNetworks.linkedin && Boolean(linkedin), instagram: activeNetworks.instagram && Boolean(instagram), facebookPage: activeNetworks.facebookPage && Boolean(facebookPage), pinterest: activeNetworks.pinterest && Boolean(pinterest && pinterest.boardId && (!pinterest.expiresAt || pinterest.expiresAt > new Date())), tumblr: activeNetworks.tumblr && Boolean(tumblr && (!tumblrExpiresAt || tumblrExpiresAt > new Date())), bluesky: activeNetworks.bluesky && Boolean(bluesky), devto: activeNetworks.devto && Boolean(devto), blogger: activeNetworks.blogger && Boolean(blogger) };
 }
 
 export async function GET() {
