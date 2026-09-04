@@ -54,3 +54,39 @@ rama, commit, migración, validación o destino de un proyecto.
 
 La misión permanece activa hasta que Milton la declare culminada. Este archivo
 debe conservarse y no debe archivarse como una conversación ordinaria.
+
+## Hallazgos (agregados por la tarea programada diaria de propagación)
+
+### Worktree anidado dentro del checkout principal — señalado 2026-09-04
+
+Según `COORDINACION_CLAUDE_CODEX.md` (commit `723a91a`, "reforzar
+aislamiento de worktrees"), se detectó que la rama
+`codex/google-api-verification` fue creada en
+`.worktrees/google-api-verification` **dentro** del checkout principal
+(`/Users/miltondavila/Creador de articulos/`), violando la regla de que un
+worktree debe estar en una ruta completamente separada (ej.
+`/private/tmp/<nombre>`). La propia nota aclara que no se deshizo nada
+porque ese trabajo ya estaba autorizado y fue promovido a Producción — se
+deja documentado como advertencia para no repetirlo, no como algo a
+corregir retroactivamente.
+
+### Producción (Vercel) corriendo commits que no están fusionados en `main` — hallazgo 2026-09-04
+
+Verificado en vivo por esta tarea (fetch de `origin/main` + `git
+merge-base --is-ancestor` de cada rama): las ramas
+`codex/google-api-verification` (tip `7908b01`) y
+`codex/google-api-verification-integrated` (tip `eaf8e90`, que integra
+además `80fdcd9` y `30189c2`) **no son ancestros de `origin/main`** — es
+decir, esos commits no están en la línea de `main` de git — pese a que,
+según `COORDINACION_CLAUDE_CODEX.md` (commits `f7e5e4c`, `4d5728d`) y
+`CONTROLADOR_DE_VERSIONES.md` ("Promoción a Producción — verificación
+OAuth de Google y video de demostración — 2026-09-04"), ambas fueron
+promovidas y verificadas en el deployment de Producción de Vercel
+(`2nHSy4qXgW4zaEmxzHBAr1NY8xqk`, `Ready`, alias
+`seototal.lasolucionweb.com`). Esto significa que Producción hoy corre
+código que `git log origin/main` no muestra: un futuro merge o deploy desde
+`main` podría revertir sin darse cuenta estos cambios (dominio OAuth,
+páginas de verificación de Google, reintento de Business Profile) si nadie
+los fusiona explícitamente a `main` antes. No se tocó nada para corregir
+esto — queda señalado para que Milton decida si conviene fusionar esas
+ramas a `main` de forma explícita.
