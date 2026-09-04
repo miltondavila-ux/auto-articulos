@@ -23,6 +23,23 @@ cualquier otro desarrollo en curso, de forma que todo lo que programes
 pueda subirse a producción sin depender, interferir ni mezclarse con otros
 trabajos.
 
+**Refuerzo explícito de Milton (2026-09-04), motivado por un caso real**:
+"independiente y completamente aislado" significa que el worktree debe
+crearse en una ruta **completamente separada** del checkout principal (por
+ejemplo `/private/tmp/<nombre-del-problema>`, como ya hace la mayoría de
+las conversaciones registradas en `INVENTARIO_CONVERSACIONES.md`). **Está
+prohibido crear un worktree anidado dentro de la carpeta del checkout
+principal** (por ejemplo, algo como
+`.worktrees/<nombre>` dentro de `/Users/miltondavila/Creador de
+articulos/`). Un worktree encapsulado dentro de main deja de ser
+independiente: puede confundirse con el propio árbol de `main`, aparecer
+sin querer en operaciones sobre el checkout principal, y es exactamente el
+tipo de desorden que este protocolo busca evitar. Se detectó un caso real
+de esto el 2026-09-03/04 (`codex/google-api-verification` en
+`.worktrees/google-api-verification`, dentro del checkout principal) — se
+documenta aquí como advertencia, no se deshizo porque su trabajo ya fue
+autorizado y promovido a producción.
+
 ## 2. Prohibición absoluta de romper lo que ya funciona
 
 Está prohibido destruir, alterar incorrectamente o afectar cualquier
@@ -43,6 +60,15 @@ INDEPENDIENTES y documentarlas, para verificar que:
 
 No debes enviar nada a producción hasta que las tres auditorías hayan sido
 completadas satisfactoriamente.
+
+**Orden directa de Milton (2026-09-04)**: esto no es una recomendación de
+buenas prácticas, es una **orden obligatoria sin excepción**. Ningún
+programador (Claude, Codex, Antigravity, o el Reparador del Árbol
+Principal) ejecuta un despliegue a producción sin haber completado y
+documentado las tres auditorías primero. El motivo explícito de esta orden
+es evitar que un arreglo puntual ("un arreglo") tumbe producción por mala
+ejecución — el objetivo no es la auditoría en sí, es que producción nunca
+se caiga por un cambio que no se verificó lo suficiente antes de subirlo.
 
 ## 4. Despliegue y verificación posterior
 
