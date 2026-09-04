@@ -892,3 +892,132 @@ El bloque **“Leer antes de ejecutar”** explica el objetivo del módulo y los
 pasos de ejecución. No debe eliminarse, duplicarse, ocultarse ni ser reemplazado
 por otro código. Toda modificación futura del módulo debe conservarlo, revisar el
 diff completo y documentar las tres auditorías antes de cualquier publicación.
+
+## Promoción a Producción — verificación OAuth de Google y video de demostración — 2026-09-04
+
+Entrada agregada por la tarea programada diaria de propagación de Claude, a
+partir de lo registrado en `COORDINACION_CLAUDE_CODEX.md` ("Solución
+integrada para evitar sobrescrituras", "Promoción de rama integrada
+autorizada" y "Actualización OAuth" / "Vídeo de demostración OAuth",
+2026-09-04) — actualiza (sin borrar) la nota anterior de este mismo
+documento en "RESUMEN DE VERSIÓN ACTUAL — 2026-09-04" que todavía listaba
+esta rama como "no promovida".
+
+Rama integrada: `codex/google-api-verification-integrated`, creada desde
+`origin/main` (`f050672`), aplicando únicamente las correcciones `7908b01`
+y `30189c2` como los commits integrados `80fdcd9` y `eaf8e90` — así se
+evitó sobrescribir Blogger/Tumblr y el resto de `main` con un merge normal.
+
+Deployment de Producción: `2nHSy4qXgW4zaEmxzHBAr1NY8xqk`, estado `Ready`,
+entorno `Production`, alias `seototal.lasolucionweb.com`, fuente
+`codex/google-api-verification-integrated` (commit `eaf8e90`).
+
+Estado de la verificación de Google (dos objetivos):
+- Objetivo 1 (Producción sirve las páginas/flujos corregidos de
+  Analytics/Business Profile): CUMPLIDO, verificado contra el propio
+  deployment `Ready`.
+- Objetivo 2 (Google aprueba la verificación de la app OAuth): NO CUMPLIDO
+  todavía al momento de este registro. Google ya guardó los tres scopes
+  (`business.manage`, `webmasters`, `analytics.readonly`) y una
+  justificación de 963 caracteres. Milton proporcionó una URL de video no
+  listada (`https://youtu.be/21wEAhgy7zk`) como evidencia del flujo de
+  conexión; queda pendiente confirmar que el video sea accesible en
+  ventana privada y cargar esa URL en el campo correspondiente de Google
+  Cloud antes de solicitar la verificación formal.
+
+Migraciones: ninguna registrada en esta nota.
+Producción verificada: parcialmente — el deployment en sí está `Ready` y
+confirmado; la verificación de la app ante Google sigue pendiente de un
+paso manual (cargar el video) que no consta como completado en
+`COORDINACION_CLAUDE_CODEX.md` a la fecha de este registro.
+Responsable de esta entrada: Claude (tarea programada diaria de
+propagación). Responsable del trabajo original: Codex.
+Siguiente acción: quien continúe con `CODEX - GPT-5 - VERIFICACION DE
+API'S DE GOOGLE` debe cargar el video en Google Cloud y luego registrar
+aquí mismo el resultado de la solicitud de verificación.
+Estado: DESPLEGADA A PRODUCCIÓN; VERIFICACIÓN DE GOOGLE PENDIENTE.
+
+## Despliegue — corrección de fechas antiguas en artículos generados — 2026-09-04
+
+Entrada agregada por la tarea programada diaria de propagación de Claude, a
+partir de "Despliegue autorizado y cierre — corrección de fechas antiguas —
+2026-09-04" en `COORDINACION_CLAUDE_CODEX.md`.
+
+Versión/commit desplegado: `2e72d02` ("Evitar fechas antiguas en artículos
+generados") en `main`.
+Archivo tocado: `apps/worker/src/automation/generateCustomArticle.ts`
+únicamente.
+Deployment Vercel: `dpl_4Q3xCBrkNMCe6Xspd7y5jLwiDuQq`, estado `Ready`.
+Aliases: `https://seototal.lasolucionweb.com` y
+`https://auto-articulos-web.vercel.app`.
+
+Auditoría funcional: 14/14 pruebas del worker OK.
+Auditoría de regresión: `git diff --check` correcto; diff limitado al
+archivo mencionado, sin tocar versiones, esquema, Vercel, middleware,
+autenticación ni secretos.
+Auditoría de integración: `npm run build` desde `apps/web` exitoso, `.next`
+generado; el build del worker conserva errores TypeScript preexistentes en
+otros archivos, ajenos a este cambio.
+
+Verificación posterior: `/login` respondió HTTP 200 y `/dashboard` HTTP 307
+hacia `/login`, sin errores de middleware. El worker productivo tomará este
+commit en su siguiente corrida cron (no se disparó manualmente para no
+procesar trabajos reales fuera de ciclo), por lo que el efecto funcional
+del cambio (fechas ya no antiguas en artículos nuevos) queda pendiente de
+observarse en la próxima corrida real.
+Migraciones: ninguna.
+Responsable de esta entrada: Claude (tarea programada diaria de
+propagación). Responsable del trabajo original: según lo registrado en
+Coordinación para esta corrección.
+Estado: DESPLEGADA Y VERIFICADA A NIVEL DE INFRAESTRUCTURA; efecto en
+artículos nuevos pendiente de confirmarse en la próxima corrida cron del
+worker.
+
+## Fusión PR #42 — refuerzo V2 de expansión temática long tail — 2026-09-04
+
+Entrada agregada por la tarea programada diaria de propagación de Claude, a
+partir del canal "MENSAJE DE CLAUDE PARA `CODEX - AUDITORIA A ALGORITMO DE
+PUBLICACIÓN DE ARTICULOS`" y su Bitácora en `COORDINACION_CLAUDE_CODEX.md`.
+Ver también `INVENTARIO_CONVERSACIONES.md` — Parte B — para el registro de
+la conversación completa.
+
+Rama: `codex/auditoria-longtail-v2-20260904` (continuación de
+`codex/auditoria-longtail-20260904`). PR #42, fusionado a `main` en el
+commit de merge `495baea` (padres `01aa72c` y `93daba3`), verificado en
+vivo contra `origin/main` con `git fetch` inmediatamente antes de escribir
+esta entrada.
+Commits incluidos: `8e07fe8` (expansión temática respaldada por evidencia),
+`a18c9ec` (rechazo de modificadores temporales sin respaldo — la barrera
+que descarta años inventados como "2023" en títulos), `fda3e0d` (rechazo de
+coincidencias de categoría legal no soportadas), `93daba3` (deduplicación
+semántica de intención de oportunidades).
+Archivos tocados: `apps/web/src/lib/opportunity-analysis.ts`,
+`apps/web/src/app/api/opportunities/route.ts`.
+
+Contexto (según la Bitácora del canal Claude↔Codex): la auditoría de
+integración/producción sobre el Preview real del PR encontró dos problemas
+antes de fusionar — títulos con el año `2023` sin evidencia visible y
+repetido, y una consulta de leyes/regulaciones inmobiliarias mal asignada a
+la categoría de inversión inmobiliaria. Codex corrigió ambos con barreras
+deterministas (no parches puntuales) antes de fusionar, siguiendo el pedido
+de Claude en el mismo canal.
+
+Auditoría de regresión (según Codex en la Bitácora): `git diff --check` y
+TypeScript del worker correctos; build de `apps/web` completo con 83/83
+rutas.
+Auditoría de integración/producción: verificada por Codex contra un Preview
+real (`https://auto-articulos-6ejlaap46-luna-portex-intelligence.vercel.app`)
+antes de la corrección final; el Preview con la corrección de categoría
+legal (`fda3e0d`) no consta verificado en un nuevo Preview en
+`COORDINACION_CLAUDE_CODEX.md` antes de fusionar, ni consta una verificación
+de Producción posterior a la fusión (`495baea`) al momento de este registro.
+Migraciones: ninguna.
+Responsable de esta entrada: Claude (tarea programada diaria de
+propagación). Responsable del trabajo original: Codex.
+Siguiente acción: quien retome esta conversación debe verificar Producción
+tras la fusión (`/login`, dominio, logs) y registrar el resultado en este
+documento, cerrando el ciclo que pide el propio canal Claude↔Codex ("Fin
+del canal: cuando el PR #42 esté fusionado, verificado en producción y
+cerrado, se escribe una entrada de cierre").
+Estado: FUSIONADO A `main`; VERIFICACIÓN DE PRODUCCIÓN POST-FUSIÓN PENDIENTE
+DE REGISTRO.
