@@ -3266,3 +3266,58 @@ real de Blogger desde el dashboard, que el resultado se ve como espera
 **Capitán de migración liberó el lote:** Claude. Resultado: Blogger
 publica resumen editorial en producción, commit `e7706fc`/`635833c`, sin
 migración de schema. No quedan reservas activas de esta tarea.
+
+Publicación de rama aislada — 2026-09-03:
+
+- Con autorización expresa, se subió `codex/google-api-verification` a GitHub.
+- GitHub confirmó el commit completo `7908b01cc1516c1943068d01d3d42bc624edb9ea`.
+- Vercel detectó la rama y creó un despliegue `Preview`; al cierre de esta
+  comprobación aún figura `Building`. No se promovió a Producción.
+
+Preview listo y auditado — 2026-09-03:
+
+- Vercel muestra `Ready` para el commit `7908b01` en el Preview
+  `https://auto-articulos-nuclaslhs-luna-portex-intelligence.vercel.app`.
+- `/acerca-de` y `/privacidad` ya incluyen referencias a Google Analytics y
+  Business Profile; las páginas responden correctamente.
+- `/terminos` responde, aunque conserva la fecha de actualización anterior y
+  debe revisarse antes de promover a Producción.
+- La prueba automatizada del callback de Search Console fue bloqueada por el
+  navegador (`ERR_BLOCKED_BY_CLIENT`); no se interpreta como fallo del
+  servidor y queda pendiente validarla con una solicitud controlada.
+
+Actualización de vigilancia — 2026-09-04: Vercel ahora muestra el despliegue
+del commit `7908b01` en estado `Ready` para la rama
+`codex/google-api-verification`. Sigue siendo `Preview`; no se promovió a
+Producción.
+
+Promoción autorizada y verificación — 2026-09-04:
+
+- Se promovió el Preview `7908b01` a Producción mediante Vercel.
+- El rebuild de Producción terminó en estado `Ready`.
+- Las páginas oficiales `/acerca-de` y `/privacidad` en
+  `seototal.lasolucionweb.com` ya muestran referencias a Google Analytics y
+  Business Profile.
+- `/terminos` responde correctamente, aunque mantiene la fecha legal anterior
+  (31 de julio de 2026); queda como ajuste editorial no bloqueante para OAuth.
+
+## CIERRE — 2026-09-04 (Créditos de imagen de Lorena Alvarez)
+
+Reserva temporal para este cierre: `COORDINACION_CLAUDE_CODEX.md` únicamente;
+no se modificó código, ramas, configuración de Vercel ni secretos. Reserva
+liberada al finalizar este registro.
+
+Resultado: desde Administración se localizó la cuenta #2, Lorena Alvarez
+(`lorenalvarez30@gmail.com`), y se confirmó que “Créditos de imagen
+disponibles” estaba desactivado. Con autorización expresa del usuario se
+activó y guardó exclusivamente ese permiso en producción.
+
+Verificación: se accedió como Lorena en el navegador interno, se abrió
+`/dashboard/oportunidades` y se recargó la página. El aviso “SIN CRÉDITOS
+IMAGEN”/“Tu cuenta de 10minutesWebsite no tiene créditos...” ya no aparece.
+El botón “Analizar oportunidades” permanece disponible y no había
+oportunidades guardadas. No hubo despliegue de código ni cambios en otras
+cuentas.
+
+Estado final: tarea funcional completada y verificada en producción; lista
+para archivo.
