@@ -117,6 +117,8 @@ async function generateGPTCopy(
               `- Habla desde la necesidad real del lector: demuestra que entiendes su preocupación antes de presentar la información.\n` +
               `- Sé empática, cercana y humana; conecta con la persona sin dramatizar, manipular ni prometer resultados.\n` +
               `- Refuerza autoridad mediante claridad, experiencia y utilidad concreta, nunca mediante frases grandilocuentes.\n` +
+              `- Usa un ángulo editorial propio para esta red: desarrolla una pregunta, problema, consejo, comparación, error, caso o tendencia relacionada con el tema central del artículo. No repitas simplemente el título ni copies el mismo enfoque de otra red.\n` +
+              `- La relación temática debe ampliar el universo del artículo: puedes conectar con subtemas complementarios y necesidades derivadas del lector, pero no inventes hechos ni te alejes del tema respaldado por el título, resumen o consultas reales.\n` +
               `- No uses frases vacías, tono frío, lenguaje corporativo ni expresiones que parezcan generadas automáticamente.\n` +
               (isInstagramFeedCaption
                 ? `- Instagram no muestra enlaces clicables en el caption — NUNCA escribas una URL ni la palabra "[ENLACE]". En vez de eso, termina con al menos 5 hashtags reales, en español, sacados de palabras clave del tema y contenido del artículo (no genéricos como #instagram) — sin espacios dentro de cada hashtag, separados entre sí por un espacio, en su propia línea al final.\n\n`

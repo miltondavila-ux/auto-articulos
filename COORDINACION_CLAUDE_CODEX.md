@@ -1,5 +1,33 @@
 # PROTOCOLO OBLIGATORIO DE NO DESTRUCCIÓN (normas de Milton, recopiladas por experiencia — organizado 2026-09-03, ningún contenido fue eliminado)
 
+## RESERVA LIBERADA — AUDITORÍA Y EXPANSIÓN LONG TAIL SEO/REDES — 2026-09-04
+
+Identidad: Codex, conversación "AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS".
+Archivos reservados exclusivamente en `/private/tmp/auditoria-longtail-20260904`:
+`apps/web/src/lib/opportunity-analysis.ts` y
+`apps/web/src/app/api/social-opportunities/generate/route.ts`.
+Objetivo: ampliar la exploración temática long tail y evitar únicamente la
+repetición de intención, tanto en oportunidades SEO/AEO como en redes sociales.
+No se tocarán Vercel, middleware, autenticación, secretos, esquema ni otras redes.
+Estado: cambios preparados en worktree aislado, sin commit, push ni despliegue;
+reserva liberada al cerrar esta intervención.
+
+### Triple auditoría — 2026-09-04
+
+1. Funcional: prompt SEO revisado; expansión temática antes del filtro de
+intención, sin tope fijo por categoría y memoria completa de títulos recibidos.
+Prompt social revisado para ángulos y subtemas complementarios por red.
+2. Regresión: `git diff --check` correcto; no se modificaron contratos,
+persistencia, publicación, Vercel, middleware, autenticación, secretos ni
+esquema. TypeScript del worker (`npx tsc -p apps/worker/tsconfig.json --noEmit`)
+correcto. El typecheck web conserva errores preexistentes fuera de estos
+cambios.
+3. Integración/preproducción: `npm run build` ejecutado desde `apps/web`,
+con Prisma generado, compilación, TypeScript y generación de 83 rutas correctos.
+`vercel.json` conserva `buildCommand: "npm run build"` y `outputDirectory: ".next"`.
+No se desplegó ni se modificó producción; la verificación post-despliegue queda
+pendiente de autorización explícita.
+
 **Texto literal de Milton, sin editar:** "NOTA OBLIGATORIA: Es importante
 que, antes de comenzar, obedezcas de manera ciega y sin omitir ninguna
 instrucción el protocolo del documento de coordinación y que,
