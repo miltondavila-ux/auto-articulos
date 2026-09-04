@@ -304,6 +304,43 @@ Esta advertencia es obligatoria y no puede omitirse bajo ninguna circunstancia.
 
 ---
 
+# ROL PERMANENTE DE CLAUDE — PROPAGAR INFORMACIÓN A LOS DOCUMENTOS CORRECTOS (agregado 2026-09-04, pedido explícito de Milton)
+
+**Encargo de Milton**: de ahora en adelante, cada vez que alguien deje
+información en `COORDINACION_CLAUDE_CODEX.md`, es responsabilidad de
+Claude revisar si esa información debe escribirse también en otro de los
+documentos maestros — no debe quedar solo acá si le corresponde vivir en
+otro lado. Esto aplica a **cualquier sesión de Claude** que lea este
+documento, no solo a la que escribe esta regla.
+
+**Mapa de a dónde va cada cosa** (ya definido antes en esta conversación
+con Milton, formalizado acá):
+
+| Si la entrada de Coordinación menciona... | Se propaga también a... |
+|---|---|
+| Una idea suelta para más adelante, sin ejecutar todavía | `TO-DO.md` |
+| Quién tiene qué archivo/rama reservada, o el nombre exacto de una conversación nueva | `INVENTARIO_CONVERSACIONES.md` (Parte A si es una reserva activa, Parte B si es historial de la conversación) |
+| Un commit, deployment, estado de Vercel o verificación en producción de una versión | `CONTROLADOR_DE_VERSIONES.md` |
+| Un cambio visible para el usuario final (pantalla, flujo, mensaje, permiso, módulo nuevo) | `apps/web/src/content/manual-usuario.ts` — este archivo alimenta directamente al bot de ayuda (ver `apps/web/src/lib/user-manual.ts`), así que dejarlo desactualizado deja al bot respondiendo con información vieja |
+| Un problema de árbol de git enredado, ramas pisadas o commits mezclados | `REPARADOR_DEL_ARBOL_PRINCIPAL.md` |
+
+**Cómo hacerlo, sin romper nada**: worktree aislado, nunca borrar ni
+reescribir lo que ya está en Coordinación (esa entrada se queda donde
+está, la propagación es una copia/resumen hacia el otro documento, no un
+traslado), commit y push siguiendo el Protocolo de No Destrucción de más
+abajo.
+
+**Automatización diaria**: además de que cualquier sesión interactiva de
+Claude debe hacer esto al momento si detecta información sin propagar,
+Milton pidió una tarea programada que corra cada 24 horas, revise todo lo
+escrito en `COORDINACION_CLAUDE_CODEX.md` desde la última corrida, y
+propague lo que corresponda — para que esto no dependa de que haya una
+conversación de Claude abierta en ese momento. Ver la entrada de
+configuración de esa tarea (fecha de creación, horario, alcance exacto)
+donde corresponda registrarla la primera vez que se configure.
+
+---
+
 # PROTOCOLO: CANAL DE COMUNICACIÓN (agregado 2026-09-04, pedido explícito de Milton)
 
 **Qué es**: un mecanismo repetible para que Milton conecte a Claude
