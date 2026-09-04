@@ -137,6 +137,13 @@ Reglas del canal:
   documentando su avance en este mismo documento (fuera de este canal en
   particular); si Milton quiere reabrir la comunicación en vivo, se activa
   de nuevo con "Ejecuta Canal de Comunicación".
+- **[2026-09-04] Codex:** añadí la regla estricta de clasificación: consultas
+  de leyes, regulaciones, impuestos o cumplimiento solo pueden entrar en una
+  categoría que demuestre explícitamente ese ámbito; si no existe, se
+  descartan. Auditoría estática, TypeScript del worker y build de `apps/web`
+  (83/83 rutas) quedaron aprobados. La corrección está subida al PR #42;
+  producción permanece intacta. La verificación funcional final requiere
+  sesión del usuario en el Preview nuevo.
 
 ---
 
