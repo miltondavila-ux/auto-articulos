@@ -1129,3 +1129,21 @@ Siguiente acción: si el botón de Tumblr vuelve a desaparecer solo, es señal
 de que Tumblr rechazó también la renovación silenciosa y hace falta
 reconectar por OAuth.
 Estado: VERIFICADA
+
+## Versión preparada — 2026-09-04 — instrucciones de Oportunidades / migración a Claude
+
+Fecha y hora: 2026-09-04
+Versión/commit: `faf4612` en `main`
+Conversación/proyecto: `CODEX - INSTRUCCIONES EN MODULOS`
+Worktree: `/private/tmp/restaurar-publicar-main-20260904`
+Cambios: sección independiente `Leer antes de ejecutar` en Oportunidades.
+Archivos modificados: `apps/web/src/app/dashboard/oportunidades/page.tsx` y
+estos registros documentales. Archivos eliminados: ninguno. Migraciones: ninguna.
+Auditoría 1: APROBADA — alcance y contenido revisados; lógica intacta.
+Auditoría 2: APROBADA — diff check, typecheck y build Next con 83/83 rutas.
+Auditoría 3: PENDIENTE — Vercel rechazó el deployment manual por límite diario;
+queda verificar el despliegue automático y la URL pública.
+Deployment, dominio, logs y producción: pendientes.
+Responsable: Codex; reconexión siguiente: Claude.
+Siguiente acción: verificar Vercel y producción; no declarar `VERIFICADA` antes.
+Estado: PREPARADA

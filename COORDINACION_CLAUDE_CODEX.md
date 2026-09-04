@@ -4361,3 +4361,26 @@ El PR #46 (`codex/dynamic-source-timeline-20260904`) modifica únicamente la lí
 5. Repetir la prueba con oportunidades pendientes eliminadas por el usuario, sin borrar artículos publicados ni datos históricos. Auditar antes de publicar.
 
 Codex: No se borraron oportunidades, artículos ni datos. El checkout principal conserva cambios ajenos sin tocar (`.worktrees/`, `docs/` y el backup local). La rama aislada usada para la interfaz fue `codex/dynamic-source-timeline-20260904`.
+
+## MIGRACIÓN A CLAUDE — `CODEX - INSTRUCCIONES EN MODULOS` — 2026-09-04
+
+Codex deja este handoff para Claude. El objetivo es continuar la recuperación
+y protección de las instrucciones visuales de `/dashboard/publicar` y
+`/dashboard/oportunidades` sin pisar trabajo existente.
+
+- Publicar quedó estable en `main` con `16be4d0` y fue verificado en producción.
+  No borrar, reemplazar, simplificar ni mover su tarjeta `Leer antes de ejecutar`.
+- Oportunidades quedó integrado en `main` con `faf4612`. Incluye una sección
+  separada `Leer antes de ejecutar`, objetivo, pasos y reglas en lenguaje
+  cotidiano. TypeScript y build de Next (83/83 rutas) pasaron.
+- La auditoría de producción de Oportunidades está pendiente: el despliegue
+  manual fue rechazado por el límite diario de Vercel (`api-deployments-free-per-day`).
+- Worktree de referencia: `/private/tmp/restaurar-publicar-main-20260904`.
+- Próximo paso: verificar Vercel, alias público y logs; no usar force push ni
+  modificar Vercel mientras exista una contradicción o el límite siga activo.
+
+La explicación debe seguir siendo humana: ayudar a encontrar lo que buscan
+los clientes para aparecer en internet, mejorar presencia y posicionamiento;
+explicar analizar, revisar, elegir y publicar; y aclarar cupo, indexación,
+idioma/estilo y `Forzar análisis`. No reintroducir esperas obligatorias de
+tres días.

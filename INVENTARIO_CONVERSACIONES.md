@@ -370,6 +370,15 @@ entrega el patrón de protocolo a fijar.
   INSTRUCCIONES DE PUBLICAR” en `COORDINACION_CLAUDE_CODEX.md` antes de tocar
   el módulo.
 
+### `CODEX - INSTRUCCIONES EN MODULOS` — migración a Claude — 2026-09-04
+
+- Agente actual: Codex - GPT-5. Próximo responsable: Claude.
+- Publicar: estable en `main`, commit `16be4d0`, tarjeta verificada en producción.
+- Oportunidades: commit `faf4612` integrado en `main`; typecheck y build de 83/83
+  rutas aprobados. Producción queda pendiente por el límite diario de Vercel.
+- Worktree: `/private/tmp/restaurar-publicar-main-20260904`.
+- Siguiente acción: verificar Vercel, alias público y logs sin alterar Publicar.
+
 ### `AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`
 
 Entrada agregada por la tarea programada diaria de propagación de Claude, a
