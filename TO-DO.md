@@ -136,6 +136,27 @@ HANDOFF, solo alimenta ideas hacia él).
     Administración para generar el contenido del artículo e
     inyectar/escribir el texto directamente en el editor de la plataforma,
     evitando pulsar el botón de ChatGPT nativo.
+- **(4/9/2026)** Posible rediseño dedicado de `apps/web/src/lib/opportunity-analysis.ts`
+  y sus dos archivos relacionados. Milton señaló (cita textual conservada en
+  `COORDINACION_CLAUDE_CODEX.md`, commit `63d9e44`) que el problema no es de
+  un programador puntual sino del diseño actual de estos tres archivos:
+  - `opportunity-analysis.ts`: contiene el prompt principal; el modelo tiene
+    demasiada libertad para convertir consultas débiles en variaciones
+    genéricas; la validación de canibalización es mayormente
+    textual/exacta; falta una etapa obligatoria y separada de "tema raíz →
+    ramas temáticas → clasificación → títulos".
+  - `apps/web/src/app/api/opportunities/route.ts`: solo envía al modelo
+    hasta 8 ejemplos publicados por categoría, sin construir antes un mapa
+    estructurado de temas y ramas; entrega la categoría casi solo como
+    nombre, por lo que el modelo puede clasificar mal una consulta.
+  - `apps/web/src/app/api/social-opportunities/generate/route.ts`: solo
+    genera textos sociales derivados de artículos existentes; no descubre
+    temáticas long tail nuevas para redes.
+  Cada parche puntual de una conversación distinta (ej. "cero canibalización
+  y longtail", la auditoría del PR #42) alivia un síntoma pero no cambia el
+  diseño de fondo. Queda pendiente que Milton decida si amerita una
+  conversación dedicada de rediseño (ej. "REDISEÑO DE OPPORTUNITY-ANALYSIS")
+  en vez de seguir acumulando parches.
 
 ## Hecho
 
