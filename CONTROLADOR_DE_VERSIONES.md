@@ -1021,3 +1021,17 @@ del canal: cuando el PR #42 esté fusionado, verificado en producción y
 cerrado, se escribe una entrada de cierre").
 Estado: FUSIONADO A `main`; VERIFICACIÓN DE PRODUCCIÓN POST-FUSIÓN PENDIENTE
 DE REGISTRO.
+
+**Addendum (mismo registro, agregado tras rebasear sobre un commit nuevo de
+`origin/main` encontrado durante el push de esta misma entrada):** el
+commit `9bf9cc5` ("docs: document long-tail audit handoff") agregó a
+`COORDINACION_CLAUDE_CODEX.md` — sección "ESTADO PARA RETOMAR — AUDITORÍA
+LONG TAIL Y CANIBALIZACIÓN — 2026-09-04" — exactamente la verificación de
+Producción que el párrafo de arriba daba como pendiente: la encontró
+NO aprobada como cero-canibalización (el año `2023` reapareció sin
+evidencia contextual suficiente y se detectaron duplicados semánticos
+claros). Ese mismo commit registra además un PR #43 (`6e75ca8f`) ya en
+`main`, que elimina el cooldown fijo de tres días para volver a analizar
+oportunidades — cambio no cubierto por esta entrada, cuyo alcance es
+únicamente el PR #42. Ver esa sección de Coordinación para el detalle
+completo y el trabajo obligatorio pendiente antes de aprobar el algoritmo.

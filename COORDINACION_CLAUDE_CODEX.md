@@ -4200,3 +4200,64 @@ Archivos principales: `apps/web/src/lib/opportunity-analysis.ts` y
 `apps/web/src/app/api/opportunities/route.ts`. No tocar Vercel, middleware,
 autenticación, secretos, schema ni migraciones para esta continuación sin una nueva
 justificación. Producción permanece estable en `Ready`; no hay migración pendiente.
+
+---
+
+## Claude (tarea programada diaria de propagación) — 2026-09-04
+
+**Nota agregada al resolver un conflicto de rebase con el commit `9bf9cc5`
+("docs: document long-tail audit handoff"), que llegó a `origin/main`
+mientras se preparaba esta entrada:** el resto de esta entrada fue escrito
+ANTES de ver la sección "ESTADO PARA RETOMAR — AUDITORÍA LONG TAIL Y
+CANIBALIZACIÓN — 2026-09-04" de arriba, así que decía que la verificación
+de Producción del PR #42 estaba "pendiente de registro" — esa sección de
+arriba es precisamente esa verificación, y encontró que el algoritmo
+**todavía no está aprobado como cero-canibalización** (año `2023` reaparece,
+hay duplicados semánticos) y que además ya existe un PR #43 (`6e75ca8f`,
+elimina el cooldown fijo) también en producción. No se reescribe el párrafo
+original de esta misma entrada (queda tal cual, con su información ya
+desactualizada) para no borrar ni alterar contenido ya commiteado; esta nota
+es la corrección aditiva. Ver la sección de arriba para el estado real y el
+trabajo pendiente.
+
+Primera corrida de esta tarea automatizada (no existía corrida previa
+registrada; se usó la ventana de las últimas 26 horas). Trabajo hecho en el
+worktree aislado `propagacion-20260904` (rama `propagacion-diaria-20260904`)
+desde `origin/main` (`495baea`), sin tocar código de la aplicación, sin
+migraciones ni despliegue.
+
+Se revisaron ~1600 líneas agregadas a este documento en la ventana (commits
+`6c8dcd7`..`495baea`). Buena parte ya había sido propagada por las propias
+sesiones que hicieron el trabajo (Blogger/Tumblr en `INVENTARIO_CONVERSACIONES.md`
+y `CONTROLADOR_DE_VERSIONES.md`; créditos de imagen en `manual-usuario.ts`).
+Se detectaron y propagaron tres vacíos genuinos, todos posteriores al último
+resumen de Producción existente:
+
+1. `INVENTARIO_CONVERSACIONES.md` (Parte B): nueva entrada para la
+   conversación `AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS` (Codex),
+   verificada como CULMINADA — PR #42 fusionado en `495baea` (confirmado en
+   vivo con `git merge-base --is-ancestor` contra `origin/main`, no según lo
+   que decía el texto).
+2. `CONTROLADOR_DE_VERSIONES.md`: tres entradas nuevas — (a) promoción a
+   Producción de la rama integrada de verificación OAuth de Google
+   (`eaf8e90`, deployment `2nHSy4qXgW4zaEmxzHBAr1NY8xqk`, `Ready`), que
+   actualiza sin borrar la nota anterior que la daba como "no promovida";
+   (b) despliegue de la corrección de fechas antiguas en artículos
+   (`2e72d02`, deployment `dpl_4Q3xCBrkNMCe6Xspd7y5jLwiDuQq`); (c) fusión del
+   PR #42 (`495baea`), con el detalle de las barreras deterministas contra
+   años inventados y categorías legales mal asignadas.
+3. No se propagó nada a `TO-DO.md` (no se encontraron ideas sueltas nuevas
+   para más adelante) ni a `REPARADOR_DEL_ARBOL_PRINCIPAL.md` (ningún
+   problema nuevo de árbol enredado en la ventana; la pausa de `stash@{0}`
+   sigue en decisión de Milton, sin cambios).
+
+Duda dejada sin resolver, para que Milton decida: ni el cierre de
+`CIERRE — 2026-09-04 (Créditos de imagen de Lorena Alvarez)` (activación de
+un permiso puntual para una cuenta) ni la verificación de Producción
+posterior a la fusión del PR #42 quedan con una acción de código pendiente
+de mi parte — el primero no encajó en ninguna de las cinco categorías de
+propagación (no es commit, deployment, reserva, idea suelta ni cambio de
+árbol git), y el segundo requiere que alguien abra la URL de Producción
+real y lo registre, algo que esta tarea no ejecuta por su cuenta. Señalado
+en `CONTROLADOR_DE_VERSIONES.md` como "siguiente acción" en la entrada del
+PR #42.
