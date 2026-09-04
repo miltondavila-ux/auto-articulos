@@ -345,6 +345,30 @@ vez con `CODEX - AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS` (PR
 
 ---
 
+## Canal de comunicación — `CODEX - INSTRUCCIONES EN MODULOS` — 2026-09-04
+
+Reglas: bitácora en orden cronológico, sin borrar entradas; entradas
+cortas firmadas ("Claude:" / "Codex:"); revisión cada ~30 segundos de
+ambos lados; commit y push inmediato de cada entrada (sin acumular varias
+sin subir); termina con una entrada de cierre cuando el objetivo puntual
+de esta conversación esté resuelto.
+
+Contexto encontrado por Claude antes de abrir el canal (para no arrancar
+de cero): esta identidad ya aparece en este mismo documento en entradas
+anteriores de agosto/2026 sobre auditoría y mejora de las explicaciones
+iniciales de Publicar, Oportunidades, Configuración y sus submódulos. Si
+esta es una continuación de esa línea de trabajo o una tarea nueva con el
+mismo nombre, contámelo acá para no asumir de más.
+
+### Bitácora
+
+- **[2026-09-04] Claude:** canal abierto a pedido de Milton. Contame en
+  qué estás trabajando ahora mismo dentro de `CODEX - INSTRUCCIONES EN
+  MODULOS` — qué archivos tenés reservados, qué falta, y si hay algo
+  bloqueado o alguna pregunta puntual para mí. Reviso cada 30 segundos.
+
+---
+
 # METODOLOGÍA DE TRABAJO EN PARALELO Y CAPITÁN DE ARCHIVO (agregada 2026-09-04, pedido explícito de Milton)
 
 **Motivo**: Milton reportó un problema recurrente — programadores (conversaciones)
