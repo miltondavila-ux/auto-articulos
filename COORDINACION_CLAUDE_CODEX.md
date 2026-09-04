@@ -4329,3 +4329,35 @@ Verificaciones hechas con `git fetch origin` + `git merge-base
 el texto existente.
 
 Responsable: Claude (tarea programada diaria de propagación).
+## PUNTO DE MIGRACIÓN A CLAUDE — 2026-09-04
+
+Codex: Esta entrada deja el contexto completo para continuar la conversación `CODEX - AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`.
+
+### Objetivo original
+
+El algoritmo de oportunidades debía analizar Search Console y, cuando estuvieran conectados, también Google Analytics 4 y Bing Webmaster Tools, para descubrir ramas long tail creativas y nuevas necesidades relacionadas. La meta era evitar canibalización: no generar varias piezas que respondan la misma necesidad principal cambiando únicamente el formato, el verbo, el perfil, la ciudad o el año.
+
+### Trabajo ya integrado
+
+- PR #42: expansión long tail, reglas de categorías, uso de señales GSC/GA/Bing y controles iniciales contra años inventados y duplicación.
+- PR #43: eliminación del bloqueo temporal de análisis.
+- PR #44: validación contextual de años y firma de intención más estricta.
+- PR #45: canonicalización adicional de acciones y necesidades (`selección`, `problema`, `errores`, `opciones`). Está fusionado en `main` con commit `112ef7a6725b5aa8e868f9aa488bfe77336478f9` y Producción respondió HTTP 200.
+
+### Resultado de la última prueba
+
+La cuenta de prueba generó 14 oportunidades. `2023` ya no reapareció, pero la auditoría volvió a detectar canibalización: tres títulos sobre cambiar el seguro después de mudarse; dos sobre deducibles para inmigrantes; dos sobre elegir seguros para inmigrantes; y dos sobre elegir seguros para pequeños negocios. Persisten demasiadas variantes de “errores comunes”, “guía completa” y “cómo elegir”. Por tanto, el resultado no está aprobado para publicar automáticamente.
+
+### PR pendiente de interfaz
+
+El PR #46 (`codex/dynamic-source-timeline-20260904`) modifica únicamente la línea de tiempo de análisis para mostrar dinámicamente `Google Search Console`, `Google Analytics` y `Bing Webmaster Tools` como `conectado` o `no conectado`, consultando el estado real de sus integraciones. No cambia el algoritmo ni datos existentes. Vercel rechazó su Preview por `Deployment rate limited — retry in 24 hours`; no fue fusionado.
+
+### Próximos pasos para Claude
+
+1. Revisar el algoritmo de deduplicación dentro y entre categorías, distinguiendo necesidad principal, objeto, contexto y formato. La comparación actual todavía permite duplicados semánticos.
+2. Añadir una segunda validación determinista que construya un mapa de intención por título y descarte cualquier propuesta cuya necesidad principal coincida con otra, aunque cambien “familias”, “inmigrantes”, “guía”, “errores” o “pasos”.
+3. Mantener la regla de años contextuales y confirmar que ninguna fecha se autorice solo porque aparece en otra fila del lote.
+4. Esperar a que Vercel permita builds, verificar el Preview real del PR #46 y fusionarlo solo si pasa.
+5. Repetir la prueba con oportunidades pendientes eliminadas por el usuario, sin borrar artículos publicados ni datos históricos. Auditar antes de publicar.
+
+Codex: No se borraron oportunidades, artículos ni datos. El checkout principal conserva cambios ajenos sin tocar (`.worktrees/`, `docs/` y el backup local). La rama aislada usada para la interfaz fue `codex/dynamic-source-timeline-20260904`.
