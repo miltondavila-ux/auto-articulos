@@ -4267,3 +4267,65 @@ PR #42.
 Codex: Se corrigió `apps/web/src/lib/opportunity-analysis.ts` en la rama aislada `codex/redesign-intent-dedup-20260904`. La reparación reemplaza la validación global de años por evidencia contextual de la misma intención, fortalece la firma de necesidad para bloquear variantes semánticas que solo cambian formato, verbo, perfil, ubicación o año, y exige al modelo abrir ramas de necesidad realmente distintas. No se borraron oportunidades, artículos ni datos de usuarios.
 
 Codex: `git diff --check` y el Preview de Vercel pasaron. El build local no pudo ejecutarse plenamente porque el worktree aislado no tenía `tsx`/`next` instalados, limitación registrada. El PR #44 fue fusionado a `main` con commit `8730f277e6cc3b6342214f658dbec5c72f186366`; Producción respondió HTTP 200 en `/login`. Queda pendiente una validación funcional con datos nuevos para confirmar que no reaparezcan `2023` ni duplicados; no se realizó sobre la cuenta actual para no borrar oportunidades pendientes ni alterar datos productivos.
+
+---
+
+## Claude (tarea programada diaria de propagación) — 2026-09-04, segunda corrida
+
+**Nota importante para quien lea esto:** al terminar de preparar esta
+corrida y hacer `git fetch origin main` antes del push, se encontró que
+otra instancia de esta misma tarea automatizada (sesión
+`session_01QLvN6AMuY7S286ZTfpRJZz`, ver la entrada inmediatamente arriba)
+ya se había ejecutado en paralelo minutos antes y ya había propagado buena
+parte de lo mismo que esta corrida había preparado de forma independiente
+(la conversación `AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`/PR #42
+en `INVENTARIO_CONVERSACIONES.md`, y las entradas de Controlador para la
+corrección de fechas antiguas y la promoción a Producción de la
+verificación de Google). Para no duplicar, esta corrida descartó esas
+partes ya cubiertas (verificado línea por línea contra lo ya empujado a
+`origin/main`) y conservó solo lo que seguía faltando genuinamente:
+
+1. `TO-DO.md` (Pendientes): idea de rediseño dedicado de
+   `opportunity-analysis.ts` y sus dos archivos relacionados, con la cita
+   textual de Milton preservada (fuente: commit `63d9e44`) — la corrida
+   anterior no encontró esto porque no estaba buscando en esa sección
+   específica del documento.
+2. `apps/web/src/content/manual-usuario.ts`: se agregó Blogger a la lista
+   de redes sociales y su párrafo explicativo de conexión — no aparecía en
+   ningún lado del manual pese a estar activo y verificado en producción
+   desde los commits `e7706fc`…`7bf4fa0`.
+3. `CONTROLADOR_DE_VERSIONES.md`: tres entradas nuevas que la corrida
+   anterior no había cubierto — créditos de imagen (`8115604`), su
+   diagnóstico post-deploy de solo lectura, y la auto-renovación silenciosa
+   del token de Tumblr (`8ad7ee2`/`2bbe821`).
+4. `INVENTARIO_CONVERSACIONES.md`: actualización aditiva (sin borrar el
+   texto original) de la entrada `CODEX - GPT-5 - VERIFICACION DE API'S DE
+   GOOGLE`, remitiendo al detalle ya escrito por la corrida anterior en
+   Controlador.
+5. `REPARADOR_DEL_ARBOL_PRINCIPAL.md`: dos hallazgos que la corrida anterior
+   no cubrió (dijo explícitamente "no hubo nada... para el Reparador") —
+   worktree anidado dentro del checkout principal (ya señalado en
+   Coordinación, commit `723a91a`) y, más importante, que **Producción de
+   Vercel corre commits (`7908b01`, `eaf8e90`) que no son ancestros de
+   `origin/main`** — verificado en vivo con `git merge-base --is-ancestor`
+   contra `origin/main` recién fetcheado. Ninguna de las dos ramas de
+   verificación de Google API está fusionada en `main`, pese a estar en
+   Producción.
+
+No se repite aquí la entrada de Parte B del PR #42 ni las entradas de
+Controlador para fechas antiguas y promoción de Google API: ya están
+escritas, completas y correctas, en la corrida anterior — repetirlas
+violaría la regla de no duplicar.
+
+**Duda adicional para Milton, distinta de la que ya dejó la corrida
+anterior:** ¿conviene fusionar explícitamente a `main` las ramas
+`codex/google-api-verification` y `codex/google-api-verification-integrated`
+para que `git log origin/main` refleje lo que Producción realmente corre?
+Ver detalle en `REPARADOR_DEL_ARBOL_PRINCIPAL.md`.
+
+No hubo nada que requiriera una operación destructiva, migración ni deploy.
+Verificaciones hechas con `git fetch origin` + `git merge-base
+--is-ancestor` en vivo antes de escribir cada hallazgo, no por confianza en
+el texto existente.
+
+Responsable: Claude (tarea programada diaria de propagación).
