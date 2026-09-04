@@ -3500,3 +3500,51 @@ falta reconectar por OAuth como esta vez.
 Reservas liberadas: `apps/web/.../generate/route.ts` y este documento.
 Capitanía de migración liberada (sin migración de schema). Worktree y
 rama local a eliminar tras este cierre.
+
+### ARCHIVO FINAL — `CONEXION BLOGGER` — 2026-09-04
+
+Identidad de esta sesión: `CONEXION BLOGGER`, traspasada de Codex a Claude
+el 2026-09-03 (Codex se quedó sin créditos de ejecución a mitad de la
+adaptación de Blogger; ver "Traspaso a Claude — CONEXION BLOGGER —
+2026-09-03" arriba). Milton confirmó explícitamente el traspaso de
+responsabilidad y de autoría de commits a Claude. Cierre consolidado de
+todo lo hecho por Claude en esta conversación, de punta a punta:
+
+1. **Blogger publica resumen editorial, no el artículo completo**
+   (commits `e7706fc`, `635833c`, `4b1e5c9`). Terminó lo que Codex dejó
+   preparado: rama `isBlogger` en el generador de copy (2-4 párrafos,
+   1600 caracteres, sin Markdown visible) y `processBloggerJob` usando
+   `formatBloggerSummary()` en vez de copiar el HTML completo del
+   artículo. Verificado con una publicación real en producción
+   (`segurosdesaludyvida.blogspot.com`, artículo "Comparativa de Planes
+   de Salud en Florida"), generada y publicada desde el dashboard con
+   sesión real de Lorena Álvarez, ejecutada por el worker de pruebas
+   dedicado (`worker-test.yml`) para no esperar detrás de la cola real.
+   Resultado verificado visualmente: título + imagen + resumen + enlace
+   "Leer el artículo completo" apuntando al artículo real. Las
+   publicaciones antiguas (incluidas las 3 entradas Blogger con formato
+   defectuoso de antes) no se tocaron.
+
+2. **Botones de Blogger y Tumblr ausentes en Oportunidades en Redes**
+   (reportado por Milton el 2026-09-04). Diagnóstico en vivo:
+   - Blogger: no era un bug — el botón apareció y desapareció
+     momentáneamente por el despliegue de OTRO cambio (no de esta
+     conversación) propagándose en la alias de Vercel en ese instante.
+     Se resolvió solo, sin cambios de código.
+   - Tumblr: el token de acceso estaba realmente vencido. Se reconectó a
+     mano (Milton inició sesión en Tumblr y autorizó el permiso
+     "10minuteswebsite" — lectura/escritura — en el navegador interno;
+     Claude nunca vio ni escribió ninguna contraseña).
+
+3. **Automatización para que Tumblr no vuelva a desconectarse "solo"**
+   (commits `8ad7ee2`, `2bbe821`, ver sección "auto-renovación de Tumblr"
+   arriba). Causa raíz real: el chequeo que decide si mostrar el botón
+   (`getConnectedNetworks()`) nunca intentaba renovar el token vencido
+   con el refresh token, a diferencia de la pantalla de Configuración y
+   el worker al publicar, que sí lo hacían. Se igualó el comportamiento.
+
+**Estado final:** Blogger y Tumblr operativos en producción, con
+publicación real verificada para Blogger y renovación automática de
+token para Tumblr. Sin reservas activas, sin worktrees pendientes de esta
+conversación, sin deuda técnica señalada. Conversación `CONEXION BLOGGER`
+queda **CERRADA**.

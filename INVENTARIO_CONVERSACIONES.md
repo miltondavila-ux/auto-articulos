@@ -81,11 +81,18 @@ línea por línea de las 3000+ líneas de Coordinación — si falta alguna,
 agregarla aquí en vez de dejarla solo en Coordinación.
 
 ### `CONEXION BLOGGER`
-- Agente: Codex - GPT-5.
-- Estado: CULMINADO y en producción (commit final de la serie fusionada en
-  `origin/main`, ver `CONTROLADOR_DE_VERSIONES.md` — "CULMINADO — 2026-09-03,
-  resumen editorial en producción").
-- Ver detalle completo debajo (entrada original preservada tal cual).
+- Agente: Codex - GPT-5, traspasada a Claude el 2026-09-03 (Codex se quedó
+  sin créditos de ejecución a mitad de la adaptación de Blogger; Milton
+  confirmó el traspaso de responsabilidad y de autoría de commits).
+- Estado: **CERRADA** — Blogger publica resumen editorial en producción
+  (commits `e7706fc`…`4b1e5c9`, verificado con una publicación real) y
+  Tumblr quedó con renovación automática de token (commits `8ad7ee2`,
+  `2bbe821`), tras diagnosticar y corregir por qué el botón de Tumblr
+  desaparecía seguido en Oportunidades en Redes. Ver
+  `COORDINACION_CLAUDE_CODEX.md` — "ARCHIVO FINAL — CONEXION BLOGGER —
+  2026-09-04" para el detalle completo de esta última fase (Claude).
+- Ver detalle completo debajo (entrada original de Codex preservada tal
+  cual, sin editar).
 
 ### `DOCUMENTO DE COORDINACION - SEPT 3`
 - Agente: Claude.
