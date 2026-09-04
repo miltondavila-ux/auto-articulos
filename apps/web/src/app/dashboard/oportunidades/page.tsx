@@ -93,6 +93,11 @@ export default function OportunidadesPage() {
   const [platformDomain, setPlatformDomain] = useState<string>("net");
   const [prompts, setPrompts] = useState<{ id: string; name: string; prompt: string }[]>([]);
   const [selectedPromptId, setSelectedPromptId] = useState("");
+  const [connectedSources, setConnectedSources] = useState({
+    searchConsole: false,
+    analytics: false,
+    bing: false,
+  });
 
   const load = useCallback(async () => {
     const [
@@ -100,6 +105,8 @@ export default function OportunidadesPage() {
       meResponse,
       languagesResponse,
       googleResponse,
+      analyticsResponse,
+      bingResponse,
       categoriesResponse,
       promptsResponse,
       statsResponse,
@@ -108,6 +115,8 @@ export default function OportunidadesPage() {
       fetch("/api/me", { cache: "no-store" }),
       fetch("/api/languages", { cache: "no-store" }),
       fetch("/api/search-integrations/google", { cache: "no-store" }),
+      fetch("/api/google-analytics", { cache: "no-store" }),
+      fetch("/api/search-integrations/bing", { cache: "no-store" }),
       fetch("/api/categories", { cache: "no-store" }),
       fetch("/api/prompts", { cache: "no-store" }),
       fetch("/api/dashboard-stats", { cache: "no-store" }),
@@ -155,6 +164,8 @@ export default function OportunidadesPage() {
       if (typeof stats.publishedThisMonth === "number") setPublishedThisMonth(stats.publishedThisMonth);
     }
     const google = await googleResponse.json().catch(() => ({}));
+    const analytics = await analyticsResponse.json().catch(() => ({}));
+    const bing = await bingResponse.json().catch(() => ({}));
     const categoriesData = await categoriesResponse.json().catch(() => ({}));
     const allCategories: { panel?: string }[] = Array.isArray(
       categoriesData.categories,
@@ -165,6 +176,11 @@ export default function OportunidadesPage() {
       googleConnected: Boolean(google.connected),
       hasSiteUrl: Boolean(google.siteUrl),
       hasCategories: allCategories.length > 0,
+    });
+    setConnectedSources({
+      searchConsole: Boolean(google.connected && google.siteUrl),
+      analytics: Boolean(analytics.connected && analytics.propertyId),
+      bing: Boolean(bing.connected && bing.siteUrl),
     });
     const panels = Array.from(
       new Set(allCategories.map((c) => c.panel).filter((p): p is string => Boolean(p))),
@@ -221,7 +237,7 @@ export default function OportunidadesPage() {
   }, [analyzing]);
 
   const analysisStages = [
-    "Consultando datos de Search Console",
+    "Consultando fuentes conectadas",
     "Comparando impresiones y tendencias",
     "Creando oportunidades long tail",
     "Validando duplicados y canibalización",
@@ -539,6 +555,30 @@ export default function OportunidadesPage() {
               >
                 {elapsedTime}
               </span>
+            </div>
+            <div
+              aria-label="Fuentes consultadas en este análisis"
+              style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}
+            >
+              {[
+                ["Google Search Console", connectedSources.searchConsole],
+                ["Google Analytics", connectedSources.analytics],
+                ["Bing Webmaster Tools", connectedSources.bing],
+              ].map(([label, connected]) => (
+                <span
+                  key={String(label)}
+                  style={{
+                    padding: "4px 8px",
+                    borderRadius: 999,
+                    background: connected ? "#e8f7ee" : "#eef0f3",
+                    color: connected ? "#166534" : "#6b7280",
+                    fontSize: 11,
+                    fontWeight: 600,
+                  }}
+                >
+                  {connected ? "✓" : "○"} {String(label)}: {connected ? "conectado" : "no conectado"}
+                </span>
+              ))}
             </div>
             <div
               aria-hidden="true"
