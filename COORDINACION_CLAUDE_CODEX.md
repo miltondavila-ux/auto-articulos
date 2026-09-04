@@ -3810,3 +3810,36 @@ Solución integrada para evitar sobrescrituras — 2026-09-04:
   conservan Blogger, Tumblr y los demás cambios recientes de `main`.
 - El Preview integrado está en `Building`; no se ha promovido ni se ha
   sobrescrito Producción.
+
+Promoción de rama integrada autorizada — 2026-09-04:
+
+- Se inició la promoción del commit integrado `eaf8e90` a Producción tras la
+  autorización de Milton.
+- Vercel creó el despliegue de Producción `2nHSy4qXgW4zaEmxzHBAr1NY8xqk`, que
+  sigue en `Building` al cierre de esta nota. No se canceló ni se reinició.
+- El despliegue incluye `main` actual más las correcciones OAuth/GMB y será
+  verificado en el dominio oficial cuando termine.
+
+Verificación posterior de objetivos — 2026-09-04:
+
+- Objetivo 1 cumplido: Vercel muestra `2nHSy4qXgW4zaEmxzHBAr1NY8xqk` en
+  `Ready`, entorno `Production`, con `seototal.lasolucionweb.com` asociado y
+  fuente `codex/google-api-verification-integrated` (`eaf8e90`). La privacidad
+  pública muestra Analytics y Business Profile.
+- Objetivo 2 no cumplido aún: Google conserva solo el scope
+  `analytics.readonly`; `webmasters` y `business.manage` no están registrados.
+  La justificación está vacía, no hay vídeo de demostración y el Centro de
+  verificación mantiene el botón deshabilitado.
+
+Actualización OAuth — 2026-09-04: se verificó que Google guardó los tres scopes
+(`business.manage`, `webmasters`, `analytics.readonly`) y la justificación de
+963 caracteres. El único requisito de contenido que queda es el vídeo de
+demostración; no se inventó una URL.
+
+Vídeo de demostración OAuth — 2026-09-04:
+
+- URL no listada proporcionada por Milton: https://youtu.be/21wEAhgy7zk
+- Uso previsto: evidencia del flujo de conexión de GSC, Analytics y Business
+  Profile con el usuario de prueba.
+- Pendiente: comprobar en ventana privada que el vídeo sea accesible y pegar la
+  URL en el campo de vídeo de Google Cloud antes de solicitar la verificación.
