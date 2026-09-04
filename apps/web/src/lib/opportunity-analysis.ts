@@ -57,6 +57,30 @@ function extractYears(value: string): string[] {
   return value.match(/\b(?:19|20)\d{2}\b/g) ?? [];
 }
 
+const INTENT_FILLER_WORDS = new Set([
+  "al", "algunas", "como", "completa", "completo", "comunes", "con",
+  "consejos", "de", "el", "en", "errores", "guia", "las", "lo", "los",
+  "para", "pasos", "practica", "que", "sobre", "todo", "tu", "una",
+  "y",
+]);
+
+function intentTokens(value: string): Set<string> {
+  return new Set(
+    normalizeTitle(value)
+      .split(" ")
+      .filter((token) => token.length > 2 && !INTENT_FILLER_WORDS.has(token)),
+  );
+}
+
+function hasSameIntent(a: string, b: string): boolean {
+  const left = intentTokens(a);
+  const right = intentTokens(b);
+  if (left.size < 3 || right.size < 3) return false;
+  const intersection = [...left].filter((token) => right.has(token)).length;
+  const union = new Set([...left, ...right]).size;
+  return intersection / union >= 0.72;
+}
+
 const PROMPT_HEADER = [
   "Actua como estratega SEO experto y analista de datos de busqueda. Tu objetivo es encontrar TODAS las oportunidades posibles para aumentar el trafico organico del usuario, siendo creativo pero siempre basado en evidencia real de los datos proporcionados.",
   "",
@@ -405,6 +429,7 @@ ${JSON.stringify(alreadyProposedByCategory)}`;
       const existingGroup = groupsByCategory.get(group.categoryId);
 
       const newTitles: OpportunityAnalysisGroup["titles"] = [];
+      const existingTitlesInCategory = existingGroup?.titles.map((title) => title.text) ?? [];
       for (const candidate of group.titles) {
         if (!candidate || typeof candidate !== "object") continue;
         const value = candidate as Record<string, unknown>;
@@ -414,6 +439,15 @@ ${JSON.stringify(alreadyProposedByCategory)}`;
         if (!text || seen.has(normalized)) continue;
         // Garantía determinista contra años inventados por la IA.
         if (extractYears(text).some((year) => !evidencedYears.has(year))) continue;
+        // La similitud se evalúa solo dentro de la misma categoría y sobre
+        // tokens de intención, no sobre palabras de formato o ubicación.
+        // Así bloqueamos variantes de la misma necesidad sin bloquear ramas
+        // long tail legítimamente distintas.
+        if (
+          [...existingTitlesInCategory, ...newTitles.map((title) => title.text)].some(
+            (existingTitle) => hasSameIntent(text, existingTitle),
+          )
+        ) continue;
         seen.add(normalized);
         newTitles.push({
           text,
