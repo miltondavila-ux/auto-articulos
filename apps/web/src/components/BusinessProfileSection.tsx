@@ -32,6 +32,7 @@ export default function BusinessProfileSection() {
   const [saving, setSaving] = useState(false);
   const [loadingLocations, setLoadingLocations] = useState(false);
   const [message, setMessage] = useState("");
+  const [retrySeconds, setRetrySeconds] = useState<number | null>(null);
 
   async function load(searchLocations = false) {
     if (loadingLocations) return;
@@ -42,10 +43,29 @@ export default function BusinessProfileSection() {
       );
       const value = await res.json();
       setData(value);
+      setRetrySeconds(typeof value.retryAfterSeconds === "number" ? value.retryAfterSeconds : null);
     } finally {
       setLoadingLocations(false);
     }
   }
+
+  // Google puede pedir una breve espera después de conectar o consultar una
+  // cuenta. La interfaz cuenta el tiempo y reintenta una sola consulta cuando
+  // el cooldown termina, evitando dejar al usuario atrapado en "55 segundos".
+  useEffect(() => {
+    if (retrySeconds === null || retrySeconds <= 0) return;
+    const timer = window.setInterval(() => {
+      setRetrySeconds((seconds) => {
+        if (seconds === null || seconds <= 1) {
+          window.clearInterval(timer);
+          void load(true);
+          return null;
+        }
+        return seconds - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [retrySeconds]);
 
   useEffect(() => {
     void load();
@@ -128,11 +148,11 @@ export default function BusinessProfileSection() {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <p style={{ fontSize: 13, color: "#8a4b08", margin: 0 }}>
-                {data.retryAfterSeconds ? `Google está preparando la consulta. Podrás buscar fichas en ${data.retryAfterSeconds} segundos.` : data.locationsLoaded ? "No encontramos fichas administradas por esta cuenta de Google." : "Tu cuenta está conectada. Busca las fichas disponibles para elegir dónde publicar."}
+                {retrySeconds ? `Google está preparando la consulta. Podrás buscar fichas en ${retrySeconds} segundos.` : data.locationsLoaded ? "No encontramos fichas administradas por esta cuenta de Google." : "Tu cuenta está conectada. Busca las fichas disponibles para elegir dónde publicar."}
               </p>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button type="button" onClick={() => void load(true)} disabled={loadingLocations} className="secondary" style={{ ...secondaryButtonStyle, opacity: loadingLocations ? 0.55 : 1 }}>
-                  {loadingLocations ? "Buscando fichas..." : data.retryAfterSeconds ? "Espera para buscar fichas" : "Buscar fichas disponibles"}
+                  {loadingLocations ? "Buscando fichas..." : retrySeconds ? "Espera para buscar fichas" : "Buscar fichas disponibles"}
                 </button>
                 <button type="button" onClick={() => { window.location.href = "/api/business-profile/connect"; }} className="secondary" style={secondaryButtonStyle}>
                   Conectar otra cuenta
