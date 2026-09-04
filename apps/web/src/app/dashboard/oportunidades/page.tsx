@@ -436,6 +436,47 @@ export default function OportunidadesPage() {
           });
         }}
       >
+        <section
+          style={{ ...sectionStyle, background: "#ffffff" }}
+          aria-labelledby="oportunidades-instrucciones"
+        >
+          <p
+            style={{
+              margin: "0 0 8px",
+              color: "#1d1d1f",
+              fontSize: 13,
+              fontWeight: 700,
+              letterSpacing: "0.02em",
+            }}
+          >
+            Leer antes de ejecutar
+          </p>
+          <h2 id="oportunidades-instrucciones" style={h2Style}>
+            Oportunidades SEO
+          </h2>
+          <p style={{ color: "#1d1d1f", fontSize: 14, lineHeight: 1.55 }}>
+            El objetivo de este módulo es ayudarte a descubrir qué buscan tus
+            posibles clientes en internet para que puedas crear artículos y
+            aparecer cuando te busquen. Así fortaleces la presencia en internet
+            y el posicionamiento de tu página web.
+          </p>
+          <ol style={{ color: "#1d1d1f", fontSize: 14, lineHeight: 1.55, paddingLeft: 22 }}>
+            <li>Pulsa “Analizar oportunidades” o “Actualizar análisis” para buscar nuevas ideas.</li>
+            <li>Revisa la categoría, la explicación y los títulos propuestos antes de publicar.</li>
+            <li>Elige el idioma y el estilo con los que se escribirán los artículos de esta ejecución.</li>
+            <li>Publica una categoría o todas las ideas. Los artículos se crearán uno por uno y podrás seguir el resultado en Publicaciones en Curso.</li>
+          </ol>
+          <p style={{ color: "#1d1d1f", fontSize: 14, fontWeight: 700, marginBottom: 6 }}>
+            Reglas importantes
+          </p>
+          <ul style={{ color: "#1d1d1f", fontSize: 14, lineHeight: 1.55, paddingLeft: 22, marginTop: 0 }}>
+            <li>Si hay ideas pendientes, publícalas o elimínalas antes de buscar otras.</li>
+            <li>Tu cupo limita cuántos artículos puedes crear; los demás quedarán pendientes.</li>
+            <li>Los artículos se podrán encontrar en Google de forma predeterminada. Desactiva la indexación solo si no quieres que aparezcan allí.</li>
+            <li>El idioma y el estilo elegidos aquí no cambian tu configuración general.</li>
+            <li>Si no aparecen ideas nuevas, usa “Forzar análisis” para volver a buscar ahora. Ese botón no publica artículos por sí solo.</li>
+          </ul>
+        </section>
         <section style={sectionStyle}>
         <h2 style={h2Style}>Oportunidades SEO</h2>
         <p style={{ color: "#6b7280", fontSize: 14, lineHeight: 1.55 }}>
