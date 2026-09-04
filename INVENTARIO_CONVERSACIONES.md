@@ -337,3 +337,18 @@ lean este documento de coordinación.
 Responsable: Claude.
 Siguiente acción: Milton revisa el diff, autoriza el push/merge, y luego
 entrega el patrón de protocolo a fijar.
+
+### `INSTRUCCIONES EN MODULOS` — protección permanente de Publicar
+
+- Agente: Codex.
+- Estado: COMPLETADO Y PUBLICADO.
+- Módulo protegido: `/dashboard/publicar`.
+- Referencia de producción: `https://seototal.lasolucionweb.com/dashboard/publicar`
+  y `https://auto-articulos-web.vercel.app/dashboard/publicar`.
+- Commit/deployment: `ab65585` / `dpl_83YWDfLAV3m9oR32vWVMhbc9vUmm` (`READY`).
+- Regla: conservar íntegramente la tarjeta “Leer antes de ejecutar”, su objetivo,
+  sus cuatro pasos, fondo blanco y separación visual. No borrar, pisar, duplicar
+  ni ocultar el bloque en cambios futuros.
+- Documento vinculante: consultar la sección “PROTECCIÓN PERMANENTE —
+  INSTRUCCIONES DE PUBLICAR” en `COORDINACION_CLAUDE_CODEX.md` antes de tocar
+  el módulo.

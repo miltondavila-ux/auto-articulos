@@ -4050,3 +4050,38 @@ Vídeo de demostración OAuth — 2026-09-04:
   Profile con el usuario de prueba.
 - Pendiente: comprobar en ventana privada que el vídeo sea accesible y pegar la
   URL en el campo de vídeo de Google Cloud antes de solicitar la verificación.
+
+## PROTECCIÓN PERMANENTE — INSTRUCCIONES DE PUBLICAR — 2026-09-04
+
+Identidad exacta: `INSTRUCCIONES EN MODULOS` — Codex.
+
+Referencia válida de producción: `/dashboard/publicar` en
+`https://seototal.lasolucionweb.com` y `https://auto-articulos-web.vercel.app`.
+
+Contenido protegido: la tarjeta visual independiente rotulada **“Leer antes de
+ejecutar”**, con el objetivo del módulo y los cuatro pasos para elegir categoría,
+idioma/estilo, introducir títulos y revisar/iniciar la ejecución. La tarjeta debe
+conservar fondo blanco, texto legible y su separación visual respecto de la
+ejecución.
+
+Objetivo del módulo: convertir ideas o títulos del usuario en artículos completos,
+con contenido e imagen, para atraer visitas, responder preguntas de clientes y
+fortalecer el posicionamiento SEO de su web; el usuario puede aportar títulos
+propios o generados por otra inteligencia artificial.
+
+Regla permanente: ningún cambio futuro puede borrar, reemplazar, duplicar,
+ocultar o pisar estas instrucciones. Cualquier modificación de
+`apps/web/src/app/dashboard/publicar/page.tsx` debe revisar explícitamente esta
+sección, preservar el bloque completo y documentar el motivo, el diff y las tres
+auditorías requeridas. Si una rama no contiene esta tarjeta, no puede publicarse
+como actualización de Publicar.
+
+Versión comprobada: commit independiente `ab65585`, deployment Vercel
+`dpl_83YWDfLAV3m9oR32vWVMhbc9vUmm`, estado `READY`. Verificación postdespliegue:
+los cuatro elementos de contenido aparecen en el DOM autenticado y el fondo de la
+tarjeta computa como blanco (`rgb(255, 255, 255)`).
+
+Responsable de protección documental: todo programador que toque el módulo debe
+leer esta entrada y actualizar Coordinación, Inventario de Conversaciones y
+Controlador de Versiones si cambia la referencia publicada. Esta entrada es
+aditiva: no se deben borrar las anteriores.

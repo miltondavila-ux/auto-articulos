@@ -878,3 +878,17 @@ vez de dejarlo desactualizado.
 Estado: VERIFICADA (como fotografía documental del estado real de
 Producción a esta fecha; no reemplaza las auditorías propias de cada
 proyecto individual).
+
+## Protección de instrucciones — módulo Publicar — 2026-09-04
+
+La versión válida de las instrucciones iniciales de `/dashboard/publicar` está
+protegida y publicada en `https://seototal.lasolucionweb.com/dashboard/publicar`
+y `https://auto-articulos-web.vercel.app/dashboard/publicar`.
+
+Referencia técnica: commit independiente `ab65585`; deployment
+`dpl_83YWDfLAV3m9oR32vWVMhbc9vUmm`, estado `READY`.
+
+El bloque **“Leer antes de ejecutar”** explica el objetivo del módulo y los cuatro
+pasos de ejecución. No debe eliminarse, duplicarse, ocultarse ni ser reemplazado
+por otro código. Toda modificación futura del módulo debe conservarlo, revisar el
+diff completo y documentar las tres auditorías antes de cualquier publicación.
