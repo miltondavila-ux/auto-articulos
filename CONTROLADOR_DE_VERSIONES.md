@@ -1035,3 +1035,97 @@ claros). Ese mismo commit registra además un PR #43 (`6e75ca8f`) ya en
 oportunidades — cambio no cubierto por esta entrada, cuyo alcance es
 únicamente el PR #42. Ver esa sección de Coordinación para el detalle
 completo y el trabajo obligatorio pendiente antes de aprobar el algoritmo.
+
+## Versión — 2026-09-03 19:05 EDT — créditos de imagen: detención real de lote
+
+Fecha y hora: 2026-09-03 19:05 EDT
+Versión/commit: `8115604`
+Rama: `codex/auditoria-creditos-imagen-20260903`
+Worktree: `/private/tmp/auditoria-creditos-imagen-20260903`
+Conversación/proyecto: `CIERRE — CRÉDITOS DE IMAGEN: hasImageCredits solo por creación real + detención de lote`
+Cambios incluidos: el worker solo marca `User.hasImageCredits = false` cuando
+una creación real de artículo confirma falta de créditos de imagen tras
+agotar `MAX_ATTEMPTS` (nunca por error ambiguo o chequeo preventivo); el
+lote se detiene de inmediato (`halted`) en vez de continuar con los demás
+títulos; se elimina el bypass persistente de `localStorage` del botón "Ya
+recibí mis créditos" (ahora es una confirmación temporal en memoria, no una
+máscara permanente del estado real de la cuenta); manual de usuario
+actualizado en el mismo commit.
+Archivos modificados: worker (`queue.ts` y relacionados) y
+`apps/web/src/content/manual-usuario.ts`.
+Archivos eliminados: ninguno.
+Migraciones creadas: ninguna.
+Migraciones aplicadas: no aplica.
+Auditoría 1: aprobada (según Coordinación) — comportamiento revisado contra
+el bug reportado por Milton.
+Auditoría 2: aprobada — Root Directory `apps/web` confirmado.
+Auditoría 3: aprobada — sin migración nueva.
+Diff revisado: sí, según Coordinación.
+Deployment/Vercel: `Ready`.
+Estado de Vercel: `Ready`.
+Producción verificada: pendiente de confirmación visual de Milton al cierre
+de esta entrada (ver diagnóstico post-deploy más abajo, 2026-09-04).
+Responsable: Claude Sonnet 5 (sesión que recibió el relevo de Codex).
+Siguiente acción: ver diagnóstico post-deploy del 2026-09-04, entrada
+siguiente.
+Estado: DESPLEGADA
+
+## Versión — 2026-09-04 10:20 EDT — diagnóstico post-deploy de créditos de imagen
+
+Fecha y hora: 2026-09-04 10:20 EDT
+Versión/commit: diagnóstico de solo lectura vía workflow
+`diagnose-image-credits.yml` + `apps/worker/src/diagnose-image-credits.ts`
+(agregado en PR #37, corregido en PR #38 por un bug de query y en PR #39 por
+timeout de `npm ci`).
+Rama: no aplica (workflow de GitHub Actions, solo lectura contra
+`DATABASE_URL` de producción).
+Conversación/proyecto: continuación de `CIERRE — CRÉDITOS DE IMAGEN...`.
+Cambios incluidos: ninguno en código de producción; corrida de diagnóstico.
+Resultado de la corrida (4/9, 14:20 UTC): 6 usuarios con
+`hasImageCredits = false` en ese momento; se confirmaron con datos reales
+títulos de Lorena Álvarez (30-31/8, ANTES del fix `8115604`) que muestran
+exactamente el bug original (el lote seguía intentando títulos en vez de
+detenerse de inmediato). Ningún caso real de falta de créditos ocurrió
+todavía DESPUÉS del deploy — la parte "detener el lote de inmediato" queda
+sin ejercitar en producción hasta que ocurra un caso real o se fuerce uno
+deliberadamente.
+Nota de proceso: el clasificador de modo automático bloqueó varios intentos
+de push directo a `main` durante esta sesión; se resolvió abriendo PR normal
+(`gh pr create` + `gh pr merge`) en vez de insistir con push directo.
+Migraciones: no aplica.
+Auditorías: no aplica (solo lectura).
+Deployment/Vercel: no aplica.
+Producción verificada: sí, de forma indirecta (lectura de datos reales de
+producción, sin escritura).
+Responsable: Claude/Codex (según Coordinación, commits `f7e5e4c`/`6d4e6b5`).
+Siguiente acción: volver a correr `diagnose-image-credits.yml` cuando se
+quiera confirmar en caliente que el lote se detiene ante un caso real.
+Estado: VERIFICADA (como diagnóstico documental; la detención inmediata del
+lote sigue sin un caso real post-deploy que la ejercite)
+
+## Versión — 2026-09-04 10:46 EDT — auto-renovación silenciosa del token de Tumblr
+
+Fecha y hora: 2026-09-04 10:46 EDT
+Versión/commit: `8ad7ee2` en `main` (fast-forward directo desde `bd60d32`)
+Archivos modificados: `apps/web/src/app/api/social-opportunities/generate/route.ts`
+Conversación/proyecto: `CONEXION BLOGGER` (fase de cierre de Tumblr).
+Cambios incluidos: `getConnectedNetworks()` (la función que decide si
+mostrar el botón "Tumblr · Crear oportunidad") intentaba renovar el token
+solo leyendo `expiresAt`, sin usar el refresh token como sí hacían
+Configuración y el worker al publicar. Ahora intenta la misma renovación
+silenciosa antes de decidir, así el botón ya no desaparece cada pocas horas
+por vencimiento normal del token.
+Migraciones: ninguna.
+Deployment/Vercel: estado `Ready` (deploy `auto-articulos-web`).
+Logs verificados: `/login` → 200, `/dashboard` → 307.
+Producción verificada: sí — con sesión real de Lorena Álvarez, `GET
+/api/social-opportunities/generate` siguió devolviendo `tumblr: true` y
+`blogger: true` con el código nuevo desplegado, sin regresión. No fue
+posible forzar una expiración real del token para probar en vivo el camino
+de renovación (requeriría manipular la base de datos); la lógica es la
+misma ya probada en Configuración y en `processTumblrJob` del worker.
+Responsable: Claude/Codex (según Coordinación, commits `8ad7ee2`/`2bbe821`).
+Siguiente acción: si el botón de Tumblr vuelve a desaparecer solo, es señal
+de que Tumblr rechazó también la renovación silenciosa y hace falta
+reconectar por OAuth.
+Estado: VERIFICADA
