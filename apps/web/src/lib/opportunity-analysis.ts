@@ -60,15 +60,24 @@ function extractYears(value: string): string[] {
 const INTENT_FILLER_WORDS = new Set([
   "al", "algunas", "como", "completa", "completo", "comunes", "con",
   "consejos", "de", "el", "en", "errores", "guia", "las", "lo", "los",
-  "para", "pasos", "practica", "que", "sobre", "todo", "tu", "una",
-  "y",
+  "para", "pasos", "practica", "que", "sobre", "todo", "tu", "una", "un",
+  "y", "evitarlos", "evitar", "elegir", "elige", "mejor", "mejores", "salud",
+  "seguro", "seguros", "seguro", "forma", "formas", "necesitas", "hacer",
+  "despues", "antes", "tras", "cuando", "inmigrantes", "inmigrante",
 ]);
+
+function stemIntentToken(token: string): string {
+  if (token.length > 5 && token.endsWith("es")) return token.slice(0, -2);
+  if (token.length > 4 && token.endsWith("s")) return token.slice(0, -1);
+  return token;
+}
 
 function intentTokens(value: string): Set<string> {
   return new Set(
     normalizeTitle(value)
       .split(" ")
-      .filter((token) => token.length > 2 && !INTENT_FILLER_WORDS.has(token)),
+      .filter((token) => token.length > 2 && !INTENT_FILLER_WORDS.has(token))
+      .map(stemIntentToken),
   );
 }
 
@@ -77,8 +86,25 @@ function hasSameIntent(a: string, b: string): boolean {
   const right = intentTokens(b);
   if (left.size < 3 || right.size < 3) return false;
   const intersection = [...left].filter((token) => right.has(token)).length;
-  const union = new Set([...left, ...right]).size;
-  return intersection / union >= 0.72;
+  // La intersección sobre el conjunto menor detecta variantes que solo
+  // agregan formato, ubicación o perfil a la misma necesidad principal.
+  const smaller = Math.min(left.size, right.size);
+  return intersection >= 3 && intersection / smaller >= 0.8;
+}
+
+function hasContextualEvidenceForYear(
+  title: string,
+  year: string,
+  rows: GoogleSearchAnalyticsRow[],
+): boolean {
+  const titleTokens = intentTokens(title);
+  return rows.some((row) => {
+    const serialized = JSON.stringify(row);
+    if (!serialized.includes(year)) return false;
+    const evidenceTokens = intentTokens(serialized);
+    const shared = [...titleTokens].filter((token) => evidenceTokens.has(token));
+    return shared.length >= 2;
+  });
 }
 
 const PROMPT_HEADER = [
@@ -104,6 +130,9 @@ const PROMPT_HEADER = [
   "- Trabaja en dos fases internas obligatorias: FASE A, construye un mapa de tema raiz y ramas relacionadas a partir de la evidencia; FASE B, convierte solo las ramas respaldadas en titulos y valida categoria, evidencia y duplicacion de intencion.",
   "- Una rama valida puede cubrir una necesidad complementaria del mismo universo (componentes, preparacion, decision, proceso, riesgos, mantenimiento, resultados o alternativas), aunque no repita las palabras del titulo principal.",
   "- El 'rationale' de cada titulo debe indicar, en una frase, la intencion de busqueda especifica y distinta que cubre (que lo diferencia de los demas titulos de su categoria).",
+  "- Antes de entregar cada titulo, resume mentalmente su NECESIDAD PRINCIPAL en pocas palabras. Si coincide con otro titulo aunque cambien el formato, el verbo, el perfil, la ciudad o el año, descártalo.",
+  "- No conviertas una misma necesidad en varias piezas cambiando solo 'guía', 'errores comunes', 'cómo elegir', 'consejos', 'pasos', 'mejores' o 'completa'. Esas palabras no crean una oportunidad nueva.",
+  "- Prioriza ramas que abran preguntas complementarias reales: preparación, componentes, decisiones, costos, riesgos, mantenimiento, alternativas, casos de uso, diagnóstico y resultados. Cada rama debe resolver una necesidad distinta y estar respaldada por una señal concreta.",
   "- CERO duplicacion de intencion es un requisito absoluto; no confundas relacion tematica con repeticion. Ante la duda, cambia el angulo hacia una necesidad complementaria respaldada por evidencia en lugar de abandonar toda la expansion del tema.",
   "",
   "REGLA OBLIGATORIA DE LONG TAIL AL 100% (ESTRICTA, sin excepciones):",
@@ -356,14 +385,11 @@ export async function analyzeSeoOpportunities(input: {
   const groupsByCategory = new Map<string, OpportunityAnalysisGroup>();
   const allResult: OpportunityAnalysisGroup[] = [];
   const validCategoryIds = new Set(input.categories.map((item) => item.id));
-  const evidenceText = [
+  const evidenceRows = [
     ...input.currentRows,
     ...input.previousRows,
     ...input.countryRows,
-  ]
-    .map((row) => JSON.stringify(row))
-    .join(" ");
-  const evidencedYears = new Set(extractYears(evidenceText));
+  ];
 
   for (let batchIndex = 0; batchIndex < batchesToProcess.length; batchIndex++) {
     const batch = batchesToProcess[batchIndex];
@@ -382,7 +408,7 @@ export async function analyzeSeoOpportunities(input: {
 
     const prompt = `${PROMPT_HEADER}
 
-NO HAY TOPE FIJO DE TITULOS POR CATEGORIA: devuelve todas las oportunidades que la evidencia real sostenga, sin repetir intencion.
+NO HAY TOPE FIJO DE TITULOS POR CATEGORIA: devuelve todas las oportunidades que la evidencia real sostenga, sin repetir intención. La cantidad no es un objetivo: si solo existe una rama distinta, devuelve una; si existen muchas ramas respaldadas, devuélvelas todas.
 
 CATEGORIAS PERMITIDAS (con EJEMPLOS DE TITULOS YA PUBLICADOS por categoria):
 ${JSON.stringify(input.categories)}
@@ -438,7 +464,11 @@ ${JSON.stringify(alreadyProposedByCategory)}`;
         const normalized = normalizeTitle(text);
         if (!text || seen.has(normalized)) continue;
         // Garantía determinista contra años inventados por la IA.
-        if (extractYears(text).some((year) => !evidencedYears.has(year))) continue;
+        if (
+          extractYears(text).some(
+            (year) => !hasContextualEvidenceForYear(text, year, evidenceRows),
+          )
+        ) continue;
         // La similitud se evalúa solo dentro de la misma categoría y sobre
         // tokens de intención, no sobre palabras de formato o ubicación.
         // Así bloqueamos variantes de la misma necesidad sin bloquear ramas
