@@ -4362,6 +4362,58 @@ El PR #46 (`codex/dynamic-source-timeline-20260904`) modifica únicamente la lí
 
 Codex: No se borraron oportunidades, artículos ni datos. El checkout principal conserva cambios ajenos sin tocar (`.worktrees/`, `docs/` y el backup local). La rama aislada usada para la interfaz fue `codex/dynamic-source-timeline-20260904`.
 
+## CLAUDE — REDISEÑO DE DEDUPLICACIÓN SEMÁNTICA — 2026-09-04
+
+Identidad: Claude, continuación de `AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`
+tras el traspaso de Codex documentado arriba.
+
+Diagnóstico de causa raíz: `hasSameIntent()` comparaba tokens del título crudo
+y **solo dentro de la misma categoría**, nunca contra títulos ya publicados ni
+entre categorías distintas. Eso explica exactamente los casos que Codex
+reportó: variantes con solo el verbo/formato cambiado dentro de una misma
+categoría, y solapamiento entre categorías de inmigración/seguros/negocios
+(nunca comparadas entre sí).
+
+Cambio implementado en `apps/web/src/lib/opportunity-analysis.ts`: el modelo
+ahora debe declarar un `needKey` por título (objeto + contexto + perfil +
+ubicación real, sin verbo ni palabras de formato/año). El código compara ese
+`needKey` de forma determinista y GLOBAL — toda la corrida, todas las
+categorías, y contra `existingTitles` (lo ya publicado) — antes de aceptar un
+título nuevo. `needKey` es interno; nunca se persiste en Prisma (el output
+sigue siendo `{text, rationale}`, sin cambios de contrato para el único
+caller, `api/opportunities/route.ts`).
+
+Worktree aislado: `/private/tmp/rediseno-intencion-longtail-20260904`, rama
+`claude/rediseno-intencion-longtail-20260904`, base `origin/main` (`65f0ff9`,
+rebaseada sin conflicto sobre `c5b9c37`).
+
+Tres auditorías:
+1. **Funcional**: revisión manual del prompt + simulación en Node de los 6
+   casos reales/límite (3 duplicados reportados por Codex, 2 variantes long
+   tail legítimas, 1 caso cruzado de categoría) — los 6 dieron el resultado
+   esperado. Se ajustó el umbral (mínimo 3 tokens compartidos en vez de 2)
+   tras detectar un falso positivo propio ("mudanza" vs "divorcio" colisionaban
+   solo por compartir "seguro"+"cambio").
+2. **Regresión**: `tsc --noEmit` en `apps/web` y `apps/worker` sin errores;
+   `git diff --check` limpio; diff acotado a un solo archivo.
+3. **Integración**: `npm run build` desde `apps/web` (mismo comando que
+   Vercel) — build exitoso, 83/83 rutas.
+
+PR [`#47`](https://github.com/miltondavila-ux/auto-articulos/pull/47) abierto.
+Estado: **BLOQUEADO por Vercel** (`build-rate-limit`, mismo límite que ya
+afecta al PR #46 de Codex — "Deployment rate limited"). `mergeable: MERGEABLE`
+según GitHub, pero **no se fusiona** hasta ver `state: success` real en el
+check de Vercel, según el Protocolo de este documento (sección 3, orden
+directa de Milton). No se tocó producción ni oportunidades/artículos
+existentes.
+
+Siguiente acción para quien retome: revisar `gh pr checks 47` cuando el
+límite de Vercel se libere; si el Preview pasa, fusionar y luego repetir el
+análisis con la cuenta de pruebas (Lorena Álvarez) para confirmar en datos
+reales que ya no hay canibalización semántica. Si el PR #46 (línea de tiempo
+dinámica GSC/GA4/Bing) también sigue bloqueado en ese momento, ambos comparten
+la misma causa (límite de builds de Vercel, no un error de código).
+
 ## MIGRACIÓN A CLAUDE — `CODEX - INSTRUCCIONES EN MODULOS` — 2026-09-04
 
 Codex deja este handoff para Claude. El objetivo es continuar la recuperación
