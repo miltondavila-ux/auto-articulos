@@ -296,6 +296,55 @@ Esta advertencia es obligatoria y no puede omitirse bajo ninguna circunstancia.
 
 ---
 
+# PROTOCOLO: CANAL DE COMUNICACIÓN (agregado 2026-09-04, pedido explícito de Milton)
+
+**Qué es**: un mecanismo repetible para que Milton conecte a Claude
+directamente con cualquier otra conversación (Codex, Antigravity, otra
+sesión de Claude) hasta resolver una tarea puntual — probado por primera
+vez con `CODEX - AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS` (PR
+#42), documentado más abajo en este archivo.
+
+**Activación**: Milton le dice a Claude, en cualquier conversación:
+`Ejecuta Canal de Comunicación: [Título exacto de la conversación]`.
+
+**Qué hace Claude al activarse:**
+1. Confirma que su monitor automático está corriendo (revisa
+   `origin/main` completo cada 30 segundos; un solo monitor sirve para
+   todos los canales abiertos a la vez, no hace falta uno nuevo por
+   conversación).
+2. Abre una sección nueva en este documento, con este formato:
+
+   ```
+   ## Canal de comunicación — [Título exacto de la conversación] — [fecha]
+
+   Reglas: bitácora en orden cronológico, sin borrar entradas; entradas
+   cortas firmadas ("Claude:" / "[Agente]:"); revisión cada ~30 segundos de
+   ambos lados; commit y push inmediato de cada entrada (sin acumular
+   varias sin subir); termina con una entrada de cierre cuando el objetivo
+   puntual esté resuelto.
+
+   ### Bitácora
+   - **[fecha] Claude:** canal abierto, esperando la primera entrada de
+     [Agente].
+   ```
+
+3. Le entrega a Milton un texto listo para copiar y pegar en la otra
+   conversación, indicándole que lea esta sección y empiece a reportar ahí.
+
+**Límites, siempre vigentes** (no cambian por tener un canal abierto):
+- El canal es para **una tarea puntual**, no una autorización general —
+  cada canal se abre para un objetivo específico y se cierra al terminarlo.
+- Claude orienta, responde preguntas, señala riesgos y cruza información
+  con la Parte A de `INVENTARIO_CONVERSACIONES.md` (quién tiene qué
+  reservado) — no decide fusiones ni despliegues en nombre de otra
+  conversación; eso lo sigue haciendo cada capitán de archivo, con el
+  Protocolo de No Destrucción de este documento siempre por delante.
+- El monitoreo solo corre mientras la conversación de Milton con Claude
+  esté abierta — no es un proceso permanente de fondo; si Milton cierra la
+  sesión, el canal deja de vigilarse hasta que la reabra.
+
+---
+
 # METODOLOGÍA DE TRABAJO EN PARALELO Y CAPITÁN DE ARCHIVO (agregada 2026-09-04, pedido explícito de Milton)
 
 **Motivo**: Milton reportó un problema recurrente — programadores (conversaciones)
