@@ -455,16 +455,19 @@ export default function OportunidadesPage() {
             Oportunidades SEO
           </h2>
           <p style={{ color: "#1d1d1f", fontSize: 14, lineHeight: 1.55 }}>
-            El objetivo de este módulo es ayudarte a descubrir qué buscan tus
-            posibles clientes en internet para que puedas crear artículos y
-            aparecer cuando te busquen. Así fortaleces la presencia en internet
-            y el posicionamiento de tu página web.
+            El objetivo de este módulo es ayudarte a encontrar temas que tus
+            posibles clientes buscan en internet y convertirlos en artículos
+            para el blog de tu página web. Auto Artículos te muestra
+            propuestas, escribe los artículos, les añade una imagen y los
+            publica en tu blog. Así tu negocio puede tener más presencia en
+            internet y aparecer cuando alguien busque los productos o
+            servicios que ofreces.
           </p>
           <ol style={{ color: "#1d1d1f", fontSize: 14, lineHeight: 1.55, paddingLeft: 22 }}>
-            <li>Pulsa “Analizar oportunidades” o “Actualizar análisis” para buscar nuevas ideas.</li>
-            <li>Revisa la categoría, la explicación y los títulos propuestos antes de publicar.</li>
-            <li>Elige el idioma y el estilo con los que se escribirán los artículos de esta ejecución.</li>
-            <li>Publica una categoría o todas las ideas. Los artículos se crearán uno por uno y podrás seguir el resultado en Publicaciones en Curso.</li>
+            <li>Busca temas para tu blog: pulsa “Analizar oportunidades” o “Actualizar análisis”. El sistema buscará temas que puedan ayudarte a aparecer en internet.</li>
+            <li>Revisa cada propuesta: verás para qué categoría es, por qué puede ser útil y qué título tendría el artículo. Elige solo las propuestas que quieras publicar.</li>
+            <li>Elige cómo se escribirán: selecciona el idioma y el estilo de los artículos que vas a crear. Estas opciones solo aplican a esta publicación.</li>
+            <li>Publica los artículos: puedes publicar una categoría o todas las propuestas. El sistema escribirá cada artículo, le añadirá una imagen y lo publicará en el blog de tu página web. El avance se muestra en “Publicaciones en Curso”.</li>
           </ol>
           <p style={{ color: "#1d1d1f", fontSize: 14, fontWeight: 700, marginBottom: 6 }}>
             Reglas importantes
