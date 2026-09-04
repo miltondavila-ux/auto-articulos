@@ -3475,3 +3475,28 @@ agregó `refreshTokenEncrypted` al `select` de la consulta a
   solo los 2 archivos reservados.
 
 Procediendo a commit + push + verificación en producción.
+
+### CULMINADO — 2026-09-04 (auto-renovación de Tumblr en producción)
+
+Commit `8ad7ee2` en `main` (fast-forward directo desde `bd60d32`). Deploy
+Vercel `auto-articulos-web` en `● Ready`. Verificación post-deploy:
+`curl -I /login` → 200, `curl -I /dashboard` → 307 (middleware/auth
+intactos). Con sesión real de Lorena Álvarez en el navegador, `GET
+/api/social-opportunities/generate` sigue devolviendo `tumblr: true` y
+`blogger: true` con el código nuevo desplegado — sin regresión.
+
+No fue posible forzar una expiración real del token para probar el
+camino de renovación silenciosa en vivo (requeriría manipular la base de
+datos), pero la lógica es la misma que ya usan, probada en producción
+desde hace tiempo, la pantalla de Configuración (`GET
+/api/search-integrations/tumblr`) y el worker al publicar
+(`processTumblrJob`) — solo se trasladó el mismo patrón al chequeo de
+`getConnectedNetworks()`. Próxima vez que el token de Tumblr venza
+naturalmente (cada pocas horas), el botón "Tumblr · Crear oportunidad"
+ya no debería desaparecer solo; si Milton lo nota desaparecido de nuevo,
+es señal de que Tumblr rechazó también la renovación silenciosa y hace
+falta reconectar por OAuth como esta vez.
+
+Reservas liberadas: `apps/web/.../generate/route.ts` y este documento.
+Capitanía de migración liberada (sin migración de schema). Worktree y
+rama local a eliminar tras este cierre.
