@@ -4151,3 +4151,52 @@ Responsable de protección documental: todo programador que toque el módulo deb
 leer esta entrada y actualizar Coordinación, Inventario de Conversaciones y
 Controlador de Versiones si cambia la referencia publicada. Esta entrada es
 aditiva: no se deben borrar las anteriores.
+
+## ESTADO PARA RETOMAR — AUDITORÍA LONG TAIL Y CANIBALIZACIÓN — 2026-09-04
+
+Identidad: Codex, conversación `AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`.
+
+Objetivo original: ampliar la exploración de oportunidades long tail usando GSC,
+GA4 y Bing, evitando repetición de intención y asignaciones temáticas incorrectas.
+
+Cambios desplegados:
+- PR #42, commit productivo `495baeaf`: expansión temática, evidencia de GSC/GA4/Bing,
+  memoria de títulos por categoría, regla de categoría y rechazo de años no presentes
+  en las señales.
+- PR #43, commit productivo `6e75ca8f`: eliminación del cooldown fijo de tres días
+  para que el usuario pueda volver a analizar cuando quiera. Se conservó la protección
+  contra oportunidades pendientes y no se borraron datos.
+
+Pruebas de producción realizadas con la cuenta de prueba Lorena Alvarez:
+- El login, dashboard y endpoint de análisis funcionaron correctamente.
+- Una corrida produjo 19 oportunidades; no se publicaron artículos.
+- El año `2023` volvió a aparecer en `Mejores seguros de salud en Miami para familias
+  inmigrantes: Guía completa 2023`; por tanto, la garantía actual solo confirma que el
+  año aparece en alguna fila de evidencia, no que exista evidencia contextual suficiente.
+- Se detectaron duplicados semánticos claros: dos variantes de `Errores comunes al
+  calcular el deducible...` y dos variantes de `Errores comunes al elegir seguros de
+  salud para emergencias...`.
+- También hubo varias variantes sobre cambiar el seguro al mudarse y repetición del
+  patrón genérico `Errores comunes`/`Guía práctica`.
+
+Conclusión actual: producción está estable, pero el algoritmo NO está aprobado como
+cero-canibalización. La corrección de formato/año y la eliminación del cooldown están
+desplegadas; la deduplicación semántica basada en tokens no fue suficiente porque el
+modelo puede generar títulos con la misma necesidad usando pequeñas variaciones.
+
+Siguiente trabajo obligatorio para quien retome:
+1. No publicar ni borrar las oportunidades existentes como parte de esta auditoría.
+2. Rediseñar la validación para extraer una intención estructurada por propuesta
+   (tema, necesidad, objeto, contexto, perfil y formato), comparar esa intención contra
+   títulos nuevos, títulos publicados y títulos del mismo análisis, y descartar duplicados
+   aunque cambien `guía`, `consejos`, `pasos` o `errores comunes`.
+3. Validar cada modificador temporal con evidencia contextual, no solo con la presencia
+   del año en cualquier fila.
+4. Ejecutar una nueva corrida controlada en Preview y luego producción, documentando una
+   doble revisión título por título. Solo aprobar cuando no queden pares con la misma
+   necesidad principal.
+
+Archivos principales: `apps/web/src/lib/opportunity-analysis.ts` y
+`apps/web/src/app/api/opportunities/route.ts`. No tocar Vercel, middleware,
+autenticación, secretos, schema ni migraciones para esta continuación sin una nueva
+justificación. Producción permanece estable en `Ready`; no hay migración pendiente.
