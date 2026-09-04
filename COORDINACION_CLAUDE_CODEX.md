@@ -4261,3 +4261,9 @@ propagación (no es commit, deployment, reserva, idea suelta ni cambio de
 real y lo registre, algo que esta tarea no ejecuta por su cuenta. Señalado
 en `CONTROLADOR_DE_VERSIONES.md` como "siguiente acción" en la entrada del
 PR #42.
+
+## CIERRE — 2026-09-04 — Reparación de canibalización y años contextuales
+
+Codex: Se corrigió `apps/web/src/lib/opportunity-analysis.ts` en la rama aislada `codex/redesign-intent-dedup-20260904`. La reparación reemplaza la validación global de años por evidencia contextual de la misma intención, fortalece la firma de necesidad para bloquear variantes semánticas que solo cambian formato, verbo, perfil, ubicación o año, y exige al modelo abrir ramas de necesidad realmente distintas. No se borraron oportunidades, artículos ni datos de usuarios.
+
+Codex: `git diff --check` y el Preview de Vercel pasaron. El build local no pudo ejecutarse plenamente porque el worktree aislado no tenía `tsx`/`next` instalados, limitación registrada. El PR #44 fue fusionado a `main` con commit `8730f277e6cc3b6342214f658dbec5c72f186366`; Producción respondió HTTP 200 en `/login`. Queda pendiente una validación funcional con datos nuevos para confirmar que no reaparezcan `2023` ni duplicados; no se realizó sobre la cuenta actual para no borrar oportunidades pendientes ni alterar datos productivos.
