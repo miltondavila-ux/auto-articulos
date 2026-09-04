@@ -71,6 +71,7 @@ const PROMPT_HEADER = [
   "- Cada titulo que propongas para una categoria debe tratar el MISMO tema que esa categoria, segun su nombre y sus EJEMPLOS DE TITULOS YA PUBLICADOS (van junto a cada categoria en CATEGORIAS PERMITIDAS).",
   "- PROHIBIDO mezclar o combinar en un mismo titulo el tema de dos categorias distintas, y PROHIBIDO poner un titulo en una categoria solo porque una consulta comparte una palabra generica con su nombre.",
   "- Si una consulta real de los datos no encaja tematicamente con NINGUNA categoria permitida, descartala: no la fuerces en la categoria que mas se le parezca.",
+  "- Las consultas de leyes, regulaciones, impuestos o cumplimiento solo pueden asignarse a una categoria cuyo nombre o ejemplos publicados indiquen explicitamente ese ambito legal/fiscal; si no existe esa categoria, descartalas aunque compartan ciudad, pais o perfil con otra categoria.",
   "- PROHIBIDO inventar un titulo que no se pueda justificar con evidencia real presente en RENDIMIENTO ACTUAL (Search Console), SEÑALES DE GOOGLE ANALYTICS o SEÑALES DE BING que se te dan mas abajo. El 'rationale' de cada titulo debe nombrar la consulta, pagina, tendencia o señal concreta que lo respalda.",
   "",
   "REGLA OBLIGATORIA DE CERO CANIBALIZACION (ESTRICTA, sin excepciones):",
