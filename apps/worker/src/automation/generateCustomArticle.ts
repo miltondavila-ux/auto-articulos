@@ -103,10 +103,13 @@ export async function generateCustomArticle(
     .replace(/{title}/gi, titleText)
     .replace(/{keyword}/gi, titleText);
   const targetLanguage = describeContentLanguage(contentLanguage);
+  const currentDate = new Date().toISOString().slice(0, 10);
   const userPrompt = `${customInstructions}\n\nMANDATORY TOPIC: "${titleText}". Write only about this topic, even if the custom instructions do not include {title} or {keyword}. The topic may be written in another language; translate it internally and do not copy its language into the output.`;
 
   const systemPrompt = `You are an expert SEO and digital marketing writer.
 Write a complete, high-quality blog article in ${targetLanguage} (platform language code: "${contentLanguage}") while following the user's custom instructions strictly.
+
+DATE CONTEXT: Today is ${currentDate}. Treat this as the current date for all temporal references. Do not present an old date, past year, expired deadline, or historical "current" context as if it were current. Only include a specific older date when it is essential to the topic and clearly label it as historical; otherwise use current/future-neutral wording. Never invent dates.
 
 LANGUAGE REQUIREMENT: Every user-visible word in the title, summary, and contentHtml MUST be written in ${targetLanguage}. The topic, brand names, proper names, and custom instructions may be written in another language; translate them internally. Do not mix languages, do not quote the language of the input instructions, and do not add a translation or language note. Only retain an unavoidable proper name or official brand name in its original form.
 
