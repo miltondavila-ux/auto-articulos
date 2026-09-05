@@ -1172,3 +1172,124 @@ Responsable: Claude. Siguiente acción: cuando el límite se libere, confirmar
 `state: success` en el commit más reciente de `main` y verificar visualmente
 `/dashboard/oportunidades` en producción antes de declarar `VERIFICADA`.
 Estado: PREPARADA
+
+## Versión — 2026-09-04 — PR #45: canonicalización de acciones y necesidades (guard de intención final)
+
+Fecha y hora: 2026-09-04 16:08 EDT (hora del merge commit)
+Versión/commit: merge `112ef7a6725b5aa8e868f9aa488bfe77336478f9` en `main`
+(rama `codex/final-intent-guard-20260904`)
+Rama: `codex/final-intent-guard-20260904`
+Worktree: no registrado en Coordinación para este PR puntual.
+Conversación/proyecto: `AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`
+(continuación tras PR #42-44, ver `COORDINACION_CLAUDE_CODEX.md` — "PUNTO DE
+MIGRACIÓN A CLAUDE — 2026-09-04").
+Cambios incluidos: canonicalización adicional de acciones y necesidades
+(`selección`, `problema`, `errores`, `opciones`) en el algoritmo de
+oportunidades, como parte del refuerzo de la firma de intención para evitar
+canibalización semántica.
+Archivos modificados: no detallados en la entrada de Coordinación de origen.
+Archivos eliminados: ninguno registrado.
+Migraciones creadas: ninguna registrada.
+Migraciones aplicadas: no aplica.
+Auditoría 1/2/3: no detalladas en la entrada de Coordinación de origen (solo
+consta la aprobación general del PR y la respuesta HTTP 200 de Producción).
+Diff revisado: según Coordinación, sí, antes de fusionar.
+Deployment/Vercel: Producción respondió HTTP 200 tras el merge.
+Estado de Vercel: `Ready` (implícito por el HTTP 200).
+Producción verificada: parcialmente — el HTTP 200 confirma que el sitio
+responde, pero la prueba funcional posterior (cuenta de prueba, 14
+oportunidades generadas) volvió a detectar canibalización semántica, por lo
+que el algoritmo en su conjunto **no quedó aprobado para publicar
+automáticamente** pese a que este PR puntual sí llegó a Producción. Ver
+detalle completo en `COORDINACION_CLAUDE_CODEX.md` — "PUNTO DE MIGRACIÓN A
+CLAUDE — 2026-09-04" y "CLAUDE — REDISEÑO DE DEDUPLICACIÓN SEMÁNTICA —
+2026-09-04".
+Responsable: Codex - GPT-5.
+Siguiente acción: ver el PR #47 (entrada siguiente en este documento), que
+es el rediseño de deduplicación que responde a la canibalización detectada
+tras este merge.
+Estado: DESPLEGADA (código en Producción; algoritmo completo aún no
+aprobado funcionalmente)
+
+## Versión preparada — 2026-09-04 — PR #47: rediseño de deduplicación semántica (`needKey`)
+
+Fecha y hora: 2026-09-04 16:31 EDT (último commit de la rama)
+Versión/commit: `a7b05e54bdb3ffe07b36f3803c0c935649e31320` (rama sin
+fusionar, base `c5b9c37`)
+Rama: `claude/rediseno-intencion-longtail-20260904`
+Worktree: `/private/tmp/rediseno-intencion-longtail-20260904` (según el
+propio texto de Coordinación; esta corrida de propagación no tuvo acceso al
+filesystem de la máquina de Milton para confirmarlo con `git worktree
+list`).
+Conversación/proyecto: `AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`
+(continuación de Claude tras el PR #45 y la canibalización detectada en la
+prueba posterior).
+Cambios incluidos: `apps/web/src/lib/opportunity-analysis.ts` — el modelo
+ahora declara un `needKey` por título (objeto + contexto + perfil +
+ubicación real, sin verbo ni palabras de formato/año); `hasSameIntent()` se
+reemplaza por una comparación determinista y GLOBAL de `needKey` contra
+toda la corrida (todas las categorías) y contra `existingTitles`.
+`needKey` es interno, nunca se persiste en Prisma; el output sigue siendo
+`{text, rationale}`, sin cambios de contrato para `api/opportunities/route.ts`.
+Archivos modificados: `apps/web/src/lib/opportunity-analysis.ts` (diff
+acotado a un solo archivo, según Coordinación).
+Archivos eliminados: ninguno.
+Migraciones creadas: ninguna.
+Migraciones aplicadas: no aplica.
+Auditoría 1 (funcional): APROBADA — simulación en Node de 6 casos
+reales/límite (3 duplicados reportados por Codex, 2 variantes long tail
+legítimas, 1 caso cruzado de categoría); se ajustó el umbral a mínimo 3
+tokens compartidos tras un falso positivo propio ("mudanza" vs "divorcio").
+Auditoría 2 (regresión): APROBADA — `tsc --noEmit` en `apps/web` y
+`apps/worker` sin errores; `git diff --check` limpio.
+Auditoría 3 (integración): APROBADA — `npm run build` desde `apps/web`
+(mismo comando que Vercel), build exitoso, 83/83 rutas.
+Diff revisado: sí, acotado a un solo archivo.
+Deployment/Vercel: PR [`#47`](https://github.com/miltondavila-ux/auto-articulos/pull/47)
+abierto, **BLOQUEADO** por `build-rate-limit` de Vercel (mismo límite que
+afecta al PR #46 y al commit `c5b9c37`); `mergeable: MERGEABLE` según
+GitHub, pero no se fusiona hasta ver `state: success` real en el check de
+Vercel (Protocolo de este repositorio, orden directa de Milton).
+Estado de Vercel: `failure` — `Deployment rate limited — retry in 24 hours`.
+Dominio/logs: no aplica (rama no fusionada, sin deployment de Producción).
+Producción verificada: no aplica todavía.
+Responsable: Claude.
+Siguiente acción: cuando el límite de Vercel se libere, revisar `gh pr
+checks 47`; si el Preview pasa, fusionar y repetir el análisis con la
+cuenta de pruebas (Lorena Álvarez) para confirmar en datos reales que ya no
+hay canibalización semántica. Verificado en vivo por esta tarea programada
+(2026-09-05) contra `origin/main` recién fetcheado: la rama
+`claude/rediseno-intencion-longtail-20260904` sigue sin ser ancestro de
+`main` (`git merge-base --is-ancestor` devuelve falso) — el PR sigue
+genuinamente abierto y sin fusionar a esta fecha.
+Estado: PREPARADA
+
+## Versión preparada — 2026-09-04 — PR #46: línea de tiempo dinámica de fuentes de análisis
+
+Fecha y hora: 2026-09-04 16:12 EDT (último commit de la rama)
+Versión/commit: `e4ed8740be31b87af7a63dd533796f6ee36106ea` (rama sin
+fusionar, base `112ef7a6`)
+Rama: `codex/dynamic-source-timeline-20260904`
+Worktree: no registrado en Coordinación para este PR.
+Conversación/proyecto: `AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`
+(trabajo de interfaz de Codex, en paralelo al algoritmo).
+Cambios incluidos: la línea de tiempo de análisis de Oportunidades muestra
+dinámicamente `Google Search Console`, `Google Analytics` y `Bing Webmaster
+Tools` como `conectado` o `no conectado`, consultando el estado real de
+esas integraciones. No cambia el algoritmo ni datos existentes.
+Archivos modificados: no detallados en la entrada de Coordinación de origen
+(alcance declarado: solo interfaz/línea de tiempo).
+Archivos eliminados: ninguno registrado. Migraciones: ninguna.
+Auditorías: no detalladas en la entrada de Coordinación de origen.
+Diff revisado: según Coordinación, cambio acotado a la interfaz.
+Deployment/Vercel: PR #46 abierto, Preview rechazado por Vercel
+(`Deployment rate limited — retry in 24 hours`), no fusionado.
+Estado de Vercel: `failure` — mismo límite diario que bloquea al PR #47 y
+al commit `c5b9c37`.
+Producción verificada: no aplica (rama no fusionada).
+Responsable: Codex - GPT-5.
+Siguiente acción: esperar a que Vercel permita builds, verificar el Preview
+real y fusionar solo si pasa. Verificado en vivo por esta tarea programada
+(2026-09-05) contra `origin/main` recién fetcheado: la rama
+`codex/dynamic-source-timeline-20260904` sigue sin ser ancestro de `main`.
+Estado: PREPARADA
