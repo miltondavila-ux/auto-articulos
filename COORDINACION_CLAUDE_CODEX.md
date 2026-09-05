@@ -4492,3 +4492,56 @@ y confirmar `Vercel – auto-articulos-web` en `success`; después verificar
 visualmente `/dashboard/oportunidades` en producción con una cuenta real
 (Lorena Álvarez) para confirmar que aparece la redacción final. No reintentar
 despliegue manual mientras el mensaje siga siendo `rate limited`.
+
+## Claude (tarea programada diaria de propagación) — 2026-09-05
+
+Punto de partida: la última entrada firmada por esta misma tarea era
+"Claude (tarea programada diaria de propagación) — 2026-09-04, segunda
+corrida" (commit `61792a1`, 2026-09-04 16:08 EDT). Se revisó el diff de
+`COORDINACION_CLAUDE_CODEX.md` entre ese commit y `origin/main` actual
+(`909e788`), es decir las cuatro secciones agregadas ese mismo día por la
+tarde: "PUNTO DE MIGRACIÓN A CLAUDE", "CLAUDE — REDISEÑO DE DEDUPLICACIÓN
+SEMÁNTICA", "MIGRACIÓN A CLAUDE — `CODEX - INSTRUCCIONES EN MODULOS`" y
+"Claude retoma `CODEX - INSTRUCCIONES EN MODULOS` — redacción final de
+Oportunidades".
+
+Las dos últimas (Publicar `16be4d0`, Oportunidades `faf4612` y `c5b9c37`, y
+el bloqueo de Vercel por `build-rate-limit`) ya estaban propagadas por
+completo a `CONTROLADOR_DE_VERSIONES.md` e `INVENTARIO_CONVERSACIONES.md`
+por las propias sesiones que las escribieron — no se duplicó nada ahí.
+
+Lo que sí faltaba propagar, de las dos primeras secciones:
+
+1. `CONTROLADOR_DE_VERSIONES.md`: tres entradas nuevas de versión — el
+   merge del PR #45 (`112ef7a6`, canonicalización de acciones/necesidades,
+   Producción HTTP 200) y los PR #46 y #47, ambos preparados y auditados
+   pero **abiertos y sin fusionar**, bloqueados por el mismo límite diario
+   de builds de Vercel que ya afectaba a otros cambios ese día.
+2. `INVENTARIO_CONVERSACIONES.md`: (a) Parte A — addendum con las dos ramas
+   activas sin fusionar (`claude/rediseno-intencion-longtail-20260904` y
+   `codex/dynamic-source-timeline-20260904`), verificadas en vivo con `git
+   fetch` + `git merge-base --is-ancestor` contra `origin/main` (ninguna es
+   ancestro todavía); (b) Parte B — corrección aditiva a la entrada
+   `AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`, que había quedado
+   marcada como "CULMINADA" por una corrida anterior de esta misma tarea
+   sin haber leído que la conversación siguió activa con los PR #43-47 y
+   que la canibalización semántica volvió a detectarse tras el PR #45; el
+   estado real es EN CURSO, no culminada.
+
+No se tocó `TO-DO.md`, `REPARADOR_DEL_ARBOL_PRINCIPAL.md` ni
+`apps/web/src/content/manual-usuario.ts`: no se encontró en el diff ninguna
+idea suelta nueva para más adelante, ningún problema de árbol de git
+enredado, ni ningún cambio de texto/flujo visible para el usuario final que
+no estuviera ya reflejado (el reword de la tarjeta "Leer antes de ejecutar"
+de Oportunidades es cosmético y el manual ya describe el mismo flujo de 3
+pasos con la misma información funcional).
+
+No hubo nada que requiriera una operación destructiva, migración ni
+deploy. Esta corrida se ejecutó en un entorno remoto sin acceso al
+filesystem de la máquina de Milton, así que las referencias a rutas de
+worktree en las entradas nuevas provienen del propio texto de Coordinación,
+no de `git worktree list` en vivo; sí se verificó en vivo, con `git fetch
+origin main` + `git merge-base --is-ancestor`, el estado real de fusión de
+cada rama mencionada.
+
+Responsable: Claude (tarea programada diaria de propagación).
