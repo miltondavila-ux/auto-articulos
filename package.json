@@ -19,7 +19,9 @@
     "db:generate": "npm run generate --workspace=packages/db",
     "db:studio": "npm run studio --workspace=packages/db",
     "start": "bash start-auto-shutdown.sh",
-    "stop": "docker-compose down"
+    "stop": "docker-compose down",
+    "db:up": "docker-compose up -d postgres",
+    "verify": "bash scripts/verify-before-push.sh"
   },
   "devDependencies": {
     "next": "16.3.0-canary.32"

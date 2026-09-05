@@ -147,6 +147,86 @@ Reglas del canal:
 
 ---
 
+# PROTOCOLO DE VERIFICACIÓN LOCAL Y REDUCCIÓN DE DESPLIEGUES (propuesto por Claude, 2026-09-04, a pedido explícito de Milton)
+
+Milton pidió, de manera autónoma, una propuesta para dejar de generar tantos
+despliegues en Vercel y para poder probar en local lo que se ejecuta, antes
+de subir. Diagnóstico real (no supuesto): en un solo día de esta
+conversación hubo más de 40 commits a `main`, y **cada uno —incluidos los
+que solo tocaban `.md`— disparó un build completo de Vercel**, porque
+`.vercelignore` excluye los `.md` del paquete final pero no evita que el
+build arranque.
+
+## 1. Verificación local en un solo comando (ya implementado, sin riesgo)
+
+Nuevo: `npm run verify` desde la raíz del repo (`scripts/verify-before-push.sh`).
+Reproduce, en este orden, exactamente lo que exige el Protocolo de No
+Destrucción para código:
+1. `git diff --check`.
+2. `npx prisma generate`.
+3. Typecheck de `apps/web`.
+4. **Build de `apps/web` ejecutado desde dentro de `apps/web`** — el mismo
+   comando exacto que usa Vercel (`Root Directory = apps/web`,
+   `buildCommand: npm run build`), no la variante `--workspace=apps/web`
+   desde la raíz, para no repetir nunca el error real de los commits
+   `535b690`/`dbbe75f` documentado más abajo.
+5. Build de `apps/worker` (incluye chequeo de tipos).
+6. Los tests de `apps/worker`.
+
+Requiere una base de datos local: `npm run db:up` levanta Postgres vía
+Docker con las mismas credenciales de `.env.example`
+(`postgresql://autoarticulos:autoarticulos@localhost:5432/autoarticulos`).
+Sin `DATABASE_URL`, el script avisa y se detiene en vez de fallar a medias
+— este es exactamente el motivo por el que el hook de generación de
+Actualizaciones (`scripts/generate-product-update.ts`) viene fallando en
+silencio en todos los worktrees aislados de hoy.
+
+Esto reemplaza a "las tres auditorías" como tres pasos manuales sueltos:
+las auditorías 1 y 2 (funcional y regresión, para lo que se puede probar
+sin producción real) quedan cubiertas por este único comando. La auditoría
+3 (integración/producción real) sigue haciéndose sobre el Preview o el
+despliegue real — este script nunca la reemplaza.
+
+## 2. Preferir Preview de Vercel a push directo, para código
+
+Regla propuesta: **push directo a `main` se reserva para documentación**
+(los 5 documentos maestros, `manual-usuario.ts`) — que además, con el punto
+3 de abajo, dejarán de gastar builds. **Cualquier cambio de código de
+aplicación** (`apps/`, `packages/`) pasa por una rama + PR, como ya se
+viene haciendo cada vez más seguido este mismo día (PRs #37 a #43): Vercel
+genera un Preview aislado, se corre `npm run verify` localmente y se
+revisa el Preview real, y solo entonces se fusiona a `main` — en vez de
+descubrir un problema ya en Producción.
+
+## 3. Pendiente de tu confirmación explícita — no aplicado todavía
+
+Esto sí toca `apps/web/vercel.json`, el archivo que ya causó una caída real
+(ver la ADVERTENCIA CRÍTICA SOBRE VERCEL más abajo), así que **no lo toco
+sin que lo confirmes primero**, tal como exige ese mismo Protocolo.
+
+Propuesta: agregar un `ignoreCommand` que le diga a Vercel que se salte el
+build entero cuando el commit no toca ningún archivo de `apps/web`,
+`apps/worker`, `packages/` ni los workflows — es decir, casi todos los
+commits de documentación de hoy.
+
+```json
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install --legacy-peer-deps",
+  "ignoreCommand": "cd .. && git diff --quiet HEAD^ HEAD -- apps/web apps/worker packages package.json package-lock.json"
+}
+```
+
+(No se tocan `buildCommand` ni `outputDirectory`, que son los dos campos
+que causaron el incidente real — solo se agrega el campo nuevo
+`ignoreCommand`.) Si confirmás, lo aplico en un PR aparte, verifico el
+Preview de ese PR específico, y documento el resultado acá antes de
+fusionarlo.
+
+---
+
 # PROTOCOLO OBLIGATORIO DE NO DESTRUCCIÓN (normas de Milton, recopiladas por experiencia — organizado 2026-09-03, ningún contenido fue eliminado)
 
 ## RESERVA — CORRECCIÓN V2 DE EXPANSIÓN TEMÁTICA — 2026-09-04
