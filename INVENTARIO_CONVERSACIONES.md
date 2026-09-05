@@ -63,6 +63,25 @@ Estas carpetas se pueden eliminar con `git worktree remove <ruta>` sin perder
 nada — todo su contenido ya vive en `origin/main`. No se borraron en esta
 sesión porque no era el pedido; solo se deja señalado.
 
+### Addendum (agregado por la tarea programada diaria de propagación, 2026-09-05, sin editar la tabla anterior)
+
+Esta corrida se ejecutó en un entorno remoto sin acceso al filesystem de la
+máquina de Milton, así que no pudo correr `git worktree list` real; en su
+lugar verificó `git fetch origin` + `git merge-base --is-ancestor <rama>
+origin/main` para las dos ramas nuevas que aparecen en
+`COORDINACION_CLAUDE_CODEX.md` desde la última corrida (secciones "PUNTO DE
+MIGRACIÓN A CLAUDE" y "CLAUDE — REDISEÑO DE DEDUPLICACIÓN SEMÁNTICA",
+2026-09-04):
+
+| Worktree (según texto de Coordinación, no verificado en el filesystem) | Rama | Commit de punta | Dueño / conversación | Nota |
+|---|---|---|---|---|
+| `/private/tmp/rediseno-intencion-longtail-20260904` | `claude/rediseno-intencion-longtail-20260904` (PR #47) | `a7b05e5` | Claude — `AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS` (rediseño `needKey`) | Verificado EN VIVO 2026-09-05: `git merge-base --is-ancestor` confirma que NO es ancestro de `origin/main` — sigue sin fusionar, bloqueada por el límite diario de builds de Vercel (`build-rate-limit`), no por un error de código. |
+| (no registrado) | `codex/dynamic-source-timeline-20260904` (PR #46) | `e4ed874` | Codex — `AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS` (línea de tiempo de fuentes conectadas) | Verificado EN VIVO 2026-09-05: `git merge-base --is-ancestor` confirma que NO es ancestro de `origin/main` — mismo bloqueo de Vercel que el PR #47. |
+
+Ver detalle completo de ambos PR en `CONTROLADOR_DE_VERSIONES.md`, entradas
+"PR #47: rediseño de deduplicación semántica" y "PR #46: línea de tiempo
+dinámica de fuentes de análisis".
+
 ### El checkout principal de Milton
 
 `/Users/miltondavila/Creador de articulos` (rama `main`, commit `f81f53b`)
@@ -429,3 +448,38 @@ documento.
   pedía cerrar con ese paso antes de dar la conversación por terminada. Ver
   detalle en `CONTROLADOR_DE_VERSIONES.md` — "Fusión PR #42 — refuerzo V2 de
   expansión temática long tail — 2026-09-04".
+
+**Corrección (agregada por la tarea programada diaria de propagación,
+2026-09-05, sin editar lo anterior): esta conversación NO quedó "CULMINADA"
+tras el PR #42.** Siguió activa con más fases, documentadas en
+`COORDINACION_CLAUDE_CODEX.md` desde el 2026-09-04 por la tarde (secciones
+"PUNTO DE MIGRACIÓN A CLAUDE" y "CLAUDE — REDISEÑO DE DEDUPLICACIÓN
+SEMÁNTICA"), que la corrida anterior de esta misma tarea automatizada no
+llegó a leer:
+- PR #43 (`6e75ca8f`), PR #44 (`8730f27`) y PR #45 (`112ef7a6`), los tres
+  fusionados a `main` con Producción respondiendo HTTP 200 (detalle de PR
+  #45 en `CONTROLADOR_DE_VERSIONES.md`, agregado hoy).
+- Una prueba con la cuenta de prueba tras el PR #45 (14 oportunidades
+  generadas) volvió a detectar canibalización semántica real: tres títulos
+  sobre cambiar el seguro tras mudanza, dos sobre deducibles para
+  inmigrantes, dos sobre elegir seguros para inmigrantes, dos sobre elegir
+  seguros para pequeños negocios. El algoritmo completo **sigue sin estar
+  aprobado para publicar automáticamente**, pese a que PR #42-45
+  individualmente sí llegaron a Producción.
+- Codex hizo un traspaso formal a Claude (Milton confirmó) con diagnóstico
+  de causa raíz: `hasSameIntent()` comparaba tokens del título crudo solo
+  dentro de la misma categoría, nunca contra títulos ya publicados ni entre
+  categorías distintas.
+- Claude respondió con un rediseño (`needKey` por título, comparación
+  global determinista) en el PR #47, y Codex en paralelo abrió el PR #46
+  (línea de tiempo de fuentes conectadas, solo interfaz). Ambos PR están
+  **abiertos y sin fusionar a esta fecha**, bloqueados por el mismo límite
+  diario de builds de Vercel (`build-rate-limit`) que ya afectaba a otros
+  cambios ese mismo día — no por un error de código. Ver Parte A (addendum
+  de esta misma corrida) y `CONTROLADOR_DE_VERSIONES.md` para el detalle
+  completo de ambos PR.
+- Estado real de la conversación a esta fecha: **EN CURSO**, no culminada;
+  próxima acción es esperar a que Vercel libere el límite, verificar los
+  Preview de ambos PR y, si pasan, fusionarlos y repetir la prueba con la
+  cuenta de Lorena Álvarez para confirmar cero canibalización con datos
+  reales.
