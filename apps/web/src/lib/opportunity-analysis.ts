@@ -92,15 +92,67 @@ function intentTokens(value: string): Set<string> {
   );
 }
 
-function hasSameIntent(a: string, b: string): boolean {
-  const left = intentTokens(a);
-  const right = intentTokens(b);
-  if (left.size < 3 || right.size < 3) return false;
+function tokenSetsOverlap(
+  left: Set<string>,
+  right: Set<string>,
+  minTokens: number,
+  minRatio: number,
+): boolean {
+  if (left.size < minTokens || right.size < minTokens) return false;
   const intersection = [...left].filter((token) => right.has(token)).length;
   // La intersección sobre el conjunto menor detecta variantes que solo
   // agregan formato, ubicación o perfil a la misma necesidad principal.
   const smaller = Math.min(left.size, right.size);
-  return intersection >= 3 && intersection / smaller >= 0.67;
+  return intersection >= minTokens && intersection / smaller >= minRatio;
+}
+
+// Firma estructurada de intención: el modelo declara, por cada título, un
+// "needKey" corto (objeto + contexto + perfil + ubicación real, SIN verbo ni
+// formato) que representa la necesidad que resuelve. Al ser una etiqueta
+// deliberadamente compacta y ya limpia de ruido (a diferencia del título
+// completo, donde "mudarse" vs "mudarte" o "elegir" vs "entender" rompen la
+// comparación léxica), el cruce de tokens entre dos needKey es una señal de
+// canibalización mucho más confiable que compararlos por el título crudo.
+interface IntentSignature {
+  needKeyNormalized: string | null;
+  tokens: Set<string>;
+  source: string;
+}
+
+function buildIntentSignature(source: string, needKey?: string): IntentSignature {
+  const key = needKey?.trim();
+  return {
+    needKeyNormalized: key ? normalizeTitle(key) : null,
+    tokens: intentTokens(key && key.length > 0 ? key : source),
+    source,
+  };
+}
+
+function collidesWithIntent(
+  candidate: IntentSignature,
+  existing: IntentSignature[],
+): boolean {
+  for (const signature of existing) {
+    // Coincidencia exacta de needKey: la señal más fuerte, independiente del
+    // umbral de tokens (dos títulos que declaran la MISMA necesidad nunca
+    // pueden coexistir, sin importar cuán distinto sea el texto visible).
+    if (
+      candidate.needKeyNormalized &&
+      signature.needKeyNormalized &&
+      candidate.needKeyNormalized === signature.needKeyNormalized
+    ) {
+      return true;
+    }
+    // needKey declarados por ambos lados: son etiquetas ya compactas y
+    // limpias de formato/verbo, así que un umbral algo más laxo sigue siendo
+    // preciso.
+    const minTokens = 3;
+    const minRatio = candidate.needKeyNormalized && signature.needKeyNormalized ? 0.6 : 0.67;
+    if (tokenSetsOverlap(candidate.tokens, signature.tokens, minTokens, minRatio)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function hasContextualEvidenceForYear(
@@ -141,8 +193,10 @@ const PROMPT_HEADER = [
   "- Trabaja en dos fases internas obligatorias: FASE A, construye un mapa de tema raiz y ramas relacionadas a partir de la evidencia; FASE B, convierte solo las ramas respaldadas en titulos y valida categoria, evidencia y duplicacion de intencion.",
   "- Una rama valida puede cubrir una necesidad complementaria del mismo universo (componentes, preparacion, decision, proceso, riesgos, mantenimiento, resultados o alternativas), aunque no repita las palabras del titulo principal.",
   "- El 'rationale' de cada titulo debe indicar, en una frase, la intencion de busqueda especifica y distinta que cubre (que lo diferencia de los demas titulos de su categoria).",
-  "- Antes de entregar cada titulo, resume mentalmente su NECESIDAD PRINCIPAL en pocas palabras. Si coincide con otro titulo aunque cambien el formato, el verbo, el perfil, la ciudad o el año, descártalo.",
-  "- No conviertas una misma necesidad en varias piezas cambiando solo 'guía', 'errores comunes', 'cómo elegir', 'consejos', 'pasos', 'mejores' o 'completa'. Esas palabras no crean una oportunidad nueva.",
+  "- OBLIGATORIO: cada titulo debe declarar tambien un campo 'needKey', una etiqueta corta en snake_case (3 a 6 palabras) que resuma UNICAMENTE el objeto + contexto + perfil + ubicacion real que resuelve el titulo (ej: seguro_salud_cambio_tras_mudanza_estado, seguro_salud_deducible_inmigrante_miami, seguro_pequeno_negocio_empleados). El needKey NUNCA debe incluir verbos de accion (elegir, comparar, entender, evitar) ni palabras de formato (guia, errores, comunes, mejores, consejos, pasos, completa, opciones) ni el año — esas palabras no cambian la necesidad.",
+  "- Dos titulos con el MISMO needKey (aunque su texto visible sea distinto) son SIEMPRE la misma oportunidad, sin importar si estan en la misma categoria o en categorias distintas. Antes de proponer un titulo, compara mentalmente su needKey contra el de TODOS los demas titulos que vas a entregar en esta respuesta y contra OPORTUNIDADES YA CREADAS EN ESTA CORRIDA (de cualquier categoria, no solo la actual): si coincide o es casi identico, descarta el titulo o cambia genuinamente el contexto/perfil/ubicacion real (con evidencia) para que el needKey sea distinto de verdad.",
+  "- Antes de entregar cada titulo, resume mentalmente su NECESIDAD PRINCIPAL en pocas palabras (eso es el needKey). Si coincide con otro titulo aunque cambien el formato, el verbo, el perfil, la ciudad o el año, descártalo.",
+  "- No conviertas una misma necesidad en varias piezas cambiando solo 'guía', 'errores comunes', 'cómo elegir', 'consejos', 'pasos', 'mejores' o 'completa'. Esas palabras no crean una oportunidad nueva ni cambian el needKey.",
   "- Prioriza ramas que abran preguntas complementarias reales: preparación, componentes, decisiones, costos, riesgos, mantenimiento, alternativas, casos de uso, diagnóstico y resultados. Cada rama debe resolver una necesidad distinta y estar respaldada por una señal concreta.",
   "- CERO duplicacion de intencion es un requisito absoluto; no confundas relacion tematica con repeticion. Ante la duda, cambia el angulo hacia una necesidad complementaria respaldada por evidencia en lugar de abandonar toda la expansion del tema.",
   "",
@@ -217,7 +271,7 @@ const PROMPT_HEADER = [
   "",
   "FORMATO DE RESPUESTA:",
   "Responde SOLO con JSON valido (sin markdown, sin texto adicional):",
-  '{"opportunities":[{"categoryId":"id","rationale":"analisis de oportunidad basado en datos","impressions":123,"clicks":4,"titles":[{"text":"titulo long tail inteligente","rationale":"justificacion con datos reales que respalda esta oportunidad"}]}]}',
+  '{"opportunities":[{"categoryId":"id","rationale":"analisis de oportunidad basado en datos","impressions":123,"clicks":4,"titles":[{"text":"titulo long tail inteligente","needKey":"objeto_contexto_perfil_ubicacion","rationale":"justificacion con datos reales que respalda esta oportunidad"}]}]}',
   "",
   'Si genuinamente no hay datos suficientes para crear oportunidades reales, responde: {"opportunities":[]}',
 ].join("\n");
@@ -402,6 +456,22 @@ export async function analyzeSeoOpportunities(input: {
     ...input.countryRows,
   ];
 
+  // needKey por título, guardado aparte de OpportunityAnalysisGroup (que solo
+  // persiste text/rationale en la base) para poder mostrarlo en el prompt de
+  // los siguientes lotes y para el chequeo cruzado de intención.
+  const needKeyByTitle = new Map<string, string>();
+
+  // Firmas de intención GLOBALES a toda la corrida (no por categoría): arranca
+  // con lo ya publicado (usando el título crudo, ya que no tiene needKey) y
+  // acumula cada título nuevo aceptado, sin importar en qué categoría cayó.
+  // Esto cierra el hueco real encontrado en producción: dos títulos casi
+  // idénticos en intención podían colarse si el modelo los repartía en
+  // categorías distintas (p.ej. "Inmigración" y "Seguros de salud"), porque
+  // la comparación anterior solo miraba dentro de la misma categoría.
+  const intentSignatures: IntentSignature[] = input.existingTitles.map((title) =>
+    buildIntentSignature(title),
+  );
+
   for (let batchIndex = 0; batchIndex < batchesToProcess.length; batchIndex++) {
     const batch = batchesToProcess[batchIndex];
 
@@ -413,7 +483,10 @@ export async function analyzeSeoOpportunities(input: {
       .map((category) => ({
         categoryId: category.id,
         name: category.name,
-        titles: groupsByCategory.get(category.id)?.titles.map((t) => t.text) ?? [],
+        titles: (groupsByCategory.get(category.id)?.titles ?? []).map((t) => ({
+          text: t.text,
+          needKey: needKeyByTitle.get(t.text) ?? null,
+        })),
       }))
       .filter((entry) => entry.titles.length > 0);
 
@@ -439,7 +512,7 @@ ${JSON.stringify(batch)}
 TITULOS YA EXISTENTES (publicados, en toda la cuenta):
 ${JSON.stringify(input.existingTitles)}
 
-OPORTUNIDADES YA CREADAS EN ESTA CORRIDA, POR CATEGORIA (NO CANIBALIZAR, NO REPETIR):
+OPORTUNIDADES YA CREADAS EN ESTA CORRIDA, POR CATEGORIA, CON SU needKey (NO CANIBALIZAR NI REPETIR needKey, NI DENTRO DE LA MISMA CATEGORIA NI CONTRA OTRA CATEGORIA DISTINTA):
 ${JSON.stringify(alreadyProposedByCategory)}`;
 
     let parsed: Record<string, unknown>;
@@ -466,7 +539,6 @@ ${JSON.stringify(alreadyProposedByCategory)}`;
       const existingGroup = groupsByCategory.get(group.categoryId);
 
       const newTitles: OpportunityAnalysisGroup["titles"] = [];
-      const existingTitlesInCategory = existingGroup?.titles.map((title) => title.text) ?? [];
       for (const candidate of group.titles) {
         if (!candidate || typeof candidate !== "object") continue;
         const value = candidate as Record<string, unknown>;
@@ -480,16 +552,15 @@ ${JSON.stringify(alreadyProposedByCategory)}`;
             (year) => !hasContextualEvidenceForYear(text, year, evidenceRows),
           )
         ) continue;
-        // La similitud se evalúa solo dentro de la misma categoría y sobre
-        // tokens de intención, no sobre palabras de formato o ubicación.
-        // Así bloqueamos variantes de la misma necesidad sin bloquear ramas
-        // long tail legítimamente distintas.
-        if (
-          [...existingTitlesInCategory, ...newTitles.map((title) => title.text)].some(
-            (existingTitle) => hasSameIntent(text, existingTitle),
-          )
-        ) continue;
+        const needKey = typeof value.needKey === "string" ? value.needKey.trim() : undefined;
+        const signature = buildIntentSignature(text, needKey);
+        // Chequeo GLOBAL (toda la cuenta y toda la corrida, cualquier
+        // categoría), no solo dentro de la categoría actual — cierra el hueco
+        // real de canibalización cruzada entre categorías.
+        if (collidesWithIntent(signature, intentSignatures)) continue;
         seen.add(normalized);
+        intentSignatures.push(signature);
+        if (needKey) needKeyByTitle.set(text, needKey);
         newTitles.push({
           text,
           rationale:
