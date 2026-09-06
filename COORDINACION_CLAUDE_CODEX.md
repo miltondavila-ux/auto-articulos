@@ -4677,3 +4677,30 @@ para que Milton decida, más allá de la que el propio commit `8c4be47` ya
 dejó explícita (la confirmación del `ignoreCommand`).
 
 Responsable: Claude (tarea programada diaria de propagación).
+
+## CIERRE — PR #47 fusionado y verificado en producción — 2026-09-06
+
+El `build-rate-limit` de Vercel que bloqueaba el PR #47 (mismo bloqueo que
+el PR #46 de Codex) se liberó solo entre el 2026-09-04 y el 2026-09-06 —
+confirmado con despliegues nuevos exitosos a Producción vía `vercel ls`
+antes de reintentar. El check de GitHub había quedado congelado en el
+intento fallido viejo porque nadie volvió a empujar un commit a esa rama;
+se forzó un reintento real con `git push --force-with-lease` tras rebasar
+sobre `origin/main` actualizado (incluye `8c4be47`, la reducción de deploys
+propuesta por otra sesión). Ambos checks de Vercel pasaron a `SUCCESS` real
+(no solo dejaron de estar en `pending`).
+
+PR [`#47`](https://github.com/miltondavila-ux/auto-articulos/pull/47)
+fusionado como `7e951f7`. Verificación postdespliegue: ambos checks del
+commit en `success`, `curl -I /login` responde `200` en
+`auto-articulos-web.vercel.app` y en `seototal.lasolucionweb.com`.
+
+Estado del algoritmo de oportunidades: la firma de intención estructurada
+(`needKey`) ya está en producción. Sigue pendiente, como próximo paso
+obligatorio antes de aprobar publicación automática: repetir el análisis
+con la cuenta de pruebas (Lorena Álvarez) y auditar los títulos generados
+para confirmar en datos reales que ya no hay canibalización semántica.
+
+El PR #46 de Codex (línea de tiempo dinámica GSC/GA4/Bing) compartía la
+misma causa de bloqueo; probablemente también pueda reintentarse ahora de
+la misma forma (rebase + push) si sigue abierto.
