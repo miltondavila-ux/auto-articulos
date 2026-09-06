@@ -4625,3 +4625,55 @@ origin main` + `git merge-base --is-ancestor`, el estado real de fusión de
 cada rama mencionada.
 
 Responsable: Claude (tarea programada diaria de propagación).
+
+## Claude (tarea programada diaria de propagación) — 2026-09-06
+
+Punto de partida: la última entrada firmada por esta misma tarea era
+"Claude (tarea programada diaria de propagación) — 2026-09-05" (commit
+`939d787`, 2026-09-05 09:13 UTC). Se revisó el diff de
+`COORDINACION_CLAUDE_CODEX.md` entre ese commit y `origin/main` actual
+(`8c4be47`): un único commit nuevo, "feat: agregar verificación local única
+y proponer reducción de deploys" (`8c4be47`, autoría de Milton, de manera
+autónoma), que agregó la sección "PROTOCOLO DE VERIFICACIÓN LOCAL Y
+REDUCCIÓN DE DESPLIEGUES".
+
+Contenido de esa sección: (1) `npm run verify`
+(`scripts/verify-before-push.sh`), ya implementado, que corre en un solo
+comando diff-check + `prisma generate` + typecheck + build de `apps/web`
+(igual que Vercel) + build/tests de `apps/worker`; (2) una regla propuesta
+de preferir rama+PR/Preview de Vercel a push directo para cualquier cambio
+de código de aplicación, dejando el push directo a `main` solo para
+documentación; (3) una propuesta concreta de `ignoreCommand` para
+`apps/web/vercel.json`, dejada explícitamente SIN APLICAR, pendiente de
+confirmación explícita de Milton.
+
+Se evaluó cada punto contra el mapa de propagación y no correspondió mover
+nada a los otros cuatro documentos:
+- No es una reserva de archivo/rama ni el nombre de una conversación nueva
+  → no toca `INVENTARIO_CONVERSACIONES.md`.
+- No es un commit de versión de la aplicación con deployment/estado de
+  Vercel/verificación en producción — es una herramienta y una política de
+  proceso para el propio repositorio, sin ningún despliegue ni verificación
+  de Producción asociado — → no encaja en la plantilla de
+  `CONTROLADOR_DE_VERSIONES.md` (que registra versiones desplegadas o
+  preparadas para desplegar, con migraciones/Vercel/Producción).
+- No es un cambio de pantalla, flujo, mensaje o permiso visible para el
+  usuario final de la aplicación (es tooling interno de desarrollo) → no
+  toca `apps/web/src/content/manual-usuario.ts`.
+- No es un problema de árbol de git enredado, ramas pisadas ni commits
+  mezclados → no toca `REPARADOR_DEL_ARBOL_PRINCIPAL.md`.
+- El punto 3 (`ignoreCommand`) es una propuesta pendiente de confirmación
+  de Milton, no una idea suelta para ejecutar más adelante sin fecha
+  definida: ya está anotada con todo su contexto en la propia sección de
+  Coordinación citada arriba, con su condición de desbloqueo explícita
+  ("si confirmás, lo aplico"). Duplicarla en `TO-DO.md` violaría la regla
+  de ese archivo de guardar solo ideas que Milton pide guardar él mismo, no
+  propuestas de un agente en espera de aprobación — así que no se tocó
+  `TO-DO.md` tampoco.
+
+No hubo nada que requiriera una operación destructiva, migración ni
+deploy en esta corrida. No se detectó ninguna duda adicional que anotar
+para que Milton decida, más allá de la que el propio commit `8c4be47` ya
+dejó explícita (la confirmación del `ignoreCommand`).
+
+Responsable: Claude (tarea programada diaria de propagación).
