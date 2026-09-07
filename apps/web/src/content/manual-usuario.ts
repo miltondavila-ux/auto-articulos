@@ -18,7 +18,7 @@ Cuando ingresas a tu cuenta por primera vez o aún no tienes artículos publicad
 4. **Paso 4 (Google Search Console):** Abre Search Console en una pestaña contigua de tu navegador para comprobar que esté activo con la cuenta de Google dueña de tu web, y luego conéctalo mediante Google OAuth seleccionando tu sitio.
 5. **Meta final:** Al completar los 4 pasos, se desbloquea el acceso para publicar tu primer artículo o explorar Oportunidades SEO.
 
-También puedes volver a abrir el Asistente en cualquier momento desde **Configuración** (/dashboard/configuracion?tab=wizard).
+También puedes volver a abrir el Asistente en cualquier momento desde **Configuración** (/dashboard/configuracion/inicial).
 
 ## Inicio
 
@@ -55,19 +55,47 @@ Si el administrador te oculta algún módulo, simplemente no aparece en el menú
 
 Ruta: /dashboard/configuracion
 
-Aquí preparas tu cuenta y personalizas el contenido.
+Configuración ya no es una sola pantalla con pestañas: es un índice con 6
+tarjetas, cada una con su propia página. Elige la que corresponda a lo que
+quieres cambiar.
 
 ### Configuración Inicial (Asistente Paso a Paso)
 
-Pestaña destacada en Configuración que te permite repasar o completar el asistente de 4 pasos en cualquier momento. Cuenta con un banner superior para abrirlo directamente.
+Ruta: /dashboard/configuracion/inicial
 
-### Cuenta de la plataforma de publicación
+Repite el asistente de 4 pasos cuando quieras: cuenta de la plataforma,
+categorías, idioma y Google Search Console.
 
-Guarda el usuario y contraseña de tu cuenta de la plataforma. El sistema los usa para publicar artículos en tu sitio. Si no recuerdas esa contraseña, usa el enlace de recuperación de la plataforma; no uses aquí la contraseña de SEO TOTAL.
+### Cuenta
 
-### Categorías e idiomas
+Ruta: /dashboard/configuracion/cuenta
 
-Usa “Sincronizar categorías ahora” para traer las secciones disponibles de tu sitio. Esas categorías aparecen después al publicar y en Oportunidades. Sincroniza también los idiomas de redacción para poder elegir el idioma de cada lote.
+Guarda el usuario y contraseña de tu cuenta de la plataforma (el sistema los
+usa para publicar artículos en tu sitio; si no recuerdas esa contraseña, usa
+el enlace de recuperación de la plataforma, no uses aquí la contraseña de
+SEO TOTAL), sincroniza tus categorías con “Sincronizar categorías ahora” y
+elige el idioma en que se redactan tus artículos con “Sincronizar idiomas de
+tu cuenta”.
+
+### Contenido
+
+Ruta: /dashboard/configuracion/contenido
+
+Aquí defines el estilo editorial de tus artículos: el estilo de redacción
+por defecto, la firma que se agrega al final de cada artículo nuevo, tu
+teléfono de contacto (para los botones de WhatsApp y llamada), hasta 3 fotos
+tuyas y hasta 2 logos (solo la primera foto y el primer logo son
+obligatorios; el resto es opcional y le da al sistema más variedad para
+elegir — se usan cuando el generador de imágenes con IA para redes sociales
+está activo en tu cuenta, lo activa el administrador).
+
+**Ubicaciones para títulos geolocalizados:** escribe, separadas por comas,
+las ciudades o países de donde son tus clientes reales (ej. "Colombia,
+Bogotá, Ecuador, Caracas") y por separado dónde está u opera tu negocio (ej.
+"Miami, Orlando, Homestead"). Oportunidades puede combinar ambos datos para
+crear títulos ultra segmentados como "Cómo invertir en propiedades en
+Homestead si vives en Colombia". Dejar los campos vacíos no cambia nada de
+tu cuenta.
 
 ### Buscadores
 
@@ -188,17 +216,19 @@ Esta sección se actualiza con los cambios visibles para usuarios y es parte del
 
 Ruta: /dashboard/configuracion
 
-Configuración está organizada por pestañas. Si una opción no aparece, puede estar deshabilitada para tu cuenta por el administrador.
+Configuración es un índice de 6 páginas independientes. Si una opción no
+aparece en Redes Sociales, puede estar deshabilitada para tu cuenta por el
+administrador.
 
 ### Configuración inicial
 
-Ruta: /dashboard/configuracion?tab=wizard
+Ruta: /dashboard/configuracion/inicial
 
 Puedes repetir el asistente de cuatro pasos cuando quieras: cuenta de la plataforma, categorías, idioma y Google Search Console. Es la forma más rápida de preparar una cuenta nueva.
 
 ### Google Search Console
 
-Ruta: /dashboard/configuracion?tab=integrations
+Ruta: /dashboard/configuracion/indexacion
 
 1. Pulsa **Conectar Google Search Console** e inicia sesión con la cuenta de Google que tiene acceso a tu sitio.
 2. Cuando vuelvas a la plataforma, elige la propiedad verificada correcta en la lista y pulsa **Guardar propiedad**.
@@ -209,21 +239,27 @@ Google Search Console permite usar Oportunidades SEO, consultar el estado de ind
 
 ### Bing Webmaster Tools
 
-Ruta: /dashboard/configuracion?tab=integrations
+Ruta: /dashboard/configuracion/indexacion
 
 Abre Bing Webmaster Tools con tu sesión iniciada, vuelve a SEO TOTAL y pulsa **Conectar Bing Webmaster Tools**. Acepta los permisos y elige o guarda el sitio correcto. Si la conexión venció, usa **Reconectar Bing** una sola vez y espera la redirección. Desde esta sección también puedes enviar el sitemap y enviar a Bing los artículos publicados que todavía estén pendientes de indexación.
 
 ### Redes sociales
 
-Ruta: /dashboard/configuracion?tab=social
+Ruta: /dashboard/configuracion/redes-sociales
 
 Aquí conectas Google Business Profile y las redes sociales. Las redes son opcionales: solo conéctalas si quieres publicar allí. Cada tarjeta te explica los pasos antes de pedirte datos. Instagram necesita una cuenta profesional vinculada a una página de Facebook. Algunas redes requieren que el administrador active tu permiso; si ves un aviso de que no está disponible, pide acceso al administrador. Puedes desconectar una red desde el mismo lugar.
 
-### Cuenta y contenido
+### Cuenta
 
-Ruta: /dashboard/configuracion?tab=platform
+Ruta: /dashboard/configuracion/cuenta
 
-Guarda las credenciales de la plataforma, sincroniza categorías e idiomas y elige el idioma habitual. También puedes definir la firma de los artículos, teléfono de contacto, hasta 3 fotos tuyas y hasta 2 logos. Solo la primera foto y el primer logo son obligatorios; el resto es opcional y le da al sistema más variedad para elegir. Estas imágenes se usan cuando el generador de imágenes con IA para redes sociales está activo en tu cuenta (lo activa el administrador).
+Guarda las credenciales de la plataforma, sincroniza categorías e idiomas y elige el idioma habitual de redacción.
+
+### Contenido
+
+Ruta: /dashboard/configuracion/contenido
+
+Define la firma de los artículos, teléfono de contacto, hasta 3 fotos tuyas y hasta 2 logos, el estilo de redacción por defecto, y las ubicaciones para títulos geolocalizados. Solo la primera foto y el primer logo son obligatorios; el resto es opcional y le da al sistema más variedad para elegir. Estas imágenes se usan cuando el generador de imágenes con IA para redes sociales está activo en tu cuenta (lo activa el administrador).
 
 **Ubicaciones para títulos geolocalizados:** escribe, separadas por comas, las ciudades o países de donde son tus clientes reales (ej. "Colombia, Bogotá, Ecuador, Caracas") y por separado dónde está u opera tu negocio (ej. "Miami, Orlando, Homestead"). Oportunidades puede combinar ambos datos para crear títulos ultra segmentados como "Cómo invertir en propiedades en Homestead si vives en Colombia". Dejar los campos vacíos no cambia nada de tu cuenta.
 
