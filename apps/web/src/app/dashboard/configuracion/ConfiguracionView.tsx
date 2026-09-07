@@ -79,6 +79,9 @@ export default function ConfiguracionView({
   const [savingLanguage, setSavingLanguage] = useState(false);
   const [articleSignature, setArticleSignature] = useState("");
   const [savingSignature, setSavingSignature] = useState(false);
+  const [clientLocations, setClientLocations] = useState("");
+  const [businessLocations, setBusinessLocations] = useState("");
+  const [savingLocations, setSavingLocations] = useState(false);
   const [prompts, setPrompts] = useState<{ id: string; name: string; prompt: string }[]>([]);
   const [defaultPromptId, setDefaultPromptId] = useState("");
   const [savingPrompt, setSavingPrompt] = useState(false);
@@ -185,6 +188,8 @@ export default function ConfiguracionView({
        const data = await meRes.json();
        setContentLanguage(data.contentLanguage ?? "");
        setArticleSignature(data.articleSignature ?? "");
+       setClientLocations(data.clientLocations ?? "");
+       setBusinessLocations(data.businessLocations ?? "");
        setDefaultPromptId(data.defaultPromptId ?? "");
        setPhone(data.phone ?? "");
        setProfilePhotoUrls({ profile: data.profilePhotoUrl ?? null, profile2: data.profilePhotoUrl2 ?? null, profile3: data.profilePhotoUrl3 ?? null });
@@ -372,6 +377,29 @@ export default function ConfiguracionView({
       setBanner({ type: "info", text: "Texto final del artículo guardado." });
     } finally {
       setSavingSignature(false);
+    }
+  }
+
+  async function handleSaveLocations() {
+    setSavingLocations(true);
+    setBanner(null);
+    try {
+      const res = await fetch("/api/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientLocations, businessLocations }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setBanner({
+          type: "error",
+          text: data.error ?? "Error al guardar las ubicaciones",
+        });
+        return;
+      }
+      setBanner({ type: "info", text: "Ubicaciones guardadas." });
+    } finally {
+      setSavingLocations(false);
     }
   }
 
@@ -1551,6 +1579,51 @@ export default function ConfiguracionView({
                 style={disabledStyle(secondaryButtonStyle, savingSignature)}
               >
                 {savingSignature ? "Guardando firma..." : "Guardar firma final"}
+              </button>
+            </div>
+          </section>
+
+          {/* Ubicaciones para títulos geolocalizados */}
+          <section style={sectionStyle}>
+            <h2 style={h2Style}>Ubicaciones para Títulos Geolocalizados</h2>
+            <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 12 }}>
+              Cuéntanos de dónde son tus clientes reales y dónde está o vende tu
+              negocio. Con esta información, Oportunidades puede crear títulos
+              ultra segmentados que combinan ambas (ej. &quot;Cómo invertir en
+              propiedades en Homestead si vives en Colombia&quot;). Escribe
+              varias ciudades o países separados por comas. Dejar vacío no
+              cambia nada de tu cuenta.
+            </p>
+
+            <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1d1d1f", marginBottom: 6 }}>
+              ¿En dónde están tus clientes?
+            </label>
+            <input
+              type="text"
+              value={clientLocations}
+              onChange={(e) => setClientLocations(e.target.value)}
+              placeholder="Ej: Colombia, Bogotá, Ecuador, Caracas"
+              style={{ ...inputStyle, width: "100%", marginBottom: 14 }}
+            />
+
+            <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1d1d1f", marginBottom: 6 }}>
+              ¿En dónde está tu negocio?
+            </label>
+            <input
+              type="text"
+              value={businessLocations}
+              onChange={(e) => setBusinessLocations(e.target.value)}
+              placeholder="Ej: Miami, Orlando, Homestead"
+              style={{ ...inputStyle, width: "100%" }}
+            />
+
+            <div style={{ marginTop: 12 }}>
+              <button
+                onClick={handleSaveLocations}
+                disabled={savingLocations}
+                style={disabledStyle(secondaryButtonStyle, savingLocations)}
+              >
+                {savingLocations ? "Guardando..." : "Guardar ubicaciones"}
               </button>
             </div>
           </section>

@@ -95,7 +95,7 @@ Si una red no aparece, primero pide al administrador que active el permiso corre
 
 ### Personalización del contenido
 
-Puedes elegir tu idioma habitual de redacción, agregar una firma al final de los artículos y guardar teléfono de contacto para los botones de llamada o WhatsApp dentro de tus artículos. También puedes subir tu foto y logo para piezas de redes sociales y definir instrucciones para el estilo de imágenes e infografías.
+Puedes elegir tu idioma habitual de redacción, agregar una firma al final de los artículos y guardar teléfono de contacto para los botones de llamada o WhatsApp dentro de tus artículos. También puedes subir tu foto y logo para piezas de redes sociales y definir instrucciones para el estilo de imágenes e infografías. Además puedes indicar en dónde están tus clientes y en dónde está tu negocio para que Oportunidades cree títulos ultra geolocalizados combinando ambos datos.
 
 Consejo: escribe instrucciones de imagen sencillas y concretas; por ejemplo, el estilo visual, colores o tipo de público. Si las dejas vacías, se usa el estilo predeterminado.
 
@@ -224,6 +224,8 @@ Aquí conectas Google Business Profile y las redes sociales. Las redes son opcio
 Ruta: /dashboard/configuracion?tab=platform
 
 Guarda las credenciales de la plataforma, sincroniza categorías e idiomas y elige el idioma habitual. También puedes definir la firma de los artículos, teléfono de contacto, hasta 3 fotos tuyas y hasta 2 logos. Solo la primera foto y el primer logo son obligatorios; el resto es opcional y le da al sistema más variedad para elegir. Estas imágenes se usan cuando el generador de imágenes con IA para redes sociales está activo en tu cuenta (lo activa el administrador).
+
+**Ubicaciones para títulos geolocalizados:** escribe, separadas por comas, las ciudades o países de donde son tus clientes reales (ej. "Colombia, Bogotá, Ecuador, Caracas") y por separado dónde está u opera tu negocio (ej. "Miami, Orlando, Homestead"). Oportunidades puede combinar ambos datos para crear títulos ultra segmentados como "Cómo invertir en propiedades en Homestead si vives en Colombia". Dejar los campos vacíos no cambia nada de tu cuenta.
 
 ### Estado de configuración
 
