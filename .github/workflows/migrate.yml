@@ -28,6 +28,11 @@ on:
         required: false
         default: false
         type: boolean
+      safe_client_business_locations:
+        description: "Aplicar solo las columnas nuevas clientLocations/businessLocations, sin tocar nada mas del schema"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   migrar:
@@ -81,8 +86,17 @@ jobs:
           npx prisma db execute \
             --url "$MIGRATION_DATABASE_URL" \
             --file packages/db/prisma/migrations/20260902150000_add_blogger_integration/migration.sql
+      - name: Aplicar migración segura de ubicaciones cliente/negocio
+        if: ${{ inputs.safe_client_business_locations }}
+        shell: bash
+        run: |
+          MIGRATION_DATABASE_URL="${DATABASE_URL/:6543/:5432}"
+          MIGRATION_DATABASE_URL="${MIGRATION_DATABASE_URL/?pgbouncer=true/}"
+          npx prisma db execute \
+            --url "$MIGRATION_DATABASE_URL" \
+            --file packages/db/prisma/migrations/20260907180000_add_client_business_locations/migration.sql
       - name: Aplicar migraciones con Session pooler
-        if: ${{ !inputs.safe_opportunity_dates && !inputs.safe_daily_limit_default && !inputs.safe_blogger_integration }}
+        if: ${{ !inputs.safe_opportunity_dates && !inputs.safe_daily_limit_default && !inputs.safe_blogger_integration && !inputs.safe_client_business_locations }}
         shell: bash
         run: |
           MIGRATION_DATABASE_URL="${DATABASE_URL/:6543/:5432}"
