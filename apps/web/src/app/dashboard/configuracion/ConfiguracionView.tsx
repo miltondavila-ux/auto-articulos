@@ -662,7 +662,7 @@ export default function ConfiguracionView({
       eyebrow: "Dispositivos",
       label: "App Móvil",
       description:
-        "Código QR e instrucciones para instalar Auto Artículos en tu celular.",
+        "Código QR e instrucciones para instalar SEO TOTAL en tu celular.",
       href: "/dashboard/configuracion/movil",
     },
   ];
@@ -1135,7 +1135,7 @@ export default function ConfiguracionView({
             )}
             {showCredentialsForm && (
               <p style={{ fontSize: 12, color: "#6e6e73", marginTop: 10 }}>
-                Ingresa tu usuario y contraseña de {platformBase.replace(/^https?:\/\//, "")} (no los de Auto Artículos). Si no recuerdas tu contraseña,{" "}
+                Ingresa tu usuario y contraseña de {platformBase.replace(/^https?:\/\//, "")} (no los de SEO TOTAL). Si no recuerdas tu contraseña,{" "}
                 <a
                   href={platformForgotPasswordUrl(platformDomain)}
                   target="_blank"
@@ -1734,7 +1734,7 @@ export default function ConfiguracionView({
                 CÓDIGO QR DIRECTO
               </span>
               <h2 style={{ ...h2Style, marginTop: 10, fontSize: 18 }}>
-                Abre Auto Artículos en tu Celular
+                Abre SEO TOTAL en tu Celular
               </h2>
               <p style={{ fontSize: 13, color: "#6e6e73", margin: "6px 0 16px 0" }}>
                 Apunta la cámara de tu teléfono al código QR para acceder al instante.
@@ -1752,7 +1752,7 @@ export default function ConfiguracionView({
               >
                 <img
                   src="/qr-app.svg"
-                  alt="Código QR para abrir Auto Artículos en el celular"
+                  alt="Código QR para abrir SEO TOTAL en el celular"
                   width={180}
                   height={180}
                   style={{ display: "block" }}

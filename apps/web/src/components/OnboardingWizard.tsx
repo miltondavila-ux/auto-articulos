@@ -961,7 +961,7 @@ export default function OnboardingWizard({
             {/* Pedido explícito de Milton (29/8/2026): si las mismas       */}
             {/* credenciales exponen 2+ sitios/paneles/idiomas, la persona  */}
             {/* elige uno solo y la cuenta queda atada a él para siempre —  */}
-            {/* para el otro sitio, otra cuenta de Auto Artículos. Se       */}
+            {/* para el otro sitio, otra cuenta de SEO TOTAL. Se       */}
             {/* muestra siempre que haya credenciales guardadas y el sitio  */}
             {/* todavía no esté confirmado, sin depender de editingCreds:   */}
             {/* la versión anterior quedaba oculta ahí y nunca se veía.    */}
@@ -971,7 +971,7 @@ export default function OnboardingWizard({
                   Confirma el sitio con el que trabajará esta cuenta
                 </div>
                 <div style={{ fontSize: 12, color: "#6e6e73", marginBottom: 10 }}>
-                  Si esta cuenta de {productName} da acceso a más de un sitio, elige uno solo: esta cuenta de Auto Artículos trabajará únicamente con él. Para el otro, crea otra cuenta.
+                  Si esta cuenta de {productName} da acceso a más de un sitio, elige uno solo: esta cuenta de SEO TOTAL trabajará únicamente con él. Para el otro, crea otra cuenta.
                 </div>
 
                 {!detectJob || detectJob.status === "error" ? (
@@ -1055,7 +1055,7 @@ export default function OnboardingWizard({
 
             {step1Saved && siteSelectionConfirmed && (
               <div style={{ marginTop: 12, fontSize: 12, color: "#16803c" }}>
-                Sitio confirmado{selectedSitePanel ? `: ${selectedSitePanel}` : " (único sitio de la cuenta)"}. Esta cuenta de Auto Artículos trabaja exclusivamente con él.
+                Sitio confirmado{selectedSitePanel ? `: ${selectedSitePanel}` : " (único sitio de la cuenta)"}. Esta cuenta de SEO TOTAL trabaja exclusivamente con él.
               </div>
             )}
           </StepCard>
@@ -1066,7 +1066,7 @@ export default function OnboardingWizard({
           <StepCard
             stepNumber={2}
             title="Sincronizar las Categorías de tu Web"
-            subtitle={`Auto Artículos descarga las categorías creadas en tu web de ${productName} para saber dónde clasificar los artículos.`}
+            subtitle={`SEO TOTAL descarga las categorías creadas en tu web de ${productName} para saber dónde clasificar los artículos.`}
             isDone={step2Done}
             isActive={activeStep === 2}
             badgeText={
@@ -1380,7 +1380,7 @@ export default function OnboardingWizard({
           <StepCard
             stepNumber={4}
             title="Conectar Google Search Console"
-            subtitle="Permite a Auto Artículos indexar tus artículos inmediatamente y analizar las búsquedas que te traen visitas."
+            subtitle="Permite a SEO TOTAL indexar tus artículos inmediatamente y analizar las búsquedas que te traen visitas."
             isDone={step4Done}
             isActive={activeStep === 4}
             badgeText={

@@ -12,7 +12,7 @@ export async function GET() {
 }
 
 /**
- * Confirma el ÚNICO panel/dominio con el que esta cuenta de Auto Artículos
+ * Confirma el ÚNICO panel/dominio con el que esta cuenta de SEO TOTAL
  * va a trabajar para siempre (pedido explícito de Milton: si las mismas
  * credenciales exponen más de un sitio real, el resto queda fuera de esta
  * cuenta — para el otro dominio, otra cuenta).
@@ -35,7 +35,7 @@ export async function PATCH(request: Request) {
   });
   if (existing.siteSelectionConfirmed) {
     return NextResponse.json(
-      { error: "El dominio de esta cuenta ya está confirmado y no se puede cambiar. Para otro dominio, crea otra cuenta de Auto Artículos." },
+      { error: "El dominio de esta cuenta ya está confirmado y no se puede cambiar. Para otro dominio, crea otra cuenta de SEO TOTAL." },
       { status: 400 },
     );
   }

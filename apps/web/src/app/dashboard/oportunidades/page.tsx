@@ -457,7 +457,7 @@ export default function OportunidadesPage() {
           <p style={{ color: "#1d1d1f", fontSize: 14, lineHeight: 1.55 }}>
             El objetivo de este módulo es ayudarte a encontrar temas que tus
             posibles clientes buscan en internet y convertirlos en artículos
-            para el blog de tu página web. Auto Artículos te muestra
+            para el blog de tu página web. SEO TOTAL te muestra
             propuestas, escribe los artículos, les añade una imagen y los
             publica en tu blog. Así tu negocio puede tener más presencia en
             internet y aparecer cuando alguien busque los productos o

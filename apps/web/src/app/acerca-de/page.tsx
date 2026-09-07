@@ -18,21 +18,21 @@ import {
 const CONTACTO = platformContactEmail(DEFAULT_PLATFORM_DOMAIN);
 
 export const metadata: Metadata = {
-  title: "Acerca de Auto Artículos",
+  title: "Acerca de SEO TOTAL",
   description:
-    "Información oficial de Auto Artículos y su integración con Google Search Console.",
+    "Información oficial de SEO TOTAL y su integración con Google Search Console.",
 };
 
 export default function AboutPage() {
   return (
     <PublicInfoPage
       eyebrow="Información oficial"
-      title="Auto Artículos"
+      title="SEO TOTAL"
       intro="Una herramienta privada para crear y administrar secuencias de artículos dentro de programas de posicionamiento web."
     >
       <h2 style={publicHeadingStyle}>Qué hace la aplicación</h2>
       <p>
-        Auto Artículos ayuda a sus usuarios autorizados a preparar lotes de
+        SEO TOTAL ayuda a sus usuarios autorizados a preparar lotes de
         títulos, generar contenido y publicar artículos en sus propias cuentas
         de su plataforma de gestión de sitios web. Cada cuenta y su historial
         permanecen separados.
@@ -44,7 +44,7 @@ export default function AboutPage() {
         mediante OAuth 2.0. La aplicación muestra únicamente las propiedades de
         Search Console que ese usuario administra y usa la propiedad que él
         mismo selecciona para gestionar el sitemap y consultar el estado de
-        indexación. Auto Artículos nunca solicita la contraseña de Google.
+        indexación. SEO TOTAL nunca solicita la contraseña de Google.
       </p>
 
       <h2 style={publicHeadingStyle}>Acceso</h2>

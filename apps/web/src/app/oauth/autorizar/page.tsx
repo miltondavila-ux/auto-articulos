@@ -44,7 +44,7 @@ function OAuthConsentContent() {
 
   return (
     <main style={{ maxWidth: 560, margin: "72px auto", padding: 24, fontFamily: "sans-serif" }}>
-      <h1>Conectar {requester} con Auto Artículos</h1>
+      <h1>Conectar {requester} con SEO TOTAL</h1>
       <p>{consentDescription}</p>
       <p><strong>Permisos:</strong> {params.scope || "no especificados"}</p>
       {error && <p role="alert" style={{ color: "#b91c1c" }}>{error}</p>}

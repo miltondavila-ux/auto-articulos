@@ -46,5 +46,5 @@ process.on("SIGINT", () => {
   stopping = true;
 });
 
-console.log("Auto Artículos worker iniciado. Escuchando ejecuciones pendientes...");
+console.log("SEO TOTAL worker iniciado. Escuchando ejecuciones pendientes...");
 loop();

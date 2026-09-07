@@ -18,8 +18,8 @@ import {
 const CONTACTO = platformContactEmail(DEFAULT_PLATFORM_DOMAIN);
 
 export const metadata: Metadata = {
-  title: "Condiciones del Servicio | Auto Artículos",
-  description: "Condiciones de uso de Auto Artículos.",
+  title: "Condiciones del Servicio | SEO TOTAL",
+  description: "Condiciones de uso de SEO TOTAL.",
 };
 
 export default function TermsPage() {
@@ -27,11 +27,11 @@ export default function TermsPage() {
     <PublicInfoPage
       eyebrow="Última actualización: 31 de julio de 2026"
       title="Condiciones del Servicio"
-      intro="Al utilizar Auto Artículos, aceptas estas condiciones y confirmas que tienes autorización sobre las cuentas y sitios que conectas."
+      intro="Al utilizar SEO TOTAL, aceptas estas condiciones y confirmas que tienes autorización sobre las cuentas y sitios que conectas."
     >
       <h2 style={publicHeadingStyle}>Uso autorizado</h2>
       <p>
-        Auto Artículos es una herramienta privada para usuarios invitados. El
+        SEO TOTAL es una herramienta privada para usuarios invitados. El
         usuario es responsable de mantener segura su cuenta y de suministrar
         información correcta. No debe utilizar el servicio para publicar
         contenido ilícito, engañoso, abusivo o que infrinja derechos de

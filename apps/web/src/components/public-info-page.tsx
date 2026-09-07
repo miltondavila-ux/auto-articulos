@@ -40,7 +40,7 @@ export function PublicInfoPage({
           }}
         >
           <a href="/acerca-de" style={{ ...linkStyle, fontWeight: 800 }}>
-            Auto Artículos
+            SEO TOTAL
           </a>
           <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
             <a href="/privacidad" style={linkStyle}>
@@ -109,7 +109,7 @@ export function PublicInfoPage({
             textAlign: "center",
           }}
         >
-          © 2026 Auto Artículos · Contacto: {platformContactEmail(DEFAULT_PLATFORM_DOMAIN)}
+          © 2026 SEO TOTAL · Contacto: {platformContactEmail(DEFAULT_PLATFORM_DOMAIN)}
         </footer>
       </div>
     </main>

@@ -12,7 +12,7 @@ import {
 import { findTool, listToolsPayload } from "@/lib/mcp/tools";
 
 /**
- * Servidor MCP de Auto Artículos — transporte "streamable HTTP".
+ * Servidor MCP de SEO TOTAL — transporte "streamable HTTP".
  *
  * Es el endpoint al que se conecta un cliente MCP (Alexa+ actúa como cliente;
  * también sirve para Claude, ChatGPT o cualquier otro). Alexa+ for Builders
@@ -69,7 +69,7 @@ async function manejar(mensaje: JsonRpcRequest, scopes: string[]) {
         capabilities: { tools: { listChanged: false } },
         serverInfo: { name: "auto-articulos", version: "0.1.0" },
         instructions:
-          "Herramientas de Auto Artículos: consultar y generar oportunidades SEO, y publicar artículos. Publicar tiene consecuencias públicas reales: usa siempre publicar_categoria con confirmar=false primero y pide confirmación explícita al usuario antes de publicar.",
+          "Herramientas de SEO TOTAL: consultar y generar oportunidades SEO, y publicar artículos. Publicar tiene consecuencias públicas reales: usa siempre publicar_categoria con confirmar=false primero y pide confirmación explícita al usuario antes de publicar.",
       });
 
     // El cliente avisa que terminó el handshake. No espera respuesta.

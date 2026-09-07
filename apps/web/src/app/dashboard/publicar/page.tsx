@@ -262,7 +262,7 @@ export default function PublicarPage() {
             Publicar artículos
           </h1>
           <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: "#1d1d1f" }}>
-            El objetivo de este módulo es convertir tus ideas o títulos en artículos completos para atraer visitas, responder las preguntas de tus clientes y fortalecer el posicionamiento de tu web en Google. Puedes colocar títulos creados por otra inteligencia artificial o escritos por ti: Auto Artículos desarrollará cada título, redactará el contenido, añadirá una imagen y publicará el artículo directamente en tu página web.
+            El objetivo de este módulo es convertir tus ideas o títulos en artículos completos para atraer visitas, responder las preguntas de tus clientes y fortalecer el posicionamiento de tu web en Google. Puedes colocar títulos creados por otra inteligencia artificial o escritos por ti: SEO TOTAL desarrollará cada título, redactará el contenido, añadirá una imagen y publicará el artículo directamente en tu página web.
           </p>
           <ol style={{ margin: "12px 0 0", paddingLeft: 22, color: "#1d1d1f", fontSize: 14, lineHeight: 1.65 }}>
             <li><strong>Elige una categoría:</strong> indica el tema o servicio del artículo.</li>

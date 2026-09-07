@@ -490,7 +490,7 @@ export async function publishArticle(
 
 /**
  * Lee las categorías/etiquetas reales configuradas en la cuenta del usuario,
- * para que el dashboard de Auto Artículos las ofrezca en un selector antes de
+ * para que el dashboard de SEO TOTAL las ofrezca en un selector antes de
  * pegar títulos. Son específicas de cada cuenta de 10minutesWebsite.
  */
 async function readCategoriesFromCurrentPanel(
@@ -791,7 +791,7 @@ async function createArticleDraft(
         'mostró el campo "Tipo" a tiempo)' +
         (alertText ? `. Mensaje visible en el sitio: "${alertText}"` : ".") +
         " Es posible que la cuenta haya alcanzado un límite diario de " +
-        `artículos en ${productName}, independiente del cupo configurado en Auto Artículos. ` +
+        `artículos en ${productName}, independiente del cupo configurado en SEO TOTAL. ` +
         "no debería aplicar para cuentas del programa de posicionamiento. " +
         "Si este error se repite, solicita al servicio al cliente de " +
         `${productName} que revise y elimine esa restricción para esta ` +
@@ -995,7 +995,7 @@ async function createArticleDraft(
   // Selector real "Lucy habla diferentes idiomas, selecciona el que más te
   // guste" (visto en vivo el 5/8/2026, ver fetchLanguages()). 10minutesWebsite
   // usa valores como `en_VI`, mientras que algunos registros históricos de
-  // Auto Artículos guardan `en` o el nombre visible. Resolvemos esos formatos
+  // SEO TOTAL guardan `en` o el nombre visible. Resolvemos esos formatos
   // contra las opciones reales antes de generar.
   const languageSelect = dialog.locator("select").first();
   const languageOptions = await languageSelect
@@ -1018,7 +1018,7 @@ async function createArticleDraft(
   }
 
   // Evita esperar el timeout completo cuando la cuenta usa valores como
-  // "es_ES" y Auto Artículos guarda el código corto "es".
+  // "es_ES" y SEO TOTAL guarda el código corto "es".
   await languageSelect.selectOption(matchingLanguage.value, { timeout: 5000 });
   // Bug real encontrado el 6/8/2026 (cuenta de Gustavo Torres, contentLanguage
   // en inglés): a diferencia del selector de categoría (#user_label_list_article),

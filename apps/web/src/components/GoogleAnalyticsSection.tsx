@@ -38,7 +38,7 @@ export default function GoogleAnalyticsSection() {
 
   return <section style={sectionStyle}>
     <h2 style={h2Style}>Google Analytics 4</h2>
-    <p className="lead-copy" style={{ margin: "0 0 16px" }}>Conecta GA4 para que Auto Artículos use el rendimiento real de tu contenido al crear oportunidades de artículos y redes sociales. Solo leeremos tus datos y nunca modificaremos tu cuenta.</p>
+    <p className="lead-copy" style={{ margin: "0 0 16px" }}>Conecta GA4 para que SEO TOTAL use el rendimiento real de tu contenido al crear oportunidades de artículos y redes sociales. Solo leeremos tus datos y nunca modificaremos tu cuenta.</p>
     <div style={{ background: "#f5f5f7", border: "1px solid #e5e5ea", borderRadius: 8, padding: "12px 14px", marginBottom: 14, fontSize: 13, lineHeight: 1.5 }}>
       <strong>Cómo funciona:</strong> conecta tu cuenta, autoriza el acceso de lectura y elige una propiedad GA4. Puedes cambiarla o desconectarla cuando quieras.
     </div>

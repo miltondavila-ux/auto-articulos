@@ -81,7 +81,7 @@ export default function GoogleSearchConsoleSection() {
     <section style={sectionStyle}>
       <h2 style={h2Style}>Google Search Console</h2>
       <p className="lead-copy" style={{ margin: "0 0 16px 0" }}>
-        Conecta tu cuenta de Google para que tus artículos aparezcan en los resultados de búsqueda de Google. Auto Artículos enviará tu sitemap automáticamente y te mostrará el estado de indexación de cada artículo.
+        Conecta tu cuenta de Google para que tus artículos aparezcan en los resultados de búsqueda de Google. SEO TOTAL enviará tu sitemap automáticamente y te mostrará el estado de indexación de cada artículo.
       </p>
 
       <div

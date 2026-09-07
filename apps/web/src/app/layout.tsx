@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     // de la página.
     capable: true,
     statusBarStyle: "default",
-    title: "Auto Artículos",
+    title: "SEO TOTAL",
   },
   openGraph: {
     title: "Creador de artículos en secuencia",

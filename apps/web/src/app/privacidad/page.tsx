@@ -18,8 +18,8 @@ import {
 const CONTACTO = platformContactEmail(DEFAULT_PLATFORM_DOMAIN);
 
 export const metadata: Metadata = {
-  title: "Política de Privacidad | Auto Artículos",
-  description: "Política de privacidad de Auto Artículos.",
+  title: "Política de Privacidad | SEO TOTAL",
+  description: "Política de privacidad de SEO TOTAL.",
 };
 
 export default function PrivacyPage() {
@@ -27,7 +27,7 @@ export default function PrivacyPage() {
     <PublicInfoPage
       eyebrow="Última actualización: 31 de julio de 2026"
       title="Política de Privacidad"
-      intro="Esta política explica qué información usa Auto Artículos, para qué se utiliza y qué control conserva cada usuario."
+      intro="Esta política explica qué información usa SEO TOTAL, para qué se utiliza y qué control conserva cada usuario."
     >
       <h2 style={publicHeadingStyle}>Información que tratamos</h2>
       <p>
@@ -40,7 +40,7 @@ export default function PrivacyPage() {
 
       <h2 style={publicHeadingStyle}>Datos de Google</h2>
       <p>
-        Si el usuario conecta Google Search Console, Auto Artículos recibe un
+        Si el usuario conecta Google Search Console, SEO TOTAL recibe un
         token OAuth revocable y acceso a la lista de propiedades que esa cuenta
         puede administrar. Usamos ese acceso exclusivamente para que el usuario
         seleccione su propiedad, gestione su sitemap y consulte el estado de
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
       <h2 style={publicHeadingStyle}>Uso y divulgación</h2>
       <p>
         La información se utiliza únicamente para prestar, proteger y mejorar
-        Auto Artículos. No vendemos datos personales, tokens ni información de
+        SEO TOTAL. No vendemos datos personales, tokens ni información de
         Google. No compartimos esos datos con anunciantes. Solo intervienen los
         proveedores técnicos necesarios para operar el servicio, como el
         alojamiento y la base de datos, sujetos a sus medidas de seguridad.

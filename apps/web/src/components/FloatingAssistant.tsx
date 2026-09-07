@@ -342,7 +342,7 @@ export default function FloatingAssistant() {
             <div className="assistant-heading">
               <span className="assistant-eyebrow">ASISTENTE DE AYUDA</span>
               <h2>¿Cómo puedo ayudarte?</h2>
-              <p>Guía rápida de Auto Artículos</p>
+              <p>Guía rápida de SEO TOTAL</p>
             </div>
             {messages.length > 0 && <button className="assistant-reset" type="button" onClick={clearConversation}>Nueva</button>}
             <button className="assistant-close" type="button" onClick={() => setOpen(false)} aria-label="Cerrar asistente de ayuda">×</button>

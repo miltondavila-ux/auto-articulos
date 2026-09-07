@@ -31,7 +31,7 @@ function languageBase(value: string): string {
 }
 
 /**
- * Maps the value saved by Auto Artículos to an option that actually exists in
+ * Maps the value saved by SEO TOTAL to an option that actually exists in
  * the live 10minutesWebsite modal. The remote site uses values such as
  * `en_VI`, while older records may contain `en` or a visible name.
  */

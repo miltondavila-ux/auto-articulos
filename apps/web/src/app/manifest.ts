@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Auto Artículos",
-    short_name: "Auto Artículos",
+    name: "SEO TOTAL",
+    short_name: "SEO TOTAL",
     description:
       "Crea artículos en secuencia. Herramienta de posicionamiento web para creación de contenido en secuencia.",
     start_url: "/",

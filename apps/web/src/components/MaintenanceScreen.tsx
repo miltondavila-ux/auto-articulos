@@ -24,7 +24,7 @@ export default function MaintenanceScreen() {
         }}
       >
         <p style={{ margin: "0 0 10px", color: "#1d1d1f", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", fontSize: 12 }}>
-          Auto Artículos
+          SEO TOTAL
         </p>
         <h1 style={{ margin: "0 0 12px", fontSize: 28 }}>Estamos en mantenimiento</h1>
         <p style={{ margin: "0 auto 24px", color: "#6e6e73", lineHeight: 1.55 }}>

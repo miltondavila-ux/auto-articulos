@@ -4,7 +4,7 @@
  * ProductUpdate mediante getUserManualKnowledge().
  */
 export const BASE_USER_MANUAL = `
-# Manual de uso de Auto Artículos
+# Manual de uso de SEO TOTAL
 
 Este manual explica cómo usar la plataforma desde la perspectiva de una persona usuaria. No describe contraseñas internas, programación ni configuración técnica del sistema.
 
@@ -63,7 +63,7 @@ Pestaña destacada en Configuración que te permite repasar o completar el asist
 
 ### Cuenta de la plataforma de publicación
 
-Guarda el usuario y contraseña de tu cuenta de la plataforma. El sistema los usa para publicar artículos en tu sitio. Si no recuerdas esa contraseña, usa el enlace de recuperación de la plataforma; no uses aquí la contraseña de Auto Artículos.
+Guarda el usuario y contraseña de tu cuenta de la plataforma. El sistema los usa para publicar artículos en tu sitio. Si no recuerdas esa contraseña, usa el enlace de recuperación de la plataforma; no uses aquí la contraseña de SEO TOTAL.
 
 ### Categorías e idiomas
 
@@ -81,13 +81,13 @@ Desde Configuración puedes vincular los servicios disponibles, como Google Busi
 
 Si una red no aparece, primero pide al administrador que active el permiso correspondiente para tu usuario. Después sigue únicamente las instrucciones de esa red. Nunca escribas aquí tu contraseña de la red: cuando una conexión use OAuth, se abrirá la red para que autorices; cuando use una credencial manual, debes copiar solo el dato que se indica.
 
-**Threads, Instagram, Facebook, LinkedIn, Pinterest y Tumblr:** abre la red en otra pestaña con la cuenta correcta iniciada, vuelve a Auto Artículos y pulsa el botón de conexión. Sigue las pantallas de autorización y acepta los permisos. Si hay varias cuentas abiertas, cierra las que no quieras conectar. Pinterest puede pedirte elegir un tablero; Tumblr puede pedirte elegir un blog. LinkedIn conecta el perfil que autorices. Instagram debe ser una cuenta profesional asociada a Facebook.
+**Threads, Instagram, Facebook, LinkedIn, Pinterest y Tumblr:** abre la red en otra pestaña con la cuenta correcta iniciada, vuelve a SEO TOTAL y pulsa el botón de conexión. Sigue las pantallas de autorización y acepta los permisos. Si hay varias cuentas abiertas, cierra las que no quieras conectar. Pinterest puede pedirte elegir un tablero; Tumblr puede pedirte elegir un blog. LinkedIn conecta el perfil que autorices. Instagram debe ser una cuenta profesional asociada a Facebook.
 
-**X (Twitter):** el administrador configura primero el Client ID y Client Secret de la aplicación de X. Luego abre X con la cuenta correcta iniciada, vuelve a Auto Artículos y pulsa “Conectar X (Twitter)”. Acepta los permisos y espera a volver a Auto Artículos. No copies aquí tu contraseña.
+**X (Twitter):** el administrador configura primero el Client ID y Client Secret de la aplicación de X. Luego abre X con la cuenta correcta iniciada, vuelve a SEO TOTAL y pulsa “Conectar X (Twitter)”. Acepta los permisos y espera a volver a SEO TOTAL. No copies aquí tu contraseña.
 
-**Bluesky:** entra en Bluesky y ve a Configuración → Privacidad y seguridad → Contraseñas de aplicación → Crear nueva App Password. Ponle “Auto Artículos”, copia la App Password y escribe tu usuario completo, por ejemplo “nombre.bsky.social”. En Auto Artículos pega ambos datos. No uses la contraseña principal de Bluesky.
+**Bluesky:** entra en Bluesky y ve a Configuración → Privacidad y seguridad → Contraseñas de aplicación → Crear nueva App Password. Ponle “SEO TOTAL”, copia la App Password y escribe tu usuario completo, por ejemplo “nombre.bsky.social”. En SEO TOTAL pega ambos datos. No uses la contraseña principal de Bluesky.
 
-**DEV.to:** entra en DEV.to → Settings → Extensions → API Keys. Crea una clave con un nombre como “Auto Artículos”, copia la API key y pégala en la configuración de tu cuenta. Cada usuario debe conectar su propia cuenta de DEV.to; no se comparte la clave del administrador.
+**DEV.to:** entra en DEV.to → Settings → Extensions → API Keys. Crea una clave con un nombre como “SEO TOTAL”, copia la API key y pégala en la configuración de tu cuenta. Cada usuario debe conectar su propia cuenta de DEV.to; no se comparte la clave del administrador.
 
 **Blogger:** conecta con la misma cuenta de Google que administra tu blog y, cuando se te pida, elige el blog donde quieres publicar. A diferencia de las demás redes, Blogger no recibe el artículo completo: recibe el título, la imagen destacada y un resumen breve escrito especialmente para ese lector, con un enlace para leer el artículo completo en tu sitio.
 
@@ -203,7 +203,7 @@ Ruta: /dashboard/configuracion?tab=integrations
 1. Pulsa **Conectar Google Search Console** e inicia sesión con la cuenta de Google que tiene acceso a tu sitio.
 2. Cuando vuelvas a la plataforma, elige la propiedad verificada correcta en la lista y pulsa **Guardar propiedad**.
 3. El sitemap se detecta automáticamente cuando es posible. Si no se encuentra, escribe su URL y guarda la configuración.
-4. Puedes pulsar **Enviar sitemap ahora** para un envío inmediato. Después, Auto Artículos lo envía automáticamente cada noche.
+4. Puedes pulsar **Enviar sitemap ahora** para un envío inmediato. Después, SEO TOTAL lo envía automáticamente cada noche.
 
 Google Search Console permite usar Oportunidades SEO, consultar el estado de indexación y enviar el sitemap. Si no ves tu sitio en la lista, revisa que la misma cuenta de Google sea propietaria o usuaria autorizada de esa propiedad.
 
@@ -211,7 +211,7 @@ Google Search Console permite usar Oportunidades SEO, consultar el estado de ind
 
 Ruta: /dashboard/configuracion?tab=integrations
 
-Abre Bing Webmaster Tools con tu sesión iniciada, vuelve a Auto Artículos y pulsa **Conectar Bing Webmaster Tools**. Acepta los permisos y elige o guarda el sitio correcto. Si la conexión venció, usa **Reconectar Bing** una sola vez y espera la redirección. Desde esta sección también puedes enviar el sitemap y enviar a Bing los artículos publicados que todavía estén pendientes de indexación.
+Abre Bing Webmaster Tools con tu sesión iniciada, vuelve a SEO TOTAL y pulsa **Conectar Bing Webmaster Tools**. Acepta los permisos y elige o guarda el sitio correcto. Si la conexión venció, usa **Reconectar Bing** una sola vez y espera la redirección. Desde esta sección también puedes enviar el sitemap y enviar a Bing los artículos publicados que todavía estén pendientes de indexación.
 
 ### Redes sociales
 

@@ -224,7 +224,7 @@ export async function POST(request: NextRequest) {
         : "Puedes intentarlo en otro lote cuando tengas cupo disponible.";
     return NextResponse.json(
       {
-        error: `Tu cupo disponible es de 0 artículos. Has alcanzado ${cupoMasEstrecho.tope}, que es ${cupoMasEstrecho.motivo} asignado por el administrador de Auto Artículos. ${renovacion}${contextoMensual}`,
+        error: `Tu cupo disponible es de 0 artículos. Has alcanzado ${cupoMasEstrecho.tope}, que es ${cupoMasEstrecho.motivo} asignado por el administrador de SEO TOTAL. ${renovacion}${contextoMensual}`,
       },
       { status: 403 },
     );

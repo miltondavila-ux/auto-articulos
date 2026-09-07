@@ -53,7 +53,7 @@ export default function BlueskySection({ allowed = true }: { allowed?: boolean }
       <strong style={{ fontSize: 14 }}>Cómo conectar Bluesky, paso a paso</strong>
       <ol style={{ margin: "10px 0 0", paddingLeft: 20 }}>
         <li>Entra en Bluesky y abre <strong>Configuración → Privacidad y seguridad → Contraseñas de aplicación</strong>.</li>
-        <li>Pulsa <strong>Crear nueva App Password</strong> y ponle el nombre <strong>Auto Artículos</strong>.</li>
+        <li>Pulsa <strong>Crear nueva App Password</strong> y ponle el nombre <strong>SEO TOTAL</strong>.</li>
         <li>Copia la contraseña que Bluesky te muestra. Esa es la <strong>App Password</strong>; no uses tu contraseña normal.</li>
         <li>En <strong>Usuario o handle</strong>, escribe tu usuario completo, por ejemplo <strong>nombre.bsky.social</strong>.</li>
         <li>Pega la App Password y pulsa <strong>Conectar Bluesky</strong>.</li>

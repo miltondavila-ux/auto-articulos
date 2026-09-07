@@ -126,9 +126,9 @@ Make sure the generated HTML is valid and clean.`;
 
 Mandatory limits so the result can be saved safely:
 - Write no more than 1,200 words in contentHtml.
-- Do not include <script>, JSON-LD, CSS, QR codes, contact buttons, or tel:/wa.me links; Auto Artículos adds real contact data safely.
+- Do not include <script>, JSON-LD, CSS, QR codes, contact buttons, or tel:/wa.me links; SEO TOTAL adds real contact data safely.
 - Do not use HTML tables. If you need to highlight data, write a short, clear list with the datum in <strong> followed by its explanation.
-- Do not use personal-data markers; Auto Artículos resolves them safely if they appear.
+- Do not use personal-data markers; SEO TOTAL resolves them safely if they appear.
 - Escape every quote inside the JSON contentHtml value correctly.
 - Keep every user-visible word in title, summary, and contentHtml in ${targetLanguage}, except unavoidable proper names or official brand names.`;
 

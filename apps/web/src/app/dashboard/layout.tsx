@@ -129,10 +129,10 @@ export default async function DashboardLayout({
               color: "#1d1d1f",
             }}
           >
-            Auto Artículos
+            SEO TOTAL
           </h1>
           <p className="eyebrow" style={{ margin: "4px 0 0" }}>
-            Generación y Posicionamiento SEO
+            Generación de contenido y posicionamiento inteligente
           </p>
         </div>
         <div

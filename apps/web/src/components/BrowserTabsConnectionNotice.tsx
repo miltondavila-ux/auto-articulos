@@ -18,14 +18,14 @@ export default function BrowserTabsConnectionNotice() {
       <ol style={{ margin: "10px 0 0", paddingLeft: 20 }}>
         <li>
           Cierra todas las pestañas del navegador excepto la pestaña donde está
-          abierto Auto Artículos.
+          abierto SEO TOTAL.
         </li>
         <li>
           Abre la red social que vas a configurar en una pestaña nueva del mismo
           navegador e inicia sesión en la cuenta correcta.
         </li>
         <li>
-          Regresa a la pestaña de Auto Artículos y completa la conexión. Si se
+          Regresa a la pestaña de SEO TOTAL y completa la conexión. Si se
           abre otra pestaña para autorizar, no cierres la pestaña del sistema y
           vuelve a ella al terminar.
         </li>

@@ -4,9 +4,9 @@ import type { CSSProperties } from "react";
 import { EnPrueba, Modulo } from "@/components/ModuleIntro";
 
 export const metadata: Metadata = {
-  title: "Cómo funciona — Auto Artículos",
+  title: "Cómo funciona — SEO TOTAL",
   description:
-    "Qué hace Auto Artículos, en qué orden ocurre y qué debes hacer tú en cada paso.",
+    "Qué hace SEO TOTAL, en qué orden ocurre y qué debes hacer tú en cada paso.",
 };
 
 /*
