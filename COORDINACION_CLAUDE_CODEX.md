@@ -5085,3 +5085,29 @@ la explicación de cada página, ni resucitar el componente monolítico, sin
 revisar esta sección primero y documentar el motivo, el diff y las tres
 auditorías requeridas.
 Estado: APROBADA POR MILTON — PROTEGIDA PERMANENTEMENTE.
+
+## RESERVA Y AUDITORÍA — CLASIFICACIÓN TEMÁTICA DETERMINISTA DE OPORTUNIDADES (2026-09-07)
+
+Identidad: continuación de `CATEGORIAS MAL ELEGIDAS`.
+Worktree aislado: `/private/tmp/categorias-tematicas-final`.
+Rama: `codex/categorias-tematicas-final`.
+Base verificada: `origin/main` en `ae78d4c`.
+
+Reserva: solo se modifican los archivos estrictamente necesarios para vincular
+las oportunidades con evidencia temática real. Se incorporó únicamente el
+arreglo del worktree limpio del Reparador (`2f1cec8`), adaptado sobre la base
+actual, sin absorber cambios ajenos. No se tocaron Vercel, middleware,
+autenticación, secretos, versiones ni rutas de producción.
+
+Reglas implementadas: las páginas publicadas se normalizan por URL y solo se
+asignan a una categoría cuando el vínculo es inequívoco; GSC y GA4 se aceptan
+como evidencia únicamente para esa categoría; Bing corrobora coincidencias
+exactas de consulta; cada llamada al modelo recibe una sola categoría fija y
+sus evidencias; se rechaza cualquier `categoryId` devuelto que no corresponda;
+las páginas ambiguas o sin vínculo se excluyen; se conserva el máximo global de
+20 llamadas y se devuelve error explícito si no hay oportunidades mapeables.
+
+Auditorías obligatorias: funcional, regresión e integración/producción deben
+ejecutarse y documentarse antes de publicar. La integración requiere confirmar
+el Preview de Vercel y las rutas críticas sin modificar la configuración de
+Root Directory ni ejecutar acciones destructivas.

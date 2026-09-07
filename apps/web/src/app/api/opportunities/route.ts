@@ -16,6 +16,16 @@ function isoDate(date: Date) {
   return date.toISOString().slice(0, 10);
 }
 
+function pageKey(value: string | null | undefined): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value, "https://placeholder.invalid");
+    return url.pathname.replace(/\/+$/, "") || "/";
+  } catch {
+    return null;
+  }
+}
+
 async function list(userId: string, siteDomain?: string | null) {
   return prisma.opportunityGroup.findMany({
     where: { userId, ...(siteDomain ? { category: { siteDomain } } : {}) },
@@ -133,13 +143,23 @@ export async function POST(request: Request) {
       ),
       prisma.title.findMany({
         where: {
-          run: { userId },
+          run: {
+            userId,
+            category: {
+              panel: selectedPanel,
+              ...(selectedSiteDomain ? { siteDomain: selectedSiteDomain } : {}),
+            },
+          },
           status: "success",
           articleUrl: { not: null },
         },
-        select: { text: true, finalTitle: true, run: { select: { categoryId: true } } },
+        select: {
+          text: true,
+          finalTitle: true,
+          articleUrl: true,
+          run: { select: { categoryId: true } },
+        },
         orderBy: { processedAt: "desc" },
-        take: 1000,
       }),
     ]);
     if (currentRows.length === 0) {
@@ -166,20 +186,78 @@ export async function POST(request: Request) {
         examplesByCategory.set(categoryId, list);
       }
     }
+    const pageToCategories = new Map<string, Set<string>>();
+    for (const title of existing) {
+      const key = pageKey(title.articleUrl);
+      if (!key) continue;
+      const categoryIds = pageToCategories.get(key) ?? new Set<string>();
+      categoryIds.add(title.run.categoryId);
+      pageToCategories.set(key, categoryIds);
+    }
+
+    const categoryEvidence = new Map<string, {
+      currentRows: typeof currentRows;
+      previousRows: typeof previousRows;
+      analyticsPages: Array<{ pagePath?: string; sessions: number; activeUsers: number; engagementRate?: number; conversions?: number }>;
+    }>();
+    const evidenceFor = (categoryId: string) => {
+      const current = categoryEvidence.get(categoryId);
+      if (current) return current;
+      const created = { currentRows: [], previousRows: [], analyticsPages: [] };
+      categoryEvidence.set(categoryId, created);
+      return created;
+    };
+    const assignGscRows = (rows: typeof currentRows, field: "currentRows" | "previousRows") => {
+      for (const row of rows) {
+        const key = pageKey(row.keys[1]);
+        const categoryIds = key ? pageToCategories.get(key) : undefined;
+        // Una página publicada en más de una categoría es ambigua: no se
+        // entrega a la IA para evitar que la asigne por parecido temático.
+        if (!categoryIds || categoryIds.size !== 1) continue;
+        evidenceFor([...categoryIds][0])[field].push(row);
+      }
+    };
+    assignGscRows(currentRows, "currentRows");
+    assignGscRows(previousRows, "previousRows");
+
+    const mappedCurrentRows = [...categoryEvidence.values()].reduce(
+      (total, evidence) => total + evidence.currentRows.length,
+      0,
+    );
+    if (mappedCurrentRows === 0) {
+      return NextResponse.json(
+        {
+          error:
+            "No se generaron oportunidades porque ninguna página con señales de Search Console pudo vincularse de forma inequívoca a una categoría publicada. Esto evita asignar temas a la categoría equivocada; verifica que los artículos publicados tengan su URL y categoría sincronizadas.",
+        },
+        { status: 422 },
+      );
+    }
+
+    const googleAnalyticsSignals = await getGoogleAnalyticsSignals(userId);
+    for (const page of googleAnalyticsSignals.rows) {
+      const key = pageKey(page.pagePath);
+      const categoryIds = key ? pageToCategories.get(key) : undefined;
+      if (!categoryIds || categoryIds.size !== 1) continue;
+      evidenceFor([...categoryIds][0]).analyticsPages.push(page);
+    }
+
     const categoriesWithExamples = categories.map((category) => ({
       ...category,
       publishedExamples: examplesByCategory.get(category.id) ?? [],
+      evidencePages: [...new Set(existing
+        .filter((title) => title.run.categoryId === category.id)
+        .map((title) => pageKey(title.articleUrl))
+        .filter((value): value is string => Boolean(value)))],
     }));
 
-    const [googleAnalyticsSignals, bingSignals] = await Promise.all([
-      getGoogleAnalyticsSignals(userId),
-      getBingSignals(userId),
-    ]);
+    const bingSignals = await getBingSignals(userId);
     const analysis = await analyzeSeoOpportunities({
       categories: categoriesWithExamples,
       currentRows,
       previousRows,
       countryRows,
+      categoryEvidence: Object.fromEntries(categoryEvidence),
       existingTitles: existing.flatMap((title) =>
         title.finalTitle ? [title.text, title.finalTitle] : [title.text],
       ),
