@@ -57,6 +57,22 @@ function extractYears(value: string): string[] {
   return value.match(/\b(?:19|20)\d{2}\b/g) ?? [];
 }
 
+// Garantía determinista ABSOLUTA, independiente de la evidencia (7/9/2026,
+// pedido explícito de Milton tras encontrar "...Comparativa 2023" en una
+// corrida real en 2026): que un año aparezca en alguna fila de evidencia NO
+// alcanza para justificarlo en un título nuevo si ese año ya quedó viejo —
+// un artículo publicado HOY con un año de hace 3 años se ve desactualizado
+// sin importar qué tan real sea la consulta que lo originó (Search Console
+// puede seguir mostrando una consulta antigua "seguro salud 2023" con
+// impresiones reales incluso hoy). Solo se permite el año actual, el
+// anterior y el siguiente (cubre "guías 2025/2026/2027" sin quedar
+// desactualizado ni inventar el futuro lejano).
+function isYearAcceptablyRecent(year: string): boolean {
+  const currentYear = new Date().getUTCFullYear();
+  const parsed = Number(year);
+  return parsed >= currentYear - 1 && parsed <= currentYear + 1;
+}
+
 const INTENT_FILLER_WORDS = new Set([
   "al", "algunas", "como", "completa", "completo", "comunes", "con",
   "consejos", "de", "el", "en", "errores", "guia", "las", "lo", "los",
@@ -510,9 +526,12 @@ export async function analyzeSeoOpportunities(input: {
       }))
       .filter((entry) => entry.titles.length > 0);
 
+    const currentYear = new Date().getUTCFullYear();
     const prompt = `${PROMPT_HEADER}
 
 NO HAY TOPE FIJO DE TITULOS POR CATEGORIA: devuelve todas las oportunidades que la evidencia real sostenga, sin repetir intención. La cantidad no es un objetivo: si solo existe una rama distinta, devuelve una; si existen muchas ramas respaldadas, devuélvelas todas.
+
+REGLA OBLIGATORIA DE AÑOS RECIENTES (ESTRICTA, sin excepciones): el año de hoy es ${currentYear}. Si un titulo incluye un año, ese año DEBE estar entre ${currentYear - 1} y ${currentYear + 1}. PROHIBIDO usar un año anterior a ${currentYear - 1} (ej. "${currentYear - 3}", "${currentYear - 2}") aunque aparezca literalmente en una consulta o pagina de la evidencia — una consulta vieja que Search Console todavia muestra con impresiones NO autoriza a publicar hoy un titulo con ese año desactualizado.
 
 CATEGORIAS PERMITIDAS (con EJEMPLOS DE TITULOS YA PUBLICADOS por categoria):
 ${JSON.stringify(input.categories)}
@@ -566,10 +585,14 @@ ${JSON.stringify(alreadyProposedByCategory)}`;
         const text = value.text.trim();
         const normalized = normalizeTitle(text);
         if (!text || seen.has(normalized)) continue;
-        // Garantía determinista contra años inventados por la IA.
+        // Garantía determinista contra años inventados O desactualizados:
+        // cada año en el título debe tener evidencia real Y estar dentro de
+        // la ventana de recencia aceptable (año actual ±1), sin excepción.
         if (
           extractYears(text).some(
-            (year) => !hasContextualEvidenceForYear(text, year, evidenceRows),
+            (year) =>
+              !isYearAcceptablyRecent(year) ||
+              !hasContextualEvidenceForYear(text, year, evidenceRows),
           )
         ) continue;
         const needKey = typeof value.needKey === "string" ? value.needKey.trim() : undefined;
