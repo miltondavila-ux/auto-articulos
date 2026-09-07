@@ -157,6 +157,16 @@ HANDOFF, solo alimenta ideas hacia él).
   diseño de fondo. Queda pendiente que Milton decida si amerita una
   conversación dedicada de rediseño (ej. "REDISEÑO DE OPPORTUNITY-ANALYSIS")
   en vez de seguir acumulando parches.
+- **(7/9/2026, origen: conversación `CODEX - AUDITORIA A ALGORITMO DE
+  PUBLICACIÓN DE ARTICULOS`)** Crear un espacio en Configuración para que el
+  usuario pueda colocar una región exacta (ciudad + país) y así afinar los
+  títulos ultra segmentados de Oportunidades.
+- **(7/9/2026, origen: conversación `CODEX - AUDITORIA A ALGORITMO DE
+  PUBLICACIÓN DE ARTICULOS`)** Revisar cómo el algoritmo de Oportunidades
+  asigna categorías a los títulos (y viceversa): al parecer el sistema no
+  está adhiriendo bien los títulos a la categoría real ni la categoría al
+  título — puede estar relacionado con el punto de rediseño de
+  `opportunity-analysis.ts` de la nota anterior.
 
 ## Hecho
 
