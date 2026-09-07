@@ -5111,3 +5111,35 @@ Auditorías obligatorias: funcional, regresión e integración/producción deben
 ejecutarse y documentarse antes de publicar. La integración requiere confirmar
 el Preview de Vercel y las rutas críticas sin modificar la configuración de
 Root Directory ni ejecutar acciones destructivas.
+
+### CIERRE DE VALIDACIÓN — PR #68 (2026-09-07)
+
+Estado del código: TERMINADO EN WORKTREE Y PR, NO FUSIONADO.
+PR: `https://github.com/miltondavila-ux/auto-articulos/pull/68`.
+Rama publicada: `codex/categorias-tematicas-final`.
+Commit funcional: `9cd790c`.
+Commit de documentación: `6d4a124`.
+
+Auditoría funcional: APROBADA. Prisma Client generado; typecheck de web y
+worker aprobado; suite del worker: 14/14 pruebas exitosas.
+
+Auditoría de regresión: APROBADA. `next build --webpack` compiló correctamente
+y generó 83/83 rutas. `git diff --check` no detectó errores. El único warning
+observado es el aviso preexistente de Next sobre la convención `middleware`,
+que no pertenece a este cambio y no fue modificado.
+
+Auditoría de integración/producción: PARCIALMENTE APROBADA. Los tres checks de
+Vercel del PR pasaron y el Preview quedó en estado `Ready`. En Preview, `/login`
+responde y `/dashboard/oportunidades` queda protegido por el SSO de Vercel.
+No fue posible ejecutar el flujo autenticado de “Actualizar análisis” porque
+no existe una sesión autenticada disponible en este entorno.
+
+Verificación de producción sin cambios: `auto-articulos-web.vercel.app/login` y
+`seototal.lasolucionweb.com/login` responden HTTP 200; ambas rutas de
+`/dashboard/oportunidades` responden HTTP 307 hacia `/login`, confirmando que la
+protección existente sigue operativa. No se desplegó este cambio a producción.
+
+Decisión: NO FUSIONAR NI PUBLICAR TODAVÍA. El código queda listo en el PR, pero
+el protocolo exige completar la prueba autenticada del Preview antes del merge.
+No se tocó Vercel, `vercel.json`, Root Directory, middleware, autenticación,
+secretos, versiones ni configuración de producción.
