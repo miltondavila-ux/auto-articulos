@@ -11,6 +11,7 @@ import {
   refreshTumblrToken,
 } from "@auto-articulos/shared";
 import { getGoogleAnalyticsSignals, summarizeGoogleAnalyticsSignals } from "@/lib/google-analytics-signals";
+import { getBingSignals } from "@/lib/bing-signals";
 import { getStoredTumblrAppCredentials } from "@/lib/tumblr-app-config";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -142,58 +143,179 @@ async function generateGPTCopy(
   }
 }
 
-async function selectArticlesWithGSC(userId: string): Promise<ArticleCandidate[]> {
-  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
-  const gsc = await prisma.searchIntegration.findFirst({ where: { userId, provider: "google", ...(user.selectedSiteDomain ? { siteDomain: user.selectedSiteDomain } : {}) } });
-  if (!gsc?.siteUrl || !gsc.encryptedRefreshToken) return [];
+function tokenizeForMatch(value: string): Set<string> {
+  return new Set(
+    value
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .split(" ")
+      .filter((token) => token.length > 3),
+  );
+}
 
+function pathnameOf(url: string): string {
   try {
-    const accessToken = await getGoogleAccessToken(decryptSecret(gsc.encryptedRefreshToken));
-    const endDate = new Date();
-    const startDate = new Date(Date.now() - 30 * 86400000);
-    const fmt = (d: Date) => d.toISOString().slice(0, 10);
-
-    const rows = await queryGoogleSearchAnalytics(
-      accessToken,
-      gsc.siteUrl,
-      fmt(startDate),
-      fmt(endDate),
-      ["page"],
-    );
-
-    if (rows.length === 0) return [];
-
-    const gscUrls = rows.map((r) => r.keys[0]);
-
-    const articles = await prisma.title.findMany({
-      where: {
-        run: { userId },
-        status: "success",
-        articleUrl: { in: gscUrls },
-      },
-      select: { id: true, finalTitle: true, text: true, summary: true, articleUrl: true },
-    });
-
-    const urlOrder = new Map(gscUrls.map((url, i) => [url, i]));
-    articles.sort((a, b) => (urlOrder.get(a.articleUrl!) ?? 999) - (urlOrder.get(b.articleUrl!) ?? 999));
-
-    return articles;
+    return new URL(url).pathname.replace(/\/$/, "");
   } catch {
-    return [];
+    return url;
   }
 }
 
-async function selectArticlesWithoutGSC(userId: string): Promise<ArticleCandidate[]> {
-  return prisma.title.findMany({
-    where: {
-      run: { userId },
-      status: "success",
-      articleUrl: { not: null },
-    },
+/**
+ * Selecciona artículos YA PUBLICADOS priorizando los que están puntuando
+ * fuerte AHORA en Google Search Console, Google Analytics 4 y Bing Webmaster
+ * Tools — pedido explícito de Milton (7/9/2026): que redes/microblogging
+ * elija de qué artículo hablar según la misma "bola de nieve" de tendencias
+ * reales que ya usa el algoritmo de Oportunidades SEO, no por orden de
+ * llegada de Google ni por fecha de publicación. NO crea artículos nuevos ni
+ * descubre temas sin artículo — decisión explícita de Milton: solo prioriza
+ * entre lo que ya existe.
+ */
+async function selectTrendingArticles(userId: string): Promise<ArticleCandidate[]> {
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
+  const gsc = await prisma.searchIntegration.findFirst({ where: { userId, provider: "google", ...(user.selectedSiteDomain ? { siteDomain: user.selectedSiteDomain } : {}) } });
+
+  // Una sola clave por página en todo este cálculo: el PATHNAME normalizado
+  // (ej. "/noticias/algo"), nunca la URL completa ni el pagePath de GA4 por
+  // separado — GSC entrega URL completa, GA4 entrega solo el path, y sin
+  // normalizar ambos a la misma forma desde el inicio sus puntajes quedaban
+  // en dos entradas distintas del mapa y nunca se sumaban entre sí.
+  const scoreByPath = new Map<string, number>();
+  const queriesByPath = new Map<string, string[]>();
+  const addScore = (path: string, amount: number) => {
+    scoreByPath.set(path, (scoreByPath.get(path) ?? 0) + amount);
+  };
+
+  // 1) Google Search Console: impresiones/clics actuales + tendencia (mismo
+  // patrón de ventana que el algoritmo de Oportunidades: 27 días actuales
+  // vs 27 previos), agregado por página, con las consultas reales que la
+  // alimentan (esto también activa `searchQueries`, que existía en el tipo
+  // pero nunca se llenaba — el copy nunca mencionaba la consulta real).
+  if (gsc?.siteUrl && gsc.encryptedRefreshToken) {
+    try {
+      const accessToken = await getGoogleAccessToken(decryptSecret(gsc.encryptedRefreshToken));
+      const end = new Date();
+      end.setUTCDate(end.getUTCDate() - 3);
+      const currentStart = new Date(end);
+      currentStart.setUTCDate(currentStart.getUTCDate() - 27);
+      const previousEnd = new Date(currentStart);
+      previousEnd.setUTCDate(previousEnd.getUTCDate() - 1);
+      const previousStart = new Date(previousEnd);
+      previousStart.setUTCDate(previousStart.getUTCDate() - 27);
+      const fmt = (d: Date) => d.toISOString().slice(0, 10);
+
+      const [currentRows, previousRows] = await Promise.all([
+        queryGoogleSearchAnalytics(accessToken, gsc.siteUrl, fmt(currentStart), fmt(end), ["page", "query"]),
+        queryGoogleSearchAnalytics(accessToken, gsc.siteUrl, fmt(previousStart), fmt(previousEnd), ["page"]),
+      ]);
+
+      const previousImpressionsByPath = new Map<string, number>();
+      for (const row of previousRows) {
+        const path = pathnameOf(row.keys[0]);
+        previousImpressionsByPath.set(path, (previousImpressionsByPath.get(path) ?? 0) + row.impressions);
+      }
+
+      const queryTotalsByPath = new Map<string, Map<string, number>>();
+      const currentImpressionsByPath = new Map<string, number>();
+      for (const row of currentRows) {
+        const path = pathnameOf(row.keys[0]);
+        const query = row.keys[1] ?? "";
+        currentImpressionsByPath.set(path, (currentImpressionsByPath.get(path) ?? 0) + row.impressions);
+        // Puntaje: impresiones + peso fuerte a clics reales.
+        addScore(path, row.impressions + row.clicks * 8);
+
+        if (query) {
+          const perQuery = queryTotalsByPath.get(path) ?? new Map<string, number>();
+          perQuery.set(query, (perQuery.get(query) ?? 0) + row.impressions);
+          queryTotalsByPath.set(path, perQuery);
+        }
+      }
+      // Bonus por tendencia creciente frente al periodo previo (una sola vez
+      // por página, no por fila, a diferencia del bloque de arriba).
+      for (const [path, currentImpressions] of currentImpressionsByPath) {
+        const previousImpressions = previousImpressionsByPath.get(path) ?? 0;
+        addScore(path, Math.max(0, currentImpressions - previousImpressions) * 2);
+      }
+
+      for (const [path, perQuery] of queryTotalsByPath) {
+        const topQueries = [...perQuery.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([query]) => query);
+        queriesByPath.set(path, topQueries);
+      }
+    } catch {
+      // GSC opcional para este ranking: si falla, el resto de señales o el
+      // fallback de recencia siguen funcionando.
+    }
+  }
+
+  // 2) Google Analytics 4: sesiones/usuarios activos reales por página —
+  // mismo patrón ya usado en el algoritmo de Oportunidades SEO.
+  try {
+    const ga4 = await getGoogleAnalyticsSignals(userId);
+    for (const row of ga4.rows) {
+      if (!row.pagePath) continue;
+      addScore(pathnameOf(row.pagePath), row.sessions * 3 + row.activeUsers * 2);
+    }
+  } catch {
+    // opcional, igual que en el resto del sistema.
+  }
+
+  // 3) Bing Webmaster Tools: no expone página por consulta, solo consultas a
+  // nivel de sitio — se usa como una señal adicional de qué tema tiene
+  // volumen real ahora mismo, sumando su impacto a cualquier página cuyas
+  // consultas reales de GSC compartan palabras clave con la consulta de Bing
+  // (mismo criterio de coincidencia por tokens que ya usa el algoritmo SEO).
+  try {
+    const bing = await getBingSignals(userId);
+    if (bing.rows.length > 0) {
+      const topBingQueries = bing.rows.slice(0, 50);
+      for (const [path, queries] of queriesByPath) {
+        const pathTokens = new Set(queries.flatMap((q) => [...tokenizeForMatch(q)]));
+        let bingBoost = 0;
+        for (const bingRow of topBingQueries) {
+          const bingTokens = tokenizeForMatch(bingRow.query);
+          const shared = [...bingTokens].filter((t) => pathTokens.has(t)).length;
+          if (shared >= 2) bingBoost += bingRow.impressions;
+        }
+        if (bingBoost > 0) addScore(path, bingBoost);
+      }
+    }
+  } catch {
+    // opcional.
+  }
+
+  const articles = await prisma.title.findMany({
+    where: { run: { userId }, status: "success", articleUrl: { not: null } },
     orderBy: { processedAt: "desc" },
-    take: 10,
-    select: { id: true, finalTitle: true, text: true, summary: true, articleUrl: true },
+    select: { id: true, finalTitle: true, text: true, summary: true, articleUrl: true, processedAt: true },
   });
+
+  const ranked = articles
+    .map((article) => ({
+      article,
+      trendScore: scoreByPath.get(pathnameOf(article.articleUrl!)) ?? 0,
+    }))
+    .sort((a, b) => {
+      // Lo que tiene señal real de tendencia va primero (mayor puntaje);
+      // sin ninguna señal (score 0 en ambos), se conserva el orden por
+      // fecha de publicación más reciente (comportamiento previo intacto
+      // para cuentas sin datos suficientes todavía).
+      if (a.trendScore !== b.trendScore) return b.trendScore - a.trendScore;
+      return (b.article.processedAt?.getTime() ?? 0) - (a.article.processedAt?.getTime() ?? 0);
+    });
+
+  return ranked.map(({ article }): ArticleCandidate => ({
+    id: article.id,
+    finalTitle: article.finalTitle,
+    text: article.text,
+    summary: article.summary,
+    articleUrl: article.articleUrl,
+    searchQueries: queriesByPath.get(pathnameOf(article.articleUrl!)) ?? [],
+  }));
 }
 
 /**
@@ -330,12 +452,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const [gscCandidates, recentCandidates] = await Promise.all([
-      selectArticlesWithGSC(userId),
-      selectArticlesWithoutGSC(userId),
-    ]);
+    const trendingCandidates = await selectTrendingArticles(userId);
     const candidateMap = new Map<string, ArticleCandidate>();
-    for (const article of [...gscCandidates, ...recentCandidates]) {
+    for (const article of trendingCandidates) {
       candidateMap.set(article.id, article);
     }
     // Dedupe también por URL real, no solo por id de artículo — pedido
