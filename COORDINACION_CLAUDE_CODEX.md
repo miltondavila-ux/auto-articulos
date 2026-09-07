@@ -5127,3 +5127,63 @@ de archivo liberada — no queda nada más que yo pueda hacer hasta que se
 libere el rate limit.
 
 **Capitán de archivo liberó el lote:** Claude.
+
+## BLOQUEADO — Tarjetas clicables en Usuarios (prueba/activos/conectados/publicaciones) — 2026-09-07
+
+**Capitán de archivo:** Claude — proyecto "ORDEN DE USUARIOS ACTIVOS EN
+ADMIN". Reserva declarada en `INVENTARIO_CONVERSACIONES.md`, Parte A:
+`apps/web/src/app/dashboard/usuarios/page.tsx`, worktree aislado
+`/tmp/panel-usuarios-clickable-20260907`, rama
+`claude/panel-usuarios-clickable-20260907`.
+
+**Pedido de Milton:** un organizador de usuarios (lista, en prueba,
+activos, conectados, cantidad de publicaciones), primero como maqueta
+(Artifact) para acordar el estilo — terminó en look minimalista tipo
+Apple, sin colores ni emojis — y después llevado a la página real
+`/dashboard/usuarios`.
+
+**Cambio** (worktree aislado, sin tocar los archivos que ya estaban
+modificados sin commitear en el checkout principal — no son de esta
+tarea): las 5 tarjetas de resumen de la pestaña "Accesos" (Usuarios
+totales, En prueba, Activos, Conectados ahora, Publicaciones totales) pasan
+de estáticas a **clicables** — cada una navega a la sección/filtro
+correspondiente usando `users`/`usage` reales (nunca datos de ejemplo) — y
+pierden los colores verde/naranja que tenían, quedando en escala de grises
+consistente con el resto del panel. No se tocó la lógica de creación de
+usuarios, módulos, mantenimiento, prompts, ni el detalle expandible por
+usuario (`UserCard`, ya clicable de antes).
+
+**Dos auditorías completas, la tercera bloqueada:**
+1. Funcional local: `npx tsc --noEmit` limpio, sin errores.
+2. Regresión/build: build exacto de `apps/web` (mismo comando que Vercel,
+   `Root Directory = apps/web`) completado sin errores, incluye
+   `/dashboard/usuarios` en la lista de rutas generadas.
+3. Integración/producción (Preview real): **bloqueada** — mismo patrón ya
+   documentado varias veces en este archivo (PR #46, #47, #69): los dos
+   checks de Vercel del PR devuelven `Deployment rate limited — retry in 24
+   hours` (`https://vercel.com/luna-portex-intelligence?upgradeToPro=build-rate-limit`).
+   No es un error de código — confirmado que `npm run verify` local (typecheck +
+   build) pasa limpio. `DATABASE_URL`/Docker no están disponibles en esta
+   máquina, así que los pasos del script que dependen de Postgres local
+   (`db:up`, tests de `apps/worker`) no se pudieron correr aquí; se
+   compensó corriendo manualmente `prisma generate`, el typecheck y el
+   build exacto de `apps/web`, que sí cubren el cambio real (no toca
+   `apps/worker` ni el esquema).
+
+**Producción verificada intacta mientras se espera:** `/login` responde
+`200` en `auto-articulos-web.vercel.app` y `seototal.lasolucionweb.com`
+con la versión anterior — este PR no rompió nada porque todavía no se
+fusionó.
+
+**PR:** [#70](https://github.com/miltondavila-ux/auto-articulos/pull/70),
+abierto, **sin fusionar** hasta que el check de Vercel salga en `success`
+sobre el Preview real (siguiendo la regla de este mismo Protocolo: no
+fusionar sin las tres auditorías completas). Cuando se libere el rate
+limit (histórico: se libera solo en un par de días), reintentar el mismo
+commit desde Vercel o hacer push vacío, verificar el Preview
+funcionalmente (tarjetas filtran de verdad, sin colores, sin romper
+`UserCard`) y recién ahí fusionar.
+
+**Estado:** abierto y bloqueado por cuota de Vercel, no por código. Reserva
+de `apps/web/src/app/dashboard/usuarios/page.tsx` **sigue activa** hasta
+fusionar y verificar producción — no liberar todavía.
