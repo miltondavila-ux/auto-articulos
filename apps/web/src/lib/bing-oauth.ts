@@ -6,7 +6,7 @@ export function bingOAuthConfig() {
   const clientSecret = process.env.BING_WEBMASTER_CLIENT_SECRET;
   const redirectUri =
     process.env.BING_WEBMASTER_REDIRECT_URI ??
-    "https://auto-articulos-web.vercel.app/api/search-integrations/bing/callback";
+    "https://seototal.lasolucionweb.com/api/search-integrations/bing/callback";
   if (!clientId || !clientSecret)
     throw new Error("Bing Webmaster Tools OAuth no está configurado.");
   return { clientId, clientSecret, redirectUri };
