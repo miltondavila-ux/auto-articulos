@@ -14,36 +14,6 @@ export type OpportunityAnalysisResult =
   | { status: "ok"; groups: OpportunityAnalysisGroup[] }
   | { status: "no_new" };
 
-const COUNTRY_NAMES: Record<string, string> = {
-  usa: "Estados Unidos",
-  mex: "México",
-  col: "Colombia",
-  ven: "Venezuela",
-  esp: "España",
-  arg: "Argentina",
-  per: "Perú",
-  ecu: "Ecuador",
-  chl: "Chile",
-  dom: "República Dominicana",
-  gtm: "Guatemala",
-  hnd: "Honduras",
-  slv: "El Salvador",
-  nic: "Nicaragua",
-  cri: "Costa Rica",
-  pan: "Panamá",
-  pri: "Puerto Rico",
-  bol: "Bolivia",
-  ury: "Uruguay",
-  pry: "Paraguay",
-  cub: "Cuba",
-  bra: "Brasil",
-  can: "Canadá",
-  gbr: "Reino Unido",
-  fra: "Francia",
-  deu: "Alemania",
-  ita: "Italia",
-};
-
 function normalizeTitle(value: string) {
   return value
     .normalize("NFD")
@@ -427,6 +397,11 @@ export async function analyzeSeoOpportunities(input: {
   currentRows: GoogleSearchAnalyticsRow[];
   previousRows: GoogleSearchAnalyticsRow[];
   countryRows: GoogleSearchAnalyticsRow[];
+  categoryEvidence?: Record<string, {
+    currentRows: GoogleSearchAnalyticsRow[];
+    previousRows: GoogleSearchAnalyticsRow[];
+    analyticsPages: Array<{ pagePath?: string; sessions: number; activeUsers: number; engagementRate?: number; conversions?: number }>;
+  }>;
   existingTitles: string[];
   googleAnalyticsSummary?: unknown;
   bingSummary?: unknown;
@@ -445,25 +420,52 @@ export async function analyzeSeoOpportunities(input: {
   // evidencia real exigido a cada título.
   const BATCH_SIZE = 100;
   const MAX_BATCHES = 20;
-  const batches = buildPerformanceBatches(
-    input.currentRows,
-    input.previousRows,
-    BATCH_SIZE,
-  );
-  const batchesToProcess = batches.slice(0, MAX_BATCHES);
-
-  const topCountries = input.countryRows
-    .map((row) => {
-      const code = (row.keys[0] ?? "").toLowerCase();
-      return {
-        country: COUNTRY_NAMES[code] ?? code,
-        impressions: row.impressions,
-        clicks: row.clicks,
-      };
-    })
-    .filter((row) => row.country)
-    .sort((a, b) => b.impressions - a.impressions)
-    .slice(0, 20);
+  type AnalysisPacket = {
+    category: { id: string; name: string; publishedExamples?: string[] };
+    batch: ProcessedRow[];
+    analyticsPages: Array<{ pagePath?: string; sessions: number; activeUsers: number; engagementRate?: number; conversions?: number }>;
+    evidenceRows: GoogleSearchAnalyticsRow[];
+  };
+  const packetQueues: Array<{
+    category: AnalysisPacket["category"];
+    batches: ProcessedRow[][];
+    analyticsPages: AnalysisPacket["analyticsPages"];
+    evidenceRows: GoogleSearchAnalyticsRow[];
+  }> = [];
+  for (const category of input.categories) {
+    const evidence = input.categoryEvidence?.[category.id];
+    if (!evidence?.currentRows.length) continue;
+    const batches = buildPerformanceBatches(
+      evidence.currentRows,
+      evidence.previousRows,
+      BATCH_SIZE,
+    );
+    packetQueues.push({
+      category,
+      batches: batches.slice(0, MAX_BATCHES),
+      analyticsPages: evidence.analyticsPages,
+      evidenceRows: [...evidence.currentRows, ...evidence.previousRows],
+    });
+  }
+  // Mantener el mismo techo global de llamadas que existía antes, pero dar
+  // prioridad equitativa a cada categoría: primero una pasada por categoría,
+  // luego una segunda pasada por las que tienen más evidencia, hasta 20.
+  const packets: AnalysisPacket[] = [];
+  for (let round = 0; packets.length < MAX_BATCHES; round++) {
+    let added = false;
+    for (const queue of packetQueues) {
+      const batch = queue.batches[round];
+      if (!batch || packets.length >= MAX_BATCHES) continue;
+      packets.push({
+        category: queue.category,
+        batch,
+        analyticsPages: queue.analyticsPages,
+        evidenceRows: queue.evidenceRows,
+      });
+      added = true;
+    }
+    if (!added) break;
+  }
 
   const seen = new Set(input.existingTitles.map(normalizeTitle));
   // Bug real encontrado el 11/8/2026 (cuenta de Lorena Álvarez, dejó de
@@ -475,13 +477,6 @@ export async function analyzeSeoOpportunities(input: {
   // por categoría de abajo), no solo del primero que la mencionó.
   const groupsByCategory = new Map<string, OpportunityAnalysisGroup>();
   const allResult: OpportunityAnalysisGroup[] = [];
-  const validCategoryIds = new Set(input.categories.map((item) => item.id));
-  const evidenceRows = [
-    ...input.currentRows,
-    ...input.previousRows,
-    ...input.countryRows,
-  ];
-
   // needKey por título, guardado aparte de OpportunityAnalysisGroup (que solo
   // persiste text/rationale en la base) para poder mostrarlo en el prompt de
   // los siguientes lotes y para el chequeo cruzado de intención.
@@ -508,23 +503,51 @@ export async function analyzeSeoOpportunities(input: {
   // salud"), porque antes solo se comparaba dentro de la misma categoría.
   const intentSignatures: IntentSignature[] = [];
 
-  for (let batchIndex = 0; batchIndex < batchesToProcess.length; batchIndex++) {
-    const batch = batchesToProcess[batchIndex];
+  for (let batchIndex = 0; batchIndex < packets.length; batchIndex++) {
+    const { category, batch, analyticsPages, evidenceRows } = packets[batchIndex];
 
     // Pedido de Milton (2/9/2026): visibilidad completa de lo ya propuesto
     // EN ESTA CORRIDA, por categoría, para que el chequeo de canibalización
     // cruzado entre lotes sea real y no dependa de una ventana rotativa que
     // podía perder títulos de lotes anteriores.
-    const alreadyProposedByCategory = input.categories
-      .map((category) => ({
-        categoryId: category.id,
-        name: category.name,
-        titles: (groupsByCategory.get(category.id)?.titles ?? []).map((t) => ({
-          text: t.text,
-          needKey: needKeyByTitle.get(t.text) ?? null,
-        })),
-      }))
-      .filter((entry) => entry.titles.length > 0);
+    const alreadyProposedByCategory = [{
+      categoryId: category.id,
+      name: category.name,
+      titles: (groupsByCategory.get(category.id)?.titles ?? []).map((t) => ({
+        text: t.text,
+        needKey: needKeyByTitle.get(t.text) ?? null,
+      })),
+    }].filter((entry) => entry.titles.length > 0);
+
+    const categoryQueries = new Set(
+      batch.map((row) => normalizeTitle(row.query)).filter(Boolean),
+    );
+    const rawBingSummary = input.bingSummary as {
+      source?: string;
+      connected?: boolean;
+      siteUrl?: string;
+      error?: string;
+      totalQueries?: number;
+      topQueries?: Array<{ query: string; clicks: number; impressions: number; position: number }>;
+    } | undefined;
+    const categoryBingSummary = rawBingSummary
+      ? {
+          ...rawBingSummary,
+          // Bing no expone página en este endpoint. Solo se entrega como
+          // evidencia secundaria cuando la consulta coincide literalmente
+          // con una consulta GSC ya vinculada a esta categoría.
+          topQueries: (rawBingSummary.topQueries ?? []).filter((row) =>
+            categoryQueries.has(normalizeTitle(row.query)),
+          ),
+        }
+      : { connected: false, topQueries: [] };
+
+    const categoryAnalyticsSummary = {
+      source: "google-analytics-4",
+      connected: analyticsPages.length > 0,
+      totalPages: analyticsPages.length,
+      topPages: analyticsPages,
+    };
 
     const currentYear = new Date().getUTCFullYear();
     const prompt = `${PROMPT_HEADER}
@@ -533,23 +556,26 @@ NO HAY TOPE FIJO DE TITULOS POR CATEGORIA: devuelve todas las oportunidades que 
 
 REGLA OBLIGATORIA DE AÑOS RECIENTES (ESTRICTA, sin excepciones): el año de hoy es ${currentYear}. Si un titulo incluye un año, ese año DEBE estar entre ${currentYear - 1} y ${currentYear + 1}. PROHIBIDO usar un año anterior a ${currentYear - 1} (ej. "${currentYear - 3}", "${currentYear - 2}") aunque aparezca literalmente en una consulta o pagina de la evidencia — una consulta vieja que Search Console todavia muestra con impresiones NO autoriza a publicar hoy un titulo con ese año desactualizado.
 
-CATEGORIAS PERMITIDAS (con EJEMPLOS DE TITULOS YA PUBLICADOS por categoria):
-${JSON.stringify(input.categories)}
+CATEGORIA FIJA PARA ESTE LOTE (NO PUEDES ELEGIR OTRA):
+${JSON.stringify(category)}
 
-DISTRIBUCION GEOGRAFICA REAL POR PAIS:
-${JSON.stringify(topCountries)}
+REGLA DE EVIDENCIA DE ESTA CATEGORIA:
+Solo puedes usar las consultas y páginas del bloque RENDIMIENTO ACTUAL de abajo. Esas páginas fueron vinculadas determinísticamente a esta categoría por artículos publicados. No uses señales de otra categoría ni reasignes este lote a otra categoría.
+
+DISTRIBUCION GEOGRAFICA:
+No se usa para elegir categoría; no agregues una ciudad o país salvo que aparezca en las consultas o páginas de este lote.
 
 SEÑALES OPCIONALES DE GOOGLE ANALYTICS 4:
-${JSON.stringify(input.googleAnalyticsSummary ?? { connected: false })}
+${JSON.stringify(categoryAnalyticsSummary)}
 
 SEÑALES OPCIONALES DE BING WEBMASTER TOOLS:
-${JSON.stringify(input.bingSummary ?? { connected: false })}
+${JSON.stringify(categoryBingSummary)}
 
-RENDIMIENTO ACTUAL Y COMPARACION (lote ${batchIndex + 1} de ${batchesToProcess.length}):
+RENDIMIENTO ACTUAL Y COMPARACION DE ESTA CATEGORIA (lote ${batchIndex + 1} de ${packets.length}):
 ${JSON.stringify(batch)}
 
-TITULOS YA EXISTENTES (publicados, en toda la cuenta):
-${JSON.stringify(input.existingTitles)}
+TITULOS YA PUBLICADOS DE ESTA CATEGORIA:
+${JSON.stringify(category.publishedExamples ?? [])}
 
 OPORTUNIDADES YA CREADAS EN ESTA CORRIDA, POR CATEGORIA, CON SU needKey (NO CANIBALIZAR NI REPETIR needKey, NI DENTRO DE LA MISMA CATEGORIA NI CONTRA OTRA CATEGORIA DISTINTA):
 ${JSON.stringify(alreadyProposedByCategory)}`;
@@ -570,7 +596,7 @@ ${JSON.stringify(alreadyProposedByCategory)}`;
       const group = item as Record<string, unknown>;
       if (
         typeof group.categoryId !== "string" ||
-        !validCategoryIds.has(group.categoryId) ||
+        group.categoryId !== category.id ||
         !Array.isArray(group.titles)
       )
         continue;

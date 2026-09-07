@@ -4946,3 +4946,60 @@ pendiente para que Milton decida.
 **Capitán de archivo liberó el lote:** Claude. Resultado: rediseño de login
 + recuperar contraseña fusionado en PR #58, sin migraciones de Prisma
 involucradas.
+
+## RESERVA — CLASIFICACIÓN TEMÁTICA DETERMINISTA DE OPORTUNIDADES — 2026-09-07
+
+Identidad: Codex, continuación de `CATEGORIAS MAL ELEGIDAS`.
+
+Worktree aislado: `/private/tmp/categorias-tematicas-deterministas`.
+Rama: `codex/categorias-tematicas-deterministas`, creada desde `main` en
+`2eb5124`.
+
+Motivo: el algoritmo sigue pudiendo asignar una consulta a la categoría
+"parecida" porque el modelo recibe todas las categorías y todas las señales
+mezcladas; el código solo valida que el `categoryId` exista, no que el tema
+de la página y la consulta pertenezca realmente a esa categoría.
+
+Archivos reservados:
+- `apps/web/src/app/api/opportunities/route.ts`
+- `apps/web/src/lib/opportunity-analysis.ts`
+- posible documentación adicional en este archivo
+
+Alcance: asociar evidencia de páginas reales a categorías mediante los
+artículos publicados; generar cada lote con una categoría fija y solo su
+evidencia; descartar evidencia sin asociación inequívoca; agregar una barrera
+final para impedir que el modelo reasigne una respuesta a otra categoría.
+No tocar Vercel, middleware, autenticación, secretos, schema ni migraciones.
+
+Estado: EN PROGRESO. Producción permanece intacta.
+
+### Diagnóstico y corrección implementada
+
+La causa raíz confirmada fue arquitectónica: el modelo recibía todas las
+categorías y todas las filas GSC mezcladas, mientras el código solo validaba
+que el `categoryId` existiera. No había una comprobación determinista de que
+la página y la consulta pertenecieran al tema de esa categoría.
+
+La rama ahora vincula cada página publicada a su `categoryId` real mediante
+su URL normalizada. Las filas GSC y las páginas GA4 solo entran al paquete de
+la categoría si esa vinculación es inequívoca; páginas ambiguas o sin
+categoría se descartan. Bing solo se entrega como señal secundaria cuando su
+consulta coincide exactamente con una consulta GSC ya vinculada.
+
+Cada llamada de OpenAI recibe una sola categoría fija y únicamente sus
+señales; si el modelo devuelve otro `categoryId`, el código descarta la
+respuesta. Se mantiene el techo global de 20 llamadas mediante una cola
+round-robin entre categorías, sin aumentar el costo máximo. Si ninguna fila
+puede vincularse con seguridad, el endpoint devuelve un error explícito en
+vez de inventar una asignación.
+
+### Auditorías
+
+1. **Funcional:** Prisma Client generado correctamente; typecheck de web y
+   worker limpio; revisión estática confirmó que la categoría queda fijada
+   por paquete y que no se aceptan respuestas de otra categoría.
+2. **Regresión:** `next build --webpack` ejecutado desde `apps/web`, con
+   83/83 rutas; suite del worker 14/14 tests; `git diff --check` limpio.
+3. **Integración/producción:** pendiente hasta crear y verificar un Preview
+   real. Producción permanece intacta; no se modificó Vercel, middleware,
+   autenticación, secretos ni schema.
