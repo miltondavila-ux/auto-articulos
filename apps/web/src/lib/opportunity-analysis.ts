@@ -262,6 +262,7 @@ const PROMPT_HEADER = [
   "REGLAS OBLIGATORIAS:",
   "- Cubre TODAS las categorias de CATEGORIAS PERMITIDAS que tengan evidencia real de oportunidad en este lote de datos. NO te limites a un numero fijo de categorias: si hay evidencia real para 15 o 25 categorias distintas, devuelve las 15 o 25.",
   "- Devuelve tantos titulos long tail unicos y no canibalizados por categoria como la evidencia real sostenga. No existe una cantidad fija por categoria: deja que la evidencia, la creatividad y el limite natural de la respuesta determinen cuantas oportunidades son validas.",
+  "- SE SOSPECHOSAMENTE POCO CONSERVADOR cuando la evidencia es abundante: si este lote trae docenas de consultas reales distintas, un resultado de 1 o 2 categorias es casi siempre una señal de que te quedaste corto, no de que falte evidencia — revisa de nuevo cada consulta del lote, una por una, antes de decidir que no hay mas oportunidades. Una consulta con pocas impresiones sigue siendo evidencia real valida; no exijas volumen alto para animarte a proponer un titulo.",
   "- Cada titulo debe tener una justificacion basada en datos reales que nombre la intencion de busqueda distinta que cubre",
   "- No inventes años, nacionalidades, ciudades, precios, estadísticas ni perfiles. Un modificador solo puede aparecer en un titulo si está respaldado por una consulta, página o señal real entregada.",
   "- Si la consulta o rama no encaja claramente en la categoria asignada, descártala; nunca la coloques en la categoria más parecida por una palabra compartida.",
@@ -417,7 +418,16 @@ export async function analyzeSeoOpportunities(input: {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("OPENAI_API_KEY no esta configurada.");
 
-  const BATCH_SIZE = 250;
+  // Bajado de 250 a 100 (7/9/2026, pedido de Milton: al menos 10 títulos por
+  // corrida cuando hay evidencia real, como confirmó el diagnóstico de
+  // producción con 262 consultas distintas disponibles). Con 250, una cuenta
+  // con ~450 filas de Search Console solo generaba 2 lotes — 2 oportunidades
+  // reales de que el modelo cubriera 10 categorías distintas. Con 100 filas
+  // por lote, la misma evidencia produce más pasadas (más llamadas a OpenAI,
+  // mismo techo de MAX_BATCHES), dando más intentos de cubrir categorías que
+  // quedaron sin título en un lote anterior — sin bajar el listón de
+  // evidencia real exigido a cada título.
+  const BATCH_SIZE = 100;
   const MAX_BATCHES = 20;
   const batches = buildPerformanceBatches(
     input.currentRows,
