@@ -1366,3 +1366,32 @@ Auditoría 3: APROBADA — `Vercel – auto-articulos-web: success` confirmado
 vía API de GitHub para `94f6e02`; `seototal.lasolucionweb.com/login` → 200.
 Responsable: Claude.
 Estado: VERIFICADA EN PRODUCCIÓN.
+
+## Versión APROBADA Y PROTEGIDA — 2026-09-07 — `/dashboard/oportunidades` (Milton)
+
+Milton confirmó explícitamente, tras revisarla en producción, que esta es la
+versión que quiere para la página de Oportunidades: "es una hermosura de
+página... por favor NO la pises ni por equivocación, mantén este código, este
+es el que quiero para esa página."
+
+Commit exacto: `b9eb450` en `main`. Deployment Vercel:
+`Vercel – auto-articulos-web: success` (verificado vía API de GitHub el
+2026-09-07); `seototal.lasolucionweb.com/login` → 200.
+
+Contenido protegido de `apps/web/src/app/dashboard/oportunidades/page.tsx`:
+- La tarjeta "Leer antes de ejecutar" con fondo blanco, objetivo, los 4 pasos
+  y las reglas importantes — texto negro (`#1d1d1f`) en su totalidad.
+- El párrafo técnico de fuentes de datos (GSC/GA4/Bing) justo debajo, sin
+  encabezado duplicado, también en negro (`#1d1d1f`).
+- El bloque de cupo, la casilla "Desactivar indexación", y las etiquetas de
+  Idioma y Estilo de escritura — todos en negro (`#1d1d1f`), sin grises
+  fuera del estilo Apple aprobado (ver [[estilo-apple-de-milton]]).
+
+Regla permanente (mismo criterio que ya rige para `/dashboard/publicar`, ver
+sección "PROTECCIÓN PERMANENTE — INSTRUCCIONES DE PUBLICAR" en
+`COORDINACION_CLAUDE_CODEX.md`): ningún cambio futuro puede borrar, reemplazar,
+duplicar, ocultar, volver a poner en gris ni pisar este contenido sin revisar
+explícitamente esta sección primero. Cualquier modificación de ese archivo
+debe preservar el bloque completo o documentar el motivo, el diff y las tres
+auditorías requeridas.
+Estado: APROBADA POR MILTON — PROTEGIDA PERMANENTEMENTE.
