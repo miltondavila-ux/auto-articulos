@@ -1532,3 +1532,57 @@ Auditoría 3: APROBADA — `Vercel – auto-articulos-web: success` confirmado
 vía API de GitHub para `2733aab`; `seototal.lasolucionweb.com/login` → 200.
 Responsable: Claude.
 Estado: VERIFICADA EN PRODUCCIÓN.
+
+## Versión desplegada — 2026-09-07 — RENEW CONFIGURACION (rediseño completo, 6 fases)
+
+Proyecto documentado previamente en `RENEW_CONFIGURACION.md` (entregado a
+Milton vía MAGO), aprobado por él con instrucción explícita: "quiero que una
+persona que no comprende nada... pueda comprender esto". Ejecutado de forma
+autónoma en 6 fases, cada una en worktree aislado, con tres auditorías y
+verificación real en producción antes de pasar a la siguiente.
+
+**Hallazgo central (Fase 0):** `ConfiguracionView.tsx` (2172 líneas) hacía
+que las pestañas "Cuenta" y "Contenido" renderizaran exactamente el mismo
+bloque de código — dos descripciones distintas para el mismo contenido.
+
+**Fase 1** — commit `7615c9e`: `/dashboard/configuracion` pasó de renderizar
+directamente el formulario a ser un índice de 6 tarjetas con explicación
+propia. Nueva ruta `/dashboard/configuracion/inicial` para el asistente
+(antes sin URL propia).
+
+**Fase 2** — commit `d20b2f1`: separación real de Cuenta (Credenciales,
+Categorías, Idioma) y Contenido (Estilo de redacción, Firma, Ubicaciones
+geolocalizadas, Teléfono, Foto/logo). Se extrajo `AdminFixPatriciaPanel.tsx`
+como componente autosuficiente (antes aparecía sin importar qué pestaña se
+viera).
+
+**Fases 3-5** — commit `2ff4969`: Indexación y SEO, Redes Sociales y App
+Móvil como páginas dedicadas — ya eran autocontenidas en el código viejo,
+extracción directa sin cambios de lógica.
+
+**Fase 6** — commit `c7accf7`: retirado `ConfiguracionView.tsx` (2172 líneas
+eliminadas, confirmado con `grep` que ninguna ruta lo importaba, build
+verificado después del borrado) y actualizado `manual-usuario.ts` — las
+rutas viejas con `?tab=` ya no existen, cada sección tiene URL propia.
+
+Archivos modificados en total: 6 páginas de `apps/web/src/app/dashboard/configuracion/*/page.tsx`
+reescritas, 1 componente nuevo (`AdminFixPatriciaPanel.tsx`), 1 archivo
+eliminado (`ConfiguracionView.tsx`), `manual-usuario.ts` actualizado. Sin
+migraciones de Prisma en ningún commit — solo reorganización de interfaz.
+Todas las llamadas a la API (`/api/credentials`, `/api/categories`,
+`/api/languages`, `/api/me`, `/api/prompts`, `/api/me/upload-image`,
+`/api/admin/fix-patricia*`) son idénticas a las que ya existían.
+
+Auditoría 1 (funcional) por fase: revisión manual línea por línea contra el
+código original antes de cada extracción, sin reescribir lógica.
+Auditoría 2 (regresión) por fase: `tsc --noEmit` limpio y `next build
+--webpack` con 83/83 rutas generadas en las 6 fases, incluida la fase final
+tras borrar el monolito.
+Auditoría 3 (integración/producción) por fase: `Vercel – auto-articulos-web:
+success` confirmado vía API de GitHub para cada commit
+(`7615c9e`/`d20b2f1`/`2ff4969`/`c7accf7`); `seototal.lasolucionweb.com/login`
+→ 200 después de cada despliegue.
+
+Responsable: Claude. Documento de planificación: `RENEW_CONFIGURACION.md`.
+Estado: **APROBADO POR MILTON — DESPLEGADO Y VERIFICADO EN PRODUCCIÓN, LAS 6
+FASES COMPLETAS.**

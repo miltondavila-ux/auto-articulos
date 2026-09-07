@@ -427,6 +427,18 @@ INSTRUCCIONES EN MODULOS`...". Siguiente acción: cuando el límite se libere,
 verificar que `Vercel – auto-articulos-web` quede en `success` para el
 último commit de `main` y confirmar visualmente en producción.
 
+**Cierre — RENEW CONFIGURACION (Claude, 2026-09-07):** Milton pidió, dentro
+de esta misma conversación, rediseñar `/dashboard/configuracion` (la pantalla
+que más costaba entender) usando MAGO para especificarlo primero. Documento
+de planificación entregado: `RENEW_CONFIGURACION.md`. Ejecutado en 6 fases
+autónomas, cada una con worktree aislado, tres auditorías y verificación real
+en producción (commits `7615c9e`, `d20b2f1`, `2ff4969`, `c7accf7`). Detalle
+completo en `CONTROLADOR_DE_VERSIONES.md`, sección "RENEW CONFIGURACION
+(rediseño completo, 6 fases)". `ConfiguracionView.tsx` (el componente
+monolítico de 2172 líneas) fue retirado; Configuración ahora es un índice más
+6 páginas independientes. Estado: **CULMINADA — aprobada por Milton,
+desplegada y verificada en producción.**
+
 ### `AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`
 
 Entrada agregada por la tarea programada diaria de propagación de Claude, a

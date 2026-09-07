@@ -5042,3 +5042,46 @@ la imagen y la pase para subirla.
 **Capitán de archivo liberó el lote:** Claude. Resultado: título/meta
 descripción + copy de prueba gratuita fusionados en PR #63, sin
 migraciones de Prisma involucradas.
+
+## PROTECCIÓN PERMANENTE — RENEW CONFIGURACION — 2026-09-07
+
+Identidad exacta: proyecto `RENEW CONFIGURACION`, dentro de la continuación
+de `CODEX - INSTRUCCIONES EN MODULOS`. Milton pidió el rediseño explícitamente
+por ser "la que menos se entiende" de todo el sistema, usó MAGO para
+especificarlo (documento `RENEW_CONFIGURACION.md`), y aprobó ejecutarlo
+"autónomo" con una sola condición: "que una persona que no comprende nada...
+pueda comprender esto".
+
+Referencia válida de producción: `https://seototal.lasolucionweb.com/dashboard/configuracion`
+y sus 6 subrutas (`/inicial`, `/cuenta`, `/contenido`, `/indexacion`,
+`/redes-sociales`, `/movil`).
+
+Contenido protegido:
+1. `/dashboard/configuracion` es un ÍNDICE de navegación (tarjetas), no un
+   formulario. No debe volver a mostrar directamente credenciales, categorías
+   ni ningún campo — eso vive en sus páginas dedicadas.
+2. **Cuenta** (`/cuenta`) y **Contenido** (`/contenido`) son secciones
+   DISTINTAS y sin superposición: Cuenta = acceso (Credenciales, Categorías,
+   Idioma de Redacción); Contenido = estilo editorial (Estilo de redacción
+   por defecto, Firma, Ubicaciones geolocalizadas, Teléfono, Foto/logo). No
+   deben volver a fusionarse en un solo bloque ni repetir la misma
+   descripción — ese fue exactamente el problema que motivó el rediseño.
+3. Cada página conserva su tarjeta `ModuleIntro` con explicación en lenguaje
+   cotidiano ANTES de cualquier campo o botón.
+4. `ConfiguracionView.tsx` fue retirado deliberadamente (commit `c7accf7`).
+   No debe recrearse un componente único con pestañas que vuelva a mezclar
+   estas 6 secciones.
+
+Versión comprobada: commits `7615c9e`, `d20b2f1`, `2ff4969`, `c7accf7` en
+`main`. `Vercel – auto-articulos-web: success` confirmado vía API de GitHub
+para cada uno; `seototal.lasolucionweb.com/login` → 200 tras cada despliegue.
+Detalle completo de las tres auditorías por fase en
+`CONTROLADOR_DE_VERSIONES.md`, sección "RENEW CONFIGURACION (rediseño
+completo, 6 fases)".
+
+Regla permanente (mismo criterio que ya rige para Publicar y Oportunidades):
+ningún cambio futuro puede volver a fusionar Cuenta y Contenido, ni ocultar
+la explicación de cada página, ni resucitar el componente monolítico, sin
+revisar esta sección primero y documentar el motivo, el diff y las tres
+auditorías requeridas.
+Estado: APROBADA POR MILTON — PROTEGIDA PERMANENTEMENTE.
