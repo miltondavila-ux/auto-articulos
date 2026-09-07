@@ -1293,3 +1293,54 @@ real y fusionar solo si pasa. Verificado en vivo por esta tarea programada
 (2026-09-05) contra `origin/main` recién fetcheado: la rama
 `codex/dynamic-source-timeline-20260904` sigue sin ser ancestro de `main`.
 Estado: PREPARADA
+
+## Fusión y verificación en Producción — PR #47: rediseño de deduplicación semántica (`needKey`) — 2026-09-06
+
+Entrada agregada por la tarea programada diaria de propagación de Claude, a
+partir de la sección "CIERRE — PR #47 fusionado y verificado en producción —
+2026-09-06" de `COORDINACION_CLAUDE_CODEX.md` (commit `719bb67`, PR #49).
+Cierra el ciclo de la entrada anterior de este mismo documento ("Versión
+preparada — 2026-09-04 — PR #47: rediseño de deduplicación semántica
+(`needKey`)"), que había quedado con "Producción verificada: no aplica
+todavía".
+
+Causa del bloqueo y resolución: el `build-rate-limit` de Vercel que
+bloqueaba el PR #47 (mismo bloqueo que el PR #46 de Codex) se liberó solo
+entre el 2026-09-04 y el 2026-09-06. El check de GitHub había quedado
+congelado en el intento fallido viejo porque nadie volvió a empujar un
+commit a esa rama; se confirmaron despliegues nuevos exitosos a Producción
+vía `vercel ls` y se forzó un reintento real con `git push
+--force-with-lease` tras rebasar la rama sobre `origin/main` actualizado
+(incluye `8c4be47`, la reducción de deploys propuesta por otra sesión).
+Ambos checks de Vercel pasaron a `SUCCESS` real (no solo dejaron de estar
+en `pending`).
+
+Versión/commit: PR [`#47`](https://github.com/miltondavila-ux/auto-articulos/pull/47)
+fusionado como `7e951f7` ("fix: firma de intencion estructurada para cero
+canibalizacion real (#47)"). Verificado en vivo por esta tarea programada
+(2026-09-07) contra `origin/main` recién fetcheado: `git merge-base
+--is-ancestor 7e951f7 origin/main` confirma que el commit ya es ancestro de
+`main`; la rama remota `claude/rediseno-intencion-longtail-20260904` ya no
+existe (borrada tras el merge, reserva liberada).
+Deployment/Vercel: ambos checks en `success` real sobre el commit fusionado.
+Producción verificada: `curl -I /login` responde `200` tanto en
+`auto-articulos-web.vercel.app` como en `seototal.lasolucionweb.com`.
+Migraciones: ninguna (esta entrada no registra ninguna migración nueva; ver
+la entrada "PREPARADA" original para el detalle completo de auditorías
+funcionales/regresión/integración, que no cambia).
+Responsable del cierre: según la propia entrada de Coordinación citada
+arriba (sesión que hizo el rebase/force-push/verificación). Responsable de
+esta entrada: Claude (tarea programada diaria de propagación).
+
+Pendiente explícito, todavía sin resolver (ya registrado también en la
+entrada "PREPARADA" original y en `INVENTARIO_CONVERSACIONES.md` — Parte B):
+antes de aprobar la publicación automática del algoritmo de oportunidades,
+falta repetir el análisis con la cuenta de pruebas (Lorena Álvarez) y
+auditar los títulos generados para confirmar en datos reales que ya no hay
+canibalización semántica. El PR #46 de Codex (línea de tiempo dinámica
+GSC/GA4/Bing, ver entrada "PREPARADA" de este mismo documento) sigue
+abierto y sin fusionar — verificado en vivo por esta tarea (2026-09-07):
+la rama `codex/dynamic-source-timeline-20260904` todavía existe en el
+remoto y `git merge-base --is-ancestor` confirma que NO es ancestro de
+`origin/main`.
+Estado: FUSIONADO A `main` Y VERIFICADO EN PRODUCCIÓN.
