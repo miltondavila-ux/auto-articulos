@@ -505,12 +505,36 @@ export async function POST(request: Request) {
       const article = candidateByUrl.get(opportunity.articleUrl);
       if (article) activeKeys.add(`${article.id}:${platform}`);
     }
+
+    // Coherencia entre redes, sin repetir el mismo tema el mismo día — pedido
+    // explícito de Milton (7/9/2026): que el mensaje varíe entre redes en
+    // vez de mandar siempre el mismo artículo top-1 a todas. Cada red se
+    // genera con su propio clic ("Crear oportunidad" por red), así que sin
+    // esto, pedir Threads y después LinkedIn el mismo día terminaba
+    // recogiendo el mismo artículo top-1 para ambas — nada lo impedía antes.
+    const todayStart = new Date();
+    todayStart.setUTCHours(0, 0, 0, 0);
+    const todaysOpportunities = await prisma.socialOpportunity.findMany({
+      where: { userId, status: { not: "skipped" }, createdAt: { gte: todayStart } },
+      select: { titleId: true, articleUrl: true },
+    });
+    const usedTodayIds = new Set(todaysOpportunities.map((o) => o.titleId).filter((id): id is string => Boolean(id)));
+    const usedTodayUrls = new Set(todaysOpportunities.map((o) => o.articleUrl).filter(Boolean));
+    const wasUsedToday = (article: ArticleCandidate) =>
+      usedTodayIds.has(article.id) || (article.articleUrl ? usedTodayUrls.has(article.articleUrl) : false);
+
     const normalizedIntegrations = integrations.map(normalizePlatform);
-    const candidates = allCandidates
-      .filter((article) =>
-        normalizedIntegrations.some((platform) => !activeKeys.has(`${article.id}:${platform}`)),
-      )
-      .slice(0, 3);
+    const availableNow = allCandidates.filter((article) =>
+      normalizedIntegrations.some((platform) => !activeKeys.has(`${article.id}:${platform}`)),
+    );
+    // Preferí un artículo que hoy todavía no se usó en NINGUNA otra red; si
+    // de verdad no queda ninguno (cuenta con pocos artículos o mucho volumen
+    // ya generado hoy), cae de vuelta al disponible con más tendencia en vez
+    // de bloquear al usuario por completo.
+    const freshToday = availableNow.filter((article) => !wasUsedToday(article));
+    // Un solo candidato por clic ("un post al día por red", no un menú de 3
+    // opciones que terminaba llenando de pendientes la misma red).
+    const candidates = (freshToday.length > 0 ? freshToday : availableNow).slice(0, 1);
 
     if (candidates.length === 0) {
       // El mensaje viejo ("no hay artículos nuevos disponibles") sonaba a
