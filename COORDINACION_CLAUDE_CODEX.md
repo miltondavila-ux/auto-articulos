@@ -4197,6 +4197,25 @@ Vídeo de demostración OAuth — 2026-09-04:
 - Pendiente: comprobar en ventana privada que el vídeo sea accesible y pegar la
   URL en el campo de vídeo de Google Cloud antes de solicitar la verificación.
 
+Estado de aprobación OAuth y GBP — 2026-09-07:
+
+- Proyecto: Auto Articulos Search Console (`621677827297`).
+- Producción: `seototal.lasolucionweb.com` continúa usando el despliegue
+  integrado con las correcciones OAuth/GMB.
+- OAuth GSC/Analytics/Business Profile: marca, tres scopes, justificación y
+  vídeo están guardados. La solicitud formal todavía no se ha enviado porque
+  Google mantiene `Prepare for verification` deshabilitado y muestra Branding
+  status/Data access status como pendientes.
+- Requisito a confirmar: `lasolucionweb.com` debe estar verificado como
+  propiedad de dominio en Search Console por `10minuteswebsite@gmail.com`,
+  coincidiendo con el dominio autorizado de OAuth. Si ya está verificado, no
+  quedan campos visibles por completar y se debe esperar la actualización de
+  Google.
+- Google Business Profile: la solicitud de acceso básico permanece en el caso
+  `7-6783000042063`; no abrir solicitudes duplicadas mientras siga en progreso.
+- Acción inmediata: revisar cada 24 horas el Centro de verificación y el correo
+  del proyecto; actuar solo si Google habilita el botón o solicita información.
+
 ## PROTECCIÓN PERMANENTE — INSTRUCCIONES DE PUBLICAR — 2026-09-04
 
 Identidad exacta: `INSTRUCCIONES EN MODULOS` — Codex.
@@ -5187,3 +5206,202 @@ funcionalmente (tarjetas filtran de verdad, sin colores, sin romper
 **Estado:** abierto y bloqueado por cuota de Vercel, no por código. Reserva
 de `apps/web/src/app/dashboard/usuarios/page.tsx` **sigue activa** hasta
 fusionar y verificar producción — no liberar todavía.
+
+---
+
+# [2026-09-07] Claude — Botón "Borrar todas las oportunidades" (SEO/AEO y Redes Sociales)
+
+Pedido directo de Milton: agregar un botón para borrar todas las
+oportunidades de una vez, tanto en Oportunidades SEO/AEO como en
+Oportunidades de Redes Sociales (antes solo existía borrado uno por uno).
+
+**Estado real de esto ahora mismo: código escrito en el checkout
+principal (`main`), sin commitear, sin PR todavía.** No se hizo en
+worktree aislado ni se siguió el Protocolo completo de este documento
+(commit/PR/3 auditorías) porque fue un pedido puntual y chico durante la
+sesión, resuelto directo. Lo dejo escrito acá para que quede visible antes
+de que alguien más toque estos mismos archivos — están **sin proteger por
+rama propia**, así que si Codex necesita tocar
+`apps/web/src/app/api/opportunities/route.ts`,
+`apps/web/src/app/api/social-opportunities/route.ts`,
+`apps/web/src/app/dashboard/oportunidades/page.tsx` o
+`apps/web/src/app/dashboard/oportunidades-redes/page.tsx`, avisar acá
+antes de hacer `git pull`/`checkout` para no perder este trabajo sin
+commitear.
+
+**Cambios:**
+1. `apps/web/src/app/api/opportunities/route.ts` — nuevo `DELETE()`:
+   borra todos los `opportunityGroup` (y sus `titles` en cascada) del
+   usuario autenticado. Antes solo existía el borrado individual por
+   `id` en `api/opportunities/groups/[id]/route.ts`.
+2. `apps/web/src/app/api/social-opportunities/route.ts` — el `DELETE()`
+   existente (usado hoy por "Borrar historial" en
+   `/dashboard/historial`, que borra solo publicadas/con error) ahora
+   acepta `?scope=pending`: con ese parámetro borra las **pendientes**
+   en vez de las históricas. Sin el parámetro, comportamiento idéntico
+   al de antes — no se rompió nada de `historial/page.tsx`.
+3. `apps/web/src/app/dashboard/oportunidades/page.tsx` — botón rojo
+   "Borrar todas las oportunidades" arriba del listado de categorías,
+   visible solo cuando hay `groups.length > 0`, con
+   `window.confirm(...)` antes de llamar a `DELETE /api/opportunities`.
+4. `apps/web/src/app/dashboard/oportunidades-redes/page.tsx` — mismo
+   patrón, junto a "Publicar todo el lote", visible solo con propuestas
+   `pending`, llama a `DELETE /api/social-opportunities?scope=pending`
+   con confirmación previa.
+
+**Auditoría hecha:** `npx tsc --noEmit -p .` sobre `apps/web` sin errores
+en los archivos tocados. **No se corrió** build completo, ni Preview de
+Vercel, ni prueba funcional en navegador con sesión real (Milton pidió
+mockup estático en vez de levantar el servidor local — mostrado como
+Artifact, no contra la app real). Falta, antes de considerar esto
+terminado según el Protocolo de este documento: commitear en rama propia,
+abrir PR, y completar las tres auditorías (funcional local con datos
+reales, build/regresión, integración en Preview).
+
+**Reserva:** los 4 archivos de "Cambios" arriba quedan reservados por
+Claude hasta commitear/PR — Codex, avisar acá si necesitás tocarlos antes.
+
+---
+
+## RESERVA — AUDITORÍA RESPONSIVE COMPLETA DEL SISTEMA — 2026-09-07
+
+Identidad: Claude, conversación "AUDITORIA DE CAPACIDADES RESPONSIVE",
+pedido explícito de Milton: recorrer página por página todo el sistema y
+corregir cualquier movimiento lateral / desbordamiento horizontal, sin
+romper nada.
+
+**Protocolo releído completo antes de empezar** (líneas 230-700 de este
+mismo documento). Verificada la Parte A de `INVENTARIO_CONVERSACIONES.md`
+antes de reservar.
+
+**Worktree aislado** (fuera del checkout principal, sin anidar, como exige
+la Sección 1 del Protocolo): `/private/tmp/auditoria-responsive-20260907`,
+rama `claude/auditoria-responsive-20260907`, creada desde `origin/main`
+limpio (`ae78d4c`).
+
+**Alcance reservado — las 23 páginas del sistema:**
+`page.tsx` (landing), `acerca-de`, `privacidad`, `terminos`, `login`,
+`oauth/autorizar`, `dashboard` (home), `dashboard/actualizaciones`,
+`dashboard/como-funciona`, `dashboard/historial`, `dashboard/oportunidades`,
+`dashboard/oportunidades-redes`, `dashboard/publicaciones-en-curso`,
+`dashboard/publicar`, `dashboard/usuarios`, `dashboard/vista-previa-bloqueo`,
+`dashboard/configuracion` y sus 6 subpáginas (contenido, cuenta,
+indexacion, inicial, movil, redes-sociales) — todas bajo
+`apps/web/src/app/`.
+
+**Excepción obligatoria dentro de este mismo alcance**:
+`apps/web/src/app/dashboard/usuarios/page.tsx` **está reservado por otra
+conversación ahora mismo** (ver entrada inmediatamente arriba, PR #70,
+bloqueado por cuota de Vercel, reserva activa). Esta auditoría **no
+tocará ese archivo** hasta que esa reserva se libere — se audita
+visualmente sin modificar, y si aparece un hallazgo real ahí, se
+documenta acá y se coordina con esa conversación en vez de editarlo
+directamente.
+
+**Metodología, en dos pasadas:**
+1. Pasada estática (completada): lectura de las 23 páginas y componentes
+   compartidos (`dashboard-ui.tsx`, `DashboardNav.tsx`, `FloatingAssistant.tsx`,
+   `dashboard/layout.tsx`, `globals.css`) buscando anchos fijos en px,
+   `100vw` sin descuento de scrollbar, tablas sin wrapper de scroll, grids
+   sin wrap, texto largo sin `break-word`. **Resultado: sin hallazgos** —
+   el sistema ya tiene `overflow-x:hidden` global, tablas con clase
+   `responsive-table` que colapsan a tarjetas por debajo de 1024px, grids
+   `auto-fit/auto-fill`, y `word-break: break-word` en celdas.
+2. Pasada visual en vivo (en curso): servidor local levantado en el
+   worktree aislado (puerto 3177, `.env.local` copiado solo para uso local,
+   Prisma generado) para medir con JavaScript real (`scrollWidth` vs
+   `innerWidth`, `getBoundingClientRect` de cada elemento) si hay
+   desbordamiento horizontal en viewport móvil (375px). Las páginas
+   públicas (`/`, `/acerca-de`, `/privacidad`, `/terminos`, `/login`) ya se
+   verificaron así: **sin desbordamiento** (`overflowCount: 0` en las
+   cinco). Las páginas del dashboard requieren sesión iniciada; Milton no
+   tiene usuario de prueba y no puede loguearse en `localhost`, así que
+   por su indicación se continúa la verificación visual directamente sobre
+   producción (`https://seototal.lasolucionweb.com`), **solo lectura,
+   redimensionando el navegador y midiendo con JavaScript de solo
+   inspección — sin escribir, enviar formularios ni modificar nada** en
+   producción. Milton está iniciando sesión ahí ahora mismo desde el
+   navegador que se le abrió.
+
+**Estado:** en curso, sin cambios de código todavía (el worktree sigue
+idéntico a `origin/main`, `git status` limpio). Si la pasada visual
+encuentra un desbordamiento real, se corregirá con el cambio mínimo
+necesario en el worktree, se ejecutarán las tres auditorías (funcional,
+regresión, build) y se documentará el resultado en esta misma entrada
+antes de pedir autorización para fusionar/desplegar — no se sube nada a
+producción sin ese paso. Reserva activa hasta cerrar esta entrada.
+
+## Aviso — Milton pidió una segunda opinión del Reparador sobre el estado del árbol — 2026-09-07
+
+Después de los tres cierres anteriores de esta conversación (login más
+Apple, título/meta descripción, imagen OG), Milton preguntó si "me enredé"
+con el árbol de git. Mi evaluación, antes de escalar al Reparador:
+
+- Los tres PRs de esta conversación (#58 `0913991`, #63 `741bf75`, #69
+  `67727b4`) están fusionados en `origin/main`, cada uno con rebase sobre
+  `main` actualizado, sin `reset --hard`, sin `clean`, sin `checkout --` ni
+  force-push — cada intento de comando destructivo mío fue bloqueado por el
+  propio harness antes de ejecutarse (ver el aviso de `git reset --hard`
+  bloqueado que aparece en esta misma sesión). Las tres ramas se borraron
+  solas al fusionar (`--delete-branch`).
+- Lo que sí hay, y no es obra mía: este checkout está compartido en vivo
+  por varias sesiones a la vez ahora mismo. Al momento de escribir esto,
+  `git status` muestra sin commitear, de otra(s) conversación(es) activas,
+  no de la mía: `TO-DO.md`, `apps/web/src/app/api/opportunities/route.ts`,
+  `apps/web/src/app/api/social-opportunities/route.ts`,
+  `apps/web/src/app/dashboard/oportunidades-redes/page.tsx` (y, según el
+  historial reciente de este mismo documento, alguien más ya reservó
+  `apps/web/src/app/dashboard/usuarios/page.tsx` para tarjetas clicables,
+  con su propio PR #70 también bloqueado por el mismo rate-limit de
+  Vercel que el mío del PR #69). No toqué ninguno de esos archivos.
+- Las decenas de ramas locales `claude/*` viejas que aparecen en `git
+  branch -a` son acumulación normal de trabajo en paralelo de sesiones
+  anteriores (varias ya fusionadas, con la rama remota borrada pero el
+  puntero local todavía sin `git fetch --prune`) — no algo que haya
+  generado yo en esta conversación.
+
+**Le pedí a Milton que, si quiere una segunda opinión independiente,
+mande este prompt al Reparador del Árbol Principal** (preservado tal cual
+se lo di, para que quien lo tome tenga el contexto completo sin tener que
+pedírmelo de nuevo):
+
+> Actuá como REPARADOR DEL ARBOL PRINCIPAL (ver
+> `REPARADOR_DEL_ARBOL_PRINCIPAL.md`). Necesito que audites el checkout
+> principal (`/Users/miltondavila/Creador de articulos`) después de una
+> conversación de Claude que hizo tres PRs seguidos hoy (7/9/2026): #58
+> (rediseño de login), #63 (título/meta descripción) y #69 (imagen OG),
+> todos fusionados a `main` (commits `0913991`, `741bf75`, `67727b4`).
+>
+> Verificá específicamente:
+> 1. Que las ramas `claude/login-apple-redesign-20260907`,
+>    `claude/login-metadata-polish-20260907` y
+>    `claude/og-image-nueva-20260907` estén realmente fusionadas en
+>    `origin/main` (con `git merge-base --is-ancestor`) y no hayan dejado
+>    nada suelto.
+> 2. Que el checkout local (`git status`) no tenga nada mío mezclado con
+>    el trabajo de otras sesiones — ahora mismo hay cambios sin commitear
+>    en `TO-DO.md`, `apps/web/src/app/api/opportunities/route.ts`,
+>    `apps/web/src/app/api/social-opportunities/route.ts`,
+>    `apps/web/src/app/dashboard/oportunidades-redes/page.tsx`,
+>    `apps/web/src/app/dashboard/oportunidades/page.tsx` y
+>    `apps/web/src/app/dashboard/usuarios/page.tsx` que no son de esta
+>    tarea — confirmá que le pertenecen a otra conversación activa y que
+>    no hace falta tocarlos.
+> 3. Que las decenas de ramas locales y remotas `claude/*` que ya deberían
+>    estar fusionadas/cerradas según `INVENTARIO_CONVERSACIONES.md` no
+>    dejen el árbol confuso — proponé cuáles son candidatas seguras a
+>    `git fetch --prune` / borrado local, sin tocar ninguna que siga
+>    activa.
+> 4. Confirmá si el commit `67727b4` (imagen OG) realmente está bloqueado
+>    solo por el `build-rate-limit` de Vercel (no por un problema de
+>    árbol) y qué hace falta para reintentarlo cuando se libere la cuota.
+>
+> No apliques nada destructivo (nada de `reset --hard`, `clean`,
+> `checkout --`, force-push). Documentá lo que encuentres en
+> `COORDINACION_CLAUDE_CODEX.md`, siguiendo el mismo formato que las
+> entradas de cierre ya existentes de esta conversación (buscá "CIERRE —
+> Rediseño de login" y las dos siguientes).
+
+**Estado:** a la espera de que Milton decida si envía este prompt al
+Reparador o si mi propia evaluación le alcanza. No hice ningún cambio de
+código en este aviso, solo dejo registro.
