@@ -64,7 +64,7 @@ export const PLATFORM_SERVERS = {
     whiteLabel: true,
     contactName: "Estee Soto",
     contactEmail: "info@tagcrush.com",
-    helpUrl: "https://www.tagcrush.com/customer-service-chat",
+    helpUrl: "https://www.tagcrush.com/Chat-de-ayuda-tagcrush",
   },
 } as const satisfies Record<string, PlatformServer>;
 

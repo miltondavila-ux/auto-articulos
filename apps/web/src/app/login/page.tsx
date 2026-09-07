@@ -2,6 +2,15 @@
 
 import { Suspense, useState, type CSSProperties, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { PLATFORM_SERVERS } from "@auto-articulos/shared";
+
+// Enlace de "Recuperar mi contraseña" en el login (pedido de Milton,
+// 7/9/2026). Todavía no se sabe a qué servidor (net/site/tagcrush)
+// pertenece la cuenta en este punto —eso solo se conoce después de
+// loguearse—, así que se usa el enlace de net/site, que cubre 2 de los 3
+// servidores; ver PLATFORM_SERVERS en packages/shared para el enlace
+// específico de tagcrush, usado una vez dentro del dashboard.
+const FORGOT_PASSWORD_URL = PLATFORM_SERVERS.net.helpUrl;
 
 export default function LoginPage() {
   return (
@@ -100,36 +109,13 @@ function LoginContent() {
       style={{
         position: "relative",
         minHeight: "100vh",
-        background: "var(--apple-bg, #f5f5f7)",
-        overflow: "hidden",
+        background: "#ffffff",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         padding: "24px 16px",
       }}
     >
-      <img
-        src="/login-hero.jpg"
-        alt=""
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          objectPosition: "20% 15%",
-          opacity: 0.1,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background:
-            "radial-gradient(circle at 30% 30%, rgba(245, 245, 247, 0.6) 0%, rgba(245, 245, 247, 0.95) 70%, #f5f5f7 100%)",
-        }}
-      />
-
       <div
         style={{
           position: "relative",
@@ -138,7 +124,7 @@ function LoginContent() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          gap: 40,
+          gap: 64,
           flexWrap: "wrap",
         }}
       >
@@ -148,39 +134,35 @@ function LoginContent() {
               fontSize: 12,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: "#1d1d1f",
-              fontWeight: 700,
-              display: "inline-block",
-              background: "rgba(0, 0, 0, 0.04)",
-              padding: "4px 10px",
-              borderRadius: 9999,
-              border: "1px solid #d2d2d7",
+              color: "#86868b",
+              fontWeight: 600,
             }}
           >
             Automatización con IA
           </span>
           <h2
             style={{
-              fontSize: 34,
-              lineHeight: 1.15,
+              fontSize: 40,
+              lineHeight: 1.1,
               color: "#1d1d1f",
               margin: "14px 0 0",
               fontWeight: 700,
               letterSpacing: "-0.02em",
             }}
           >
-            Creador de artículos en secuencia
+            Toda la inteligencia, al alcance de tu mano.
           </h2>
           <p
             style={{
-              fontSize: 15,
+              fontSize: 17,
               color: "#86868b",
-              marginTop: 14,
+              marginTop: 16,
               lineHeight: 1.5,
             }}
           >
-            Herramienta de posicionamiento web para creación de contenido en
-            secuencia.
+            SEO TOTAL investiga, escribe y publica artículos optimizados para
+            tu sitio todos los días — el trabajo de un equipo entero, hecho
+            solo.
           </p>
         </div>
 
@@ -193,13 +175,13 @@ function LoginContent() {
               flex: "1 1 320px",
               maxWidth: 380,
               background: "#ffffff",
-              border: "1px solid rgba(0, 0, 0, 0.08)",
-              padding: 32,
-              borderRadius: 20,
+              border: "none",
+              padding: 36,
+              borderRadius: 22,
               display: "flex",
               flexDirection: "column",
               gap: 14,
-              boxShadow: "none",
+              boxShadow: "0 2px 40px rgba(0, 0, 0, 0.08)",
               boxSizing: "border-box",
             }}
           >
@@ -252,6 +234,20 @@ function LoginContent() {
               required
               style={inputStyle}
             />
+            <a
+              href={FORGOT_PASSWORD_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontSize: 13,
+                color: "#0066cc",
+                textDecoration: "none",
+                alignSelf: "flex-end",
+                marginTop: -6,
+              }}
+            >
+              Recuperar mi contraseña
+            </a>
             {error && (
               <p
                 style={{
