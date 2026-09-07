@@ -4760,3 +4760,78 @@ en esta corrida. No se detectó ninguna duda adicional que anotar para que
 Milton decida.
 
 Responsable: Claude (tarea programada diaria de propagación).
+
+---
+
+## CIERRE — Mensaje humano para error de categoría cacheada (caso Alfonso Giménez) — 2026-09-07
+
+**Capitán de migración:** Claude — reclamado y liberado en esta misma
+tarea (no hubo migración de Prisma involucrada, solo código del worker;
+se reclamó por norma del protocolo antes de cualquier push).
+
+**Problema reportado por Milton:** el usuario Alfonso Giménez tenía un
+título ("Definiendo los atributos del espacio habitable") fallando 3
+intentos con este error crudo de Playwright, ilegible para cualquiera:
+
+```
+page.selectOption: Timeout 30000ms exceeded. ... did not find some
+options - retrying select option action - waiting 500ms
+```
+
+**Diagnóstico:** el worker publica usando `Category.externalId`
+**cacheado** en la base de datos (`apps/worker/src/queue.ts:335` →
+`apps/worker/src/automation/10minutesWebsite.ts:805`, dentro de
+`createArticleDraft`), sin volver a leer en vivo las opciones reales del
+`<select multiple id="user_label_list_article">` del sitio en el momento
+de publicar. Si esa categoría cacheada ya no existe como opción real
+(se borró, se renombró, o cambió de panel/sitio desde el último
+`categorySyncJob`), Playwright reintenta silenciosamente 30 segundos y
+falla con ese timeout técnico. Mismo patrón de causa raíz ya documentado
+antes con las cuentas de Estee Soto y Antonio Aguirre (ver comentarios en
+el modelo `Category` de `packages/db/prisma/schema.prisma` y en
+`apps/worker/src/categorySync.ts`) — no es un bug nuevo, es caché
+desactualizado.
+
+**Corrección aplicada** (worktree aislado
+`/private/tmp/fix-error-labels-alfonso-20260907`, rama
+`claude/fix-error-labels-alfonso-20260907`, PR #50, fusionado por squash
+como `dffcdd9`): se envolvió el `page.selectOption(...)` de
+`10minutesWebsite.ts:805` en `try/catch`. Ante ese error puntual, ahora
+se lanza un mensaje humano y accionable en vez de propagar el error crudo
+de Playwright: explica que la categoría ya no existe en el sitio y que
+hay que tocar **"Sincronizar categorías ahora"** en Configuración antes
+de reintentar. No se tocó ningún otro comportamiento del flujo de
+creación de artículo — el camino de éxito (cuando la categoría sí existe)
+queda idéntico.
+
+**Tres auditorías:**
+1. **Funcional/lógica**: revisado el flujo completo de
+   `createArticleDraft`; el nuevo mensaje reutiliza `productName`, ya
+   disponible en el scope, sin variables nuevas ni cambios al camino de
+   éxito.
+2. **Regresión/build**: `npx tsc --noEmit` y `npm run build` en
+   `apps/worker`, sin errores, corridos en worktree aislado con
+   `node_modules` y Prisma Client propios (no enlazados al checkout
+   principal, para evitar el error real ya documentado de resolver
+   `@auto-articulos/*` contra el repo equivocado).
+3. **Integración/producción**: el worker de este proyecto se ejecuta vía
+   GitHub Actions (`.github/workflows/worker.yml`) leyendo directamente
+   de `main` en cada corrida — no hay build/deploy de Vercel de por medio
+   para este cambio (`Vercel – auto-articulos-web` salió `Skipped - Not
+   affected` en el PR, correcto: no se tocó `apps/web`). El PR quedó
+   `MERGEABLE`/`CLEAN` con los tres checks en verde antes de fusionar.
+   Verificación funcional completa en vivo (reproducir el error real con
+   una categoría desincronizada y confirmar el mensaje nuevo en el
+   dashboard) queda pendiente para la próxima vez que este caso puntual
+   ocurra — el cambio es aditivo sobre una ruta que hoy ya está rota, así
+   que el riesgo de esta auditoría pendiente es bajo.
+
+**Recomendación operativa para Alfonso Giménez, independiente del fix de
+mensaje**: entrar a Configuración y tocar "Sincronizar categorías ahora"
+para refrescar el caché y que el título pendiente pueda publicarse.
+
+**Estado:** cerrado y fusionado. Reserva liberada.
+
+**Capitán de migración liberó el lote:** Claude. Resultado: fix mensaje
+humano de error de categoría cacheada fusionado en PR #50, sin
+migraciones de Prisma involucradas.
