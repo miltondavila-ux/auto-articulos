@@ -1449,3 +1449,58 @@ cuatro auditorías). Sin migraciones de Prisma en ninguno de los cuatro PRs.
 Responsable: Claude.
 Estado: APROBADA POR MILTON — VERIFICADA EN PRODUCCIÓN. Pendiente de una
 próxima conversación: corregir la asignación categoría↔título (ver TO-DO.md).
+
+## Versión desplegada — 2026-09-07 — rebranding a SEO TOTAL
+
+Fecha y hora: 2026-09-07
+Versión/commit: `67a5f2f` en `main` (fast-forward desde `77d61fa`)
+Conversación/proyecto: `CODEX - INSTRUCCIONES EN MODULOS` (continuación de Claude)
+Worktree: `/private/tmp/rebrand-seo-total`
+Motivo: Milton confirmó explícitamente que la plataforma dejó de llamarse
+"Auto Artículos" y ahora se llama "SEO TOTAL | Generación de contenido y
+posicionamiento inteligente"; pidió que no quedara esa mención en ningún lado.
+Cambios: reemplazo literal de "Auto Artículos" por "SEO TOTAL" en 29 archivos
+— encabezado del dashboard (con el nuevo eslogan como subtítulo), `<title>`
+de la PWA (`appleWebApp.title`) y `manifest.ts` (`name`/`short_name`), login,
+páginas públicas (`acerca-de`, `privacidad`, `terminos`), manual del
+asistente (`manual-usuario.ts`), componentes de conexión de redes sociales
+(Bluesky, DEV.to, Google Analytics/Search Console, aviso de pestañas), y
+mensajes de error/prompt del worker visibles para el usuario final
+(`10minutesWebsite.ts`, `generateCustomArticle.ts`, `index.ts`,
+`contentLanguage.ts`). Se verificó con `grep` recursivo sobre todo el
+repositorio (`apps`, `packages`, `.github`) que no queda ninguna mención
+literal restante.
+Archivos modificados: 29 (ver commit `67a5f2f` para el listado completo).
+Auditoría 1: APROBADA — cambio de texto puro, sin lógica; revisión manual de
+que cada frase se sigue leyendo natural tras el reemplazo (incluidas las
+tarjetas protegidas de Publicar y Oportunidades).
+Auditoría 2: APROBADA — `tsc --noEmit` limpio en `apps/web`; `next build
+--webpack` con 83/83 rutas; `tsc --noEmit` del worker limpio; 14/14 tests del
+worker en verde; diff acotado exclusivamente a los 29 archivos con la
+mención antigua.
+Auditoría 3: APROBADA — `Vercel – auto-articulos-web: success` confirmado
+vía API de GitHub para `67a5f2f`; `seototal.lasolucionweb.com/login` → 200.
+Responsable: Claude.
+Estado: VERIFICADA EN PRODUCCIÓN.
+
+## Versión desplegada — 2026-09-07 — aclarar que no hace falta ver el progreso en Publicaciones en Curso
+
+Fecha y hora: 2026-09-07
+Versión/commit: `e5af4d5` en `main` (fast-forward desde `6f2948f`)
+Worktree: `/private/tmp/publicaciones-en-curso-texto`
+Motivo: Milton pidió que la pantalla `/dashboard/publicaciones-en-curso`
+dejara explícito, sin ambigüedad, que no hace falta quedarse mirando el
+avance — se puede cerrar la aplicación e irse y todo sigue funcionando solo.
+Cambios: se reescribió el segundo párrafo de la introducción del módulo
+(`ModuleIntro`/`IntroP`) en `apps/web/src/app/dashboard/publicaciones-en-curso/page.tsx`
+con la frase textual pedida ("No hace falta que te sientes a ver lo que va
+pasando. Puedes cerrar la aplicación e irte..."), conservando la mención de
+que se puede cancelar desde ahí si algo se atasca.
+Archivos modificados: `apps/web/src/app/dashboard/publicaciones-en-curso/page.tsx`.
+Auditoría 1: APROBADA — cambio de texto puro, un solo párrafo.
+Auditoría 2: APROBADA — `tsc --noEmit` limpio, `next build --webpack` 83/83
+rutas, diff acotado a 1 línea de un solo archivo.
+Auditoría 3: APROBADA — `Vercel – auto-articulos-web: success` confirmado
+vía API de GitHub para `e5af4d5`; `seototal.lasolucionweb.com/login` → 200.
+Responsable: Claude.
+Estado: VERIFICADA EN PRODUCCIÓN.
