@@ -1504,3 +1504,31 @@ Auditoría 3: APROBADA — `Vercel – auto-articulos-web: success` confirmado
 vía API de GitHub para `e5af4d5`; `seototal.lasolucionweb.com/login` → 200.
 Responsable: Claude.
 Estado: VERIFICADA EN PRODUCCIÓN.
+
+## Versión desplegada — 2026-09-07 — unificar tamaño de botones en Oportunidades en Redes
+
+Fecha y hora: 2026-09-07
+Versión/commit: `2733aab` en `main` (fast-forward desde `97495e0`)
+Worktree: `/private/tmp/oportunidades-redes-botones`
+Motivo: Milton reportó que `/dashboard/oportunidades-redes` acumulaba
+botones con formas y tamaños distintos entre sí — los de "Crear
+oportunidad" por red en forma de píldora (radio 20), el resto con radio 10,
+y tipografía mezclada (12px/13px/14px) entre tarjetas y modales — pidió que
+todos fueran "un estándar".
+Cambios: se definió una única constante `uniformButtonSize` (padding "9px
+16px", `borderRadius: 10`, `fontSize: 13`) aplicada sobre las mismas
+variantes ya existentes (`buttonStyle`/`secondaryButtonStyle`) en los 9
+botones de la pantalla: los de red ("Crear oportunidad"), "Publicar todo el
+lote", "Ver publicaciones en curso" (estado vacío), Preview/Guardar/
+Publicar/Descartar de cada tarjeta, y Cancelar/Descartar/Cerrar de los dos
+modales. No se tocó ningún color, texto ni comportamiento — solo forma y
+tamaño.
+Archivos modificados: `apps/web/src/app/dashboard/oportunidades-redes/page.tsx`.
+Auditoría 1: APROBADA — cambio de estilo puro; revisión manual confirmando
+que los 9 botones de la pantalla usan la misma constante.
+Auditoría 2: APROBADA — `tsc --noEmit` limpio, `next build --webpack` 83/83
+rutas, diff acotado a un solo archivo (23 inserciones, 11 eliminaciones).
+Auditoría 3: APROBADA — `Vercel – auto-articulos-web: success` confirmado
+vía API de GitHub para `2733aab`; `seototal.lasolucionweb.com/login` → 200.
+Responsable: Claude.
+Estado: VERIFICADA EN PRODUCCIÓN.
