@@ -263,6 +263,17 @@ Define la firma de los artículos, teléfono de contacto, hasta 3 fotos tuyas y 
 
 **Ubicaciones para títulos geolocalizados:** escribe, separadas por comas, las ciudades o países de donde son tus clientes reales (ej. "Colombia, Bogotá, Ecuador, Caracas") y por separado dónde está u opera tu negocio (ej. "Miami, Orlando, Homestead"). Oportunidades puede combinar ambos datos para crear títulos ultra segmentados como "Cómo invertir en propiedades en Homestead si vives en Colombia". Dejar los campos vacíos no cambia nada de tu cuenta.
 
+Paso a paso para usarlo:
+1. Entra a Configuración → Contenido (esta sección).
+2. En "¿En dónde están tus clientes?" escribe las ciudades o países de tus clientes reales, separados por comas.
+3. En "¿En dónde está tu negocio?" escribe las ciudades donde operas o vendes, separadas por comas.
+4. Presiona "Guardar ubicaciones".
+5. Ve a Oportunidades SEO/AEO. Si ya tenés propuestas pendientes de antes, publícalas o elimínalas primero (el sistema no deja analizar de nuevo con pendientes sin resolver).
+6. Presiona "Analizar oportunidades" (o "Actualizar análisis" si ya corriste uno antes).
+7. Revisa los resultados: los títulos geolocalizados aparecen mezclados con el resto de las propuestas, organizados por categoría, combinando explícitamente una ubicación de cliente con una de negocio (ej. "si vivo en Colombia").
+
+Si dejás cualquiera de los dos campos vacío, esta combinación no se genera — necesita ambas listas llenas. Cuantas más ubicaciones pongas en cada campo, más combinaciones intenta cubrir el sistema (por ejemplo, 4 ciudades de clientes × 3 de negocio = hasta 12 combinaciones), siempre que tengan sentido real para tus categorías.
+
 ### Estado de configuración
 
 Inicio muestra una lista de progreso con lo obligatorio y opcional. Para publicar necesitas credenciales de la plataforma, categorías sincronizadas e idioma. Google, Bing y redes sociales amplían lo que puedes hacer, pero no impiden publicar artículos.
