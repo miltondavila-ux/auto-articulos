@@ -60,9 +60,17 @@ export async function POST(request: Request) {
     .catch(() => ({ force: false, panel: "" }));
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { lastOpportunityAnalysisAt: true, selectedSiteDomain: true, selectedSitePanel: true, platformDomain: true },
+    select: { lastOpportunityAnalysisAt: true, selectedSiteDomain: true, selectedSitePanel: true, platformDomain: true, clientLocations: true, businessLocations: true },
   });
   const selectedSiteDomain = user.selectedSiteDomain;
+  // Ubicaciones REALES declaradas por el dueño de la cuenta (Configuración →
+  // Cuenta), no inventadas ni deducidas de evidencia — pedido explícito de
+  // Milton, 7/9/2026: combinarlas (origen del cliente x destino del negocio)
+  // para títulos ultra geolocalizados (ver REGLA en opportunity-analysis.ts).
+  const splitLocations = (value: string | null) =>
+    (value ?? "").split(",").map((v) => v.trim()).filter(Boolean);
+  const clientLocations = splitLocations(user.clientLocations);
+  const businessLocations = splitLocations(user.businessLocations);
   const integration = await prisma.searchIntegration.findFirst({
     where: { userId, provider: "google", ...(selectedSiteDomain ? { siteDomain: selectedSiteDomain } : {}) },
   });
@@ -177,6 +185,8 @@ export async function POST(request: Request) {
       ),
       googleAnalyticsSummary: summarizeGoogleAnalyticsSignals(googleAnalyticsSignals),
       bingSummary: summarizeBingSignals(bingSignals),
+      clientLocations,
+      businessLocations,
     });
 
     const now = new Date();

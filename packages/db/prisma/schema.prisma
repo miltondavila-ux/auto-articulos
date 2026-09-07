@@ -61,6 +61,18 @@ model User {
   // automáticamente al final del contenido de CADA artículo nuevo — pedido
   // explícito del usuario, 6/8/2026. Null/vacío = no se agrega nada.
   articleSignature                  String?
+  // Ubicaciones REALES declaradas por el dueño de la cuenta (separadas por
+  // comas), no inventadas ni deducidas de Search Console — pedido explícito
+  // de Milton, 7/9/2026: permitir títulos ultra geolocalizados combinando de
+  // dónde son los clientes reales del negocio con dónde opera/vende el
+  // negocio (ej. "Cómo invertir en propiedades en Homestead si vivo en
+  // Colombia"). `clientLocations` = de dónde son los clientes (ej. "Colombia,
+  // Bogotá, Ecuador, Caracas"); `businessLocations` = dónde está/opera el
+  // negocio (ej. "Miami, Orlando, Homestead"). Null/vacío = el algoritmo de
+  // Oportunidades sigue sin usar esta segmentación, sin cambio de
+  // comportamiento para cuentas que no lo llenen.
+  clientLocations                   String?
+  businessLocations                 String?
   // Se actualiza cada vez que termina un análisis de oportunidades (haya
   // encontrado categorías nuevas o no) — permite mostrar "último análisis"
   // y aplicar la espera mínima de 7 días cuando no hay nada nuevo, sin

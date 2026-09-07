@@ -28,6 +28,8 @@ export async function getCurrentUser() {
       platformDomain: true,
       contentLanguage: true,
       articleSignature: true,
+      clientLocations: true,
+      businessLocations: true,
       allowInstagramPublishing: true,
       profilePhotoUrl: true,
       profilePhotoUrl2: true,

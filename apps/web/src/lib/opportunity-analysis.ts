@@ -275,6 +275,12 @@ const PROMPT_HEADER = [
   "",
   "REGLA DE ORO: La triple segmentacion debe sonar NATURAL, no forzada. Si la evidencia no respalda un nivel, omítelo pero mantén los otros dos.",
   "",
+  "REGLA OBLIGATORIA DE GEOLOCALIZACION ULTRA ESPECIFICA (cuando el dueño de la cuenta declaro UBICACIONES DE CLIENTES y/o UBICACIONES DEL NEGOCIO mas abajo):",
+  "- Esas ubicaciones son datos REALES declarados directamente por el dueño de la cuenta en su Configuracion, NO son evidencia de Search Console/GA4/Bing y NO necesitan aparecer en ninguna consulta para poder usarse — a diferencia de cualquier otra ciudad, pais o perfil, que si necesitan evidencia real.",
+  "- Combina una UBICACION DE CLIENTE (de donde es/vive el cliente real) con una UBICACION DEL NEGOCIO (donde opera/vende el negocio) para crear titulos ultra segmentados del tipo 'Como [accion] en [ubicacion del negocio] si vivo en [ubicacion del cliente]' — siempre que el TEMA en si (ej. seguros, propiedades, inversion) tenga evidencia real de que es relevante para esta cuenta.",
+  "- No inventes una combinacion nueva de cliente+negocio que no este en las listas declaradas; usa unicamente las ubicaciones exactas que aparecen en UBICACIONES DE CLIENTES y UBICACIONES DEL NEGOCIO mas abajo.",
+  "- Esto es ADICIONAL a la regla de cero canibalizacion: cada combinacion cliente+negocio distinta cuenta como una necesidad realmente distinta (perfil geografico distinto), no como el mismo titulo repetido.",
+  "",
   "REGLAS OBLIGATORIAS:",
   "- Cubre TODAS las categorias de CATEGORIAS PERMITIDAS que tengan evidencia real de oportunidad en este lote de datos. NO te limites a un numero fijo de categorias: si hay evidencia real para 15 o 25 categorias distintas, devuelve las 15 o 25.",
   "- Devuelve tantos titulos long tail unicos y no canibalizados por categoria como la evidencia real sostenga. No existe una cantidad fija por categoria: deja que la evidencia, la creatividad y el limite natural de la respuesta determinen cuantas oportunidades son validas.",
@@ -430,6 +436,12 @@ export async function analyzeSeoOpportunities(input: {
   existingTitles: string[];
   googleAnalyticsSummary?: unknown;
   bingSummary?: unknown;
+  // Ubicaciones REALES declaradas por el dueño de la cuenta en Configuración
+  // (Configuración → Cuenta), no inventadas ni deducidas de evidencia —
+  // pedido explícito de Milton, 7/9/2026. Vacío en cuentas que no lo llenen,
+  // sin cambio de comportamiento.
+  clientLocations?: string[];
+  businessLocations?: string[];
 }): Promise<OpportunityAnalysisResult> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("OPENAI_API_KEY no esta configurada.");
@@ -538,6 +550,12 @@ ${JSON.stringify(input.categories)}
 
 DISTRIBUCION GEOGRAFICA REAL POR PAIS:
 ${JSON.stringify(topCountries)}
+
+UBICACIONES DE CLIENTES (declaradas por el dueño de la cuenta, de donde son sus clientes reales — usar tal cual, ver REGLA OBLIGATORIA DE GEOLOCALIZACION arriba):
+${JSON.stringify(input.clientLocations ?? [])}
+
+UBICACIONES DEL NEGOCIO (declaradas por el dueño de la cuenta, donde opera/vende el negocio — usar tal cual, ver REGLA OBLIGATORIA DE GEOLOCALIZACION arriba):
+${JSON.stringify(input.businessLocations ?? [])}
 
 SEÑALES OPCIONALES DE GOOGLE ANALYTICS 4:
 ${JSON.stringify(input.googleAnalyticsSummary ?? { connected: false })}

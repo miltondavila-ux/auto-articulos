@@ -16,6 +16,8 @@ export const revalidate = 0;
 // Un poco más del doble del texto de ejemplo que dio el usuario (340
 // caracteres) — pedido explícito, 6/8/2026.
 const MAX_ARTICLE_SIGNATURE_LEN = 700;
+// Suficiente para varias decenas de ciudades/países separados por comas.
+const MAX_LOCATIONS_LEN = 500;
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -44,6 +46,8 @@ export async function GET() {
       platformBaseUrl: platformBaseUrl(user.platformDomain),
       contentLanguage: user.contentLanguage,
       articleSignature: user.articleSignature,
+      clientLocations: user.clientLocations,
+      businessLocations: user.businessLocations,
       opportunitiesDisclosureAcceptedAt: user.opportunitiesDisclosureAcceptedAt,
       phone: user.phone,
       imagePrompt: user.imagePrompt,
@@ -85,6 +89,8 @@ export async function PATCH(request: NextRequest) {
     imagePrompt?: string | null;
     infographicPrompt?: string | null;
     defaultPromptId?: string | null;
+    clientLocations?: string | null;
+    businessLocations?: string | null;
   } = {};
 
   if ("contentLanguage" in body) {
@@ -133,6 +139,42 @@ export async function PATCH(request: NextRequest) {
       );
     }
     data.articleSignature = trimmed || null;
+  }
+
+  if ("clientLocations" in body) {
+    const { clientLocations } = body;
+    if (clientLocations !== null && typeof clientLocations !== "string") {
+      return NextResponse.json(
+        { error: "clientLocations debe ser texto o null" },
+        { status: 400 },
+      );
+    }
+    const trimmed = typeof clientLocations === "string" ? clientLocations.trim() : "";
+    if (trimmed.length > MAX_LOCATIONS_LEN) {
+      return NextResponse.json(
+        { error: `El texto no puede superar los ${MAX_LOCATIONS_LEN} caracteres (tiene ${trimmed.length}).` },
+        { status: 400 },
+      );
+    }
+    data.clientLocations = trimmed || null;
+  }
+
+  if ("businessLocations" in body) {
+    const { businessLocations } = body;
+    if (businessLocations !== null && typeof businessLocations !== "string") {
+      return NextResponse.json(
+        { error: "businessLocations debe ser texto o null" },
+        { status: 400 },
+      );
+    }
+    const trimmed = typeof businessLocations === "string" ? businessLocations.trim() : "";
+    if (trimmed.length > MAX_LOCATIONS_LEN) {
+      return NextResponse.json(
+        { error: `El texto no puede superar los ${MAX_LOCATIONS_LEN} caracteres (tiene ${trimmed.length}).` },
+        { status: 400 },
+      );
+    }
+    data.businessLocations = trimmed || null;
   }
 
   if ("phone" in body) {
@@ -206,6 +248,8 @@ export async function PATCH(request: NextRequest) {
       imagePrompt: true,
       infographicPrompt: true,
       defaultPromptId: true,
+      clientLocations: true,
+      businessLocations: true,
     },
   });
 
