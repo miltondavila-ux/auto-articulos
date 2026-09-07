@@ -11,6 +11,19 @@ import {
   secondaryButtonStyle,
   sectionStyle,
 } from "@/components/dashboard-ui";
+import type { CSSProperties } from "react";
+
+// Pedido explícito de Milton (7/9/2026): esta pantalla había acumulado
+// botones con tamaños, radios y tipografías distintas entre sí (pill de
+// radio 20 en los de red, radio 10 en el resto, fuentes 12/13/14 mezcladas).
+// Un único tamaño estándar para TODOS los botones de esta página, sobre las
+// variantes ya existentes (buttonStyle/secondaryButtonStyle), en vez de que
+// cada botón traiga su propio ajuste suelto.
+const uniformButtonSize: CSSProperties = {
+  padding: "9px 16px",
+  borderRadius: 10,
+  fontSize: 13,
+};
 
 interface SocialOpportunity {
   id: string;
@@ -382,7 +395,7 @@ export default function OportunidadesRedesPage() {
                 // sola con el tiempo y volvía a aparecer como "Configurar").
                 if (!connected) return null;
                 const busy = Boolean(generatingNetwork);
-                return <button key={key} type="button" onClick={() => handleGenerate(platform)} disabled={busy} className="secondary" style={disabledStyle({ ...secondaryButtonStyle, width: "100%", minHeight: 40, padding: "9px 13px", borderRadius: 20, border: "1px solid #d2d2d7", background: "#ffffff", color: "#1d1d1f", justifyContent: "center", fontSize: 13 }, busy)}>
+                return <button key={key} type="button" onClick={() => handleGenerate(platform)} disabled={busy} className="secondary" style={disabledStyle({ ...secondaryButtonStyle, ...uniformButtonSize, width: "100%", border: "1px solid #d2d2d7", background: "#ffffff", color: "#1d1d1f", justifyContent: "center" }, busy)}>
                   {generatingNetwork === platform ? "Analizando..." : "✓ " + label + " · Crear oportunidad"}
                 </button>;
                 })}
@@ -393,7 +406,7 @@ export default function OportunidadesRedesPage() {
                 <button
                   onClick={handlePublishAll}
                   disabled={publishingAll}
-                  style={{ ...buttonStyle, marginTop: 0, minHeight: 40, padding: "9px 18px", borderRadius: 20, fontSize: 13, whiteSpace: "nowrap" }}
+                  style={{ ...buttonStyle, ...uniformButtonSize, marginTop: 0, whiteSpace: "nowrap" }}
                 >
                   {publishingAll ? "Publicando..." : "Publicar todo el lote"}
                 </button>
@@ -500,7 +513,7 @@ export default function OportunidadesRedesPage() {
               <button
                 onClick={() => router.push("/dashboard/publicaciones-en-curso")}
                 className="secondary"
-                style={{ ...secondaryButtonStyle, marginTop: 14, padding: "8px 14px", fontSize: 13 }}
+                style={{ ...secondaryButtonStyle, ...uniformButtonSize, marginTop: 14 }}
               >
                 Ver publicaciones en curso
               </button>
@@ -562,7 +575,7 @@ export default function OportunidadesRedesPage() {
                               <button
                                 onClick={() => handlePreview(opp)}
                                 className="secondary"
-                                style={{ ...secondaryButtonStyle, padding: "7px 12px", fontSize: 12 }}
+                                style={{ ...secondaryButtonStyle, ...uniformButtonSize }}
                               >
                                 Preview
                               </button>
@@ -570,21 +583,21 @@ export default function OportunidadesRedesPage() {
                             <button
                               onClick={() => handleSaveText(opp)}
                               className="secondary"
-                              style={{ ...secondaryButtonStyle, padding: "7px 12px", fontSize: 12 }}
+                              style={{ ...secondaryButtonStyle, ...uniformButtonSize }}
                             >
                               Guardar
                             </button>
                             <button
                               onClick={() => handlePublishOne(opp)}
                               disabled={publishingId === opp.id}
-                              style={{ ...buttonStyle, marginTop: 0, padding: "7px 14px", fontSize: 12 }}
+                              style={{ ...buttonStyle, ...uniformButtonSize, marginTop: 0 }}
                             >
                               {publishingId === opp.id ? "Publicando..." : "Publicar"}
                             </button>
                             <button
                               onClick={() => handleSkipOne(opp)}
                               className="secondary"
-                              style={{ ...secondaryButtonStyle, padding: "7px 12px", fontSize: 12, color: "#ff3b30" }}
+                              style={{ ...secondaryButtonStyle, ...uniformButtonSize, color: "#ff3b30" }}
                             >
                               Descartar
                             </button>
@@ -694,7 +707,7 @@ export default function OportunidadesRedesPage() {
               <button
                 onClick={() => setSkipModal(null)}
                 className="secondary"
-                style={{ ...secondaryButtonStyle, padding: "8px 14px", fontSize: 13 }}
+                style={{ ...secondaryButtonStyle, ...uniformButtonSize }}
               >
                 Cancelar
               </button>
@@ -703,10 +716,9 @@ export default function OportunidadesRedesPage() {
                 disabled={!skipModal.reason}
                 style={{
                   ...buttonStyle,
+                  ...uniformButtonSize,
                   background: "#ff3b30",
                   marginTop: 0,
-                  padding: "8px 16px",
-                  fontSize: 13,
                 }}
               >
                 Descartar
@@ -772,7 +784,7 @@ export default function OportunidadesRedesPage() {
               <button
                 onClick={() => setPreviewModal(null)}
                 className="secondary"
-                style={{ ...secondaryButtonStyle, padding: "8px 16px", fontSize: 13 }}
+                style={{ ...secondaryButtonStyle, ...uniformButtonSize }}
               >
                 Cerrar
               </button>
