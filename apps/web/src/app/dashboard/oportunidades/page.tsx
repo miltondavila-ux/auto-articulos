@@ -772,7 +772,7 @@ export default function OportunidadesPage() {
             </div>
           </div>
         )}
-        <p style={{ color: "#6b7280", fontSize: 12 }}>
+        <p style={{ color: "#1d1d1f", fontSize: 12 }}>
           Tu cupo actual permite hasta {Number.isFinite(effectiveAvailable) ? effectiveAvailable : "todos"} artículos. Lote: {maxTitlesPerBatch || "sin límite"}; diario: {dailyArticleLimit ?? "sin límite"}; mensual: {monthlyArticleLimit ?? "sin límite"}.
         </p>
         <label
@@ -781,7 +781,7 @@ export default function OportunidadesPage() {
             alignItems: "center",
             gap: 8,
             fontSize: 13,
-            color: "#6b7280",
+            color: "#1d1d1f",
             margin: "10px 0 0",
           }}
         >
@@ -799,7 +799,7 @@ export default function OportunidadesPage() {
             style={{
               display: "block",
               fontSize: 13,
-              color: "#6b7280",
+              color: "#1d1d1f",
               marginBottom: 6,
             }}
           >
@@ -826,7 +826,7 @@ export default function OportunidadesPage() {
         </div>
 
         <div style={{ marginTop: 12 }}>
-          <label style={{ display: "block", fontSize: 13, color: "#6b7280", marginBottom: 6 }}>
+          <label style={{ display: "block", fontSize: 13, color: "#1d1d1f", marginBottom: 6 }}>
             Estilo de escritura (Prompt) con el que se generarán los artículos de estas oportunidades.
           </label>
           <select value={selectedPromptId} onChange={(e) => setSelectedPromptId(e.target.value)} style={{ ...inputStyle, width: "100%", maxWidth: 320 }}>
