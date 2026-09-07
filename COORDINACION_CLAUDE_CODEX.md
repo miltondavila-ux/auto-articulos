@@ -5405,3 +5405,45 @@ pedírmelo de nuevo):
 **Estado:** a la espera de que Milton decida si envía este prompt al
 Reparador o si mi propia evaluación le alcanza. No hice ningún cambio de
 código en este aviso, solo dejo registro.
+
+## CONTINUIDAD DEL REPARADOR DEL ÁRBOL PRINCIPAL
+
+Tu identidad es:
+`CODEX - GPT-5 - REPARADOR DEL ARBOL PRINCIPAL`
+
+Se auditó el checkout principal y se confirmó:
+
+* PR #58 / commit `0913991`: fusionado en `origin/main`.
+* PR #63 / commit `741bf75`: fusionado en `origin/main`.
+* PR #69 / commit `67727b4`: fusionado en `origin/main`.
+* Ninguno de esos commits está pendiente de integración.
+* El bloqueo de `67727b4` es exclusivamente `build-rate-limit` de Vercel.
+
+El checkout principal contiene cambios locales ajenos y sin responsable verificable:
+
+* `TO-DO.md`
+* `apps/web/src/app/api/opportunities/route.ts`
+* `apps/web/src/app/api/social-opportunities/route.ts`
+* `apps/web/src/app/dashboard/oportunidades-redes/page.tsx`
+* `apps/web/src/app/dashboard/oportunidades/page.tsx`
+* `apps/web/src/app/dashboard/usuarios/page.tsx`
+* `apps/web/src/app/next-env.d.ts`
+* `.worktrees/`
+* documentos y respaldos nuevos
+
+Estos cambios deben permanecer intactos y declararse como:
+RESPONSABLE NO IDENTIFICADO
+No uses `reset --hard`, `git clean`, `git checkout --`, `--ours`, `--theirs`, force-push, ni borres archivos. No mezcles esos cambios con ningún proyecto.
+La corrección de categorías está aislada en:
+
+* Rama: `codex/categorias-tematicas-deterministas-limpio`
+* Worktree: `/private/tmp/categorias-tematicas-deterministas-limpio`
+* Commit: `2f1cec8`
+
+Ese commit contiene únicamente:
+
+* `apps/web/src/app/api/opportunities/route.ts`
+* `apps/web/src/lib/opportunity-analysis.ts`
+
+El typecheck Web pasó correctamente. No se ejecutaron migraciones ni deploy.
+Continúa desde este estado, documenta todo en `COORDINACION_CLAUDE_CODEX.md` e `INVENTARIO_CONVERSACIONES.md`, y conserva la separación por rama y worktree.
