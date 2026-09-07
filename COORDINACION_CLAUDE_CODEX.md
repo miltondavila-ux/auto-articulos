@@ -4990,3 +4990,55 @@ menos un título combinando cliente+negocio.
 **Capitán de migración liberó el lote:** Claude. Resultado:
 `safe_client_business_locations` aplicado con éxito. Nadie más tiene la
 capitanía tomada.
+
+## CIERRE — Título/meta descripción y copy de prueba gratuita — 2026-09-07
+
+**Capitán de archivo:** Claude — reclamado y liberado en esta misma tarea
+(sin migraciones de Prisma).
+
+Continuación directa del cierre anterior de esta misma conversación
+("Rediseño de login (más Apple) + recuperar contraseña"). Milton pidió
+además: mejorar el `<title>`/meta descripción del sitio y afinar el texto
+de la tarjeta de "prueba gratuita" para que combine con el resto.
+
+**Cambios** (rama `claude/login-metadata-polish-20260907`, PR
+[#63](https://github.com/miltondavila-ux/auto-articulos/pull/63), fusionado
+como `741bf75`):
+- `<title>` y meta descripción globales (`apps/web/src/app/layout.tsx`):
+  de "Creador de artículos en secuencia" / texto genérico, a "SEO TOTAL —
+  Artículos con IA que se publican solos" / "SEO TOTAL investiga, escribe y
+  publica artículos optimizados para tu sitio todos los días, sin que
+  muevas un dedo." Mismo texto en Open Graph.
+- `themeColor` y el fondo de fallback de `layout.tsx`: de gris (`#f5f5f7`)
+  a blanco (`#ffffff`), consistente con el login.
+- Encabezado de la tarjeta de prueba gratuita: "Solicitar prueba gratuita"
+  → "Probá SEO TOTAL gratis".
+
+**Tres auditorías:** igual patrón que el cierre anterior — funcional/local
+en navegador, `npm run verify` en verde (typecheck + build `apps/web` +
+build/tests `apps/worker`), y verificación en producción real después de
+fusionar: ambos checks de Vercel en `success`, `/login` responde `200` en
+`auto-articulos-web.vercel.app` y `seototal.lasolucionweb.com`, título de
+pestaña confirmado visualmente en el dominio real.
+
+**Pendiente que quedó fuera de esta tarea, documentado para quien lo
+retome:** el hook de `scripts/generate-product-update.ts` (anuncio
+automático en `dashboard/actualizaciones`) volvió a fallar por falta de
+`DATABASE_URL` local en ambos commits de esta conversación (`0913991`,
+`2eb5124`, `741bf75`) — no hay entrada de "Actualizaciones" para ninguno de
+estos tres cambios. Falta que alguien con credenciales de la base real
+corra ese script a mano para esos tres SHAs, o decidir que estos cambios no
+necesitan anuncio.
+
+**Además, Milton pidió un prompt para generar una imagen OG nueva con
+ChatGPT Images** (usando su propia foto), para reemplazar
+`apps/web/public/og-image.jpg` (actualmente un template de Canva "Blue
+Futuristic Neon Artificial Intelligence", ya no combina con el rediseño
+minimalista). Se le entregó el prompt en el chat; falta que Milton genere
+la imagen y la pase para subirla.
+
+**Estado:** cerrado y fusionado. Reserva liberada.
+
+**Capitán de archivo liberó el lote:** Claude. Resultado: título/meta
+descripción + copy de prueba gratuita fusionados en PR #63, sin
+migraciones de Prisma involucradas.
