@@ -461,16 +461,26 @@ export async function analyzeSeoOpportunities(input: {
   // los siguientes lotes y para el chequeo cruzado de intención.
   const needKeyByTitle = new Map<string, string>();
 
-  // Firmas de intención GLOBALES a toda la corrida (no por categoría): arranca
-  // con lo ya publicado (usando el título crudo, ya que no tiene needKey) y
-  // acumula cada título nuevo aceptado, sin importar en qué categoría cayó.
-  // Esto cierra el hueco real encontrado en producción: dos títulos casi
-  // idénticos en intención podían colarse si el modelo los repartía en
-  // categorías distintas (p.ej. "Inmigración" y "Seguros de salud"), porque
-  // la comparación anterior solo miraba dentro de la misma categoría.
-  const intentSignatures: IntentSignature[] = input.existingTitles.map((title) =>
-    buildIntentSignature(title),
-  );
+  // Firmas de intención GLOBALES a TODA LA CORRIDA (no por categoría), pero
+  // SOLO de lo generado ahora — nunca de lo ya publicado. Corrección
+  // encontrada en producción (7/9/2026, cuenta de Lorena Álvarez): una
+  // primera versión de esto arrancaba también con `input.existingTitles`,
+  // comparándolos por similitud de palabras contra cada título nuevo. En una
+  // cuenta con 405 artículos ya publicados y muy temática (todo "seguros de
+  // salud en Florida"), casi cualquier título nuevo comparte 3+ palabras con
+  // ALGO ya publicado, así que terminaba bloqueando de más — de ~14-19
+  // oportunidades típicas bajó a solo 2. Esto además contradecía una decisión
+  // de diseño ya tomada antes (ver "Decisión de diseño explicada" en
+  // COORDINACION_CLAUDE_CODEX.md): la similitud de texto contra lo publicado
+  // NUNCA debe ser un filtro de código, porque dos títulos long tail
+  // legítimos (misma ciudad/tema, ángulo distinto) comparten casi todas las
+  // palabras sin ser canibalización real. Lo ya publicado sigue protegido
+  // solo por coincidencia EXACTA de texto (`seen`, sin cambios). Esta firma
+  // global solo cierra el hueco real reportado por Codex: dos títulos casi
+  // idénticos podían colarse si el modelo los repartía en categorías
+  // distintas DENTRO DE LA MISMA CORRIDA (p.ej. "Inmigración" y "Seguros de
+  // salud"), porque antes solo se comparaba dentro de la misma categoría.
+  const intentSignatures: IntentSignature[] = [];
 
   for (let batchIndex = 0; batchIndex < batchesToProcess.length; batchIndex++) {
     const batch = batchesToProcess[batchIndex];
@@ -554,9 +564,10 @@ ${JSON.stringify(alreadyProposedByCategory)}`;
         ) continue;
         const needKey = typeof value.needKey === "string" ? value.needKey.trim() : undefined;
         const signature = buildIntentSignature(text, needKey);
-        // Chequeo GLOBAL (toda la cuenta y toda la corrida, cualquier
-        // categoría), no solo dentro de la categoría actual — cierra el hueco
-        // real de canibalización cruzada entre categorías.
+        // Chequeo GLOBAL a esta corrida (cualquier categoría, no solo la
+        // actual) — cierra el hueco real de canibalización cruzada entre
+        // categorías. NO compara contra lo ya publicado (ver nota arriba,
+        // en la inicialización de intentSignatures).
         if (collidesWithIntent(signature, intentSignatures)) continue;
         seen.add(normalized);
         intentSignatures.push(signature);
