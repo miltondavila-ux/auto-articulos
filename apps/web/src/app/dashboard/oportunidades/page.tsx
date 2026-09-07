@@ -481,8 +481,7 @@ export default function OportunidadesPage() {
           </ul>
         </section>
         <section style={sectionStyle}>
-        <h2 style={h2Style}>Oportunidades SEO</h2>
-        <p style={{ color: "#6b7280", fontSize: 14, lineHeight: 1.55 }}>
+        <p style={{ color: "#1d1d1f", fontSize: 14, lineHeight: 1.55 }}>
           Analiza impresiones, tendencias, posiciones, consultas y páginas de tu
           propiedad de Google Search Console, Google Analytics y Bing Webmaster
           Tools (cuando estén conectados). El sistema cubre todas tus categorías
