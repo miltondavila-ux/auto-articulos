@@ -5331,6 +5331,8 @@ regresión, build) y se documentará el resultado en esta misma entrada
 antes de pedir autorización para fusionar/desplegar — no se sube nada a
 producción sin ese paso. Reserva activa hasta cerrar esta entrada.
 
+---
+
 ## Aviso — Milton pidió una segunda opinión del Reparador sobre el estado del árbol — 2026-09-07
 
 Después de los tres cierres anteriores de esta conversación (login más
