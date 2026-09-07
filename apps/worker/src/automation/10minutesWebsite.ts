@@ -802,7 +802,24 @@ async function createArticleDraft(
   // #user_label_list_article es un <select multiple> reforzado visualmente
   // por un widget (se ve como combobox), pero fijar el value real y disparar
   // "change" es suficiente para que el widget se sincronice.
-  await page.selectOption("#user_label_list_article", categoryExternalId);
+  try {
+    await page.selectOption("#user_label_list_article", categoryExternalId);
+  } catch {
+    // Playwright, sin este catch, tira un error técnico de bajo nivel
+    // ("did not find some options" tras 30s de reintentos silenciosos) que
+    // nadie sin leer el código puede entender. Pasa cuando la categoría
+    // guardada ya no existe como opción real en el sitio: se borró, se
+    // renombró, o cambió de panel/sitio desde la última sincronización.
+    // Mismo patrón ya visto antes (cuentas de Estee Soto y Antonio
+    // Aguirre) — no es un bug de código, es caché desactualizado con
+    // solución de un clic.
+    throw new Error(
+      `La categoría configurada para este artículo ya no existe en ${productName} ` +
+        "(se borró, se renombró, o cambió de panel/sitio desde la última vez que se " +
+        'sincronizó). Entra a Configuración y toca "Sincronizar categorías ahora", ' +
+        "luego vuelve a intentar publicar este artículo.",
+    );
+  }
   await page.dispatchEvent("#user_label_list_article", "change");
   await onStep("Categoría seleccionada.");
 
