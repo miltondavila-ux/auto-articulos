@@ -82,6 +82,22 @@ Ver detalle completo de ambos PR en `CONTROLADOR_DE_VERSIONES.md`, entradas
 "PR #47: rediseño de deduplicación semántica" y "PR #46: línea de tiempo
 dinámica de fuentes de análisis".
 
+#### Actualización (agregada por la tarea programada diaria de propagación, 2026-09-07, sin editar la tabla anterior)
+
+Verificado EN VIVO contra `origin/main` recién fetcheado:
+- Fila del PR #47 (`claude/rediseno-intencion-longtail-20260904`): **la
+  reserva ya no está activa.** El PR se fusionó como el commit `7e951f7`
+  (`git merge-base --is-ancestor 7e951f7 origin/main` confirma que ya es
+  ancestro de `main`) y la rama remota fue borrada tras el merge. Detalle
+  completo en `CONTROLADOR_DE_VERSIONES.md` — "Fusión y verificación en
+  Producción — PR #47: rediseño de deduplicación semántica (`needKey`) —
+  2026-09-06".
+- Fila del PR #46 (`codex/dynamic-source-timeline-20260904`): **la reserva
+  de Codex sigue activa.** La rama remota todavía existe y
+  `git merge-base --is-ancestor` confirma que NO es ancestro de
+  `origin/main` — sigue sin fusionar, mismo estado que el registrado el
+  2026-09-05.
+
 ### El checkout principal de Milton
 
 `/Users/miltondavila/Creador de articulos` (rama `main`, commit `f81f53b`)
@@ -483,3 +499,17 @@ llegó a leer:
   Preview de ambos PR y, si pasan, fusionarlos y repetir la prueba con la
   cuenta de Lorena Álvarez para confirmar cero canibalización con datos
   reales.
+
+**Actualización (agregada por la tarea programada diaria de propagación,
+2026-09-07, sin editar lo anterior):** el PR #47 (rediseño `needKey`) ya se
+fusionó y se verificó en Producción — commit de merge `7e951f7`, ambos
+checks de Vercel en `success` real, `curl -I /login` responde `200` en
+`auto-articulos-web.vercel.app` y en `seototal.lasolucionweb.com` (detalle
+completo en `COORDINACION_CLAUDE_CODEX.md`, sección "CIERRE — PR #47
+fusionado y verificado en producción — 2026-09-06", y en
+`CONTROLADOR_DE_VERSIONES.md`). El PR #46 de Codex (línea de tiempo
+dinámica de fuentes) sigue **abierto y sin fusionar** — verificado en vivo
+por esta misma corrida contra `origin/main`. La conversación sigue **EN
+CURSO**: el paso pendiente de repetir el análisis con la cuenta de Lorena
+Álvarez para confirmar cero canibalización con datos reales, mencionado en
+el párrafo anterior, todavía no consta hecho en `COORDINACION_CLAUDE_CODEX.md`.
