@@ -1344,3 +1344,25 @@ la rama `codex/dynamic-source-timeline-20260904` todavía existe en el
 remoto y `git merge-base --is-ancestor` confirma que NO es ancestro de
 `origin/main`.
 Estado: FUSIONADO A `main` Y VERIFICADO EN PRODUCCIÓN.
+
+## Versión desplegada — 2026-09-07 — quitar título duplicado y texto gris en Oportunidades
+
+Fecha y hora: 2026-09-07
+Versión/commit: `94f6e02` en `main` (fast-forward desde `8032368`)
+Conversación/proyecto: `CODEX - INSTRUCCIONES EN MODULOS` (continuación de Claude)
+Worktree: `/private/tmp/oportunidades-texto-negro-sin-duplicado`
+Motivo: Milton reportó, con captura de producción, que el encabezado
+"Oportunidades SEO" aparecía dos veces en la página (en la tarjeta "Leer
+antes de ejecutar" y de nuevo en la sección técnica de abajo) y que el
+párrafo de fuentes de datos (GSC/GA4/Bing) seguía en gris (`#6b7280`) en
+vez de negro, inconsistente con el resto de la tarjeta.
+Cambios: se eliminó el `<h2>Oportunidades SEO</h2>` duplicado de la segunda
+sección; el párrafo pasó de `#6b7280` a `#1d1d1f` (mismo negro que el resto).
+Archivos modificados: `apps/web/src/app/dashboard/oportunidades/page.tsx`.
+Auditoría 1: APROBADA — cambio de texto/estilo puro, sin lógica.
+Auditoría 2: APROBADA — `tsc --noEmit` limpio, `next build --webpack` 83/83
+rutas, diff acotado a 3 líneas de un solo archivo.
+Auditoría 3: APROBADA — `Vercel – auto-articulos-web: success` confirmado
+vía API de GitHub para `94f6e02`; `seototal.lasolucionweb.com/login` → 200.
+Responsable: Claude.
+Estado: VERIFICADA EN PRODUCCIÓN.
