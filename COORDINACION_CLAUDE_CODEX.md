@@ -4946,3 +4946,47 @@ pendiente para que Milton decida.
 **Capitán de archivo liberó el lote:** Claude. Resultado: rediseño de login
 + recuperar contraseña fusionado en PR #58, sin migraciones de Prisma
 involucradas.
+
+## CIERRE — 2026-09-07 — Títulos ultra geolocalizados (cliente × negocio)
+
+Conversación: `CODEX - AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`
+(continuación de Claude). Pedido explícito de Milton: combinar de dónde son
+los clientes reales del negocio con dónde opera el negocio, para títulos
+ultra segmentados (ej. "Cómo invertir en propiedades en Homestead si vivo
+en Colombia").
+
+PR [`#61`](https://github.com/miltondavila-ux/auto-articulos/pull/61)
+(`b47784b`): `User.clientLocations`/`User.businessLocations` (texto
+separado por comas, nullable); nueva sección "Ubicaciones para Títulos
+Geolocalizados" en Configuración → Cuenta (`ConfiguracionView.tsx`, pestaña
+"platform"/"content"); `api/opportunities/route.ts` las lee y separa por
+comas; `opportunity-analysis.ts` tiene una regla nueva que deja explícito
+que estas ubicaciones son datos REALES declarados por el dueño de la
+cuenta (no evidencia de GSC/GA4/Bing) y por eso no necesitan evidencia
+para usarse, a diferencia de cualquier otra ciudad/país. `manual-usuario.ts`
+actualizado en el mismo lote.
+
+**Migración**: el primer intento con `prisma db push` normal falló por el
+bloqueo preexistente ya documentado en este archivo (columnas huérfanas
+`activeSitePanel`/`usePromptBoxPipeline`/`PromptBox`/`PromptBoxExecution`
+con datos reales, nunca autorizado su borrado). Se agregó un input seguro
+nuevo `safe_client_business_locations` en `migrate.yml`
+(PR [`#62`](https://github.com/miltondavila-ux/auto-articulos/pull/62),
+mismo patrón que `safe_daily_limit_default`/`safe_blogger_integration`) y
+se aplicó con éxito (run `34167888519`) sin tocar el resto del schema.
+`seototal.lasolucionweb.com/login` respondió 200 después.
+
+**Nota para quien continúe el rediseño de Configuración** (`RENEW
+CONFIGURACION`, ver commit `7615c9e` en este mismo `main`): la nueva
+sección de ubicaciones vive en `ConfiguracionView.tsx`, dentro del bloque
+que hoy sirve la pestaña "Cuenta"/"Contenido" — al dividir ese componente
+en las fases siguientes, preservar ese bloque completo (no es solo la
+firma del artículo).
+
+Pendiente real, no de código: que Milton (o Lorena) llene los dos campos
+en Configuración → Cuenta y se confirme en una corrida real que aparece al
+menos un título combinando cliente+negocio.
+
+**Capitán de migración liberó el lote:** Claude. Resultado:
+`safe_client_business_locations` aplicado con éxito. Nadie más tiene la
+capitanía tomada.
