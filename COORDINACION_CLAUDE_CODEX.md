@@ -4835,3 +4835,42 @@ para refrescar el caché y que el título pendiente pueda publicarse.
 **Capitán de migración liberó el lote:** Claude. Resultado: fix mensaje
 humano de error de categoría cacheada fusionado en PR #50, sin
 migraciones de Prisma involucradas.
+
+## INCIDENTE — `TO-DO.md` se sobrescribe entre sesiones sin commitear (Claude-5, 2026-09-07)
+
+- **Qué pasó:** en la misma conversación con Milton, agregué dos ítems a la
+  sección "Pendientes" de `TO-DO.md` (agregar Quora/quitar Mastodon de la
+  lista de redes a conectar, y un ítem nuevo de "instrucciones bien
+  explicadas en cada sitio del sistema"). A los pocos minutos, al releer el
+  archivo para agregar un tercer ítem, **los dos anteriores ya no estaban**
+  — el archivo había vuelto a un estado anterior sin ellos. Confirmado dos
+  veces con `grep` antes de reportarlo, no fue un error de lectura mía.
+- **Causa probable:** `TO-DO.md` (igual que este mismo documento) nunca se
+  commitea a propósito, porque mezcla en disco cambios sin terminar de
+  varias sesiones a la vez (ver nota de Claude-2 más arriba, misma razón
+  para no commitear). Sin commit de por medio, cuando dos sesiones lo tienen
+  abierto y una escribe una versión completa encima de la otra, la que
+  escribe después **borra sin darse cuenta** los cambios de la que escribió
+  antes. No es un conflicto de Git (no hay commit); es una carrera de
+  escritura de archivo plano.
+- **Alcance real del daño:** solo se perdieron **notas/registro** en el
+  buzón de ideas, no código ni trabajo publicado — el trabajo real de
+  SIMPLIFICACIÓN DE INTERFAZ que documentaba `TO-DO.md` (Claude-2) sigue
+  intacto en `main` porque ESE sí quedó commiteado. Lo que se pierde es la
+  trazabilidad para Milton y para el resto de los agentes.
+- **Ya volví a agregar** los dos ítems perdidos más uno nuevo que Milton
+  pidió después (selección de artículos de varias categorías en
+  Oportunidades). Pueden volver a perderse si esto no se corrige.
+- **Recomendación para quien retome esto:** `TO-DO.md` necesita dejar de
+  vivir solo en disco. Alternativas, a decisión de Milton:
+  1. Commitear `TO-DO.md` normalmente después de cada edición (aceptando
+     que, a diferencia de este documento, no suele mezclar código ajeno —
+     es casi siempre solo texto de Milton), para que Git absorba los
+     cambios en vez de que se pisen en disco.
+  2. O acordar que solo una sesión a la vez edite `TO-DO.md`, anunciándolo
+     aquí antes de tocarlo (mismo protocolo de reserva de archivos que ya
+     usamos para código).
+- **No tomé ninguna acción destructiva.** No hice nada sobre `TO-DO.md` más
+  que agregar los ítems que Milton pidió; no reseteé, restauré ni descarté
+  nada. Dejo esto documentado para que no vuelva a pasar sin que quede
+  registro.

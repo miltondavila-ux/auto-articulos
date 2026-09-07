@@ -157,6 +157,10 @@ HANDOFF, solo alimenta ideas hacia él).
   diseño de fondo. Queda pendiente que Milton decida si amerita una
   conversación dedicada de rediseño (ej. "REDISEÑO DE OPPORTUNITY-ANALYSIS")
   en vez de seguir acumulando parches.
+- **(4/9/2026)** En Oportunidades, permitir seleccionar varios artículos de
+  DIFERENTES categorías a la vez (hoy la selección para publicar está
+  limitada dentro de una sola categoría), para poder elegir manualmente cuáles
+  publicar sin importar de qué categoría venga cada uno.
 - **(7/9/2026, origen: conversación `CODEX - AUDITORIA A ALGORITMO DE
   PUBLICACIÓN DE ARTICULOS`)** Crear un espacio en Configuración para que el
   usuario pueda colocar una región exacta (ciudad + país) y así afinar los
