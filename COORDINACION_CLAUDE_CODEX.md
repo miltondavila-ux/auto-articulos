@@ -5000,6 +5000,12 @@ vez de inventar una asignación.
    por paquete y que no se aceptan respuestas de otra categoría.
 2. **Regresión:** `next build --webpack` ejecutado desde `apps/web`, con
    83/83 rutas; suite del worker 14/14 tests; `git diff --check` limpio.
-3. **Integración/producción:** pendiente hasta crear y verificar un Preview
-   real. Producción permanece intacta; no se modificó Vercel, middleware,
-   autenticación, secretos ni schema.
+3. **Integración/producción:** Preview de Vercel `Ready`, ambos checks en
+   `success`, y `/login` responde mediante redirección SSO de Vercel. La URL
+   del Preview es `https://auto-articulos-web-git-codex-ca-61c377-luna-portex-intelligence.vercel.app`.
+   La auditoría funcional autenticada del módulo Oportunidades queda
+   incompleta porque el Preview exige SSO y no se utilizaron credenciales
+   ajenas. Por protocolo, no se fusiona ni se publica a producción hasta que
+   Milton verifique allí una corrida real con su cuenta de prueba. Producción
+   permanece intacta; no se modificó Vercel, middleware, autenticación,
+   secretos ni schema.
