@@ -4874,3 +4874,75 @@ migraciones de Prisma involucradas.
   que agregar los ítems que Milton pidió; no reseteé, restauré ni descarté
   nada. Dejo esto documentado para que no vuelva a pasar sin que quede
   registro.
+
+## CIERRE — Rediseño de login (más Apple) + recuperar contraseña — 2026-09-07
+
+**Capitán de archivo:** Claude — reclamado y liberado en esta misma tarea
+(sin migración de Prisma involucrada, solo `apps/web/src/app/login/page.tsx`
+y la constante compartida `packages/shared/src/platform-servers.ts`).
+
+**Pedido de Milton:** la pantalla de login (imagen adjunta) le pareció poco
+"Apple" y con fondo gris en vez de blanco; pidió título/descripción nuevos
+(los propuse yo, Milton no pasó texto propio) y agregar recuperación de
+contraseña, que no existía.
+
+**Cambios aplicados** (rama `claude/login-apple-redesign-20260907`, PR
+[#58](https://github.com/miltondavila-ux/auto-articulos/pull/58), fusionado
+por squash-merge... en realidad merge normal, commit `0913991`):
+- Fondo blanco puro (`#ffffff`), se quitó el gradiente/imagen de fondo gris
+  que traía el diseño anterior.
+- Card sin borde duro, con sombra suave y más aire (mismo cambio aplicado a
+  las dos tarjetas, login y "prueba gratuita").
+- Título/descripción nuevos: "Toda la inteligencia, al alcance de tu mano."
+  / "SEO TOTAL investiga, escribe y publica artículos optimizados para tu
+  sitio todos los días — el trabajo de un equipo entero, hecho solo."
+  (retoma la frase textual que dio Milton al pedir algo que reflejara "mucha
+  inteligencia al alcance de la mano").
+- Nuevo enlace "Recuperar mi contraseña" bajo el campo de contraseña. No
+  hay recuperación real por correo (no existe infraestructura de email en
+  el proyecto): por pedido explícito de Milton, apunta directo al soporte
+  humano de la plataforma — `https://www.10minuteswebsite.com/ayuda` (cubre
+  net + site, que comparten el mismo soporte). El login es una sola pantalla
+  compartida por las tres plataformas y todavía no se sabe a cuál pertenece
+  la cuenta en este punto, así que no se puede enrutar automáticamente al
+  soporte específico de TagCrush desde acá.
+- De paso, actualicé el `helpUrl` de TagCrush en `PLATFORM_SERVERS`
+  (`packages/shared/src/platform-servers.ts`), que apuntaba a un enlace
+  desactualizado (`customer-service-chat`); ahora es
+  `https://www.tagcrush.com/Chat-de-ayuda-tagcrush`, dado por Milton. Este
+  valor sí se usa ya en el resto de la app (Configuración, validaciones)
+  para cuentas ya logueadas donde el servidor de la cuenta es conocido.
+
+**Hallazgo de entorno corregido de paso:** `node_modules/@auto-articulos/*`
+tenía symlinks apuntando a un checkout viejo y ajeno
+(`/private/tmp/linkedin-posts-api-v2`), rompiendo cualquier build local.
+Se corrigió con `npm install` en la raíz (solo toca `node_modules`, quedó
+reflejado como una limpieza menor de `package-lock.json` en el mismo PR).
+
+**Tres auditorías:**
+1. **Funcional/local:** servidor de desarrollo local, verificado a mano en
+   desktop y en viewport mobile (375px) — login y modo "prueba gratuita",
+   enlace de recuperación con el `href` correcto.
+2. **Regresión/build:** `npm run verify` (typecheck + build de `apps/web`
+   con las 90 rutas, build + tests de `apps/worker`, 14/14 tests) en verde.
+3. **Integración/producción:** el Preview del PR quedó `Ready` en Vercel
+   (mismo pipeline que producción), pero protegido por Vercel SSO — no
+   inicio sesión ahí con credenciales ajenas, así que no pude verlo
+   directamente antes de fusionar; me apoyé en que el build es idéntico al
+   ya verificado en local. Después de fusionar (commit `0913991`), verifiqué
+   producción real: ambos checks de Vercel en `success`, `/login` responde
+   `200` en `auto-articulos-web.vercel.app` y en `seototal.lasolucionweb.com`,
+   y confirmé visualmente en el navegador contra el dominio real de
+   producción que el texto y el enlace nuevos están ahí.
+
+**Nota sobre el flujo de esta conversación:** Milton señaló, con razón, que
+tuve que preguntar dos veces si podía subir el cambio cuando la autonomía
+para eso ya estaba otorgada de antemano en la sección "C.1. Autonomía ya
+otorgada" de este mismo documento — quedó registrado acá para no repetirlo.
+
+**Estado:** cerrado y fusionado. Reserva liberada. No quedó ninguna duda
+pendiente para que Milton decida.
+
+**Capitán de archivo liberó el lote:** Claude. Resultado: rediseño de login
++ recuperar contraseña fusionado en PR #58, sin migraciones de Prisma
+involucradas.
