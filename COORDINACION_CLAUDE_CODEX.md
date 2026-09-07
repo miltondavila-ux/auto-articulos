@@ -5085,3 +5085,45 @@ la explicación de cada página, ni resucitar el componente monolítico, sin
 revisar esta sección primero y documentar el motivo, el diff y las tres
 auditorías requeridas.
 Estado: APROBADA POR MILTON — PROTEGIDA PERMANENTEMENTE.
+
+## CIERRE (parcial) — Nueva imagen OG con foto real de Milton — 2026-09-07
+
+**Capitán de archivo:** Claude — reclamado y liberado en esta misma tarea.
+
+Continuación de los dos cierres anteriores de esta conversación (rediseño
+de login). Milton pidió una imagen OG nueva generada con ChatGPT Images
+usando su propia foto, para reemplazar el template de Canva "Blue
+Futuristic Neon Artificial Intelligence" que ya no combinaba con el
+rediseño. Advertí que la estética resultante (Milton fusionado con un
+cuerpo cyborg, circuitos, ojo biónico) contradice la limpieza minimalista
+del login nuevo; Milton confirmó explícitamente que es la decisión de
+marca que quiere ("ese cyborg soy yo"), así que se subió tal cual, sin más
+objeciones de mi parte.
+
+**Cambio** (rama `claude/og-image-nueva-20260907`, PR
+[#69](https://github.com/miltondavila-ux/auto-articulos/pull/69), fusionado
+como `67727b4`): reemplazo de `apps/web/public/og-image.jpg` por la imagen
+nueva, redimensionada de 1730x909 a 1200x630 con `sips -z` (resize
+proporcional, no crop, para no cortar el texto de la izquierda — un primer
+intento con `sips -c` sí lo cortaba y se descartó).
+
+**Bloqueo real, sin resolver:** el check `Vercel – auto-articulos-web` para
+el commit `67727b4` devolvió `Deployment rate limited — retry in 24 hours.`
+(mismo tipo de bloqueo de cuota que ya frenó los PR #46/#47 en su momento,
+ver más arriba en este documento). No es un error de código ni de mi
+build — confirmado con
+`gh api repos/miltondavila-ux/auto-articulos/commits/67727b4.../status`.
+**Producción NO está rota**: verifiqué que `/login` sigue respondiendo
+`200` en ambos dominios con el build anterior (el de PR #63), simplemente
+todavía no tiene la imagen OG nueva. Falta esperar a que se libere la
+cuota (como pasó con el PR #47, se liberó sola en un par de días) y
+reintentar el build — no hace falta un commit nuevo, alcanza con
+re-disparar el deploy de ese mismo commit desde Vercel o hacer un
+`git commit --allow-empty` + push cuando corresponda.
+
+**Estado:** código fusionado en `main`, pero la imagen nueva todavía no
+está visible en producción por la limitación de cuota de Vercel. Reserva
+de archivo liberada — no queda nada más que yo pueda hacer hasta que se
+libere el rate limit.
+
+**Capitán de archivo liberó el lote:** Claude.
