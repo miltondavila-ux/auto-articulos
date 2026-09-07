@@ -4704,3 +4704,59 @@ para confirmar en datos reales que ya no hay canibalización semántica.
 El PR #46 de Codex (línea de tiempo dinámica GSC/GA4/Bing) compartía la
 misma causa de bloqueo; probablemente también pueda reintentarse ahora de
 la misma forma (rebase + push) si sigue abierto.
+
+## Claude (tarea programada diaria de propagación) — 2026-09-07
+
+Punto de partida: la última entrada firmada por esta misma tarea era
+"Claude (tarea programada diaria de propagación) — 2026-09-06" (commit
+`a1cf31a`). Se revisó el diff de `COORDINACION_CLAUDE_CODEX.md` entre ese
+commit y `origin/main` actual (`719bb67`): un único commit nuevo, "docs:
+cerrar PR #47 fusionado y verificado en produccion (#49)" (`719bb67`,
+autoría de Milton), que agregó la sección "CIERRE — PR #47 fusionado y
+verificado en producción — 2026-09-06" justo arriba de esta entrada.
+
+Contenido propagado, verificando en vivo contra `origin/main` recién
+fetcheado antes de escribir cada entrada:
+- El merge y la verificación de Producción del PR #47 (`7e951f7`, ambos
+  checks de Vercel en `success`, `/login` respondiendo `200` en ambos
+  dominios) → nueva entrada en `CONTROLADOR_DE_VERSIONES.md`, "Fusión y
+  verificación en Producción — PR #47: rediseño de deduplicación semántica
+  (`needKey`) — 2026-09-06", que cierra la entrada "PREPARADA" previa sin
+  editarla.
+- La liberación de la reserva de rama del PR #47 (`git merge-base
+  --is-ancestor 7e951f7 origin/main` confirma que ya es ancestro de
+  `main`; la rama remota ya no existe) y la confirmación de que la reserva
+  del PR #46 de Codex sigue activa (la rama remota
+  `codex/dynamic-source-timeline-20260904` todavía existe y no es ancestro
+  de `origin/main`) → addendum en `INVENTARIO_CONVERSACIONES.md` Parte A
+  (tabla del 2026-09-05) y actualización en Parte B (entrada `AUDITORIA A
+  ALGORITMO DE PUBLICACIÓN DE ARTICULOS`), ambos sin editar el contenido
+  existente.
+
+Se evaluó el resto del contenido de la nueva sección contra el mapa de
+propagación y no correspondió mover nada más:
+- El pendiente de repetir el análisis con la cuenta de pruebas (Lorena
+  Álvarez) ya estaba registrado con todo su contexto tanto en la entrada
+  "PREPARADA" original de `CONTROLADOR_DE_VERSIONES.md` como en
+  `INVENTARIO_CONVERSACIONES.md` Parte B (actualización del 2026-09-05);
+  no es una idea suelta nueva para `TO-DO.md`, así que no se duplicó ahí.
+- La sugerencia de que el PR #46 "probablemente también pueda
+  reintentarse" es especulación de la propia entrada de origen, no un
+  hecho confirmado; se verificó en vivo que el PR #46 sigue genuinamente
+  abierto (ver arriba) y esa verificación ya quedó registrada en
+  `INVENTARIO_CONVERSACIONES.md`. No hay ninguna acción nueva que anotar
+  aparte de eso.
+- No es un cambio visible para el usuario final de la aplicación (es una
+  corrección interna del algoritmo de deduplicación, ya reflejada como tal
+  en los documentos técnicos) → no toca
+  `apps/web/src/content/manual-usuario.ts`.
+- No es un problema de árbol de git enredado, ramas pisadas ni commits
+  mezclados (el `force-with-lease` fue sobre la propia rama del PR, tras
+  rebasar sobre `origin/main`, uso normal del protocolo) → no toca
+  `REPARADOR_DEL_ARBOL_PRINCIPAL.md`.
+
+No hubo nada que requiriera una operación destructiva, migración ni deploy
+en esta corrida. No se detectó ninguna duda adicional que anotar para que
+Milton decida.
+
+Responsable: Claude (tarea programada diaria de propagación).
