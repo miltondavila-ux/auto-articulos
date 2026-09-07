@@ -300,7 +300,7 @@ function LoginContent() {
                 letterSpacing: "-0.01em",
               }}
             >
-              Solicitar prueba gratuita
+              Probá SEO TOTAL gratis
             </h1>
             <p style={{ fontSize: 13, color: "#86868b", margin: "0 0 4px" }}>
               7 días de acceso completo. Deja tus datos para empezar.
