@@ -1395,3 +1395,57 @@ explícitamente esta sección primero. Cualquier modificación de ese archivo
 debe preservar el bloque completo o documentar el motivo, el diff y las tres
 auditorías requeridas.
 Estado: APROBADA POR MILTON — PROTEGIDA PERMANENTEMENTE.
+
+## Versión APROBADA POR MILTON — 2026-09-07 — Algoritmo de Oportunidades (`opportunity-analysis.ts`)
+
+Conversación: `CODEX - AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`
+(traspasada de Codex a Claude el 4/9/2026, continuada por Claude el 7/9/2026).
+Milton confirmó explícitamente, tras una prueba real con la cuenta de pruebas
+(Lorena Álvarez, `segurosdesaludyvida.com`), que esta versión cumple el
+objetivo: "TE FELICITO... guarda esta versión".
+
+**Commits que componen esta versión** (todos en `main`, en orden):
+- `7e951f7` (PR #47): firma de intención estructurada (`needKey`: objeto +
+  contexto + perfil + ubicación, sin verbo ni formato) declarada por el
+  modelo por título; el código la compara de forma determinista y GLOBAL —
+  cualquier categoría, no solo la actual — para bloquear canibalización
+  cruzada entre categorías distintas.
+- `4614ad3` (PR #52): corrección de alcance — el chequeo de `needKey` NO debe
+  compararse contra los títulos ya publicados (`existingTitles`), solo contra
+  lo generado en la misma corrida. Una primera versión sí lo hacía y, en una
+  cuenta con 405 artículos ya publicados muy temática, bloqueaba de más (de
+  ~14-19 oportunidades típicas bajó a solo 2). Lo publicado sigue protegido
+  únicamente por coincidencia exacta de texto, como en el diseño original.
+- `3a76d71` (PR #54): `BATCH_SIZE` de 250 a 100 (más lotes, más intentos de
+  cubrir categorías con evidencia real) + regla en el prompt contra ser
+  demasiado conservador cuando la evidencia es abundante. Pedido explícito de
+  Milton: al menos 10 títulos por corrida cuando la evidencia real lo permite.
+- `e1662a4` (PR #55): prohibición ABSOLUTA de años viejos, independiente de la
+  evidencia. Milton encontró `"...Comparativa 2023"` en un título real
+  generado en 2026 — el chequeo anterior solo exigía que el año tuviera
+  evidencia real en los datos (Search Console puede seguir mostrando
+  impresiones de una consulta vieja), no que fuera razonable publicarlo hoy.
+  `isYearAcceptablyRecent()` solo permite año actual ±1, sin excepción.
+
+**Resultado verificado en producción** (cuenta de pruebas Lorena Álvarez,
+2026-09-07, dos corridas reales consecutivas tras cada fix):
+- Antes de `4614ad3`: 2 títulos en 2 de 10 categorías (sobre-bloqueo).
+- Después de `4614ad3` + `3a76d71`: 10 títulos en 3 de 10 categorías —
+  objetivo de "al menos 10" cumplido.
+- Sin años inventados ni desactualizados detectados en esa corrida (el fix
+  de `e1662a4` es posterior a esa prueba puntual; queda pendiente confirmar
+  con una corrida nueva que ya no reaparezca ningún año fuera de rango).
+
+**Hallazgo pendiente, NO resuelto en esta versión** (documentado también en
+`TO-DO.md`, pedido explícito de Milton): el algoritmo asigna mal la categoría
+a algunos títulos y viceversa — en la corrida de prueba, un título sin
+ninguna mención de "deducible" cayó en la categoría "Deducibles", y un título
+genérico sin mención de embarazo cayó en "Embarazo y Bebés" (duplicando además
+contenido de otra categoría). Ver el punto 2 de `TO-DO.md` bajo esta misma
+conversación.
+
+Archivo: `apps/web/src/lib/opportunity-analysis.ts` (único modificado en las
+cuatro auditorías). Sin migraciones de Prisma en ninguno de los cuatro PRs.
+Responsable: Claude.
+Estado: APROBADA POR MILTON — VERIFICADA EN PRODUCCIÓN. Pendiente de una
+próxima conversación: corregir la asignación categoría↔título (ver TO-DO.md).
