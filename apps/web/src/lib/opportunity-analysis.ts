@@ -582,7 +582,67 @@ ${JSON.stringify(alreadyProposedByCategory)}`;
 
     const opportunities = parsed.opportunities;
     if (!Array.isArray(opportunities)) continue;
+    applyOpportunityItems(opportunities);
+  }
 
+  // PASO DEDICADO DE GEOLOCALIZACION (7/9/2026, pedido explicito de Milton:
+  // "haz lo necesario para que la ejecucion vaya en funcion de los
+  // objetivos... no quiero tantas pruebas"). Confirmado en produccion que
+  // meter la regla de geolocalizacion como una linea mas del prompt
+  // principal NO bastaba: el modelo la ignoraba casi siempre porque tenia
+  // que competir contra otras ~15 reglas obligatorias en la misma llamada.
+  // Solucion determinista: una llamada A PARTE, con un prompt corto y
+  // enfocado EXCLUSIVAMENTE en combinar cliente x negocio, sin ninguna otra
+  // regla que le reste prioridad. Solo corre cuando el dueño de la cuenta
+  // declaro AMBAS listas; en cualquier otro caso el comportamiento es
+  // identico a antes (cero llamadas nuevas, cero cambio).
+  if ((input.clientLocations?.length ?? 0) > 0 && (input.businessLocations?.length ?? 0) > 0) {
+    const combos = input.clientLocations!.flatMap((client) =>
+      input.businessLocations!.map((business) => ({ client, business })),
+    );
+    const geoPrompt = `Eres un estratega SEO. Tu UNICA tarea ahora es crear titulos long tail que combinen explicitamente una ubicacion de CLIENTE con una ubicacion de NEGOCIO, una por titulo, usando EXACTAMENTE las combinaciones de la lista de abajo (no inventes otras).
+
+Formato esperado del titulo: una frase natural que mencione la accion (comprar, invertir, elegir, contratar, etc.), el tema real del negocio (segun las categorias de abajo) y AMBAS ubicaciones — la de negocio como destino/lugar del servicio, la de cliente como "si vivo en..." / "siendo de...". Ejemplo: "Como invertir en propiedades en Homestead si vivo en Colombia".
+
+COMBINACIONES OBLIGATORIAS A CUBRIR (una por una, en el orden dado; si una combinacion no tiene sentido real para el negocio, omitela y sigue con la siguiente):
+${JSON.stringify(combos)}
+
+CATEGORIAS PERMITIDAS (con EJEMPLOS DE TITULOS YA PUBLICADOS por categoria — el tema del titulo debe encajar en una de estas, igual que cualquier otro titulo del sistema):
+${JSON.stringify(input.categories)}
+
+TITULOS YA EXISTENTES (publicados, en toda la cuenta) — no repitas la misma pregunta principal que alguno de estos:
+${JSON.stringify(input.existingTitles)}
+
+Reglas no negociables (las mismas que rigen todo el sistema, resumidas):
+- Cada titulo debe ir en un categoryId real de la lista de arriba; si ninguna categoria encaja con el tema real del negocio, omite esa combinacion.
+- No inventes anos, cifras ni datos que no esten en las categorias o en esta instruccion.
+- Cada titulo debe declarar "needKey" (objeto_contexto_perfil_ubicacion en snake_case, sin verbo ni formato) que incluya AMBAS ubicaciones para que el sistema lo distinga de otros titulos.
+- Puedes proponer mas de un titulo por combinacion solo si son necesidades realmente distintas (ver needKey); si no, uno solo por combinacion alcanza.
+
+Responde SOLO con JSON valido (sin markdown): {"opportunities":[{"categoryId":"id","rationale":"por que esta combinacion tiene sentido para este negocio","impressions":0,"clicks":0,"titles":[{"text":"...","needKey":"...","rationale":"..."}]}]}
+Si genuinamente ninguna combinacion tiene sentido real para este negocio, responde: {"opportunities":[]}`;
+
+    try {
+      const parsedGeo = await callOpenAiWithRetry(geoPrompt, apiKey);
+      const geoOpportunities = parsedGeo.opportunities;
+      if (Array.isArray(geoOpportunities)) applyOpportunityItems(geoOpportunities);
+    } catch (err) {
+      console.error("Paso dedicado de geolocalizacion fallo (no bloquea el resto del analisis):", err);
+    }
+  }
+
+  if (allResult.length === 0) {
+    return { status: "no_new" };
+  }
+  return { status: "ok", groups: allResult };
+
+  // Procesa un array crudo de "opportunities" devuelto por OpenAI (del lote
+  // principal o del paso dedicado de geolocalizacion) con exactamente las
+  // mismas validaciones deterministas: categoria valida, texto no vacio y no
+  // duplicado exacto, anio real y reciente, y sin colision de needKey/
+  // intencion contra nada ya aceptado en esta corrida. Factor comun para que
+  // ambas fuentes respeten las mismas garantias, sin duplicar la logica.
+  function applyOpportunityItems(opportunities: unknown[]) {
     for (const item of opportunities) {
       if (!item || typeof item !== "object") continue;
       const group = item as Record<string, unknown>;
@@ -648,11 +708,5 @@ ${JSON.stringify(alreadyProposedByCategory)}`;
         allResult.push(newGroup);
       }
     }
-
   }
-
-  if (allResult.length === 0) {
-    return { status: "no_new" };
-  }
-  return { status: "ok", groups: allResult };
 }
