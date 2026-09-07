@@ -171,6 +171,14 @@ HANDOFF, solo alimenta ideas hacia él).
   está adhiriendo bien los títulos a la categoría real ni la categoría al
   título — puede estar relacionado con el punto de rediseño de
   `opportunity-analysis.ts` de la nota anterior.
+- **(7/9/2026, origen: conversación `CODEX - AUDITORIA A ALGORITMO DE
+  PUBLICACIÓN DE ARTICULOS`)** Falta un botón de "Descartar todo" en
+  Oportunidades en Redes Sociales (`/dashboard/oportunidades-redes`). Hoy,
+  para limpiar varias propuestas pendientes, hay que abrir el modal de
+  motivo de descarte y confirmar una por una — Milton lo notó al tener que
+  descartar 6 propuestas manualmente para poder probar limpio. Agregar un
+  botón de descarte masivo (con su propio motivo o uno genérico), similar
+  en espíritu al "Publicar todo el lote" que ya existe ahí mismo.
 
 ## Hecho
 
