@@ -5143,3 +5143,27 @@ Decisión: NO FUSIONAR NI PUBLICAR TODAVÍA. El código queda listo en el PR, pe
 el protocolo exige completar la prueba autenticada del Preview antes del merge.
 No se tocó Vercel, `vercel.json`, Root Directory, middleware, autenticación,
 secretos, versiones ni configuración de producción.
+
+### TRIPLE AUDITORÍA DE ARCHIVADO — 2026-09-08
+
+Auditoría funcional independiente: APROBADA nuevamente. Prisma Client generó
+correctamente y la suite del worker terminó con 14/14 pruebas exitosas. Los
+typechecks de web y worker no reportaron errores.
+
+Auditoría de regresión independiente: APROBADA nuevamente. El build local de
+producción terminó correctamente, compiló TypeScript y generó 83/83 rutas.
+`git diff --check` pasó. Se mantiene únicamente el warning preexistente de
+Next sobre `middleware`, fuera del alcance de este cambio.
+
+Auditoría de integración/producción independiente: NO APROBADA PARA CIERRE.
+El PR #68 permanece abierto y no fusionado. Los checks actuales de Vercel
+fallaron por `build-rate-limit` con el mensaje `Deployment rate limited — retry
+in 24 hours`; esto es un bloqueo externo de capacidad, no un error funcional
+del código. El smoke test de producción sí confirma `/login` HTTP 200 y la
+ruta protegida `/dashboard/oportunidades` HTTP 307 hacia `/login` en ambos
+dominios. La prueba autenticada del flujo de oportunidades sigue pendiente.
+
+Decisión de archivado: el código puede considerarse técnicamente listo en el
+PR, pero el proyecto no debe archivarse como “publicado y cerrado”. Debe quedar
+como PENDIENTE DE INTEGRACIÓN hasta que Vercel permita un nuevo Preview y se
+complete la prueba autenticada. No se hicieron cambios en producción.
