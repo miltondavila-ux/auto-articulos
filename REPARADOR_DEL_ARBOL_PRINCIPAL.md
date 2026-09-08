@@ -90,3 +90,34 @@ páginas de verificación de Google, reintento de Business Profile) si nadie
 los fusiona explícitamente a `main` antes. No se tocó nada para corregir
 esto — queda señalado para que Milton decida si conviene fusionar esas
 ramas a `main` de forma explícita.
+
+### Pedido de segunda opinión sobre el árbol tras tres PRs seguidos — señalado 2026-09-07
+
+Agregado por la tarea programada diaria de propagación (2026-09-08) a
+partir de `COORDINACION_CLAUDE_CODEX.md`, sección "Aviso — Milton pidió una
+segunda opinión del Reparador sobre el estado del árbol — 2026-09-07".
+
+Después de fusionar tres PRs seguidos en una misma conversación (#58
+rediseño de login, #63 título/meta descripción, #69 imagen OG — commits
+`0913991`, `741bf75`, `67727b4`), Milton preguntó si la conversación se
+había "enredado" con el árbol. La autoevaluación de esa misma conversación,
+antes de escalar acá, concluyó: los tres PRs están fusionados en
+`origin/main`, cada uno con rebase sobre `main` actualizado, sin `reset
+--hard`/`clean`/`checkout --`/force-push (cada intento de comando
+destructivo fue bloqueado por el harness antes de ejecutarse); las tres
+ramas se autoborraron al fusionar. Lo que sí encontró, y no es obra de esa
+conversación: el checkout principal de Milton tiene, en simultáneo, cambios
+sin commitear de otras sesiones activas (`TO-DO.md`,
+`apps/web/src/app/api/opportunities/route.ts`,
+`apps/web/src/app/api/social-opportunities/route.ts`,
+`apps/web/src/app/dashboard/oportunidades/page.tsx`,
+`apps/web/src/app/dashboard/oportunidades-redes/page.tsx`, y la reserva ya
+declarada de `apps/web/src/app/dashboard/usuarios/page.tsx` para el PR
+#70) — ver el detalle de estas reservas en
+`INVENTARIO_CONVERSACIONES.md`, Parte A. Milton no había decidido, a la
+fecha de esta nota, si de todos modos quería que el Reparador auditara el
+árbol de forma independiente (el prompt completo que se le ofreció para
+ese caso quedó preservado en `COORDINACION_CLAUDE_CODEX.md`, mismo lugar
+citado arriba). Esta tarea de propagación no tomó ninguna decisión al
+respecto — se deja señalado para que Milton confirme si todavía quiere esa
+segunda auditoría o si la autoevaluación ya le resultó suficiente.
