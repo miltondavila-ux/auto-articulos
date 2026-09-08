@@ -1,3 +1,63 @@
+# INCIDENTE CRÍTICO Y PROTOCOLO OBLIGATORIO — 2026-09-08
+
+## Qué pasó: Producción rota por schema sin migración
+
+**Resumen:** PR #76 (Claude) agregó `User.publishMethod` y `McpConnection` al schema Prisma sin crear la migración correspondiente. Resultado: login en Producción devolvía HTTP 500 ("column `User.publishMethod` does not exist"). Tardó 4 horas en arreglarse.
+
+**Root cause:** Schema y migración deben ser INSEPARABLES. Cambiar uno sin el otro = desastre garantizado.
+
+## Protocolo obligatorio (TODOS deben seguir)
+
+**Antes de mergear CUALQUIER cambio a `packages/db/prisma/schema.prisma`:**
+
+1. **Crear la migración EN EL MISMO COMMIT**
+   ```bash
+   npx prisma migrate dev --name <descripcion>
+   # Esto genera schema.prisma + migrations/20260908XXXXXX_<descripcion>/migration.sql
+   # AMBOS archivos van al commit.
+   ```
+
+2. **Probar la migración en worktree aislado ANTES de main**
+   ```bash
+   # En worktree con npm install propio:
+   npx prisma migrate deploy  # O la forma que uses
+   # Debe completar sin errores.
+   ```
+
+3. **Auditoría de integración: ejecutar en Producción ANTES de activar el código**
+   - El código espera que los campos existan
+   - Si la migración falla en Producción, el código roto llega primero
+   - Solución: migración SIEMPRE antes que el código que la usa
+
+4. **Si la migración causa data loss** (DROP TABLE, DROP COLUMN):
+   - Documentar EXACTAMENTE qué se pierde y por qué
+   - Requiere autorización explícita de Milton ANTES de mergear
+   - Nunca usar `--accept-data-loss` sin revisar qué datos se pierden
+
+## Cómo se arregló (no hagas esto a menos que sea un desastre real)
+
+```bash
+# 1. Revert del PR que rompió Producción
+gh pr merge <revert-pr>  # Devuelve el código a estado conocido
+
+# 2. Migración SEGURA con --accept-data-loss (ÚLTIMA OPCIÓN)
+gh workflow run migrate.yml --ref main -f force_sync=true
+# Esto sincroniza la BD con el schema, pero ELIMINA datos.
+# Solo cuando no hay alternativa.
+```
+
+## Responsables
+
+- **Claude/Codex:** crear migración EN MISMO COMMIT que schema
+- **PR reviewer:** verificar que schema + migración vayan juntas
+- **Milton:** autorizar si hay data loss
+
+## Aplicar este protocolo ahora
+
+Este documento es OBLIGATORIO para el próximo cambio de schema. Si lo olvidas, Coordinador debe rechazar el PR y pedirte que lo hagas de nuevo.
+
+---
+
 # MCP 10MWS — andamiaje de segunda línea de ejecución de publicación (2026-09-07/08)
 
 Pedido de Milton: agregar, sin tocar la línea actual (Playwright/navegador
