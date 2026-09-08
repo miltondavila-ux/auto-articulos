@@ -6059,3 +6059,14 @@ fusionado, pero **no se libera todavía** hasta confirmar el build de
 producción y la verificación visual real de Milton.
 
 **Capitán de archivo:** Claude, sigue a cargo hasta el próximo build exitoso.
+
+### Verificación en vivo — 2026-09-08 (misma tarea, sin cambios de estado)
+
+Milton pidió actualizar esta entrada. Reverificado ahora mismo con
+`gh api repos/miltondavila-ux/auto-articulos/commits/main/status`: **sigue
+igual**, `Vercel – auto-articulos-web` en `failure` /
+`Deployment rate limited — retry in 24 hours`. Nada nuevo que reportar
+todavía — el código del fix (PR #80, commit `ba62119`) sigue correcto en
+`main`, solo falta que Vercel libere la cuota para que el build de
+producción se dispare. Sigo monitoreando; próxima actualización cuando el
+estado cambie.
