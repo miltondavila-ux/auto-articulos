@@ -162,7 +162,7 @@ Paso 1, pide el análisis. Si tienes más de un sitio, eliges para cuál generar
 
 Paso 2, elige cómo se escribirán. Seleccionas el idioma de los artículos y el estilo de escritura. También puedes desactivar la indexación en buscadores, aunque por defecto queda activada, que es lo normal si quieres que Google los encuentre. Estas opciones solo afectan a lo que publiques desde esta pantalla; no cambian tu configuración general.
 
-Paso 3, revisa y publica. Aparecen las propuestas agrupadas por categoría, con su explicación, impresiones y clics. Puedes eliminar los títulos que no te convenzan, publicar un título suelto, una categoría completa o todas de una vez. Respeta el máximo de títulos por lote: si una categoría lo supera, publícala en partes o elimina títulos antes.
+Paso 3, revisa y publica. Aparecen las propuestas agrupadas por categoría, con su explicación, impresiones y clics. Puedes eliminar los títulos que no te convenzan, publicar un título suelto, una categoría completa o todas de una vez. Respeta el máximo de títulos por lote: si una categoría lo supera, publícala en partes o elimina títulos antes. Si prefieres empezar de cero, el botón **Borrar todas las oportunidades** elimina de una vez todas las propuestas pendientes (pide confirmación antes de borrar y no se puede deshacer).
 
 Nada se publica sin que tú lo mandes. Las sugerencias ayudan a decidir, pero la decisión es tuya: revisa que cada título sea adecuado para tu negocio y tu audiencia.
 
@@ -172,7 +172,7 @@ Nada se publica sin que tú lo mandes. Las sugerencias ayudan a decidir, pero la
 
 Ruta: /dashboard/oportunidades-redes
 
-Aquí puedes revisar propuestas de contenido para redes sociales. Las propuestas pendientes se pueden aprobar, editar o descartar explicando el motivo. Si algo falla, abre el detalle del error para ver qué ocurrió antes de intentarlo otra vez.
+Aquí puedes revisar propuestas de contenido para redes sociales. Las propuestas pendientes se pueden aprobar, editar o descartar explicando el motivo. Si algo falla, abre el detalle del error para ver qué ocurrió antes de intentarlo otra vez. El botón **Borrar todas las oportunidades**, junto a "Publicar todo el lote", elimina de una vez todas las propuestas pendientes (pide confirmación antes de borrar y no se puede deshacer).
 
 Consejo: edita el texto si necesitas adaptar el tono a tu marca antes de aprobarlo.
 
