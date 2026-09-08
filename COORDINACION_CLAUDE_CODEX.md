@@ -5229,3 +5229,32 @@ deploy, reset ni force-push. Debe revisarse con el Reparador si PR #73 ya
 incorporó esas garantías por otra vía o si deben trasladarse de forma segura a
 la solución canónica. Hasta resolver esa diferencia, PR #68 conserva valor como
 referencia técnica y permanece abierto.
+
+### MENSAJE DIRECTO PARA EL REPARADOR
+
+Lee este documento completo y atiende específicamente la sección “Comparación
+PR #68 vs PR #73”. No cierres PR #68 todavía.
+
+PR #73 (`60ee8cc`) sí está integrado en `origin/main`, pero la comparación
+demostró que PR #68 contiene garantías funcionales que no aparecen en el merge
+de #73, especialmente en `apps/web/src/app/api/opportunities/route.ts`:
+
+- vinculación de páginas publicadas con categorías mediante URL normalizada;
+- filtrado por panel y dominio;
+- asignación inequívoca de GSC y GA4 a una sola categoría;
+- exclusión de páginas ambiguas o sin vínculo;
+- respuesta HTTP 422 cuando no existe evidencia segura;
+- evidencia específica entregada al analizador por categoría.
+
+También debes revisar las diferencias de `opportunity-analysis.ts`: categoría
+fija por llamada, rondas por categoría, filtrado exacto de Bing, evidencia por
+lote y rechazo de `categoryId` incorrecto.
+
+Tu tarea es comparar estas garantías contra el código real de `origin/main` y
+determinar si PR #73 ya las implementa por otra vía. Si existen, documenta la
+prueba exacta y cierra PR #68 como redundante. Si no existen, detente y
+documenta qué garantías faltan y cuál sería la forma segura de incorporarlas a
+la solución canónica.
+
+En ningún caso hagas merge de PR #68, deploy, reset, force-push, migraciones o
+cambios directos en producción. Conserva los commits de #68 como referencia.
