@@ -6115,3 +6115,68 @@ variables "Sensitive" para completar el changelog de "Actualizaciones", y
 `TO-DO.md` se siga sobrescribiendo entre sesiones.
 
 Responsable: Claude.
+
+## Actualización — RENEW CONFIGURACION, pulido estilo Apple — 2026-09-08
+
+Cierre de la entrada "Trabajo activo — RENEW CONFIGURACION, pulido estilo
+Apple — 2026-09-07" de más arriba en este documento.
+
+**Primer commit del pulido** (`3a0d985`): quitó colores solo de los 6
+archivos de página que yo mismo había escrito en las Fases 1-6 (badge verde
+"Listo", tag morado, texto ámbar, panel de administrador rojo) y agregó
+`ConfiguracionSubNav.tsx`. Desplegado y verificado en producción
+(`Vercel – auto-articulos-web: success`, `seototal.lasolucionweb.com/login`
+→ 200).
+
+**Milton revisó en producción y encontró que seguían apareciendo colores.**
+Causa real: mi primer pase fue incompleto — la pantalla de Configuración
+también renderiza 13 componentes compartidos que yo no había tocado
+(`GoogleSearchConsoleSection`, `GoogleAnalyticsSection`,
+`BingWebmasterSection`, `BrowserTabsConnectionNotice`,
+`BusinessProfileSection`, `ThreadsSection`, `LinkedInSection`,
+`PinterestSection`, `TumblrSection`, `BlueskySection`, `DevToSection`,
+`CategorySyncProgress`, `OnboardingWizard`), y esos sí tenían verde
+(`#16803c`), ámbar (`#8a4b08`/`#ff9500`), un azul no estándar (`#0071e3`) y
+fondos tintados. Verificado que los 13 son exclusivos de Configuración (no
+se comparten con pantallas fuera de ella), así que corregirlos no arriesga
+nada más del sistema.
+
+**Segundo commit** (`a66d1b1`): neutraliza los 13 componentes a la paleta ya
+establecida (`#1d1d1f`/`#6e6e73`/`#f5f5f7`/`#e5e5ea`), dejando color
+únicamente donde es funcional y ya es estándar del resto de la app (rojo
+para errores reales). Además:
+- **Responsive**: se agregó `flexWrap` a las filas de Cuenta/Contenido que
+  no lo tenían (credenciales guardadas, idioma, estilo de redacción), a
+  pedido de Milton ("no se si esta responsive... me huele que no").
+- **Explicaciones**: lista numerada de pasos concretos agregada a las
+  introducciones de Cuenta, Contenido, Indexación y Redes Sociales (mismo
+  patrón ya aprobado en Publicar/Oportunidades), a pedido explícito de
+  Milton de que cada módulo explique "qué puede hacer allí el usuario" en
+  lenguaje bien simple, "como si fuera para bebés".
+
+Auditoría 1 (funcional): revisión manual de cada componente tocado,
+confirmando que ningún color remanente queda fuera de rojo-error/verde-éxito
+ya establecidos; se corrigieron además dos ternarios redundantes que había
+dejado el primer reemplazo automático (`BingWebmasterSection.tsx`,
+`OnboardingWizard.tsx` — ambas ramas de la condición terminaban en el mismo
+color tras el reemplazo, quedaba código confuso aunque funcionalmente
+correcto).
+Auditoría 2 (regresión): `tsc --noEmit` limpio, `next build --webpack` con
+83/83 rutas, diff acotado a los 17 archivos listados arriba.
+Auditoría 3 (integración/producción): **BLOQUEADA**. GitHub confirma para
+`a66d1b1` el mismo bloqueo que ya documentaron sesiones anteriores hoy:
+`Vercel – auto-articulos-web: failure`, `"Deployment rate limited — retry
+in 24 hours"`. No se forzó ningún reintento manual.
+
+**Estado real ahora mismo:** el código correcto está en `main`
+(`a66d1b1`), pero **producción todavía sirve la versión anterior con los
+colores que Milton señaló** — no declarar esto resuelto hasta confirmar
+`state: success` para el commit más reciente de `main` y verificar
+visualmente.
+
+Siguiente acción para quien retome: cuando el límite de Vercel se libere,
+correr
+`curl -s https://api.github.com/repos/miltondavila-ux/auto-articulos/commits/<último sha en main>/status`,
+confirmar `Vercel – auto-articulos-web: success`, y pedirle a Milton que
+confirme visualmente `/dashboard/configuracion` sin colores y con las
+tarjetas apiladas en celular antes de dar esto por cerrado.
