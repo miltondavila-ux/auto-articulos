@@ -1,4 +1,5 @@
 import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
+import ConfiguracionSubNav from "@/components/ConfiguracionSubNav";
 import GoogleSearchConsoleSection from "@/components/GoogleSearchConsoleSection";
 import GoogleAnalyticsSection from "@/components/GoogleAnalyticsSection";
 import BingWebmasterSection from "@/components/BingWebmasterSection";
@@ -25,7 +26,8 @@ export default function ConfiguracionIndexacionPage() {
           resto, avisándote aquí mismo si algo necesita tu atención.
         </IntroP>
       </ModuleIntro>
-      <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 16 }}>
+      <ConfiguracionSubNav />
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <div id="google">
           <GoogleSearchConsoleSection />
           <GoogleAnalyticsSection />

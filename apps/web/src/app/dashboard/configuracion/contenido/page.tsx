@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
+import ConfiguracionSubNav from "@/components/ConfiguracionSubNav";
 import PhotoLogoUploader, { type UploadType } from "@/components/PhotoLogoUploader";
 import {
   sectionStyle,
@@ -51,12 +52,7 @@ export default function ConfiguracionContenidoPage() {
     100,
     Math.round((articleSignature.length / MAX_SIGNATURE_LEN) * 100),
   );
-  const signatureBarColor =
-    signaturePercent >= 95
-      ? "#ff3b30"
-      : signaturePercent >= 80
-        ? "#ff9500"
-        : "#1d1d1f";
+  const signatureBarColor = signaturePercent >= 95 ? "#ff3b30" : "#1d1d1f";
 
   const loadContent = useCallback(async () => {
     const [meRes, promptsRes] = await Promise.all([
@@ -247,8 +243,9 @@ export default function ConfiguracionContenidoPage() {
           redacción, eso vive en Cuenta.
         </IntroP>
       </ModuleIntro>
+      <ConfiguracionSubNav />
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 16 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {/* Estilo de Redacción por Defecto */}
         <section style={sectionStyle}>
           <h2 style={h2Style}>Estilo de redacción por defecto</h2>
@@ -450,12 +447,11 @@ export default function ConfiguracionContenidoPage() {
             <span
               style={{
                 fontSize: 11,
-                fontWeight: 700,
-                color: "#1d1d1f",
-                background: "rgba(94, 92, 230, 0.08)",
+                fontWeight: 600,
+                color: "#6e6e73",
+                background: "#f5f5f7",
                 padding: "4px 10px",
                 borderRadius: 999,
-                border: "1px solid rgba(94, 92, 230, 0.25)",
               }}
             >
               Marca personal

@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
+import ConfiguracionSubNav from "@/components/ConfiguracionSubNav";
 import OnboardingWizard from "@/components/OnboardingWizard";
 
 /**
@@ -22,18 +22,12 @@ export default function ConfiguracionInicialPage() {
         </IntroP>
         <IntroP>
           Si ya hiciste esto antes, no necesitas volver a pasar por aquí —
-          puedes ir directo a{" "}
-          <Link href="/dashboard/configuracion/cuenta" style={{ color: "#0066cc", fontWeight: 600 }}>
-            Cuenta
-          </Link>{" "}
-          o a cualquier otra sección desde{" "}
-          <Link href="/dashboard/configuracion" style={{ color: "#0066cc", fontWeight: 600 }}>
-            Configuración
-          </Link>
-          .
+          usa la barra de abajo para ir directo a Cuenta o a cualquier otra
+          sección.
         </IntroP>
       </ModuleIntro>
-      <div style={{ marginTop: 16 }}>
+      <ConfiguracionSubNav />
+      <div>
         <OnboardingWizard variant="standalone" />
       </div>
     </div>

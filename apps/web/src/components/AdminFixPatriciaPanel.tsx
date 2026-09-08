@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { h2Style, secondaryButtonStyle } from "@/components/dashboard-ui";
+import { buttonStyle, h2Style, secondaryButtonStyle } from "@/components/dashboard-ui";
 
 /**
  * Herramienta temporal de reparación de artículos ("Patricia Coy"), visible
@@ -119,24 +119,20 @@ export default function AdminFixPatriciaPanel() {
         marginTop: 30,
         padding: 24,
         borderRadius: 18,
-        border: "1px solid rgba(255, 59, 48, 0.3)",
-        background: "rgba(255, 59, 48, 0.08)",
+        border: "1px solid #d2d2d7",
+        background: "#f5f5f7",
       }}
     >
-      <h2 style={{ ...h2Style, color: "#ff3b30" }}>⚙Herramientas de Administrador (Temporal)</h2>
-      <p style={{ fontSize: 13, color: "#ff3b30", marginBottom: 12 }}>
+      <h2 style={h2Style}>Herramientas de Administrador (Temporal)</h2>
+      <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 12 }}>
         Repara hasta 20 artículos por lote, completando cada artículo antes de abrir el siguiente.
       </p>
       <button
         onClick={handleTriggerFix}
         disabled={triggeringFix}
         style={{
-          ...secondaryButtonStyle,
-          background: "#ff3b30",
-          color: "#ffffff",
-          border: "1px solid #ff3b30",
-          padding: "10px 20px",
-          fontWeight: 700,
+          ...buttonStyle,
+          marginTop: 0,
         }}
       >
         {triggeringFix ? "Iniciando lote..." : "Procesar siguiente lote de 20"}
@@ -147,11 +143,8 @@ export default function AdminFixPatriciaPanel() {
         style={{
           ...secondaryButtonStyle,
           marginLeft: 10,
-          background: "#ffffff",
           color: "#ff3b30",
           border: "1px solid #ff3b30",
-          padding: "10px 20px",
-          fontWeight: 700,
         }}
       >
         {clearingFixHistory ? "Borrando..." : "Borrar historial y logs"}
@@ -184,7 +177,7 @@ export default function AdminFixPatriciaPanel() {
             padding: 16,
             borderRadius: 8,
             background: "#ffffff",
-            border: "1px solid rgba(255, 59, 48, 0.3)",
+            border: "1px solid #d2d2d7",
             boxShadow: "none",
           }}
         >
@@ -199,11 +192,11 @@ export default function AdminFixPatriciaPanel() {
                   marginBottom: 8,
                 }}
               >
-                <span style={{ fontWeight: 700, color: "#ff3b30", fontSize: 13 }}>
+                <span style={{ fontWeight: 600, color: "#1d1d1f", fontSize: 13 }}>
                   Estado: {fixStatus.status === "running" ? "⏳ Procesando..." : "⏳ En cola (Iniciando robot...)"}
                 </span>
                 {fixStatus.total ? (
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#ff3b30" }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#1d1d1f" }}>
                     Progreso: {fixStatus.processed} / {fixStatus.total} ({Math.round(((fixStatus.processed || 0) / (fixStatus.total || 1)) * 100)}%)
                   </span>
                 ) : (
@@ -217,7 +210,7 @@ export default function AdminFixPatriciaPanel() {
                   style={{
                     width: "100%",
                     height: 10,
-                    background: "rgba(255, 59, 48, 0.08)",
+                    background: "#f5f5f7",
                     borderRadius: 999,
                     overflow: "hidden",
                     marginBottom: 16,
@@ -227,7 +220,7 @@ export default function AdminFixPatriciaPanel() {
                     style={{
                       width: `${Math.round(((fixStatus.processed || 0) / (fixStatus.total || 1)) * 100)}%`,
                       height: "100%",
-                      background: "#ff3b30",
+                      background: "#1d1d1f",
                       borderRadius: 999,
                       transition: "width 0.3s ease",
                     }}
@@ -238,7 +231,7 @@ export default function AdminFixPatriciaPanel() {
               {/* Live console logs */}
               {fixStatus.logs && fixStatus.logs.length > 0 ? (
                 <div>
-                  <h3 style={{ fontSize: 12, fontWeight: 700, color: "#ff3b30", margin: "0 0 6px 0" }}>
+                  <h3 style={{ fontSize: 12, fontWeight: 600, color: "#1d1d1f", margin: "0 0 6px 0" }}>
                     Consola de avance en tiempo real:
                   </h3>
                   <div
@@ -266,12 +259,12 @@ export default function AdminFixPatriciaPanel() {
           )}
 
           {fixStatus.history && fixStatus.history.length > 0 ? (
-            <div style={{ marginTop: 16, borderTop: "1px solid rgba(255, 59, 48, 0.08)", paddingTop: 16 }}>
+            <div style={{ marginTop: 16, borderTop: "1px solid #e5e5ea", paddingTop: 16 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                <h3 style={{ fontSize: 13, fontWeight: 700, color: "#ff3b30", margin: 0 }}>
+                <h3 style={{ fontSize: 13, fontWeight: 600, color: "#1d1d1f", margin: 0 }}>
                   Historial de Lotes Procesados
                 </h3>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#ff3b30", background: "rgba(255, 59, 48, 0.15)", padding: "2px 8px", borderRadius: 999 }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: "#6e6e73", background: "#f5f5f7", padding: "2px 8px", borderRadius: 999 }}>
                   Total revisados: {fixStatus.history.reduce((acc, curr) => acc + (curr.totalReviewed || 0), 0)}
                 </span>
               </div>
@@ -284,7 +277,7 @@ export default function AdminFixPatriciaPanel() {
                     style={{
                       fontSize: 12,
                       padding: "10px 0",
-                      borderBottom: "1px solid rgba(255, 59, 48, 0.08)",
+                      borderBottom: "1px solid #e5e5ea",
                     }}
                   >
                     <div
@@ -295,7 +288,7 @@ export default function AdminFixPatriciaPanel() {
                         alignItems: "center",
                         cursor: "pointer",
                         fontWeight: 600,
-                        color: "#ff3b30",
+                        color: "#1d1d1f",
                       }}
                     >
                       <span style={{ userSelect: "none" }}>
@@ -317,8 +310,8 @@ export default function AdminFixPatriciaPanel() {
                             textTransform: "uppercase",
                             padding: "2px 6px",
                             borderRadius: 4,
-                            background: batch.status === "success" ? "rgba(52, 199, 89, 0.1)" : batch.status === "running" ? "rgba(255, 149, 0, 0.15)" : "rgba(255, 59, 48, 0.08)",
-                            color: batch.status === "success" ? "#16803c" : batch.status === "running" ? "#8a4b08" : "#ff3b30",
+                            background: batch.status === "success" ? "rgba(52, 199, 89, 0.1)" : "#f5f5f7",
+                            color: batch.status === "success" ? "#16803c" : "#6e6e73",
                           }}
                         >
                           {batch.status === "success" ? "Completado" : batch.status === "running" ? "Procesando" : batch.status}
@@ -330,7 +323,7 @@ export default function AdminFixPatriciaPanel() {
                     </div>
 
                     {isExpanded && (
-                      <div style={{ marginTop: 8, paddingLeft: 14, background: "rgba(255, 59, 48, 0.05)", borderRadius: 6, padding: 8 }}>
+                      <div style={{ marginTop: 8, paddingLeft: 14, background: "#f5f5f7", borderRadius: 6, padding: 8 }}>
                         {batch.articles && batch.articles.length > 0 ? (
                           <ul style={{ margin: 0, paddingLeft: 16, fontSize: 11 }}>
                             {batch.articles.map((art, idx) => (
@@ -353,15 +346,15 @@ export default function AdminFixPatriciaPanel() {
                           <div style={{ fontSize: 11, color: "#6e6e73", fontStyle: "italic" }}>No se procesó ningún artículo en este lote o el worker se detuvo antes de iniciar.</div>
                         )}
                         {batch.stopPoint ? (
-                          <div style={{ color: "#ff3b30", marginTop: 6, fontSize: 11, fontWeight: 500 }}>
+                          <div style={{ color: "#1d1d1f", marginTop: 6, fontSize: 11, fontWeight: 500 }}>
                             Detenido: {batch.stopPoint}
                           </div>
                         ) : null}
 
                         {/* Logs de este lote específico */}
                         {batch.logs && batch.logs.length > 0 ? (
-                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px dashed rgba(255, 59, 48, 0.08)" }}>
-                            <div style={{ fontSize: 10, fontWeight: 700, color: "#ff3b30", marginBottom: 4 }}>
+                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px dashed #e5e5ea" }}>
+                            <div style={{ fontSize: 10, fontWeight: 600, color: "#1d1d1f", marginBottom: 4 }}>
                               Registro de avances (Log de la tanda):
                             </div>
                             <div
