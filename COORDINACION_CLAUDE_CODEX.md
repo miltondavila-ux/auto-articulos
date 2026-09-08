@@ -5702,6 +5702,42 @@ producción con pruebas reales (no solo builds exitosos) contra la cuenta
 de Lorena Álvarez. Conversación cerrada por pedido explícito de Milton.
 Responsable: Claude. Sin reservas activas de esta conversación.
 
+### CONTINUACIÓN AUTÓNOMA — 2026-09-08
+
+Milton pidió "sigue con esto de manera autónoma" tras el cierre de arriba.
+Se retomaron los pendientes reales que había dejado esa misma conversación
+en `TO-DO.md` (sin tocar el programador automático, pospuesto
+explícitamente por Milton):
+
+1. **PR #73** (`60ee8cc`): garantía determinista contra categoría/título
+   mal asignados en `opportunity-analysis.ts` — ver detalle completo en la
+   entrada "CIERRE FINAL" de arriba. El hallazgo pendiente que quedaba sin
+   resolver de esa conversación ya está corregido.
+2. **PR #75** (`00a5732`): `DELETE /api/opportunities` (botón "Borrar todas
+   las oportunidades" de SEO/AEO). Al llegar a este ítem, el lado de Redes
+   Sociales (`DELETE /api/social-opportunities?scope=pending`) ya estaba
+   completo — hecho por otra sesión mientras tanto. Para SEO, el botón ya
+   existía en la UI apuntando a un endpoint que todavía no existía (404); se
+   encontró además una versión simple ya agregada por otra sesión
+   concurrente mientras se preparaba este PR (sin filtro de panel/dominio)
+   — se reemplazó por la versión con el mismo alcance por panel que ya usa
+   el análisis, para no borrar oportunidades de otro panel en cuentas
+   multi-idioma.
+3. **Hallazgo de árbol, sin acción destructiva**: al empezar esta
+   continuación, el checkout principal (`/Users/miltondavila/Creador de
+   articulos`) estaba en medio de un `git merge` sin terminar (conflicto sin
+   resolver en este mismo archivo), dejado por otra sesión. No se tocó —
+   se trabajó exclusivamente en worktrees aislados fuera de ese checkout,
+   como ya exige el Protocolo. Queda como aviso para el Reparador del Árbol
+   Principal si Milton lo pide.
+4. **TO-DO.md** (PR #78): los 3 pendientes que había dejado la conversación
+   original (región exacta, categoría/título, descartar todo) se movieron a
+   "Hecho" con las referencias reales. Solo queda abierto el programador
+   automático de publicación diaria, explícitamente pospuesto por Milton.
+
+**Estado:** todo fusionado y verificado en producción (`/login` → 200 tras
+cada despliegue). Sin reservas activas.
+
 ## CONTINUIDAD DEL REPARADOR DEL ÁRBOL PRINCIPAL
 
 Tu identidad es:
