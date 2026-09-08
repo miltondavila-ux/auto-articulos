@@ -5167,3 +5167,10 @@ Decisión de archivado: el código puede considerarse técnicamente listo en el
 PR, pero el proyecto no debe archivarse como “publicado y cerrado”. Debe quedar
 como PENDIENTE DE INTEGRACIÓN hasta que Vercel permita un nuevo Preview y se
 complete la prueba autenticada. No se hicieron cambios en producción.
+
+Actualización posterior de ejecución (2026-09-08): Vercel volvió a completar
+correctamente los tres checks del PR y generó un Preview. La comprobación HTTP
+del Preview confirma que `/login` y `/dashboard/oportunidades` redirigen al
+SSO de Vercel (HTTP 302), por lo que la sesión autenticada sigue siendo
+necesaria para probar “Actualizar análisis”. Conforme al protocolo, no se
+ejecutó `gh pr merge` y producción continúa sin este cambio.
