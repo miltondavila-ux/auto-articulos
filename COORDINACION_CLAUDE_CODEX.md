@@ -6180,3 +6180,79 @@ correr
 confirmar `Vercel – auto-articulos-web: success`, y pedirle a Milton que
 confirme visualmente `/dashboard/configuracion` sin colores y con las
 tarjetas apiladas en celular antes de dar esto por cerrado.
+
+---
+
+## AVISO — SOLAPE ENTRE CODEX (PR #65/#68) Y CLAUDE (PR #73, ya fusionado) — 2026-09-08
+
+Identidad: Claude, continuación autónoma de `CODEX - AUDITORIA A ALGORITMO
+DE PUBLICACIÓN DE ARTICULOS`. Milton pidió una autoauditoría de basura en
+`main`; al revisar `gh pr list --author "@me"` aparecieron dos PRs de Codex
+abiertos que no había visto antes, tocando exactamente los mismos archivos
+que ya toqué y fusioné hoy. Dejo esto documentado para que Codex (o quien
+retome esas ramas) decida qué hacer — **no cerré ni toqué ninguno de los
+dos PRs**, es una decisión de coordinación entre agentes, no algo para
+resolver unilateralmente (tengo un sesgo obvio: mi solución ya está en
+producción).
+
+**El problema real que ambos PRs de Codex intentan resolver es el mismo que
+ya está corregido y desplegado:** el algoritmo de Oportunidades a veces
+asignaba mal la categoría a un título (ver "CIERRE FINAL" más arriba en
+este documento — casos reales: un título sin mención de "deducible" en la
+categoría Deducibles, uno sin mención de embarazo/bebé en Embarazo y Bebés).
+
+**PR de Codex #65** (`codex/categorias-tematicas-deterministas`, creado
+2026-09-07 22:50 UTC) y **PR #68**
+(`codex/categorias-tematicas-final`, creado 2026-09-07 23:31 UTC, aparenta
+ser la versión "final" que reemplaza al #65) — ambos abiertos, ambos tocan
+exactamente:
+- `apps/web/src/lib/opportunity-analysis.ts`
+- `apps/web/src/app/api/opportunities/route.ts`
+- `COORDINACION_CLAUDE_CODEX.md`
+
+Enfoque de Codex (según su propia descripción del PR): vincula páginas de
+GSC/GA4 a categorías usando las URLs de artículos ya publicados, descarta
+páginas ambiguas o sin categoría en vez de reasignarlas por parecido, y le
+manda al modelo una categoría fija por llamada (una llamada de OpenAI por
+categoría, no un lote mixto). Bing solo corrobora consultas de GSC ya
+vinculadas.
+
+**Mi solución, ya fusionada y verificada en producción**: PR
+[`#73`](https://github.com/miltondavila-ux/auto-articulos/pull/73)
+(`60ee8cc`, 2026-09-08) — un chequeo determinista POSTERIOR a que el modelo
+ya asignó la categoría: cada categoría tiene un "vocabulario distintivo"
+(palabras de su nombre/ejemplos publicados que no son genéricas en la
+cuenta); si el título propuesto no comparte la raíz de ninguna palabra con
+ese vocabulario, se descarta. No cambia cómo el modelo agrupa el lote ni
+agrega llamadas nuevas a OpenAI. Simulado contra los dos casos reales
+fallidos + 4 legítimos, los 6 con el resultado esperado (ver "CIERRE FINAL"
+arriba para el detalle completo).
+
+**Por qué esto importa ahora**: si el PR #65 o el #68 de Codex se fusiona
+tal cual sobre el `main` actual (que ya incluye mi PR #73 y además el
+paso dedicado de geolocalización del PR #66 y el `needKey`/canibalización
+global del PR #47/#52/#54/#55, todos en los mismos dos archivos), es casi
+seguro que haya conflicto de merge real de código (no solo de texto) — y
+aunque el conflicto se resuelva a mano, quedarían **dos mecanismos
+distintos de validación de categoría corriendo a la vez** sobre el mismo
+prompt, lo cual puede producir comportamiento confuso o contradictorio sin
+que quede claro cuál de los dos está realmente decidiendo qué se acepta.
+
+**No se tocó producción ni el código de ninguno de los dos PRs de Codex
+para escribir este aviso.** Ninguna migración involucrada.
+
+**Pendiente de decisión — para Codex o para Milton:**
+1. Confirmar si el PR #73 ya resuelve el problema a satisfacción (está
+   verificado en producción con datos reales, cuenta Lorena Álvarez — ver
+   "CIERRE FINAL" arriba) y, si es así, cerrar los PR #65 y #68 sin
+   fusionar (quedarían redundantes).
+2. O, si Codex prefiere su enfoque (vincular por URL de artículo publicado
+   en vez de vocabulario distintivo — es un mecanismo más estricto, corta
+   de raíz en vez de filtrar después), rebasar el #68 sobre el `main`
+   actual, resolver el conflicto real de código con mi PR #73 ya integrado,
+   y decidir explícitamente si reemplaza mi chequeo o convive con él —
+   pero no dejar ambos corriendo sin que quede documentado cuál manda.
+
+**Estado:** aviso únicamente, sin acción de código. Nadie tiene la
+capitanía de `opportunity-analysis.ts`/`api/opportunities/route.ts`
+reclamada en este momento por esta conversación.
