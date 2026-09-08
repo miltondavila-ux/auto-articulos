@@ -5560,3 +5560,99 @@ Ese commit contiene únicamente:
 
 El typecheck Web pasó correctamente. No se ejecutaron migraciones ni deploy.
 Continúa desde este estado, documenta todo en `COORDINACION_CLAUDE_CODEX.md` e `INVENTARIO_CONVERSACIONES.md`, y conserva la separación por rama y worktree.
+
+---
+
+## Claude (tarea programada diaria de propagación) — 2026-09-08
+
+Punto de partida: la última entrada firmada por esta misma tarea era
+"Claude (tarea programada diaria de propagación) — 2026-09-07" (commit
+`0ce5146`). Se revisó el diff de `COORDINACION_CLAUDE_CODEX.md` entre ese
+commit y `origin/main` actual (`11a7ff3`): 11 commits nuevos, con 10
+secciones nuevas al final del documento más un agregado dentro de la
+sección de estado OAuth/GBP existente.
+
+Contenido propagado, verificando en vivo contra `origin/main` recién
+fetcheado antes de escribir cada entrada:
+
+- El mensaje humano nuevo para categoría cacheada (PR #50, caso Alfonso
+  Giménez) → nueva entrada en `CONTROLADOR_DE_VERSIONES.md`, y nuevo punto
+  en "Problemas frecuentes" de `apps/web/src/content/manual-usuario.ts`
+  (mensaje visible que puede ver cualquier usuario al publicar, no solo
+  Alfonso).
+- El rediseño de login + recuperar contraseña (PR #58), títulos ultra
+  geolocalizados (PR #61/#62/#66/#67), título/meta descripción (PR #63),
+  motor de selección de artículos tendencia para redes (PR #57/#60) e
+  imagen OG (PR #69, parcial, bloqueada por cuota de Vercel) → nuevas
+  entradas en `CONTROLADOR_DE_VERSIONES.md`. Al verificar el commit citado
+  para PR #62 (`f050672`) contra `origin/main`, resultó ser un hash corto
+  ambiguo que apunta a un commit distinto y anterior del 2026-09-04; el
+  commit real de PR #62 es `e79ee5e` (verificado con `git log --oneline
+  --all | grep "(#62)"`). Se documentó la corrección en la nueva entrada de
+  `CONTROLADOR_DE_VERSIONES.md` sin tocar el texto original de esta
+  sección.
+- PR #70 (tarjetas clicables en Usuarios, bloqueado por la misma cuota de
+  Vercel) → nueva entrada "Versión preparada" en
+  `CONTROLADOR_DE_VERSIONES.md`, verificada en vivo hoy contra la API de
+  GitHub (sigue `open`, ambos checks en `failure` por rate limit); y nueva
+  entrada de conversación `ORDEN DE USUARIOS ACTIVOS EN ADMIN` en
+  `INVENTARIO_CONVERSACIONES.md` Parte B (la reserva de archivo en Parte A
+  ya existía de una corrida anterior, se agregó un addendum confirmando que
+  sigue activa).
+- La reserva nueva de `AUDITORÍA RESPONSIVE COMPLETA DEL SISTEMA` (worktree
+  sin commits empujados todavía) y la reserva sin rama del botón "Borrar
+  todas las oportunidades" (cambios sin commitear en el checkout principal
+  de Milton, según su propia entrada) → addendum en
+  `INVENTARIO_CONVERSACIONES.md` Parte A, y nueva entrada de conversación
+  `AUDITORIA DE CAPACIDADES RESPONSIVE` en Parte B. Ninguna de las dos se
+  pudo verificar con `git merge-base` porque no existen como rama remota ni
+  commit — se transcribieron tal cual con esa salvedad explícita.
+- El cierre final de esta misma conversación (`CODEX - AUDITORIA A
+  ALGORITMO DE PUBLICACIÓN DE ARTICULOS`, cerrada por Milton el
+  2026-09-07) → actualización (sin editar lo existente) de su entrada en
+  `INVENTARIO_CONVERSACIONES.md` Parte B, marcándola CERRADA.
+- El pedido de Milton de una segunda opinión del Reparador sobre el árbol
+  (sin resolver, a la espera de que Milton decida) → nota nueva en
+  `REPARADOR_DEL_ARBOL_PRINCIPAL.md`, sección "Hallazgos".
+- El incidente de `TO-DO.md` sobrescribiéndose entre sesiones sin
+  commitear (Claude-5) → nuevo ítem en la sección "Pendientes" de
+  `TO-DO.md`, con las dos alternativas que Milton tiene que decidir.
+- El programador automático de publicación diaria en redes (1 post/red/día
+  sin clic), mencionado como pospuesto en el cierre final del algoritmo →
+  nuevo ítem en "Pendientes" de `TO-DO.md`, señalando que puede solaparse
+  con el ítem del 8/8/2026 y que hay que unificar cadencias al ejecutar.
+
+Se evaluó el resto del contenido nuevo contra el mapa de propagación y no
+correspondió mover nada más:
+- La sección "PROTECCIÓN PERMANENTE — RENEW CONFIGURACION" no se propagó
+  de nuevo a ningún lado: el detalle técnico completo ya está en
+  `CONTROLADOR_DE_VERSIONES.md` (sección "RENEW CONFIGURACION (rediseño
+  completo, 6 fases)"), la reserva/cierre ya está en
+  `INVENTARIO_CONVERSACIONES.md` (bajo "CODEX - INSTRUCCIONES EN
+  MODULOS"), y `manual-usuario.ts` ya refleja el índice de 6 páginas y sus
+  rutas nuevas — todo verificado leyendo esos tres documentos, no solo
+  confiando en que "ya debería estar".
+- El resto de los cambios visibles del rediseño de login (título/meta
+  descripción, copy de "Probá SEO TOTAL gratis", fondo blanco) no se
+  agregó a `manual-usuario.ts`: ese documento alimenta al asistente de
+  ayuda (`FloatingAssistant`), que solo vive dentro de
+  `apps/web/src/app/dashboard/layout.tsx` — no aparece en la pantalla de
+  login — así que esos textos no son parte de lo que el asistente necesita
+  explicar.
+- La actualización de estado de aprobación OAuth GSC/Analytics/GBP
+  (agregada dentro de la sección "Vídeo de demostración OAuth" ya
+  existente) no se propagó a ningún lado: es una reiteración del mismo
+  bloqueo externo ya registrado en `CONTROLADOR_DE_VERSIONES.md` ("Bloqueado,
+  pendiente de terceros") y en `REPARADOR_DEL_ARBOL_PRINCIPAL.md`, sin una
+  decisión nueva ni un commit/deployment que registrar — el único paso
+  nuevo ("revisar cada 24 horas") ya lo describe la propia entrada.
+- El pendiente de la asignación categoría↔título y el botón "descartar
+  todo" en Oportunidades Redes, mencionados en el cierre final, ya estaban
+  en `TO-DO.md` desde la corrida del 2026-09-07; no se duplicaron.
+
+No hubo nada que requiriera una operación destructiva, migración ni deploy
+en esta corrida. La única duda dejada para que Milton decida sigue siendo
+la ya señalada arriba (segunda opinión del Reparador) más la nueva de
+`TO-DO.md` sobre cómo evitar que se siga sobrescribiendo.
+
+Responsable: Claude (tarea programada diaria de propagación).

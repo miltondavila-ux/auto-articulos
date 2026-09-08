@@ -333,6 +333,10 @@ Comprueba que tienes categorías sincronizadas, un idioma elegido y que no hay o
 
 Si aparece el aviso de créditos de imagen, significa que la pantalla todavía no reconoce saldo para ilustrar artículos. Si ya te los asignaron, pulsa **Ya recibí mis créditos** y vuelve a intentar. Si la operación sigue detenida, solicita créditos o consulta a soporte.
 
+### Un título falla porque la categoría ya no existe
+
+Si un título falla y el mensaje explica que la categoría ya no existe en tu sitio (por ejemplo, porque se borró o se renombró desde la última vez que sincronizaste), entra a Configuración → Cuenta y pulsa "Sincronizar categorías ahora" para refrescar la lista, y luego vuelve a intentar ese título.
+
 ### No veo Oportunidades SEO
 
 En Configuración conecta Google Search Console, selecciona una propiedad, sincroniza categorías y guarda un idioma de redacción. Luego vuelve a Oportunidades para analizar.
