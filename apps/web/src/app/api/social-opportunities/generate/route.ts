@@ -533,6 +533,7 @@ export async function POST(request: Request) {
     // de bloquear al usuario por completo.
     const freshToday = availableNow.filter((article) => !wasUsedToday(article));
     // Hasta 3 candidatos por clic para dar más opciones sin saturar de pendientes.
+    // Se aplica a todas las redes sociales (Threads, X, LinkedIn, Instagram, Pinterest, etc.)
     const candidates = (freshToday.length > 0 ? freshToday : availableNow).slice(0, 3);
 
     if (candidates.length === 0) {

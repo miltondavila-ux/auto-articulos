@@ -6515,10 +6515,15 @@ Siguiente verificación: Cuando Milton confirme que la interfaz se ve perfecta e
 
 ---
 
-## MEJORA — Aumentar límite de oportunidades sociales de 1 a 3 por clic — 2026-09-08
+## CLAUDE - PROBLEMAS Y PRUEBAS REDES SOCIALES Y BLOGGINS — 2026-09-08
 
-**Solicitud:** Usuario pidió más de 1 oportunidad al presionar botón de THREADS (solo retornaba 1)  
-**Cambio:** `apps/web/src/app/api/social-opportunities/generate/route.ts` línea 537: `slice(0, 1)` → `slice(0, 3)`
+**Sesión:** Investigación y pruebas de issues de Threads, búsqueda de oportunidades limitada, y problemas de publicación
+
+### Problema 1: Oportunidades limitadas a 1 por red — SOLUCIÓN EN PROGRESO
+
+**Solicitud:** Usuario pidió más de 1 oportunidad al presionar botón de cualquier red social (solo retornaba 1)  
+**Cambio:** `apps/web/src/app/api/social-opportunities/generate/route.ts` línea 537: `slice(0, 1)` → `slice(0, 3)`  
+**Aplica a:** TODAS las redes (Threads, X, LinkedIn, Instagram, Pinterest, Tumblr, Bluesky, DEV.to, Blogger, Facebook)
 
 ### TRIPLE AUDITORÍA COMPLETADA
 
