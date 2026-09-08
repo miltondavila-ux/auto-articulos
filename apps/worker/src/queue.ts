@@ -395,6 +395,9 @@ async function processRunTitle(
       /(?:no tiene|agotad[oa]s?|sin) (?:los )?(?:tokens|cr[ée]ditos)/i.test(
         normalizedMessage,
       );
+    const isPermanentWebsiteLoginIssue =
+      /please enter a valid email address/i.test(normalizedMessage) ||
+      /correo guardado.*formato válido/i.test(normalizedMessage);
     const displayMessage = isImageCreditIssue
       ? `Sin créditos de imagen en ${platformProductNameOrNeutral(run.user.platformDomain)}. Pide más créditos a tu proveedor del sitio; no hace falta hacer nada más aquí, el próximo intento funcionará solo.`
       : message;
@@ -421,6 +424,11 @@ async function processRunTitle(
       // Un lote administrativo nunca se reintenta automáticamente: cada orden
       // puede modificar como máximo 20 artículos. El siguiente lote requiere
       // una nueva orden y retomará los pendientes de forma idempotente.
+    } else if (isPermanentWebsiteLoginIssue) {
+      // Un correo inválido es un fallo permanente de configuración, no un
+      // fallo transitorio del sitio: reintentarlo solo repite el mismo login.
+      await markTitleError(nextTitle.id, message);
+      await restoreUnfinishedTitlesToOpportunities(run.id, nextTitle.id);
     } else if (err instanceof DailyLimitReachedError) {
       // Límite diario de artículos confirmado por el propio sitio (no una
       // hipótesis): NINGÚN otro título de este lote puede avanzar hoy, así

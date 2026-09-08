@@ -21,6 +21,8 @@ Estructura:
 
 ## PARTE A — ¿Quién tiene qué reservado AHORA MISMO?
 
+| `/private/tmp/fix-natalia-category-login-20260908` | `codex/fix-natalia-category-login-20260908` | En curso | Codex — `BUG NATALIA` | Reserva: `apps/worker/src/categorySync.ts`, `apps/worker/src/automation/10minutesWebsite.ts`; base `origin/main` `7f3c7e9`; SHA exacto de Producción no expuesto por los headers disponibles. |
+
 **Este es el tablero de reservas rápidas** que exige la "METODOLOGÍA DE
 TRABAJO EN PARALELO Y CAPITÁN DE ARCHIVO" en `COORDINACION_CLAUDE_CODEX.md`
 (agregada 2026-09-04): antes de tocar un archivo, consultar acá; al
