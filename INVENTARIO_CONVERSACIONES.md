@@ -172,6 +172,13 @@ investigó de quién son — quedan señalados para que Milton confirme su orige
 
 ## PARTE B — Registro histórico de conversaciones (nombre exacto, agente, proyecto, estado)
 
+### `BUG NATALIA`
+- Agente: Codex.
+- Estado: **CERRADA** — PR #82 fusionado y desplegado en Producción (`9f0c2f1`).
+  Se corrigió el timeout del pool de categorías y se evitó repetir errores
+  permanentes de correo inválido. Natalia confirmó que la sincronización de
+  categorías funciona correctamente.
+
 Compilado a partir de los campos "Identidad exacta", encabezados de proyecto y
 "Conversación/proyecto" encontrados en `COORDINACION_CLAUDE_CODEX.md` y
 `CONTROLADOR_DE_VERSIONES.md` (versión real de `origin/main`, commit

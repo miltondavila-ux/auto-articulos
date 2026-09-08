@@ -1,183 +1,3 @@
-# INCIDENTE CRÍTICO Y PROTOCOLO OBLIGATORIO — 2026-09-08
-
-## Qué pasó: Producción rota por schema sin migración
-
-**Resumen:** PR #76 (Claude) agregó `User.publishMethod` y `McpConnection` al schema Prisma sin crear la migración correspondiente. Resultado: login en Producción devolvía HTTP 500 ("column `User.publishMethod` does not exist"). Tardó 4 horas en arreglarse.
-
-**Root cause:** Schema y migración deben ser INSEPARABLES. Cambiar uno sin el otro = desastre garantizado.
-
-## Protocolo obligatorio (TODOS deben seguir)
-
-**Antes de mergear CUALQUIER cambio a `packages/db/prisma/schema.prisma`:**
-
-1. **Crear la migración EN EL MISMO COMMIT**
-   ```bash
-   npx prisma migrate dev --name <descripcion>
-   # Esto genera schema.prisma + migrations/20260908XXXXXX_<descripcion>/migration.sql
-   # AMBOS archivos van al commit.
-   ```
-
-2. **Probar la migración en worktree aislado ANTES de main**
-   ```bash
-   # En worktree con npm install propio:
-   npx prisma migrate deploy  # O la forma que uses
-   # Debe completar sin errores.
-   ```
-
-3. **Auditoría de integración: ejecutar en Producción ANTES de activar el código**
-   - El código espera que los campos existan
-   - Si la migración falla en Producción, el código roto llega primero
-   - Solución: migración SIEMPRE antes que el código que la usa
-
-4. **Si la migración causa data loss** (DROP TABLE, DROP COLUMN):
-   - Documentar EXACTAMENTE qué se pierde y por qué
-   - Requiere autorización explícita de Milton ANTES de mergear
-   - Nunca usar `--accept-data-loss` sin revisar qué datos se pierden
-
-## Cómo se arregló (no hagas esto a menos que sea un desastre real)
-
-```bash
-# 1. Revert del PR que rompió Producción
-gh pr merge <revert-pr>  # Devuelve el código a estado conocido
-
-# 2. Migración SEGURA con --accept-data-loss (ÚLTIMA OPCIÓN)
-gh workflow run migrate.yml --ref main -f force_sync=true
-# Esto sincroniza la BD con el schema, pero ELIMINA datos.
-# Solo cuando no hay alternativa.
-```
-
-## Responsables
-
-- **Claude/Codex:** crear migración EN MISMO COMMIT que schema
-- **PR reviewer:** verificar que schema + migración vayan juntas
-- **Milton:** autorizar si hay data loss
-
-## Aplicar este protocolo ahora
-
-Este documento es OBLIGATORIO para el próximo cambio de schema. Si lo olvidas, Coordinador debe rechazar el PR y pedirte que lo hagas de nuevo.
-
----
-
-# MCP 10MWS — andamiaje de segunda línea de ejecución de publicación (2026-09-07/08)
-
-Pedido de Milton: agregar, sin tocar la línea actual (Playwright/navegador
-contra `10minutesWebsite.net`/`.site`/`tagcrush.net`), una segunda línea de
-ejecución para que cuentas nuevas y antiguas que lo elijan publiquen directo
-contra un servidor MCP de terceros — el primero, en construcción por el
-equipo de 10MWS (contrato completo en
-`/Users/miltondavila/Desktop/MCP_DE_ARTICULOS_ESPECIFICACION.md`). Pensado
-para servir después también a WordPress/Wix, etc. Marca actual: **SEO
-Total** (ya no "Auto Artículos"; cualquier copy nuevo de cara al usuario
-debe decir eso).
-
-Aclaración de Milton (2026-09-08): el recorte/optimización de la imagen NO
-lo hace la plataforma receptora en este modo — lo hace **SEO Total**;
-el MCP remoto solo copia/pega la imagen ya lista. Reflejado en
-`mcpPublisher.ts` (`imageUrl` obligatorio en `PublishArticleInput`,
-pendiente todavía el generador/hosting de imagen del lado de SEO Total).
-
-**PR #76** (`claude/mcp-publicacion-20260907`, `open`, sin fusionar):
-esquema (`User.publishMethod` default `BROWSER`, modelo `McpConnection`),
-interfaz `ArticlePublisher` (el "puerto"), `browserPublisher.ts` (envoltorio
-sin cambios sobre `10minutesWebsite.ts`), cliente MCP JSON-RPC genérico en
-`packages/shared`, `mcpPublisher.ts` (traduce `CUPO_DIARIO_AGOTADO` /
-`TITULO_DUPLICADO` a las excepciones que ya usa el pipeline), y
-`mcpQueue.ts` (rama nueva desde `queue.ts` solo si `publishMethod === "MCP"`,
-en su propio archivo para no ramificar el `queue.ts` de producción).
-
-## Tres auditorías
-
-1. **Funcional**: `browserPublisher.ts` es un envoltorio 1:1 de
-   `fetchCategories`/`fetchLanguages`/`publishArticle` de
-   `10minutesWebsite.ts`, sin tocar su lógica interna — mismo
-   comportamiento de siempre para toda cuenta `BROWSER` (el default, sin
-   excepción). `mcpPublisher.ts` probado contra un servidor MCP stub local
-   (`apps/worker/src/automation/mcpPublisher.test.ts`): mapeo de
-   `listar_categorias` al formato interno, traducción de
-   `CUPO_DIARIO_AGOTADO`→`DailyLimitReachedError` y
-   `TITULO_DUPLICADO`→`DuplicateTitleError`, y la guarda `IMAGEN_REQUERIDA`
-   (falla antes de gastar una llamada de generación de contenido si no hay
-   imagen).
-2. **Regresión**: `git diff --check` limpio. `npx tsc -p
-   apps/worker/tsconfig.json --noEmit` y `npx tsc -p
-   packages/shared/tsconfig.json --noEmit` sin errores, corridos en un
-   worktree aislado (`/private/tmp/mcp-publicacion-20260907`) con
-   `npm install` y `npx prisma generate` propios (nunca enlazando
-   `node_modules` del checkout principal, para que `@auto-articulos/*`
-   resuelva a los paquetes de ESTE worktree y no a los del repo principal).
-   Suite completa del worker: 27/27 tests pasan (21 preexistentes + 6
-   nuevos), cero regresión.
-3. **Integración/producción**: **bloqueada a propósito, no simulada**. No
-   existe todavía una URL real del servidor MCP de 10MWS contra la cual
-   probar (pendiente de que ellos la entreguen — sección 13 del contrato).
-   Tampoco se generó ni se aplicó la migración de Prisma contra ninguna
-   base de datos (falta una base de datos local disponible en este
-   worktree, y aplicarla contra producción requiere autorización explícita
-   de Milton en el momento, tal como exige el Protocolo). El PR queda
-   `open`, sin fusionar, hasta que la auditoría 3 deje de estar bloqueada.
-
-Sin URL real ni interfaz que active `publishMethod = MCP` para ninguna
-cuenta, este código es inerte por defecto: cero riesgo para producción tal
-como está. Pendientes explícitos, documentados en el propio código: refresh
-automático de tokens OAuth, rutas OAuth (`authorize`/`callback`) y UI de
-conexión, y el generador/hosting de imagen del lado de SEO Total para el
-flujo MCP.
-
-**Reserva activa** (ver Inventario, Parte A): `packages/db/prisma/schema.prisma`
-y `apps/worker/src/queue.ts`, hasta que el PR #76 se fusione o se cierre.
-
-## Corrección de alcance de Milton (2026-09-08) — no es "un MCP para 10MWS", es un selector de plataforma
-
-Milton fue explícito: la idea **no es tumbar lo que ya funciona**, sino que
-**SEO Total tome el control** de un modo de publicación mucho más
-inteligente, sin navegador, que sirva no solo para 10minutesWebsite sino
-para **cualquier generador de páginas web** (Shopify, Wix, WordPress,
-etc.). Pidió, antes de seguir programando, investigar qué generadores de
-páginas web existen en el mercado y cuáles ya tienen un servidor MCP
-propio, analizarlos, y **dejó dicho de antemano que el sistema debe tener
-un selector de plataforma** que la persona usuaria use al momento de
-conectar su cuenta (no un solo proveedor fijo).
-
-Esto no contradice ni descarta nada del PR #76 — el diseño de ese PR
-(interfaz `ArticlePublisher` como puerto + un adaptador por proveedor +
-`McpConnection.provider` como string abierto) ya estaba pensado para esto
-exactamente. Lo que cambia es la ambición declarada del proyecto: 10MWS es
-el primer proveedor, no el único.
-
-### Investigación de mercado (Claude, 2026-09-08, solo investigación — no se tocó código)
-
-| Plataforma | Estado de MCP | Alcance real hoy | Relevancia |
-|---|---|---|---|
-| **WordPress** | Oficial: **MCP Adapter** (feb-2026) sobre la nueva Abilities API (WP 6.9); expone como herramientas MCP cualquier "ability" registrada. Terceros como Respira ya ofrecen versiones más maduras con rollback. | Crear/editar posts, custom post types, lo que registre cada instalación | **Alta** — el CMS más usado del mundo; muchos clientes de SEO Total probablemente ya lo tienen aparte de 10MWS. |
-| **Shopify** | Oficial: 4 servidores MCP separados (Storefront, Customer Account, Checkout, Dev) desde Q1-2026 | El de "Dev"/Admin lee y escribe catálogo real vía GraphQL Admin API; Shopify también tiene sección de blog | **Media-alta**, sobre todo si algún cliente vende productos, no solo publica artículos. |
-| **Wix** | Oficial desde mayo-2025, maduro en 2026, soporte 24/7 | Cubre APIs de negocio completas, no solo contenido | **Alta** — mencionado explícitamente por Milton como plataforma objetivo. |
-| **Webflow** | Oficial, lanzado a inicios de 2026 | CMS collections, páginas, publicación — mapeo casi 1:1 a "categoría → colección, crear artículo" | **Alta** — de los más limpios para encajar en el contrato ya diseñado. |
-| **Squarespace** | Oficial pero limitado hoy a dominios/algo de comercio; terceros (no oficiales) cubren blog/contenido de forma más completa | El oficial no publica blog posts todavía | **Media** — esperar a que el oficial cubra blog, o evaluar un conector de terceros con cautela (no oficial = puede romperse sin aviso). |
-| **Duda** | Oficial, beta de MCP activa en 2026 | Sitios, blogs, tiendas, republish — y Duda es **también una plataforma white-label para agencias**, mismo modelo de negocio que 10MWS/Tagcrush | **Muy alta como referencia de diseño** — el caso más parecido a nuestro propio negocio para copiar patrones de autorización multi-tenant. |
-| **GoDaddy Website Builder** | Oficial pero solo dominios, de solo lectura (no publica contenido, no compra, no toca DNS) | No sirve para publicar artículos hoy | **Baja** por ahora. |
-| Contentful/Sanity/Storyblok (headless) | Oficiales, MCP maduro | Pensados para desarrolladores con front-end propio | **Baja-media** — público más técnico, no es el perfil típico de cliente de SEO Total. |
-
-**Lectura general**: MCP remoto con OAuth ya es el estándar de 2026 en toda
-esta categoría — el mismo patrón que 10MWS ya nos propuso. El diseño de
-`ArticlePublisher` del PR #76 no necesita cambiar de forma para soportar
-esto; cada proveedor nuevo es un adaptador más (como `mcpPublisher.ts`) más
-una entrada en el selector de plataforma.
-
-**Orden de prioridad propuesto** (pendiente de que Milton lo confirme):
-1. 10minutesWebsite/Tagcrush (MCP) — ya en desarrollo del lado de ellos.
-2. WordPress — mayor volumen de usuarios potenciales, MCP oficial flexible.
-3. Wix y Webflow — MCP oficial maduro, mapeo limpio al contrato interno.
-4. Duda — más por aprendizaje de arquitectura que por volumen inmediato.
-5. Shopify/Squarespace — evaluar según si los clientes reales de SEO Total
-   ya usan estas plataformas (dato pendiente del lado de Milton).
-
-**Estado**: solo investigación, sin ejecutar todavía — Milton pidió
-analizar antes de proceder. El selector de plataforma y los adaptadores
-adicionales quedan pendientes de que él confirme el orden y de que se
-complete/fusione primero el PR #76 (10MWS).
-
----
-
 # MENSAJE DE CLAUDE PARA `CODEX - AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS` (2026-09-04)
 
 Milton me pidió que revise el estado de tu PR #42
@@ -328,6 +148,74 @@ Reglas del canal:
 ---
 
 # PROTOCOLO DE VERIFICACIÓN LOCAL Y REDUCCIÓN DE DESPLIEGUES (propuesto por Claude, 2026-09-04, a pedido explícito de Milton)
+
+## Regla operativa nueva — desarrollo local primero (2026-09-08)
+
+### Regla de sincronización con Producción
+
+Antes de probar o crear un worktree, el responsable debe identificar el SHA
+exacto del deployment `Production/Ready` que Vercel está sirviendo y llamarlo
+`PRODUCTION_SHA`. No se debe asumir que `origin/main` es Producción: si Vercel
+está limitado, pendiente, fallando o sirviendo un deployment anterior, ambos
+pueden diferir. La diferencia se registra en
+`CONTROLADOR_DE_VERSIONES.md` y no se presenta como sincronización.
+
+El orden de referencia es: (1) Producción real (`PRODUCTION_SHA`), (2)
+`origin/main` actualizado, (3) rama/worktree local creado desde la base que
+corresponda. Ejecutar `PRODUCTION_SHA=<sha> npm run check:production-baseline`
+antes de modificar código. El comando falla si no se informa el SHA, si el
+worktree no contiene esa base, y avisa si `origin/main` está en otro commit.
+Cuando existe diferencia, se puede trabajar localmente sobre el SHA real de
+Producción o sobre `origin/main`, pero la elección, el riesgo y la diferencia
+deben quedar documentados antes del PR.
+
+Un entorno local sincronizado significa: mismo commit base de Producción,
+mismas migraciones aplicadas localmente, mismas versiones declaradas en el
+lockfile y variables locales equivalentes en forma, nunca secretos iguales.
+No significa copiar la base de datos productiva ni sus credenciales. Lorena
+local es una cuenta sintética con el mismo correo identificador, contraseña
+local y sin integraciones/tokens productivos.
+
+Para reducir el consumo de Vercel, el ciclo normal es: trabajar en un
+worktree aislado, levantar la base local, preparar o actualizar el usuario
+local de pruebas de Lorena, ejecutar `npm run verify`, revisar manualmente el
+flujo afectado en `http://localhost:3000` y solo después abrir el PR. Vercel
+queda reservado para validar el Preview final y el despliegue autorizado; no
+se usa como entorno de desarrollo ni como sustituto de las pruebas locales.
+
+La cuenta local de pruebas usa el correo
+`lorenalvarez30@gmail.com`, pero su contraseña debe ser una contraseña local
+definida mediante `LOCAL_LORENA_PASSWORD`. Está prohibido copiar desde
+producción la contraseña, tokens, credenciales OAuth, integraciones o datos
+privados de Lorena. La preparación reproducible es `npm run local:lorena`:
+levanta PostgreSQL local, genera Prisma, aplica las migraciones existentes y
+crea/actualiza únicamente el usuario local de prueba.
+
+## Puerta de Vercel para documentación
+
+`apps/web/vercel.json` mantiene intactos `buildCommand: npm run build` y
+`outputDirectory: .next`. Su `ignoreCommand` evita el build cuando el commit
+no cambia código de aplicación, paquetes, dependencias ni workflows. Así,
+los registros documentales no consumen un Preview/build completo. Si el
+commit toca `apps/`, `packages/`, `package.json`, `package-lock.json` o un
+workflow, Vercel sí construye normalmente y la validación local sigue siendo
+obligatoria antes del PR.
+
+## Ciclo mínimo antes de cada PR de código
+
+1. `npm run local:lorena` (una vez por entorno o cuando falte la base local).
+2. `npm run verify`, que cubre diff, Prisma, typecheck web, build web desde
+   `apps/web`, build del worker y tests del worker.
+3. Prueba manual del módulo afectado con Lorena local, sin llamadas de
+   publicación reales ni credenciales de producción.
+4. Revisión del diff y del Preview de Vercel solo después de lo anterior.
+5. Fusionar únicamente con las tres auditorías documentadas y verificar
+   producción después del despliegue.
+
+Este ciclo no reemplaza las tres auditorías: organiza las dos primeras en
+local y conserva la tercera para integración/producción. Si la prueba local
+no puede ejecutarse por falta de variables, datos o servicios, se registra
+el bloqueo y no se presenta como aprobada.
 
 Milton pidió, de manera autónoma, una propuesta para dejar de generar tantos
 despliegues en Vercel y para poder probar en local lo que se ejecuta, antes
@@ -6437,79 +6325,17 @@ para escribir este aviso.** Ninguna migración involucrada.
 capitanía de `opportunity-analysis.ts`/`api/opportunities/route.ts`
 reclamada en este momento por esta conversación.
 
-## DECISIÓN DE MILTON — BUG NATALIA — 2026-09-08
+## CIERRE — BUG NATALIA — 2026-09-08
 
-Milton indicó expresamente que la ausencia de la cuenta de Natalia en la
-base local no debe trabar esta corrección. Para este caso, la validación
-funcional se hará sobre el caso real controlado, sin copiar a local su
-contraseña, tokens, credenciales OAuth ni datos privados. Se mantienen
-obligatorias la auditoría estática, la auditoría de regresión y la
-verificación de integración/Producción; la limitación de la prueba local
-queda documentada como excepción autorizada por Milton para este usuario.
+La corrección fue fusionada mediante el PR #82 y desplegada en Producción
+con el commit `9f0c2f1`. Vercel terminó en estado `Ready`; `/login` respondió
+correctamente y Producción sirvió el deployment nuevo con `age: 0` durante la
+verificación.
 
-Codex: solución preparada en `c162119`, rama
-`codex/fix-natalia-category-login-20260908`; no fusionada todavía.
+Se completaron las auditorías estática, de regresión e integración. La
+excepción de prueba local por ausencia de la cuenta local de Natalia quedó
+autorizada y documentada por Milton. Natalia confirmó que la sincronización
+de categorías funciona correctamente en Producción. La publicación de un
+artículo quedó en prueba manual al cerrar esta conversación.
 
-## AUDITORÍA APIs GOOGLE — 2026-09-08
-
-Identidad exacta: CODEX - GPT-5.6 - VERIFICACIÓN DE API'S DE GOOGLE
-Proyecto: auto-articulos-search-console (621677827297)
-Objetivo: revisar el estado completo de GSC, Analytics y Business Profile.
-Resultado: producción sigue fijada en seototal.lasolucionweb.com, deployment
-Ready 2nHSy4qXgW4zaEmxzHBAr1NY8xqk (eaf8e90). Marca OAuth y scopes están
-guardados; webmasters y business.manage no sensibles, analytics.readonly
-pendiente de verificación, justificación y video guardados.
-Estado de revisión: Centro de verificación continúa bloqueado; muestra que
-la marca no se está mostrando y que el acceso a datos no está verificado.
-`Prepare for verification` permanece deshabilitado, por lo que la solicitud
-formal todavía no ha sido enviada y no existe aprobación final.
-Evidencia adicional: notificación antigua marca completada la tarea de marca,
-pero contradice el estado actual del Centro; se conserva como inconsistencia
-para seguimiento. No hay notificación nueva de aprobación o requerimiento.
-GMB: la cuota de Account Management debe vigilarse; el historial conocido
-mostró Requests/minute = 0 y el caso de soporte 7-6783000042063 sigue siendo
-la vía de acceso. No se modificaron cuotas ni se enviaron formularios.
-Acción siguiente: esperar habilitación de Prepare for verification, revisar
-correo de 10minuteswebsite@gmail.com y confirmar propiedad de dominio
-lasolucionweb.com en Search Console. No borrar commits ni cambiar producción.
-Capitanía de migración: no.
-
-**CIERRE — Auditoría responsive fusionada:** PR #87 (`1a2ebc0`) 
-**Fecha:** 2026-09-08 20:57 UTC  
-**Estado:** ✓ Fusionado a main sin conflictos  
-**Cambios:** 7 mejoras CSS (clamp() responsivo)  
-**Riesgo:** Bajo (visual only, sin lógica)  
-**Verificación:** Pendiente en producción
-
-Todos los cambios de escala responsiva están en main. La siguiente revisión 
-sucede cuando Milton confirme que la interfaz se vea perfecta en móvil/tablet/desktop.
-
----
-
-## CIERRE — Conversación "AUDITORIA DE CAPACIDADES RESPONSIVE" — 2026-09-08
-
-**Identidad:** Claude (Haiku 4.5), conversación única de auditoría responsive  
-**Duración:** Sesión única  
-**Resultado:** ✓ COMPLETADO SIN FALLOS
-
-### Resumen de Trabajo
-
-1. **Auditoría de código:** 23 páginas, 10 criterios de calidad responsive
-2. **Hallazgos:** 8 problemas identificados, 7 corregidos sin riesgo alto
-3. **Cambios:** 7 mejoras CSS-in-JS con `clamp()` para escala fluida
-4. **Fusión:** PR #87 (fe91e44 → 1a2ebc0) a main sin conflictos
-5. **Protocolo:** Worktree aislado, documentación completa, zero daño
-
-### Archivos Modificados
-
-- `apps/web/src/app/login/page.tsx` — 5 cambios (gap, padding x2, fontSize x2)
-- `apps/web/src/app/dashboard/page.tsx` — 2 cambios (padding, gap)
-- `COORDINACION_CLAUDE_CODEX.md` — Documentación de auditoría
-
-### Conversación Cerrada
-
-No hay cambios pendientes. Auditoría responsive está en producción (main).  
-Siguiente verificación: Cuando Milton confirme que la interfaz se ve perfecta en todos los dispositivos.
-
-**Memoria:** Guardada en `/Users/miltondavila/.claude/projects/.../memory/auditoria-responsive-cierre.md`
-
+Reserva liberada. Estado: CERRADA.
