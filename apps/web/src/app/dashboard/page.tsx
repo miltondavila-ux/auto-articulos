@@ -177,7 +177,7 @@ export default function InicioPage() {
             WebkitBackdropFilter: "blur(20px) saturate(180%)",
             color: "#fff",
             borderRadius: 16,
-            padding: "20px 24px",
+            padding: "clamp(14px, 4vw, 20px) clamp(16px, 5vw, 24px)",
             marginTop: 4,
             marginBottom: 16,
             display: "flex",
@@ -221,7 +221,7 @@ export default function InicioPage() {
             marginTop: 20,
             display: "flex",
             flexDirection: "column",
-            gap: 8,
+            gap: "clamp(6px, 1.5vw, 8px)",
           }}
         >
           {notifications.map((n) => (
