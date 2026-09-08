@@ -285,6 +285,18 @@ export default function OportunidadesPage() {
     setBusyId(null);
   }
 
+  async function removeAll() {
+    if (!window.confirm("¿Borrar todas las oportunidades? Esta acción no se puede deshacer.")) return;
+    setBusyId("__delete_all__");
+    setMessage(null);
+    const response = await fetch("/api/opportunities", { method: "DELETE" });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok)
+      setMessage({ kind: "error", text: data.error ?? "No se pudieron eliminar las oportunidades." });
+    await load();
+    setBusyId(null);
+  }
+
   async function executeAll() {
     if (!contentLanguage.trim()) {
       setMessage({
@@ -837,6 +849,17 @@ export default function OportunidadesPage() {
 
         {groups.length > 0 && (
           <div style={{ marginTop: 16 }}>
+            <button
+              onClick={removeAll}
+              disabled={busyId !== null}
+              className="secondary"
+              style={disabledStyle(
+                { ...secondaryButtonStyle, color: "#ff3b30", marginTop: 0, marginBottom: 12 },
+                busyId !== null,
+              )}
+            >
+              {busyId === "__delete_all__" ? "Borrando..." : "Borrar todas las oportunidades"}
+            </button>
             {(() => {
               const totalTitles = groups.reduce(
                 (sum, g) => sum + g.titles.length,

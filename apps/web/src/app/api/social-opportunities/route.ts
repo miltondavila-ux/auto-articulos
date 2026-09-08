@@ -95,17 +95,21 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
   try {
     const userId = await getCurrentUserId();
     if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Módulo reservado a administradores y Lorena." }, { status: 403 });
 
-    // Borrar todas las propuestas que no estén pendientes (es decir, publicadas o con error)
+    // scope=pending: usado por el botón "Borrar todas" de Oportunidades en
+    // Redes Sociales, para borrar las propuestas pendientes. Sin ese
+    // parámetro se mantiene el comportamiento original ("Borrar historial"
+    // en /dashboard/historial): borra solo publicadas o con error.
+    const scope = request.nextUrl.searchParams.get("scope");
     await prisma.socialOpportunity.deleteMany({
-      where: {
-        userId,
-        status: { not: "pending" },
-      },
+      where:
+        scope === "pending"
+          ? { userId, status: "pending" }
+          : { userId, status: { not: "pending" } },
     });
 
     return NextResponse.json({ success: true });

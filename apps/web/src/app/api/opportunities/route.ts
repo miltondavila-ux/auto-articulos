@@ -36,6 +36,12 @@ export async function GET() {
   });
 }
 
+export async function DELETE() {
+  const userId = await getCurrentUserId();
+  await prisma.opportunityGroup.deleteMany({ where: { userId } });
+  return NextResponse.json({ ok: true });
+}
+
 export async function POST(request: Request) {
   const userId = await getCurrentUserId();
   const pendingCount = await prisma.opportunityTitle.count({

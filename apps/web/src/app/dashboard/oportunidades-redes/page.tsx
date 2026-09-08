@@ -293,6 +293,28 @@ export default function OportunidadesRedesPage() {
     }
   }
 
+  const [deletingAll, setDeletingAll] = useState(false);
+
+  async function handleDeleteAll() {
+    if (!window.confirm("¿Borrar todas las oportunidades pendientes? Esta acción no se puede deshacer.")) return;
+    setDeletingAll(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/social-opportunities?scope=pending", { method: "DELETE" });
+      if (res.ok) {
+        setMessage({ kind: "info", text: "Se borraron todas las oportunidades pendientes." });
+        loadOpportunities();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setMessage({ kind: "error", text: data.error || "No se pudieron borrar las oportunidades." });
+      }
+    } catch (err: any) {
+      setMessage({ kind: "error", text: err.message });
+    } finally {
+      setDeletingAll(false);
+    }
+  }
+
   async function handlePreview(opp: SocialOpportunity) {
     setPreviewModal({ loading: true, imageUrl: null, imageBase64: null, platform: opp.platform, title: opp.articleTitle });
     try {
@@ -402,10 +424,21 @@ export default function OportunidadesRedesPage() {
               </div>
             )}
             {pendingList.length > 0 && (
-              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 12 }}>
+                <button
+                  onClick={handleDeleteAll}
+                  disabled={deletingAll || publishingAll}
+                  className="secondary"
+                  style={disabledStyle(
+                    { ...secondaryButtonStyle, ...uniformButtonSize, color: "#ff3b30", whiteSpace: "nowrap" },
+                    deletingAll || publishingAll,
+                  )}
+                >
+                  {deletingAll ? "Borrando..." : "Borrar todas las oportunidades"}
+                </button>
                 <button
                   onClick={handlePublishAll}
-                  disabled={publishingAll}
+                  disabled={publishingAll || deletingAll}
                   style={{ ...buttonStyle, ...uniformButtonSize, marginTop: 0, whiteSpace: "nowrap" }}
                 >
                   {publishingAll ? "Publicando..." : "Publicar todo el lote"}
