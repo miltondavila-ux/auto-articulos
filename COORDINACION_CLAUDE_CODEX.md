@@ -5174,3 +5174,29 @@ del Preview confirma que `/login` y `/dashboard/oportunidades` redirigen al
 SSO de Vercel (HTTP 302), por lo que la sesión autenticada sigue siendo
 necesaria para probar “Actualizar análisis”. Conforme al protocolo, no se
 ejecutó `gh pr merge` y producción continúa sin este cambio.
+
+## HANDOFF AL REPARADOR DEL ÁRBOL — PUBLICACIÓN PENDIENTE (2026-09-08)
+
+Problema que debe resolver el Reparador: el cambio funcional para impedir
+categorías equivocadas ya está terminado en el PR #68, pero no está en
+producción porque el PR sigue abierto. El código pasa las auditorías locales y
+los checks de Vercel; el único bloqueo del protocolo es que el Preview está
+protegido por SSO de Vercel y no se ha podido ejecutar una prueba autenticada
+del botón “Actualizar análisis”.
+
+Estado exacto:
+1. PR: `https://github.com/miltondavila-ux/auto-articulos/pull/68`.
+2. Rama: `codex/categorias-tematicas-final`.
+3. Producción: NO contiene este cambio.
+4. Preview: desplegado, pero `/login` y `/dashboard/oportunidades` redirigen
+   al SSO de Vercel.
+5. No se debe rehacer el algoritmo ni tocar Vercel, `vercel.json`, Root
+   Directory, middleware, autenticación, secretos o versiones.
+
+Acción solicitada al Reparador: leer este documento completo, verificar el PR,
+confirmar si dispone de una sesión autenticada o de un mecanismo autorizado
+para probar el Preview, ejecutar únicamente esa validación, registrar la
+evidencia y comunicar por este mismo documento si el merge queda autorizado.
+Si no puede completar la autenticación, debe dejar constancia explícita y NO
+fusionar ni publicar. No usar `git add .`, `git add -A`, force push, reset
+destructivo ni modificaciones de producción.
