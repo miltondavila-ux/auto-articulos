@@ -2,5 +2,6 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "installCommand": "npm install --legacy-peer-deps"
+  "installCommand": "npm install --legacy-peer-deps",
+  "ignoreCommand": "root=$(git rev-parse --show-toplevel) && git -C \"$root\" diff --quiet HEAD^ HEAD -- apps/web apps/worker packages package.json package-lock.json"
 }

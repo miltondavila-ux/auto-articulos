@@ -149,6 +149,49 @@ Reglas del canal:
 
 # PROTOCOLO DE VERIFICACIÓN LOCAL Y REDUCCIÓN DE DESPLIEGUES (propuesto por Claude, 2026-09-04, a pedido explícito de Milton)
 
+## Regla operativa nueva — desarrollo local primero (2026-09-08)
+
+Para reducir el consumo de Vercel, el ciclo normal es: trabajar en un
+worktree aislado, levantar la base local, preparar o actualizar el usuario
+local de pruebas de Lorena, ejecutar `npm run verify`, revisar manualmente el
+flujo afectado en `http://localhost:3000` y solo después abrir el PR. Vercel
+queda reservado para validar el Preview final y el despliegue autorizado; no
+se usa como entorno de desarrollo ni como sustituto de las pruebas locales.
+
+La cuenta local de pruebas usa el correo
+`lorenalvarez30@gmail.com`, pero su contraseña debe ser una contraseña local
+definida mediante `LOCAL_LORENA_PASSWORD`. Está prohibido copiar desde
+producción la contraseña, tokens, credenciales OAuth, integraciones o datos
+privados de Lorena. La preparación reproducible es `npm run local:lorena`:
+levanta PostgreSQL local, genera Prisma, aplica las migraciones existentes y
+crea/actualiza únicamente el usuario local de prueba.
+
+## Puerta de Vercel para documentación
+
+`apps/web/vercel.json` mantiene intactos `buildCommand: npm run build` y
+`outputDirectory: .next`. Su `ignoreCommand` evita el build cuando el commit
+no cambia código de aplicación, paquetes, dependencias ni workflows. Así,
+los registros documentales no consumen un Preview/build completo. Si el
+commit toca `apps/`, `packages/`, `package.json`, `package-lock.json` o un
+workflow, Vercel sí construye normalmente y la validación local sigue siendo
+obligatoria antes del PR.
+
+## Ciclo mínimo antes de cada PR de código
+
+1. `npm run local:lorena` (una vez por entorno o cuando falte la base local).
+2. `npm run verify`, que cubre diff, Prisma, typecheck web, build web desde
+   `apps/web`, build del worker y tests del worker.
+3. Prueba manual del módulo afectado con Lorena local, sin llamadas de
+   publicación reales ni credenciales de producción.
+4. Revisión del diff y del Preview de Vercel solo después de lo anterior.
+5. Fusionar únicamente con las tres auditorías documentadas y verificar
+   producción después del despliegue.
+
+Este ciclo no reemplaza las tres auditorías: organiza las dos primeras en
+local y conserva la tercera para integración/producción. Si la prueba local
+no puede ejecutarse por falta de variables, datos o servicios, se registra
+el bloqueo y no se presenta como aprobada.
+
 Milton pidió, de manera autónoma, una propuesta para dejar de generar tantos
 despliegues en Vercel y para poder probar en local lo que se ejecuta, antes
 de subir. Diagnóstico real (no supuesto): en un solo día de esta

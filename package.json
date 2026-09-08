@@ -17,6 +17,8 @@
     "dev:worker": "npm run dev --workspace=apps/worker",
     "db:migrate": "npm run migrate --workspace=packages/db",
     "db:generate": "npm run generate --workspace=packages/db",
+    "db:migrate:deploy": "npm run migrate:deploy --workspace=packages/db",
+    "local:lorena": "bash scripts/setup-local-lorena.sh",
     "db:studio": "npm run studio --workspace=packages/db",
     "start": "bash start-auto-shutdown.sh",
     "stop": "docker-compose down",

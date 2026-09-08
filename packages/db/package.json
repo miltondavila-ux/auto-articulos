@@ -10,6 +10,7 @@
     "migrate:deploy": "prisma migrate deploy",
     "studio": "prisma studio",
     "seed": "tsx prisma/seed.ts",
+    "local:lorena": "tsx prisma/ensure-local-lorena.ts",
     "enforce-rls": "tsx scripts/enforce-rls.ts"
   },
   "prisma": {
