@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
+import ConfiguracionSubNav from "@/components/ConfiguracionSubNav";
 import AdminFixPatriciaPanel from "@/components/AdminFixPatriciaPanel";
 import CategorySyncProgress, {
   type CategorySyncStatus,
@@ -13,7 +14,6 @@ import {
   secondaryButtonStyle,
   readySectionStyle,
   disabledStyle,
-  ReadyBadge,
 } from "@/components/dashboard-ui";
 import type { CategoryRow, LanguageRow, SyncStatus } from "@/types/dashboard";
 import {
@@ -241,8 +241,9 @@ export default function ConfiguracionCuentaPage() {
           fotos para redes sociales, eso vive en Contenido.
         </IntroP>
       </ModuleIntro>
+      <ConfiguracionSubNav />
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 16 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {/* Credenciales Card */}
         <section id="credentials" style={readySectionStyle(credentialsConfigured)}>
           <div
@@ -257,7 +258,22 @@ export default function ConfiguracionCuentaPage() {
           >
             <h2 style={{ ...h2Style, margin: 0 }}>
               Credenciales de {productName}{" "}
-              {credentialsConfigured && <ReadyBadge />}
+              {credentialsConfigured && (
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: "#6e6e73",
+                    background: "#f5f5f7",
+                    padding: "2px 8px",
+                    borderRadius: 999,
+                    marginLeft: 8,
+                    verticalAlign: "middle",
+                  }}
+                >
+                  Listo
+                </span>
+              )}
             </h2>
             <span
               style={{
@@ -539,8 +555,8 @@ export default function ConfiguracionCuentaPage() {
                             fontSize: 12,
                             fontWeight: 600,
                             color: "#1d1d1f",
-                            background: "rgba(94, 92, 230, 0.08)",
-                            border: "1px solid rgba(94, 92, 230, 0.25)",
+                            background: "#f5f5f7",
+                            border: "1px solid #e5e5ea",
                             padding: "5px 12px",
                             borderRadius: 20,
                           }}
@@ -649,7 +665,7 @@ export default function ConfiguracionCuentaPage() {
           </div>
 
           {languageSyncInProgress && (
-            <p style={{ fontSize: 13, color: "#8a4b08", marginTop: 10 }}>
+            <p style={{ fontSize: 13, color: "#6e6e73", marginTop: 10 }}>
               Conectando con {productName} para sincronizar idiomas...
             </p>
           )}

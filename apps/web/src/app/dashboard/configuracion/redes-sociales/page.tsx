@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
+import ConfiguracionSubNav from "@/components/ConfiguracionSubNav";
 import BrowserTabsConnectionNotice from "@/components/BrowserTabsConnectionNotice";
 import BusinessProfileSection from "@/components/BusinessProfileSection";
 import ThreadsSection from "@/components/ThreadsSection";
@@ -79,7 +80,8 @@ export default function ConfiguracionRedesSocialesPage() {
           acceso a ella.
         </IntroP>
       </ModuleIntro>
-      <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 16 }}>
+      <ConfiguracionSubNav />
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <BrowserTabsConnectionNotice />
         <BusinessProfileSection />
         {(allowThreadsPublishing || allowInstagramPublishing || allowFacebookPublishing || isAdmin || tieneModuloRedes) && (
