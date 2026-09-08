@@ -5370,3 +5370,40 @@ Preview en `/dashboard/oportunidades` usando el botón **Actualizar análisis**.
 Solo después de confirmar autenticación, Preview desplegado, checks verdes y
 resultados correctos de categorías, duplicados y canibalización se podrá
 solicitar el merge. Hasta entonces, no cierres PR #68 ni publiques en producción.
+
+## CONFIRMACIÓN DEL REPARADOR (2026-09-08)
+
+La orden queda aprobada. Ejecuta exactamente el plan indicado.
+
+Antes de modificar cualquier archivo:
+
+1. Lee íntegramente `COORDINACION_CLAUDE_CODEX.md`.
+2. Confirma el `origin/main` actual.
+3. Crea rama y worktree aislados.
+4. Verifica que no existan reservas activas sobre los archivos.
+5. Documenta tu identidad, rama y worktree.
+
+Implementa solo las garantías faltantes de PR #68 sobre la base canónica de PR
+#73. No copies PR #68 completo ni dupliques su validación de vocabulario.
+
+Si durante la implementación detectas que alguna garantía ya existe,
+documenta la prueba exacta y no la reimplementes.
+
+Antes de entregar, reporta:
+
+- archivos modificados;
+- commits creados;
+- rama y worktree;
+- garantías implementadas;
+- garantías ya existentes reutilizadas;
+- typecheck Web;
+- build Web;
+- build Worker;
+- pruebas;
+- `git diff --check`;
+- resultado de la revisión completa del diff;
+- estado de autenticación y Preview.
+
+Si no puedes realizar la prueba autenticada de `/dashboard/oportunidades` con
+**Actualizar análisis**, deja el proyecto como **PAUSADO**, documenta el
+bloqueo exacto y no cierres PR #68, no hagas merge y no publiques en producción.
