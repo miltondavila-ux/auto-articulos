@@ -5286,10 +5286,18 @@ entrada anterior (código estaba directo en `main`, sin aislar):
 6. Commit `3809471` en la rama, push a `origin`, PR abierto:
    **[#72](https://github.com/miltondavila-ux/auto-articulos/pull/72)**.
 
-**Auditoría 3 (integración/Preview de Vercel): pendiente**, esperando el
-check del PR #72. Siguiendo el Protocolo (Sección 3): no se fusiona hasta
-que el check esté en `success` y se verifique funcionalmente el botón en
-el Preview real. Se documentará el resultado acá antes de fusionar.
+**Auditoría 3 (integración/Preview de Vercel)**: los dos checks del PR #72
+sobre el commit `3809471` terminaron en `success`
+(`Vercel – auto-articulos-web` y `Vercel – cambio-boton-comienza-aqui-clean`),
+confirmando que compila y despliega sin error con la configuración real de
+Vercel (`Root Directory=apps/web`, `buildCommand=npm run build`). **Click
+por click funcional sobre el Preview no fue posible**: la URL del Preview
+devuelve `302` a `vercel.com/sso-api` (protección SSO de Vercel), sin token
+de bypass ni cuenta de prueba disponible en este entorno — mismo límite ya
+documentado en la entrada de "Auditoría Responsive" de más abajo en este
+mismo archivo. Se compensa verificando funcionalmente en producción
+inmediatamente después de fusionar (Sección 4 del Protocolo), antes de dar
+esto por cerrado.
 
 **Reserva:** sigue activa sobre los mismos 4 archivos hasta fusionar y
 verificar producción.
