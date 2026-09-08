@@ -5656,3 +5656,37 @@ la ya señalada arriba (segunda opinión del Reparador) más la nueva de
 `TO-DO.md` sobre cómo evitar que se siga sobrescribiendo.
 
 Responsable: Claude (tarea programada diaria de propagación).
+
+## Incidente interceptado — otra sobrescritura de `TO-DO.md` (Claude, 2026-09-08)
+
+Al terminar de fusionar `origin/main` en esta conversación (ver la entrada
+"CONTINUIDAD DEL REPARADOR DEL ÁRBOL PRINCIPAL" y la de propagación diaria
+justo arriba), el merge se frenó porque tenía cambios locales sin commitear
+en `TO-DO.md` que pisaban lo que traía `origin/main`. Antes de descartar
+nada, revisé el contenido con `git stash show -p` (sin aplicar el stash
+todavía) y confirmé en vivo el mismo incidente que ya está documentado más
+arriba en este mismo archivo (sección "INCIDENTE — `TO-DO.md` se
+sobrescribe entre sesiones sin commitear"): la versión sin commitear en
+disco de otra sesión reemplazaba **~20 pendientes reales** (motor de
+redes, reparador de artículos, bug de responsive, rediseño de
+opportunity-analysis, botón de descartar todo, etc.) dejando solo un ítem
+nuevo ("disclosure" al final de cada artículo).
+
+**No apliqué ese stash tal cual** — habría reproducido la pérdida de datos
+que el propio archivo ya advierte. En cambio: dejé la versión completa de
+`TO-DO.md` que trajo `origin/main` (con todos los pendientes intactos) y le
+agregué a mano, sin tocar nada más, el único ítem nuevo real de esa versión
+descartada: la caja de texto de "disclosure" en Configuración (8/9/2026).
+El stash con la versión completa descartada queda guardado igual
+(`git stash list`, entrada "WIP on main" sobre el commit
+`df7155f`) por si hace falta revisarlo, no se borró.
+
+Esto confirma que el incidente de `TO-DO.md` sigue activo y sin resolver
+—Milton todavía no eligió entre las dos alternativas que ya están
+planteadas en la sección de arriba (commitear `TO-DO.md` normalmente, o
+protocolo de reserva de un solo editor a la vez)—. Cada vez que pase de
+nuevo, alguien tiene que hacer manualmente esta misma verificación antes de
+fusionar o sobrescribir, en vez de asumir que la versión más reciente en
+disco es la buena.
+
+Responsable: Claude.

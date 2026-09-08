@@ -202,6 +202,14 @@ HANDOFF, solo alimenta ideas hacia él).
   normalmente después de cada edición, o (2) acordar que solo una
   conversación a la vez lo edite, avisando en `COORDINACION_CLAUDE_CODEX.md`
   antes de tocarlo (mismo protocolo de reserva que ya se usa para código).
+- **(8/9/2026)** Agregar en Configuración una caja de texto para un
+  "disclosure" que se coloque automáticamente al final de cada artículo
+  publicado. Nota para quien lo ejecute: falta que Milton precise el texto/
+  tipo de disclosure y si es fijo o editable por usuario — confirmar con él
+  antes de asumirlo. (Rescatado de un intento de sobrescritura de este
+  mismo archivo por otra sesión el 8/9/2026 — ver el ítem anterior sobre la
+  carrera de escritura de `TO-DO.md`; el resto de esa versión se descartó
+  porque borraba todos los demás pendientes.)
 
 ## Hecho
 
