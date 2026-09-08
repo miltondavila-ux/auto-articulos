@@ -122,6 +122,28 @@ function tokenSetsOverlap(
   return intersection >= minTokens && intersection / smaller >= minRatio;
 }
 
+// Comparación laxa por raíz de palabra (primeros ~6 caracteres), no por
+// coincidencia exacta de token — necesaria porque el stemmer de arriba solo
+// quita plurales simples ("s"/"es"), no variantes reales del español como
+// "embarazo" vs "embarazada" o "inmigrante" vs "inmigración". Sin esto, un
+// título legítimo sobre embarazo podía quedar "sin vocabulario compartido"
+// con su propia categoría solo por usar una palabra emparentada distinta.
+function sharesWordRoot(a: string, b: string): boolean {
+  const minLen = Math.min(a.length, b.length);
+  if (minLen < 5) return a === b;
+  const prefixLen = Math.min(6, minLen);
+  return a.slice(0, prefixLen) === b.slice(0, prefixLen);
+}
+
+function tokensShareRoot(a: Set<string>, b: Set<string>): boolean {
+  for (const tokenA of a) {
+    for (const tokenB of b) {
+      if (sharesWordRoot(tokenA, tokenB)) return true;
+    }
+  }
+  return false;
+}
+
 // Firma estructurada de intención: el modelo declara, por cada título, un
 // "needKey" corto (objeto + contexto + perfil + ubicación real, SIN verbo ni
 // formato) que representa la necesidad que resuelve. Al ser una etiqueta
@@ -494,6 +516,69 @@ export async function analyzeSeoOpportunities(input: {
     ...input.countryRows,
   ];
 
+  // Garantía determinista contra categoría↔título mal asignados (7/9/2026 y
+  // 8/9/2026, hallazgo real confirmado en producción: un título sin ninguna
+  // mención de "deducible" cayó en la categoría "Deducibles", y uno sin
+  // mención de embarazo/bebé cayó en "Embarazo y Bebés"). El modelo puede
+  // asignar mal aunque se le den ejemplos, así que se valida en código: cada
+  // categoría tiene un "vocabulario distintivo" (palabras de su nombre y de
+  // sus ejemplos ya publicados que NO son genéricas — es decir, que no se
+  // repiten en casi todas las demás categorías de la cuenta, como "seguros",
+  // "salud" o "florida" en una cuenta de seguros de salud en Florida). Un
+  // título nuevo debe compartir la raíz de al menos una palabra de ese
+  // vocabulario con la categoría a la que el modelo lo asignó; si no
+  // comparte nada, se descarta (no se reasigna a ciegas — mejor perder un
+  // título que publicarlo en el lugar equivocado). Si una categoría no tiene
+  // vocabulario distintivo (nombre y ejemplos 100% genéricos), no se puede
+  // juzgar y no se bloquea nada — evita falsos rechazos en cuentas con
+  // categorías de nombres muy parecidos entre sí.
+  // "seleccion" y "problema" son cubetas canónicas MUY amplias (agrupan
+  // elegir/mejor/mejores/opciones y errores/error/problemas/soluciones,
+  // ver stemIntentToken) — sirven para detectar canibalización, pero como
+  // vocabulario de categoría son ruido puro: casi cualquier categoría tiene
+  // un ejemplo con "mejores X" o "errores comunes", así que dejarlas pasar
+  // aquí volvía a aceptar títulos genéricos sin relación real con el tema.
+  const CATEGORY_VOCAB_NOISE = new Set(["seleccion", "problema"]);
+  const categoryVocabTokens = (value: string): Set<string> => {
+    const tokens = intentTokens(value);
+    for (const noise of CATEGORY_VOCAB_NOISE) tokens.delete(noise);
+    return tokens;
+  };
+  const nameTokensByCategory = new Map<string, Set<string>>();
+  const exampleTokensByCategory = new Map<string, Set<string>>();
+  for (const category of input.categories) {
+    nameTokensByCategory.set(category.id, categoryVocabTokens(category.name));
+    const exampleTokens = new Set<string>();
+    for (const example of category.publishedExamples ?? []) {
+      for (const token of categoryVocabTokens(example)) exampleTokens.add(token);
+    }
+    exampleTokensByCategory.set(category.id, exampleTokens);
+  }
+  const categoryCount = input.categories.length;
+  const countCategoriesWithToken = (map: Map<string, Set<string>>, token: string) => {
+    let count = 0;
+    for (const tokens of map.values()) if (tokens.has(token)) count++;
+    return count;
+  };
+  const isGenericAcrossCategories = (map: Map<string, Set<string>>, token: string) =>
+    categoryCount > 1 && countCategoriesWithToken(map, token) > categoryCount / 2;
+  const distinctiveVocabularyByCategory = new Map<string, Set<string>>();
+  for (const category of input.categories) {
+    const distinctive = new Set<string>();
+    for (const token of nameTokensByCategory.get(category.id) ?? []) {
+      if (!isGenericAcrossCategories(nameTokensByCategory, token)) distinctive.add(token);
+    }
+    for (const token of exampleTokensByCategory.get(category.id) ?? []) {
+      if (!isGenericAcrossCategories(exampleTokensByCategory, token)) distinctive.add(token);
+    }
+    distinctiveVocabularyByCategory.set(category.id, distinctive);
+  }
+  const titleFitsCategory = (text: string, categoryId: string): boolean => {
+    const distinctive = distinctiveVocabularyByCategory.get(categoryId);
+    if (!distinctive || distinctive.size === 0) return true;
+    return tokensShareRoot(categoryVocabTokens(text), distinctive);
+  };
+
   // needKey por título, guardado aparte de OpportunityAnalysisGroup (que solo
   // persiste text/rationale en la base) para poder mostrarlo en el prompt de
   // los siguientes lotes y para el chequeo cruzado de intención.
@@ -673,6 +758,11 @@ Si genuinamente ninguna combinacion tiene sentido real para este negocio, respon
               !hasContextualEvidenceForYear(text, year, evidenceRows),
           )
         ) continue;
+        // Garantía determinista contra categoría↔título mal asignados: el
+        // título debe compartir al menos una raíz de palabra con el
+        // vocabulario distintivo de la categoría a la que el modelo lo
+        // asignó (ver cálculo de distinctiveVocabularyByCategory arriba).
+        if (!titleFitsCategory(text, group.categoryId)) continue;
         const needKey = typeof value.needKey === "string" ? value.needKey.trim() : undefined;
         const signature = buildIntentSignature(text, needKey);
         // Chequeo GLOBAL a esta corrida (cualquier categoría, no solo la
