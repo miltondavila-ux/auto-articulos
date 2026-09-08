@@ -6449,3 +6449,37 @@ queda documentada como excepción autorizada por Milton para este usuario.
 
 Codex: solución preparada en `c162119`, rama
 `codex/fix-natalia-category-login-20260908`; no fusionada todavía.
+
+## AUDITORÍA APIs GOOGLE — 2026-09-08
+
+Identidad exacta: CODEX - GPT-5.6 - VERIFICACIÓN DE API'S DE GOOGLE
+Proyecto: auto-articulos-search-console (621677827297)
+Objetivo: revisar el estado completo de GSC, Analytics y Business Profile.
+Resultado: producción sigue fijada en seototal.lasolucionweb.com, deployment
+Ready 2nHSy4qXgW4zaEmxzHBAr1NY8xqk (eaf8e90). Marca OAuth y scopes están
+guardados; webmasters y business.manage no sensibles, analytics.readonly
+pendiente de verificación, justificación y video guardados.
+Estado de revisión: Centro de verificación continúa bloqueado; muestra que
+la marca no se está mostrando y que el acceso a datos no está verificado.
+`Prepare for verification` permanece deshabilitado, por lo que la solicitud
+formal todavía no ha sido enviada y no existe aprobación final.
+Evidencia adicional: notificación antigua marca completada la tarea de marca,
+pero contradice el estado actual del Centro; se conserva como inconsistencia
+para seguimiento. No hay notificación nueva de aprobación o requerimiento.
+GMB: la cuota de Account Management debe vigilarse; el historial conocido
+mostró Requests/minute = 0 y el caso de soporte 7-6783000042063 sigue siendo
+la vía de acceso. No se modificaron cuotas ni se enviaron formularios.
+Acción siguiente: esperar habilitación de Prepare for verification, revisar
+correo de 10minuteswebsite@gmail.com y confirmar propiedad de dominio
+lasolucionweb.com en Search Console. No borrar commits ni cambiar producción.
+Capitanía de migración: no.
+
+**CIERRE — Auditoría responsive fusionada:** PR #87 (`1a2ebc0`) 
+**Fecha:** 2026-09-08 20:57 UTC  
+**Estado:** ✓ Fusionado a main sin conflictos  
+**Cambios:** 7 mejoras CSS (clamp() responsivo)  
+**Riesgo:** Bajo (visual only, sin lógica)  
+**Verificación:** Pendiente en producción
+
+Todos los cambios de escala responsiva están en main. La siguiente revisión 
+sucede cuando Milton confirme que la interfaz se vea perfecta en móvil/tablet/desktop.
