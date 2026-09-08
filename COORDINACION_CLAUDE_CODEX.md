@@ -5614,3 +5614,43 @@ la ya señalada arriba (segunda opinión del Reparador) más la nueva de
 `TO-DO.md` sobre cómo evitar que se siga sobrescribiendo.
 
 Responsable: Claude (tarea programada diaria de propagación).
+
+## Trabajo activo — RENEW CONFIGURACION, pulido estilo Apple — 2026-09-07
+
+Identidad: Claude, continuación del proyecto `RENEW CONFIGURACION` (6 fases
+ya desplegadas y protegidas, ver sección "PROTECCIÓN PERMANENTE — RENEW
+CONFIGURACION" más arriba en este documento).
+
+Motivo: Milton revisó las 6 páginas nuevas en producción y señaló 4
+problemas de estilo, todos válidos contra [[estilo-apple-de-milton]]:
+1. Colores decorativos que Apple no usa (badge verde "Listo", tag morado de
+   categorías de secuencia, texto ámbar "Conectando...", panel de
+   administrador enteramente rojo).
+2. Falta de estandarización tipográfica (pesos y tamaños de letra distintos
+   entre elementos similares).
+3. Fondos de color en tarjetas/badges.
+4. Sin forma de moverse entre las 6 secciones sin volver al índice — pidió
+   una barra visible en todo momento, con la sección actual sombreada.
+
+(Nota de contexto: coincide con lo que otra sesión está resolviendo en
+paralelo para `usuarios/page.tsx` en la entrada de arriba — "sin colores"
+parece ser una preferencia general de Milton, no solo de Configuración.)
+
+Worktree aislado: `/private/tmp/renew-configuracion-polish`, rama
+`claude/renew-configuracion-polish`. Reservados temporalmente: las 6 páginas
+de `apps/web/src/app/dashboard/configuracion/*/page.tsx`,
+`apps/web/src/components/AdminFixPatriciaPanel.tsx`, y un componente nuevo
+`apps/web/src/components/ConfiguracionSubNav.tsx` (barra de navegación
+reutilizando exactamente el patrón visual de pestaña activa que ya usa
+`DashboardNav.tsx` — píldora rellena `#f5f5f7`, sin introducir un segundo
+lenguaje visual).
+
+No se tocan: Vercel, middleware, autenticación, secretos, esquema, ni
+componentes compartidos usados fuera de Configuración (`GoogleSearchConsoleSection`,
+`ThreadsSection`, etc. — sus colores internos no se modifican en este pase,
+solo el contenedor de las páginas de Configuración que sí escribí en las
+Fases 1-6).
+
+Estado: EN PROGRESO — sin commit, sin push, sin despliegue todavía. Reserva
+se libera al completar las tres auditorías y verificar en producción, como
+en las fases anteriores de este mismo proyecto.
