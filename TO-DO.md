@@ -179,6 +179,29 @@ HANDOFF, solo alimenta ideas hacia él).
   descartar 6 propuestas manualmente para poder probar limpio. Agregar un
   botón de descarte masivo (con su propio motivo o uno genérico), similar
   en espíritu al "Publicar todo el lote" que ya existe ahí mismo.
+- **(7/9/2026, origen: cierre final de la conversación `CODEX - AUDITORIA A
+  ALGORITMO DE PUBLICACIÓN DE ARTICULOS`)** Programador automático de
+  publicación diaria en redes sociales (1 post por red por día, sin clic
+  manual del usuario) — decisión explícita de Milton de posponerlo para una
+  conversación futura; por ahora el flujo de Oportunidades en Redes sigue
+  siendo manual (el usuario aprueba cada propuesta). Nota: revisar al
+  ejecutar si esto es el mismo concepto que el ítem del 8/8/2026 ("Motor de
+  Distribución Inteligente SEO para Redes Sociales", 2 posts por semana) o
+  si Milton quiere dos cosas distintas con cadencias diferentes — unificar
+  o diferenciar antes de construir.
+- **(7/9/2026, origen: incidente reportado por Claude-5 en
+  `COORDINACION_CLAUDE_CODEX.md`)** Este mismo archivo (`TO-DO.md`) se
+  sobrescribe entre sesiones porque nunca se commitea a git: cuando dos
+  conversaciones lo tienen abierto a la vez y una guarda una versión
+  completa encima de la otra, la que guarda después borra sin darse cuenta
+  los ítems que agregó la anterior (no es un conflicto de Git, es una
+  carrera de escritura de archivo plano en disco). Ya pasó una vez el
+  7/9/2026: se perdieron temporalmente dos ítems de esta misma lista hasta
+  que se volvieron a agregar a mano. Milton tiene que decidir entre dos
+  alternativas para que no se repita: (1) empezar a commitear `TO-DO.md`
+  normalmente después de cada edición, o (2) acordar que solo una
+  conversación a la vez lo edite, avisando en `COORDINACION_CLAUDE_CODEX.md`
+  antes de tocarlo (mismo protocolo de reserva que ya se usa para código).
 
 ## Hecho
 
