@@ -171,14 +171,6 @@ HANDOFF, solo alimenta ideas hacia él).
   está adhiriendo bien los títulos a la categoría real ni la categoría al
   título — puede estar relacionado con el punto de rediseño de
   `opportunity-analysis.ts` de la nota anterior.
-- **(7/9/2026, origen: conversación `CODEX - AUDITORIA A ALGORITMO DE
-  PUBLICACIÓN DE ARTICULOS`)** Falta un botón de "Descartar todo" en
-  Oportunidades en Redes Sociales (`/dashboard/oportunidades-redes`). Hoy,
-  para limpiar varias propuestas pendientes, hay que abrir el modal de
-  motivo de descarte y confirmar una por una — Milton lo notó al tener que
-  descartar 6 propuestas manualmente para poder probar limpio. Agregar un
-  botón de descarte masivo (con su propio motivo o uno genérico), similar
-  en espíritu al "Publicar todo el lote" que ya existe ahí mismo.
 - **(7/9/2026, origen: cierre final de la conversación `CODEX - AUDITORIA A
   ALGORITMO DE PUBLICACIÓN DE ARTICULOS`)** Programador automático de
   publicación diaria en redes sociales (1 post por red por día, sin clic
@@ -212,6 +204,34 @@ HANDOFF, solo alimenta ideas hacia él).
   porque borraba todos los demás pendientes.)
 
 ## Hecho
+
+- **(8/9/2026)** Botón "Borrar todas las oportunidades" en Oportunidades
+  SEO/AEO y en Oportunidades en Redes Sociales — pedido directo de Milton en
+  chat, coincide con el ítem del 7/9/2026 (origen: conversación `CODEX -
+  AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`) sobre falta de un
+  botón de descarte/borrado masivo en `/dashboard/oportunidades-redes`.
+  **Nota de diferencia con lo pedido originalmente:** el ítem original pedía
+  "Descartar todo" (motivo de descarte, como `handleSkipOne`); lo
+  implementado es un **borrado real** (`DELETE`, sin motivo, con
+  `window.confirm`) en ambas pantallas — resuelve la misma necesidad de
+  fondo (limpiar varias propuestas pendientes sin clic por clic) pero con
+  una semántica distinta (borra en vez de archivar con motivo). Si Milton
+  todavía quiere la versión "descartar con motivo" además de esta, es un
+  ítem nuevo, no este mismo.
+  - `DELETE /api/opportunities`: borra todas las oportunidades SEO/AEO
+    (`opportunityGroup` + `titles` en cascada) del usuario.
+  - `DELETE /api/social-opportunities?scope=pending`: borra las propuestas
+    pendientes de redes sociales (sin el parámetro, mantiene el
+    comportamiento previo de "Borrar historial" en `/dashboard/historial`).
+  - Botón rojo en ambas pantallas, visible solo con pendientes, con
+    confirmación previa.
+  - Propagado también al manual del bot de ayuda
+    (`apps/web/src/content/manual-usuario.ts`).
+  - PR [#72](https://github.com/miltondavila-ux/auto-articulos/pull/72)
+    (código) y PR
+    [#74](https://github.com/miltondavila-ux/auto-articulos/pull/74)
+    (manual), ambos fusionados y verificados en producción. Detalle
+    completo en `COORDINACION_CLAUDE_CODEX.md`.
 
 - **(16/8/2026)** Asistente Flotante Arrastrable (Drag-and-Drop) en `FloatingAssistant`:
   - Se agregó la funcionalidad de arrastrar (drag-and-drop) con soporte completo para ratón y gestos táctiles (touch) en móviles.

@@ -644,3 +644,38 @@ están en `TO-DO.md` (asignación categoría↔título, botón "descartar todo" 
 Oportunidades Redes, programador automático diario de redes — este último
 agregado hoy por esta misma corrida). **Estado final: CERRADA por Milton,
 sin reservas activas.**
+
+### Botón "Borrar todas las oportunidades" (SEO/AEO y Redes Sociales)
+- Agente: Claude.
+- Fecha: 2026-09-07/08.
+- Proyecto: pedido directo de Milton en chat (sin nombre de conversación
+  formal) — agregar borrado masivo de oportunidades en
+  `/dashboard/oportunidades` y `/dashboard/oportunidades-redes`, antes solo
+  se podía borrar una por una. Resuelve, con semántica distinta (borra en
+  vez de descartar con motivo), el ítem que había quedado pendiente en
+  `TO-DO.md` desde el 7/9/2026 (ver entrada de arriba, "CODEX - AUDITORIA A
+  ALGORITMO DE PUBLICACIÓN DE ARTICULOS") sobre falta de un botón de
+  descarte masivo en Oportunidades Redes — movido a "Hecho" en `TO-DO.md`
+  con esta misma fecha.
+- Ejecución: primero directo en el checkout principal sin aislar (fuera del
+  Protocolo); corregido en la misma tarea moviendo el cambio a dos
+  worktrees aislados sucesivos, cada uno con sus tres auditorías
+  (typecheck, build exacto de Vercel, checks de Preview) documentadas en
+  `COORDINACION_CLAUDE_CODEX.md`.
+- PRs: [#72](https://github.com/miltondavila-ux/auto-articulos/pull/72)
+  (código, commit de merge `16befb5`) y
+  [#74](https://github.com/miltondavila-ux/auto-articulos/pull/74)
+  (propagación al manual del bot de ayuda, commit de merge `582b9de`).
+- Verificación en producción: checks de Vercel en `success` sobre ambos
+  commits fusionados y `/login` respondiendo `200` en
+  `auto-articulos-web.vercel.app` y `seototal.lasolucionweb.com` después de
+  cada despliegue. Clic funcional real del botón en producción **no se
+  verificó** (requeriría sesión de una cuenta con oportunidades pendientes,
+  fuera del alcance de esta tarea) — mismo límite de SSO en Preview ya
+  documentado en la entrada de "Auditoría Responsive" de
+  `COORDINACION_CLAUDE_CODEX.md`.
+- Propagación hecha: `TO-DO.md` (ítem movido a "Hecho"), `HANDOFF.md`
+  (entrada agregada), `apps/web/src/content/manual-usuario.ts` (secciones
+  "Oportunidades SEO" y "Oportunidades Redes").
+- **Estado final: CERRADA, ambos PR fusionados y verificados, sin reservas
+  activas.**

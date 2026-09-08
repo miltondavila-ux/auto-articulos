@@ -1,6 +1,45 @@
 # HANDOFF — Auto Artículos
 
-Última actualización: 2026-08-14, por Antigravity (capitán de migración).
+Última actualización: 2026-09-08, por Claude.
+
+**Nota de mantenimiento (2026-09-08):** este archivo dejó de actualizarse
+tras el 14/8/2026 en la práctica — desde entonces la fuente de verdad viva
+del proyecto es `COORDINACION_CLAUDE_CODEX.md` (diario cronológico
+técnico) e `INVENTARIO_CONVERSACIONES.md` (quién tiene qué reservado y
+registro histórico por conversación). Se agrega esta entrada por seguir la
+regla de `TO-DO.md` ("al cerrar un ítem, documentar también en HANDOFF"),
+sin reescribir ni resumir lo anterior.
+
+## Botón "Borrar todas las oportunidades" (8/9/2026, Claude)
+
+Pedido directo de Milton en chat: agregar borrado masivo de oportunidades,
+tanto en SEO/AEO como en Redes Sociales (antes solo se podía borrar una por
+una). Resuelve también, con semántica distinta (borra en vez de descartar
+con motivo), el ítem pendiente que había quedado en `TO-DO.md` desde el
+7/9/2026 sobre falta de un botón de descarte masivo en Oportunidades Redes.
+
+- `DELETE /api/opportunities`: borra todas las oportunidades SEO/AEO
+  (`opportunityGroup` + `titles` en cascada) del usuario autenticado.
+- `DELETE /api/social-opportunities?scope=pending`: borra las propuestas
+  pendientes de redes sociales. Sin el parámetro `scope`, mantiene el
+  comportamiento previo (usado por "Borrar historial" en
+  `/dashboard/historial`, que borra publicadas/con error) — no se rompió
+  nada de esa pantalla.
+- Botón rojo "Borrar todas las oportunidades" en `oportunidades/page.tsx` y
+  `oportunidades-redes/page.tsx`, visible solo con pendientes, con
+  `window.confirm` antes de ejecutar.
+- Propagado al manual del bot de ayuda
+  (`apps/web/src/content/manual-usuario.ts`).
+
+Hecho en dos worktrees aislados, con las tres auditorías cada uno
+(typecheck, build exacto de Vercel, checks de Preview) documentadas en
+`COORDINACION_CLAUDE_CODEX.md`. Fusionado y verificado en producción:
+PR [#72](https://github.com/miltondavila-ux/auto-articulos/pull/72)
+(código, commit `16befb5`) y PR
+[#74](https://github.com/miltondavila-ux/auto-articulos/pull/74)
+(manual, commit `582b9de`). `/login` responde `200` en
+`auto-articulos-web.vercel.app` y `seototal.lasolucionweb.com` después de
+ambos despliegues.
 
 ## Participantes autorizados y coordinación obligatoria
 
