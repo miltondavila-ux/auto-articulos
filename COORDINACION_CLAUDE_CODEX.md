@@ -5331,6 +5331,8 @@ regresión, build) y se documentará el resultado en esta misma entrada
 antes de pedir autorización para fusionar/desplegar — no se sube nada a
 producción sin ese paso. Reserva activa hasta cerrar esta entrada.
 
+---
+
 ## Aviso — Milton pidió una segunda opinión del Reparador sobre el estado del árbol — 2026-09-07
 
 Después de los tres cierres anteriores de esta conversación (login más
@@ -5405,6 +5407,117 @@ pedírmelo de nuevo):
 **Estado:** a la espera de que Milton decida si envía este prompt al
 Reparador o si mi propia evaluación le alcanza. No hice ningún cambio de
 código en este aviso, solo dejo registro.
+
+---
+
+## CIERRE FINAL — 2026-09-07 — `CODEX - AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`
+
+Identidad: Claude, conversación traspasada de Codex el 2026-09-04 (ver
+"PUNTO DE MIGRACIÓN A CLAUDE" más arriba en este documento) y cerrada por
+Milton el 2026-09-07 ("quedamos listos por acá con el nuevo algoritmo para
+títulos y nuevo algoritmo para redes sociales"). Resumen completo de todo
+lo hecho en esta conversación, de punta a punta, para que cualquiera pueda
+retomarla sin releer todo el historial de chat.
+
+### Algoritmo de Oportunidades SEO (`opportunity-analysis.ts`)
+
+Estado real al momento del traspaso de Codex: PR #42/#43/#44/#45 ya
+fusionados, pero el algoritmo NO estaba aprobado como cero-canibalización
+(el año `2023` reaparecía y había duplicados semánticos). Trabajo hecho por
+Claude en esta conversación, en orden:
+
+1. **PR #47** (`7e951f7`): firma de intención estructurada. El modelo
+   declara un `needKey` por título (objeto+contexto+perfil+ubicación, sin
+   verbo ni formato); el código lo compara de forma determinista y GLOBAL
+   (cualquier categoría de la misma corrida, no solo la actual) para
+   bloquear canibalización cruzada entre categorías — el hueco real que
+   Codex había dejado documentado.
+2. **PR #52** (`4614ad3`): corrección de alcance. La primera versión del
+   `needKey` global también comparaba contra `existingTitles` (lo ya
+   publicado). En la cuenta de pruebas (405 artículos, tema muy
+   concentrado), eso bloqueaba de más — de ~14-19 oportunidades típicas
+   bajó a solo 2, confirmado con un script de diagnóstico de solo lectura
+   (`diagnose-opportunities-evidence.ts`, PR #51: 262 consultas distintas
+   disponibles esa corrida, no faltaba evidencia). Corregido: el chequeo
+   global solo compara contra lo generado en la misma corrida; lo publicado
+   sigue protegido solo por coincidencia exacta de texto, como en el diseño
+   original (ver "Decisión de diseño explicada" en este mismo documento).
+3. **PR #54** (`3a76d71`): más cobertura. Pedido explícito de Milton: al
+   menos 10 títulos por corrida cuando hay evidencia real. `BATCH_SIZE` de
+   250 a 100 (más lotes = más intentos de cubrir categorías) + regla nueva
+   en el prompt contra ser demasiado conservador con evidencia abundante.
+4. **PR #55** (`e1662a4`): prohibición ABSOLUTA de años viejos. Milton
+   encontró `"...Comparativa 2023"` en un título real generado en 2026 — el
+   chequeo anterior solo exigía evidencia real del año en los datos
+   (Search Console puede seguir mostrando una consulta vieja), no que fuera
+   razonable publicarlo hoy. Nueva función `isYearAcceptablyRecent()`: solo
+   permite año actual ±1, sin excepción, independiente de la evidencia.
+5. **PR #61** (`b47784b`) + **PR #62** (`f050672`, ruta segura de
+   migración) + **PR #66** (`c87d6ef`): títulos ultra geolocalizados. Nuevo
+   par de campos `User.clientLocations`/`User.businessLocations` (Config. →
+   Contenido, separados por comas: de dónde son los clientes reales / dónde
+   opera el negocio). Primer intento (regla dentro del prompt principal) NO
+   bastó: de 14 títulos reales, ninguno combinó cliente+negocio porque
+   competía contra ~15 reglas más en la misma llamada. Solución final
+   (PR #66): una llamada A PARTE a OpenAI, enfocada exclusivamente en cubrir
+   cada combinación cliente×negocio declarada — verificado en producción
+   con la cuenta de Lorena Álvarez: **las 12 combinaciones completas**
+   (4 ciudades de clientes × 3 de negocio) aparecieron correctas, sin
+   inventar ninguna fuera de las declaradas.
+
+**Resultado verificado en producción (última corrida real, cuenta Lorena
+Álvarez):** 24 títulos en 4 categorías — 12 geolocalizados (cliente×negocio,
+sin canibalización) + 12 de tendencia normal. Sin años inventados.
+
+**Hallazgo pendiente, NO resuelto, ya en `TO-DO.md`:** el algoritmo a veces
+asigna mal la categoría a un título (ej. un título sin mención de
+"deducible" cayó en la categoría Deducibles). Requiere una conversación
+dedicada de rediseño de `opportunity-analysis.ts`/`route.ts` (ver la nota
+de Milton "Caso de estudio real" más arriba en este documento).
+
+### Algoritmo de Redes Sociales/Microblogging (`social-opportunities/generate/route.ts`)
+
+Estado real al momento en que Milton preguntó por esto: el motor social NO
+tenía nada del rediseño de arriba — solo derivaba textos de artículos ya
+publicados, elegidos por el orden que devolvía Google o por fecha, sin
+usar GA4 ni Bing para decidir cuál elegir.
+
+1. **PR #57** (`97495e0`): `selectTrendingArticles()` puntúa cada página
+   publicada combinando impresiones+clics+tendencia de GSC, sesiones+
+   usuarios de GA4, y coincidencia de palabras clave con consultas reales
+   de Bing — la misma "bola de nieve" de tendencia real que ya usa el
+   algoritmo SEO, aplicada para decidir DE QUÉ artículo hablar en redes.
+   Efecto secundario: `searchQueries` (existía en el tipo, nunca se
+   llenaba) ahora sí trae las consultas reales.
+2. **PR #60** (`bf18f64`): variedad entre redes el mismo día. Causa real:
+   cada botón "Crear oportunidad" llama al endpoint con una sola red; sin
+   protección, pedir Threads y después LinkedIn el mismo día recogía el
+   mismo artículo top-1 para ambas. Corregido: se excluyen artículos ya
+   usados HOY en cualquier red (con fallback si no queda ninguno sin usar),
+   y se genera 1 solo candidato por clic en vez de hasta 3.
+
+**Decisión explícita de Milton:** por ahora sigue siendo manual (el usuario
+aprueba cada propuesta); el programador automático de publicación diaria
+(1 post/red/día sin clic) queda para una conversación futura.
+
+### Documentación actualizada en el mismo lote (regla permanente)
+
+`apps/web/src/content/manual-usuario.ts`: paso a paso completo para usar
+las ubicaciones geolocalizadas (PR #67, `ae78d4c`), agregado explícitamente
+a pedido de Milton para que quede en el manual de ayuda dentro de la app,
+no solo en la conversación.
+
+### Pendientes reales para quien retome (todos en `TO-DO.md`, sin ejecutar)
+
+1. Corregir la asignación categoría↔título en `opportunity-analysis.ts`.
+2. Botón de "descartar todo" en Oportunidades en Redes Sociales.
+3. Programador automático de publicación diaria en redes (1 post/red/día,
+   sin clic manual) — decisión explícita de Milton de posponerlo.
+
+**Estado final:** todo lo anterior fusionado en `main` y verificado en
+producción con pruebas reales (no solo builds exitosos) contra la cuenta
+de Lorena Álvarez. Conversación cerrada por pedido explícito de Milton.
+Responsable: Claude. Sin reservas activas de esta conversación.
 
 ## CONTINUIDAD DEL REPARADOR DEL ÁRBOL PRINCIPAL
 
