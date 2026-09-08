@@ -1,3 +1,123 @@
+# MCP 10MWS — andamiaje de segunda línea de ejecución de publicación (2026-09-07/08)
+
+Pedido de Milton: agregar, sin tocar la línea actual (Playwright/navegador
+contra `10minutesWebsite.net`/`.site`/`tagcrush.net`), una segunda línea de
+ejecución para que cuentas nuevas y antiguas que lo elijan publiquen directo
+contra un servidor MCP de terceros — el primero, en construcción por el
+equipo de 10MWS (contrato completo en
+`/Users/miltondavila/Desktop/MCP_DE_ARTICULOS_ESPECIFICACION.md`). Pensado
+para servir después también a WordPress/Wix, etc. Marca actual: **SEO
+Total** (ya no "Auto Artículos"; cualquier copy nuevo de cara al usuario
+debe decir eso).
+
+Aclaración de Milton (2026-09-08): el recorte/optimización de la imagen NO
+lo hace la plataforma receptora en este modo — lo hace **SEO Total**;
+el MCP remoto solo copia/pega la imagen ya lista. Reflejado en
+`mcpPublisher.ts` (`imageUrl` obligatorio en `PublishArticleInput`,
+pendiente todavía el generador/hosting de imagen del lado de SEO Total).
+
+**PR #76** (`claude/mcp-publicacion-20260907`, `open`, sin fusionar):
+esquema (`User.publishMethod` default `BROWSER`, modelo `McpConnection`),
+interfaz `ArticlePublisher` (el "puerto"), `browserPublisher.ts` (envoltorio
+sin cambios sobre `10minutesWebsite.ts`), cliente MCP JSON-RPC genérico en
+`packages/shared`, `mcpPublisher.ts` (traduce `CUPO_DIARIO_AGOTADO` /
+`TITULO_DUPLICADO` a las excepciones que ya usa el pipeline), y
+`mcpQueue.ts` (rama nueva desde `queue.ts` solo si `publishMethod === "MCP"`,
+en su propio archivo para no ramificar el `queue.ts` de producción).
+
+## Tres auditorías
+
+1. **Funcional**: `browserPublisher.ts` es un envoltorio 1:1 de
+   `fetchCategories`/`fetchLanguages`/`publishArticle` de
+   `10minutesWebsite.ts`, sin tocar su lógica interna — mismo
+   comportamiento de siempre para toda cuenta `BROWSER` (el default, sin
+   excepción). `mcpPublisher.ts` probado contra un servidor MCP stub local
+   (`apps/worker/src/automation/mcpPublisher.test.ts`): mapeo de
+   `listar_categorias` al formato interno, traducción de
+   `CUPO_DIARIO_AGOTADO`→`DailyLimitReachedError` y
+   `TITULO_DUPLICADO`→`DuplicateTitleError`, y la guarda `IMAGEN_REQUERIDA`
+   (falla antes de gastar una llamada de generación de contenido si no hay
+   imagen).
+2. **Regresión**: `git diff --check` limpio. `npx tsc -p
+   apps/worker/tsconfig.json --noEmit` y `npx tsc -p
+   packages/shared/tsconfig.json --noEmit` sin errores, corridos en un
+   worktree aislado (`/private/tmp/mcp-publicacion-20260907`) con
+   `npm install` y `npx prisma generate` propios (nunca enlazando
+   `node_modules` del checkout principal, para que `@auto-articulos/*`
+   resuelva a los paquetes de ESTE worktree y no a los del repo principal).
+   Suite completa del worker: 27/27 tests pasan (21 preexistentes + 6
+   nuevos), cero regresión.
+3. **Integración/producción**: **bloqueada a propósito, no simulada**. No
+   existe todavía una URL real del servidor MCP de 10MWS contra la cual
+   probar (pendiente de que ellos la entreguen — sección 13 del contrato).
+   Tampoco se generó ni se aplicó la migración de Prisma contra ninguna
+   base de datos (falta una base de datos local disponible en este
+   worktree, y aplicarla contra producción requiere autorización explícita
+   de Milton en el momento, tal como exige el Protocolo). El PR queda
+   `open`, sin fusionar, hasta que la auditoría 3 deje de estar bloqueada.
+
+Sin URL real ni interfaz que active `publishMethod = MCP` para ninguna
+cuenta, este código es inerte por defecto: cero riesgo para producción tal
+como está. Pendientes explícitos, documentados en el propio código: refresh
+automático de tokens OAuth, rutas OAuth (`authorize`/`callback`) y UI de
+conexión, y el generador/hosting de imagen del lado de SEO Total para el
+flujo MCP.
+
+**Reserva activa** (ver Inventario, Parte A): `packages/db/prisma/schema.prisma`
+y `apps/worker/src/queue.ts`, hasta que el PR #76 se fusione o se cierre.
+
+## Corrección de alcance de Milton (2026-09-08) — no es "un MCP para 10MWS", es un selector de plataforma
+
+Milton fue explícito: la idea **no es tumbar lo que ya funciona**, sino que
+**SEO Total tome el control** de un modo de publicación mucho más
+inteligente, sin navegador, que sirva no solo para 10minutesWebsite sino
+para **cualquier generador de páginas web** (Shopify, Wix, WordPress,
+etc.). Pidió, antes de seguir programando, investigar qué generadores de
+páginas web existen en el mercado y cuáles ya tienen un servidor MCP
+propio, analizarlos, y **dejó dicho de antemano que el sistema debe tener
+un selector de plataforma** que la persona usuaria use al momento de
+conectar su cuenta (no un solo proveedor fijo).
+
+Esto no contradice ni descarta nada del PR #76 — el diseño de ese PR
+(interfaz `ArticlePublisher` como puerto + un adaptador por proveedor +
+`McpConnection.provider` como string abierto) ya estaba pensado para esto
+exactamente. Lo que cambia es la ambición declarada del proyecto: 10MWS es
+el primer proveedor, no el único.
+
+### Investigación de mercado (Claude, 2026-09-08, solo investigación — no se tocó código)
+
+| Plataforma | Estado de MCP | Alcance real hoy | Relevancia |
+|---|---|---|---|
+| **WordPress** | Oficial: **MCP Adapter** (feb-2026) sobre la nueva Abilities API (WP 6.9); expone como herramientas MCP cualquier "ability" registrada. Terceros como Respira ya ofrecen versiones más maduras con rollback. | Crear/editar posts, custom post types, lo que registre cada instalación | **Alta** — el CMS más usado del mundo; muchos clientes de SEO Total probablemente ya lo tienen aparte de 10MWS. |
+| **Shopify** | Oficial: 4 servidores MCP separados (Storefront, Customer Account, Checkout, Dev) desde Q1-2026 | El de "Dev"/Admin lee y escribe catálogo real vía GraphQL Admin API; Shopify también tiene sección de blog | **Media-alta**, sobre todo si algún cliente vende productos, no solo publica artículos. |
+| **Wix** | Oficial desde mayo-2025, maduro en 2026, soporte 24/7 | Cubre APIs de negocio completas, no solo contenido | **Alta** — mencionado explícitamente por Milton como plataforma objetivo. |
+| **Webflow** | Oficial, lanzado a inicios de 2026 | CMS collections, páginas, publicación — mapeo casi 1:1 a "categoría → colección, crear artículo" | **Alta** — de los más limpios para encajar en el contrato ya diseñado. |
+| **Squarespace** | Oficial pero limitado hoy a dominios/algo de comercio; terceros (no oficiales) cubren blog/contenido de forma más completa | El oficial no publica blog posts todavía | **Media** — esperar a que el oficial cubra blog, o evaluar un conector de terceros con cautela (no oficial = puede romperse sin aviso). |
+| **Duda** | Oficial, beta de MCP activa en 2026 | Sitios, blogs, tiendas, republish — y Duda es **también una plataforma white-label para agencias**, mismo modelo de negocio que 10MWS/Tagcrush | **Muy alta como referencia de diseño** — el caso más parecido a nuestro propio negocio para copiar patrones de autorización multi-tenant. |
+| **GoDaddy Website Builder** | Oficial pero solo dominios, de solo lectura (no publica contenido, no compra, no toca DNS) | No sirve para publicar artículos hoy | **Baja** por ahora. |
+| Contentful/Sanity/Storyblok (headless) | Oficiales, MCP maduro | Pensados para desarrolladores con front-end propio | **Baja-media** — público más técnico, no es el perfil típico de cliente de SEO Total. |
+
+**Lectura general**: MCP remoto con OAuth ya es el estándar de 2026 en toda
+esta categoría — el mismo patrón que 10MWS ya nos propuso. El diseño de
+`ArticlePublisher` del PR #76 no necesita cambiar de forma para soportar
+esto; cada proveedor nuevo es un adaptador más (como `mcpPublisher.ts`) más
+una entrada en el selector de plataforma.
+
+**Orden de prioridad propuesto** (pendiente de que Milton lo confirme):
+1. 10minutesWebsite/Tagcrush (MCP) — ya en desarrollo del lado de ellos.
+2. WordPress — mayor volumen de usuarios potenciales, MCP oficial flexible.
+3. Wix y Webflow — MCP oficial maduro, mapeo limpio al contrato interno.
+4. Duda — más por aprendizaje de arquitectura que por volumen inmediato.
+5. Shopify/Squarespace — evaluar según si los clientes reales de SEO Total
+   ya usan estas plataformas (dato pendiente del lado de Milton).
+
+**Estado**: solo investigación, sin ejecutar todavía — Milton pidió
+analizar antes de proceder. El selector de plataforma y los adaptadores
+adicionales quedan pendientes de que él confirme el orden y de que se
+complete/fusione primero el PR #76 (10MWS).
+
+---
+
 # MENSAJE DE CLAUDE PARA `CODEX - AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS` (2026-09-04)
 
 Milton me pidió que revise el estado de tu PR #42
