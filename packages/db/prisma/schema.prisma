@@ -165,19 +165,8 @@ model User {
   hasImageCredits                   Boolean   @default(true)
   defaultPromptId                   String?
   defaultPrompt                     Prompt?   @relation(fields: [defaultPromptId], references: [id], onDelete: SetNull)
-  // Segunda línea de ejecución de publicación (2026-09-07/08, "MCP 10MWS"):
-  // por defecto TODAS las cuentas (nuevas y existentes) siguen publicando
-  // exactamente igual que hoy, manejando un navegador (BROWSER). Solo pasa
-  // a MCP cuando el usuario conecta explícitamente su cuenta por OAuth
-  // contra un servidor MCP de la plataforma destino (ver McpConnection).
-  // No aplica ningún tope de la plataforma remota a estas cuentas (lo sigue
-  // controlando SEO Total, igual que con BROWSER) y el contenido siempre se
-  // genera con el prompt propio de la cuenta (nunca el "estándar" del
-  // sitio, que no existe del lado MCP).
-  publishMethod                     PublishMethod @default(BROWSER)
 
   credentials                Credential[]
-  mcpConnections              McpConnection[]
   runs                       Run[]
   categories                 Category[]
   categorySyncJobs           CategorySyncJob[]
@@ -483,35 +472,6 @@ model Credential {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, platform])
-}
-
-enum PublishMethod {
-  BROWSER
-  MCP
-}
-
-// Conexión OAuth de una cuenta contra un servidor MCP de publicación de
-// terceros (2026-09-07/08, "MCP 10MWS"). `provider` identifica la
-// plataforma remota ("10mws" para 10minutesWebsite/Tagcrush hoy; pensado
-// para admitir "wordpress"/"wix" más adelante sin cambiar el modelo).
-// Nunca se guarda usuario/contraseña real aquí — solo tokens OAuth
-// cifrados, a diferencia de Credential.
-model McpConnection {
-  id                    String    @id @default(cuid())
-  userId                String
-  provider              String
-  accessTokenEncrypted  String
-  refreshTokenEncrypted String?
-  tokenExpiresAt        DateTime?
-  scope                 String?
-  connectedAt           DateTime  @default(now())
-  revokedAt             DateTime?
-  updatedAt             DateTime  @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, provider])
-  @@index([userId])
 }
 
 model Category {

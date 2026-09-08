@@ -13,10 +13,9 @@ import {
 import { notifyGoogle } from "./googleIndexing";
 import { notifyBing } from "./bingIndexing";
 import { runPatriciaFix } from "./fix-patricia";
-import { processMcpRunTitle } from "./mcpQueue";
 
 
-export async function markTitleError(titleId: string, message: string) {
+async function markTitleError(titleId: string, message: string) {
   await prisma.title.update({
     where: { id: titleId },
     data: { status: "error", errorMessage: message, processedAt: new Date() },
@@ -32,7 +31,7 @@ const OPPORTUNITY_RETRY_NOTE =
  * y se elimina; sin esta compensación, un fallo definitivo hacía desaparecer
  * la oportunidad aunque el artículo nunca hubiera sido publicado.
  */
-export async function restoreUnfinishedTitlesToOpportunities(
+async function restoreUnfinishedTitlesToOpportunities(
   runId: string,
   onlyTitleId?: string,
 ) {
@@ -113,7 +112,6 @@ export async function processNext(filterUserId?: string): Promise<boolean> {
           name: true,
           firstName: true,
           lastName: true,
-          publishMethod: true,
         },
       },
     },
@@ -165,7 +163,6 @@ async function processRunTitle(
           name: true;
           firstName: true;
           lastName: true;
-          publishMethod: true;
         };
       };
     };
@@ -201,16 +198,6 @@ async function processRunTitle(
       },
     });
     return true;
-  }
-
-  // Segunda línea de ejecución (2026-09-07/08, "MCP 10MWS"): cuentas
-  // conectadas por MCP no tienen Credential (usuario/contraseña) ni pasan
-  // por el flujo de navegador de más abajo — se atienden aparte, en su
-  // propio módulo, para no ramificar esta función que ya es sensible.
-  // BROWSER (el valor por defecto de siempre) sigue exactamente el mismo
-  // camino que antes de este cambio, sin ninguna diferencia.
-  if (run.user.publishMethod === "MCP") {
-    return processMcpRunTitle(run, nextTitle);
   }
 
   const credential = await prisma.credential.findUnique({
