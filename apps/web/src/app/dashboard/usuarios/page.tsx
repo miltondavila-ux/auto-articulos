@@ -821,6 +821,12 @@ export default function UsuariosPage() {
             onClick={metric.onClick}
             className="row"
             style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              justifyContent: "flex-start",
+              width: "100%",
+              minHeight: "auto",
               padding: "16px 18px",
               borderRadius: 14,
               background: "#ffffff",
