@@ -5258,3 +5258,38 @@ la solución canónica.
 
 En ningún caso hagas merge de PR #68, deploy, reset, force-push, migraciones o
 cambios directos en producción. Conserva los commits de #68 como referencia.
+
+## ORDEN DE CONTINUIDAD — PR #68 SOBRE PR #73 (2026-09-08)
+
+La auditoría confirmó que PR #73 (`60ee8cc`) ya está en `origin/main`, pero no
+cubre todas las garantías funcionales de PR #68.
+
+Debes incorporar únicamente las garantías faltantes:
+
+- vinculación de páginas publicadas con categorías mediante URL normalizada;
+- filtrado por panel y dominio;
+- asignación inequívoca de GSC y GA4;
+- exclusión de páginas ambiguas o sin vínculo;
+- HTTP 422 cuando no exista evidencia segura;
+- evidencia específica por categoría;
+- categoría fija por llamada;
+- rondas independientes por categoría;
+- filtrado exacto de Bing;
+- rechazo de `categoryId` incorrecto.
+
+No fusiones PR #68 directamente ni dupliques la validación de vocabulario de
+PR #73.
+
+Trabaja en una rama y worktree nuevos basados en `origin/main`. No modifiques
+`main`, producción ni migraciones. No uses `reset`, `clean`, `checkout --`,
+`--ours`, `--theirs` ni force-push.
+
+Antes de entregar:
+
+1. Ejecuta typecheck, build y pruebas existentes.
+2. Verifica el diff archivo por archivo.
+3. Confirma que no se mezclaron otros proyectos.
+4. Documenta archivos, commits, pruebas, riesgos y trabajo pendiente en
+   `COORDINACION_CLAUDE_CODEX.md`.
+5. Conserva PR #68 como referencia hasta que la nueva implementación sea
+   validada.
