@@ -5523,3 +5523,26 @@ force-push.
 
 Esta es una orden de ejecución y culminación, no una solicitud de nuevas
 recomendaciones.
+
+## ORDEN PROFESIONAL DE EJECUCIÓN — CORRECCIÓN DETERMINISTA DE CATEGORÍAS (2026-09-08)
+
+Se recibió y se trasladó al Reparador la orden técnica completa para producir
+una implementación real sobre `origin/main` y PR #73 (`60ee8cc`), extrayendo
+únicamente las garantías faltantes de PR #68: URL normalizada, filtros por
+usuario/panel/dominio, asignación inequívoca de GSC y GA4, exclusión de páginas
+ambiguas, HTTP 422 sin evidencia, evidencia por categoría, categoría fija por
+llamada, rondas independientes, Bing con coincidencia exacta GSC y rechazo de
+`categoryId` incorrecto.
+
+La orden exige reutilizar sin duplicar vocabulario, deduplicación,
+`needKey`, intención y canibalización de PR #73; trabajar en rama/worktree
+nuevos; no fusionar PR #68; no tocar main, producción, Vercel o migraciones;
+no usar comandos destructivos; separar commits; ejecutar `prisma generate`,
+typechecks, builds, pruebas, `git diff --check`, casos funcionales de filtrado
+y revisar el diff completo. También exige actualizar este documento e
+`INVENTARIO_CONVERSACIONES.md`.
+
+La entrega queda pausada únicamente si no existe autenticación para probar el
+Preview en `/dashboard/oportunidades` con **Actualizar análisis**. En ese caso
+debe terminarse la validación local, documentarse el bloqueo exacto y no hacer
+merge, deploy ni cerrar PR #68.
