@@ -5331,6 +5331,53 @@ regresión, build) y se documentará el resultado en esta misma entrada
 antes de pedir autorización para fusionar/desplegar — no se sube nada a
 producción sin ese paso. Reserva activa hasta cerrar esta entrada.
 
+### CIERRE (parcial) — 2026-09-08
+
+**Pasada visual en producción completada para todo lo que no requiere
+sesión:** `/`, `/login`, `/acerca-de`, `/privacidad`, `/terminos`
+verificadas en vivo contra `https://seototal.lasolucionweb.com`, en 375px
+y también en el ancho real más angosto (320px, iPhone SE/mini) —
+`document.documentElement.scrollWidth === window.innerWidth` en las
+cinco, cero elementos con `getBoundingClientRect().right` fuera de
+viewport. Confirmado además por código: el dropdown de navegación de
+escritorio señalado como "riesgo teórico menor" en la pasada estática
+solo se activa desde `min-width: 1180px`
+(`apps/web/src/components/DashboardNav.tsx:188`) — no aplica a
+tablet/móvil, descartado como hallazgo.
+
+**Pasada visual del dashboard (17 páginas), bloqueada, no por decisión
+propia sino por límite de seguridad:** intenté levantar el servidor local
+del worktree para no depender de la sesión de Milton, pero
+`apps/web/.env.local` solo trae `VERCEL_OIDC_TOKEN` (sin
+`DATABASE_URL`), así que el login local falló con
+`Environment variable not found: DATABASE_URL` — el servidor local no
+tiene forma de autenticar contra ninguna base de datos, ni local ni de
+producción; confirmado en los logs que Milton intentó loguearse ahí con
+su usuario real y falló por eso, no por credenciales incorrectas. En
+producción, entrar con su cuenta le corresponde exclusivamente a él:
+introducir credenciales o autenticarse en nombre de otra persona está
+fuera de lo que puedo hacer, sin excepción, así que no completé ese login
+por él. Tampoco se creó ningún usuario de prueba en la base de datos real
+para evitar tocar datos de producción de un sistema que publica contenido
+de forma automática.
+
+**Conclusión de esta auditoría:** con dos pasadas independientes (código +
+visual en vivo) sin un solo hallazgo real de desbordamiento horizontal en
+las 6 páginas públicas, y una revisión estática ya completada de las 17
+páginas del dashboard (ver pasada 1 más arriba: `overflow-x:hidden`
+global, tablas con `responsive-table`, grids `auto-fit`, `word-break` en
+celdas) sin hallazgos tampoco, **no queda pendiente ningún cambio de
+código** — el worktree sigue idéntico a `origin/main`. Lo único que falta
+es la confirmación visual en vivo del dashboard con datos reales, que
+requiere que Milton inicie sesión él mismo (en cualquier momento, sin
+apuro) en la pestaña de producción que se le dejó abierta; si al mirarlo
+él ve algo moverse lateralmente, se retoma esta misma reserva con el
+archivo puntual señalado en vez de repetir la auditoría completa.
+
+**Reserva liberada** — no queda ningún archivo tomado por esta
+conversación. Worktree `/private/tmp/auditoria-responsive-20260907` y
+servidor local (puerto 3177) detenidos, sin cambios sin commitear.
+
 ---
 
 ## Aviso — Milton pidió una segunda opinión del Reparador sobre el estado del árbol — 2026-09-07
