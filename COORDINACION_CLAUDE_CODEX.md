@@ -1,3 +1,72 @@
+# MCP 10MWS — andamiaje de segunda línea de ejecución de publicación (2026-09-07/08)
+
+Pedido de Milton: agregar, sin tocar la línea actual (Playwright/navegador
+contra `10minutesWebsite.net`/`.site`/`tagcrush.net`), una segunda línea de
+ejecución para que cuentas nuevas y antiguas que lo elijan publiquen directo
+contra un servidor MCP de terceros — el primero, en construcción por el
+equipo de 10MWS (contrato completo en
+`/Users/miltondavila/Desktop/MCP_DE_ARTICULOS_ESPECIFICACION.md`). Pensado
+para servir después también a WordPress/Wix, etc. Marca actual: **SEO
+Total** (ya no "Auto Artículos"; cualquier copy nuevo de cara al usuario
+debe decir eso).
+
+Aclaración de Milton (2026-09-08): el recorte/optimización de la imagen NO
+lo hace la plataforma receptora en este modo — lo hace **SEO Total**;
+el MCP remoto solo copia/pega la imagen ya lista. Reflejado en
+`mcpPublisher.ts` (`imageUrl` obligatorio en `PublishArticleInput`,
+pendiente todavía el generador/hosting de imagen del lado de SEO Total).
+
+**PR #76** (`claude/mcp-publicacion-20260907`, `open`, sin fusionar):
+esquema (`User.publishMethod` default `BROWSER`, modelo `McpConnection`),
+interfaz `ArticlePublisher` (el "puerto"), `browserPublisher.ts` (envoltorio
+sin cambios sobre `10minutesWebsite.ts`), cliente MCP JSON-RPC genérico en
+`packages/shared`, `mcpPublisher.ts` (traduce `CUPO_DIARIO_AGOTADO` /
+`TITULO_DUPLICADO` a las excepciones que ya usa el pipeline), y
+`mcpQueue.ts` (rama nueva desde `queue.ts` solo si `publishMethod === "MCP"`,
+en su propio archivo para no ramificar el `queue.ts` de producción).
+
+## Tres auditorías
+
+1. **Funcional**: `browserPublisher.ts` es un envoltorio 1:1 de
+   `fetchCategories`/`fetchLanguages`/`publishArticle` de
+   `10minutesWebsite.ts`, sin tocar su lógica interna — mismo
+   comportamiento de siempre para toda cuenta `BROWSER` (el default, sin
+   excepción). `mcpPublisher.ts` probado contra un servidor MCP stub local
+   (`apps/worker/src/automation/mcpPublisher.test.ts`): mapeo de
+   `listar_categorias` al formato interno, traducción de
+   `CUPO_DIARIO_AGOTADO`→`DailyLimitReachedError` y
+   `TITULO_DUPLICADO`→`DuplicateTitleError`, y la guarda `IMAGEN_REQUERIDA`
+   (falla antes de gastar una llamada de generación de contenido si no hay
+   imagen).
+2. **Regresión**: `git diff --check` limpio. `npx tsc -p
+   apps/worker/tsconfig.json --noEmit` y `npx tsc -p
+   packages/shared/tsconfig.json --noEmit` sin errores, corridos en un
+   worktree aislado (`/private/tmp/mcp-publicacion-20260907`) con
+   `npm install` y `npx prisma generate` propios (nunca enlazando
+   `node_modules` del checkout principal, ver
+   [[protocolo-capitan-obligatorio]]). Suite completa del worker:
+   27/27 tests pasan (21 preexistentes + 6 nuevos), cero regresión.
+3. **Integración/producción**: **bloqueada a propósito, no simulada**. No
+   existe todavía una URL real del servidor MCP de 10MWS contra la cual
+   probar (pendiente de que ellos la entreguen — sección 13 del contrato).
+   Tampoco se generó ni se aplicó la migración de Prisma contra ninguna
+   base de datos (falta una base de datos local disponible en este
+   worktree, y aplicarla contra producción requiere autorización explícita
+   de Milton en el momento, tal como exige el Protocolo). El PR queda
+   `open`, sin fusionar, hasta que la auditoría 3 deje de estar bloqueada.
+
+Sin URL real ni interfaz que active `publishMethod = MCP` para ninguna
+cuenta, este código es inerte por defecto: cero riesgo para producción tal
+como está. Pendientes explícitos, documentados en el propio código: refresh
+automático de tokens OAuth, rutas OAuth (`authorize`/`callback`) y UI de
+conexión, y el generador/hosting de imagen del lado de SEO Total para el
+flujo MCP.
+
+**Reserva activa** (ver Inventario, Parte A): `packages/db/prisma/schema.prisma`
+y `apps/worker/src/queue.ts`, hasta que el PR #76 se fusione o se cierre.
+
+---
+
 # MENSAJE DE CLAUDE PARA `CODEX - AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS` (2026-09-04)
 
 Milton me pidió que revise el estado de tu PR #42
