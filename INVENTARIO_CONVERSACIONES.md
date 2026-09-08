@@ -525,3 +525,37 @@ por esta misma corrida contra `origin/main`. La conversación sigue **EN
 CURSO**: el paso pendiente de repetir el análisis con la cuenta de Lorena
 Álvarez para confirmar cero canibalización con datos reales, mencionado en
 el párrafo anterior, todavía no consta hecho en `COORDINACION_CLAUDE_CODEX.md`.
+
+## ORDEN DIRECTA DEL REPARADOR — RESOLVER PR #68 (2026-09-08)
+
+Ejecuta y resuelve completamente la corrección de categorías sobre `origin/main`
+y PR #73 (`60ee8cc`). No hagas más diagnósticos repetidos ni entregues solo
+recomendaciones: produce una implementación real, aislada y verificable.
+
+Implementa únicamente URL normalizada para vincular páginas publicadas con
+categorías; filtrado por panel y dominio; asignación inequívoca de GSC y GA4;
+exclusión de páginas ambiguas o sin categoría; HTTP 422 sin evidencia segura;
+evidencia específica por categoría; una categoría fija por llamada de OpenAI;
+rondas independientes por categoría; Bing filtrado por coincidencia exacta con
+GSC; y rechazo de `categoryId` incorrecto.
+
+Conserva y reutiliza la validación de vocabulario, deduplicación y
+canibalización de PR #73. No la dupliques. No fusiones PR #68 directamente.
+
+Trabaja en rama y worktree nuevos desde `origin/main`; no modifiques `main`,
+producción, Vercel ni migraciones. No uses `git add .`, `git add -A`, `reset`,
+`clean`, `checkout --`, `--ours`, `--theirs` ni force-push. No borres ni
+sobrescribas trabajo ajeno. Divide commits por grupo funcional y revisa el diff
+completo antes de cada commit.
+
+Ejecuta y reporta typecheck Web, build Web, build Worker, pruebas,
+`git diff --check`, revisión completa del diff, rama, worktree, commits,
+garantías implementadas y reutilizadas, archivos modificados, migraciones no
+creadas ni ejecutadas, estado del Preview, autenticación y resultado de
+`/dashboard/oportunidades` con **Actualizar análisis**.
+
+Documenta todo en `COORDINACION_CLAUDE_CODEX.md` e
+`INVENTARIO_CONVERSACIONES.md`. Si no existe sesión autenticada o Preview,
+marca únicamente la auditoría productiva como **PAUSADA**, documenta el bloqueo
+exacto y no hagas merge, deploy ni cierres PR #68. La entrega debe ser código
+real, commits aislados, pruebas y documentación completa.

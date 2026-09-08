@@ -5432,3 +5432,69 @@ función y líneas donde está implementada.
 Si no puedes probar el Preview autenticadamente con **Actualizar análisis**,
 detén la ejecución, marca el proyecto como **PAUSADO**, documenta el bloqueo y
 no hagas merge, deploy ni cierres PR #68.
+
+## ORDEN DIRECTA DEL REPARADOR — RESOLVER PR #68 (2026-09-08)
+
+Ejecuta y resuelve completamente la corrección de categorías sobre `origin/main`
+y PR #73 (`60ee8cc`).
+
+No hagas más diagnósticos repetidos ni entregues solo recomendaciones. Debes
+producir una implementación real, aislada y verificable.
+
+Implementa únicamente:
+
+- URL normalizada para vincular páginas publicadas con categorías.
+- Filtrado por panel y dominio.
+- Asignación inequívoca de GSC y GA4.
+- Exclusión de páginas ambiguas o sin categoría.
+- HTTP 422 cuando no exista evidencia segura.
+- Evidencia específica por categoría.
+- Una categoría fija por llamada de OpenAI.
+- Rondas independientes por categoría.
+- Bing filtrado por coincidencia exacta con GSC.
+- Rechazo de `categoryId` incorrecto.
+
+Conserva y reutiliza la validación de vocabulario, deduplicación y
+canibalización de PR #73. No la dupliques.
+
+Reglas:
+
+- Crea una rama y worktree nuevos desde el `origin/main` actual.
+- No modifiques `main`.
+- No fusiones PR #68 directamente.
+- No modifiques producción ni Vercel.
+- No ejecutes migraciones.
+- No uses `git add .`, `git add -A`, `reset`, `clean`, `checkout --`, `--ours`,
+  `--theirs` ni force-push.
+- No borres ni sobrescribas trabajo ajeno.
+
+Divide los commits por grupo funcional, agrega únicamente archivos específicos
+y revisa el diff completo antes de cada commit.
+
+Ejecuta y reporta obligatoriamente:
+
+- typecheck Web;
+- build Web;
+- build Worker;
+- pruebas;
+- `git diff --check`;
+- revisión completa del diff;
+- rama, worktree y commits;
+- garantías implementadas;
+- garantías reutilizadas de PR #73;
+- archivos modificados;
+- migraciones: confirmar que no se crearon ni ejecutaron;
+- estado del Preview;
+- estado de autenticación;
+- resultado de `/dashboard/oportunidades` y **Actualizar análisis**.
+
+Documenta todo en `COORDINACION_CLAUDE_CODEX.md` e
+`INVENTARIO_CONVERSACIONES.md`.
+
+Si la sesión autenticada o el Preview no están disponibles, termina todo lo
+que sí pueda verificarse localmente, marca únicamente la auditoría productiva
+como **PAUSADA**, documenta el bloqueo exacto y no hagas merge, deploy ni
+cierres PR #68.
+
+La entrega final debe ser código real, commits aislados, pruebas ejecutadas y
+documentación completa; no otra propuesta.
