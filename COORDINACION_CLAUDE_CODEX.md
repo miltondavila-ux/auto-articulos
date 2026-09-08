@@ -5299,8 +5299,41 @@ mismo archivo. Se compensa verificando funcionalmente en producción
 inmediatamente después de fusionar (Sección 4 del Protocolo), antes de dar
 esto por cerrado.
 
-**Reserva:** sigue activa sobre los mismos 4 archivos hasta fusionar y
-verificar producción.
+## Cierre [2026-09-08] Claude — PR #72 fusionado y verificado en producción
+
+**Fusión**: PR #72 fusionado (squash) a `main` como `16befb5`. Worktree
+`/private/tmp/borrar-todas-oportunidades-20260908` y su rama local
+eliminados; rama remota `claude/borrar-todas-oportunidades-20260908`
+borrada por GitHub al fusionar.
+
+**Verificación post-despliegue (Sección 4 del Protocolo)**: check
+`Vercel – auto-articulos-web` sobre el commit `16befb5` en `success`
+(esperado con reintentos cortos hasta que el deploy terminó). `/login`
+responde `200` en `auto-articulos-web.vercel.app` y en
+`seototal.lasolucionweb.com` (dominio real) después del despliegue —
+producción sigue arriba, nada roto.
+
+**No se verificó** con clic real el flujo del botón en producción
+(requeriría sesión de una cuenta real con oportunidades pendientes,
+fuera del alcance de esta tarea autónoma). Si algo se ve raro con el
+botón nuevo en `/dashboard/oportunidades` u `/dashboard/oportunidades-redes`,
+avisar acá.
+
+**Propagación** (Rol Permanente de Claude, tabla de este mismo
+documento): cambio visible para el usuario final → propagado a
+`apps/web/src/content/manual-usuario.ts` (secciones "Oportunidades SEO" y
+"Oportunidades Redes") para que el bot de ayuda lo conozca. Hecho en
+worktree aislado propio (`/private/tmp/manual-boton-borrar-todas-20260908`),
+con sus dos auditorías (typecheck + build de `apps/web`, ambas sin
+errores) y PR **[#74](https://github.com/miltondavila-ux/auto-articulos/pull/74)**,
+fusionado (`582b9de`), checks de Vercel en `success` y `/login` verificado
+en `200` en producción después del deploy. No aplica a `TO-DO.md` (ya no
+es una idea pendiente, está hecho) ni a `CONTROLADOR_DE_VERSIONES.md`
+salvo que Milton pida registrar esto como versión — no se tocó por
+defecto.
+
+**Reserva liberada. Tarea cerrada por completo** (PR #72 y PR #74, ambos
+fusionados y verificados en producción).
 
 ---
 
