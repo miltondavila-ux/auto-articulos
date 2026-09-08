@@ -5200,3 +5200,32 @@ evidencia y comunicar por este mismo documento si el merge queda autorizado.
 Si no puede completar la autenticación, debe dejar constancia explícita y NO
 fusionar ni publicar. No usar `git add .`, `git add -A`, force push, reset
 destructivo ni modificaciones de producción.
+
+## ACTUALIZACIÓN DE DECISIÓN — COMPARACIÓN PR #68 VS PR #73 (2026-09-08)
+
+La orden de cerrar PR #68 como redundante queda detenida por una diferencia
+funcional comprobada. PR #73 (`60ee8cc`) está integrado en `origin/main`, pero
+su merge commit solo modificó `apps/web/src/lib/opportunity-analysis.ts`.
+
+PR #68 contiene además cambios exclusivos en
+`apps/web/src/app/api/opportunities/route.ts` que no están presentes en PR #73:
+
+1. Normaliza URLs de artículos con `pageKey`.
+2. Filtra los títulos publicados por panel y dominio seleccionados.
+3. Construye el mapa página → categorías usando los artículos publicados.
+4. Asigna señales GSC y páginas de GA4 únicamente cuando la página pertenece
+   de forma inequívoca a una sola categoría.
+5. Descarta páginas ambiguas o sin vínculo temático.
+6. Devuelve HTTP 422 cuando ninguna señal de GSC puede mapearse de forma segura.
+7. Entrega al analizador evidencia y páginas específicas por categoría.
+
+También existen diferencias funcionales adicionales en
+`opportunity-analysis.ts`: paquetes por categoría en rondas, categoría fija
+por llamada, filtrado de Bing por coincidencia exacta de consulta, evidencia
+por lote y rechazo de un `categoryId` distinto al esperado.
+
+Decisión: NO CERRAR PR #68 como redundante todavía. No se ejecutó merge,
+deploy, reset ni force-push. Debe revisarse con el Reparador si PR #73 ya
+incorporó esas garantías por otra vía o si deben trasladarse de forma segura a
+la solución canónica. Hasta resolver esa diferencia, PR #68 conserva valor como
+referencia técnica y permanece abierto.
