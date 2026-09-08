@@ -6324,3 +6324,18 @@ para escribir este aviso.** Ninguna migración involucrada.
 **Estado:** aviso únicamente, sin acción de código. Nadie tiene la
 capitanía de `opportunity-analysis.ts`/`api/opportunities/route.ts`
 reclamada en este momento por esta conversación.
+
+## CIERRE — BUG NATALIA — 2026-09-08
+
+La corrección fue fusionada mediante el PR #82 y desplegada en Producción
+con el commit `9f0c2f1`. Vercel terminó en estado `Ready`; `/login` respondió
+correctamente y Producción sirvió el deployment nuevo con `age: 0` durante la
+verificación.
+
+Se completaron las auditorías estática, de regresión e integración. La
+excepción de prueba local por ausencia de la cuenta local de Natalia quedó
+autorizada y documentada por Milton. Natalia confirmó que la sincronización
+de categorías funciona correctamente en Producción. La publicación de un
+artículo quedó en prueba manual al cerrar esta conversación.
+
+Reserva liberada. Estado: CERRADA.
