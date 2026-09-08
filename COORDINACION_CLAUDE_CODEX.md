@@ -5312,3 +5312,61 @@ Estado que se transfiere al Reparador:
 Este cierre no significa que la implementación nueva esté publicada; significa
 únicamente que la conversación deja documentado el estado y transfiere el
 trabajo pendiente al Reparador.
+
+## ORDEN FINAL — CULMINAR CORRECCIÓN DE CATEGORÍAS (2026-09-08)
+
+Retoma el proyecto desde el estado documentado en `COORDINACION_CLAUDE_CODEX.md`.
+
+La solución vigente de `origin/main` incluye PR #73 (`60ee8cc`) y ya posee:
+
+- validación de `categoryId`;
+- vocabulario distintivo por categoría;
+- rechazo de títulos sin relación temática;
+- deduplicación;
+- control global de canibalización;
+- límite máximo de 20 lotes.
+
+PR #68 no debe fusionarse directamente. Conserva sus commits como referencia e
+incorpora únicamente las garantías funcionales que todavía faltan:
+
+1. Relacionar páginas publicadas con categorías usando URL normalizada.
+2. Filtrar por panel y dominio.
+3. Asignar cada página de GSC y GA4 a una sola categoría.
+4. Excluir páginas ambiguas o sin categoría.
+5. Devolver HTTP 422 cuando no exista evidencia segura por categoría.
+6. Construir evidencia específica para cada categoría.
+7. Ejecutar una llamada de OpenAI con una sola categoría fija.
+8. Procesar rondas independientes por categoría.
+9. Filtrar Bing únicamente contra consultas GSC de esa categoría.
+10. Rechazar cualquier `categoryId` incorrecto.
+
+Reglas obligatorias:
+
+- Crea una rama y worktree nuevos basados en el `origin/main` actual.
+- No modifiques `main`.
+- No mezcles la solución con otros proyectos.
+- No uses `git add .`, `git add -A`, `reset`, `clean`, `checkout --`, `--ours`,
+  `--theirs` ni force-push.
+- No ejecutes migraciones.
+- No hagas deploy todavía.
+- No borres ni reescribas los commits de PR #68 o PR #73.
+
+Antes de entregar:
+
+- Ejecuta typecheck Web.
+- Ejecuta build Web.
+- Ejecuta build Worker.
+- Ejecuta las pruebas existentes.
+- Ejecuta `git diff --check`.
+- Revisa el diff completo archivo por archivo.
+- Confirma que solo se modificaron archivos relacionados con
+  oportunidades/categorías.
+- Registra rama, worktree, archivos, commits, pruebas y riesgos en
+  `COORDINACION_CLAUDE_CODEX.md`.
+
+La tarea queda **PAUSADA** si no existe una sesión autenticada para verificar el
+Preview en `/dashboard/oportunidades` usando el botón **Actualizar análisis**.
+
+Solo después de confirmar autenticación, Preview desplegado, checks verdes y
+resultados correctos de categorías, duplicados y canibalización se podrá
+solicitar el merge. Hasta entonces, no cierres PR #68 ni publiques en producción.
