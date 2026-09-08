@@ -99,6 +99,47 @@ Verificado EN VIVO contra `origin/main` recién fetcheado:
   `origin/main` — sigue sin fusionar, mismo estado que el registrado el
   2026-09-05.
 
+#### Actualización (agregada por la tarea programada diaria de propagación, 2026-09-08, sin editar la tabla anterior)
+
+Verificado EN VIVO contra `origin/main` recién fetcheado desde un entorno
+remoto (sin acceso al filesystem de la máquina de Milton, igual que la
+corrida del 2026-09-05):
+
+- Fila de `apps/web/src/app/dashboard/usuarios/page.tsx` /
+  `claude/panel-usuarios-clickable-20260907` (PR #70, "ORDEN DE USUARIOS
+  ACTIVOS EN ADMIN"): **la reserva sigue activa.** La rama remota todavía
+  existe, `git merge-base --is-ancestor` confirma que NO es ancestro de
+  `origin/main`, y el PR #70 sigue `open`/`merged: false` según la API de
+  GitHub — bloqueado por `Deployment rate limited — retry in 24 hours` en
+  ambos checks de Vercel (confirmado hoy, no solo transcrito de
+  Coordinación).
+- Nueva reserva declarada en `COORDINACION_CLAUDE_CODEX.md` (2026-09-07,
+  sección "RESERVA — AUDITORÍA RESPONSIVE COMPLETA DEL SISTEMA"): worktree
+  `/private/tmp/auditoria-responsive-20260907`, rama
+  `claude/auditoria-responsive-20260907`, conversación "AUDITORIA DE
+  CAPACIDADES RESPONSIVE". **No se pudo verificar con `git merge-base`
+  porque esa rama todavía no existe en `origin`** (0 commits empujados a
+  esta fecha — la propia entrada dice que el worktree seguía idéntico a
+  `origin/main`). Se deja igualmente señalada porque la reserva de archivos
+  ya está declarada y vigente: las 23 páginas de `apps/web/src/app/`
+  listadas en esa sección, EXCEPTO `dashboard/usuarios/page.tsx` (reservado
+  aparte por el punto anterior, PR #70).
+- Nueva reserva sin rama ni commit, declarada en
+  `COORDINACION_CLAUDE_CODEX.md` (sección "[2026-09-07] Claude — Botón
+  'Borrar todas las oportunidades'"): cambios escritos directamente en el
+  checkout principal de Milton, sin commitear y sin worktree aislado
+  (violación reconocida por la propia entrada del Protocolo de este mismo
+  documento). Archivos reservados según ese texto:
+  `apps/web/src/app/api/opportunities/route.ts`,
+  `apps/web/src/app/api/social-opportunities/route.ts`,
+  `apps/web/src/app/dashboard/oportunidades/page.tsx`,
+  `apps/web/src/app/dashboard/oportunidades-redes/page.tsx`. **No
+  verificable contra git desde este entorno remoto** (vive solo sin
+  commitear en la máquina de Milton); se transcribe tal cual para que
+  quede visible aquí y no solo enterrada en Coordinación. Milton o quien
+  retome debe confirmar si ese trabajo sigue sin commitear o si ya se
+  resolvió con un PR propio.
+
 ### El checkout principal de Milton
 
 `/Users/miltondavila/Creador de articulos` (rama `main`, commit `f81f53b`)
@@ -281,6 +322,47 @@ agregarla aquí en vez de dejarla solo en Coordinación.
 - Estado: DESPLEGADO, pendiente de confirmación visual de Milton (commit
   `8115604`). Coincide con el worktree ya fusionado
   `auditoria-creditos-imagen-20260903` (Parte A).
+
+### `ORDEN DE USUARIOS ACTIVOS EN ADMIN`
+
+Entrada agregada por la tarea programada diaria de propagación
+(2026-09-08), a partir de la sección "BLOQUEADO — Tarjetas clicables en
+Usuarios..." de `COORDINACION_CLAUDE_CODEX.md` (2026-09-07).
+
+- Agente: Claude.
+- Proyecto: organizar el panel de Administración (`/dashboard/usuarios`),
+  primero como maqueta (Artifact) y luego llevado a la pantalla real: las 5
+  tarjetas de resumen de la pestaña "Accesos" pasan de estáticas a
+  clicables (navegan a la sección/filtro correspondiente con datos reales)
+  y pierden los colores verde/naranja.
+- PR: [#70](https://github.com/miltondavila-ux/auto-articulos/pull/70),
+  **abierto, sin fusionar** — bloqueado por `Deployment rate limited` de
+  Vercel, no por error de código (`npx tsc --noEmit` y el build exacto de
+  `apps/web` pasan limpios). Ver Parte A para el estado de la reserva de
+  archivo.
+- Estado: EN CURSO, bloqueado por cuota de terceros.
+
+### `AUDITORIA DE CAPACIDADES RESPONSIVE`
+
+Entrada agregada por la tarea programada diaria de propagación
+(2026-09-08), a partir de la sección "RESERVA — AUDITORÍA RESPONSIVE
+COMPLETA DEL SISTEMA" de `COORDINACION_CLAUDE_CODEX.md` (2026-09-07).
+
+- Agente: Claude.
+- Proyecto: pedido explícito de Milton de recorrer página por página todo
+  el sistema (23 páginas) y corregir cualquier desbordamiento horizontal /
+  movimiento lateral, sin romper nada.
+- Worktree/rama declarados: `/private/tmp/auditoria-responsive-20260907`,
+  `claude/auditoria-responsive-20260907` (sin commits empujados a
+  `origin` a esta fecha — ver Parte A).
+- Avance según la propia entrada: pasada estática completa sin hallazgos
+  (el sistema ya usa `overflow-x:hidden` global, tablas responsive y
+  grids `auto-fit`); pasada visual en vivo en curso, verificada ya sin
+  desbordamiento en las 5 páginas públicas, continuando sobre
+  `seototal.lasolucionweb.com` en modo solo lectura para las páginas de
+  dashboard (requieren sesión).
+- Estado: EN CURSO, sin cambios de código todavía a la fecha de la última
+  entrada de Coordinación.
 
 **Nota sobre numeración de sesiones concurrentes**: Coordinación registra que
 en varios momentos hubo más de una sesión de Claude activa a la vez (ej.
@@ -526,3 +608,27 @@ por esta misma corrida contra `origin/main`. La conversación sigue **EN
 CURSO**: el paso pendiente de repetir el análisis con la cuenta de Lorena
 Álvarez para confirmar cero canibalización con datos reales, mencionado en
 el párrafo anterior, todavía no consta hecho en `COORDINACION_CLAUDE_CODEX.md`.
+
+**Cierre final (agregado por la tarea programada diaria de propagación,
+2026-09-08, sin editar lo anterior):** Milton cerró esta conversación el
+2026-09-07 ("quedamos listos por acá con el nuevo algoritmo para títulos y
+nuevo algoritmo para redes sociales"). El paso pendiente de repetir el
+análisis con la cuenta de Lorena Álvarez **sí se completó** antes del
+cierre: resultado verificado en producción de 24 títulos en 4 categorías
+(12 geolocalizados cliente×negocio sin canibalización + 12 de tendencia
+normal, sin años inventados). Fases adicionales fusionadas después del
+párrafo anterior: PR #52 (`4614ad3`, corrección de alcance del `needKey`),
+PR #54 (`3a76d71`, más cobertura), PR #55 (`e1662a4`, prohibición absoluta
+de años viejos), PR #61 (`b47784b`) + PR #62 (commit real `e79ee5e`, no
+`f050672` como quedó escrito por error en la entrada de origen de
+Coordinación — verificado con `git log --oneline --all | grep "(#62)"`,
+`f050672` corresponde a un commit distinto y anterior del 2026-09-04) + PR
+#66 (`c87d6ef`) para los títulos ultra geolocalizados, y PR #57 (`97495e0`)
++ PR #60 (`bf18f64`) para el motor de selección de artículos tendencia en
+redes sociales. Detalle completo de cada PR en
+`CONTROLADOR_DE_VERSIONES.md` (entradas agregadas por esta misma corrida de
+propagación). Los 3 pendientes reales que quedaron para quien retome ya
+están en `TO-DO.md` (asignación categoría↔título, botón "descartar todo" en
+Oportunidades Redes, programador automático diario de redes — este último
+agregado hoy por esta misma corrida). **Estado final: CERRADA por Milton,
+sin reservas activas.**
