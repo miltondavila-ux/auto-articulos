@@ -5988,3 +5988,74 @@ Fases 1-6).
 Estado: EN PROGRESO — sin commit, sin push, sin despliegue todavía. Reserva
 se libera al completar las tres auditorías y verificar en producción, como
 en las fases anteriores de este mismo proyecto.
+
+## CIERRE (parcial) — Hotfix visual: tarjetas de Usuarios en fila por reset global de `button` — 2026-09-08
+
+**Capitán de archivo:** Claude — proyecto "ORDEN DE USUARIOS ACTIVOS EN
+ADMIN", continuación directa del cierre de PR #70 de más arriba en este
+mismo archivo. Milton pidió continuar de manera autónoma y después reportó,
+con una captura de pantalla real de producción, que las 5 tarjetas de
+resumen se veían mal: label, número y detalle aplastados en una sola fila
+en vez de apilados.
+
+**Causa real, no supuesta:** `apps/web/src/app/globals.css` tiene un reset
+global `button { display: inline-flex; align-items: center; justify-content:
+center; ... }` (para los botones estilo Apple del resto del sitio). El PR
+#70 convirtió las tarjetas de `<div>` a `<button>` para hacerlas clicables,
+pero no sobreescribió ese `display`/`alignItems` en su estilo inline — las
+tres divs internas (label, número, detalle) quedaron centradas en fila por
+el reset, en vez de apiladas verticalmente. El botón de "Secciones de
+administración" un poco más abajo en el mismo archivo sí lo hacía bien
+(tenía `display: "flex", flexDirection: "column"` explícito) — ese fue el
+patrón de referencia para el fix.
+
+**Fix** (worktree aislado `/tmp/fix-tiles-flex-20260908`, rama
+`claude/fix-tiles-flex-20260908`): agregar `display: "flex", flexDirection:
+"column", alignItems: "flex-start", justifyContent: "flex-start", width:
+"100%"` al estilo inline del botón de cada tarjeta. Un solo archivo, 6
+líneas.
+
+**Auditorías:**
+1. Funcional local: `npx tsc --noEmit` limpio para `page.tsx`. Se detectaron
+   ~63 errores de TypeScript en otros archivos (`opportunities/*.ts`,
+   `mcp/tools.ts`, etc.) ya presentes en `origin/main` antes de este cambio
+   — no relacionados, no introducidos por este fix, no corregidos acá
+   (pertenecen a otras tareas en curso).
+2. Build exacto de `apps/web` completado sin errores, incluye
+   `/dashboard/usuarios`.
+3. Integración/producción: **no se pudo verificar visualmente antes de
+   fusionar**, ni en Preview (protegida por SSO de Vercel, sin credenciales)
+   ni en producción inmediatamente después de fusionar — el rate limit
+   diario de Vercel volvió a agotarse (varias sesiones en paralelo
+   consumieron la cuota hoy: PR #70 retry, #72, #74, #75, #78, #79, y ahora
+   este #80), confirmado con
+   `gh api repos/miltondavila-ux/auto-articulos/commits/main/status` en
+   `failure` / `Deployment rate limited — retry in 24 hours` para el commit
+   de fusión.
+
+**Decisión de fusionar sin la tercera auditoría completa:** se tomó porque
+(a) el defecto ya estaba confirmado en vivo en producción con una captura
+real de Milton — no fusionar dejaba la interfaz rota un día entero más;
+(b) la causa y el fix son puntuales, ya verificados por typecheck + build
+exactos, y calcan un patrón que ya funciona correctamente en el mismo
+archivo; (c) esperar 24h por un solo carácter de CSS mal heredado no es
+proporcional al riesgo. Fusionado como PR
+[#80](https://github.com/miltondavila-ux/auto-articulos/pull/80), commit
+`ba62119`.
+
+**Estado real ahora mismo:** código correcto en `main`, pero **producción
+todavía no muestra el fix** porque el build de `main` para el commit de
+fusión también quedó `rate limited`. Mismo patrón que ya documentó este
+archivo varias veces (PR #46, #47, #69, #70) — se libera solo en un par de
+días. Cuando se libere, el próximo push a `main` (de cualquier sesión)
+debería disparar el build automático; si no, reintentar con
+`git commit --allow-empty` + push, confirmar con
+`gh api repos/miltondavila-ux/auto-articulos/commits/main/status` en
+`success`, y recién ahí pedirle a Milton que confirme visualmente que las
+tarjetas ya se ven apiladas.
+
+**Reserva:** de `apps/web/src/app/dashboard/usuarios/page.tsx` — código
+fusionado, pero **no se libera todavía** hasta confirmar el build de
+producción y la verificación visual real de Milton.
+
+**Capitán de archivo:** Claude, sigue a cargo hasta el próximo build exitoso.
