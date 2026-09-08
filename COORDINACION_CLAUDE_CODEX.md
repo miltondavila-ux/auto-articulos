@@ -5261,6 +5261,39 @@ reales, build/regresión, integración en Preview).
 **Reserva:** los 4 archivos de "Cambios" arriba quedan reservados por
 Claude hasta commitear/PR — Codex, avisar acá si necesitás tocarlos antes.
 
+## Actualización [2026-09-08] Claude — movido a worktree aislado, commit, PR abierto
+
+Milton pidió seguir de manera autónoma. Se corrigió lo pendiente de la
+entrada anterior (código estaba directo en `main`, sin aislar):
+
+1. Diff de los 4 archivos guardado a patch, `git checkout --` sobre esos
+   4 archivos en el checkout principal (ya estaban salvados en el patch,
+   nada se perdió) — `main` queda limpio de este cambio, solo con el
+   trabajo de la reserva de PR #70 (`usuarios/page.tsx`, ajena a esto).
+2. Worktree aislado creado en `/private/tmp/borrar-todas-oportunidades-20260908`
+   desde `origin/main` (`9dc395f`), rama
+   `claude/borrar-todas-oportunidades-20260908`, patch aplicado limpio.
+3. **Auditoría 1 (funcional)**: `npx tsc --noEmit -p .` en el worktree
+   (con `npm install` + `prisma generate` propios) — sin errores.
+4. **Auditoría 2 (regresión/build)**: `npm run build` desde `apps/web`
+   en el worktree (mismo comando y `Root Directory=apps/web` que usa
+   Vercel, ver Sección 8 del Protocolo) — completado sin errores, 83
+   rutas generadas, incluye `/dashboard/oportunidades`,
+   `/dashboard/oportunidades-redes`, `/api/opportunities`,
+   `/api/social-opportunities`.
+5. `git status`/`git diff --stat` revisados antes de commitear — exactamente
+   los 4 archivos esperados, nada de otros programadores incluido.
+6. Commit `3809471` en la rama, push a `origin`, PR abierto:
+   **[#72](https://github.com/miltondavila-ux/auto-articulos/pull/72)**.
+
+**Auditoría 3 (integración/Preview de Vercel): pendiente**, esperando el
+check del PR #72. Siguiendo el Protocolo (Sección 3): no se fusiona hasta
+que el check esté en `success` y se verifique funcionalmente el botón en
+el Preview real. Se documentará el resultado acá antes de fusionar.
+
+**Reserva:** sigue activa sobre los mismos 4 archivos hasta fusionar y
+verificar producción.
+
 ---
 
 ## RESERVA — AUDITORÍA RESPONSIVE COMPLETA DEL SISTEMA — 2026-09-07
