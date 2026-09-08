@@ -5498,3 +5498,28 @@ cierres PR #68.
 
 La entrega final debe ser código real, commits aislados, pruebas ejecutadas y
 documentación completa; no otra propuesta.
+
+## ORDEN DE CULMINACIÓN — EJECUCIÓN INMEDIATA (2026-09-08)
+
+El informe recibido solo documenta el estado; la tarea aún no está culminada.
+La continuidad debe partir de `origin/main`, con PR #73 como base canónica,
+worktree y rama aislados, implementación real de las garantías faltantes de
+PR #68, commits separados, typecheck, builds, pruebas, `git diff --check` y
+revisión completa del diff.
+
+La implementación debe cubrir URL normalizada, panel/dominio, GSC/GA4
+inequívocos, exclusión de páginas ambiguas, HTTP 422 sin evidencia, evidencia
+por categoría, categoría fija por llamada, rondas independientes, Bing exacto
+y rechazo de `categoryId`, reutilizando sin duplicar vocabulario,
+deduplicación y canibalización de PR #73.
+
+Debe actualizar ambos documentos y reportar código real, archivos, rama,
+worktree, commits, pruebas y riesgos. Si no existe autenticación para probar
+`/dashboard/oportunidades` con **Actualizar análisis**, la auditoría productiva
+queda **PAUSADA** y no puede hacerse merge, deploy ni cerrar PR #68. Está
+prohibido modificar `main`, producción, Vercel o migraciones, y usar reset,
+clean, checkout destructivo, `--ours`, `--theirs`, `git add .`, `git add -A` o
+force-push.
+
+Esta es una orden de ejecución y culminación, no una solicitud de nuevas
+recomendaciones.
