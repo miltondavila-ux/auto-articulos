@@ -151,6 +151,31 @@ Reglas del canal:
 
 ## Regla operativa nueva — desarrollo local primero (2026-09-08)
 
+### Regla de sincronización con Producción
+
+Antes de probar o crear un worktree, el responsable debe identificar el SHA
+exacto del deployment `Production/Ready` que Vercel está sirviendo y llamarlo
+`PRODUCTION_SHA`. No se debe asumir que `origin/main` es Producción: si Vercel
+está limitado, pendiente, fallando o sirviendo un deployment anterior, ambos
+pueden diferir. La diferencia se registra en
+`CONTROLADOR_DE_VERSIONES.md` y no se presenta como sincronización.
+
+El orden de referencia es: (1) Producción real (`PRODUCTION_SHA`), (2)
+`origin/main` actualizado, (3) rama/worktree local creado desde la base que
+corresponda. Ejecutar `PRODUCTION_SHA=<sha> npm run check:production-baseline`
+antes de modificar código. El comando falla si no se informa el SHA, si el
+worktree no contiene esa base, y avisa si `origin/main` está en otro commit.
+Cuando existe diferencia, se puede trabajar localmente sobre el SHA real de
+Producción o sobre `origin/main`, pero la elección, el riesgo y la diferencia
+deben quedar documentados antes del PR.
+
+Un entorno local sincronizado significa: mismo commit base de Producción,
+mismas migraciones aplicadas localmente, mismas versiones declaradas en el
+lockfile y variables locales equivalentes en forma, nunca secretos iguales.
+No significa copiar la base de datos productiva ni sus credenciales. Lorena
+local es una cuenta sintética con el mismo correo identificador, contraseña
+local y sin integraciones/tokens productivos.
+
 Para reducir el consumo de Vercel, el ciclo normal es: trabajar en un
 worktree aislado, levantar la base local, preparar o actualizar el usuario
 local de pruebas de Lorena, ejecutar `npm run verify`, revisar manualmente el
