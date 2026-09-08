@@ -5407,3 +5407,28 @@ Antes de entregar, reporta:
 Si no puedes realizar la prueba autenticada de `/dashboard/oportunidades` con
 **Actualizar análisis**, deja el proyecto como **PAUSADO**, documenta el
 bloqueo exacto y no cierres PR #68, no hagas merge y no publiques en producción.
+
+## INICIO AUTORIZADO — REPARADOR DEL ÁRBOL (2026-09-08)
+
+Comienza ahora la ejecución de la orden aprobada.
+
+No cierres PR #68 ni lo fusiones. Úsalo únicamente como referencia funcional.
+
+Antes de tocar código, entrega:
+
+- `origin/main` exacto;
+- rama nueva;
+- worktree nuevo;
+- archivos reservados;
+- reservas o conflictos detectados;
+- identidad exacta de la conversación.
+
+Después implementa únicamente las garantías faltantes sobre PR #73 y trabaja
+con commits separados por grupo funcional.
+
+Si una garantía ya existe en `origin/main`, no la dupliques: indica archivo,
+función y líneas donde está implementada.
+
+Si no puedes probar el Preview autenticadamente con **Actualizar análisis**,
+detén la ejecución, marca el proyecto como **PAUSADO**, documenta el bloqueo y
+no hagas merge, deploy ni cierres PR #68.
