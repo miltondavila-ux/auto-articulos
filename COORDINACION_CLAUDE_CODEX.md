@@ -5207,6 +5207,68 @@ funcionalmente (tarjetas filtran de verdad, sin colores, sin romper
 de `apps/web/src/app/dashboard/usuarios/page.tsx` **sigue activa** hasta
 fusionar y verificar producción — no liberar todavía.
 
+## CIERRE — Tarjetas clicables en Usuarios — 2026-09-08
+
+**Capitán de archivo:** Claude — mismo lote de arriba, reclamado y liberado
+en esta misma tarea. Milton pidió continuar de manera autónoma al día
+siguiente.
+
+**Desbloqueo:** el rate limit de Vercel se liberó, como ya había pasado
+antes con los PR #46/#47/#69. Primer reintento (`git commit --allow-empty`)
+resultó engañoso: el proyecto real `auto-articulos-web` respondió `Skipped
+- Not affected` porque el commit vacío no tocaba ningún archivo — su
+detección de monorepo comparó contra el commit anterior, no contra el
+último deploy exitoso, y decidió que no había nada que reconstruir. Único
+check verde real en ese intento fue `cambio-boton-comienza-aqui-clean`, que
+según quedó documentado más arriba en este mismo archivo (ver nota sobre
+"proyecto duplicado/viejo") **no cuenta como verificación** del dominio
+real. Se corrigió agregando un salto de línea real a
+`page.tsx` (commit `bac676f`) para forzar una reconstrucción genuina del
+proyecto correcto — con eso sí compiló y quedó `Deployment has completed`
+para `auto-articulos-web`.
+
+**Auditoría 3 (integración/producción), con una limitación real:** la URL
+de Preview (`auto-articulos-web-git-claude-p-7a888b-luna-portex-intelligence.vercel.app`)
+está protegida por el propio login de Vercel (SSO de Deployment Protection,
+no el login de la aplicación) — no tengo ni debo usar credenciales de
+Vercel de Milton para pasar esa pantalla, así que no pude hacer clic en las
+tarjetas dentro del Preview antes de fusionar. Se compensó así: build real
+confirmado en verde para el proyecto correcto (no el duplicado), typecheck
+y build local ya limpios (auditorías 1 y 2), y el diff es un cambio de bajo
+riesgo (agrega `onClick` a tarjetas ya existentes usando los mismos
+`setState` que ya usa el formulario de filtros, sin nueva lógica de datos).
+Con eso fusioné el PR #70 (squash, commit `48578e9`) y verifiqué producción
+real inmediatamente después — esa sí es pública, sin SSO.
+
+**Verificación en producción real:**
+- Build de `main` para `auto-articulos-web`: `success` / "Deployment has
+  completed".
+- `auto-articulos-web.vercel.app` responde y carga con normalidad — título
+  "SEO TOTAL — Artículos con IA que se publican solos", pantalla de login
+  con su diseño esperado (verificado con captura de pantalla real, no solo
+  código de estado HTTP).
+- No verifiqué con clics reales las 5 tarjetas dentro de
+  `/dashboard/usuarios` en producción porque eso requiere una sesión de
+  administrador — pendiente de que Milton (o quien tenga acceso) confirme
+  en vivo que las tarjetas filtran correctamente. Si algo no luce como se
+  describe arriba, avisar acá para corregirlo en una tarea nueva sobre el
+  mismo archivo.
+
+**PR:** [#70](https://github.com/miltondavila-ux/auto-articulos/pull/70),
+fusionado como `48578e9`. Rama remota borrada al fusionar; el worktree
+local (`/tmp/panel-usuarios-clickable-20260907`) y su copia de la rama
+quedaron sueltos sin borrar (una limpieza de `git worktree remove` fue
+bloqueada por el propio permiso de la sesión) — no afecta a nadie, se
+puede borrar cuando alguien quiera con `git worktree remove
+/tmp/panel-usuarios-clickable-20260907 --force`.
+
+**Estado:** cerrado y fusionado en `main`, producción desplegada y
+respondiendo. Reserva de `apps/web/src/app/dashboard/usuarios/page.tsx`
+liberada — actualizar `INVENTARIO_CONVERSACIONES.md`, Parte A, borrando esa
+línea.
+
+**Capitán de archivo liberó el lote:** Claude.
+
 ---
 
 # [2026-09-07] Claude — Botón "Borrar todas las oportunidades" (SEO/AEO y Redes Sociales)
