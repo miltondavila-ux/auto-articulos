@@ -161,16 +161,6 @@ HANDOFF, solo alimenta ideas hacia él).
   DIFERENTES categorías a la vez (hoy la selección para publicar está
   limitada dentro de una sola categoría), para poder elegir manualmente cuáles
   publicar sin importar de qué categoría venga cada uno.
-- **(7/9/2026, origen: conversación `CODEX - AUDITORIA A ALGORITMO DE
-  PUBLICACIÓN DE ARTICULOS`)** Crear un espacio en Configuración para que el
-  usuario pueda colocar una región exacta (ciudad + país) y así afinar los
-  títulos ultra segmentados de Oportunidades.
-- **(7/9/2026, origen: conversación `CODEX - AUDITORIA A ALGORITMO DE
-  PUBLICACIÓN DE ARTICULOS`)** Revisar cómo el algoritmo de Oportunidades
-  asigna categorías a los títulos (y viceversa): al parecer el sistema no
-  está adhiriendo bien los títulos a la categoría real ni la categoría al
-  título — puede estar relacionado con el punto de rediseño de
-  `opportunity-analysis.ts` de la nota anterior.
 - **(7/9/2026, origen: cierre final de la conversación `CODEX - AUDITORIA A
   ALGORITMO DE PUBLICACIÓN DE ARTICULOS`)** Programador automático de
   publicación diaria en redes sociales (1 post por red por día, sin clic
@@ -205,33 +195,44 @@ HANDOFF, solo alimenta ideas hacia él).
 
 ## Hecho
 
-- **(8/9/2026)** Botón "Borrar todas las oportunidades" en Oportunidades
-  SEO/AEO y en Oportunidades en Redes Sociales — pedido directo de Milton en
-  chat, coincide con el ítem del 7/9/2026 (origen: conversación `CODEX -
-  AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`) sobre falta de un
-  botón de descarte/borrado masivo en `/dashboard/oportunidades-redes`.
-  **Nota de diferencia con lo pedido originalmente:** el ítem original pedía
-  "Descartar todo" (motivo de descarte, como `handleSkipOne`); lo
-  implementado es un **borrado real** (`DELETE`, sin motivo, con
-  `window.confirm`) en ambas pantallas — resuelve la misma necesidad de
-  fondo (limpiar varias propuestas pendientes sin clic por clic) pero con
-  una semántica distinta (borra en vez de archivar con motivo). Si Milton
-  todavía quiere la versión "descartar con motivo" además de esta, es un
-  ítem nuevo, no este mismo.
-  - `DELETE /api/opportunities`: borra todas las oportunidades SEO/AEO
-    (`opportunityGroup` + `titles` en cascada) del usuario.
-  - `DELETE /api/social-opportunities?scope=pending`: borra las propuestas
-    pendientes de redes sociales (sin el parámetro, mantiene el
-    comportamiento previo de "Borrar historial" en `/dashboard/historial`).
-  - Botón rojo en ambas pantallas, visible solo con pendientes, con
-    confirmación previa.
-  - Propagado también al manual del bot de ayuda
-    (`apps/web/src/content/manual-usuario.ts`).
-  - PR [#72](https://github.com/miltondavila-ux/auto-articulos/pull/72)
-    (código) y PR
-    [#74](https://github.com/miltondavila-ux/auto-articulos/pull/74)
-    (manual), ambos fusionados y verificados en producción. Detalle
-    completo en `COORDINACION_CLAUDE_CODEX.md`.
+- **(8/9/2026, origen: conversación `CODEX - AUDITORIA A ALGORITMO DE
+  PUBLICACIÓN DE ARTICULOS`)** Espacio en Configuración para región exacta.
+  Implementado como dos campos separados (más completo que lo pedido
+  originalmente): "¿En dónde están tus clientes?" y "¿En dónde está tu
+  negocio?" (Configuración → Contenido), que el algoritmo de Oportunidades
+  combina para crear títulos ultra geolocalizados. PR #61 (`b47784b`,
+  schema+UI+algoritmo), PR #62 (`f050672`, migración segura), PR #66
+  (`c87d6ef`, paso dedicado de la IA para forzar la combinación). Verificado
+  en producción con la cuenta de Lorena Álvarez: las 12 combinaciones reales
+  (4 ubicaciones de cliente × 3 de negocio) aparecieron correctas.
+- **(8/9/2026, origen: conversación `CODEX - AUDITORIA A ALGORITMO DE
+  PUBLICACIÓN DE ARTICULOS`)** Garantía determinista contra categoría/título
+  mal asignados en `opportunity-analysis.ts`. Cada categoría tiene un
+  "vocabulario distintivo" (palabras de su nombre/ejemplos que no son
+  genéricas en la cuenta); un título debe compartir la raíz de al menos una
+  palabra con la categoría asignada o se descarta. PR #73 (`60ee8cc`).
+  Simulado contra los dos casos reales fallidos (título de "Deducibles" sin
+  la palabra deducible, título de "Embarazo" sin mención de embarazo/bebé)
+  más 4 casos legítimos — los 6 dieron el resultado esperado.
+- **(8/9/2026, origen: conversación `CODEX - AUDITORIA A ALGORITMO DE
+  PUBLICACIÓN DE ARTICULOS`)** Botón de "Descartar todo"/"Borrar todas las
+  oportunidades", en SEO/AEO y en Redes Sociales. El lado de Redes ya
+  estaba completo (backend + botón) cuando se retomó este ítem. Faltaba el
+  endpoint `DELETE /api/opportunities` para SEO — agregado con el mismo
+  alcance por panel/dominio que ya usa el análisis, para no borrar
+  oportunidades de otro panel en cuentas con más de un idioma/sitio. PR #75
+  (`00a5732`), que reemplazó la primera versión simple del endpoint (sin
+  filtro de panel) hecha por otra sesión concurrente de Claude en el PR
+  [#72](https://github.com/miltondavila-ux/auto-articulos/pull/72) — ese
+  mismo PR #72 fue el que agregó los botones rojos "Borrar todas las
+  oportunidades" en ambas pantallas (`oportunidades/page.tsx` y
+  `oportunidades-redes/page.tsx`, visibles solo con pendientes, con
+  `window.confirm` previo) y el `DELETE /api/social-opportunities?scope=pending`
+  del lado de Redes, que si quedó sin reemplazar. El PR
+  [#74](https://github.com/miltondavila-ux/auto-articulos/pull/74) propagó
+  el botón al manual del bot de ayuda
+  (`apps/web/src/content/manual-usuario.ts`). Detalle completo de ambos en
+  `COORDINACION_CLAUDE_CODEX.md`.
 
 - **(16/8/2026)** Asistente Flotante Arrastrable (Drag-and-Drop) en `FloatingAssistant`:
   - Se agregó la funcionalidad de arrastrar (drag-and-drop) con soporte completo para ratón y gestos táctiles (touch) en móviles.
