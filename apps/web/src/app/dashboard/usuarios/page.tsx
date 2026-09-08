@@ -3296,3 +3296,4 @@ function UserHistorial({ email }: { email: string }) {
     </details>
   );
 }
+
