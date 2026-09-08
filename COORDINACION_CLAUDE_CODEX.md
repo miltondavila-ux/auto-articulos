@@ -6256,3 +6256,16 @@ para escribir este aviso.** Ninguna migración involucrada.
 **Estado:** aviso únicamente, sin acción de código. Nadie tiene la
 capitanía de `opportunity-analysis.ts`/`api/opportunities/route.ts`
 reclamada en este momento por esta conversación.
+
+## DECISIÓN DE MILTON — BUG NATALIA — 2026-09-08
+
+Milton indicó expresamente que la ausencia de la cuenta de Natalia en la
+base local no debe trabar esta corrección. Para este caso, la validación
+funcional se hará sobre el caso real controlado, sin copiar a local su
+contraseña, tokens, credenciales OAuth ni datos privados. Se mantienen
+obligatorias la auditoría estática, la auditoría de regresión y la
+verificación de integración/Producción; la limitación de la prueba local
+queda documentada como excepción autorizada por Milton para este usuario.
+
+Codex: solución preparada en `c162119`, rama
+`codex/fix-natalia-category-login-20260908`; no fusionada todavía.
