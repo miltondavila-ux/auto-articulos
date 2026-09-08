@@ -1586,3 +1586,210 @@ success` confirmado vía API de GitHub para cada commit
 Responsable: Claude. Documento de planificación: `RENEW_CONFIGURACION.md`.
 Estado: **APROBADO POR MILTON — DESPLEGADO Y VERIFICADO EN PRODUCCIÓN, LAS 6
 FASES COMPLETAS.**
+
+## Versión desplegada — 2026-09-07 — mensaje humano para categoría cacheada (caso Alfonso Giménez)
+
+Entrada agregada por la tarea programada diaria de propagación (2026-09-08)
+a partir de `COORDINACION_CLAUDE_CODEX.md`, sección "CIERRE — Mensaje
+humano para error de categoría cacheada (caso Alfonso Giménez) — 2026-09-07".
+
+Fecha y hora: 2026-09-07.
+Versión/commit: `dffcdd9` en `main` (PR #50, fusionado por squash).
+Worktree: `/private/tmp/fix-error-labels-alfonso-20260907`.
+Conversación/proyecto: caso puntual reportado por Milton (usuario Alfonso
+Giménez, título fallando 3 intentos con timeout crudo de Playwright).
+Cambios: `apps/worker/src/automation/10minutesWebsite.ts:805` — el
+`page.selectOption(...)` de `createArticleDraft` ahora está envuelto en
+`try/catch`; si la categoría cacheada de `Category.externalId` ya no existe
+como opción real en el sitio, se lanza un mensaje humano y accionable
+("sincroniza categorías ahora en Configuración") en vez de propagar el
+timeout técnico de Playwright. El camino de éxito (categoría existente)
+queda idéntico.
+Archivos modificados: `apps/worker/src/automation/10minutesWebsite.ts`.
+Migraciones: ninguna.
+Auditoría 1 (funcional): APROBADA — revisión del flujo completo de
+`createArticleDraft`, reutiliza `productName` ya disponible en el scope.
+Auditoría 2 (regresión): APROBADA — `npx tsc --noEmit` y `npm run build` en
+`apps/worker`, worktree aislado con `node_modules`/Prisma Client propios.
+Auditoría 3 (integración/producción): APROBADA con salvedad — el worker
+corre vía GitHub Actions leyendo `main` directo (`Vercel –
+auto-articulos-web` salió `Skipped - Not affected`, correcto, no se tocó
+`apps/web`); verificación funcional en vivo (reproducir el error real y
+confirmar el mensaje nuevo) queda pendiente para la próxima vez que este
+caso puntual ocurra — riesgo bajo por ser un cambio aditivo sobre una ruta
+que hoy ya está rota.
+Responsable: Claude.
+Estado: DESPLEGADA. Verificación funcional en vivo pendiente (bajo riesgo).
+
+## Versión desplegada — 2026-09-07 — rediseño de login (más Apple) + recuperar contraseña
+
+Entrada agregada por la tarea programada diaria de propagación (2026-09-08)
+a partir de `COORDINACION_CLAUDE_CODEX.md`, sección "CIERRE — Rediseño de
+login (más Apple) + recuperar contraseña — 2026-09-07".
+
+Fecha y hora: 2026-09-07.
+Versión/commit: `0913991` en `main` (PR #58).
+Conversación/proyecto: pedido de Milton de modernizar la pantalla de login
+(fondo blanco en vez de gris, título/descripción nuevos, agregar
+recuperación de contraseña, que no existía).
+Cambios: `apps/web/src/app/login/page.tsx` — fondo blanco puro, tarjetas sin
+borde duro con sombra suave; título "Toda la inteligencia, al alcance de tu
+mano." y descripción nuevos; nuevo enlace "Recuperar mi contraseña" que
+apunta a `https://www.10minuteswebsite.com/ayuda` (no hay infraestructura
+de email para recuperación real, decisión explícita de Milton). De paso,
+`packages/shared/src/platform-servers.ts` — `helpUrl` de TagCrush
+actualizado a `https://www.tagcrush.com/Chat-de-ayuda-tagcrush` (estaba
+desactualizado).
+Archivos modificados: `apps/web/src/app/login/page.tsx`,
+`packages/shared/src/platform-servers.ts`.
+Migraciones: ninguna.
+Auditoría 1 (funcional): APROBADA — servidor local, verificado en desktop y
+viewport mobile (375px).
+Auditoría 2 (regresión): APROBADA — `npm run verify` (typecheck + build de
+`apps/web` con 90 rutas, build + 14/14 tests de `apps/worker`).
+Auditoría 3 (integración/producción): APROBADA — tras fusionar, ambos
+checks de Vercel en `success`, `/login` responde `200` en
+`auto-articulos-web.vercel.app` y `seototal.lasolucionweb.com`, confirmado
+visualmente contra el dominio real.
+Responsable: Claude.
+Estado: VERIFICADA EN PRODUCCIÓN.
+
+## Versión desplegada — 2026-09-07 — títulos ultra geolocalizados (cliente × negocio)
+
+Entrada agregada por la tarea programada diaria de propagación (2026-09-08)
+a partir de `COORDINACION_CLAUDE_CODEX.md`, secciones "CIERRE — 2026-09-07 —
+Títulos ultra geolocalizados" y "CIERRE FINAL — CODEX - AUDITORIA A
+ALGORITMO DE PUBLICACIÓN DE ARTICULOS".
+
+Fecha y hora: 2026-09-07.
+Versión/commit: `b47784b` (PR #61, campos y UI), `e79ee5e` (PR #62, ruta
+segura de migración — **nota de corrección**: la entrada de origen en
+`COORDINACION_CLAUDE_CODEX.md` cita el commit de PR #62 como `f050672`,
+pero ese hash corto corresponde en realidad a un commit distinto y
+anterior del 2026-09-04 ["docs: liberar capitanía tras archivar CONEXION
+BLOGGER"] — verificado con `git log --oneline --all | grep "(#62)"` contra
+`origin/main` antes de escribir esta entrada; se deja señalado aquí sin
+tocar el texto original de Coordinación), `c87d6ef` (PR #66, llamada
+dedicada para forzar combinaciones), `ae78d4c` (PR #67, manual de usuario).
+Conversación/proyecto: `CODEX - AUDITORIA A ALGORITMO DE PUBLICACIÓN DE
+ARTICULOS` (continuación de Claude).
+Cambios: nuevos campos `User.clientLocations`/`User.businessLocations`
+(texto separado por comas); sección "Ubicaciones para Títulos
+Geolocalizados" en Configuración → Contenido; `opportunity-analysis.ts`
+trata estas ubicaciones como datos reales declarados por el dueño de la
+cuenta (no requieren evidencia de GSC/GA4/Bing); llamada aparte a OpenAI
+dedicada a cubrir cada combinación cliente×negocio (el primer intento,
+dentro del prompt principal, no bastó por competir contra ~15 reglas más);
+`manual-usuario.ts` actualizado con el paso a paso.
+Migraciones: `safe_client_business_locations`, input nuevo y seguro en
+`migrate.yml` (mismo patrón que `safe_daily_limit_default`/
+`safe_blogger_integration`, tras fallar `prisma db push` normal por las
+columnas huérfanas ya documentadas). Aplicada con éxito, run `34167888519`.
+Auditoría 3 (integración/producción): APROBADA — `seototal.lasolucionweb.com/login`
+respondió 200 tras la migración; verificado en producción con la cuenta de
+Lorena Álvarez: las 12 combinaciones completas (4 ciudades de clientes × 3
+de negocio) aparecieron correctas, sin inventar ninguna fuera de las
+declaradas.
+Responsable: Claude.
+Estado: VERIFICADA EN PRODUCCIÓN.
+
+## Versión desplegada — 2026-09-07 — motor de selección de artículos tendencia para redes sociales
+
+Entrada agregada por la tarea programada diaria de propagación (2026-09-08)
+a partir de `COORDINACION_CLAUDE_CODEX.md`, sección "CIERRE FINAL — CODEX -
+AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS" (subsección "Algoritmo
+de Redes Sociales/Microblogging").
+
+Fecha y hora: 2026-09-07 (aprox., según orden de PRs citado en la fuente).
+Versión/commit: `97495e0` (PR #57), `bf18f64` (PR #60).
+Conversación/proyecto: `CODEX - AUDITORIA A ALGORITMO DE PUBLICACIÓN DE
+ARTICULOS`.
+Cambios: `selectTrendingArticles()` en
+`apps/web/src/app/api/social-opportunities/generate/route.ts` puntúa cada
+página publicada combinando impresiones+clics+tendencia de GSC,
+sesiones+usuarios de GA4 y coincidencia de palabras clave con consultas
+reales de Bing, para decidir de qué artículo hablar en redes (antes elegía
+por orden de Google o por fecha, sin usar GA4/Bing); `searchQueries` ahora
+se llena de verdad. PR #60: se excluyen artículos ya usados hoy en
+cualquier red (con fallback si no queda ninguno sin usar) y se genera 1
+solo candidato por clic en vez de hasta 3, corrigiendo que pedir dos redes
+distintas el mismo día devolvía el mismo artículo top-1 para ambas.
+Archivos modificados:
+`apps/web/src/app/api/social-opportunities/generate/route.ts`.
+Migraciones: ninguna.
+Decisión explícita de Milton: el flujo sigue siendo manual (el usuario
+aprueba cada propuesta); el programador automático de publicación diaria
+sin clic queda pendiente (ver `TO-DO.md`).
+Responsable: Claude/Codex (ver detalle completo y atribución exacta en
+`COORDINACION_CLAUDE_CODEX.md`).
+Estado: la fuente no detalla las tres auditorías por separado para estos
+dos commits puntuales; ambos están fusionados en `main` y forman parte del
+resultado ya verificado en producción con la cuenta de Lorena Álvarez
+descrito en la entrada anterior de este mismo documento.
+
+## Versión desplegada (parcial) — 2026-09-07 — nueva imagen OG con foto real de Milton
+
+Entrada agregada por la tarea programada diaria de propagación (2026-09-08)
+a partir de `COORDINACION_CLAUDE_CODEX.md`, sección "CIERRE (parcial) —
+Nueva imagen OG con foto real de Milton — 2026-09-07".
+
+Fecha y hora: 2026-09-07.
+Versión/commit: `67727b4` en `main` (PR #69).
+Cambios: reemplazo de `apps/web/public/og-image.jpg` (antes template de
+Canva "Blue Futuristic Neon Artificial Intelligence") por una imagen nueva
+generada con ChatGPT Images a partir de una foto real de Milton (estética
+cyborg, decisión de marca explícita confirmada por él), redimensionada de
+1730x909 a 1200x630 con `sips -z` (resize proporcional, sin recortar
+texto).
+Archivos modificados: `apps/web/public/og-image.jpg` (1 archivo binario).
+Migraciones: ninguna.
+Auditoría 1 (funcional): APROBADA — verificado visualmente que la imagen
+completa entra sin recortes en 1200x630.
+Auditoría 2 (regresión): no aplica — solo un asset estático.
+Auditoría 3 (integración/producción): **BLOQUEADA al momento del merge** —
+el check `Vercel – auto-articulos-web` para `67727b4` devolvió `Deployment
+rate limited — retry in 24 hours` (mismo tipo de bloqueo de cuota que ya
+afectó a los PR #46/#47/#70). No es error de código. Producción NO se
+rompió: `/login` seguía respondiendo `200` en ambos dominios con el build
+anterior (el de PR #63), solo sin la imagen OG nueva todavía.
+Responsable: Claude.
+Siguiente acción: cuando se libere la cuota de Vercel, reintentar el mismo
+commit desde Vercel (o `git commit --allow-empty` + push) y confirmar
+visualmente que `og-image.jpg` nuevo se sirve en producción.
+Estado: CÓDIGO FUSIONADO EN `main`, DESPLIEGUE PENDIENTE POR CUOTA DE
+VERCEL (no verificado como resuelto por esta corrida de propagación).
+
+## Versión preparada — 2026-09-07 — PR #70: tarjetas clicables en Usuarios
+
+Entrada agregada por la tarea programada diaria de propagación (2026-09-08)
+a partir de `COORDINACION_CLAUDE_CODEX.md`, sección "BLOQUEADO — Tarjetas
+clicables en Usuarios... — 2026-09-07", y verificada en vivo contra la API
+de GitHub por esta misma corrida.
+
+Fecha y hora: 2026-09-07 23:52 UTC (según metadatos del PR).
+Versión/commit: `0fcedef` (rama `claude/panel-usuarios-clickable-20260907`,
+sin fusionar).
+Worktree: `/tmp/panel-usuarios-clickable-20260907`.
+Conversación/proyecto: `ORDEN DE USUARIOS ACTIVOS EN ADMIN`.
+Cambios: las 5 tarjetas de resumen de la pestaña "Accesos" en
+`/dashboard/usuarios` (Usuarios totales, En prueba, Activos, Conectados
+ahora, Publicaciones totales) pasan de estáticas a clicables (navegan a la
+sección/filtro correspondiente con datos reales) y pierden los colores
+verde/naranja, quedando en escala de grises. No se tocó lógica de creación
+de usuarios, módulos, mantenimiento, prompts ni `UserCard`.
+Archivos modificados: `apps/web/src/app/dashboard/usuarios/page.tsx` (1
+archivo, +59/-18 según la API de GitHub).
+Migraciones: ninguna.
+Auditoría 1 (funcional): APROBADA — `npx tsc --noEmit` limpio.
+Auditoría 2 (regresión): APROBADA — build exacto de `apps/web` (mismo
+comando que Vercel), incluye `/dashboard/usuarios` en las rutas generadas.
+Auditoría 3 (integración/producción): **BLOQUEADA** — verificado en vivo
+por esta corrida vía API de GitHub (`pull_request_read.get_status` para PR
+#70): ambos checks de Vercel (`cambio-boton-comienza-aqui-clean` y
+`auto-articulos-web`) en `failure`, `Deployment rate limited — retry in 24
+hours`. El PR sigue `open`, `mergeable_state: unknown`, sin fusionar —
+correcto según el Protocolo (no fusionar sin las tres auditorías).
+Responsable: Claude.
+Siguiente acción: cuando se libere la cuota de Vercel, reintentar el mismo
+commit, verificar el Preview funcionalmente y recién ahí fusionar.
+Estado: PREPARADA, BLOQUEADA POR CUOTA DE VERCEL.
