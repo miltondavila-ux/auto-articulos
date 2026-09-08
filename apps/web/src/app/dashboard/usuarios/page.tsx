@@ -661,33 +661,59 @@ export default function UsuariosPage() {
     0,
   );
   const adminCount = users.filter((user) => user.role === "admin").length;
+  const trialCount = users.filter(
+    (user) => user.isTrialSignup && user.role !== "admin",
+  ).length;
+  const standardCount = users.length - trialCount;
   const activeNow = usage?.perUser.filter((user) => user.active).length ?? 0;
-  const metrics = [
+  const metrics: {
+    label: string;
+    value: string;
+    detail: string;
+    onClick: () => void;
+  }[] = [
     {
       label: "Usuarios totales",
       value: users.length.toLocaleString("es-US"),
       detail: `${adminCount} con acceso administrativo`,
-      color: "#1d1d1f",
+      onClick: () => {
+        setUserCategory("all");
+        openSection("accesos");
+      },
     },
     {
-      label: "Activos ahora",
+      label: "En prueba",
+      value: trialCount.toLocaleString("es-US"),
+      detail: "Periodo de evaluación (7 días)",
+      onClick: () => {
+        setUserCategory("trial");
+        openSection("accesos");
+      },
+    },
+    {
+      label: "Activos",
+      value: standardCount.toLocaleString("es-US"),
+      detail: "Cuentas estándar, fuera de prueba",
+      onClick: () => {
+        setUserCategory("standard");
+        openSection("accesos");
+      },
+    },
+    {
+      label: "Conectados ahora",
       value: loadingUsage ? "…" : activeNow.toLocaleString("es-US"),
       detail: "Con ejecuciones en curso o pendientes",
-      color: "#34c759",
+      onClick: () => openSection("uso"),
     },
     {
-      label: "Artículos publicados",
+      label: "Publicaciones totales",
       value: totalPublished.toLocaleString("es-US"),
       detail: "Suma de todas las cuentas",
-      color: "#1d1d1f",
-    },
-    {
-      label: "Base de datos usada",
-      value: usage ? `${(usage.percentUsed * 100).toFixed(1)}%` : "…",
-      detail: usage
-        ? `${formatBytes(usage.remainingBytes)} disponibles`
-        : "Calculando almacenamiento",
-      color: "#ff9500",
+      onClick: () => {
+        setSortOrder("articles_desc");
+        setUserCategory("all");
+        openSection("accesos");
+      },
     },
   ];
   const tabs: {
@@ -789,8 +815,10 @@ export default function UsuariosPage() {
         }}
       >
         {metrics.map((metric) => (
-          <div
+          <button
             key={metric.label}
+            type="button"
+            onClick={metric.onClick}
             className="row"
             style={{
               padding: "16px 18px",
@@ -798,9 +826,21 @@ export default function UsuariosPage() {
               background: "#ffffff",
               color: "#1d1d1f",
               border: "1px solid #e5e5ea",
+              textAlign: "left",
+              fontFamily: "inherit",
+              cursor: "pointer",
+              transition: "background 0.12s, border-color 0.12s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "#f5f5f7";
+              e.currentTarget.style.borderColor = "#c9c9cd";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "#ffffff";
+              e.currentTarget.style.borderColor = "#e5e5ea";
             }}
           >
-            <div className="muted" style={{ fontSize: 12, fontWeight: 500 }}>
+            <div style={{ fontSize: 12, fontWeight: 500, color: "#6e6e73" }}>
               {metric.label}
             </div>
             <div
@@ -810,14 +850,15 @@ export default function UsuariosPage() {
                 lineHeight: 1.1,
                 fontWeight: 600,
                 color: "#1d1d1f",
+                fontVariantNumeric: "tabular-nums",
               }}
             >
               {metric.value}
             </div>
-            <div className="muted" style={{ marginTop: 6, fontSize: 11 }}>
+            <div style={{ marginTop: 6, fontSize: 11, color: "#9a9a9e" }}>
               {metric.detail}
             </div>
-          </div>
+          </button>
         ))}
       </div>
 
@@ -3255,3 +3296,4 @@ function UserHistorial({ email }: { email: string }) {
     </details>
   );
 }
+
