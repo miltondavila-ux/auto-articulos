@@ -6070,3 +6070,48 @@ todavía — el código del fix (PR #80, commit `ba62119`) sigue correcto en
 `main`, solo falta que Vercel libere la cuota para que el build de
 producción se dispare. Sigo monitoreando; próxima actualización cuando el
 estado cambie.
+
+## Estado actual — resumen pedido por Milton — 2026-09-08
+
+Milton pidió una actualización del estado en este documento. Resumen de
+esta conversación (login más Apple + imagen OG + reparación de conflictos),
+verificado en vivo contra `origin/main` justo antes de escribir esto:
+
+- **PR #58** (rediseño de login, `0913991`), **PR #63** (título/meta
+  descripción, `741bf75`) y **PR #69** (imagen OG nueva con foto real de
+  Milton, `67727b4`): los tres fusionados en `main` y verificados en
+  producción (`/login` responde `200` en ambos dominios).
+- El único punto sin cerrar del PR #69: la imagen OG todavía no se ve en
+  producción porque el deploy de ese commit específico quedó bloqueado por
+  `build-rate-limit` de Vercel (no es un error de código). Mismo bloqueo
+  que también frena, en paralelo, el PR #70/#80 de otra conversación
+  (tarjetas clicables de Usuarios) — ver la entrada de esa conversación más
+  arriba. No depende de mí, solo de que Vercel libere la cuota.
+- El generador automático de "Actualizaciones" (`scripts/generate-product-update.ts`)
+  sigue sin poder correr para ninguno de los commits de esta conversación:
+  intenté traer `DATABASE_URL`/`OPENAI_API_KEY` reales con `vercel env pull`
+  y vinieron vacías — están marcadas como variables "Sensitive" en Vercel,
+  que la plataforma bloquea a propósito para que ni siquiera la cuenta
+  autenticada pueda leerlas de vuelta. No hay anuncio en
+  `dashboard/actualizaciones` para el rediseño de login ni para la imagen
+  OG. Queda pendiente que alguien con acceso al dashboard de Vercel
+  desmarque esas variables temporalmente, o decida que estos cambios no
+  necesitan anuncio.
+- Mientras fusionaba con `origin/main` (mucha actividad concurrente de
+  otras sesiones hoy), resolví tres conflictos de merge en este mismo
+  documento — todos agregados no solapados de otras conversaciones, sin
+  pérdida de contenido — y evité que se aplicara sin querer un stash de
+  `TO-DO.md` de otra sesión que iba a borrar ~20 pendientes reales (ver la
+  entrada "Incidente interceptado" más arriba). El `git status` actual del
+  checkout está limpio de cambios míos sin commitear.
+
+**Estado real de esta conversación:** cerrada en lo funcional (los tres
+PRs de diseño están en producción salvo la imagen OG por cuota externa).
+Sin reservas de archivo activas de mi parte. Pendientes reales para quien
+retome: (1) reintentar el deploy del PR #69 cuando se libere el
+rate-limit de Vercel, (2) decidir si vale la pena desbloquear las
+variables "Sensitive" para completar el changelog de "Actualizaciones", y
+(3) la decisión de Milton, todavía sin resolver, sobre cómo evitar que
+`TO-DO.md` se siga sobrescribiendo entre sesiones.
+
+Responsable: Claude.
