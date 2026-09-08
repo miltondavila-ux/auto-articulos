@@ -38,7 +38,6 @@ refrescar esta tabla; no confiar en la fecha si pasó mucho tiempo.
 | Worktree | Rama | Commits sin fusionar | Dueño / conversación (según el propio commit o Coordinación) | Nota |
 |---|---|---|---|---|
 | `/private/tmp/doc-coordinacion-sept3` | `claude/doc-coordinacion-sept3` | 1 | Claude — esta misma sesión, "DOCUMENTO DE COORDINACION - SEPT 3" | Soy yo, ahora mismo. |
-| `/tmp/panel-usuarios-clickable-20260907` | `claude/panel-usuarios-clickable-20260907` | 1 | Claude — "ORDEN DE USUARIOS ACTIVOS EN ADMIN" | Reserva: `apps/web/src/app/dashboard/usuarios/page.tsx` — tarjetas de resumen clicables (prueba/activos/conectados/publicaciones), sin cambiar lógica existente. |
 | `/Users/miltondavila/Creador de articulos/.worktrees/google-api-verification` | `codex/google-api-verification` | 1 | Codex — commit `7908b01` "chore: prepare Google OAuth domain and verification pages", hecho hoy 19:06 | Muy reciente; probablemente Codex trabajando en paralelo ahora mismo en `CODEX - GPT-5 - VERIFICACION DE API'S DE GOOGLE`. |
 | `/private/tmp/limites-globales-articulos` | `codex/limites-globales-articulos` | 1 | Codex — proyecto `LIMITES GLOBALES DE ARTICULOS` | Coincide con la decisión de Milton (2026-09-02): **PAUSADO, no tocar ni integrar**. |
 | `/private/tmp/meta-threads-callbacks` | `codex/meta-threads-callbacks` | 1 | Codex — proyecto `META THREADS CALLBACKS` | Coincide con la decisión de Milton (2026-09-02): **ACTIVO, no tocar**, continúa en su propia conversación. |
@@ -140,6 +139,18 @@ corrida del 2026-09-05):
   quede visible aquí y no solo enterrada en Coordinación. Milton o quien
   retome debe confirmar si ese trabajo sigue sin commitear o si ya se
   resolvió con un PR propio.
+
+#### Corrección (agregada por Claude, 2026-09-08, ~07:20 hora local, sin editar el bloque anterior)
+
+La fila de arriba sobre `apps/web/src/app/dashboard/usuarios/page.tsx` /
+PR #70 quedó desactualizada apenas unos minutos después de escrita: el
+rate limit de Vercel se liberó la misma mañana, el PR #70 se fusionó como
+`48578e9` y ya está verificado en producción real (`auto-articulos-web.vercel.app`
+responde con normalidad). Detalle completo del desbloqueo y la fusión en
+`COORDINACION_CLAUDE_CODEX.md`, sección "CIERRE — Tarjetas clicables en
+Usuarios — 2026-09-08". **La reserva de ese archivo ya se borró** de la
+tabla de la Parte A (arriba en este mismo documento) — esta nota solo
+corrige el addendum automático, que no debe editarse retroactivamente.
 
 ### El checkout principal de Milton
 
