@@ -5,7 +5,7 @@ export default function BrowserTabsConnectionNotice() {
         padding: 16,
         border: "1px solid #d2d2d7",
         borderRadius: 14,
-        background: "#fffaf0",
+        background: "#f5f5f7",
         color: "#1d1d1f",
         fontSize: 13,
         lineHeight: 1.55,

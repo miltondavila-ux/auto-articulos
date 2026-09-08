@@ -238,6 +238,13 @@ export default function ConfiguracionContenidoPage() {
           tu teléfono de contacto y las fotos que se usan al crear
           publicaciones para redes sociales.
         </IntroP>
+        <ol style={{ margin: "12px 0 0", paddingLeft: 22, color: "#1d1d1f", fontSize: 14, lineHeight: 1.65 }}>
+          <li><strong>Elige el estilo de redacción:</strong> el tono con el que la inteligencia artificial escribe por defecto.</li>
+          <li><strong>Escribe la firma:</strong> el texto que se agrega automáticamente al final de cada artículo nuevo.</li>
+          <li><strong>Indica ubicaciones (opcional):</strong> de dónde son tus clientes y dónde opera tu negocio, para títulos más segmentados.</li>
+          <li><strong>Guarda tu teléfono:</strong> se usa en los botones de WhatsApp y llamada de tus artículos.</li>
+          <li><strong>Sube tus fotos y logo:</strong> se usan al crear imágenes para redes sociales.</li>
+        </ol>
         <IntroP>
           Si buscas tu usuario y contraseña, tus categorías o el idioma de
           redacción, eso vive en Cuenta.
@@ -252,11 +259,11 @@ export default function ConfiguracionContenidoPage() {
           <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 12 }}>
             Selecciona el estilo de escritura que se usará por defecto para tus artículos. Puedes cambiarlo individualmente al publicar un lote o ejecutar una oportunidad.
           </p>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <select
               value={defaultPromptId}
               onChange={(e) => setDefaultPromptId(e.target.value)}
-              style={{ ...inputStyle, width: 280, height: 40 }}
+              style={{ ...inputStyle, width: 280, maxWidth: "100%", height: 40 }}
             >
               <option value="">STANDARD (Estilo predeterminado de la plataforma)</option>
               {prompts.map((p) => (

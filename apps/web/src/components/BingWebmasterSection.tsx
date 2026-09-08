@@ -256,7 +256,7 @@ export default function BingWebmasterSection() {
             <p
               style={{
                 margin: "0 0 10px",
-                color: "#8a4b08",
+                color: "#6e6e73",
                 fontSize: 11,
                 fontFamily: "monospace",
               }}
@@ -302,7 +302,7 @@ export default function BingWebmasterSection() {
             ))}
           </select>
           {data.sitemapUrl && !editingSitemap ? (
-            <div style={{ fontSize: 13, color: "#16803c" }}>
+            <div style={{ fontSize: 13, color: "#1d1d1f" }}>
               ✓ Sitemap detectado: {data.sitemapUrl}{" "}
               <button
                 type="button"
@@ -323,7 +323,7 @@ export default function BingWebmasterSection() {
           ) : (
             <>
               {!data.sitemapUrl && (
-                <p style={{ fontSize: 12, color: "#8a4b08", margin: 0 }}>
+                <p style={{ fontSize: 12, color: "#6e6e73", margin: 0 }}>
                   No pudimos detectar tu sitemap automáticamente — puedes escribirlo a mano.
                 </p>
               )}
@@ -338,7 +338,7 @@ export default function BingWebmasterSection() {
           {data.sitemapUrl && (
             <div style={{ fontSize: 12 }}>
               {data.lastSitemapSyncStatus === "success" && (
-                <p style={{ color: "#16803c", margin: 0 }}>
+                <p style={{ color: "#1d1d1f", margin: 0 }}>
                   ✓ Último envío exitoso
                   {data.lastSitemapSyncAt
                     ? `: ${new Date(data.lastSitemapSyncAt).toLocaleString("es-US")}`
@@ -394,14 +394,14 @@ export default function BingWebmasterSection() {
             return (
             <div
               style={{
-                background: masterIncompleto ? "#fff4e5" : "#f2faf4",
-                border: `1px solid ${masterIncompleto ? "rgba(255, 149, 0, 0.25)" : "rgba(52, 199, 89, 0.25)"}`,
+                background: "#f5f5f7",
+                border: "1px solid #e5e5ea",
                 borderRadius: 12,
                 padding: "12px 16px",
                 fontSize: 13,
               }}
             >
-              <p style={{ margin: 0, fontWeight: 600, color: masterIncompleto ? "#8a4b08" : "#16803c" }}>
+              <p style={{ margin: 0, fontWeight: 600, color: masterIncompleto ? "#6e6e73" : "#1d1d1f" }}>
                 {masterResult.errores > 0
                   ? "Indexación masiva con algunos errores:"
                   : masterIncompleto
@@ -422,7 +422,7 @@ export default function BingWebmasterSection() {
                 </p>
               )}
               {!!masterResult.sinCupo && masterResult.sinCupo > 0 && (
-                <p style={{ margin: "4px 0 0", color: "#8a4b08" }}>
+                <p style={{ margin: "4px 0 0", color: "#6e6e73" }}>
                   • Quedaron <strong>{masterResult.sinCupo}</strong> esperando cupo diario de Bing.
                 </p>
               )}
@@ -438,7 +438,7 @@ export default function BingWebmasterSection() {
         <p
           style={{
             fontSize: 13,
-            color: message.type === "error" ? "#ff3b30" : message.type === "success" ? "#16803c" : "#6e6e73",
+            color: message.type === "error" ? "#ff3b30" : message.type === "success" ? "#1d1d1f" : "#6e6e73",
             margin: "12px 0 0",
             display: "flex",
             alignItems: "center",

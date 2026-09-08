@@ -157,7 +157,7 @@ export default function LinkedInSection({ allowed = true }: LinkedInSectionProps
                     Client ID y Secret de developer.linkedin.com (solo visible para admin).
                   </p>
                 </div>
-                <span style={{ color: isConfigured ? "#16803c" : "#8a4b08", fontSize: 12, fontWeight: 600 }}>
+                <span style={{ color: isConfigured ? "#1d1d1f" : "#6e6e73", fontSize: 12, fontWeight: 600 }}>
                   {isConfigured ? "✓ Configurada" : "Sin configurar"}
                 </span>
               </div>
@@ -226,7 +226,7 @@ export default function LinkedInSection({ allowed = true }: LinkedInSectionProps
               </p>
             ) : connection?.connected ? (
               <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                <span style={{ color: "#16803c", fontSize: 13, fontWeight: 600 }}>
+                <span style={{ color: "#1d1d1f", fontSize: 13, fontWeight: 600 }}>
                   ✓ Conectado{connection.linkedinUsername ? ` — ${connection.linkedinUsername}` : ""}
                 </span>
                 {connection.isExpired && (
@@ -266,7 +266,7 @@ export default function LinkedInSection({ allowed = true }: LinkedInSectionProps
         </p>
       )}
 
-      {message && <p style={{ color: "#16803c", fontSize: 13, marginTop: 10 }}>{message}</p>}
+      {message && <p style={{ color: "#1d1d1f", fontSize: 13, marginTop: 10 }}>{message}</p>}
     </section>
   );
 }

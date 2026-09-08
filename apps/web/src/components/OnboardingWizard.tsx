@@ -682,19 +682,19 @@ export default function OnboardingWizard({
             alignItems: "center",
             background:
               message.type === "success"
-                ? "rgba(52, 199, 89, 0.1)"
+                ? "#f5f5f7"
                 : message.type === "error"
                   ? "rgba(255, 59, 48, 0.08)"
                   : "#f5f5f7",
             border:
               message.type === "success"
-                ? "1px solid rgba(52, 199, 89, 0.25)"
+                ? "1px solid #f5f5f7"
                 : message.type === "error"
                   ? "1px solid rgba(255, 59, 48, 0.3)"
                   : "1px solid rgba(0, 0, 0, 0.25)",
             color:
               message.type === "success"
-                ? "#16803c"
+                ? "#1d1d1f"
                 : message.type === "error"
                   ? "#ff3b30"
                   : "#1d1d1f",
@@ -775,12 +775,12 @@ export default function OnboardingWizard({
                 style={{
                   width: `${progressPercent}%`,
                   height: "100%",
-                  background: allCoreDone ? "#34c759" : "#1d1d1f",
+                  background: "#1d1d1f",
                   transition: "width 0.4s ease",
                 }}
               />
             </div>
-            <span style={{ fontSize: 12, fontWeight: 600, color: allCoreDone ? "#16803c" : "#1d1d1f" }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "#1d1d1f" }}>
               {allCoreDone ? "100% Configurado" : `${progressPercent}% completado`}
             </span>
           </div>
@@ -817,18 +817,18 @@ export default function OnboardingWizard({
                   marginTop: 10,
                   padding: "10px 14px",
                   background: step1Verified
-                    ? "rgba(52, 199, 89, 0.1)"
-                    : "rgba(255, 149, 0, 0.1)",
+                    ? "#f5f5f7"
+                    : "#f5f5f7",
                   borderRadius: 8,
                   border: step1Verified
-                    ? "1px solid rgba(52, 199, 89, 0.25)"
-                    : "1px solid rgba(255, 149, 0, 0.35)",
+                    ? "1px solid #f5f5f7"
+                    : "1px solid #f5f5f7",
                 }}
               >
                 <div
                   style={{
                     fontSize: 13,
-                    color: step1Verified ? "#16803c" : "#8a5a00",
+                    color: step1Verified ? "#1d1d1f" : "#6e6e73",
                   }}
                 >
                   {step1Verified
@@ -848,13 +848,13 @@ export default function OnboardingWizard({
                 {/* Cuadro de recomendación fuerte para resetear contraseña */}
                 <div
                   style={{
-                    background: "#fff4e5",
-                    border: "1.5px solid rgba(255, 149, 0, 0.4)",
+                    background: "#f5f5f7",
+                    border: "1.5px solid #f5f5f7",
                     borderRadius: 8,
                     padding: "12px 14px",
                     marginBottom: 14,
                     fontSize: 13,
-                    color: "#8a5a00",
+                    color: "#6e6e73",
                     lineHeight: 1.45,
                   }}
                 >
@@ -872,7 +872,7 @@ export default function OnboardingWizard({
                       display: "inline-flex",
                       alignItems: "center",
                       gap: 6,
-                      background: "#ff9500",
+                      background: "#6e6e73",
                       color: "#ffffff",
                       padding: "7px 14px",
                       borderRadius: 6,
@@ -883,7 +883,7 @@ export default function OnboardingWizard({
                   >
                     Resetear contraseña de la plataforma ahora ↗
                   </a>
-                  <p style={{ margin: "8px 0 0 0", fontSize: 12, color: "#8a5a00" }}>
+                  <p style={{ margin: "8px 0 0 0", fontSize: 12, color: "#6e6e73" }}>
                     <strong>Importante:</strong> al generar tu nueva contraseña en la plataforma, copia y pega esa misma clave en el campo de abajo para que ambos sistemas queden sincronizados.
                   </p>
                 </div>
@@ -1054,7 +1054,7 @@ export default function OnboardingWizard({
             )}
 
             {step1Saved && siteSelectionConfirmed && (
-              <div style={{ marginTop: 12, fontSize: 12, color: "#16803c" }}>
+              <div style={{ marginTop: 12, fontSize: 12, color: "#1d1d1f" }}>
                 Sitio confirmado{selectedSitePanel ? `: ${selectedSitePanel}` : " (único sitio de la cuenta)"}. Esta cuenta de SEO TOTAL trabaja exclusivamente con él.
               </div>
             )}
@@ -1092,13 +1092,13 @@ export default function OnboardingWizard({
                       flexWrap: "wrap",
                       gap: 12,
                       padding: "10px 14px",
-                      background: "rgba(52, 199, 89, 0.1)",
+                      background: "#f5f5f7",
                       borderRadius: 8,
-                      border: "1px solid rgba(52, 199, 89, 0.25)",
+                      border: "1px solid #f5f5f7",
                       marginBottom: 8,
                     }}
                   >
-                    <div style={{ fontSize: 13, color: "#16803c" }}>
+                    <div style={{ fontSize: 13, color: "#1d1d1f" }}>
                       <strong>{categories.length} categorías</strong> sincronizadas y listas para publicar.
                     </div>
                     <button
@@ -1275,12 +1275,12 @@ export default function OnboardingWizard({
                     flexWrap: "wrap",
                     gap: 12,
                     padding: "10px 14px",
-                    background: "rgba(52, 199, 89, 0.1)",
+                    background: "#f5f5f7",
                     borderRadius: 8,
-                    border: "1px solid rgba(52, 199, 89, 0.25)",
+                    border: "1px solid #f5f5f7",
                   }}
                 >
-                  <div style={{ fontSize: 13, color: "#16803c" }}>
+                  <div style={{ fontSize: 13, color: "#1d1d1f" }}>
                     Idioma activo: <strong>{activeLangName}</strong>. Los artículos se generarán en este idioma.
                   </div>
                   <button
@@ -1449,13 +1449,13 @@ export default function OnboardingWizard({
                         flexWrap: "wrap",
                         gap: 12,
                         padding: "10px 14px",
-                        background: "rgba(52, 199, 89, 0.1)",
+                        background: "#f5f5f7",
                         borderRadius: 8,
-                        border: "1px solid rgba(52, 199, 89, 0.25)",
+                        border: "1px solid #f5f5f7",
                         marginBottom: 10,
                       }}
                     >
-                      <div style={{ fontSize: 13, color: "#16803c" }}>
+                      <div style={{ fontSize: 13, color: "#1d1d1f" }}>
                         Google Search Console conectado y activo en: <strong>{googleData?.siteUrl}</strong>
                       </div>
                       <button
@@ -1577,12 +1577,12 @@ export default function OnboardingWizard({
                           {(!googleData.sites || googleData.sites.length === 0) && (
                             <div
                               style={{
-                                background: "#fff4e5",
-                                border: "1px solid rgba(255, 149, 0, 0.3)",
+                                background: "#f5f5f7",
+                                border: "1px solid #f5f5f7",
                                 borderRadius: 8,
                                 padding: "10px 14px",
                                 fontSize: 13,
-                                color: "#8a4b08",
+                                color: "#6e6e73",
                               }}
                             >
                               Tu cuenta de Google está vinculada, pero no tiene sitios listados en Google Search Console. Puedes ingresar la URL exacta de tu propiedad a continuación:
@@ -1837,12 +1837,12 @@ function StepCard({
               padding: "4px 10px",
               borderRadius: 999,
               background: isDone
-                ? "rgba(52, 199, 89, 0.1)"
+                ? "#f5f5f7"
                 : isActive
                   ? "#f5f5f7"
                   : "#f5f5f7",
               color: isDone
-                ? "#16803c"
+                ? "#1d1d1f"
                 : isActive
                   ? "#1d1d1f"
                   : "#6e6e73",

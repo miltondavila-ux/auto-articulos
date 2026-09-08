@@ -74,6 +74,12 @@ export default function ConfiguracionRedesSocialesPage() {
           el sistema también pueda crear y publicar contenido adaptado a
           cada red automáticamente.
         </IntroP>
+        <ol style={{ margin: "12px 0 0", paddingLeft: 22, color: "#1d1d1f", fontSize: 14, lineHeight: 1.65 }}>
+          <li><strong>Elige una red:</strong> cada tarjeta de abajo explica sus propios pasos antes de pedirte nada.</li>
+          <li><strong>Inicia sesión en esa red:</strong> en una pestaña nueva, con la cuenta correcta ya abierta.</li>
+          <li><strong>Autoriza la conexión:</strong> acepta los permisos que te pida esa red.</li>
+          <li><strong>Listo:</strong> conectar una red no publica nada por sí solo, solo la deja disponible para cuando quieras usarla.</li>
+        </ol>
         <IntroP>
           Solo aparecen aquí las redes que tu cuenta tiene habilitadas. Si
           falta alguna que necesitas, pídele al administrador que te dé

@@ -43,7 +43,7 @@ export default function GoogleAnalyticsSection() {
       <strong>Cómo funciona:</strong> conecta tu cuenta, autoriza el acceso de lectura y elige una propiedad GA4. Puedes cambiarla o desconectarla cuando quieras.
     </div>
     {!data?.connected ? <a href="/api/google-analytics/connect?returnTo=/dashboard/configuracion" style={{ ...secondaryButtonStyle, display: "inline-block", textDecoration: "none" }}>Conectar Google Analytics 4</a> : <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {data.error && <div style={{ color: "#8a4b08", fontSize: 13 }}>⚠️ {data.error} Puedes reconectar tu cuenta.</div>}
+      {data.error && <div style={{ color: "#6e6e73", fontSize: 13 }}>⚠️ {data.error} Puedes reconectar tu cuenta.</div>}
       <select value={selected} onChange={(event) => setSelected(event.target.value)} style={inputStyle}>
         <option value="">Selecciona tu propiedad GA4</option>
         {data.properties.map((property) => <option key={property.propertyId} value={property.propertyId}>{property.displayName} ({property.propertyId})</option>)}
@@ -51,14 +51,14 @@ export default function GoogleAnalyticsSection() {
       {data.propertyId && (() => {
         const property = data.properties.find((item) => item.propertyId === data.propertyId);
         return (
-          <p style={{ fontSize: 13, color: "#16803c", margin: 0 }}>
+          <p style={{ fontSize: 13, color: "#1d1d1f", margin: 0 }}>
             ✓ Propiedad conectada: {property ? `${property.displayName} (${property.propertyId})` : data.propertyId}
           </p>
         );
       })()}
       {data.propertyId && data.summary && (
         data.summary.totalSessions > 0 ? (
-          <p style={{ fontSize: 12, color: "#16803c", margin: 0 }}>
+          <p style={{ fontSize: 12, color: "#1d1d1f", margin: 0 }}>
             ✓ Recibiendo datos reales: {data.summary.totalSessions.toLocaleString("es-US")} sesiones y {data.summary.totalActiveUsers.toLocaleString("es-US")} usuarios activos en los últimos 12 meses, en {data.summary.pagesWithData} páginas.
           </p>
         ) : (
@@ -73,6 +73,6 @@ export default function GoogleAnalyticsSection() {
         <button onClick={disconnect} style={secondaryButtonStyle}>Desconectar Google Analytics</button>
       </div>
     </div>}
-    {message && <p style={{ fontSize: 13, margin: "10px 0 0", color: message.includes("no se") || message.includes("No se") ? "#c00" : "#16803c" }}>{message}</p>}
+    {message && <p style={{ fontSize: 13, margin: "10px 0 0", color: message.includes("no se") || message.includes("No se") ? "#c00" : "#1d1d1f" }}>{message}</p>}
   </section>;
 }

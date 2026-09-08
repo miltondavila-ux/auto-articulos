@@ -106,7 +106,7 @@ export default function PinterestSection({ allowed = true }: { allowed?: boolean
         {settings?.isAdmin && <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 14, paddingTop: 14 }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
             <div><strong style={{ color: "#1d1d1f", fontSize: 13 }}>Credenciales globales de la App</strong><p className="lead-copy" style={{ fontSize: 12, margin: "2px 0 0" }}>Client ID y Secret de Pinterest Developers.</p></div>
-            <span style={{ color: configured ? "#16803c" : "#8a4b08", fontSize: 12, fontWeight: 600 }}>{configured ? "✓ Configurada" : "Sin configurar"}</span>
+            <span style={{ color: configured ? "#1d1d1f" : "#6e6e73", fontSize: 12, fontWeight: 600 }}>{configured ? "✓ Configurada" : "Sin configurar"}</span>
           </div>
           {!editing ? <div style={{ marginTop: 10 }}>
             {configured && <p className="muted" style={{ fontSize: 12 }}>Client ID: {settings.clientId}</p>}
@@ -128,7 +128,7 @@ export default function PinterestSection({ allowed = true }: { allowed?: boolean
                   Autoriza tu cuenta, elige el tablero y controla la conexión desde aquí.
                 </p>
               </div>
-              {connection?.connected && !connection.isExpired ? <span style={{ color: "#16803c", fontSize: 12, fontWeight: 700 }}>● Conectada</span> : <span style={{ color: "#8a4b08", fontSize: 12, fontWeight: 700 }}>● Pendiente</span>}
+              {connection?.connected && !connection.isExpired ? <span style={{ color: "#1d1d1f", fontSize: 12, fontWeight: 700 }}>● Conectada</span> : <span style={{ color: "#6e6e73", fontSize: 12, fontWeight: 700 }}>● Pendiente</span>}
             </div>
             {!configured ? <p className="notice" style={{ margin: "14px 0 0" }}>Pinterest todavía no está configurado. {settings?.isAdmin ? "Guarda primero las credenciales de la aplicación arriba." : "El administrador debe configurar la aplicación."}</p> : !connection?.connected ? <div style={{ marginTop: 14 }}>
               <p className="lead-copy" style={{ fontSize: 13, margin: "0 0 12px" }}>Paso 1 de 2 · Conecta la cuenta que usará este usuario para publicar.</p>

@@ -107,7 +107,7 @@ export default function BusinessProfileSection() {
         {!data?.connected && (
           <span
             style={{
-              color: "#b45309",
+              color: "#6e6e73",
               fontWeight: 700,
               fontSize: 12,
               letterSpacing: ".04em",
@@ -147,7 +147,7 @@ export default function BusinessProfileSection() {
             </>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <p style={{ fontSize: 13, color: "#8a4b08", margin: 0 }}>
+              <p style={{ fontSize: 13, color: "#6e6e73", margin: 0 }}>
                 {retrySeconds ? `Google está preparando la consulta. Podrás buscar fichas en ${retrySeconds} segundos.` : data.locationsLoaded ? "No encontramos fichas administradas por esta cuenta de Google." : "Tu cuenta está conectada. Busca las fichas disponibles para elegir dónde publicar."}
               </p>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -165,11 +165,11 @@ export default function BusinessProfileSection() {
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <p style={{ fontSize: 13, color: "#16803c", margin: 0 }}>✓ Conectado a {data.locationTitle ?? data.locationName}</p>
+          <p style={{ fontSize: 13, color: "#1d1d1f", margin: 0 }}>✓ Conectado a {data.locationTitle ?? data.locationName}</p>
           <div><button onClick={disconnect} className="secondary" style={secondaryButtonStyle}>Desconectar</button></div>
         </div>
       )}
-      {message && <p style={{ fontSize: 13, color: "#16803c", marginTop: 10 }}>{message}</p>}
+      {message && <p style={{ fontSize: 13, color: "#1d1d1f", marginTop: 10 }}>{message}</p>}
     </section>
   );
 }

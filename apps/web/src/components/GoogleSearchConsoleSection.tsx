@@ -151,7 +151,7 @@ export default function GoogleSearchConsoleSection() {
             ))}
           </select>
           {data.sitemapUrl && !editingSitemap ? (
-            <div style={{ fontSize: 13, color: "#16803c" }}>
+            <div style={{ fontSize: 13, color: "#1d1d1f" }}>
               ✓ Sitemap detectado automáticamente: {data.sitemapUrl}{" "}
               <button
                 type="button"
@@ -172,7 +172,7 @@ export default function GoogleSearchConsoleSection() {
           ) : (
             <>
               {!data.sitemapUrl && (
-                <p style={{ fontSize: 12, color: "#8a4b08", margin: 0 }}>
+                <p style={{ fontSize: 12, color: "#6e6e73", margin: 0 }}>
                   No pudimos detectar tu sitemap automáticamente — puedes escribirlo a mano.
                 </p>
               )}
@@ -187,7 +187,7 @@ export default function GoogleSearchConsoleSection() {
           {data.sitemapUrl && (
             <div style={{ fontSize: 12 }}>
               {data.lastSitemapSyncStatus === "success" && (
-                <p style={{ color: "#16803c", margin: 0 }}>
+                <p style={{ color: "#1d1d1f", margin: 0 }}>
                   ✓ Último envío exitoso
                   {data.lastSitemapSyncAt
                     ? `: ${new Date(data.lastSitemapSyncAt).toLocaleString("es-US")}`
@@ -224,7 +224,7 @@ export default function GoogleSearchConsoleSection() {
           )}
         </div>
       )}
-      {message && <p style={{ fontSize: 13, color: "#16803c", marginTop: 10 }}>{message}</p>}
+      {message && <p style={{ fontSize: 13, color: "#1d1d1f", marginTop: 10 }}>{message}</p>}
       <p className="muted" style={{ fontSize: 12, marginTop: 14 }}>
         El sistema enviará tu sitemap a Google todas las noches y consultará el estado de cada URL automáticamente. Si un artículo no se indexa, verás un acceso directo para solicitar la indexación manual desde Search Console.
       </p>

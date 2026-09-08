@@ -20,6 +20,11 @@ export default function ConfiguracionIndexacionPage() {
           artículos aparezcan en las búsquedas: Google Search Console, Google
           Analytics y Bing Webmaster Tools.
         </IntroP>
+        <ol style={{ margin: "12px 0 0", paddingLeft: 22, color: "#1d1d1f", fontSize: 14, lineHeight: 1.65 }}>
+          <li><strong>Conecta Google Search Console:</strong> inicia sesión con la cuenta de Google que tiene tu web y elige tu sitio.</li>
+          <li><strong>Conecta Google Analytics (opcional):</strong> para que el sistema use tus datos reales de visitas.</li>
+          <li><strong>Conecta Bing Webmaster Tools (opcional):</strong> mismo proceso, para aparecer también en Bing.</li>
+        </ol>
         <IntroP>
           No necesitas entender de SEO para usar esto: solo conecta tu cuenta
           de Google (y de Bing si la tienes) y el sistema se encarga del

@@ -181,7 +181,7 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
           </div>
           <span
             style={{
-              color: settings?.configured ? "#16803c" : "#8a4b08",
+              color: settings?.configured ? "#1d1d1f" : "#6e6e73",
               fontSize: 12,
               fontWeight: 600,
             }}
@@ -234,7 +234,7 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
 
   function connectionStatus(connected: boolean, label: string, account?: string) {
     return (
-      <span style={{ color: connected ? "#16803c" : "#8a4b08", fontSize: 12, fontWeight: 600 }}>
+      <span style={{ color: connected ? "#1d1d1f" : "#6e6e73", fontSize: 12, fontWeight: 600 }}>
         {connected ? `✓ Conectado — ${label}${account ? ` (${account})` : ""}` : `○ No conectado — ${label}`}
       </span>
     );
@@ -360,7 +360,7 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
         </p>
       )}
 
-      {message && <p style={{ color: "#16803c", fontSize: 13, marginTop: 10 }}>{message}</p>}
+      {message && <p style={{ color: "#1d1d1f", fontSize: 13, marginTop: 10 }}>{message}</p>}
     </section>
   );
 }

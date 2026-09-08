@@ -135,7 +135,7 @@ export default function CategorySyncProgress({
   const elapsed = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
   const barColor =
-    status === "error" ? "#ff3b30" : status === "success" ? "#34c759" : "#0071e3";
+    status === "error" ? "#ff3b30" : status === "success" ? "#1d1d1f" : "#0066cc";
 
   return (
     <div
@@ -270,7 +270,7 @@ export default function CategorySyncProgress({
                     entry.kind === "error"
                       ? "#ff3b30"
                       : entry.kind === "success"
-                        ? "#16803c"
+                        ? "#1d1d1f"
                         : "#6e6e73",
                 }}
               >

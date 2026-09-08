@@ -236,6 +236,11 @@ export default function ConfiguracionCuentaPage() {
           que el sistema publica por ti, las categorías donde puede publicar,
           y el idioma en que escribe tus artículos.
         </IntroP>
+        <ol style={{ margin: "12px 0 0", paddingLeft: 22, color: "#1d1d1f", fontSize: 14, lineHeight: 1.65 }}>
+          <li><strong>Guarda tu usuario y contraseña:</strong> son los mismos con los que entras a tu plataforma; el sistema los necesita para publicar por ti.</li>
+          <li><strong>Trae tus categorías:</strong> pulsa "Sincronizar categorías ahora" para copiar las secciones reales de tu web.</li>
+          <li><strong>Elige el idioma:</strong> sincroniza los idiomas disponibles y guarda el que usarán tus artículos.</li>
+        </ol>
         <IntroP>
           Si buscas la firma de tus artículos, tu teléfono de contacto o las
           fotos para redes sociales, eso vive en Contenido.
@@ -298,6 +303,8 @@ export default function ConfiguracionCuentaPage() {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
+                flexWrap: "wrap",
+                gap: 10,
                 background: "rgba(255,255,255,0.7)",
                 padding: "12px 16px",
                 borderRadius: 10,
@@ -636,12 +643,13 @@ export default function ConfiguracionCuentaPage() {
                   display: "flex",
                   gap: 8,
                   alignItems: "center",
+                  flexWrap: "wrap",
                 }}
               >
                 <select
                   value={contentLanguage}
                   onChange={(e) => setContentLanguage(e.target.value)}
-                  style={{ ...inputStyle, width: 220, height: 40 }}
+                  style={{ ...inputStyle, width: 220, maxWidth: "100%", height: 40 }}
                 >
                   <option value="">Seleccionar idioma...</option>
                   {languages.map((l) => (
