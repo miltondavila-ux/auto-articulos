@@ -5397,6 +5397,45 @@ defecto.
 **Reserva liberada. Tarea cerrada por completo** (PR #72 y PR #74, ambos
 fusionados y verificados en producción).
 
+## Addendum [2026-09-08] Claude — colisión real detectada y resuelta con `CODEX - AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS` (PR #75)
+
+Milton pidió seguir con el Protocolo del Capitán de Archivo (Metodología de
+Trabajo en Paralelo, más arriba en este documento) y mantener el foco en
+el objetivo. Al hacer la propagación final a `TO-DO.md`/`HANDOFF.md`/
+`INVENTARIO_CONVERSACIONES.md`, el `git merge origin/main` encontró un
+**conflicto real de la misma función** (Sección C.3 de la Metodología, no
+el caso trivial de texto): otra conversación (Codex, "AUDITORIA A
+ALGORITMO DE PUBLICACIÓN DE ARTICULOS") detectó que mi `DELETE
+/api/opportunities` del PR #72 no filtraba por panel/`siteDomain` — un bug
+real en cuentas con más de un idioma/sitio, donde hubiera borrado
+oportunidades de un panel que no era el seleccionado. Lo corrigieron en el
+PR #75 (`00a5732`), ya fusionado, agregando el mismo alcance por panel que
+ya usa el análisis (`POST`).
+
+**Resolución, leyendo ambos cambios (no se descartó ninguno a ciegas):**
+la versión del PR #75 es estrictamente mejor que la mía — la acepté tal
+cual quedó en `origin/main` (verificado: una sola función `DELETE`, sin
+duplicados, `git grep "^export async function"` limpio). Lo mío que seguía
+vigente y no se solapaba (los botones rojos "Borrar todas las
+oportunidades" en ambas pantallas, y el `DELETE
+/api/social-opportunities?scope=pending` del lado de Redes) se conservó
+sin cambios — el PR #75 no tocó la UI ni el lado de Redes. Reflejado así
+en `TO-DO.md` (entrada de "Hecho" unificada, sin duplicar el ítem) y en
+`INVENTARIO_CONVERSACIONES.md`.
+
+**Lección para el diseño de fondo**, ya señalada en este mismo documento
+más arriba ("Caso de estudio real — parches acumulados sin dueño de
+diseño"): dos sesiones distintas implementaron el mismo endpoint el mismo
+día sin verse — la del PR #72 no hizo la consulta rápida obligatoria de la
+Sección A antes de empezar (no revisó si alguien ya estaba en esto). No
+causó daño real porque el rebase lo expuso y se resolvió en segundos, tal
+como predice la Metodología, pero es la prueba en vivo de que la consulta
+previa (`git fetch` + revisar Parte A del Inventario) sí importa, incluso
+para tareas que parecen chicas y directas.
+
+Commit de merge: `003ab16`. Sin cambios de código adicionales — el
+`route.ts` resultante es exactamente el del PR #75, sin tocar.
+
 ---
 
 ## RESERVA — AUDITORÍA RESPONSIVE COMPLETA DEL SISTEMA — 2026-09-07
