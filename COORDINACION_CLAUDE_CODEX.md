@@ -6529,3 +6529,271 @@ Identidad: Claude, conversación "AUDITORIA DE CAPACIDADES RESPONSIVE" (continua
 4. Fusionar a main
 
 No se ha modificado nada fuera del alcance. El worktree está listo para verificación en Vercel Preview antes de fusionar a producción.
+
+---
+
+## RECUPERACIÓN DE CONTENIDO PERDIDO EN MERGE — 2026-09-09 (tarea programada diaria de propagación)
+
+Al revisar qué se agregó a este documento desde la corrida anterior, se
+detectó que el merge `d188f44` (punta actual de `origin/main`) descartó
+silenciosamente, sin ningún conflicto visible, el contenido de 5 commits de
+documentación ya fusionados (el código de esos mismos commits sí sobrevivió
+intacto — solo se perdió texto de este archivo). Detalle técnico completo
+de cómo se detectó y por qué pasó en `REPARADOR_DEL_ARBOL_PRINCIPAL.md`,
+sección "Contenido real perdido en un merge... — hallazgo y reparación
+2026-09-09".
+
+Los 5 fragmentos se restituyen a continuación **tal cual el commit original
+los escribió, sin resumir ni editar una palabra**, en orden cronológico,
+cada uno con su commit de origen. Esto es una recuperación, no contenido
+nuevo de esta tarea de propagación.
+
+### Recuperado de `96ea2a4` (2026-09-08 08:00 UTC) + `3b9b6df` (08:03 UTC) — "Regla operativa nueva — desarrollo local primero"
+
+Para reducir el consumo de Vercel, el ciclo normal es: trabajar en un
+worktree aislado, levantar la base local, preparar o actualizar el usuario
+local de pruebas de Lorena, ejecutar `npm run verify`, revisar manualmente el
+flujo afectado en `http://localhost:3000` y solo después abrir el PR. Vercel
+queda reservado para validar el Preview final y el despliegue autorizado; no
+se usa como entorno de desarrollo ni como sustituto de las pruebas locales.
+
+La cuenta local de pruebas usa el correo
+`lorenalvarez30@gmail.com`, pero su contraseña debe ser una contraseña local
+definida mediante `LOCAL_LORENA_PASSWORD`. Está prohibido copiar desde
+producción la contraseña, tokens, credenciales OAuth, integraciones o datos
+privados de Lorena. La preparación reproducible es `npm run local:lorena`:
+levanta PostgreSQL local, genera Prisma, aplica las migraciones existentes y
+crea/actualiza únicamente el usuario local de prueba.
+
+#### Puerta de Vercel para documentación
+
+`apps/web/vercel.json` mantiene intactos `buildCommand: npm run build` y
+`outputDirectory: .next`. Su `ignoreCommand` evita el build cuando el commit
+no cambia código de aplicación, paquetes, dependencias ni workflows. Así,
+los registros documentales no consumen un Preview/build completo. Si el
+commit toca `apps/`, `packages/`, `package.json`, `package-lock.json` o un
+workflow, Vercel sí construye normalmente y la validación local sigue siendo
+obligatoria antes del PR.
+
+#### Ciclo mínimo antes de cada PR de código
+
+1. `npm run local:lorena` (una vez por entorno o cuando falte la base local).
+2. `npm run verify`, que cubre diff, Prisma, typecheck web, build web desde
+   `apps/web`, build del worker y tests del worker.
+3. Prueba manual del módulo afectado con Lorena local, sin llamadas de
+   publicación reales ni credenciales de producción.
+4. Revisión del diff y del Preview de Vercel solo después de lo anterior.
+5. Fusionar únicamente con las tres auditorías documentadas y verificar
+   producción después del despliegue.
+
+Este ciclo no reemplaza las tres auditorías: organiza las dos primeras en
+local y conserva la tercera para integración/producción. Si la prueba local
+no puede ejecutarse por falta de variables, datos o servicios, se registra
+el bloqueo y no se presenta como aprobada.
+
+#### Regla de sincronización con Producción
+
+Antes de probar o crear un worktree, el responsable debe identificar el SHA
+exacto del deployment `Production/Ready` que Vercel está sirviendo y llamarlo
+`PRODUCTION_SHA`. No se debe asumir que `origin/main` es Producción: si Vercel
+está limitado, pendiente, fallando o sirviendo un deployment anterior, ambos
+pueden diferir. La diferencia se registra en
+`CONTROLADOR_DE_VERSIONES.md` y no se presenta como sincronización.
+
+El orden de referencia es: (1) Producción real (`PRODUCTION_SHA`), (2)
+`origin/main` actualizado, (3) rama/worktree local creado desde la base que
+corresponda. Ejecutar `PRODUCTION_SHA=<sha> npm run check:production-baseline`
+antes de modificar código. El comando falla si no se informa el SHA, si el
+worktree no contiene esa base, y avisa si `origin/main` está en otro commit.
+Cuando existe diferencia, se puede trabajar localmente sobre el SHA real de
+Producción o sobre `origin/main`, pero la elección, el riesgo y la diferencia
+deben quedar documentados antes del PR.
+
+Un entorno local sincronizado significa: mismo commit base de Producción,
+mismas migraciones aplicadas localmente, mismas versiones declaradas en el
+lockfile y variables locales equivalentes en forma, nunca secretos iguales.
+No significa copiar la base de datos productiva ni sus credenciales. Lorena
+local es una cuenta sintética con el mismo correo identificador, contraseña
+local y sin integraciones/tokens productivos.
+
+### Recuperado de `0931f75` (2026-09-08 12:07 UTC) — "CIERRE — BUG NATALIA — 2026-09-08"
+
+La corrección fue fusionada mediante el PR #82 y desplegada en Producción
+con el commit `9f0c2f1`. Vercel terminó en estado `Ready`; `/login` respondió
+correctamente y Producción sirvió el deployment nuevo con `age: 0` durante la
+verificación.
+
+Se completaron las auditorías estática, de regresión e integración. La
+excepción de prueba local por ausencia de la cuenta local de Natalia quedó
+autorizada y documentada por Milton. Natalia confirmó que la sincronización
+de categorías funciona correctamente en Producción. La publicación de un
+artículo quedó en prueba manual al cerrar esta conversación.
+
+Reserva liberada. Estado: CERRADA.
+
+### Recuperado de `3e2d957` (2026-09-08 16:57 UTC) — "AUDITORÍA APIs GOOGLE — 2026-09-08" y cierre parcial de PR #87
+
+Identidad exacta: CODEX - GPT-5.6 - VERIFICACIÓN DE API'S DE GOOGLE
+Proyecto: auto-articulos-search-console (621677827297)
+Objetivo: revisar el estado completo de GSC, Analytics y Business Profile.
+Resultado: producción sigue fijada en seototal.lasolucionweb.com, deployment
+Ready 2nHSy4qXgW4zaEmxzHBAr1NY8xqk (eaf8e90). Marca OAuth y scopes están
+guardados; webmasters y business.manage no sensibles, analytics.readonly
+pendiente de verificación, justificación y video guardados.
+Estado de revisión: Centro de verificación continúa bloqueado; muestra que
+la marca no se está mostrando y que el acceso a datos no está verificado.
+`Prepare for verification` permanece deshabilitado, por lo que la solicitud
+formal todavía no ha sido enviada y no existe aprobación final.
+Evidencia adicional: notificación antigua marca completada la tarea de marca,
+pero contradice el estado actual del Centro; se conserva como inconsistencia
+para seguimiento. No hay notificación nueva de aprobación o requerimiento.
+GMB: la cuota de Account Management debe vigilarse; el historial conocido
+mostró Requests/minute = 0 y el caso de soporte 7-6783000042063 sigue siendo
+la vía de acceso. No se modificaron cuotas ni se enviaron formularios.
+Acción siguiente: esperar habilitación de Prepare for verification, revisar
+correo de 10minuteswebsite@gmail.com y confirmar propiedad de dominio
+lasolucionweb.com en Search Console. No borrar commits ni cambiar producción.
+Capitanía de migración: no.
+
+**CIERRE — Auditoría responsive fusionada:** PR #87 (`1a2ebc0`) 
+**Fecha:** 2026-09-08 20:57 UTC  
+**Estado:** ✓ Fusionado a main sin conflictos  
+**Cambios:** 7 mejoras CSS (clamp() responsivo)  
+**Riesgo:** Bajo (visual only, sin lógica)  
+**Verificación:** Pendiente en producción
+
+Todos los cambios de escala responsiva están en main. La siguiente revisión 
+sucede cuando Milton confirme que la interfaz se vea perfecta en móvil/tablet/desktop.
+
+### Recuperado de `1d727dc` (2026-09-08 17:00 UTC) — "CIERRE — Conversación 'AUDITORIA DE CAPACIDADES RESPONSIVE' — 2026-09-08"
+
+**Identidad:** Claude (Haiku 4.5), conversación única de auditoría responsive  
+**Duración:** Sesión única  
+**Resultado:** ✓ COMPLETADO SIN FALLOS
+
+#### Resumen de Trabajo
+
+1. **Auditoría de código:** 23 páginas, 10 criterios de calidad responsive
+2. **Hallazgos:** 8 problemas identificados, 7 corregidos sin riesgo alto
+3. **Cambios:** 7 mejoras CSS-in-JS con `clamp()` para escala fluida
+4. **Fusión:** PR #87 (fe91e44 → 1a2ebc0) a main sin conflictos
+5. **Protocolo:** Worktree aislado, documentación completa, zero daño
+
+#### Archivos Modificados
+
+- `apps/web/src/app/login/page.tsx` — 5 cambios (gap, padding x2, fontSize x2)
+- `apps/web/src/app/dashboard/page.tsx` — 2 cambios (padding, gap)
+- `COORDINACION_CLAUDE_CODEX.md` — Documentación de auditoría
+
+#### Conversación Cerrada
+
+No hay cambios pendientes. Auditoría responsive está en producción (main).  
+Siguiente verificación: Cuando Milton confirme que la interfaz se ve perfecta en todos los dispositivos.
+
+**Memoria:** Guardada en `/Users/miltondavila/.claude/projects/.../memory/auditoria-responsive-cierre.md`
+
+**Fin de la recuperación.** A partir de acá sigue contenido nuevo de esta
+misma corrida de propagación (2026-09-09).
+
+## Claude (tarea programada diaria de propagación) — 2026-09-09
+
+Punto de partida: la última entrada firmada por esta misma tarea era
+"Claude (tarea programada diaria de propagación) — 2026-09-08" (commit
+`9dc395f`). Se revisó el diff de `COORDINACION_CLAUDE_CODEX.md` entre ese
+commit y `origin/main` actual (`d188f44`): 34 commits nuevos en el rango
+(`git log --full-history`), 915 líneas nuevas.
+
+**Hallazgo principal de esta corrida, no una propagación de rutina:** al
+comparar el `git log` normal (filtrado por este archivo) contra
+`--full-history` para el mismo rango, se detectaron 5 commits de
+documentación ya fusionados cuyo contenido **no aparecía en el archivo
+actual** — un merge (`d188f44`) los descartó sin ningún conflicto visible.
+Investigado y reparado de forma no destructiva: el contenido se restituyó
+tal cual en la sección "RECUPERACIÓN DE CONTENIDO PERDIDO EN MERGE —
+2026-09-09" más arriba en este mismo documento; el hallazgo técnico
+completo (por qué pasó, cómo detectarlo) quedó en
+`REPARADOR_DEL_ARBOL_PRINCIPAL.md`. Ningún código de aplicación se vio
+afectado — la pérdida fue exclusivamente de este documento.
+
+Contenido propagado, verificando en vivo contra `origin/main` recién
+fetcheado antes de escribir cada entrada:
+
+- El cierre en Producción de PR #70 (tarjetas clicables, `48578e9`) y su
+  hotfix PR #80 (tarjetas en fila por el reset global de `button`,
+  `ba62119`) → nuevas entradas en `CONTROLADOR_DE_VERSIONES.md`; addendum
+  de cierre en `INVENTARIO_CONVERSACIONES.md` Parte A (reservas liberadas,
+  verificado con `git merge-base --is-ancestor`) y Parte B (conversación
+  `ORDEN DE USUARIOS ACTIVOS EN ADMIN`); nueva sección "Tarjetas de resumen
+  clicables" en `apps/web/src/content/manual-usuario.ts` (Administración),
+  que no estaba reflejada todavía.
+- PR #72/#74/#75 (botón "Borrar todas las oportunidades") → nueva entrada
+  en `CONTROLADOR_DE_VERSIONES.md` (ya estaba propagado en `TO-DO.md` e
+  `INVENTARIO_CONVERSACIONES.md` Parte B por la propia conversación que
+  hizo el trabajo, no se duplicó ahí).
+- PR #76 (andamiaje MCP 10MWS) y el incidente real de Producción que causó
+  (schema sin migración, login caído ~4h, revert + fix + revert del
+  revert) → nueva entrada en `CONTROLADOR_DE_VERSIONES.md`; reserva
+  liberada en `INVENTARIO_CONVERSACIONES.md` Parte A (el PR ya está
+  fusionado, no `open` como decía la tabla); nueva conversación `MCP 10MWS`
+  en Parte B (no existía todavía pese a estar en Parte A desde el
+  2026-09-07). El selector de plataforma multi-proveedor con el orden de
+  prioridad que Milton todavía no confirmó → nuevo ítem en "Pendientes" de
+  `TO-DO.md`.
+- PR #82 (Bug Natalia, contenido de cierre recuperado del merge) → nueva
+  entrada en `CONTROLADOR_DE_VERSIONES.md` (la Parte B de
+  `INVENTARIO_CONVERSACIONES.md` ya tenía esta conversación marcada
+  CERRADA; se liberó además la fila correspondiente de la Parte A, que
+  había quedado desactualizada).
+- PR #87 (escala responsiva con `clamp()`, contenido de cierre recuperado
+  del merge) → nueva entrada en `CONTROLADOR_DE_VERSIONES.md`; addendum de
+  cierre para la conversación `AUDITORIA DE CAPACIDADES RESPONSIVE` en
+  `INVENTARIO_CONVERSACIONES.md` Parte A y Parte B (la reserva original sin
+  commits se cerró sin código; una conversación distinta con el mismo
+  nombre sí llegó a producción).
+- La continuación de `RENEW CONFIGURACION` (pulido estilo Apple, dos
+  commits más allá del cierre "CULMINADA" del 2026-09-07: quitar colores de
+  13 componentes compartidos, `ConfiguracionSubNav.tsx`) → nueva entrada en
+  `CONTROLADOR_DE_VERSIONES.md`; addendum en `INVENTARIO_CONVERSACIONES.md`
+  Parte B; nueva frase sobre la barra de navegación persistente en
+  `apps/web/src/content/manual-usuario.ts` ("Guía detallada de
+  Configuración"), que no estaba reflejada.
+- El commit suelto `51fa8f2` (límite de oportunidades sociales por clic, de
+  1 a 3) → nueva entrada en `CONTROLADOR_DE_VERSIONES.md`, señalando sin
+  resolver que revierte silenciosamente el ajuste contrario que había hecho
+  el PR #60 (bajar de 3 a 1 para evitar el mismo artículo repetido en dos
+  redes el mismo día) — no verificado si ese caso sigue cubierto de otra
+  forma. No se tocó el texto de `manual-usuario.ts` para esto porque no
+  hacía ninguna afirmación de cantidad que corregir.
+- La reverificación sin cambios de estado de `CODEX - GPT-5 - VERIFICACION
+  DE API'S DE GOOGLE` (Centro de verificación de Google sigue bloqueado,
+  contenido recuperado del merge) → addendum en
+  `INVENTARIO_CONVERSACIONES.md` Parte B, siguiendo el mismo criterio de la
+  corrida del 2026-09-08 (reiteración de un bloqueo externo ya registrado,
+  sin decisión nueva que amerite tocar `CONTROLADOR_DE_VERSIONES.md`).
+- La variable "Sensitive" de Vercel bloqueando el generador automático de
+  "Actualizaciones" para varios commits recientes → nuevo ítem en
+  "Pendientes" de `TO-DO.md`, para que Milton decida.
+- Las 6 ramas remotas ya fusionadas pero sin borrar del remoto
+  (`claude/mcp-publicacion-20260907`, `claude/mcp-publicacion-doc-20260908`,
+  `claude/fix-tiles-flex-20260908`, `claude/panel-usuarios-clickable-20260907`,
+  `claude/borrar-todas-oportunidades-20260908`,
+  `claude/responsive-escala-fluida-20260908`) → nota nueva en
+  `REPARADOR_DEL_ARBOL_PRINCIPAL.md`, sin borrar ninguna (fuera del
+  alcance de esta tarea).
+
+Se evaluó el resto del contenido nuevo contra el mapa de propagación y no
+correspondió mover nada más: el "AVISO — SOLAPE ENTRE CODEX (PR #65/#68) Y
+CLAUDE (PR #73)" es una decisión de coordinación entre agentes sin archivo
+ni versión que registrar todavía (nadie tiene la capitanía reclamada); se
+deja donde está, en este mismo documento, para que Codex o Milton decidan.
+
+No hubo nada que requiriera una operación destructiva, migración ni deploy
+en esta corrida — la reparación del contenido perdido fue exclusivamente
+agregar texto ya escrito por otros commits, nunca reescribir historia. La
+única duda nueva dejada para que Milton decida es la ya señalada arriba
+sobre el límite de oportunidades sociales (PR #60 vs. `51fa8f2`); las dudas
+de corridas anteriores (segunda opinión del Reparador, cómo evitar que
+`TO-DO.md` se siga sobrescribiendo) siguen sin resolver y no se duplicaron
+aquí.
+
+Responsable: Claude (tarea programada diaria de propagación).
