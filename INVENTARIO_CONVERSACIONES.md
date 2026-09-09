@@ -168,6 +168,57 @@ varios archivos (`acerca-de/page.tsx`, `admin/users/route.ts`,
 ninguna conversación registrada en este documento. No se tocaron ni se
 investigó de quién son — quedan señalados para que Milton confirme su origen.
 
+#### Actualización (agregada por la tarea programada diaria de propagación, 2026-09-09, sin editar la tabla anterior)
+
+Verificado EN VIVO contra `origin/main` recién fetcheado (`git merge-base
+--is-ancestor` para cada rama citada):
+
+- Fila de `/private/tmp/mcp-publicacion-20260907` / `claude/mcp-publicacion-20260907`
+  (PR #76, "MCP 10MWS"), en la tabla de la Parte A (arriba en este mismo
+  documento): **la reserva ya no está activa.** El PR #76 se fusionó
+  (`ae225dd`), fue revertido por un incidente real de Producción (schema sin
+  migración, ver `CONTROLADOR_DE_VERSIONES.md`) y el revert se revirtió tras
+  corregir la migración (`df830eb`) — hoy `packages/db/prisma/schema.prisma`
+  y `apps/worker/src/queue.ts` en `origin/main` ya contienen este código.
+  Detalle completo en `CONTROLADOR_DE_VERSIONES.md`, entrada "andamiaje MCP
+  10MWS (PR #76) e incidente de producción por migración faltante".
+- Fila de `/tmp/fix-tiles-flex-20260908` / `claude/fix-tiles-flex-20260908`
+  (hotfix PR #80 sobre `usuarios/page.tsx`), en la tabla de la Parte A:
+  **la reserva ya no está activa.** El commit `ba62119` es ancestro de
+  `origin/main`; el fix (`flexDirection: "column"` en las tarjetas) está
+  confirmado en el archivo actual de `origin/main`.
+- Fila de `/private/tmp/fix-natalia-category-login-20260908` /
+  `codex/fix-natalia-category-login-20260908` ("BUG NATALIA"), en la tabla
+  de la Parte A (arriba, primera fila): **la reserva ya no está activa.**
+  El commit `c162119` se fusionó vía PR #82 (`9f0c2f1`), ya es ancestro de
+  `origin/main`, y la propia Parte B de este documento (sección `BUG
+  NATALIA`) ya lo tiene marcado `CERRADA` — esta fila de la Parte A había
+  quedado desactualizada respecto a la Parte B.
+- Reserva de `claude/auditoria-responsive-20260907` (declarada en el
+  addendum del 2026-09-08, más arriba en esta misma sección, para la
+  conversación "AUDITORIA DE CAPACIDADES RESPONSIVE"): **ya no está
+  activa.** Esa reserva se cerró sin cambios de código (worktree idéntico a
+  `origin/main`, según su propio cierre parcial del 2026-09-08) y una
+  conversación distinta y posterior con el mismo nombre de proyecto abrió
+  su propio worktree/rama (`claude/responsive-escala-fluida-20260908`, PR
+  #87), ya fusionado y verificado como ancestro de `origin/main` — ver
+  `CONTROLADOR_DE_VERSIONES.md`, entrada "escala responsiva fluida con
+  `clamp()`... (PR #87)". Ninguna reserva de archivo queda activa por
+  ninguna de las dos conversaciones de auditoría responsive.
+- Las ramas remotas de los 5 puntos anteriores (`claude/mcp-publicacion-20260907`,
+  `claude/fix-tiles-flex-20260908`, `claude/responsive-escala-fluida-20260908`,
+  y también `claude/panel-usuarios-clickable-20260907` y
+  `claude/borrar-todas-oportunidades-20260908`, ya cerradas en corridas
+  anteriores) siguen existiendo en el remoto pese a estar fusionadas — no
+  representan reservas activas, es solo limpieza pendiente. Detalle en
+  `REPARADOR_DEL_ARBOL_PRINCIPAL.md`, sección "Ramas remotas obsoletas sin
+  borrar".
+- No se pudo ejecutar `git worktree list` real (entorno remoto sin acceso al
+  filesystem de la máquina de Milton, igual que las corridas del 2026-09-05
+  y 2026-09-08) — esta verificación se hizo por `git merge-base
+  --is-ancestor` de cada rama contra `origin/main` recién fetcheado, no por
+  inspección directa del filesystem local de Milton.
+
 ---
 
 ## PARTE B — Registro histórico de conversaciones (nombre exacto, agente, proyecto, estado)
@@ -689,3 +740,99 @@ sin reservas activas.**
   "Oportunidades SEO" y "Oportunidades Redes").
 - **Estado final: CERRADA, ambos PR fusionados y verificados, sin reservas
   activas.**
+
+### `MCP 10MWS`
+
+Entrada agregada por la tarea programada diaria de propagación (2026-09-09),
+a partir de `COORDINACION_CLAUDE_CODEX.md`, sección "MCP 10MWS — andamiaje
+de segunda línea de ejecución de publicación (2026-09-07/08)". No existía
+entrada previa de esta conversación en la Parte B, pese a estar ya
+declarada en la Parte A desde el 2026-09-07.
+
+- Agente: Claude.
+- Proyecto: segunda línea de ejecución de publicación (sin tocar la actual
+  vía Playwright/navegador), para que cuentas nuevas y antiguas que lo
+  elijan publiquen directo contra un servidor MCP de terceros — 10MWS
+  primero, pensado para escalar después a un selector multi-plataforma
+  (WordPress, Wix, Webflow, Shopify, Duda, etc. — investigación de mercado
+  completa en `COORDINACION_CLAUDE_CODEX.md`, orden de prioridad todavía
+  sin confirmar por Milton, ver `TO-DO.md`).
+- PR: [#76](https://github.com/miltondavila-ux/auto-articulos/pull/76),
+  fusionado (`ae225dd`). **Incidente real de Producción:** el schema de
+  Prisma (`User.publishMethod`, `McpConnection`) se fusionó sin la
+  migración correspondiente en el mismo commit, rompiendo el login en
+  Producción durante ~4 horas; se revirtió el PR, se sincronizó la
+  migración y se revirtió el revert. Detalle completo del incidente y del
+  protocolo obligatorio resultante en `CONTROLADOR_DE_VERSIONES.md` y en el
+  bloque "INCIDENTE CRÍTICO Y PROTOCOLO OBLIGATORIO — 2026-09-08" al inicio
+  de `COORDINACION_CLAUDE_CODEX.md`.
+- Estado: **CÓDIGO EN PRODUCCIÓN, sin reservas activas** (`packages/db/prisma/schema.prisma`
+  y `apps/worker/src/queue.ts` liberados — ver addendum de Parte A de esta
+  misma corrida). Funcionalmente inerte: ninguna cuenta usa `publishMethod
+  = MCP` todavía, a la espera de la URL real del servidor MCP de 10MWS y de
+  que Milton confirme el orden de prioridad de plataformas adicionales.
+
+### `ORDEN DE USUARIOS ACTIVOS EN ADMIN` — actualización de cierre
+
+Addendum agregado por la tarea programada diaria de propagación
+(2026-09-09) a la entrada existente de esta conversación (más arriba en
+esta misma Parte B), sin editar el texto original.
+
+PR #70 (tarjetas clicables) se fusionó como `48578e9` y PR #80 (hotfix del
+reset global de `button` que aplastaba las tarjetas en fila) se fusionó
+como `ba62119` — ambos verificados como ancestros de `origin/main` por esta
+corrida. Detalle completo en `CONTROLADOR_DE_VERSIONES.md`. **Estado final:
+CERRADA, código en Producción, sin reservas activas.**
+
+### `AUDITORIA DE CAPACIDADES RESPONSIVE` — actualización de cierre
+
+Addendum agregado por la tarea programada diaria de propagación
+(2026-09-09) a la entrada existente de esta conversación (más arriba en
+esta misma Parte B), sin editar el texto original. Contenido recuperado de
+los commits `3e2d957`/`1d727dc`, perdidos en un merge y restituidos en
+`COORDINACION_CLAUDE_CODEX.md` (ver `REPARADOR_DEL_ARBOL_PRINCIPAL.md`).
+
+La conversación registrada originalmente (worktree
+`claude/auditoria-responsive-20260907`, sin commits empujados) cerró sin
+cambios de código. Una conversación distinta y posterior, con el mismo
+nombre de proyecto pero identidad "Claude (Haiku 4.5)", sí encontró y
+corrigió 7 problemas de escala responsiva (`clamp()` en `login/page.tsx` y
+`dashboard/page.tsx`), fusionados como PR #87 (`fe91e44` → `1a2ebc0`).
+Verificado por esta corrida como ancestro de `origin/main`. **Estado final:
+CERRADA, código en Producción, sin reservas activas** (confirmación visual
+final de Milton en todos los dispositivos, pendiente según la propia fuente).
+
+### `RENEW CONFIGURACION` — addendum de continuación (pulido estilo Apple)
+
+Addendum agregado por la tarea programada diaria de propagación
+(2026-09-09) a la entrada existente "Cierre — RENEW CONFIGURACION" (más
+arriba en esta misma Parte B), sin editar el texto original.
+
+Después del cierre del 2026-09-07 ("CULMINADA"), Milton revisó las 6
+páginas en Producción y señaló 4 problemas de estilo (colores decorativos
+que Apple no usa, tipografía sin estandarizar, fondos de color en
+tarjetas/badges, y falta de una barra de navegación entre las 6 secciones).
+Corregido en dos commits (`3a0d985`, `a66d1b1`), incluyendo un componente
+nuevo `ConfiguracionSubNav.tsx` y la neutralización de 13 componentes
+compartidos que el cierre original no había tocado. Ambos commits son
+ancestros de `origin/main` (verificado por esta corrida). Detalle completo
+en `CONTROLADOR_DE_VERSIONES.md`, entrada "RENEW CONFIGURACION: pulido
+estilo Apple". **Estado: código en Producción; confirmación visual final de
+Milton pendiente según la fuente.**
+
+### `CODEX - GPT-5 - VERIFICACION DE API'S DE GOOGLE` — addendum de reverificación
+
+Addendum agregado por la tarea programada diaria de propagación
+(2026-09-09) a la entrada existente de esta conversación (más arriba en
+esta misma Parte B), sin editar el texto original. Contenido recuperado
+del commit `3e2d957` (ver `REPARADOR_DEL_ARBOL_PRINCIPAL.md`).
+
+Reverificación del 2026-09-08 (identidad "CODEX - GPT-5.6"), sin cambios de
+estado: el deployment de Producción sigue siendo el mismo ya registrado
+(`eaf8e90`, `Ready`), los tres scopes OAuth y su justificación siguen
+guardados, y el Centro de verificación de Google sigue bloqueado —
+`Prepare for verification` permanece deshabilitado, la solicitud formal
+todavía no se envió. Google Business Profile sigue bloqueado por la misma
+cuota externa ya documentada (caso de soporte 7-6783000042063). Ningún
+código ni configuración de Producción se tocó. Sigue pendiente de terceros
+(Google), no de este equipo.
