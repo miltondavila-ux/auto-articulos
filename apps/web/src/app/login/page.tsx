@@ -3,6 +3,7 @@
 import { Suspense, useState, type CSSProperties, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PLATFORM_SERVERS } from "@auto-articulos/shared";
+import { QrCodeDisplay } from "@/components/QrCodeDisplay";
 
 // Enlace de "Recuperar mi contraseña" en el login (pedido de Milton,
 // 7/9/2026). Todavía no se sabe a qué servidor (net/site/tagcrush)
@@ -158,12 +159,20 @@ function LoginContent() {
               color: "#86868b",
               marginTop: 16,
               lineHeight: 1.5,
+              marginBottom: 24,
             }}
           >
             SEO TOTAL investiga, escribe y publica artículos optimizados para
             tu sitio todos los días — el trabajo de un equipo entero, hecho
             solo.
           </p>
+          <div style={{ marginTop: 24 }}>
+            <QrCodeDisplay
+              url="https://seototal.lasolucionweb.com/login"
+              size={160}
+              label="Escanea para registrarte"
+            />
+          </div>
         </div>
 
         {mode === "login" ? (
