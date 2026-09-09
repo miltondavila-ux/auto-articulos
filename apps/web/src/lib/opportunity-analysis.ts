@@ -464,6 +464,9 @@ export async function analyzeSeoOpportunities(input: {
   // sin cambio de comportamiento.
   clientLocations?: string[];
   businessLocations?: string[];
+  // Temas que el usuario NO quiere en artículos, separados por comas.
+  // El algoritmo filtra oportunidades que caigan en estas categorías.
+  excludedTopics?: string;
 }): Promise<OpportunityAnalysisResult> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("OPENAI_API_KEY no esta configurada.");
@@ -641,6 +644,13 @@ ${JSON.stringify(input.clientLocations ?? [])}
 
 UBICACIONES DEL NEGOCIO (declaradas por el dueño de la cuenta, donde opera/vende el negocio — usar tal cual, ver REGLA OBLIGATORIA DE GEOLOCALIZACION arriba):
 ${JSON.stringify(input.businessLocations ?? [])}
+
+TEMAS EXCLUIDOS (el usuario NO quiere titulos sobre estas categorias — PROHIBIDO proponer cualquier titulo que caiga en estos temas, SIN EXCEPCION):
+${
+  input.excludedTopics && input.excludedTopics.trim()
+    ? JSON.stringify(input.excludedTopics.split(",").map((t) => t.trim()).filter((t) => t))
+    : "NINGUNO (sin restricciones, comportamiento normal)"
+}
 
 SEÑALES OPCIONALES DE GOOGLE ANALYTICS 4:
 ${JSON.stringify(input.googleAnalyticsSummary ?? { connected: false })}

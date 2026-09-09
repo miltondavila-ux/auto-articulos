@@ -73,6 +73,12 @@ model User {
   // comportamiento para cuentas que no lo llenen.
   clientLocations                   String?
   businessLocations                 String?
+  // Temas que el usuario NO quiere que aparezcan en los artículos, separados
+  // por comas (ej. "temas jurídicos, política, religión"). El algoritmo de
+  // Oportunidades filtra cualquier título que caiga en estas categorías.
+  // Null/vacío = sin restricciones, comportamiento normal. Mientras más
+  // estricto sea el usuario, menos oportunidades se generarán.
+  excludedTopics                    String?
   // Se actualiza cada vez que termina un análisis de oportunidades (haya
   // encontrado categorías nuevas o no) — permite mostrar "último análisis"
   // y aplicar la espera mínima de 7 días cuando no hay nada nuevo, sin

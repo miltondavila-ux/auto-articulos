@@ -37,6 +37,8 @@ export default function ConfiguracionContenidoPage() {
   const [clientLocations, setClientLocations] = useState("");
   const [businessLocations, setBusinessLocations] = useState("");
   const [savingLocations, setSavingLocations] = useState(false);
+  const [excludedTopics, setExcludedTopics] = useState("");
+  const [savingExcludedTopics, setSavingExcludedTopics] = useState(false);
   const [phone, setPhone] = useState("");
   const [savingPhone, setSavingPhone] = useState(false);
   const [profilePhotoUrls, setProfilePhotoUrls] = useState<Record<"profile" | "profile2" | "profile3", string | null>>({ profile: null, profile2: null, profile3: null });
@@ -70,6 +72,7 @@ export default function ConfiguracionContenidoPage() {
       setPhone(data.phone ?? "");
       setClientLocations(data.clientLocations ?? "");
       setBusinessLocations(data.businessLocations ?? "");
+      setExcludedTopics(data.excludedTopics ?? "");
       setProfilePhotoUrls({ profile: data.profilePhotoUrl ?? null, profile2: data.profilePhotoUrl2 ?? null, profile3: data.profilePhotoUrl3 ?? null });
       setBusinessLogoUrls({ logo: data.businessLogoUrl ?? null, logo2: data.businessLogoUrl2 ?? null });
     }
@@ -145,6 +148,29 @@ export default function ConfiguracionContenidoPage() {
       setBanner({ type: "info", text: "Ubicaciones guardadas." });
     } finally {
       setSavingLocations(false);
+    }
+  }
+
+  async function handleSaveExcludedTopics() {
+    setSavingExcludedTopics(true);
+    setBanner(null);
+    try {
+      const res = await fetch("/api/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ excludedTopics }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setBanner({
+          type: "error",
+          text: data.error ?? "Error al guardar los temas excluidos",
+        });
+        return;
+      }
+      setBanner({ type: "info", text: "Temas excluidos guardados. El algoritmo filtrará automáticamente estas categorías." });
+    } finally {
+      setSavingExcludedTopics(false);
     }
   }
 
@@ -404,6 +430,45 @@ export default function ConfiguracionContenidoPage() {
               style={disabledStyle(secondaryButtonStyle, savingLocations)}
             >
               {savingLocations ? "Guardando..." : "Guardar ubicaciones"}
+            </button>
+          </div>
+        </section>
+
+        {/* Temas Excluidos */}
+        <section style={sectionStyle}>
+          <h2 style={h2Style}>Temas que NO quieres en tus artículos</h2>
+          <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 12 }}>
+            Cuéntanos qué temas prefieres evitar y el algoritmo de Oportunidades
+            no te propondrá artículos sobre esas categorías. Escribe los temas
+            separados por comas. Mientras más estricto seas, menos oportunidades
+            se generarán, pero tu contenido será más alineado con tu nicho.
+          </p>
+
+          <textarea
+            value={excludedTopics}
+            onChange={(e) => setExcludedTopics(e.target.value)}
+            placeholder="Ej: temas jurídicos, política, religión, finanzas"
+            rows={3}
+            style={{
+              ...inputStyle,
+              width: "100%",
+              resize: "vertical",
+              fontFamily: "inherit",
+              lineHeight: 1.5,
+            }}
+          />
+
+          <p style={{ fontSize: 12, color: "#8e8e93", marginTop: 8, marginBottom: 12, fontStyle: "italic" }}>
+            Cuanto más específico seas (ej: "impuestos", no "dinero"), mejores serán los filtros.
+          </p>
+
+          <div style={{ marginTop: 12 }}>
+            <button
+              onClick={handleSaveExcludedTopics}
+              disabled={savingExcludedTopics}
+              style={disabledStyle(secondaryButtonStyle, savingExcludedTopics)}
+            >
+              {savingExcludedTopics ? "Guardando..." : "Guardar temas excluidos"}
             </button>
           </div>
         </section>
