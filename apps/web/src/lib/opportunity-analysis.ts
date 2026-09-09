@@ -721,6 +721,31 @@ Si genuinamente ninguna combinacion tiene sentido real para este negocio, respon
   }
   return { status: "ok", groups: allResult };
 
+  // Palabras clave de temas excluidos, parseadas desde input.excludedTopics
+  const excludedKeywords = new Set<string>();
+  if (input.excludedTopics && input.excludedTopics.trim()) {
+    input.excludedTopics
+      .split(",")
+      .map((t) => t.trim().toLowerCase())
+      .filter((t) => t.length > 0)
+      .forEach((topic) => {
+        // Agregar el topic completo y sus palabras individuales para búsqueda flexible
+        excludedKeywords.add(topic);
+        topic.split(/\s+/).forEach((word) => {
+          if (word.length > 2) excludedKeywords.add(word);
+        });
+      });
+  }
+
+  // Verifica si un título toca temas excluidos. Comparación laxa: si alguna
+  // palabra del título (3+ caracteres) coincide con keyword excluida, rechaza.
+  function titleTouchesExcludedTopic(text: string): boolean {
+    if (excludedKeywords.size === 0) return false;
+    const textNormalized = normalizeTitle(text);
+    const titleWords = textNormalized.split(/\s+/).filter((w) => w.length > 2);
+    return titleWords.some((word) => excludedKeywords.has(word));
+  }
+
   // Procesa un array crudo de "opportunities" devuelto por OpenAI (del lote
   // principal o del paso dedicado de geolocalizacion) con exactamente las
   // mismas validaciones deterministas: categoria valida, texto no vacio y no
@@ -748,6 +773,11 @@ Si genuinamente ninguna combinacion tiene sentido real para este negocio, respon
         const text = value.text.trim();
         const normalized = normalizeTitle(text);
         if (!text || seen.has(normalized)) continue;
+        // Garantía determinista contra temas excluidos: si el usuario indicó
+        // que no quiere ciertos temas, rechazar CUALQUIER título que los mencione,
+        // sin importar cuán buena sea la evidencia. Esta validación corre AQUÍ
+        // (en JavaScript), no solo en el prompt, para garantizar cumplimiento.
+        if (titleTouchesExcludedTopic(text)) continue;
         // Garantía determinista contra años inventados O desactualizados:
         // cada año en el título debe tener evidencia real Y estar dentro de
         // la ventana de recencia aceptable (año actual ±1), sin excepción.
