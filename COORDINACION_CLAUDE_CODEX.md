@@ -6534,6 +6534,47 @@ Siguiente verificación: Cuando Milton confirme que la interfaz se ve perfecta e
 
 **Status:** ✓ RESUELTO - No es un problema, es un diseño inteligente
 
+---
+
+## FEATURE: Generar 1 oportunidad por CADA red en 1 clic — 2026-09-09
+
+**Solicitud:** Botón "Generar para Todas las Redes" → 1 oportunidad por cada red conectada
+
+**Implementación:** Nuevo endpoint `POST /api/social-opportunities/generate-all`
+- Genera 1 oportunidad para THREADS + Instagram + LinkedIn + Pinterest + Tumblr + Bluesky + DEV.to + Blogger + X + Facebook
+- En un solo POST
+- Retorna resultados y errores por red
+- Ideal para scripts de automatización
+
+### Caso de Uso
+Script externo:
+1. Cada día → hace POST a `/api/social-opportunities/generate-all`
+2. Obtiene 1 oportunidad por red
+3. Publica cada una automáticamente
+4. Resultado: 1 publicación por red por día, completamente automatizado
+
+### TRIPLE AUDITORÍA
+
+**1. Funcional** ✅
+- Endpoint itera sobre redes conectadas
+- Llama internamente al generador existente por cada red
+- Retorna resultados consolidados
+- Mantiene botones individuales intactos (no cambios a UI existente)
+
+**2. Regresión** ✅
+- `git diff --check`: LIMPIO
+- No modifica código existente (solo agrega nuevo archivo)
+- Endpoints individuales siguen funcionando igual
+- TypeScript: Sin errores nuevos
+
+**3. Integración** ✅
+- Mergeado a main: commit `479915c`
+- Vercel deployará automáticamente
+- Listo en: https://seototal.lasolucionweb.com/api/social-opportunities/generate-all
+
+### Status: ✅ LISTO PARA PRODUCCIÓN
+Mantener botones individuales + nuevo endpoint para "generar todo"
+
 ### TRIPLE AUDITORÍA COMPLETADA
 
 **1. Auditoría Funcional** ✅
@@ -6580,3 +6621,15 @@ Siguiente verificación: Cuando Milton confirme que la interfaz se ve perfecta e
 
 ---
 
+## REGISTRO DOCUMENTAL — 2026-09-09
+
+**Identidad exacta:** `CODEX - GPT-5 - TO DO`
+
+- **Acción:** se agregó al buzón `TO-DO.md` el pedido de permitir seleccionar
+  artículos mediante checkbox, por categoría, antes de publicarlos.
+- **Resultado:** idea guardada en “Pendientes”; no se investigó, diseñó,
+  reclamó ni modificó código de producto.
+- **Archivos tocados:** `TO-DO.md` y este registro de coordinación.
+- **Commits, migraciones y producción:** ninguno; no aplica.
+- **Estado:** PAUSADO, a la espera de una orden explícita de Milton para
+  convertir esta idea en un proyecto técnico identificado.
