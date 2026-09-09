@@ -294,7 +294,7 @@ export default function ConfiguracionContenidoPage() {
               marginBottom: 6,
             }}
           >
-            <h2 style={{ ...h2Style, margin: 0 }}>Firma al Final del Artículo</h2>
+            <h2 style={{ ...h2Style, margin: 0 }}>Firma al Final del Artículo y Disclosure</h2>
             <span
               style={{
                 fontSize: 12,
@@ -311,7 +311,7 @@ export default function ConfiguracionContenidoPage() {
           </div>
 
           <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 12 }}>
-            Este texto se agregará automáticamente al final de cada artículo nuevo. Puedes usarlo como firma profesional, datos de contacto o un llamado a la acción.
+            Este texto se agregará automáticamente al final de cada artículo nuevo. Úsalo para firmar profesionalmente y, si es necesario, incluir un disclosure (aclaración legal) que indique que no eres asesor en materias legales, fiscales, financieras o de seguros.
           </p>
 
           <textarea
@@ -320,7 +320,7 @@ export default function ConfiguracionContenidoPage() {
               e.target.value.length <= MAX_SIGNATURE_LEN &&
               setArticleSignature(e.target.value)
             }
-            placeholder='Ej: "Verónica Rojas, Agente Inmobiliario Licenciada en Florida, comparte su análisis..."'
+            placeholder='Ej: "**Nota importante:** Soy [Tu nombre], [Tu profesión] licenciado en [Tu estado/país]. El contenido de este artículo tiene fines informativos y educativos. No constituye asesoría legal, fiscal, contable, de seguros o de inversiones. Consulta siempre con un profesional debidamente licenciado."'
             rows={5}
             style={{
               ...inputStyle,
