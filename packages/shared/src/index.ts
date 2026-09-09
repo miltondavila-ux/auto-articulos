@@ -18,5 +18,6 @@ export * from "./image-prompt";
 export * from "./social-image";
 export * from "./platform-servers";
 export * from "./article-limits";
+export * from "./mcp-client";
 
 export const MAX_ATTEMPTS = 3;

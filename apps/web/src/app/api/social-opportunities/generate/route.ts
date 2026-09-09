@@ -527,14 +527,13 @@ export async function POST(request: Request) {
     const availableNow = allCandidates.filter((article) =>
       normalizedIntegrations.some((platform) => !activeKeys.has(`${article.id}:${platform}`)),
     );
-    // Preferí un artículo que hoy todavía no se usó en NINGUNA otra red; si
-    // de verdad no queda ninguno (cuenta con pocos artículos o mucho volumen
+    // Preferí artículos que hoy todavía no se usaron en NINGUNA otra red; si
+    // de verdad no quedan suficientes (cuenta con pocos artículos o mucho volumen
     // ya generado hoy), cae de vuelta al disponible con más tendencia en vez
     // de bloquear al usuario por completo.
     const freshToday = availableNow.filter((article) => !wasUsedToday(article));
-    // Un solo candidato por clic ("un post al día por red", no un menú de 3
-    // opciones que terminaba llenando de pendientes la misma red).
-    const candidates = (freshToday.length > 0 ? freshToday : availableNow).slice(0, 1);
+    // Hasta 3 candidatos por clic para dar más opciones sin saturar de pendientes.
+    const candidates = (freshToday.length > 0 ? freshToday : availableNow).slice(0, 3);
 
     if (candidates.length === 0) {
       // El mensaje viejo ("no hay artículos nuevos disponibles") sonaba a

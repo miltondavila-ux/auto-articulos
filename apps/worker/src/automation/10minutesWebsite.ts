@@ -662,6 +662,12 @@ async function login(
   credentials: TenMinutesWebsiteCredentials,
   onStep: OnStep,
 ): Promise<void> {
+  const username = credentials.username.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username)) {
+    throw new Error(
+      `El correo guardado para 10minutesWebsite no tiene un formato válido ("${credentials.username}"). Corrígelo en Configuración antes de volver a publicar.`,
+    );
+  }
   await onStep(`Iniciando sesión en ${platformProductNameOrNeutral(credentials.platformDomain)}...`);
   await page.goto(`${baseUrl}/dashboard/start.php`, {
     waitUntil: "domcontentloaded",
@@ -687,7 +693,7 @@ async function login(
   }
 
   await page.getByText("Using your Email + Password", { exact: true }).click();
-  await page.fill('input[name="email"]', credentials.username);
+  await page.fill('input[name="email"]', username);
   await page.fill('input[name="password"]', credentials.password);
   await page.getByRole("button", { name: "Login", exact: true }).click();
 
