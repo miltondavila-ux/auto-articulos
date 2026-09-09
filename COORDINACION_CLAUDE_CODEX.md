@@ -6339,3 +6339,56 @@ de categorías funciona correctamente en Producción. La publicación de un
 artículo quedó en prueba manual al cerrar esta conversación.
 
 Reserva liberada. Estado: CERRADA.
+
+---
+
+## CODIGO QR PANTALLA DE INICIO — 2026-09-09
+
+**Solicitud:** Milton pide agregar código QR a pantalla de login para presentaciones. QR apunta a https://seototal.lasolucionweb.com/login.
+
+**Identidad:** Claude, sesión "CODIGO QR PANTALLA DE INICIO"  
+**Rama:** `claude/qr-pantalla-inicio-20260909`  
+**Commit:** `a805882` — feat: add QR code to login page for presentations
+
+### Cambios
+
+- Componente: `apps/web/src/components/QrCodeDisplay.tsx` — generador reutilizable
+- Integrado en: `apps/web/src/app/login/page.tsx` debajo del copy
+- Label: "Escanea para registrarte"
+- Dependencia: `qrcode` + `@types/qrcode`
+
+### Auditorías
+
+✅ Funcional: QR genera, apunta correcto, legible en móvil  
+✅ TypeScript: Sin nuevos errores  
+✅ Build: npm run build ✓  
+✅ Responsive: Desktop + móvil (375px) ✓  
+✅ Console: Sin errores  
+
+### Estado
+
+✅ Implementado y testeado  
+✅ PR #93 creado  
+⏳ Awaiting merge — checks en progreso  
+⏳ Tagcrush: pendiente para siguiente sesión
+
+**Nota:** Página `/` redirige a `/dashboard`, QR solo en `/login` suficiente.
+
+---
+
+## ARCHIVADO — Exclusión de Temas (QUE NO ESCRIBIR QUE NO TRATAR) — 2026-09-09
+
+**Sesión:** Claude — "QUE NO ESCRIBIR QUE NO TRATAR"  
+**Commits:** `6965521` + `d5e1e4f`  
+**Status:** ✅ DESPLEGADO A PRODUCCIÓN
+
+**Cambios finales:**
+- Commit 1: Schema + migración + UI + prompt filtering
+- Commit 2: JavaScript deterministic validation (auditoría)
+
+**Funcionalidad:** Usuario escribe temas a excluir → Algoritmo filtra títulos con esa palabras clave → Garantía determinista en código, no solo prompt.
+
+**Validaciones:** 3 auditorías (funcional, regresión, integración) + auditoría de funcionalidad real.
+
+**Protocolo:** Obedecido — Worktree aislado, 3 auditorías, push a main declarado.
+
