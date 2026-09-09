@@ -67,6 +67,7 @@ export default function OportunidadesRedesPage() {
   const [connectionsLoading, setConnectionsLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [generatingNetwork, setGeneratingNetwork] = useState<"threads" | "x" | "linkedin" | "instagram" | "facebook-page" | "pinterest" | "tumblr" | "bluesky" | "devto" | "blogger" | null>(null);
+  const [generatingAll, setGeneratingAll] = useState(false);
   const [connectedNetworks, setConnectedNetworks] = useState({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false, bluesky: false, devto: false, blogger: false });
   const [activeNetworks, setActiveNetworks] = useState({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false, bluesky: false, devto: false, blogger: false });
   const [generateSeconds, setGenerateSeconds] = useState(0);
@@ -170,6 +171,28 @@ export default function OportunidadesRedesPage() {
     } finally {
       setGenerating(false);
       setGeneratingNetwork(null);
+    }
+  }
+
+  async function handleGenerateAll() {
+    setGeneratingAll(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/social-opportunities/generate-all", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage({ kind: "success", text: data.message || "Oportunidades generadas para todas las redes." });
+        loadOpportunities();
+      } else {
+        setMessage({ kind: "error", text: data.error || "Error al generar oportunidades." });
+      }
+    } catch (err: any) {
+      setMessage({ kind: "error", text: err.message });
+    } finally {
+      setGeneratingAll(false);
     }
   }
 
@@ -404,7 +427,15 @@ export default function OportunidadesRedesPage() {
                 Preparando las redes conectadas...
               </span>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 8 }}>
+              <>
+                <button
+                  onClick={handleGenerateAll}
+                  disabled={generatingAll || generatingNetwork !== null}
+                  style={{ ...buttonStyle, ...uniformButtonSize, width: "100%", marginBottom: 16 }}
+                >
+                  {generatingAll ? "Generando para todas las redes..." : "📲 Generar 1 por cada red (Todas)"}
+                </button>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 8 }}>
                 {([
                 ["threads", "threads", "Threads"], ["x", "x", "X (Twitter)"], ["linkedin", "linkedin", "LinkedIn"], ["instagram", "instagram", "Instagram"], ["facebookPage", "facebook-page", "Facebook"], ["pinterest", "pinterest", "Pinterest"], ["tumblr", "tumblr", "Tumblr"], ["bluesky", "bluesky", "Bluesky"], ["devto", "devto", "DEV.to"], ["blogger", "blogger", "Blogger"],
                 ] as const).map(([key, platform, label]) => {
@@ -421,7 +452,8 @@ export default function OportunidadesRedesPage() {
                   {generatingNetwork === platform ? "Analizando..." : "✓ " + label + " · Crear oportunidad"}
                 </button>;
                 })}
-              </div>
+                </div>
+              </>
             )}
             {pendingList.length > 0 && (
               <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 12 }}>
