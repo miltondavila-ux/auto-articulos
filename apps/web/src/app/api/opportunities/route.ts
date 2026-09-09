@@ -82,7 +82,7 @@ export async function POST(request: Request) {
     .catch(() => ({ force: false, panel: "" }));
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { lastOpportunityAnalysisAt: true, selectedSiteDomain: true, selectedSitePanel: true, platformDomain: true, clientLocations: true, businessLocations: true },
+    select: { lastOpportunityAnalysisAt: true, selectedSiteDomain: true, selectedSitePanel: true, platformDomain: true, clientLocations: true, businessLocations: true, excludedTopics: true },
   });
   const selectedSiteDomain = user.selectedSiteDomain;
   // Ubicaciones REALES declaradas por el dueño de la cuenta (Configuración →
@@ -209,6 +209,7 @@ export async function POST(request: Request) {
       bingSummary: summarizeBingSignals(bingSignals),
       clientLocations,
       businessLocations,
+      excludedTopics: user.excludedTopics ?? undefined,
     });
 
     const now = new Date();
