@@ -93,6 +93,10 @@ export default function OportunidadesPage() {
   const [platformDomain, setPlatformDomain] = useState<string>("net");
   const [prompts, setPrompts] = useState<{ id: string; name: string; prompt: string }[]>([]);
   const [selectedPromptId, setSelectedPromptId] = useState("");
+  // Rastrear títulos seleccionados: Map<titleId, boolean>
+  const [selectedTitles, setSelectedTitles] = useState<Map<string, boolean>>(
+    new Map(),
+  );
 
   const load = useCallback(async () => {
     const [
@@ -322,6 +326,65 @@ export default function OportunidadesPage() {
       setMessage({
         kind: "error",
         text: data.error ?? "No se pudo publicar todas las categorías.",
+      });
+      await load();
+      setBusyId(null);
+      return;
+    }
+    const publishedCount = Number(data.publishedCount ?? 0);
+    const pendingCount = Number(data.pendingCount ?? 0);
+    setMessage({
+      kind: "info",
+      text: pendingCount > 0
+        ? `Se publicarán ${publishedCount} títulos según tu cupo. Quedaron ${pendingCount} títulos pendientes en Oportunidades.`
+        : `Se publicarán ${publishedCount} títulos. No quedaron títulos pendientes.`,
+    });
+    if (typeof data.workerWarning === "string") {
+      window.sessionStorage.setItem("auto-articulos-worker-warning", data.workerWarning);
+    }
+    setBusyId(null);
+    router.push("/dashboard/publicaciones-en-curso");
+    router.refresh();
+  }
+
+  async function executeBatch() {
+    if (!contentLanguage.trim()) {
+      setMessage({
+        kind: "error",
+        text: "Debes configurar tu idioma de redacción en Configuración antes de publicar.",
+      });
+      return;
+    }
+    const titleIds = Array.from(selectedTitles.entries())
+      .filter(([, selected]) => selected)
+      .map(([id]) => id);
+
+    if (titleIds.length === 0) {
+      setMessage({
+        kind: "error",
+        text: "Debes seleccionar al menos un título para publicar.",
+      });
+      return;
+    }
+
+    setBusyId("__batch__");
+    setMessage(null);
+    const response = await fetch("/api/opportunities/execute-batch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        titleIds,
+        disableIndexing,
+        contentLanguage,
+        promptId: selectedPromptId || null,
+        confirmedImageCredits: hasImageCredits,
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setMessage({
+        kind: "error",
+        text: data.error ?? "No se pudo publicar la selección.",
       });
       await load();
       setBusyId(null);
@@ -865,27 +928,56 @@ export default function OportunidadesPage() {
                 (sum, g) => sum + g.titles.length,
                 0,
               );
+              const selectedCount = Array.from(selectedTitles.values()).filter(
+                (selected) => selected,
+              ).length;
               const overLimit = Number.isFinite(effectiveAvailable) && totalTitles > effectiveAvailable;
               const disabled = busyId !== null || !contentLanguage;
               return (
                 <>
-                  <button
-                    onClick={executeAll}
-                    disabled={disabled}
-                    title={
-                      !contentLanguage
-                        ? "Debes configurar tu idioma de redacción en Configuración antes de publicar."
-                        : undefined
-                    }
-                    style={disabledStyle(
-                      { ...buttonStyle, marginTop: 0 },
-                      disabled,
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <button
+                      onClick={executeAll}
+                      disabled={disabled}
+                      title={
+                        !contentLanguage
+                          ? "Debes configurar tu idioma de redacción en Configuración antes de publicar."
+                          : undefined
+                      }
+                      style={disabledStyle(
+                        { ...buttonStyle, marginTop: 0 },
+                        disabled,
+                      )}
+                    >
+                      {busyId === "__all__"
+                        ? "Publicando todas..."
+                        : `Publicar todas las categorías (${totalTitles})`}
+                    </button>
+                    {selectedCount > 0 && (
+                      <button
+                        onClick={executeBatch}
+                        disabled={disabled}
+                        title={
+                          !contentLanguage
+                            ? "Debes configurar tu idioma de redacción en Configuración antes de publicar."
+                            : undefined
+                        }
+                        style={disabledStyle(
+                          {
+                            ...buttonStyle,
+                            marginTop: 0,
+                            background: "#16a34a",
+                            borderColor: "#16a34a",
+                          },
+                          disabled,
+                        )}
+                      >
+                        {busyId === "__batch__"
+                          ? "Publicando selección..."
+                          : `Publicar selección (${selectedCount})`}
+                      </button>
                     )}
-                  >
-                    {busyId === "__all__"
-                      ? "Publicando todas..."
-                      : `Publicar todas las categorías (${totalTitles})`}
-                  </button>
+                  </div>
                   {overLimit && (
                     <p
                       style={{
@@ -1033,20 +1125,45 @@ export default function OportunidadesPage() {
                   padding: "12px 14px",
                   borderRadius: 12,
                   border: "1px solid #e5e5ea",
-                  background: "#ffffff",
+                  background: selectedTitles.get(title.id) ? "#f0f9ff" : "#ffffff",
+                  transition: "background-color 0.2s",
                 }}
               >
-                <div style={{ minWidth: 200, flex: "1 1 200px" }}>
-                  <strong style={{ fontSize: 14, color: "#1d1d1f" }}>
-                    {index + 1}. {title.text}
-                  </strong>
-                  {title.rationale && (
-                    <div
-                      style={{ color: "#6e6e73", fontSize: 12, marginTop: 3 }}
-                    >
-                      {title.rationale}
-                    </div>
-                  )}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 10,
+                    minWidth: 200,
+                    flex: "1 1 200px",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedTitles.get(title.id) ?? false}
+                    onChange={(e) => {
+                      const newMap = new Map(selectedTitles);
+                      if (e.target.checked) {
+                        newMap.set(title.id, true);
+                      } else {
+                        newMap.delete(title.id);
+                      }
+                      setSelectedTitles(newMap);
+                    }}
+                    style={{ marginTop: 2, cursor: "pointer" }}
+                  />
+                  <div>
+                    <strong style={{ fontSize: 14, color: "#1d1d1f" }}>
+                      {index + 1}. {title.text}
+                    </strong>
+                    {title.rationale && (
+                      <div
+                        style={{ color: "#6e6e73", fontSize: 12, marginTop: 3 }}
+                      >
+                        {title.rationale}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                   <button
