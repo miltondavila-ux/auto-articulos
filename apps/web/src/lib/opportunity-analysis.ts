@@ -181,11 +181,18 @@ function collidesWithIntent(
     ) {
       return true;
     }
-    // needKey declarados por ambos lados: son etiquetas ya compactas y
-    // limpias de formato/verbo, así que un umbral algo más laxo sigue siendo
-    // preciso.
+    // CORRECCION 2026-09-09: Si AMBOS tienen needKey y son DISTINTOS, usar
+    // umbral RELAJADO (0.5) para permitir LONGTAIL legítimo que comparte
+    // palabras pero tiene necesidades distintas (ingredientes vs proceso).
+    // Esto confía en que needKey distintos = necesidades distintas, sin requerir
+    // similitud de tokens baja.
     const minTokens = 3;
-    const minRatio = candidate.needKeyNormalized && signature.needKeyNormalized ? 0.6 : 0.67;
+    let minRatio = 0.67;
+    if (candidate.needKeyNormalized && signature.needKeyNormalized) {
+      // Si ambos tienen needKey explícito (ambos declarados por OpenAI),
+      // el modelo ya filtró duplicados obvios. Bajar umbral para LONGTAIL.
+      minRatio = 0.5;
+    }
     if (tokenSetsOverlap(candidate.tokens, signature.tokens, minTokens, minRatio)) {
       return true;
     }
