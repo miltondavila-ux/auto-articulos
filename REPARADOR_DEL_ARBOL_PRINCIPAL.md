@@ -121,3 +121,84 @@ ese caso quedó preservado en `COORDINACION_CLAUDE_CODEX.md`, mismo lugar
 citado arriba). Esta tarea de propagación no tomó ninguna decisión al
 respecto — se deja señalado para que Milton confirme si todavía quiere esa
 segunda auditoría o si la autoevaluación ya le resultó suficiente.
+
+### Contenido real perdido en un merge de `COORDINACION_CLAUDE_CODEX.md` — hallazgo y reparación 2026-09-09
+
+Agregado por la tarea programada diaria de propagación (2026-09-09). Al
+revisar qué se agregó a `COORDINACION_CLAUDE_CODEX.md` desde la corrida
+anterior, se detectó (con `git log --full-history` comparado contra el `git
+log` normal filtrado por ese archivo, y verificando cada commit de
+documentación uno por uno contra el texto actual de `origin/main`) que
+**5 commits legítimos de documentación, todos ya fusionados y ancestros
+reales de `origin/main`, tienen contenido que NO aparece en el archivo
+actual**, pese a nunca haber sido revertidos ni tocados por ningún `reset`.
+
+Los 5 commits (con su fecha y lo que agregaban, ninguno relacionado con
+código de la aplicación):
+- `96ea2a4` (08:00 UTC) y `3b9b6df` (08:03 UTC) — la sección completa "Regla
+  operativa nueva — desarrollo local primero" (protocolo `npm run
+  local:lorena`, `PRODUCTION_SHA`, `npm run check:production-baseline`,
+  `npm run verify`, puerta de Vercel para documentación vía
+  `apps/web/vercel.json`).
+- `0931f75` (12:07 UTC) — cierre de la conversación `BUG NATALIA` (PR #82,
+  commit `9f0c2f1`, verificado en Producción).
+- `3e2d957` (16:57 UTC) — entrada `AUDITORÍA APIs GOOGLE — 2026-09-08`
+  (identidad `CODEX - GPT-5.6 - VERIFICACIÓN DE API'S DE GOOGLE`) y el
+  primer cierre parcial de `AUDITORIA DE CAPACIDADES RESPONSIVE` (PR #87
+  fusionado).
+- `1d727dc` (17:00 UTC) — cierre oficial completo de la conversación
+  `AUDITORIA DE CAPACIDADES RESPONSIVE`.
+
+**Causa técnica identificada:** el grafo de `git log --graph` muestra que
+estos 5 commits quedaron en una rama secundaria (`01ff1c1` → `3e2d957` →
+`1d727dc` → `51fa8f2`) que se fusionó primero dentro de `5e0de86` ("Merge
+origin/main with social opportunities increase") junto con otra rama
+paralela (`96ea2a4` → `3b9b6df` → `0931f75`), y ese resultado se fusionó
+después, como **segundo padre**, dentro de `d188f44` ("Merge remote-tracking
+branch 'origin/main' into merge-social-opp") — cuyo primer padre era la
+cadena real de `origin/main` (`8add43d` → PR #87 vía `1a2ebc0`). El árbol
+final de `d188f44` (que hoy es la punta de `origin/main`) coincide con el
+primer padre para este archivo: el contenido exclusivo del segundo padre en
+`COORDINACION_CLAUDE_CODEX.md` se descartó en la resolución de ese merge —
+probablemente una resolución manual o automática que tomó "el otro lado"
+completo para esta ruta en vez de combinar ambos aportes línea por línea,
+tal como exige el "PROTOCOLO OBLIGATORIO DE NO DESTRUCCIÓN" del propio
+documento. El código de aplicación de esos mismos commits (PR #76 MCP, PR
+#82 Natalia, PR #87 responsive) **sí sobrevivió intacto** — esto fue
+exclusivamente pérdida de documentación, no de producción.
+
+**Reparación aplicada, no destructiva:** no se reescribió historia ni se
+tocó ningún commit existente. Se restituyó el contenido perdido tal cual
+(sin resumir ni editar una palabra) como una sección nueva agregada al
+final de `COORDINACION_CLAUDE_CODEX.md` ("RECUPERACIÓN DE CONTENIDO PERDIDO
+EN MERGE — 2026-09-09"), citando el commit de origen de cada fragmento. El
+resto de esta misma corrida de propagación (`CONTROLADOR_DE_VERSIONES.md`,
+`INVENTARIO_CONVERSACIONES.md`) ya incorpora el contenido de los PR #76,
+#82 y #87 leyendo estos commits directamente, así que la reparación no deja
+huecos en el resto del sistema de documentación.
+
+**Lección para el resto del equipo:** cuando dos ramas divergentes tocan el
+mismo documento de texto libre el mismo día (frecuente con esta cantidad de
+sesiones concurrentes), un merge de un merge puede perder contenido de
+forma silenciosa sin ningún conflicto visible en pantalla — a diferencia de
+un conflicto de código, este tipo de pérdida no bloquea el `git merge` ni
+avisa. Antes de fusionar `origin/main` sobre una rama que ya trae
+`COORDINACION_CLAUDE_CODEX.md` modificado por dos líneas de trabajo
+distintas, conviene diferenciar el archivo resultante contra AMBOS padres
+por separado (`git diff <padre1> <merge> -- archivo` y `git diff <padre2>
+<merge> -- archivo`) antes de dar el merge por bueno, no solo confiar en
+que "no hubo conflicto".
+
+### Ramas remotas obsoletas sin borrar (sin acción, solo señalado) — 2026-09-09
+
+Verificado con `git ls-remote --heads origin`: las ramas
+`claude/borrar-todas-oportunidades-20260908`, `claude/fix-tiles-flex-20260908`,
+`claude/mcp-publicacion-20260907`, `claude/mcp-publicacion-doc-20260908`,
+`claude/panel-usuarios-clickable-20260907` y
+`claude/responsive-escala-fluida-20260908` siguen existiendo en el remoto
+pese a que sus commits ya son ancestros de `origin/main` (fusionados por
+squash o merge normal, según el caso). No representan trabajo en riesgo ni
+reservas activas — son solo limpieza pendiente. No se borró ninguna en esta
+corrida (borrar ramas remotas es una acción que esta tarea programada no
+está autorizada a tomar por su cuenta); queda para que Milton decida si
+vale la pena limpiarlas.
