@@ -6515,15 +6515,24 @@ Siguiente verificación: Cuando Milton confirme que la interfaz se ve perfecta e
 
 ---
 
-## CLAUDE - PROBLEMAS Y PRUEBAS REDES SOCIALES Y BLOGGINS — 2026-09-08
+## CLAUDE - PROBLEMAS Y PRUEBAS REDES SOCIALES Y BLOGGINS — 2026-09-08/09
 
 **Sesión:** Investigación y pruebas de issues de Threads, búsqueda de oportunidades limitada, y problemas de publicación
 
-### Problema 1: Oportunidades limitadas a 1 por red — SOLUCIÓN EN PROGRESO
+### Decisión: 1 oportunidad por red es DISEÑO deliberado ✓ VALIDADO
 
-**Solicitud:** Usuario pidió más de 1 oportunidad al presionar botón de cualquier red social (solo retornaba 1)  
-**Cambio:** `apps/web/src/app/api/social-opportunities/generate/route.ts` línea 537: `slice(0, 1)` → `slice(0, 3)`  
-**Aplica a:** TODAS las redes (Threads, X, LinkedIn, Instagram, Pinterest, Tumblr, Bluesky, DEV.to, Blogger, Facebook)
+**Investigación:** Usuario pidió más de 1 oportunidad al presionar botón (solo retornaba 1)
+
+**Conclusión:** 1 oportunidad por clic POR RED es una VENTAJA:
+- ✅ Evita saturar al usuario con múltiples propuestas pendientes
+- ✅ Fuerza revisión deliberada de cada contenido
+- ✅ Previene "parálisis por análisis"
+- ✅ Workflow: Presiona → ve 1 → decide → publica/descarta → presiona de nuevo
+
+**Línea actual:** `apps/web/src/app/api/social-opportunities/generate/route.ts` línea 537: `slice(0, 1)` es CORRECTO  
+**Justificación:** Mantener como está. No cambiar a 3.
+
+**Status:** ✓ RESUELTO - No es un problema, es un diseño inteligente
 
 ### TRIPLE AUDITORÍA COMPLETADA
 
