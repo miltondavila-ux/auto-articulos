@@ -58,6 +58,23 @@ Este documento es OBLIGATORIO para el próximo cambio de schema. Si lo olvidas, 
 
 ---
 
+# SEGMENTO DE FIRMA CON DISCLOSURE (2026-09-09 — Claude)
+
+**Cambio:** Actualizar la sección "Firma al Final del Artículo" para incluir requirement de disclosure (aclaración legal).
+
+**Qué cambió:**
+1. Título del campo: "Firma al Final del Artículo" → "Firma al Final del Artículo y Disclosure"
+2. Texto instructivo: ahora explica que incluya disclosure que indique que NO es asesor en materias legales, fiscales, financieras, de seguros
+3. Placeholder/ejemplo: template genérico con placeholders `[Tu nombre]`, `[Tu profesión]`, `[Tu estado/país]` — sin mencionar personas específicas como Verónica
+
+**Archivo afectado:** `apps/web/src/app/dashboard/configuracion/contenido/page.tsx` (líneas 297, 314, 323)
+
+**Commit:** `0f008e8` rama `claude/doc-protocolo-schema`
+
+**Estado:** Ready for merge / deploy automático a Vercel
+
+---
+
 # MCP 10MWS — andamiaje de segunda línea de ejecución de publicación (2026-09-07/08)
 
 Pedido de Milton: agregar, sin tocar la línea actual (Playwright/navegador
