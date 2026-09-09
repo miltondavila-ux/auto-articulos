@@ -181,11 +181,23 @@ function collidesWithIntent(
     ) {
       return true;
     }
-    // needKey declarados por ambos lados: son etiquetas ya compactas y
-    // limpias de formato/verbo, así que un umbral algo más laxo sigue siendo
-    // preciso.
+    // CORRECCION 2026-09-09: Si AMBOS tienen needKey EXPLÍCITO y son DIFERENTES,
+    // CONFIAR en eso y NO revisar tokens. El modelo ya entiende semántica;
+    // no anularla con análisis superficial de palabras. Esto permite LONGTAIL
+    // legítimo (ingredientes vs. proceso, componentes vs. decisiones) sin
+    // rechazarlos por similitud de tokens.
+    if (
+      candidate.needKeyNormalized &&
+      signature.needKeyNormalized &&
+      candidate.needKeyNormalized !== signature.needKeyNormalized
+    ) {
+      return false;
+    }
+    // needKey declarados por ambos lados pero IGUALES: ya rechazamos arriba.
+    // Si solo uno tiene needKey: revisar tokens con umbral RELAJADO (0.5 en lugar
+    // de 0.67) para permitir más variación legítima sin confiar solo en palabras.
     const minTokens = 3;
-    const minRatio = candidate.needKeyNormalized && signature.needKeyNormalized ? 0.6 : 0.67;
+    const minRatio = 0.5; // Bajado de 0.67 para permitir LONGTAIL legítimo
     if (tokenSetsOverlap(candidate.tokens, signature.tokens, minTokens, minRatio)) {
       return true;
     }
@@ -719,7 +731,21 @@ Si genuinamente ninguna combinacion tiene sentido real para este negocio, respon
   if (allResult.length === 0) {
     return { status: "no_new" };
   }
-  return { status: "ok", groups: allResult };
+
+  // CORRECCION 2026-09-09: Limitar a máximo 3 categorías × 3 títulos/categoría
+  // para evitar abrumar al usuario en una sola corrida. Múltiples corridas
+  // permiten cubrir todas las categorías de forma controlada.
+  const MAX_CATEGORIES_PER_RUN = 3;
+  const MAX_TITLES_PER_CATEGORY = 3;
+
+  const limitedResult = allResult
+    .slice(0, MAX_CATEGORIES_PER_RUN)
+    .map((group) => ({
+      ...group,
+      titles: group.titles.slice(0, MAX_TITLES_PER_CATEGORY),
+    }));
+
+  return { status: "ok", groups: limitedResult };
 
   // Procesa un array crudo de "opportunities" devuelto por OpenAI (del lote
   // principal o del paso dedicado de geolocalizacion) con exactamente las
