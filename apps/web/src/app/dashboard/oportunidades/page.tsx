@@ -785,7 +785,7 @@ export default function OportunidadesPage() {
           </div>
         )}
         <p style={{ color: "#1d1d1f", fontSize: 12 }}>
-          Tu cupo actual permite hasta {Number.isFinite(effectiveAvailable) ? effectiveAvailable : "todos"} artículos. Lote: {maxTitlesPerBatch || "sin límite"}; diario: {dailyArticleLimit ?? "sin límite"}; mensual: {monthlyArticleLimit ?? "sin límite"}.
+          Tu cupo diario es de {dailyArticleLimit ?? "sin límite"}, hasta este momento has publicado {publishedToday}, te quedan {Number.isFinite(dailyAvailable) ? dailyAvailable : "sin límite"}.
         </p>
         <label
           style={{
