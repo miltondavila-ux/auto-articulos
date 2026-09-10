@@ -471,6 +471,10 @@ export async function analyzeSeoOpportunities(input: {
   // sin cambio de comportamiento.
   clientLocations?: string[];
   businessLocations?: string[];
+  // Temas que el usuario indicó excluir explícitamente, separados por coma
+  // (Configuración → Contenido). Ver uso más abajo: excludedKeywords /
+  // titleTouchesExcludedTopic.
+  excludedTopics?: string;
 }): Promise<OpportunityAnalysisResult> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("OPENAI_API_KEY no esta configurada.");
@@ -585,6 +589,31 @@ export async function analyzeSeoOpportunities(input: {
     if (!distinctive || distinctive.size === 0) return true;
     return tokensShareRoot(categoryVocabTokens(text), distinctive);
   };
+
+  // Palabras clave de temas excluidos, parseadas desde input.excludedTopics
+  const excludedKeywords = new Set<string>();
+  if (input.excludedTopics && input.excludedTopics.trim()) {
+    input.excludedTopics
+      .split(",")
+      .map((t) => t.trim().toLowerCase())
+      .filter((t) => t.length > 0)
+      .forEach((topic) => {
+        // Agregar el topic completo y sus palabras individuales para búsqueda flexible
+        excludedKeywords.add(topic);
+        topic.split(/\s+/).forEach((word) => {
+          if (word.length > 2) excludedKeywords.add(word);
+        });
+      });
+  }
+
+  // Verifica si un título toca temas excluidos. Comparación laxa: si alguna
+  // palabra del título (3+ caracteres) coincide con keyword excluida, rechaza.
+  function titleTouchesExcludedTopic(text: string): boolean {
+    if (excludedKeywords.size === 0) return false;
+    const textNormalized = normalizeTitle(text);
+    const titleWords = textNormalized.split(/\s+/).filter((w) => w.length > 2);
+    return titleWords.some((word) => excludedKeywords.has(word));
+  }
 
   // needKey por título, guardado aparte de OpportunityAnalysisGroup (que solo
   // persiste text/rationale en la base) para poder mostrarlo en el prompt de
@@ -727,31 +756,6 @@ Si genuinamente ninguna combinacion tiene sentido real para este negocio, respon
     return { status: "no_new" };
   }
   return { status: "ok", groups: allResult };
-
-  // Palabras clave de temas excluidos, parseadas desde input.excludedTopics
-  const excludedKeywords = new Set<string>();
-  if (input.excludedTopics && input.excludedTopics.trim()) {
-    input.excludedTopics
-      .split(",")
-      .map((t) => t.trim().toLowerCase())
-      .filter((t) => t.length > 0)
-      .forEach((topic) => {
-        // Agregar el topic completo y sus palabras individuales para búsqueda flexible
-        excludedKeywords.add(topic);
-        topic.split(/\s+/).forEach((word) => {
-          if (word.length > 2) excludedKeywords.add(word);
-        });
-      });
-  }
-
-  // Verifica si un título toca temas excluidos. Comparación laxa: si alguna
-  // palabra del título (3+ caracteres) coincide con keyword excluida, rechaza.
-  function titleTouchesExcludedTopic(text: string): boolean {
-    if (excludedKeywords.size === 0) return false;
-    const textNormalized = normalizeTitle(text);
-    const titleWords = textNormalized.split(/\s+/).filter((w) => w.length > 2);
-    return titleWords.some((word) => excludedKeywords.has(word));
-  }
 
   // Procesa un array crudo de "opportunities" devuelto por OpenAI (del lote
   // principal o del paso dedicado de geolocalizacion) con exactamente las
