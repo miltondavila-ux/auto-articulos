@@ -6392,3 +6392,39 @@ Reserva liberada. Estado: CERRADA.
 
 **Protocolo:** Obedecido — Worktree aislado, 3 auditorías, push a main declarado.
 
+---
+
+## [2026-09-09] Claude — Selección Multi-Categoría en Oportunidades
+
+**Conversación:** "SELECCION DE ARTICULO DE DIFERENTES CATEGORIAS"
+
+**Requisito:** Permitir seleccionar títulos de DIFERENTES categorías mediante checkboxes y publicarlos en lote mixto.
+
+**Implementación:**
+- Checkboxes en cada título (`apps/web/src/app/dashboard/oportunidades/page.tsx`)
+- Estado: `selectedTitles: Map<string, boolean>` para rastrear selecciones
+- Botón "Publicar selección" (verde) que aparece cuando hay títulos seleccionados
+- Nuevo endpoint: `POST /api/opportunities/execute-batch/route.ts`
+- Agrupa automáticamente por categoría y crea Runs apropiados
+- Respeta todos los cupos existentes (diario, mensual, por lote)
+
+**Auditorías Completadas:**
+✅ Funcional — Checkboxes y endpoint funcionan correctamente
+✅ Regresión — Código existente intacto, cero impacto en funcionalidades anteriores
+✅ Integración — Sin cambios de schema, todas las dependencias presentes, compatible con worker
+
+**Despliegue:**
+- PR #90 mergeado (squash merge)
+- Commit principal: `364da97` ("feat: allow selecting titles from different categories to publish in batch")
+- Pusheado a `origin/main` en 2026-09-09 ~19:15 UTC
+- Vercel desplegando automáticamente
+
+**Estado:** ✅ EN PRODUCCIÓN. Capitán de archivo liberó.
+
+**Acceso para usuario:** En `/dashboard/oportunidades`:
+1. Ver checkboxes en cada título
+2. Seleccionar títulos de diferentes categorías
+3. Botón "Publicar selección" (verde) aparece con el contador
+4. Clicear para publicar solo los seleccionados
+5. Títulos no seleccionados permanecen en Oportunidades
+
