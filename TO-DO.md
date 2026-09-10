@@ -192,6 +192,28 @@ HANDOFF, solo alimenta ideas hacia él).
   mismo archivo por otra sesión el 8/9/2026 — ver el ítem anterior sobre la
   carrera de escritura de `TO-DO.md`; el resto de esa versión se descartó
   porque borraba todos los demás pendientes.)
+- **(8/9/2026, origen: investigación de mercado de Claude en
+  `COORDINACION_CLAUDE_CODEX.md`, sección "MCP 10MWS")** Selector de
+  plataforma de publicación multi-proveedor: además de 10minutesWebsite (ya
+  en desarrollo, PR #76), agregar adaptadores tipo MCP para otros
+  generadores de páginas web, con un selector visible que la persona
+  usuaria elija al conectar su cuenta (no un solo proveedor fijo — pedido
+  explícito de Milton). Orden de prioridad propuesto por la investigación,
+  pendiente de que Milton lo confirme antes de construir nada: (1)
+  10minutesWebsite/Tagcrush, (2) WordPress (MCP oficial, mayor volumen
+  potencial de usuarios), (3) Wix y Webflow (MCP oficial maduro, mapeo
+  limpio), (4) Duda (más por aprendizaje de arquitectura multi-tenant que
+  por volumen), (5) Shopify/Squarespace (evaluar según si clientes reales
+  de SEO Total ya los usan). Depende de que primero se complete/fusione el
+  PR #76 (10MWS) y de que Milton confirme el orden.
+- **(8/9/2026, origen: `COORDINACION_CLAUDE_CODEX.md`, "Estado actual —
+  resumen pedido por Milton")** Decidir si vale la pena desbloquear
+  temporalmente las variables "Sensitive" de Vercel (`DATABASE_URL`,
+  `OPENAI_API_KEY`) para que el generador automático de "Actualizaciones"
+  (`scripts/generate-product-update.ts`) pueda correr, o si se acepta que
+  ciertos cambios (rediseño de login, imagen OG, etc.) no generen anuncio
+  automático en `dashboard/actualizaciones`. Milton tiene que decidir; no
+  se tocó ninguna variable de Vercel para este ítem.
 
 ## Hecho
 

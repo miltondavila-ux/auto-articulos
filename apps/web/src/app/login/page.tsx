@@ -125,7 +125,7 @@ function LoginContent() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          gap: 64,
+          gap: "clamp(16px, 3vw, 64px)",
           flexWrap: "wrap",
         }}
       >
@@ -143,7 +143,7 @@ function LoginContent() {
           </span>
           <h2
             style={{
-              fontSize: 40,
+              fontSize: "clamp(28px, 6vw, 40px)",
               lineHeight: 1.1,
               color: "#1d1d1f",
               margin: "14px 0 0",
@@ -155,7 +155,7 @@ function LoginContent() {
           </h2>
           <p
             style={{
-              fontSize: 17,
+              fontSize: "clamp(14px, 2vw, 17px)",
               color: "#86868b",
               marginTop: 16,
               lineHeight: 1.5,
@@ -185,7 +185,7 @@ function LoginContent() {
               maxWidth: 380,
               background: "#ffffff",
               border: "none",
-              padding: 36,
+              padding: "clamp(20px, 4vw, 36px)",
               borderRadius: 22,
               display: "flex",
               flexDirection: "column",
@@ -291,7 +291,7 @@ function LoginContent() {
               maxWidth: 380,
               background: "#ffffff",
               border: "1px solid rgba(0, 0, 0, 0.08)",
-              padding: 32,
+              padding: "clamp(20px, 4vw, 32px)",
               borderRadius: 20,
               display: "flex",
               flexDirection: "column",

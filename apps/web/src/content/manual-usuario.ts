@@ -216,9 +216,11 @@ Esta sección se actualiza con los cambios visibles para usuarios y es parte del
 
 Ruta: /dashboard/configuracion
 
-Configuración es un índice de 6 páginas independientes. Si una opción no
-aparece en Redes Sociales, puede estar deshabilitada para tu cuenta por el
-administrador.
+Configuración es un índice de 6 páginas independientes. Una barra de
+navegación visible en todo momento, con la sección actual resaltada, te
+permite moverte entre las 6 páginas sin volver primero al índice. Si una
+opción no aparece en Redes Sociales, puede estar deshabilitada para tu
+cuenta por el administrador.
 
 ### Configuración inicial
 
@@ -322,6 +324,7 @@ Solo los administradores tienen acceso a este módulo:
 - **Filtros por Tipo de Cuenta:** Permite filtrar instantáneamente entre *Todos los tipos*, *Usuarios comunes*, *Administradores* y usuarios en periodo de *Free Trial (Prueba Gratuita)*, combinándose con la barra de búsqueda en tiempo real.
 - **Visibilidad de Módulos:** Permite ocultar o activar módulos específicos de forma individual por usuario o de manera global para mantenimiento.
 - **Prompts:** además de los estilos de redacción de artículos, incluye el prompt del generador de imágenes con IA para redes sociales — es global (aplica a todas las cuentas), se edita ahí mismo y no necesita ningún cambio de código para actualizarse.
+- **Tarjetas de resumen clicables:** en la pestaña "Accesos", las 5 tarjetas de arriba (Usuarios totales, En prueba, Activos, Conectados ahora, Publicaciones totales) no son solo informativas: al hacer clic en cualquiera, la lista de abajo se filtra automáticamente por ese criterio.
 
 ## Problemas frecuentes
 

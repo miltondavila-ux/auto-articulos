@@ -1793,3 +1793,325 @@ Responsable: Claude.
 Siguiente acción: cuando se libere la cuota de Vercel, reintentar el mismo
 commit, verificar el Preview funcionalmente y recién ahí fusionar.
 Estado: PREPARADA, BLOQUEADA POR CUOTA DE VERCEL.
+
+## Versión desplegada — 2026-09-08 — PR #70: tarjetas clicables en Usuarios, fusionado
+
+Entrada agregada por la tarea programada diaria de propagación (2026-09-09)
+a partir de `COORDINACION_CLAUDE_CODEX.md`, sección "CIERRE — Tarjetas
+clicables en Usuarios — 2026-09-08" (continuación de la entrada anterior de
+este mismo documento, "Versión preparada — 2026-09-07 — PR #70").
+
+Fecha y hora: 2026-09-08.
+Versión/commit: `bac676f` (forzar reconstrucción tras un reintento
+engañoso con commit vacío), fusión squash `48578e9`.
+Conversación/proyecto: `ORDEN DE USUARIOS ACTIVOS EN ADMIN`.
+Cambios: mismos de la entrada anterior (tarjetas clicables, sin colores).
+Migraciones: ninguna.
+Auditoría 3 (integración/producción): rate limit de Vercel liberado; build
+real en verde para el proyecto correcto (`auto-articulos-web`, no el
+duplicado). **Limitación real:** la URL de Preview quedó protegida por SSO
+de Vercel, sin credenciales disponibles para verificar clic por clic antes
+de fusionar — compensado con build/typecheck limpios y un diff de bajo
+riesgo (solo `onClick` sobre tarjetas ya existentes). Verificado en
+Producción real inmediatamente después: build `success`,
+`auto-articulos-web.vercel.app` responde con normalidad (captura de
+pantalla real). No se verificó con clics reales las 5 tarjetas en
+Producción (requiere sesión de administrador).
+Responsable: Claude.
+Estado: VERIFICADA EN PRODUCCIÓN (build y carga), CLIC FUNCIONAL SIN
+VERIFICAR POR FALTA DE SESIÓN DE ADMINISTRADOR.
+
+## Versión desplegada — 2026-09-08 — botón "Borrar todas las oportunidades" (PR #72, #74, #75)
+
+Entrada agregada por la tarea programada diaria de propagación (2026-09-09)
+a partir de `COORDINACION_CLAUDE_CODEX.md` (secciones sobre el worktree
+aislado, el cierre del PR #72 y el addendum de colisión con el PR #75).
+Ya documentado también en `TO-DO.md` (sección "Hecho") e
+`INVENTARIO_CONVERSACIONES.md` Parte B, propagados directamente por la
+propia conversación que hizo el trabajo — esta entrada solo completa el
+registro de versiones que faltaba en este documento.
+
+Fecha y hora: 2026-09-08.
+Versión/commit: `3809471` (PR #72, código: botones "Borrar todas las
+oportunidades" en `/dashboard/oportunidades` y
+`/dashboard/oportunidades-redes`, más `DELETE /api/social-opportunities?scope=pending`),
+fusión squash `16befb5`; `582b9de` (PR #74, propagación a
+`apps/web/src/content/manual-usuario.ts`); `00a5732` (PR #75, de Codex/otra
+sesión: `DELETE /api/opportunities` con el mismo alcance por
+panel/`siteDomain` que ya usa el análisis, reemplazando una primera versión
+del PR #72 que no filtraba por panel).
+Conversación/proyecto: pedido directo de Milton en chat, sin nombre de
+conversación formal; el PR #75 surgió de `CODEX - AUDITORIA A ALGORITMO DE
+PUBLICACIÓN DE ARTICULOS`.
+Cambios: ver detalle completo en `TO-DO.md` ("Hecho") e
+`INVENTARIO_CONVERSACIONES.md` Parte B, sección "Botón 'Borrar todas las
+oportunidades'".
+Migraciones: ninguna.
+Auditoría 3 (integración/producción): APROBADA — checks de Vercel en
+`success` sobre ambos commits fusionados, `/login` respondió `200` en
+`auto-articulos-web.vercel.app` y `seototal.lasolucionweb.com` tras cada
+despliegue. Clic funcional real del botón en Producción no se verificó
+(requiere sesión con oportunidades pendientes).
+**Resolución de colisión real de código:** el `DELETE /api/opportunities`
+simple del PR #72 (sin filtro de panel, un bug real en cuentas
+multi-idioma/sitio) fue reemplazado por la versión correcta del PR #75 al
+fusionar `origin/main` — merge de resolución `003ab16`, sin duplicar la
+función.
+Responsable: Claude (PR #72/#74), Codex/Claude (PR #75, ver Coordinación
+para atribución exacta).
+Estado: VERIFICADA EN PRODUCCIÓN, sin reservas activas.
+
+## Versión desplegada — 2026-09-08 — hotfix visual: tarjetas de Usuarios en fila (PR #80)
+
+Entrada agregada por la tarea programada diaria de propagación (2026-09-09)
+a partir de `COORDINACION_CLAUDE_CODEX.md`, sección "CIERRE (parcial) —
+Hotfix visual: tarjetas de Usuarios en fila por reset global de `button` —
+2026-09-08".
+
+Fecha y hora: 2026-09-08.
+Versión/commit: `ba62119` (PR #80, squash).
+Conversación/proyecto: `ORDEN DE USUARIOS ACTIVOS EN ADMIN` (continuación
+directa del cierre de PR #70).
+Causa: el reset global `button { display: inline-flex; align-items:
+center; justify-content: center; }` de `apps/web/src/app/globals.css`
+aplastaba en una sola fila el label/número/detalle de las 5 tarjetas de
+resumen, que el PR #70 había convertido de `<div>` a `<button>` sin
+sobreescribir ese `display`/`alignItems` en su estilo inline.
+Cambios: `display: "flex", flexDirection: "column", alignItems:
+"flex-start", justifyContent: "flex-start", width: "100%"` agregado al
+estilo inline de cada tarjeta (mismo patrón que ya usaba el botón de
+"Secciones de administración" un poco más abajo en el mismo archivo).
+Archivos modificados: `apps/web/src/app/dashboard/usuarios/page.tsx` (6
+líneas).
+Migraciones: ninguna.
+Auditoría 1 (funcional): APROBADA — `npx tsc --noEmit` limpio para
+`page.tsx` (~63 errores de TypeScript preexistentes en otros archivos no
+relacionados, ya presentes en `origin/main` antes de este cambio, no
+introducidos ni corregidos acá).
+Auditoría 2 (regresión): APROBADA — build exacto de `apps/web` sin
+errores, incluye `/dashboard/usuarios`.
+Auditoría 3 (integración/producción): **fusionado sin completarla** — ni
+Preview (SSO) ni Producción pudieron verificarse visualmente antes/después
+de fusionar porque el rate limit diario de Vercel volvió a agotarse (varias
+sesiones en paralelo consumieron la cuota ese día: PR #70 retry, #72, #74,
+#75, #78, #79 y #80). Decisión explícita de fusionar sin la tercera
+auditoría completa, documentada en la fuente con su justificación (defecto
+ya confirmado en Producción con captura real de Milton; causa y fix
+puntuales ya verificados por typecheck+build; esperar 24h no proporcional
+al riesgo). **Verificado por esta misma corrida de propagación (2026-09-09)
+contra `origin/main`: el código del fix SÍ está confirmado en producción
+hoy** (`flexDirection: "column"` presente en
+`apps/web/src/app/dashboard/usuarios/page.tsx` de `origin/main`,
+`git merge-base --is-ancestor ba62119 origin/main` exitoso).
+Responsable: Claude.
+Estado: VERIFICADA EN PRODUCCIÓN (confirmado por esta corrida de
+propagación; no consta en `COORDINACION_CLAUDE_CODEX.md` una verificación
+visual explícita de Milton posterior al despliegue — si Milton ya lo vio y
+está conforme, falta solo la nota de cierre en ese documento).
+
+## Versión desplegada — 2026-09-08 — Bug Natalia: reintentos de login y timeout de categorías (PR #82)
+
+Entrada agregada por la tarea programada diaria de propagación (2026-09-09)
+a partir de contenido recuperado del commit `0931f75` (ver
+`REPARADOR_DEL_ARBOL_PRINCIPAL.md`, hallazgo de contenido perdido en merge,
+y la sección "RECUPERACIÓN DE CONTENIDO PERDIDO EN MERGE" de
+`COORDINACION_CLAUDE_CODEX.md`).
+
+Fecha y hora: 2026-09-08.
+Versión/commit: `c162119` ("fix: prevent Natalia login retries and category
+pool timeout"), fusionado vía PR #82, commit de merge `9f0c2f1`.
+Conversación/proyecto: `BUG NATALIA`.
+Cambios: no consta el diff exacto en la documentación de origen (recuperada
+solo la entrada de cierre, no la técnica); afecta `apps/worker/src/categorySync.ts`
+y `apps/worker/src/automation/10minutesWebsite.ts` (según la reserva de
+archivo que tenía esta conversación en `INVENTARIO_CONVERSACIONES.md`,
+Parte A).
+Migraciones: no mencionadas en la entrada de cierre recuperada.
+Excepción autorizada por Milton: la validación funcional se hizo sobre el
+caso real controlado (cuenta de Natalia), sin copiar a local su contraseña,
+tokens, credenciales OAuth ni datos privados — la ausencia de esa cuenta en
+la base local no debía trabar la corrección.
+Auditoría 1 (funcional), 2 (regresión) y 3 (integración/producción):
+APROBADAS según la entrada de cierre — Vercel terminó en `Ready`, `/login`
+respondió correctamente y Producción sirvió el deployment nuevo (`age: 0`)
+durante la verificación. Natalia confirmó en vivo que la sincronización de
+categorías funciona correctamente en Producción. La publicación de un
+artículo quedó en prueba manual al cerrar la conversación (no consta
+verificación posterior de ese paso puntual).
+Responsable: Codex.
+Estado: VERIFICADA EN PRODUCCIÓN, reserva liberada.
+
+## Versión desplegada — 2026-09-08 — andamiaje MCP 10MWS (PR #76) e incidente de producción por migración faltante
+
+Entrada agregada por la tarea programada diaria de propagación (2026-09-09)
+a partir de `COORDINACION_CLAUDE_CODEX.md` (sección "MCP 10MWS — andamiaje
+de segunda línea de ejecución de publicación", investigación de mercado de
+plataformas, y el bloque "INCIDENTE CRÍTICO Y PROTOCOLO OBLIGATORIO —
+2026-09-08" al inicio del documento), verificado en vivo contra
+`origin/main` por esta misma corrida (`git log --graph`, `git merge-base
+--is-ancestor`).
+
+Fecha y hora: 2026-09-07/08.
+Versión/commit: `ae225dd` (PR #76, mergeado originalmente) → **revertido**
+en `0640bd6` ("Revert 'feat: andamiaje...MCP (#76)' (#85)") tras romper
+Producción → **revertido el revert** en `df830eb` ("Revert 'Revert...'
+(#85)") una vez corregida la migración, con `d07fb6b` ("fix(db): sync MCP
+publication schema in production (#84)") y `519a679` ("workflow: agregar
+opción force_sync para sincronizar BD con schema (--accept-data-loss)")
+como parte de la reparación. Documentación del incidente: `8add43d`/`01ff1c1`.
+Conversación/proyecto: `MCP 10MWS` — segunda línea de ejecución de
+publicación (sin tocar la actual vía Playwright) para que cuentas que lo
+elijan publiquen directo contra un servidor MCP de terceros (10MWS primero,
+pensado para escalar a un selector multi-plataforma — ver `TO-DO.md`).
+Cambios: `User.publishMethod` (default `BROWSER`, sin cambio de
+comportamiento para ninguna cuenta existente), modelo `McpConnection`,
+interfaz `ArticlePublisher`, `browserPublisher.ts` (envoltorio 1:1 sin
+tocar lógica), cliente MCP JSON-RPC en `packages/shared`, `mcpPublisher.ts`,
+`mcpQueue.ts` (rama nueva desde `queue.ts` solo si `publishMethod ===
+"MCP"`).
+**Incidente real de Producción:** el PR #76 agregó `User.publishMethod` y
+`McpConnection` al schema de Prisma **sin la migración correspondiente en
+el mismo commit** — el login en Producción devolvió HTTP 500 (`column
+"User.publishMethod" does not exist"`). Tardó 4 horas en resolverse:
+revert del PR para devolver Producción a un estado conocido, migración
+segura sincronizada con `--accept-data-loss` como última opción, y luego
+el revert del revert una vez la base de datos ya tenía las columnas. Ver el
+protocolo obligatorio resultante ("INCIDENTE CRÍTICO Y PROTOCOLO OBLIGATORIO
+— 2026-09-08", inicio de `COORDINACION_CLAUDE_CODEX.md`): schema y
+migración deben crearse SIEMPRE en el mismo commit de aquí en adelante.
+Migraciones: la migración de `User.publishMethod`/`McpConnection` quedó
+aplicada en Producción como parte de la reparación del incidente (commits
+`d07fb6b`/`519a679`); no se encontró en la documentación disponible el
+nombre exacto del archivo de migración usado.
+Auditoría 3 (integración/producción real del propio PR #76, antes del
+incidente): bloqueada a propósito — no existía todavía un servidor MCP real
+de 10MWS contra el cual probar, y sin URL real ni interfaz que active
+`publishMethod = MCP` para ninguna cuenta, el código quedaba inerte por
+defecto. El incidente de Producción fue por la falta de migración, no por
+el propio código MCP (que sigue sin tener ninguna cuenta usándolo hoy).
+Responsable: Claude (PR #76 y su reparación).
+Estado: **CÓDIGO EN PRODUCCIÓN, SCHEMA SINCRONIZADO** tras el incidente;
+funcionalmente inerte (ninguna cuenta usa `publishMethod = MCP` todavía) a
+la espera de la URL real del servidor MCP de 10MWS y de que Milton confirme
+el orden de prioridad de plataformas adicionales (ver `TO-DO.md`).
+
+## Versión desplegada — 2026-09-08 — escala responsiva fluida con `clamp()` en login y dashboard (PR #87)
+
+Entrada agregada por la tarea programada diaria de propagación (2026-09-09)
+a partir de contenido recuperado de los commits `3e2d957`/`1d727dc` (ver
+`REPARADOR_DEL_ARBOL_PRINCIPAL.md`, hallazgo de contenido perdido en merge),
+más la entrada previa de este mismo documento ("BLOQUEADO/EN CURSO" para la
+misma auditoría), verificado en vivo contra `origin/main`.
+
+Fecha y hora: 2026-09-08 20:57 UTC.
+Versión/commit: `fe91e44`, fusionado vía PR #87 en el merge `1a2ebc0`.
+Conversación/proyecto: `AUDITORIA DE CAPACIDADES RESPONSIVE` (Claude Haiku
+4.5).
+Cambios: 7 valores fijos de `padding`/`gap`/`fontSize` reemplazados por
+`clamp()` (mínimo, preferido en `vw`, máximo) en
+`apps/web/src/app/login/page.tsx` (5 cambios: gap del layout, tamaño de
+título, tamaño de párrafo, padding de ambos formularios) y
+`apps/web/src/app/dashboard/page.tsx` (2 cambios: padding del banner de
+bienvenida de prueba, gap del contenedor de notificaciones). Cambios
+puramente visuales, sin tocar lógica ni estructura.
+Archivos modificados: los 2 archivos citados arriba.
+Migraciones: ninguna.
+Auditoría 1 (funcional): APROBADA — 7 cambios son solo valores CSS dentro
+de `style={{}}` ya existentes.
+Auditoría 2 (regresión): APROBADA — `git diff --stat` limpio (2 archivos,
+0 eliminados/creados); los valores mínimo/máximo de cada `clamp()` son
+iguales o menores a los originales, por lo que no debería verse peor en
+ningún tamaño de pantalla.
+Auditoría 3 (integración/producción): fusionado sin conflictos según la
+fuente ("✓ Fusionado a main sin conflictos"); no consta en la
+documentación disponible una verificación visual explícita posterior en
+Producción — **verificado por esta corrida de propagación (2026-09-09)
+que el código está presente en `origin/main`**
+(`gap: "clamp(16px, 3vw, 64px)"` confirmado en
+`apps/web/src/app/login/page.tsx`).
+Responsable: Claude (Haiku 4.5).
+Estado: CÓDIGO EN PRODUCCIÓN (confirmado por esta corrida); confirmación
+visual de Milton en móvil/tablet/desktop pendiente según la propia fuente.
+
+## Versión desplegada — 2026-09-08 — límite de oportunidades sociales por clic: de 1 a 3
+
+Entrada agregada por la tarea programada diaria de propagación (2026-09-09),
+verificada en vivo contra `origin/main` (commit y diff completo).
+
+Fecha y hora: 2026-09-08 17:46 UTC.
+Versión/commit: `51fa8f2`.
+Conversación/proyecto: sin nombre de conversación formal en
+`COORDINACION_CLAUDE_CODEX.md` (commit directo, sin PR documentado en el
+diario de coordinación).
+Cambios: `POST /api/social-opportunities/generate` ahora devuelve hasta 3
+candidatos por clic en vez de 1 (`.slice(0, 1)` → `.slice(0, 3)`), "para dar
+más opciones sin saturar de pendientes".
+Archivos modificados:
+`apps/web/src/app/api/social-opportunities/generate/route.ts` (9 líneas).
+Migraciones: ninguna.
+**Nota de posible regresión, sin resolver por esta tarea de propagación:**
+el PR #60 (ver más arriba en este mismo documento, "motor de selección de
+artículos tendencia para redes sociales") había reducido este mismo límite
+de 3 a 1 explícitamente para corregir que pedir dos redes distintas el
+mismo día devolvía el mismo artículo top-1 para ambas. Este commit revierte
+ese límite a 3 sin mencionar el PR #60 ni si el problema que motivó bajarlo
+a 1 sigue resuelto de otra forma (por ejemplo, si la exclusión de
+`activeKeys`/`wasUsedToday` alcanza para evitar duplicados entre redes
+cuando se piden 3 candidatos en vez de 1). Auditorías no documentadas en
+`COORDINACION_CLAUDE_CODEX.md` para este commit puntual. Queda señalado
+para que quien lo revise confirme si el escenario que arregló el PR #60
+sigue cubierto.
+Responsable: no identificado en la documentación disponible (commit
+autoría `miltondavila-ux`, co-autoría `Claude Haiku 4.5`).
+Estado: EN PRODUCCIÓN (commit ya es ancestro de `origin/main`); auditoría
+de integración/producción no documentada.
+
+## Versión desplegada — 2026-09-08 — RENEW CONFIGURACION: pulido estilo Apple (continuación tras el cierre de la Fase 6)
+
+Entrada agregada por la tarea programada diaria de propagación (2026-09-09)
+a partir de `COORDINACION_CLAUDE_CODEX.md`, secciones "Trabajo activo —
+RENEW CONFIGURACION, pulido estilo Apple — 2026-09-07" y "Actualización —
+RENEW CONFIGURACION, pulido estilo Apple — 2026-09-08". Continuación de la
+entrada anterior de este mismo documento ("RENEW CONFIGURACION (rediseño
+completo, 6 fases)"), después de que Milton revisó las 6 páginas nuevas en
+Producción y señaló 4 problemas de estilo.
+
+Fecha y hora: 2026-09-08.
+Versión/commit: `3a0d985` (primer pase: quita colores de las 6 páginas
+propias de las Fases 1-6, agrega `ConfiguracionSubNav.tsx`); `a66d1b1`
+(segundo pase: neutraliza 13 componentes compartidos exclusivos de
+Configuración que el primer pase no había tocado — `GoogleSearchConsoleSection`,
+`GoogleAnalyticsSection`, `BingWebmasterSection`,
+`BrowserTabsConnectionNotice`, `BusinessProfileSection`, `ThreadsSection`,
+`LinkedInSection`, `PinterestSection`, `TumblrSection`, `BlueskySection`,
+`DevToSection`, `CategorySyncProgress`, `OnboardingWizard`).
+Conversación/proyecto: `RENEW CONFIGURACION` (continuación).
+Cambios: paleta neutralizada a `#1d1d1f`/`#6e6e73`/`#f5f5f7`/`#e5e5ea` en
+todas partes salvo rojo-error/verde-éxito ya estándar; `flexWrap` agregado
+a filas de Cuenta/Contenido que no lo tenían; explicaciones numeradas
+agregadas a las introducciones de Cuenta, Contenido, Indexación y Redes
+Sociales; barra de navegación persistente `ConfiguracionSubNav.tsx` entre
+las 6 páginas (mismo patrón visual de pestaña activa que `DashboardNav.tsx`).
+Archivos modificados: 17 archivos (6 páginas de Configuración +
+`ConfiguracionSubNav.tsx` nuevo + 13 componentes compartidos, más 2
+ternarios redundantes corregidos en `BingWebmasterSection.tsx` y
+`OnboardingWizard.tsx`).
+Migraciones: ninguna.
+Auditoría 1 (funcional): APROBADA — revisión manual de cada componente
+tocado.
+Auditoría 2 (regresión): APROBADA — `tsc --noEmit` limpio, `next build
+--webpack` con 83/83 rutas.
+Auditoría 3 (integración/producción): **BLOQUEADA al momento de la última
+entrada de origen** — `Vercel – auto-articulos-web` en `failure`,
+`Deployment rate limited — retry in 24 hours` para `a66d1b1`, mismo
+bloqueo que ya afectaba al PR #80 el mismo día. **Verificado por esta
+misma corrida de propagación (2026-09-09) contra `origin/main`:** el
+código de ambos commits (`3a0d985`, `a66d1b1`) es ancestro de `origin/main`
+y `ConfiguracionSubNav.tsx` existe en el árbol actual — el bloqueo de
+Vercel ya se liberó en algún momento entre el 8 y el 9 de septiembre.
+Responsable: Claude.
+Estado: CÓDIGO EN PRODUCCIÓN (confirmado por esta corrida); no consta en
+`COORDINACION_CLAUDE_CODEX.md` la confirmación visual explícita de Milton
+de que `/dashboard/configuracion` ya no tiene colores y las tarjetas
+quedan apiladas en celular — pendiente esa confirmación puntual, aunque el
+código y el despliegue ya están verificados.
