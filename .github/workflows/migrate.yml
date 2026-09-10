@@ -33,6 +33,11 @@ on:
         required: false
         default: false
         type: boolean
+      force_sync:
+        description: "Forzar sincronización de BD con schema (--accept-data-loss). USAR SOLO CUANDO SE SABE QUE ESTÁ CORRECTO"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   migrar:
@@ -95,8 +100,17 @@ jobs:
           npx prisma db execute \
             --url "$MIGRATION_DATABASE_URL" \
             --file packages/db/prisma/migrations/20260907180000_add_client_business_locations/migration.sql
+      - name: Forzar sincronización (--accept-data-loss)
+        if: ${{ inputs.force_sync }}
+        shell: bash
+        run: |
+          MIGRATION_DATABASE_URL="${DATABASE_URL/:6543/:5432}"
+          MIGRATION_DATABASE_URL="${MIGRATION_DATABASE_URL/?pgbouncer=true/}"
+          DATABASE_URL="$MIGRATION_DATABASE_URL" DIRECT_URL="$MIGRATION_DATABASE_URL" \
+            npx prisma db push --schema=packages/db/prisma/schema.prisma \
+            --accept-data-loss
       - name: Aplicar migraciones con Session pooler
-        if: ${{ !inputs.safe_opportunity_dates && !inputs.safe_daily_limit_default && !inputs.safe_blogger_integration && !inputs.safe_client_business_locations }}
+        if: ${{ !inputs.safe_opportunity_dates && !inputs.safe_daily_limit_default && !inputs.safe_blogger_integration && !inputs.safe_client_business_locations && !inputs.force_sync }}
         shell: bash
         run: |
           MIGRATION_DATABASE_URL="${DATABASE_URL/:6543/:5432}"

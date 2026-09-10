@@ -200,9 +200,10 @@ export async function processNextCategorySync(filterUserId?: string): Promise<bo
     const selectedSiteDomain = user?.selectedSiteDomain ?? "";
 
     // 1. Primero upsertamos todas las categorías remotas para asegurarnos de que existan y tengan ID.
-    const upsertedCategories = await Promise.all(
-      remoteCategories.map((cat) =>
-        prisma.category.upsert({
+    const upsertedCategories = [];
+    for (const cat of remoteCategories) {
+      upsertedCategories.push(
+        await prisma.category.upsert({
           where: {
             userId_platform_panel_externalId: {
               userId: job.userId,
@@ -223,8 +224,8 @@ export async function processNextCategorySync(filterUserId?: string): Promise<bo
           },
           update: { name: cat.name, isSequence: cat.isSequence, source: "sync", siteDomain: selectedSiteDomain },
         }),
-      ),
-    );
+      );
+    }
 
     // 2. Traer las categorías que existen actualmente en la base de datos para este usuario.
     const existingCategories = await prisma.category.findMany({

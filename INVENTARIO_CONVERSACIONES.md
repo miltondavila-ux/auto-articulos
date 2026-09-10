@@ -21,6 +21,8 @@ Estructura:
 
 ## PARTE A — ¿Quién tiene qué reservado AHORA MISMO?
 
+| `/private/tmp/fix-natalia-category-login-20260908` | `codex/fix-natalia-category-login-20260908` | En curso | Codex — `BUG NATALIA` | Reserva: `apps/worker/src/categorySync.ts`, `apps/worker/src/automation/10minutesWebsite.ts`; base `origin/main` `7f3c7e9`; SHA exacto de Producción no expuesto por los headers disponibles. |
+
 **Este es el tablero de reservas rápidas** que exige la "METODOLOGÍA DE
 TRABAJO EN PARALELO Y CAPITÁN DE ARCHIVO" en `COORDINACION_CLAUDE_CODEX.md`
 (agregada 2026-09-04): antes de tocar un archivo, consultar acá; al
@@ -44,7 +46,7 @@ refrescar esta tabla; no confiar en la fecha si pasó mucho tiempo.
 | `/private/tmp/auto-articulos-conexion-blogger` | `codex/conexion-blogger-20260902` | 1 | Codex — un intento de `CONEXION BLOGGER` | Atención: existe otra rama de Blogger (`codex/conexion-blogger-produccion-20260903`) que SÍ está fusionada en `origin/main` y fue la que llegó a producción. Esta parece un intento anterior o paralelo que quedó suelto sin fusionar — no se decide aquí si conservarla o descartarla. |
 | `/private/tmp/auto-articulos-resolucion-conexion-web` | `codex/resolucion-conexion-web-20260902` | 5 | Codex/Claude — proyecto `RESOLUCION DE CONEXION WEB` | Contradicción real detectada: la decisión de Milton (2026-09-02) marca este proyecto como **CULMINADO**, pero sus 5 commits nunca se fusionaron a `origin/main`. "Culminado" no fue lo mismo que "publicado". Señalado, no resuelto. |
 | `/private/tmp/cambio-cantidad-articulos-20260902` | `codex/cambio-cantidad-articulos-20260902` | 1 | Codex — cambio de cantidad de artículos | No aparece mencionado como cerrado en Coordinación; verificar con Codex si sigue vivo o es un residuo. |
-| `/private/tmp/mcp-publicacion-20260907` | `claude/mcp-publicacion-20260907` | 0 | Claude — "MCP 10MWS" | Nueva línea de ejecución de publicación vía MCP (paralela a la actual por navegador), en diseño/andamiaje. Reserva: `packages/db/prisma/schema.prisma`, `apps/worker/src/queue.ts`. Sin cambio de comportamiento por defecto (nuevo `publishMethod` queda en `BROWSER`). Ver `COORDINACION_CLAUDE_CODEX.md` para el detalle. |
+| `/private/tmp/mcp-publicacion-20260907` | `claude/mcp-publicacion-20260907` (PR #76) | 1 | Claude — "MCP 10MWS" | Andamiaje de la nueva línea de ejecución de publicación vía MCP (ahora con alcance ampliado a un selector multi-plataforma, no solo 10MWS — ver Coordinación), enviado como PR #76 (`open`, sin fusionar). Reserva sigue activa sobre `packages/db/prisma/schema.prisma` y `apps/worker/src/queue.ts` hasta que se fusione o se cierre. Sin cambio de comportamiento por defecto (`publishMethod` queda en `BROWSER`). Auditoría 3 (integración/producción) bloqueada a propósito — no existe todavía servidor MCP real de 10MWS ni migración aplicada. Detalle completo en `COORDINACION_CLAUDE_CODEX.md`. |
 | `/tmp/fix-tiles-flex-20260908` | `claude/fix-tiles-flex-20260908` | 1 | Claude — "ORDEN DE USUARIOS ACTIVOS EN ADMIN" (hotfix visual sobre PR #70) | Reserva: `apps/web/src/app/dashboard/usuarios/page.tsx` — arregla que las tarjetas de resumen se veían en fila (aplastadas) por el reset global `button { display: inline-flex }`. |
 
 ### Ya terminados y fusionados (el worktree quedó suelto, pero el trabajo YA está en producción — no son reservas activas)
