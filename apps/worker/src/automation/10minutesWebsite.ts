@@ -1388,9 +1388,23 @@ async function createArticleDraft(
  * segunda oportunidad del mismo artículo. Función de módulo (antes vivía
  * solo dentro de saveAndGetUrl) para poder mutar el título temprano, antes
  * de generar la imagen, y no solo al momento final de guardar.
+ *
+ * Bug real en producción (10/9/2026, cuenta de Lorena Álvarez): el sufijo
+ * anterior (" — versión 5380210-1", un epoch crudo) quedaba visible tal
+ * cual en el título publicado y en la URL — Milton nunca pidió que esta
+ * marca de unicidad interna se viera, solo que el guardado no fallara por
+ * choque de título. Se reemplaza por una fecha/hora legible en español,
+ * que además comunica algo real (cuándo se generó esta versión) en vez de
+ * un número sin sentido para el lector.
  */
 function makeUniqueTitle(baseTitle: string, attempt: number): string {
-  const uniqueness = ` — versión ${Date.now().toString().slice(-7)}-${attempt}`;
+  const now = new Date();
+  const dd = String(now.getDate()).padStart(2, "0");
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const hh = String(now.getHours()).padStart(2, "0");
+  const min = String(now.getMinutes()).padStart(2, "0");
+  const marca = `${dd}/${mm} ${hh}:${min}${attempt > 1 ? ` · ${attempt}` : ""}`;
+  const uniqueness = ` (actualizado ${marca})`;
   return `${baseTitle.slice(0, 200 - uniqueness.length)}${uniqueness}`;
 }
 
