@@ -6484,37 +6484,47 @@ Reserva liberada. Estado: CERRADA.
 
 ---
 
-## CODIGO QR PANTALLA DE INICIO — 2026-09-09
+## CERRADO — CODIGO QR PANTALLA DE INICIO — 2026-09-09/10
 
-**Solicitud:** Milton pide agregar código QR a pantalla de login para presentaciones. QR apunta a https://seototal.lasolucionweb.com/login.
+**Solicitud:** Milton pidió agregar código QR a la pantalla de login para presentaciones — apunta a https://seototal.lasolucionweb.com/login, escaneable desde celular para registrarse en el momento.
 
-**Identidad:** Claude, sesión "CODIGO QR PANTALLA DE INICIO"  
-**Rama:** `claude/qr-pantalla-inicio-20260909`  
-**Commit:** `a805882` — feat: add QR code to login page for presentations
+**Identidad:** Claude (Sonnet 5 desde el fix de infraestructura), sesión "CODIGO QR PANTALLA DE INICIO"
 
-### Cambios
+### Cambios de producto
 
-- Componente: `apps/web/src/components/QrCodeDisplay.tsx` — generador reutilizable
-- Integrado en: `apps/web/src/app/login/page.tsx` debajo del copy
-- Label: "Escanea para registrarte"
-- Dependencia: `qrcode` + `@types/qrcode`
+- Componente nuevo: `apps/web/src/components/QrCodeDisplay.tsx` (generador reutilizable, canvas + librería `qrcode`)
+- Integrado en `apps/web/src/app/login/page.tsx`, debajo del copy de presentación (izquierda), NO en `/` (redirige a `/dashboard`, no hace falta ahí)
+- Ajustes visuales pedidos por Milton en iteraciones posteriores:
+  - Label final: "Escanea para registrarte en movil"
+  - Eliminado el ícono "A" (cuadrado negro) junto al título "SEO TOTAL" del formulario
+  - QR justificado a la izquierda (antes centrado)
+  - Fondo del QR blanco (antes gris `rgba(0,0,0,0.02)`)
+- Commits: `a805882`/`cb2c1ae` (feature original), `ef6cf5c` (label), `64e2904` (logo + alineación + fondo)
+
+### Bloqueo crítico encontrado y resuelto (no relacionado al QR en sí)
+
+Al intentar llevar el QR a producción se descubrió que **ningún deploy llegaba a Production desde hacía ~20 horas** — afectaba a todo el equipo, no solo a este cambio. Tres causas independientes, todas corregidas:
+
+1. **Build TypeScript roto**: `opportunity-analysis.ts` referenciaba `input.excludedTopics` (nunca agregado al tipo) dentro de código muerto ubicado después de un `return` — resto huérfano de la feature "Exclusión de Temas", que nunca se completó (sin schema, sin migración, sin UI). Fix: PR [#95](https://github.com/miltondavila-ux/auto-articulos/pull/95) — agregó el campo al tipo y movió el bloque (`excludedKeywords`/`titleTouchesExcludedTopic`) a antes de su primer uso real. La lógica de filtrado queda alcanzable pero sigue inerte (nadie le pasa `excludedTopics` todavía).
+2. **`.vercelignore` vs `vercel.json` en conflicto**: `.vercelignore` eliminaba `.git` del checkout antes del build, pero el `ignoreCommand` de `vercel.json` (agregado un día después, commit `96ea2a4`) dependía de `git diff` para decidir si saltar el build — fallaba con `fatal: not a git repository`. Fix directo a main (`3bd6286`): se quitó `.git` de `.vercelignore`.
+3. **`package-lock.json` desincronizado**: corregido por otra sesión en paralelo, PR [#96](https://github.com/miltondavila-ux/auto-articulos/pull/96) (commit `2ddb952`).
+
+Diagnóstico hecho con `vercel inspect <deployment-id> --logs` (CLI autenticado como `miltondavila-6917`) contra el deployment fallido real, no por conjetura.
 
 ### Auditorías
 
-✅ Funcional: QR genera, apunta correcto, legible en móvil  
-✅ TypeScript: Sin nuevos errores  
-✅ Build: npm run build ✓  
-✅ Responsive: Desktop + móvil (375px) ✓  
-✅ Console: Sin errores  
+✅ Funcional: QR genera, apunta a URL correcta, legible en móvil y desktop  
+✅ TypeScript: sin errores nuevos (los tres bugs de infraestructura arriba, todos corregidos)  
+✅ Build: `npm run build` limpio, reproducido en worktree aislado antes de tocar main  
+✅ Responsive: verificado 375px (mobile) y desktop  
+✅ Verificación visual en Producción real (no solo Preview) tras cada cambio
 
-### Estado
+### Estado final
 
-✅ Implementado y testeado  
-✅ PR #93 creado  
-⏳ Awaiting merge — checks en progreso  
-⏳ Tagcrush: pendiente para siguiente sesión
+✅ **DESPLEGADO Y VERIFICADO EN PRODUCCIÓN** — https://seototal.lasolucionweb.com/login  
+⏳ Tagcrush: pendiente, usar mismo componente `QrCodeDisplay` con URL de tagcrush.net cuando se pida
 
-**Nota:** Página `/` redirige a `/dashboard`, QR solo en `/login` suficiente.
+**CERRADA.**
 
 ---
 
