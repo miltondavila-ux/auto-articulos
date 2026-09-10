@@ -2115,3 +2115,72 @@ Estado: CÓDIGO EN PRODUCCIÓN (confirmado por esta corrida); no consta en
 de que `/dashboard/configuracion` ya no tiene colores y las tarjetas
 quedan apiladas en celular — pendiente esa confirmación puntual, aunque el
 código y el despliegue ya están verificados.
+
+## Versión desplegada — 2026-09-10 — Worker roto (lockfile + Vercel) y sufijo de título duplicado
+
+Fecha y hora: 2026-09-10.
+Versión/commit: `2ddb952` (fix #1: `package-lock.json` sincronizado +
+`ignoreCommand` roto retirado de `apps/web/vercel.json`, PR #96); `51833e0`
+(fix #2: sufijo legible en títulos duplicados, PR #97); `54379d8` (cierre
+documental, solo `.md`).
+Conversación/proyecto: "NO PUBLICA ARTICULOS" (pedido directo de Milton en
+chat). Ver entradas completas con triple auditoría en
+`COORDINACION_CLAUDE_CODEX.md` e `INVENTARIO_CONVERSACIONES.md`.
+
+**Causa raíz #1:** el commit `cb2c1ae` (2026-09-09) agregó
+`qrcode`/`@types/qrcode` a `apps/web/package.json` sin regenerar
+`package-lock.json`. Desde ese commit, `npm ci` fallaba con `EUSAGE` en
+TODOS los workflows de GitHub Actions (worker, worker-test,
+social-worker), en todos los shards — ningún worker podía arrancar, por
+eso los artículos quedaban en cola para siempre.
+
+**Causa raíz #2:** el `ignoreCommand` agregado en `apps/web/vercel.json`
+por el commit `96ea2a4` (2026-09-08) usaba `git rev-parse` dentro del
+contenedor de build de Vercel, donde no hay `.git` disponible — tumbaba
+TODOS los deployments de producción desde ese commit (~2 días sin un solo
+deploy exitoso, confirmado con `vercel ls --prod`).
+
+**Bug adicional (no relacionado a las causas raíz, encontrado por Milton
+en vivo durante la verificación):** `makeUniqueTitle()` en
+`apps/worker/src/automation/10minutesWebsite.ts` — el sufijo de
+desambiguación para títulos duplicados era un epoch crudo
+(`— versión 5380210-1`) visible en el título público y la URL de
+artículos reales. Reemplazado por fecha/hora legible en español
+(`(actualizado 10/09 12:44)`), mismo mecanismo, mismos dos puntos de uso.
+
+Cambios: `package-lock.json` regenerado (`npm install
+--package-lock-only`, ninguna dependencia declarada cambió);
+`apps/web/vercel.json` sin el campo `ignoreCommand` (quedan intactos
+`buildCommand`/`outputDirectory`/`installCommand`, la config que funcionó
+semanas antes del 2026-09-08); `apps/worker/src/automation/
+10minutesWebsite.ts` — formato del sufijo de `makeUniqueTitle()`.
+Migraciones: ninguna.
+
+Auditoría 1 (funcional, local en worktree aislado): `npm ci` instala sin
+error; typecheck limpio; build de `apps/web` (comando exacto de Vercel)
+completo con 83 rutas; build de `apps/worker` limpio; tests del worker
+20/20 (14 antes del fix #2 + 6 agregados/confirmados). Pasos que requieren
+Postgres corridos con `DATABASE_URL` dummy por falta de Docker local —
+documentado como limitación real.
+Auditoría 2 (regresión): único archivo de dependencias tocado en fix #1
+sin cambiar ninguna versión declarada; único campo retirado en
+`vercel.json`; único string de formato cambiado en fix #3. Ningún otro
+código de aplicación, esquema, secreto ni middleware modificado.
+Auditoría 3 (integración/producción, real): checks de Vercel en `success`
+para ambos PR; primer deployment de producción en ~2 días terminó
+`● Ready` en 48s tras el fix #1; worker relanzado manualmente — 10/10
+shards en `success` (antes: fallaban en 2-51s); `/login` respondiendo
+`200` en `auto-articulos-web.vercel.app` con el commit `54379d8` ya
+desplegado (confirmado con `gh api .../commits/<sha>/status` y
+`curl -I`). **Verificación funcional hecha por Milton en vivo con la
+cuenta de pruebas Lorena Álvarez:** artículo de prueba completó el flujo
+entero (login, contenido IA, imagen, FAQ, guardado/publicación) y luego un
+lote completo enviado a publicar, sin errores.
+
+Responsable: Claude.
+Estado: EN PRODUCCIÓN, verificado en vivo por Milton. Pendiente: el
+artículo ya publicado antes del fix #3 con el sufijo viejo
+(`como-calcular-el-deducible-de-tu-seguro-de-salud-version-53802101` en
+`segurosdesaludyvida.com`) no se corrigió — queda con ese título/URL hasta
+que se edite a mano si Milton lo pide. **Esta es la versión estable de
+referencia para el worker y el deploy de Vercel a partir de esta fecha.**
