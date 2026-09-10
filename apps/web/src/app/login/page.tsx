@@ -195,23 +195,6 @@ function LoginContent() {
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 2 }}>
-              <div
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 7,
-                  background: "#1d1d1f",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#ffffff",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  boxShadow: "none",
-                }}
-              >
-                A
-              </div>
               <h1
                 style={{
                   fontSize: 20,

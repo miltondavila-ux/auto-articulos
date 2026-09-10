@@ -30,11 +30,11 @@ export function QrCodeDisplay({ url, size = 200, label }: QrCodeDisplayProps) {
       style={{
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
+        alignItems: "flex-start",
         gap: 12,
         padding: "16px",
         borderRadius: 12,
-        background: "rgba(0, 0, 0, 0.02)",
+        background: "#ffffff",
       }}
     >
       <canvas
@@ -51,7 +51,7 @@ export function QrCodeDisplay({ url, size = 200, label }: QrCodeDisplayProps) {
             fontSize: 13,
             color: "#86868b",
             margin: 0,
-            textAlign: "center",
+            textAlign: "left",
           }}
         >
           {label}
