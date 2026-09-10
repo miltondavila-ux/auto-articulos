@@ -170,7 +170,7 @@ function LoginContent() {
             <QrCodeDisplay
               url="https://seototal.lasolucionweb.com/login"
               size={160}
-              label="Escanea para registrarte"
+              label="Escanea para registrarte en movil"
             />
           </div>
         </div>
