@@ -836,3 +836,36 @@ todavía no se envió. Google Business Profile sigue bloqueado por la misma
 cuota externa ya documentada (caso de soporte 7-6783000042063). Ningún
 código ni configuración de Producción se tocó. Sigue pendiente de terceros
 (Google), no de este equipo.
+
+### NO PUBLICA ARTÍCULOS — worker roto por lockfile + producción rota por Vercel + sufijo feo de título duplicado
+- Agente: Claude.
+- Fecha: 2026-09-10.
+- Proyecto: pedido directo de Milton en chat ("NO PUBLICA ARTICULOS"),
+  cuenta de pruebas Lorena Álvarez.
+- Causa raíz #1: `package-lock.json` desincronizado desde el commit
+  `cb2c1ae` (2026-09-09) rompía `npm ci` en todos los workflows de GitHub
+  Actions — ningún worker podía arrancar.
+- Causa raíz #2 (encontrada en paralelo, al verificar el Preview del fix
+  #1): `ignoreCommand` roto en `apps/web/vercel.json` (commit `96ea2a4`,
+  2026-09-08) tumbaba todos los deployments de producción desde entonces
+  (~2 días sin un solo deploy exitoso).
+- Bug adicional encontrado por Milton durante la verificación en vivo: el
+  sufijo de desambiguación de títulos duplicados (`makeUniqueTitle`,
+  pedida el 30/8/2026) quedaba visible como texto crudo
+  ("— versión 5380210-1") en el título público y la URL de artículos
+  reales.
+- PRs: [#96](https://github.com/miltondavila-ux/auto-articulos/pull/96)
+  (lockfile + vercel.json, commit de merge `2ddb952`) y
+  [#97](https://github.com/miltondavila-ux/auto-articulos/pull/97) (sufijo
+  legible, commit de merge `51833e0`). Detalle completo de cada uno,
+  incluida la triple auditoría, en `COORDINACION_CLAUDE_CODEX.md`.
+- Verificación en producción real: 10/10 shards del worker en `success`
+  tras el fix #1 (antes fallaban todos). Milton verificó en vivo con la
+  cuenta de Lorena: artículo de prueba completó el flujo entero y publicó
+  un lote completo sin problema.
+- Pendiente para quien retome: el artículo ya publicado con el sufijo
+  viejo (`como-calcular-el-deducible-de-tu-seguro-de-salud-version-53802101`)
+  no se corrigió — queda con ese título/URL hasta que se edite a mano si
+  Milton lo pide.
+- **Estado final: CERRADA por Milton ("ya funciona documenta por favor y
+  archivamos"), ambos PR fusionados y verificados, sin reservas activas.**

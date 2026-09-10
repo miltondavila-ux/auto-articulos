@@ -7040,3 +7040,33 @@ de corridas anteriores (segunda opinión del Reparador, cómo evitar que
 aquí.
 
 Responsable: Claude (tarea programada diaria de propagación).
+
+### Fix adicional en la misma tarea — sufijo de título duplicado visible en producción (2026-09-10)
+
+Durante la verificación en vivo del fix anterior, Milton encontró un
+artículo real publicado con el título "Cómo calcular el deducible de tu
+seguro de salud — versión 5380210-1"
+(`segurosdesaludyvida.com/noticias/como-calcular-el-deducible-de-tu-seguro-de-salud-version-53802101`).
+No es consecuencia del fix de hoy: `makeUniqueTitle()` (pedida por Milton
+el 30/8/2026) le agrega un sufijo al título cuando el sitio detecta choque
+con uno ya existente, para no perder la publicación — pero el sufijo era
+un epoch crudo y quedaba visible tal cual en el título público y la URL,
+cosa que nunca se pidió.
+
+**Fix:** mismo mecanismo, mismos dos puntos de uso
+(`resolveDuplicateTitleEarly` y el loop de reintento de guardado en
+`saveAndGetUrl`) — solo cambia el formato del sufijo a fecha/hora legible
+en español (`(actualizado 10/09 12:44)`, con el intento agregado desde el
+segundo). PR [#97](https://github.com/miltondavila-ux/auto-articulos/pull/97)
+(commit de merge `51833e0`), worktree aislado en
+`/private/tmp/fix-duplicate-title-suffix-20260910`.
+
+Auditorías: build de `apps/worker` (typecheck incluido) limpio, 20/20 tests
+en verde, verificación manual del formato de salida. Check de Vercel del
+PR en `success`. **No se corrigió el artículo ya publicado con el sufijo
+viejo** — el fix solo previene casos nuevos de acá en adelante; ese
+artículo específico queda pendiente de edición manual si Milton la quiere.
+
+**Estado final: CERRADA, PR #97 fusionado y verificado (build+tests),
+verificación funcional en producción real pendiente del próximo choque de
+título — sin reservas activas.**
