@@ -214,6 +214,19 @@ HANDOFF, solo alimenta ideas hacia él).
   ciertos cambios (rediseño de login, imagen OG, etc.) no generen anuncio
   automático en `dashboard/actualizaciones`. Milton tiene que decidir; no
   se tocó ninguna variable de Vercel para este ítem.
+- **(11/9/2026, origen: tarea programada diaria de propagación, al
+  verificar la sección "ARCHIVADO — Exclusión de Temas" de
+  `COORDINACION_CLAUDE_CODEX.md` contra el código real)** Completar (o
+  descartar) la feature de "Exclusión de Temas" en Oportunidades: el
+  código de filtrado (`excludedKeywords`/`titleTouchesExcludedTopic` en
+  `apps/web/src/lib/opportunity-analysis.ts`) existe y compila, pero no
+  hay ningún campo en `packages/db/prisma/schema.prisma`, ninguna
+  migración ni ningún UI para que la persona usuaria cargue los temas a
+  excluir — queda inerte. La fuente original la marcó como "✅ DESPLEGADO
+  A PRODUCCIÓN", lo cual no es exacto; ver la duda completa en
+  `CONTROLADOR_DE_VERSIONES.md` e `INVENTARIO_CONVERSACIONES.md` Parte B.
+  Milton decide si vale la pena terminarla (schema + migración + UI) o
+  quitar el código muerto.
 
 ## Hecho
 
