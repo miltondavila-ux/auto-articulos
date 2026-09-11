@@ -869,3 +869,77 @@ código ni configuración de Producción se tocó. Sigue pendiente de terceros
   Milton lo pide.
 - **Estado final: CERRADA por Milton ("ya funciona documenta por favor y
   archivamos"), ambos PR fusionados y verificados, sin reservas activas.**
+
+### `CODIGO QR PANTALLA DE INICIO`
+- Agente: Claude.
+- Fecha: 2026-09-09/10.
+- Proyecto: Milton pidió un código QR en la pantalla de login (para
+  presentaciones) que apunte a https://seototal.lasolucionweb.com/login.
+- Commits: `cb2c1ae` (feature original), `ef6cf5c` (label), `64e2904`
+  (logo + alineación + fondo). Durante el trabajo se encontró y arregló un
+  bloqueo no relacionado que tumbaba todos los deploys de Producción desde
+  hacía ~20 horas (build de TypeScript roto y `.vercelignore` en
+  conflicto con `ignoreCommand`) — PR #95 (`0121aef`) y fix directo
+  `3bd6286`. Detalle completo, incluida una duda abierta sobre la feature
+  "Exclusión de Temas" encontrada en el camino, en
+  `CONTROLADOR_DE_VERSIONES.md`.
+- Verificado con `git merge-base --is-ancestor` que todos los commits
+  citados son ancestros de `origin/main`; sin worktree/rama activa que
+  liberar en Parte A (no llegó a registrarse ahí).
+- **Estado final: CERRADA, desplegado y verificado en Producción real.
+  Pendiente: mismo componente `QrCodeDisplay` para Tagcrush cuando se
+  pida.**
+
+### `SELECCION DE ARTICULO DE DIFERENTES CATEGORIAS`
+- Agente: Claude.
+- Fecha: 2026-09-09.
+- Proyecto: permitir seleccionar títulos de distintas categorías con
+  checkboxes en Oportunidades SEO y publicarlos juntos en un lote mixto.
+- Commit principal: `364da97`, fusionado como PR #90 (`c086214`).
+  Verificado como ancestro de `origin/main`. Detalle completo en
+  `CONTROLADOR_DE_VERSIONES.md`.
+- Sin worktree/rama activa que liberar en Parte A (no llegó a
+  registrarse ahí).
+- **Estado final: EN PRODUCCIÓN, código confirmado. Capitán de archivo
+  liberado según la fuente original; sin confirmación visual explícita de
+  Milton registrada.**
+
+### `QUE NO ESCRIBIR QUE NO TRATAR` (Exclusión de Temas)
+- Agente: Claude.
+- Fecha: 2026-09-09.
+- Proyecto: excluir temas indicados por el usuario de las propuestas de
+  Oportunidades.
+- Commits citados en `COORDINACION_CLAUDE_CODEX.md`: no resuelven contra
+  el historial disponible en este clon (`git cat-file` no los encuentra;
+  posible efecto del incidente de force-push documentado en
+  `REPARADOR_DEL_ARBOL_PRINCIPAL.md`); `d5e1e4f` sí es ancestro confirmado
+  de `origin/main`.
+- **Discrepancia real, no resuelta por esta corrida:** la fuente original
+  afirma "✅ DESPLEGADO A PRODUCCIÓN" con "Schema + migración + UI", pero
+  el código actual de `origin/main` (verificado con `grep` en esta
+  corrida) no tiene ningún campo en `packages/db/prisma/schema.prisma`,
+  ninguna migración, ni ningún UI para esto — solo existe un tipo opcional
+  `excludedTopics` y lógica de filtrado inerte (nadie le pasa el valor)
+  dentro de `apps/web/src/lib/opportunity-analysis.ts`. Detalle y duda
+  para Milton en `CONTROLADOR_DE_VERSIONES.md` y en
+  `COORDINACION_CLAUDE_CODEX.md`.
+- **Estado: NO CERRAR como funcionalidad entregada al usuario — el código
+  de filtrado existe pero está inalcanzable sin UI ni forma de que el
+  usuario cargue temas a excluir.**
+
+### `CLAUDE - PROBLEMAS Y PRUEBAS REDES SOCIALES Y BLOGGINS`
+- Agente: Claude.
+- Fecha: 2026-09-08/09.
+- Proyecto: investigación de límite de oportunidades por red social y
+  nueva forma de generarlas todas de una vez.
+- Confirmado "1 oportunidad por red por clic" como diseño deliberado (no
+  bug); el cambio posterior de `slice(0, 1)` a `slice(0, 3)` (commit
+  `51fa8f2`) ya está registrado en `CONTROLADOR_DE_VERSIONES.md` por una
+  corrida anterior, con la duda pendiente de si revierte silenciosamente
+  el ajuste contrario del PR #60 — no se duplica acá.
+- Commit nuevo de esta corrida: `479915c` — endpoint
+  `POST /api/social-opportunities/generate-all`, botón "📲 Generar 1 por
+  cada red (Todas)". Verificado como ancestro de `origin/main`. Detalle
+  completo en `CONTROLADOR_DE_VERSIONES.md`.
+- **Estado: EN PRODUCCIÓN, código confirmado; sin confirmación visual
+  explícita de Milton registrada.**
