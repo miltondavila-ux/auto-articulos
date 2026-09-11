@@ -89,6 +89,8 @@ obligatorios; el resto es opcional y le da al sistema más variedad para
 elegir — se usan cuando el generador de imágenes con IA para redes sociales
 está activo en tu cuenta, lo activa el administrador).
 
+**Firma y disclosure:** el campo de firma ahora se llama "Firma al Final del Artículo y Disclosure". Además de firmar profesionalmente, se recomienda incluir una aclaración legal (disclosure) indicando que no eres asesor en materias legales, fiscales, financieras o de seguros, con un ejemplo genérico como guía (con placeholders de nombre, profesión y estado/país, sin datos de personas reales).
+
 **Ubicaciones para títulos geolocalizados:** escribe, separadas por comas,
 las ciudades o países de donde son tus clientes reales (ej. "Colombia,
 Bogotá, Ecuador, Caracas") y por separado dónde está u opera tu negocio (ej.
@@ -166,6 +168,8 @@ Paso 3, revisa y publica. Aparecen las propuestas agrupadas por categoría, con 
 
 Nada se publica sin que tú lo mandes. Las sugerencias ayudan a decidir, pero la decisión es tuya: revisa que cada título sea adecuado para tu negocio y tu audiencia.
 
+**Publicar en lote mixto de varias categorías a la vez:** cada título tiene una casilla de selección. Puedes marcar títulos de distintas categorías al mismo tiempo; en cuanto marcas alguno aparece el botón verde "Publicar selección" con un contador, que agrupa automáticamente por categoría y publica solo lo que elegiste, respetando los mismos cupos de siempre. Los títulos que no marques quedan sin tocar en Oportunidades.
+
 ## Oportunidades Redes
 
 **Este módulo está en prueba.** Todavía no está disponible para todas las cuentas: se está activando poco a poco. Si no aparece en tu menú, no es que te falte algo por configurar.
@@ -175,6 +179,8 @@ Ruta: /dashboard/oportunidades-redes
 Aquí puedes revisar propuestas de contenido para redes sociales. Las propuestas pendientes se pueden aprobar, editar o descartar explicando el motivo. Si algo falla, abre el detalle del error para ver qué ocurrió antes de intentarlo otra vez. El botón **Borrar todas las oportunidades**, junto a "Publicar todo el lote", elimina de una vez todas las propuestas pendientes (pide confirmación antes de borrar y no se puede deshacer).
 
 Consejo: edita el texto si necesitas adaptar el tono a tu marca antes de aprobarlo.
+
+**Generar 1 propuesta por cada red conectada de una vez:** el botón "📲 Generar 1 por cada red (Todas)" crea, en un solo paso, una propuesta para cada red social que tengas conectada (en vez de generar red por red con los botones individuales, que siguen funcionando igual).
 
 ## Historial
 
@@ -262,6 +268,8 @@ Guarda las credenciales de la plataforma, sincroniza categorías e idiomas y eli
 Ruta: /dashboard/configuracion/contenido
 
 Define la firma de los artículos, teléfono de contacto, hasta 3 fotos tuyas y hasta 2 logos, el estilo de redacción por defecto, y las ubicaciones para títulos geolocalizados. Solo la primera foto y el primer logo son obligatorios; el resto es opcional y le da al sistema más variedad para elegir. Estas imágenes se usan cuando el generador de imágenes con IA para redes sociales está activo en tu cuenta (lo activa el administrador).
+
+El campo de firma se llama "Firma al Final del Artículo y Disclosure": además de tu firma, se sugiere agregar una aclaración legal (disclosure) que indique que no eres asesor en materias legales, fiscales, financieras o de seguros.
 
 **Ubicaciones para títulos geolocalizados:** escribe, separadas por comas, las ciudades o países de donde son tus clientes reales (ej. "Colombia, Bogotá, Ecuador, Caracas") y por separado dónde está u opera tu negocio (ej. "Miami, Orlando, Homestead"). Oportunidades puede combinar ambos datos para crear títulos ultra segmentados como "Cómo invertir en propiedades en Homestead si vives en Colombia". Dejar los campos vacíos no cambia nada de tu cuenta.
 
