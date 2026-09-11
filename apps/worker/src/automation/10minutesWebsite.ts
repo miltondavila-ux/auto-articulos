@@ -12,7 +12,7 @@ import {
   replacePhonePlaceholders,
 } from "../phonePlaceholders";
 import { resolveContentLanguageOption } from "./contentLanguage";
-import { generateCustomArticle } from "./generateCustomArticle";
+import { generateCustomArticle, generateTitleVariant } from "./generateCustomArticle";
 
 export interface TenMinutesWebsiteCredentials {
   username: string;
@@ -468,6 +468,7 @@ export async function publishArticle(
       page,
       baseUrl,
       finalTitle,
+      credentials.contentLanguage,
       onStep,
     );
 
@@ -1367,7 +1368,12 @@ async function createArticleDraft(
   // remota que usa el sitio (no una búsqueda aproximada, que daría falsos
   // positivos con títulos parecidos pero distintos) ahora, antes de la
   // imagen, para mutar el título desde el inicio si ya existe.
-  const resolvedTitle = await resolveDuplicateTitleEarly(page, finalTitle, onStep);
+  const resolvedTitle = await resolveDuplicateTitleEarly(
+    page,
+    finalTitle,
+    requestedContentLanguage,
+    onStep,
+  );
 
   return { summary, contentHtml, finalTitle: resolvedTitle };
 }
@@ -1382,40 +1388,11 @@ async function createArticleDraft(
  * escribir en el campo antes de continuar.
  */
 /**
- * Un número incremental no basta: puede existir ya porque otro intento
- * anterior o una publicación manual usó exactamente el mismo sufijo. La
- * marca corta de tiempo evita que el validador remoto vuelva a rechazar la
- * segunda oportunidad del mismo artículo. Función de módulo (antes vivía
- * solo dentro de saveAndGetUrl) para poder mutar el título temprano, antes
- * de generar la imagen, y no solo al momento final de guardar.
- *
- * Bug real en producción (10/9/2026, cuenta de Lorena Álvarez): el sufijo
- * anterior (" — versión 5380210-1", un epoch crudo) quedaba visible tal
- * cual en el título publicado y en la URL — Milton nunca pidió que esta
- * marca de unicidad interna se viera, solo que el guardado no fallara por
- * choque de título. Se reemplaza por una fecha/hora legible en español,
- * que además comunica algo real (cuándo se generó esta versión) en vez de
- * un número sin sentido para el lector.
+ * Corre la MISMA regla `remote` de jQuery Validate que usa el sitio sobre
+ * `#titlees` (ya lleno en este punto) para saber si el título actualmente
+ * escrito en el campo choca con uno existente en la cuenta.
  */
-function makeUniqueTitle(baseTitle: string, attempt: number): string {
-  const now = new Date();
-  const dd = String(now.getDate()).padStart(2, "0");
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  const hh = String(now.getHours()).padStart(2, "0");
-  const min = String(now.getMinutes()).padStart(2, "0");
-  const marca = `${dd}/${mm} ${hh}:${min}${attempt > 1 ? ` · ${attempt}` : ""}`;
-  const uniqueness = ` (actualizado ${marca})`;
-  return `${baseTitle.slice(0, 200 - uniqueness.length)}${uniqueness}`;
-}
-
-async function resolveDuplicateTitleEarly(
-  page: Page,
-  title: string,
-  onStep: OnStep,
-): Promise<string> {
-  // Pedido directo de Milton (30/8/2026): que se vea que el sistema está
-  // revisando esto, no solo enterarse cuando encuentra un choque.
-  await onStep("Validando si el artículo está repetido...");
+async function checkTitleDuplicate(page: Page): Promise<boolean> {
   await page
     .evaluate(() => {
       const jq = (window as unknown as {
@@ -1447,7 +1424,7 @@ async function resolveDuplicateTitleEarly(
     )
     .catch(() => {});
 
-  const isDuplicate = await page
+  return page
     .evaluate(() => {
       const jq = (window as unknown as {
         jQuery?: (selector: string) => {
@@ -1462,17 +1439,63 @@ async function resolveDuplicateTitleEarly(
       );
     })
     .catch(() => false);
+}
 
-  if (!isDuplicate) return title;
+/**
+ * Pedido directo de Milton (11/9/2026): nada de sufijos visibles (fechas,
+ * números de versión, marcas de unicidad) pegados al título publicado — eso
+ * ya se había intentado antes y seguía filtrándose al título real y a la
+ * URL. Si el sitio marca el título como duplicado, se le pide al modelo una
+ * reformulación real (mismo tema, redacción distinta) y se reintenta la
+ * validación remota. Solo si el modelo no logra una variante única tras
+ * varios intentos se detiene la publicación con un error explícito, en vez
+ * de forzar un título con una marca interna que nadie pidió que se viera.
+ */
+async function resolveDuplicateTitleEarly(
+  page: Page,
+  title: string,
+  contentLanguage: string,
+  onStep: OnStep,
+): Promise<string> {
+  // Pedido directo de Milton (30/8/2026): que se vea que el sistema está
+  // revisando esto, no solo enterarse cuando encuentra un choque.
+  await onStep("Validando si el artículo está repetido...");
 
-  const mutatedTitle = makeUniqueTitle(title, 1);
+  if (!(await checkTitleDuplicate(page))) return title;
+
   const titleField = page.locator("#titlees");
-  await titleField.fill(mutatedTitle).catch(() => {});
-  await titleField.press("Tab").catch(() => {});
-  await onStep(
-    `El título "${title}" ya existe en la cuenta. Se usa "${mutatedTitle}" desde ahora, antes de generar la imagen.`,
+  const attempts: string[] = [];
+  const maxAttempts = 4;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    await onStep(
+      `El título "${title}" ya existe en la cuenta. Generando una reformulación distinta (intento ${attempt}/${maxAttempts})...`,
+    );
+
+    let candidate: string;
+    try {
+      candidate = await generateTitleVariant(title, contentLanguage, attempts);
+    } catch (error) {
+      throw new Error(
+        `El título "${title}" ya existe en la cuenta y no se pudo generar una reformulación: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+    attempts.push(candidate);
+
+    await titleField.fill(candidate).catch(() => {});
+    await titleField.press("Tab").catch(() => {});
+
+    if (!(await checkTitleDuplicate(page))) {
+      await onStep(`Título reformulado y validado: "${candidate}".`);
+      return candidate;
+    }
+  }
+
+  throw new Error(
+    `El título "${title}" ya existe en la cuenta y ninguna de las ${maxAttempts} reformulaciones generadas resultó única. Se detiene sin publicar para no forzar un título con una marca de unicidad visible.`,
   );
-  return mutatedTitle;
 }
 
 async function diagnoseEditorState(page: Page): Promise<{
@@ -2455,6 +2478,7 @@ async function saveAndGetUrl(
   page: Page,
   baseUrl: string,
   expectedTitle: string,
+  contentLanguage: string | null | undefined,
   onStep: OnStep,
 ): Promise<{ url: string | null; titleUsed: string }> {
   // Causa raíz encontrada leyendo el JS del sitio (15/8/2026, cuenta de
@@ -2490,6 +2514,7 @@ async function saveAndGetUrl(
   // habilitó a tiempo para el título mutado).
   let hitDuplicateTitle = false;
   const MAX_SAVE_ATTEMPTS = 3;
+  const titleAttempts: string[] = [];
 
   const revalidateTitleAndForm = async () => {
     // La plataforma usa jQuery Validate con una regla remota en #titlees.
@@ -2708,7 +2733,26 @@ async function saveAndGetUrl(
     }
 
     if (isDuplicateTitle && saveAttempt < MAX_SAVE_ATTEMPTS) {
-      const mutatedTitle = makeUniqueTitle(expectedTitle, saveAttempt + 1);
+      // Pedido directo de Milton (11/9/2026): nunca pegar una marca de
+      // unicidad visible (fecha, versión) al título; se le pide al modelo
+      // una reformulación real del título, igual que en
+      // resolveDuplicateTitleEarly, en vez de mutar el string a mano.
+      let mutatedTitle: string;
+      try {
+        mutatedTitle = await generateTitleVariant(
+          expectedTitle,
+          contentLanguage?.trim() || "es",
+          titleAttempts,
+        );
+      } catch (error) {
+        await onStep(
+          `El título "${expectedTitle}" ya existe en la cuenta y no se pudo generar una reformulación: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+        break;
+      }
+      titleAttempts.push(mutatedTitle);
       const titleField = page.locator("#titlees");
       await titleField.fill(mutatedTitle).catch(() => {});
       // La regla `remote` de jQuery Validate se dispara al perder el foco.

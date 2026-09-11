@@ -880,3 +880,42 @@ conversación de producto ni modifica código de aplicación.
 
 Responsable de la reorganización: Codex (coordinador).
 Estado: CERRADA; documentos separados y verificables.
+
+## Claude - ARTICULOS CON CODIGO DE SEGUIMIENTO — 2026-09-11
+
+- Rama/worktree: `claude/titulo-duplicado-sin-sufijo` (nueva, aislada del
+  resto de tareas activas).
+- Problema reportado por Milton en chat, con ejemplos reales en
+  `guillermo-martinez.com`: los títulos publicados seguían saliendo con
+  sufijos visibles del mecanismo de desambiguación de duplicados —
+  `-actualizado-11-09-1940`, `-actualizado-11-09-1935` — pese a que el
+  PR #97 (ver entrada anterior) ya había "corregido" el sufijo anterior
+  (`-version-<epoch>`) cambiándolo por una fecha legible. El problema real
+  nunca fue el formato del sufijo, sino que existiera un sufijo visible.
+- Pedido explícito de Milton: cero sufijos visibles en el título/URL; si
+  el sitio detecta un título duplicado, el sistema debe generar una
+  variación FUERTE (reformulación real vía IA), no un parche de texto
+  pegado.
+- Cambio: se agregó `generateTitleVariant()` en
+  `apps/worker/src/automation/generateCustomArticle.ts` (llama a OpenAI
+  para reformular el título manteniendo tema e intención de búsqueda, sin
+  fechas ni marcas de versión). Se reemplazó `makeUniqueTitle()` en
+  `apps/worker/src/automation/10minutesWebsite.ts` en sus dos puntos de
+  uso (`resolveDuplicateTitleEarly`, antes de generar la imagen, y el
+  reintento final dentro de `saveAndGetUrl`) por un loop que llama a
+  `generateTitleVariant()` contra la validación remota real del sitio
+  hasta encontrar un título único; si ningún intento resulta único, se
+  detiene la publicación con error explícito en vez de forzar un título
+  con marca visible.
+- Nota sobre el `39as-is39` que Milton también reportó en las URLs:
+  investigado, no tiene origen en este repo — todo indica que es el
+  slugificador del sitio externo (10minutesWebsite) convirtiendo comillas
+  alrededor de "as-is" en la entidad `&#39;` y dejando solo los dígitos al
+  limpiar el slug. Queda fuera del alcance de este repo; posible mitigación
+  futura: evitar comillas dobles alrededor de "as-is" en el título generado.
+- Auditoría de integridad: `npm run build --workspace=apps/worker` (tsc)
+  compila sin errores tras el cambio.
+- Pendiente: auditoría funcional (prueba real de publicación con un título
+  duplicado real) y verificación en producción — no ejecutadas todavía en
+  esta conversación.
+- Estado: ACTIVO (commit local hecho, PR aún no abierto).

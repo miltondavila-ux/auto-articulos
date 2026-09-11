@@ -192,3 +192,78 @@ Mandatory limits so the result can be saved safely:
 
   throw new Error(`OpenAI no pudo generar un artículo válido tras dos intentos: ${lastError}`);
 }
+
+/**
+ * El sitio de publicación rechaza títulos duplicados. En vez de pegar un
+ * sufijo mecánico (fecha, número) que queda visible en el título publicado
+ * y en la URL, se le pide al modelo una reformulación real del título:
+ * mismo tema y misma intención de búsqueda, pero redactado de forma
+ * distinta y notoriamente diferente a los intentos previos, sin fechas,
+ * números de versión ni marcas de unicidad. Se pasan los intentos previos
+ * para que cada nueva variante sea distinta a las anteriores, no solo a la
+ * original.
+ */
+export async function generateTitleVariant(
+  originalTitle: string,
+  contentLanguage: string,
+  previousAttempts: string[] = [],
+): Promise<string> {
+  if (!OPENAI_API_KEY) {
+    throw new Error(
+      "La clave de API de OpenAI (OPENAI_API_KEY) no está configurada en las variables de entorno."
+    );
+  }
+
+  const targetLanguage = describeContentLanguage(contentLanguage);
+  const avoidList = [originalTitle, ...previousAttempts]
+    .map((t) => `- "${t}"`)
+    .join("\n");
+
+  const response = await fetch(OPENAI_CHAT_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content: `You are an expert SEO editor. The user needs an alternative headline for an article, because the original title already exists on the site and it must be republished with a genuinely different title — not a cosmetic edit.
+
+Write the new title in ${targetLanguage}. Keep the same topic and search intent, but rephrase it meaningfully: change the structure, the leading words, or the angle. Do NOT just add a date, a number, a version mark, or punctuation to the original title. The result must read as a natural, standalone headline a human editor would write, maximum 200 characters, with no quotation marks around it.
+
+Respond ONLY as JSON: {"title": "the new headline"}`,
+        },
+        {
+          role: "user",
+          content: `Original title: "${originalTitle}"\n\nTitles already tried and rejected (write something clearly different from all of these, not just from the original):\n${avoidList}`,
+        },
+      ],
+      temperature: 0.9,
+      max_tokens: 300,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Error en la llamada a OpenAI (Status ${response.status}): ${errorText}`);
+  }
+
+  const data = (await response.json()) as {
+    choices?: { message?: { content?: string } }[];
+  };
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) {
+    throw new Error("OpenAI no retornó una variante de título.");
+  }
+
+  const parsed = JSON.parse(content) as { title?: string };
+  const variant = parsed.title?.trim().replace(/^["']|["']$/g, "");
+  if (!variant) {
+    throw new Error("OpenAI devolvió una variante de título vacía.");
+  }
+  return variant.slice(0, 200);
+}
