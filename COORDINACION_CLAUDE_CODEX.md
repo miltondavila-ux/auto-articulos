@@ -7080,3 +7080,92 @@ artículo específico queda pendiente de edición manual si Milton la quiere.
 **Estado final: CERRADA, PR #97 fusionado y verificado (build+tests),
 verificación funcional en producción real pendiente del próximo choque de
 título — sin reservas activas.**
+
+## Claude (tarea programada diaria de propagación) — 2026-09-11
+
+Punto de partida: la última entrada firmada por esta misma tarea era
+"Claude (tarea programada diaria de propagación) — 2026-09-09" (commit
+`4622303`). Se revisó el diff de `COORDINACION_CLAUDE_CODEX.md` entre ese
+commit y `origin/main` actual (`1477085`): 283 líneas nuevas, 0 borradas.
+Todo el contenido nuevo resultó ser trabajo real de sesiones paralelas
+recuperado tras un force-push accidental sobre `main` el 2026-09-10 (ver
+hallazgo nuevo más abajo), no contenido de esta tarea de corridas
+anteriores.
+
+Contenido propagado, verificando en vivo contra `origin/main` recién
+fetcheado y contra el código real (no solo contra lo que dice este
+documento) antes de escribir cada entrada:
+
+- PR #90 (Selección multi-categoría en Oportunidades, checkboxes +
+  "Publicar selección", commit `364da97`/`c086214`) → nueva entrada en
+  `CONTROLADOR_DE_VERSIONES.md`; nueva conversación en
+  `INVENTARIO_CONVERSACIONES.md` Parte B; nuevo párrafo en
+  `apps/web/src/content/manual-usuario.ts` (Oportunidades SEO), que no
+  estaba reflejado.
+- Endpoint `generate-all` (1 oportunidad por cada red social conectada en
+  un clic, botón "📲 Generar 1 por cada red (Todas)", commit `479915c`) →
+  nueva entrada en `CONTROLADOR_DE_VERSIONES.md`; nueva conversación
+  `CLAUDE - PROBLEMAS Y PRUEBAS REDES SOCIALES Y BLOGGINS` en
+  `INVENTARIO_CONVERSACIONES.md` Parte B; nuevo párrafo en
+  `manual-usuario.ts` (Oportunidades Redes).
+- Firma con disclosure legal en Configuración → Contenido (commit
+  `0f008e8`) → nueva entrada en `CONTROLADOR_DE_VERSIONES.md`; dos
+  párrafos nuevos en `manual-usuario.ts` (sección "Contenido" y "Guía
+  detallada de Configuración → Contenido). No se creó fila nueva en
+  `INVENTARIO_CONVERSACIONES.md` porque la fuente no da un nombre exacto
+  de conversación para este commit puntual — señalado, no inventado.
+- Código QR en pantalla de login (commits `cb2c1ae`/`ef6cf5c`/`64e2904`,
+  PR #93) → nueva entrada en `CONTROLADOR_DE_VERSIONES.md`; nueva
+  conversación `CODIGO QR PANTALLA DE INICIO` en
+  `INVENTARIO_CONVERSACIONES.md` Parte B. **No se agregó a
+  `manual-usuario.ts`**: es una pantalla previa al login (para
+  presentaciones de Milton), fuera del alcance del manual, que describe
+  el uso de la plataforma ya dentro de la cuenta — juicio propio de esta
+  corrida, señalado por si Milton no está de acuerdo.
+
+**Hallazgo nuevo de esta corrida (no una propagación de rutina):**
+mientras investigaba el bloqueo de deploys que motivó el QR, se encontró
+que el fix del build roto (PR #95, `0121aef`) tocó código muerto de una
+feature "Exclusión de Temas" que otra sección de este mismo documento
+("ARCHIVADO — Exclusión de Temas... 2026-09-09") marca como "✅
+DESPLEGADO A PRODUCCIÓN" con "Schema + migración + UI". Verificado contra
+el código real de `origin/main`: **no existe** ningún campo en
+`packages/db/prisma/schema.prisma`, ninguna migración, ni ningún UI para
+esto — solo un tipo opcional `excludedTopics` y lógica de filtrado
+inalcanzable (nadie le pasa el valor) en
+`apps/web/src/lib/opportunity-analysis.ts`. Es decir, esa sección del
+documento describe un despliegue que el código no respalda. No se editó
+ni se borró esa sección (protocolo de no destrucción); se documentó la
+discrepancia en `CONTROLADOR_DE_VERSIONES.md`, `INVENTARIO_CONVERSACIONES.md`
+Parte B y como ítem nuevo en "Pendientes" de `TO-DO.md`, para que Milton
+decida si completa la feature o retira el código muerto.
+
+**Segundo hallazgo:** el mismo rango de commits reveló, por sus propios
+mensajes (`56ceb31`, `ebba45f`), que un force-push accidental sobre
+`main` el 2026-09-10 había perdido temporalmente la integración MCP
+completa (`mcpQueue.ts`, `mcpPublisher.ts`, `browserPublisher.ts`,
+`publisher.ts`, `mcp-client.ts`, migración `add_mcp_publish_method`) y el
+endpoint `generate-all`, y que otra sesión de Claude ya lo reparó de
+forma no destructiva (dos merges de reconciliación, sin `reset --hard` ni
+force-push nuevo). Verificado que ambos elementos existen hoy en
+`origin/main`. Documentado en `REPARADOR_DEL_ARBOL_PRINCIPAL.md`, con una
+duda abierta: no se identificó quién hizo el force-push original ni
+cuándo — queda señalado para Milton, no investigado más a fondo por esta
+tarea (fuera de su alcance de solo lectura/propagación).
+
+Se evaluó el resto del contenido nuevo contra el mapa de propagación y no
+correspondió mover nada más: la entrada "REGISTRO DOCUMENTAL — 2026-09-09"
+(`CODEX - GPT-5 - TO DO`) dice haber agregado a `TO-DO.md` un pedido de
+seleccionar artículos por checkbox/categoría, pero ese ítem no está en
+`TO-DO.md` actual — se verificó y se descartó agregarlo ahora como
+"pendiente" porque ya se implementó (es exactamente el PR #90 de arriba);
+no tiene sentido documentar como idea suelta algo que ya se construyó.
+
+No hubo ninguna acción destructiva, migración ni deploy en esta corrida.
+Las dos dudas nuevas (Exclusión de Temas y autoría del force-push) quedan
+señaladas arriba y en sus documentos respectivos; las dudas de corridas
+anteriores (selector de plataforma multi-proveedor, variables Sensitive
+de Vercel, límite de oportunidades sociales PR #60 vs. `51fa8f2`) siguen
+sin resolver y no se duplicaron aquí.
+
+Responsable: Claude (tarea programada diaria de propagación).
