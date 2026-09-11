@@ -2184,3 +2184,132 @@ artículo ya publicado antes del fix #3 con el sufijo viejo
 `segurosdesaludyvida.com`) no se corrigió — queda con ese título/URL hasta
 que se edite a mano si Milton lo pide. **Esta es la versión estable de
 referencia para el worker y el deploy de Vercel a partir de esta fecha.**
+
+## Versión desplegada — 2026-09-09 — Selección multi-categoría en Oportunidades (PR #90)
+
+Fecha y hora: 2026-09-09 ~14:53 (commit `364da97`) / merge `c086214`.
+Versión/commit: `c086214` ("feat: allow selecting titles from different
+categories to publish in batch (#90)"), ancestro confirmado de
+`origin/main`.
+Conversación/proyecto: `SELECCION DE ARTICULO DE DIFERENTES CATEGORIAS`.
+
+Cambios: checkboxes por título en `apps/web/src/app/dashboard/oportunidades/page.tsx`
+(estado `selectedTitles: Map<string, boolean>`); botón verde "Publicar
+selección" con contador; nuevo endpoint `POST
+/api/opportunities/execute-batch`, que agrupa automáticamente por
+categoría y respeta los cupos existentes (diario, mensual, por lote).
+Migraciones: ninguna.
+
+Auditorías (según lo documentado en `COORDINACION_CLAUDE_CODEX.md`):
+funcional, regresión e integración aprobadas; sin cambios de schema.
+Producción verificada en código: el botón y el endpoint existen en el
+árbol actual de `origin/main` (confirmado con `grep` en esta corrida).
+
+Responsable: Claude.
+Estado: EN PRODUCCIÓN (código confirmado en `origin/main`); sin
+confirmación visual explícita de Milton registrada en
+`COORDINACION_CLAUDE_CODEX.md`.
+
+## Versión desplegada — 2026-09-09 — Firma con disclosure legal en Configuración → Contenido
+
+Fecha y hora: 2026-09-09 13:27.
+Versión/commit: `0f008e8` ("feat: update signature section with
+disclosure requirement"), rama `claude/doc-protocolo-schema`, ancestro
+confirmado de `origin/main`.
+Conversación/proyecto: no consta un nombre exacto de conversación en
+`COORDINACION_CLAUDE_CODEX.md` para este commit puntual (aparece
+documentado sin sesión asociada); no se crea entrada nueva en
+`INVENTARIO_CONVERSACIONES.md` por falta de ese dato.
+
+Cambios: campo "Firma al Final del Artículo" renombrado a "Firma al Final
+del Artículo y Disclosure" en
+`apps/web/src/app/dashboard/configuracion/contenido/page.tsx` (líneas
+297, 314, 323); el texto instructivo ahora sugiere incluir una aclaración
+legal (disclosure) de que el usuario no es asesor en materias legales,
+fiscales, financieras ni de seguros; el placeholder/ejemplo pasó a ser
+genérico (`[Tu nombre]`, `[Tu profesión]`, `[Tu estado/país]`, sin
+mencionar personas reales). Migraciones: ninguna (cambio de copy/UI).
+
+Auditoría: verificado en esta corrida con `grep` que el texto vive en
+`origin/main` actual.
+
+Responsable: Claude.
+Estado: EN PRODUCCIÓN (código confirmado); sin confirmación visual
+explícita de Milton registrada.
+
+## Versión desplegada — 2026-09-09 — Generar 1 oportunidad por cada red social en un clic
+
+Fecha y hora: 2026-09-09 (merge `479915c`).
+Versión/commit: `479915c`, ancestro confirmado de `origin/main`.
+Conversación/proyecto: `CLAUDE - PROBLEMAS Y PRUEBAS REDES SOCIALES Y BLOGGINS`.
+
+Cambios: nuevo endpoint `POST /api/social-opportunities/generate-all` que
+genera 1 oportunidad por cada red social conectada en un solo POST
+(THREADS, Instagram, LinkedIn, Pinterest, Tumblr, Bluesky, DEV.to,
+Blogger, X, Facebook), retornando resultados y errores por red; mantiene
+intactos los botones individuales existentes. Botón en la UI: "📲 Generar
+1 por cada red (Todas)" en
+`apps/web/src/app/dashboard/oportunidades-redes/page.tsx`. Migraciones:
+ninguna.
+
+Auditoría: confirmado con `grep` que el endpoint y el botón existen en el
+árbol actual de `origin/main`.
+
+Responsable: Claude.
+Estado: EN PRODUCCIÓN (código confirmado); sin confirmación visual
+explícita de Milton registrada.
+
+## Versión desplegada — 2026-09-09/10 — Código QR en pantalla de login + 2 bugs de infraestructura que bloqueaban todos los deploys (PR #93 y #95)
+
+Fecha y hora: feature original 2026-09-09 15:47 (`cb2c1ae`), ajustes
+2026-09-10 12:41/12:48 (`ef6cf5c`, `64e2904`); fix de infraestructura
+2026-09-10 11:10 (`0121aef`, PR #95) y 11:26 (`3bd6286`, directo a main).
+Conversación/proyecto: `CODIGO QR PANTALLA DE INICIO`.
+
+**Feature QR:** componente `apps/web/src/components/QrCodeDisplay.tsx`
+(canvas + librería `qrcode`), integrado en `apps/web/src/app/login/page.tsx`
+apuntando a `https://seototal.lasolucionweb.com/login`. Ajustes
+posteriores pedidos por Milton: label final "Escanea para registrarte en
+movil", ícono "A" junto a "SEO TOTAL" eliminado, QR justificado a la
+izquierda, fondo blanco.
+
+**Bloqueo crítico encontrado en el proceso (no relacionado al QR):**
+ningún deploy llegaba a Producción desde hacía ~20 horas, afectando a
+todo el equipo. Causas independientes:
+1. Build de TypeScript roto: `apps/web/src/lib/opportunity-analysis.ts`
+   referenciaba `input.excludedTopics` (nunca agregado al tipo) en código
+   muerto después de un `return` — resto huérfano de una feature
+   "Exclusión de Temas" que, pese a estar documentada en otra parte de
+   `COORDINACION_CLAUDE_CODEX.md` como "✅ DESPLEGADO A PRODUCCIÓN" con
+   "Schema + migración + UI", **no tiene ningún campo en
+   `packages/db/prisma/schema.prisma`, ninguna migración ni ningún UI**
+   (verificado con `grep` en esta corrida contra `origin/main` actual):
+   el campo `excludedTopics` solo existe como tipo opcional en la firma
+   de `analyzeSeoOpportunities`, y la lógica de filtrado
+   (`excludedKeywords`/`titleTouchesExcludedTopic`) queda alcanzable pero
+   inerte porque nadie le pasa ese valor todavía. Fix del build: PR #95
+   (commit de merge `0121aef`) agregó el campo al tipo y reordenó el
+   bloque antes de su primer uso real, sin activar la funcionalidad.
+   **Duda para Milton, dejada también en `COORDINACION_CLAUDE_CODEX.md`:**
+   la sección "ARCHIVADO — Exclusión de Temas" de ese documento afirma un
+   despliegue completo que el código actual no respalda.
+2. `.vercelignore` quitaba `.git` del checkout antes del build, pero el
+   `ignoreCommand` de `vercel.json` (agregado un día antes) dependía de
+   `git diff` para decidir si saltar el build — fallaba con `fatal: not a
+   git repository`, tumbando todos los deployments. Fix directo a main:
+   `3bd6286`.
+
+Migraciones: ninguna en todo este rango.
+
+Auditorías (según `COORDINACION_CLAUDE_CODEX.md`): funcional (QR genera,
+apunta a la URL correcta, legible en móvil y desktop), TypeScript sin
+errores nuevos, build limpio reproducido en worktree aislado, responsive
+375px y desktop verificado, verificación visual en Producción real tras
+cada cambio.
+
+Responsable: Claude.
+Estado: DESPLEGADO Y VERIFICADO EN PRODUCCIÓN —
+https://seototal.lasolucionweb.com/login. Pendiente: Tagcrush (usar el
+mismo componente `QrCodeDisplay` con la URL de tagcrush.net cuando se
+pida). La duda sobre "Exclusión de Temas" señalada arriba queda sin
+resolver para que Milton decida.
