@@ -2184,3 +2184,14 @@ artículo ya publicado antes del fix #3 con el sufijo viejo
 `segurosdesaludyvida.com`) no se corrigió — queda con ese título/URL hasta
 que se edite a mano si Milton lo pide. **Esta es la versión estable de
 referencia para el worker y el deploy de Vercel a partir de esta fecha.**
+## Reorganización documental — Coordinación liviana — 2026-09-10
+
+Se separó el documento operativo del histórico para reducir el contexto cargado
+por cada conversación. `COORDINACION_CLAUDE_CODEX.md` quedó dedicado a reglas
+vigentes y navegación. El contenido anterior se conserva íntegramente y en el
+mismo orden en `ARCHIVO_COORDINACION_HISTORICO.md`; no se borraron registros.
+`INVENTARIO_CONVERSACIONES.md` conserva la trazabilidad de conversaciones y
+este documento conserva la versión de la reorganización.
+
+Responsable: Codex (coordinador). Estado: completado en documentación local;
+pendiente únicamente el commit de esta reorganización.

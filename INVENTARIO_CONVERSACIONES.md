@@ -869,3 +869,14 @@ código ni configuración de Producción se tocó. Sigue pendiente de terceros
   Milton lo pide.
 - **Estado final: CERRADA por Milton ("ya funciona documenta por favor y
   archivamos"), ambos PR fusionados y verificados, sin reservas activas.**
+## Registro operativo — aligeramiento de Coordinación — 2026-09-10
+
+La conversación/tarea actual reorganizó el documento maestro de Coordinación.
+El histórico completo de 7.082 líneas fue trasladado íntegramente, sin
+reescritura ni eliminación, a `ARCHIVO_COORDINACION_HISTORICO.md`. El nuevo
+`COORDINACION_CLAUDE_CODEX.md` conserva únicamente reglas vigentes, roles,
+estados, flujo local, auditorías, Vercel y enlaces de registro. No es una nueva
+conversación de producto ni modifica código de aplicación.
+
+Responsable de la reorganización: Codex (coordinador).
+Estado: CERRADA; documentos separados y verificables.
