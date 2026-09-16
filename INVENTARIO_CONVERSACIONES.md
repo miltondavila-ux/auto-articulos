@@ -980,6 +980,11 @@ código ni configuración de Producción se tocó. Sigue pendiente de terceros
   en otra conversación, que Gustavo ya puede guardar su credencial sin el
   bloqueo.
 
-Responsable: Claude. Estado: CERRADO — botón desplegado y verificado en
-producción. Pendiente (fuera de esta conversación): que Milton confirme que
-Gustavo puede completar su Paso 1 sin el error.
+Milton dio por cerrada la conversación el 16/9/2026 ("Esto está listo
+documenta y archiva"), tras haber dicho que probaría el guardado real de
+Gustavo por su cuenta, en otra conversación — esa prueba puntual no se
+verificó dentro de esta conversación.
+
+Responsable: Claude. **Estado final: ARCHIVADO por Milton.** Botón
+desplegado y verificado en producción (la credencial cruzada se borró de
+la cuenta admin sin afectar el resto de esa cuenta); sin reservas activas.
