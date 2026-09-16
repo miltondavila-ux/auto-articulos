@@ -943,3 +943,32 @@ código ni configuración de Producción se tocó. Sigue pendiente de terceros
   completo en `CONTROLADOR_DE_VERSIONES.md`.
 - **Estado: EN PRODUCCIÓN, código confirmado; sin confirmación visual
   explícita de Milton registrada.**
+
+## Claude - CUENTA DUPLICADA — 2026-09-16
+
+- Problema reportado por Milton: en `seototal.lasolucionweb.com/dashboard/configuracion/inicial`,
+  al intentar conectar la cuenta de la plataforma `gustavo.cabrera@expglobalspain.com`, aparece
+  "La cuenta de la plataforma ... ya está vinculada a otro usuario en el sistema."
+- Origen exacto del mensaje (evidencia dura, código): `apps/web/src/lib/domain-validation.ts:103-115`,
+  invocado desde `POST /api/credentials` (`apps/web/src/app/api/credentials/route.ts:27`),
+  llamado por `handleSaveCredentials` en `OnboardingWizard.tsx`. Solo dispara si el usuario logueado
+  es "trial restringido" (`isTrialSignup && !trialUnlocked && role !== admin`) y otra cuenta ya tiene
+  guardada esa misma credencial (o aparece en `TrialDomainRegistry`).
+- Intentos descartados durante la investigación: consulta contra base local (irrelevante, no es
+  producción); `vercel env pull --environment=production` (la variable `DATABASE_URL` está
+  `Encrypted` y el CLI no revela el valor ni al dueño del proyecto); navegar directo a
+  `GET /api/admin/users` desde el navegador integrado (bloqueado por el clasificador de PII).
+- **Causa raíz confirmada** (leída de la respuesta real de `GET /api/admin/users`, ya cargada en la
+  sesión de Milton logueado como admin, sin llamada nueva): la credencial de 10minutesWebsite
+  `gustavo.cabrera@expglobalspain.com` estaba guardada en la cuenta admin de Milton
+  (`miltondavila@gmail.com`, id `cms8c1zrr0000iilb6or98tr5`, cuenta #1), no en la cuenta nueva de
+  Gustavo (#91). El validador antifraude funciona correctamente — bloquea porque esa credencial ya
+  existe, real, en otra cuenta. No hay bug de código; es un dato residual. No se pudo determinar
+  cómo/cuándo se guardó: `POST /api/credentials` no llama a `auditLog`, sin rastro histórico.
+- Pedido de Milton: en vez de borrar el dato directamente, agregar un botón en `/dashboard/usuarios`
+  para que él mismo pueda eliminar la credencial 10minutesWebsite guardada de cualquier cuenta.
+- Cambio: nuevo endpoint `DELETE /api/admin/users/credential` (admin-only) + botón "Eliminar esta
+  credencial" en `apps/web/src/app/dashboard/usuarios/page.tsx`, con confirmación en dos pasos.
+  Trabajado en worktree aislado `claude/cuenta-duplicada-boton-credencial`.
+
+Responsable: Claude. Estado: ACTIVO — pendiente PR, merge y verificación en producción.
