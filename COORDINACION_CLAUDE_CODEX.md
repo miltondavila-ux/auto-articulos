@@ -7193,3 +7193,10 @@ Responsable: Claude (tarea programada diaria de propagación).
   `apps/web/src/app/dashboard/usuarios/page.tsx`.
 - Detalle completo de la investigación en `INVENTARIO_CONVERSACIONES.md`,
   entrada "Claude - CUENTA DUPLICADA".
+
+**Capitán de migración liberó el lote:** Claude. Resultado: botón de borrar
+credencial 10minutesWebsite fusionado ([PR #100](https://github.com/miltondavila-ux/auto-articulos/pull/100)),
+desplegado y verificado en producción — Milton confirmó en vivo que el
+campo "Cuenta 10minutesWebsite" de su propia cuenta admin (#1) pasó a
+"Sin credenciales guardadas" tras usar el botón, sin afectar el resto de
+su cuenta. Sin migración de esquema. Estado: CERRADO.
