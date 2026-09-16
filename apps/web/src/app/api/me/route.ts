@@ -18,6 +18,8 @@ export const revalidate = 0;
 const MAX_ARTICLE_SIGNATURE_LEN = 700;
 // Suficiente para varias decenas de ciudades/países separados por comas.
 const MAX_LOCATIONS_LEN = 500;
+// Suficiente para varias decenas de temas separados por comas.
+const MAX_EXCLUDED_TOPICS_LEN = 500;
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -48,6 +50,7 @@ export async function GET() {
       articleSignature: user.articleSignature,
       clientLocations: user.clientLocations,
       businessLocations: user.businessLocations,
+      excludedTopics: user.excludedTopics,
       opportunitiesDisclosureAcceptedAt: user.opportunitiesDisclosureAcceptedAt,
       phone: user.phone,
       imagePrompt: user.imagePrompt,
@@ -94,6 +97,7 @@ export async function PATCH(request: NextRequest) {
     defaultPromptId?: string | null;
     clientLocations?: string | null;
     businessLocations?: string | null;
+    excludedTopics?: string | null;
   } = {};
 
   if ("contentLanguage" in body) {
@@ -180,6 +184,24 @@ export async function PATCH(request: NextRequest) {
     data.businessLocations = trimmed || null;
   }
 
+  if ("excludedTopics" in body) {
+    const { excludedTopics } = body;
+    if (excludedTopics !== null && typeof excludedTopics !== "string") {
+      return NextResponse.json(
+        { error: "excludedTopics debe ser texto o null" },
+        { status: 400 },
+      );
+    }
+    const trimmed = typeof excludedTopics === "string" ? excludedTopics.trim() : "";
+    if (trimmed.length > MAX_EXCLUDED_TOPICS_LEN) {
+      return NextResponse.json(
+        { error: `El texto no puede superar los ${MAX_EXCLUDED_TOPICS_LEN} caracteres (tiene ${trimmed.length}).` },
+        { status: 400 },
+      );
+    }
+    data.excludedTopics = trimmed || null;
+  }
+
   if ("phone" in body) {
     const { phone } = body;
     if (phone !== null && typeof phone !== "string") {
@@ -253,6 +275,7 @@ export async function PATCH(request: NextRequest) {
       defaultPromptId: true,
       clientLocations: true,
       businessLocations: true,
+      excludedTopics: true,
     },
   });
 

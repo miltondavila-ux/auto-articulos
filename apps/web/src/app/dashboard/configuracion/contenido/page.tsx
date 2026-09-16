@@ -37,6 +37,8 @@ export default function ConfiguracionContenidoPage() {
   const [clientLocations, setClientLocations] = useState("");
   const [businessLocations, setBusinessLocations] = useState("");
   const [savingLocations, setSavingLocations] = useState(false);
+  const [excludedTopics, setExcludedTopics] = useState("");
+  const [savingExcludedTopics, setSavingExcludedTopics] = useState(false);
   const [phone, setPhone] = useState("");
   const [savingPhone, setSavingPhone] = useState(false);
   const [profilePhotoUrls, setProfilePhotoUrls] = useState<Record<"profile" | "profile2" | "profile3", string | null>>({ profile: null, profile2: null, profile3: null });
@@ -70,6 +72,7 @@ export default function ConfiguracionContenidoPage() {
       setPhone(data.phone ?? "");
       setClientLocations(data.clientLocations ?? "");
       setBusinessLocations(data.businessLocations ?? "");
+      setExcludedTopics(data.excludedTopics ?? "");
       setProfilePhotoUrls({ profile: data.profilePhotoUrl ?? null, profile2: data.profilePhotoUrl2 ?? null, profile3: data.profilePhotoUrl3 ?? null });
       setBusinessLogoUrls({ logo: data.businessLogoUrl ?? null, logo2: data.businessLogoUrl2 ?? null });
     }
@@ -145,6 +148,29 @@ export default function ConfiguracionContenidoPage() {
       setBanner({ type: "info", text: "Ubicaciones guardadas." });
     } finally {
       setSavingLocations(false);
+    }
+  }
+
+  async function handleSaveExcludedTopics() {
+    setSavingExcludedTopics(true);
+    setBanner(null);
+    try {
+      const res = await fetch("/api/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ excludedTopics }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setBanner({
+          type: "error",
+          text: data.error ?? "Error al guardar el segmento de no publicar",
+        });
+        return;
+      }
+      setBanner({ type: "info", text: "Segmento de no publicar guardado." });
+    } finally {
+      setSavingExcludedTopics(false);
     }
   }
 
@@ -242,6 +268,7 @@ export default function ConfiguracionContenidoPage() {
           <li><strong>Elige el estilo de redacción:</strong> el tono con el que la inteligencia artificial escribe por defecto.</li>
           <li><strong>Escribe la firma:</strong> el texto que se agrega automáticamente al final de cada artículo nuevo.</li>
           <li><strong>Indica ubicaciones (opcional):</strong> de dónde son tus clientes y dónde opera tu negocio, para títulos más segmentados.</li>
+          <li><strong>Segmento de no publicar (opcional):</strong> temas que Oportunidades debe descartar siempre, sin importar la demanda real.</li>
           <li><strong>Guarda tu teléfono:</strong> se usa en los botones de WhatsApp y llamada de tus artículos.</li>
           <li><strong>Sube tus fotos y logo:</strong> se usan al crear imágenes para redes sociales.</li>
         </ol>
@@ -404,6 +431,39 @@ export default function ConfiguracionContenidoPage() {
               style={disabledStyle(secondaryButtonStyle, savingLocations)}
             >
               {savingLocations ? "Guardando..." : "Guardar ubicaciones"}
+            </button>
+          </div>
+        </section>
+
+        {/* Segmento de No Publicar */}
+        <section style={sectionStyle}>
+          <h2 style={h2Style}>Segmento de No Publicar</h2>
+          <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 12 }}>
+            Escribe aquí, separados por comas, los temas o palabras que NO
+            quieres que Oportunidades tome en cuenta al proponer títulos
+            nuevos. Cualquier título que toque uno de estos temas se descarta
+            automáticamente antes de mostrarse. Dejar vacío no cambia nada de
+            tu cuenta.
+          </p>
+
+          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1d1d1f", marginBottom: 6 }}>
+            Temas a excluir
+          </label>
+          <input
+            type="text"
+            value={excludedTopics}
+            onChange={(e) => setExcludedTopics(e.target.value)}
+            placeholder="Ej: seguros de vida, criptomonedas, política"
+            style={{ ...inputStyle, width: "100%" }}
+          />
+
+          <div style={{ marginTop: 12 }}>
+            <button
+              onClick={handleSaveExcludedTopics}
+              disabled={savingExcludedTopics}
+              style={disabledStyle(secondaryButtonStyle, savingExcludedTopics)}
+            >
+              {savingExcludedTopics ? "Guardando..." : "Guardar segmento de no publicar"}
             </button>
           </div>
         </section>

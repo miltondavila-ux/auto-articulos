@@ -1044,3 +1044,23 @@ la cuenta admin sin afectar el resto de esa cuenta); sin reservas activas.
   cambios ni fallos nuevos durante la prueba en vivo.
 - **Estado final: verificado con las tres auditorías, mergeado a `main` y
   desplegado a producción.**
+
+### `SEGMENTO DE NO PUBLICAR`
+- Agente: Claude.
+- Fecha: 2026-09-16.
+- Proyecto: resuelve la discrepancia ya registrada arriba en
+  `QUE NO ESCRIBIR QUE NO TRATAR (Exclusión de Temas)` — el filtro de
+  `excludedTopics` existe en `apps/web/src/lib/opportunity-analysis.ts`
+  pero está inerte (sin campo en schema, sin migración, sin UI).
+  Verificado de nuevo en esta corrida contra `origin/main` actual
+  (después de PR #101/#103/#105): sigue igual de inerte.
+- Alcance: agregar columna `excludedTopics` a `User` (schema + migración),
+  conectar `apps/web/src/app/api/opportunities/route.ts` para leerla y
+  pasarla, exponerla en `GET`/`PATCH` de `apps/web/src/app/api/me/route.ts`,
+  y agregar el campo de texto en Configuración → Contenido
+  (`apps/web/src/app/dashboard/configuracion/contenido/page.tsx`).
+- Trabajado en worktree aislado `.worktrees/segmento-no-publicar`, rama
+  `claude/segmento-no-publicar`, partiendo de `origin/main` actualizado.
+- Capitanía de migración reclamada por Claude (`scripts/migration-coordinator.sh`)
+  antes de tocar `schema.prisma`.
+- Responsable: Claude. Estado: ACTIVO.

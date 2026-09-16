@@ -73,6 +73,14 @@ model User {
   // comportamiento para cuentas que no lo llenen.
   clientLocations                   String?
   businessLocations                 String?
+  // Temas que el usuario indica explícitamente que NO quiere que el
+  // algoritmo de Oportunidades tome en cuenta al generar/publicar títulos
+  // (separados por comas) — pedido explícito de Milton, 16/9/2026. El
+  // filtro ya existía en apps/web/src/lib/opportunity-analysis.ts
+  // (excludedKeywords/titleTouchesExcludedTopic) pero estaba inerte: sin
+  // este campo, sin UI y sin nadie pasándole el valor. Null/vacío = sin
+  // cambio de comportamiento para cuentas que no lo llenen.
+  excludedTopics                    String?
   // Se actualiza cada vez que termina un análisis de oportunidades (haya
   // encontrado categorías nuevas o no) — permite mostrar "último análisis"
   // y aplicar la espera mínima de 7 días cuando no hay nada nuevo, sin
