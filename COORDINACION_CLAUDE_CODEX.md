@@ -7204,3 +7204,53 @@ su cuenta. Sin migración de esquema. Estado: CERRADO.
 **Capitán de migración liberó el lote:** Claude. Resultado: CUENTA DUPLICADA
 archivada por Milton. Sin código ni migración en este cierre, solo
 documentación (ver `INVENTARIO_CONVERSACIONES.md`).
+
+## SEGMENTO DE NO PUBLICAR — corrección de la entrada "ARCHIVADO — Exclusión
+de Temas (QUE NO ESCRIBIR QUE NO TRATAR) — 2026-09-09" — 2026-09-16
+
+**Corrección, no borrado.** La entrada de arriba (línea ~6531) afirma
+"✅ DESPLEGADO A PRODUCCIÓN" con "Schema + migración + UI". Verificado hoy
+contra `origin/main` (después de PR #101/#103/#105): eso no era exacto. El
+código real solo tenía el filtro determinista
+(`excludedKeywords`/`titleTouchesExcludedTopic` en
+`apps/web/src/lib/opportunity-analysis.ts`), pero sin columna en
+`packages/db/prisma/schema.prisma`, sin migración y sin ningún campo en la
+interfaz — nadie podía cargar el valor, así que el filtro nunca se
+ejecutaba con datos reales. Milton lo pidió completar hoy bajo el nombre
+"SEGMENTO DE NO PUBLICAR".
+
+**Capitán de migración:** Claude — revisará y aplicará el lote completo.
+Motivo: agregar columna `excludedTopics` a `User` (con migración) y
+conectar el campo de UI que faltaba en Configuración → Contenido. Nadie más
+ejecuta Prisma hasta su liberación.
+
+**Cambios** (rama `claude/segmento-no-publicar`, worktree
+`.worktrees/segmento-no-publicar`, partiendo de `origin/main` actualizado):
+- `packages/db/prisma/schema.prisma` + migración
+  `20260916180000_add_excluded_topics`: columna `excludedTopics String?` en
+  `User`.
+- `apps/web/src/lib/current-user.ts`: agregado al `select` de
+  `getCurrentUser()`.
+- `apps/web/src/app/api/me/route.ts`: expuesto en `GET`, aceptado y
+  validado (máx. 500 caracteres) en `PATCH`.
+- `apps/web/src/app/api/opportunities/route.ts`: se lee `user.excludedTopics`
+  y se pasa a `analyzeSeoOpportunities` (antes nunca se pasaba — el filtro
+  quedaba inerte).
+- `apps/web/src/app/dashboard/configuracion/contenido/page.tsx`: nueva
+  sección "Segmento de No Publicar" con el campo "Temas a excluir" y botón
+  de guardado, siguiendo el mismo patrón que "Ubicaciones para Títulos
+  Geolocalizados".
+- Manual actualizado en el mismo lote
+  (`apps/web/src/content/manual-usuario.ts`), regla permanente.
+
+**Probado en local** contra la base de datos local
+(`postgresql://127.0.0.1:5432/autoarticulos`), con la cuenta de pruebas de
+Lorena Álvarez (contraseña reseteada solo en la base LOCAL, nunca en
+producción, únicamente para poder iniciar sesión y probar): typecheck
+limpio, `npm run build` completo sin errores, columna confirmada por SQL
+directo, guardado del campo confirmado por `PATCH /api/me` (200) y por
+lectura directa de la fila en Postgres, y persistencia confirmada
+recargando la página. No se corrió un análisis real de Oportunidades
+(llamada real a OpenAI) para no gastar cuota; la lógica de filtrado en sí
+(`titleTouchesExcludedTopic`) es la misma que ya existía sin cambios, solo
+se conectó el dato que le faltaba.
