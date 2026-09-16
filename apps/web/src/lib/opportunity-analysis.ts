@@ -132,6 +132,7 @@ function tokenSetsOverlap(
 interface IntentSignature {
   needKeyNormalized: string | null;
   tokens: Set<string>;
+  titleTokens: Set<string>;
   source: string;
 }
 
@@ -140,6 +141,9 @@ function buildIntentSignature(source: string, needKey?: string): IntentSignature
   return {
     needKeyNormalized: key ? normalizeTitle(key) : null,
     tokens: intentTokens(key && key.length > 0 ? key : source),
+    // Tokens del titulo visible, SIEMPRE calculados (no solo cuando falta
+    // needKey): sirven de respaldo independiente del needKey mas abajo.
+    titleTokens: intentTokens(source),
     source,
   };
 }
@@ -174,8 +178,34 @@ function collidesWithIntent(
     if (tokenSetsOverlap(candidate.tokens, signature.tokens, minTokens, minRatio)) {
       return true;
     }
+    // Respaldo determinista 2026-09-16 (hallazgo real: "Comparativa de
+    // seguros de salud en Miami... para inmigrantes" vs "Comparativa de
+    // seguros médicos en Miami: ¿Cuál es el mejor para ti?" pasaron como
+    // no-colisión porque sus needKey, tras filtrar palabras genéricas del
+    // dominio como "salud"/"inmigrante", quedaban con muy pocos tokens
+    // comparables). El needKey es autodeclarado por el modelo y puede
+    // divergir aunque el titulo visible sea, en esencia, el mismo. Se
+    // compara tambien el texto visible completo, con un umbral algo mas
+    // estricto que el relajado de needKey, para no depender solo de que
+    // el modelo haya etiquetado bien la necesidad.
+    if (tokenSetsOverlap(candidate.titleTokens, signature.titleTokens, 3, 0.6)) {
+      return true;
+    }
   }
   return false;
+}
+
+// Garantía determinista 2026-09-16 (hallazgo real: se coló un título -
+// "Relación entre seguros de vida y salud en Miami" - cuyo rationale no
+// citaba ninguna consulta, página o cluster real, solo decía "una necesidad
+// que no está cubierta"). El prompt ya exige citar textualmente entre
+// comillas la evidencia real que respalda cada título; esta función hace esa
+// exigencia verificable en código en vez de confiar solo en que el modelo la
+// cumpla.
+function rationaleHasQuotedEvidence(rationale: string): boolean {
+  return /['"‘’“”]([^'"‘’“”]{4,})['"‘’“”]/.test(
+    rationale,
+  );
 }
 
 function hasContextualEvidenceForYear(
@@ -207,7 +237,7 @@ const PROMPT_HEADER = [
   "- La categoria es UNICAMENTE el lugar del blog donde el articulo queda archivado. NUNCA es el criterio para decidir SI un tema se escribe: esa decision depende exclusivamente de que exista evidencia real (Search Console, Google Analytics o Bing) y de que no canibalice una necesidad ya cubierta (ver regla de cero canibalizacion mas abajo).",
   "- PROHIBIDO descartar una consulta, pagina o tendencia real con evidencia solo porque no calza perfecto con el nombre o los ejemplos de ninguna categoria existente: asignala a la categoria PERMITIDA cuyo tema sea el MAS CERCANO. Si de verdad ninguna categoria es remotamente afin (tema completamente ajeno al negocio del usuario), puedes omitirla, pero la falta de coincidencia de palabras con el nombre de la categoria NUNCA es motivo de descarte por si sola.",
   "- Evita mezclar en un mismo titulo dos temas completamente distintos; esto es una regla de claridad editorial del titulo, no una excusa para descartar la consulta.",
-  "- PROHIBIDO inventar un titulo que no se pueda justificar con evidencia real presente en RENDIMIENTO ACTUAL (Search Console), SEÑALES DE GOOGLE ANALYTICS o SEÑALES DE BING que se te dan mas abajo. El 'rationale' de cada titulo debe nombrar la consulta, pagina, tendencia o señal concreta que lo respalda.",
+  "- PROHIBIDO inventar un titulo que no se pueda justificar con evidencia real presente en RENDIMIENTO ACTUAL (Search Console), SEÑALES DE GOOGLE ANALYTICS o SEÑALES DE BING que se te dan mas abajo. El 'rationale' de cada titulo debe CITAR TEXTUALMENTE entre comillas la consulta o pagina real que lo respalda (ej: la consulta 'seguros de salud en miami'); si el titulo es una rama inferida que no tiene una consulta exacta propia, cita en cambio la consulta o cluster real del que se deriva (ej: 'se deriva del cluster de consultas sobre seguros de salud en Miami'). Un rationale sin ninguna cita textual entre comillas de un dato real NO es valido.",
   "",
   "REGLA OBLIGATORIA DE CERO CANIBALIZACION (ESTRICTA, sin excepciones):",
   "- Canibalizar significa que dos titulos apuntan a la MISMA pregunta o necesidad principal. NO es canibalizacion pertenecer al mismo universo tematico: un articulo sobre una receta puede abrir subtemas sobre ingredientes, herramientas, tecnicas, errores, conservacion y perfiles de usuario.",
@@ -708,6 +738,12 @@ Si genuinamente ninguna combinacion tiene sentido real para este negocio, respon
         const text = value.text.trim();
         const normalized = normalizeTitle(text);
         if (!text || seen.has(normalized)) continue;
+        const rationale =
+          typeof value.rationale === "string" ? value.rationale.trim() : "";
+        // Garantía determinista contra títulos sin evidencia citada: el
+        // rationale debe nombrar textualmente (entre comillas) la consulta,
+        // página o cluster real que lo respalda, tal como exige el prompt.
+        if (!rationaleHasQuotedEvidence(rationale)) continue;
         // Garantía determinista contra temas excluidos: si el usuario indicó
         // que no quiere ciertos temas, rechazar CUALQUIER título que los mencione,
         // sin importar cuán buena sea la evidencia. Esta validación corre AQUÍ
@@ -737,11 +773,7 @@ Si genuinamente ninguna combinacion tiene sentido real para este negocio, respon
         seen.add(normalized);
         intentSignatures.push(signature);
         if (needKey) needKeyByTitle.set(text, needKey);
-        newTitles.push({
-          text,
-          rationale:
-            typeof value.rationale === "string" ? value.rationale.trim() : "",
-        });
+        newTitles.push({ text, rationale });
       }
 
       if (newTitles.length === 0) continue;
