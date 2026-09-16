@@ -989,6 +989,62 @@ Responsable: Claude. **Estado final: ARCHIVADO por Milton.** Botón
 desplegado y verificado en producción (la credencial cruzada se borró de
 la cuenta admin sin afectar el resto de esa cuenta); sin reservas activas.
 
+## Claude - ARTICULOS CON CODIGO DE SEGUIMIENTO — 2026-09-11/16
+
+- Rama/worktree: `claude/titulo-duplicado-sin-sufijo` (nueva, aislada del
+  resto de tareas activas).
+- Problema reportado por Milton en chat, con ejemplos reales en
+  `guillermo-martinez.com`: los títulos publicados seguían saliendo con
+  sufijos visibles del mecanismo de desambiguación de duplicados —
+  `-actualizado-11-09-1940`, `-actualizado-11-09-1935` — pese a que el
+  PR #97 (ver entrada anterior) ya había "corregido" el sufijo anterior
+  (`-version-<epoch>`) cambiándolo por una fecha legible. El problema real
+  nunca fue el formato del sufijo, sino que existiera un sufijo visible.
+- Pedido explícito de Milton: cero sufijos visibles en el título/URL; si
+  el sitio detecta un título duplicado, el sistema debe generar una
+  variación FUERTE (reformulación real vía IA), no un parche de texto
+  pegado.
+- Cambio: se agregó `generateTitleVariant()` en
+  `apps/worker/src/automation/generateCustomArticle.ts` (llama a OpenAI
+  para reformular el título manteniendo tema e intención de búsqueda, sin
+  fechas ni marcas de versión). Se reemplazó `makeUniqueTitle()` en
+  `apps/worker/src/automation/10minutesWebsite.ts` en sus dos puntos de
+  uso (`resolveDuplicateTitleEarly`, antes de generar la imagen, y el
+  reintento final dentro de `saveAndGetUrl`) por un loop que llama a
+  `generateTitleVariant()` contra la validación remota real del sitio
+  hasta encontrar un título único; si ningún intento resulta único, se
+  detiene la publicación con error explícito en vez de forzar un título
+  con marca visible.
+- Nota sobre el `39as-is39` que Milton también reportó en las URLs:
+  investigado, no tiene origen en este repo — todo indica que es el
+  slugificador del sitio externo (10minutesWebsite) convirtiendo comillas
+  alrededor de "as-is" en la entidad `&#39;` y dejando solo los dígitos al
+  limpiar el slug. Queda fuera del alcance de este repo; posible mitigación
+  futura: evitar comillas dobles alrededor de "as-is" en el título generado.
+- Auditoría de integridad: `npm run build --workspace=apps/worker` (tsc)
+  compila sin errores tras el cambio.
+- **Auditoría funcional (2026-09-16): verificada en vivo, en producción
+  real**, cuenta de Guillermo Martinez, categoría "As Is Contract Florida".
+  Se forzó un título duplicado real
+  ("Ventajas y desventajas de comprar propiedades 'as is' en Florida").
+  El sistema detectó el choque, generó con IA la reformulación
+  "Pros y Contras de la Compra de Inmuebles en su Estado Actual" y publicó
+  ese título limpio, sin fecha ni marca de versión:
+  `guillermo-martinez.com/news/pros-y-contras-de-la-compra-de-inmuebles-en-su-estado-actual`.
+  Indexación desactivada para esta prueba.
+- Efecto secundario de las pruebas (ganadas por el worker real de
+  producción, código viejo, antes de que esta rama estuviera desplegada):
+  quedaron publicados 2 artículos de prueba con el sufijo feo todavía
+  vigente en `main`
+  (`implicaciones-legales-de-comprar-propiedades-39as-is39-actualizado-16-09-1447`
+  y `...-1451`, indexación desactivada); Milton los está borrando
+  directamente en el panel de 10minutesWebsite.
+- Auditoría de regresión: el resto del flujo de publicación (login, panel,
+  categoría, generación de contenido, imagen, FAQ, guardado) corrió sin
+  cambios ni fallos nuevos durante la prueba en vivo.
+- **Estado final: verificado con las tres auditorías, mergeado a `main` y
+  desplegado a producción.**
+
 ### `SEGMENTO DE NO PUBLICAR`
 - Agente: Claude.
 - Fecha: 2026-09-16.
