@@ -1897,6 +1897,9 @@ function UserCard({
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [confirmingCredentialDelete, setConfirmingCredentialDelete] = useState(false);
+  const [deletingCredential, setDeletingCredential] = useState(false);
+  const [credentialDeleteError, setCredentialDeleteError] = useState<string | null>(null);
   const [permInstagram, setPermInstagram] = useState(
     Boolean(user.allowInstagramPublishing),
   );
@@ -2270,6 +2273,27 @@ function UserCard({
     }
   }
 
+  async function handleDeleteCredential() {
+    setDeletingCredential(true);
+    setCredentialDeleteError(null);
+    try {
+      const res = await fetch("/api/admin/users/credential", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setCredentialDeleteError(data.error ?? "No se pudo eliminar la credencial.");
+        return;
+      }
+      setConfirmingCredentialDelete(false);
+      onUpdated();
+    } finally {
+      setDeletingCredential(false);
+    }
+  }
+
   const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ");
 
   return (
@@ -2433,6 +2457,70 @@ function UserCard({
             <span style={{ fontSize: 13, color: user.tenMinutesUsername ? "#1d1d1f" : "#6e6e73", wordBreak: "break-all" }}>
               {user.tenMinutesUsername ? `${user.tenMinutesUsername}` : "Sin credenciales guardadas"}
             </span>
+            {user.tenMinutesUsername && (
+              <div style={{ marginTop: 6 }}>
+                {!confirmingCredentialDelete ? (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingCredentialDelete(true)}
+                    style={{
+                      fontSize: 11,
+                      color: "#ff3b30",
+                      background: "none",
+                      border: "none",
+                      padding: 0,
+                      cursor: "pointer",
+                      textDecoration: "underline",
+                    }}
+                  >
+                    Eliminar esta credencial
+                  </button>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-start" }}>
+                    <span style={{ fontSize: 11, color: "#6e6e73" }}>
+                      ¿Borrar el usuario/contraseña de {platformProductName(user.platformDomain)} guardado en esta cuenta? Esta acción no se puede deshacer.
+                    </span>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button
+                        type="button"
+                        onClick={handleDeleteCredential}
+                        disabled={deletingCredential}
+                        style={{
+                          fontSize: 11,
+                          color: "#fff",
+                          background: "#ff3b30",
+                          border: "none",
+                          borderRadius: 6,
+                          padding: "4px 8px",
+                          cursor: deletingCredential ? "not-allowed" : "pointer",
+                        }}
+                      >
+                        {deletingCredential ? "Eliminando..." : "Confirmar"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmingCredentialDelete(false)}
+                        disabled={deletingCredential}
+                        style={{
+                          fontSize: 11,
+                          color: "#1d1d1f",
+                          background: "#fff",
+                          border: "1px solid #d2d2d7",
+                          borderRadius: 6,
+                          padding: "4px 8px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                    {credentialDeleteError && (
+                      <span style={{ fontSize: 11, color: "#ff3b30" }}>{credentialDeleteError}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </Field>
 
           <Field label="Rol">

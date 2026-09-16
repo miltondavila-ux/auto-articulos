@@ -7169,3 +7169,27 @@ de Vercel, límite de oportunidades sociales PR #60 vs. `51fa8f2`) siguen
 sin resolver y no se duplicaron aquí.
 
 Responsable: Claude (tarea programada diaria de propagación).
+
+## CUENTA DUPLICADA — botón admin para borrar credencial residual — 2026-09-16
+
+- **Capitán de migración:** Claude — revisará y aplicará el lote completo.
+  Motivo: botón admin para borrar credencial 10minutesWebsite residual (fix
+  cuenta duplicada Gustavo Cabrera). Nadie más ejecuta Prisma hasta su
+  liberación. Sin migración de esquema en este cambio (solo UI + endpoint).
+- Problema: al intentar guardar sus credenciales de 10minutesWebsite,
+  Gustavo Cabrera (#91, cuenta nueva en trial) recibía "ya está vinculada a
+  otro usuario en el sistema". Causa raíz confirmada con datos reales (no
+  código): esa misma credencial estaba guardada en la cuenta admin de Milton
+  (`miltondavila@gmail.com`, #1), no en la de Gustavo — dato residual, sin
+  rastro de cómo llegó ahí (`POST /api/credentials` no llama a `auditLog`).
+  El validador antifraude en `apps/web/src/lib/domain-validation.ts` funciona
+  correctamente; no hay bug de código.
+- Cambio: nuevo endpoint `DELETE /api/admin/users/credential` (admin-only,
+  `requireAdmin`) que borra únicamente la fila `Credential` de una cuenta
+  para la plataforma 10minutesWebsite, y un botón "Eliminar esta credencial"
+  en `/dashboard/usuarios`, junto al campo de cuenta 10minutesWebsite, con
+  confirmación en dos pasos.
+- Archivos: `apps/web/src/app/api/admin/users/credential/route.ts` (nuevo),
+  `apps/web/src/app/dashboard/usuarios/page.tsx`.
+- Detalle completo de la investigación en `INVENTARIO_CONVERSACIONES.md`,
+  entrada "Claude - CUENTA DUPLICADA".
