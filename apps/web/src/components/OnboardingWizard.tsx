@@ -1025,9 +1025,49 @@ export default function OnboardingWizard({
                 {!detectJob || detectJob.status === "error" ? (
                   <div>
                     {detectJob?.status === "error" && (
-                      <div style={{ marginBottom: 10, fontSize: 12, color: "#ff3b30" }}>
-                        ❌ No pudimos conectar con tu plataforma. Verifica el usuario y la contraseña en Configuración y vuelve a intentarlo.
-                      </div>
+                      isLoginFailureMessage(detectJob.errorMessage || "") ? (
+                        <div
+                          style={{
+                            marginBottom: 12,
+                            padding: "12px 14px",
+                            borderRadius: 8,
+                            background: "rgba(255, 59, 48, 0.08)",
+                            border: "1px solid rgba(255, 59, 48, 0.3)",
+                            fontSize: 12,
+                          }}
+                        >
+                          <p style={{ margin: "0 0 6px 0", fontWeight: 700, color: "#ff3b30" }}>
+                            No pudimos conectarnos con tu cuenta de {productName}
+                          </p>
+                          <p style={{ margin: "0 0 8px 0", color: "#1d1d1f", lineHeight: 1.5 }}>
+                            Esto casi siempre significa que la contraseña guardada ya no es la correcta.
+                            Debes resetearla en la plataforma y volver a guardarla arriba, en el Paso 1.
+                          </p>
+                          <a
+                            href={platformForgotPasswordUrl(platformDomain)}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 6,
+                              background: "#1d1d1f",
+                              color: "#ffffff",
+                              padding: "7px 14px",
+                              borderRadius: 6,
+                              fontSize: 12,
+                              fontWeight: 700,
+                              textDecoration: "none",
+                            }}
+                          >
+                            Resetear contraseña de la plataforma ahora ↗
+                          </a>
+                        </div>
+                      ) : (
+                        <div style={{ marginBottom: 10, fontSize: 12, color: "#ff3b30" }}>
+                          ❌ {detectJob.errorMessage || "No pudimos conectar con tu plataforma. Verifica el usuario y la contraseña en Configuración y vuelve a intentarlo."}
+                        </div>
+                      )
                     )}
                     <button
                       type="button"

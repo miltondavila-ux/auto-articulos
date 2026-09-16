@@ -107,7 +107,14 @@ export default function InicioPage() {
     return () => clearInterval(interval);
   }, [activeRun, loadRuns]);
 
-  const [wizardComplete, setWizardComplete] = useState<boolean | null>(null);
+  // La cuenta que arrancó incompleta se queda viendo el wizard aunque termine
+  // el Paso 4 en esta misma visita, para que le dé tiempo a ver la pantalla
+  // de "¡Felicitaciones!" (Paso 5) del propio wizard, en vez de que la
+  // sección desaparezca de golpe al instante en que se cumple el último
+  // paso (pedido de Milton, 16/9/2026 — así se veía al conectar GSC). En la
+  // siguiente visita, ya completada, entra directo al panel de métricas.
+  const everIncompleteRef = useRef(false);
+  const [showWizard, setShowWizard] = useState<boolean | null>(null);
 
   const checkWizardStatus = useCallback(async () => {
     try {
@@ -127,8 +134,10 @@ export default function InicioPage() {
       const step2 = Array.isArray(catData.categories) && catData.categories.length > 0;
       const step3 = typeof meData.contentLanguage === "string" && meData.contentLanguage.trim().length > 0;
       const step4 = Boolean(googleData.connected && googleData.siteUrl);
+      const complete = step1 && step2 && step3 && step4;
 
-      setWizardComplete(step1 && step2 && step3 && step4);
+      if (!complete) everIncompleteRef.current = true;
+      setShowWizard(everIncompleteRef.current ? true : !complete);
 
       if (meData.isTrialSignup && !meData.trialUnlocked && meData.trialStartedAt) {
         setTrialDaysLeft(trialDaysRemaining(new Date(meData.trialStartedAt)));
@@ -136,7 +145,8 @@ export default function InicioPage() {
         setTrialDaysLeft(null);
       }
     } catch {
-      setWizardComplete(false);
+      everIncompleteRef.current = true;
+      setShowWizard(true);
     }
   }, []);
 
@@ -179,7 +189,7 @@ export default function InicioPage() {
         </div>
       )}
       <ModuleIntro titulo="Inicio">
-        {wizardComplete === false ? (
+        {showWizard === true ? (
           <>
             <IntroP>
               Antes de que la plataforma pueda redactar y publicar por ti, necesitamos configurar 4 cosas, en este orden:
@@ -216,7 +226,7 @@ export default function InicioPage() {
           </>
         )}
       </ModuleIntro>
-      {wizardComplete === true && (
+      {showWizard === false && (
         <Grid numItemsSm={2} numItemsLg={4} className="gap-4" style={{ marginTop: 20, marginBottom: 20 }}>
           {QUICK_LINKS.map((l, i) => (
             <Link key={l.href} href={l.href} style={{ textDecoration: "none" }}>
@@ -288,9 +298,9 @@ export default function InicioPage() {
         </div>
       )}
 
-      {wizardComplete === false ? (
+      {showWizard === true ? (
         <OnboardingWizard onUpdated={checkWizardStatus} />
-      ) : wizardComplete === true ? (
+      ) : showWizard === false ? (
         <PerformanceDashboard />
       ) : null}
 
