@@ -7,7 +7,7 @@ import { Card, Grid, Text } from "@tremor/react";
 import type { RunRow } from "@/types/dashboard";
 import PerformanceDashboard from "@/components/PerformanceDashboard";
 import OnboardingWizard from "@/components/OnboardingWizard";
-import { TRIAL_DAYS } from "@/lib/trial";
+import { trialDaysRemaining } from "@/lib/trial";
 
 interface PublishedNotification {
   id: string;
@@ -27,18 +27,15 @@ export default function InicioPage() {
   const [notifications, setNotifications] = useState<PublishedNotification[]>(
     [],
   );
-  // Banner grande de bienvenida a la prueba gratuita (pedido explícito del
-  // usuario, 13/8/2026): /api/auth/trial-signup redirige acá con `?trial=1`
-  // apenas se crea la cuenta. Se lee con window.location en vez de
-  // useSearchParams() para no forzar un límite de Suspense en esta página.
-  // Se borra el parámetro de la URL después de mostrarlo para que no
-  // reaparezca con cada refresh.
-  const [showTrialWelcome, setShowTrialWelcome] = useState(false);
+  // Banner de días restantes de prueba gratuita: se calcula del lado del
+  // servidor (trialStartedAt) y se muestra durante todo el período, no solo
+  // al crear la cuenta. Desaparece solo cuando el trial termina de verdad,
+  // no con un botón de cerrar (pedido explícito de Milton, 16/9/2026).
+  const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("trial") === "1") {
-      setShowTrialWelcome(true);
       params.delete("trial");
       const next = params.toString();
       window.history.replaceState(
@@ -132,6 +129,12 @@ export default function InicioPage() {
       const step4 = Boolean(googleData.connected && googleData.siteUrl);
 
       setWizardComplete(step1 && step2 && step3 && step4);
+
+      if (meData.isTrialSignup && !meData.trialUnlocked && meData.trialStartedAt) {
+        setTrialDaysLeft(trialDaysRemaining(new Date(meData.trialStartedAt)));
+      } else {
+        setTrialDaysLeft(null);
+      }
     } catch {
       setWizardComplete(false);
     }
@@ -143,33 +146,7 @@ export default function InicioPage() {
 
   return (
     <div>
-      <ModuleIntro titulo="Inicio">
-        <IntroP>
-          Esta es tu pantalla de control. Aquí ves de un vistazo cómo va tu cuenta: cuántos artículos se han publicado hoy y este mes, cuánto te queda de tu límite y el ritmo que llevas.
-        </IntroP>
-        <IntroP>
-          Si tu cuenta es nueva y todavía no hay artículos, en lugar de las métricas verás el asistente de configuración, que te pide una por una las cuatro cosas que el sistema necesita para poder publicar por ti. Cuando termines, el resto de la plataforma se desbloquea.
-        </IntroP>
-        <IntroP>
-          Si no sabes por dónde empezar, <Modulo id="como-funciona" /> lo explica entero en tres pasos.
-        </IntroP>
-        <IntroP>
-          Justo abajo tienes 4 botones: elige el que corresponda a lo que quieres hacer ahora.
-        </IntroP>
-      </ModuleIntro>
-      <Grid numItemsSm={2} numItemsLg={4} className="gap-4" style={{ marginTop: 20, marginBottom: 20 }}>
-        {QUICK_LINKS.map((l, i) => (
-          <Link key={l.href} href={l.href} style={{ textDecoration: "none" }}>
-            <Card>
-              <Text>{String(i + 1).padStart(2, "0")}</Text>
-              <p style={{ marginTop: 8, fontSize: 15, fontWeight: 600, color: "#1d1d1f", lineHeight: 1.4 }}>
-                {l.label}
-              </p>
-            </Card>
-          </Link>
-        ))}
-      </Grid>
-      {showTrialWelcome && (
+      {trialDaysLeft !== null && trialDaysLeft > 0 && (
         <div
           style={{
             background: "linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 75, 153, 0.9) 100%)",
@@ -191,29 +168,67 @@ export default function InicioPage() {
         >
           <div>
             <p style={{ margin: 0, fontSize: 17, fontWeight: 700, letterSpacing: "-0.01em" }}>
-              ¡Bienvenido! Tienes {TRIAL_DAYS} días de prueba gratuita.
+              {trialDaysLeft === 1
+                ? "¡Bienvenido! Te queda 1 día de prueba gratuita."
+                : `¡Bienvenido! Te quedan ${trialDaysLeft} días de prueba gratuita.`}
             </p>
             <p style={{ margin: "6px 0 0", fontSize: 13, opacity: 0.9 }}>
               Explora todo el sistema sin restricciones durante este período.
             </p>
           </div>
-          <button
-            onClick={() => setShowTrialWelcome(false)}
-            style={{
-              background: "rgba(255, 255, 255, 0.18)",
-              border: "1px solid rgba(255, 255, 255, 0.35)",
-              borderRadius: 10,
-              color: "#fff",
-              padding: "8px 18px",
-              fontWeight: 600,
-              fontSize: 13,
-              cursor: "pointer",
-              transition: "all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)",
-            }}
-          >
-            Entendido
-          </button>
         </div>
+      )}
+      <ModuleIntro titulo="Inicio">
+        {wizardComplete === false ? (
+          <>
+            <IntroP>
+              Antes de que la plataforma pueda redactar y publicar por ti, necesitamos configurar 4 cosas, en este orden:
+            </IntroP>
+            <ol
+              style={{
+                margin: "10px 0 0",
+                paddingLeft: 20,
+                fontSize: 16,
+                lineHeight: 1.55,
+                color: "#1d1d1f",
+              }}
+            >
+              <li>Conectar tu cuenta de 10minutesWebsite.</li>
+              <li>Sincronizar las categorías de tu web.</li>
+              <li>Elegir el idioma en el que se redactan los artículos.</li>
+              <li>Conectar Google Search Console.</li>
+            </ol>
+            <IntroP>
+              Complétalos en orden, uno por uno, más abajo. Cuando termines los 4, el resto de la plataforma se desbloquea.
+            </IntroP>
+          </>
+        ) : (
+          <>
+            <IntroP>
+              Esta es tu pantalla de control. Aquí ves de un vistazo cómo va tu cuenta: cuántos artículos se han publicado hoy y este mes, cuánto te queda de tu límite y el ritmo que llevas.
+            </IntroP>
+            <IntroP>
+              Si no sabes por dónde empezar, <Modulo id="como-funciona" /> lo explica entero en tres pasos.
+            </IntroP>
+            <IntroP>
+              Justo abajo tienes 4 botones: elige el que corresponda a lo que quieres hacer ahora.
+            </IntroP>
+          </>
+        )}
+      </ModuleIntro>
+      {wizardComplete === true && (
+        <Grid numItemsSm={2} numItemsLg={4} className="gap-4" style={{ marginTop: 20, marginBottom: 20 }}>
+          {QUICK_LINKS.map((l, i) => (
+            <Link key={l.href} href={l.href} style={{ textDecoration: "none" }}>
+              <Card>
+                <Text>{String(i + 1).padStart(2, "0")}</Text>
+                <p style={{ marginTop: 8, fontSize: 15, fontWeight: 600, color: "#1d1d1f", lineHeight: 1.4 }}>
+                  {l.label}
+                </p>
+              </Card>
+            </Link>
+          ))}
+        </Grid>
       )}
       {notifications.length > 0 && (
         <div

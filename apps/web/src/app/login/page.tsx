@@ -204,7 +204,7 @@ function LoginContent() {
                   letterSpacing: "-0.01em",
                 }}
               >
-                SEO TOTAL
+                LA Solución AI
               </h1>
             </div>
             <p style={{ fontSize: 13, color: "#86868b", margin: "0 0 6px" }}>
