@@ -64,6 +64,43 @@ export default function DashboardNav() {
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const groupRef = useRef<HTMLDivElement | null>(null);
 
+  // El menú se oculta mientras la cuenta está en el asistente de
+  // configuración inicial (pedido de Milton, 16/9/2026): esa pantalla debe
+  // verse sola, sin navegación a secciones que todavía están bloqueadas.
+  // Solo aplica en /dashboard, que es donde vive el asistente.
+  const [hideForSetup, setHideForSetup] = useState(false);
+  useEffect(() => {
+    if (pathname !== "/dashboard") {
+      setHideForSetup(false);
+      return;
+    }
+    let cancelled = false;
+    Promise.all([
+      fetch("/api/credentials", { cache: "no-store" }),
+      fetch("/api/categories", { cache: "no-store" }),
+      fetch("/api/me", { cache: "no-store" }),
+      fetch("/api/search-integrations/google", { cache: "no-store" }),
+    ])
+      .then(async ([credRes, catRes, meRes, googleRes]) => {
+        const credData = credRes.ok ? await credRes.json() : {};
+        const catData = catRes.ok ? await catRes.json() : {};
+        const meData = meRes.ok ? await meRes.json() : {};
+        const googleData = googleRes.ok ? await googleRes.json() : {};
+        const step1 = Boolean(credData.configured);
+        const step2 = Array.isArray(catData.categories) && catData.categories.length > 0;
+        const step3 =
+          typeof meData.contentLanguage === "string" && meData.contentLanguage.trim().length > 0;
+        const step4 = Boolean(googleData.connected && googleData.siteUrl);
+        if (!cancelled) setHideForSetup(!(step1 && step2 && step3 && step4));
+      })
+      .catch(() => {
+        if (!cancelled) setHideForSetup(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
+
   useEffect(() => {
     fetch(`/api/me?_t=${Date.now()}`, {
       cache: "no-store",
@@ -181,6 +218,8 @@ export default function DashboardNav() {
       Oculto
     </span>
   );
+
+  if (hideForSetup) return null;
 
   return (
     <nav style={{ position: "relative", marginTop: 18, marginBottom: 28 }}>
