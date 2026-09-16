@@ -10,6 +10,7 @@ import {
 import {
   platformForgotPasswordUrl,
   platformProductNameOrNeutral,
+  isWhiteLabelPlatform,
 } from "@auto-articulos/shared";
 import type { CategoryRow, LanguageRow, RunRow } from "@/types/dashboard";
 import CategorySyncProgress, {
@@ -19,6 +20,18 @@ import CategorySyncProgress, {
 interface OnboardingWizardProps {
   variant?: "standalone" | "embedded";
   onUpdated?: () => void;
+}
+
+// Firma exacta que el worker escribe en TODOS los mensajes de login fallido
+// (ver withServerDetection/fetchCategoriesDetectingServer en
+// apps/worker/src/categorySync.ts). Sirve para detectar esta causa concreta
+// y, en vez de mostrar el error técnico crudo, decirle siempre al usuario
+// qué acción tomar: nunca un error sin una instrucción (pedido de Milton,
+// 16/9/2026, tras el caso Estee Soto donde el mensaje real nunca se vio).
+const LOGIN_FAILURE_SIGNATURE = "No se pudo iniciar sesión con las credenciales guardadas";
+
+function isLoginFailureMessage(text: string): boolean {
+  return text.includes(LOGIN_FAILURE_SIGNATURE);
 }
 
 export default function OnboardingWizard({
@@ -67,6 +80,7 @@ export default function OnboardingWizard({
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [savingCreds, setSavingCreds] = useState(false);
 
   const [syncingCategories, setSyncingCategories] = useState(false);
@@ -568,13 +582,17 @@ export default function OnboardingWizard({
   // dependiera de la sincronización y la sincronización del verde, nadie
   // podría avanzar nunca).
   //
-  // `step1Verified` es lo único que pinta verde: la ÚNICA prueba real de que
-  // el usuario y la contraseña sirven es que un login de verdad haya
-  // funcionado, y eso solo ocurre cuando una sincronización de categorías
-  // termina bien (el worker es quien abre el navegador y entra al sitio).
+  // `step1Verified` es lo único que pinta verde: la prueba real de que el
+  // usuario y la contraseña sirven es que un login de verdad haya
+  // funcionado. Eso ocurre cuando una sincronización de categorías termina
+  // bien, pero también cuando la detección de sitios ya confirmó un panel
+  // real (`siteSelectionConfirmed`) — ambas abren sesión de verdad contra
+  // 10minutesWebsite, así que ambas son prueba válida (pedido de Milton,
+  // 16/9/2026: no tenía sentido seguir mostrando "pendiente de verificar"
+  // cuando el sitio ya se confirmó con un login exitoso).
   const step1Saved = credentialsConfigured;
   const step1Verified =
-    step1Saved && (lastSyncStatus === "success" || categories.length > 0);
+    step1Saved && (lastSyncStatus === "success" || categories.length > 0 || siteSelectionConfirmed);
   // El paso 1 solo se da por terminado cuando, además de guardar
   // credenciales, el sitio real con el que va a trabajar esta cuenta quedó
   // confirmado — si no, Paso 2 podría sincronizar categorías de un sitio
@@ -616,123 +634,119 @@ export default function OnboardingWizard({
   }
 
   return (
-    <div style={{ marginBottom: 24 }}>
+    <div style={{ marginTop: 24, marginBottom: 24 }}>
       <style>{`@keyframes wizard-detection-progress { 0% { transform: translateX(-110%); } 100% { transform: translateX(290%); } }`}</style>
-      {/* Invitación a leer "Cómo Funciona" antes de empezar. Pedido explícito
-          del usuario (23/8/2026): quien recién llega debe poder entender el
-          panorama completo antes de meterse en los 4 pasos, y volver aquí
-          sin fricción — por eso el enlace manda de vuelta a /dashboard, que
-          es exactamente donde vive este asistente mientras la cuenta no esté
-          configurada del todo: no hay nada que "perder" al ir y volver. */}
-      <div
-        style={{
-          marginBottom: 16,
-          padding: "14px 18px",
-          borderRadius: 12,
-          background: "#f5f5f7",
-          border: "1px solid #e5e5ea",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
-        <div style={{ fontSize: 13, color: "#1d1d1f", lineHeight: 1.5 }}>
-          <strong>¿Primera vez aquí?</strong> Antes de completar estos pasos,
-          te recomendamos leer{" "}
-          <Link
-            href="/dashboard/como-funciona"
-            style={{ color: "#0066cc", fontWeight: 600, textDecoration: "underline" }}
-          >
-            Cómo Funciona
-          </Link>{" "}
-          — toma un par de minutos y te explica todo el panorama. Cuando
-          termines, vuelve a Inicio para seguir aquí mismo, exactamente donde
-          lo dejaste.
-        </div>
-        <Link
-          href="/dashboard/como-funciona"
-          style={{
-            background: "#1d1d1f",
-            color: "#fff",
-            textDecoration: "none",
-            padding: "8px 16px",
-            borderRadius: 8,
-            fontSize: 13,
-            fontWeight: 600,
-            whiteSpace: "nowrap",
-          }}
-        >
-          Leer Cómo Funciona →
-        </Link>
-      </div>
 
       {/* Mensajes de feedback */}
-      {message && (
+      {message && message.type === "error" && isLoginFailureMessage(message.text) ? (
+        // Nunca un error crudo sin decir qué hacer: si la causa es login
+        // fallido, siempre se manda a resetear la contraseña con el enlace
+        // exacto, con la misma acción que el Paso 1 (pedido de Milton,
+        // 16/9/2026).
         <div
           style={{
-            padding: "10px 16px",
+            padding: "14px 16px",
             borderRadius: 8,
             marginBottom: 16,
             fontSize: 13,
-            fontWeight: 500,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            background:
-              message.type === "success"
-                ? "#f5f5f7"
-                : message.type === "error"
-                  ? "rgba(255, 59, 48, 0.08)"
-                  : "#f5f5f7",
-            border:
-              message.type === "success"
-                ? "1px solid #f5f5f7"
-                : message.type === "error"
-                  ? "1px solid rgba(255, 59, 48, 0.3)"
-                  : "1px solid rgba(0, 0, 0, 0.25)",
-            color:
-              message.type === "success"
-                ? "#1d1d1f"
-                : message.type === "error"
-                  ? "#ff3b30"
-                  : "#1d1d1f",
+            background: "rgba(255, 59, 48, 0.08)",
+            border: "1px solid rgba(255, 59, 48, 0.3)",
+            color: "#1d1d1f",
           }}
         >
-          <span>{message.text}</span>
-          <button
-            onClick={() => setMessage(null)}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+            <p style={{ margin: 0, fontWeight: 700, color: "#ff3b30" }}>
+              No pudimos conectarnos con tu cuenta de {productName}
+            </p>
+            <button
+              onClick={() => setMessage(null)}
+              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "inherit" }}
+            >
+              ✕
+            </button>
+          </div>
+          <p style={{ margin: "6px 0 10px", lineHeight: 1.5 }}>
+            Esto casi siempre significa que la contraseña guardada ya no es la correcta. Debes
+            resetearla en la plataforma y volver a guardarla aquí en el Paso 1.
+          </p>
+          <a
+            href={platformForgotPasswordUrl(platformDomain)}
+            target="_blank"
+            rel="noreferrer"
             style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              fontSize: 14,
-              color: "inherit",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              background: "#1d1d1f",
+              color: "#ffffff",
+              padding: "8px 16px",
+              borderRadius: 8,
+              fontSize: 13,
+              fontWeight: 700,
+              textDecoration: "none",
             }}
           >
-            ✕
-          </button>
+            Resetear contraseña de la plataforma ahora ↗
+          </a>
         </div>
+      ) : (
+        message && (
+          <div
+            style={{
+              padding: "10px 16px",
+              borderRadius: 8,
+              marginBottom: 16,
+              fontSize: 13,
+              fontWeight: 500,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              background:
+                message.type === "success"
+                  ? "#f5f5f7"
+                  : message.type === "error"
+                    ? "rgba(255, 59, 48, 0.08)"
+                    : "#f5f5f7",
+              border:
+                message.type === "success"
+                  ? "1px solid #f5f5f7"
+                  : message.type === "error"
+                    ? "1px solid rgba(255, 59, 48, 0.3)"
+                    : "1px solid rgba(0, 0, 0, 0.25)",
+              color:
+                message.type === "success"
+                  ? "#1d1d1f"
+                  : message.type === "error"
+                    ? "#ff3b30"
+                    : "#1d1d1f",
+            }}
+          >
+            <span>{message.text}</span>
+            <button
+              onClick={() => setMessage(null)}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontSize: 14,
+                color: "inherit",
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        )
       )}
 
-      <div
-        className="panel"
-        style={{
-          background: "rgba(255, 255, 255, 0.88)",
-          borderRadius: 22,
-          border: "1px solid rgba(0, 0, 0, 0.07)",
-          boxShadow: "none",
-          overflow: "hidden",
-          padding: 0,
-        }}
-      >
-        {/* Cabecera del Wizard */}
+      <div>
+        {/* Cabecera del Wizard: sin caja propia, para no apilar un segundo
+            recuadro justo debajo de la tarjeta de intro (pedido de Milton,
+            16/9/2026) — un simple divisor basta para separarla de los pasos. */}
         <div
           style={{
-            padding: "24px 28px",
-            background: "#ffffff",
+            padding: "0 0 20px",
             borderBottom: "1px solid rgba(0, 0, 0, 0.07)",
+            marginBottom: 20,
             color: "#1d1d1f",
             display: "flex",
             justifyContent: "space-between",
@@ -787,7 +801,7 @@ export default function OnboardingWizard({
         </div>
 
         {/* Lista Vertical de Pasos */}
-        <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
           {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
           {/* PASO 1: 10minutesWebsite                               */}
@@ -845,20 +859,19 @@ export default function OnboardingWizard({
               </div>
             ) : (
               <div style={{ marginTop: 12 }}>
-                {/* Cuadro de recomendación fuerte para resetear contraseña */}
+                {/* Nota para resetear contraseña: sin caja propia, para no anidar
+                    un recuadro dentro del StepCard (pedido de Milton, 16/9/2026) */}
                 <div
                   style={{
-                    background: "#f5f5f7",
-                    border: "1.5px solid #f5f5f7",
-                    borderRadius: 8,
-                    padding: "12px 14px",
-                    marginBottom: 14,
+                    borderLeft: "2px solid #e5e5ea",
+                    paddingLeft: 14,
+                    marginBottom: 16,
                     fontSize: 13,
                     color: "#6e6e73",
                     lineHeight: 1.45,
                   }}
                 >
-                  <p style={{ margin: "0 0 6px 0", fontWeight: 700 }}>
+                  <p style={{ margin: "0 0 6px 0", fontWeight: 700, color: "#1d1d1f" }}>
                     Paso recomendado antes de continuar: resetea tu contraseña de la plataforma
                   </p>
                   <p style={{ margin: "0 0 8px 0" }}>
@@ -914,14 +927,49 @@ export default function OnboardingWizard({
                     <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#1d1d1f", marginBottom: 4 }}>
                       Contraseña de {productName}:
                     </label>
-                    <input
-                      type="password"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••••••"
-                      style={inputStyle}
-                    />
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••••••"
+                        style={{ ...inputStyle, paddingRight: 40 }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                        title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                        style={{
+                          position: "absolute",
+                          right: 8,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          padding: 6,
+                          color: showPassword ? "#1d1d1f" : "#86868b",
+                        }}
+                      >
+                        {showPassword ? (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                            <circle cx="12" cy="12" r="3" />
+                          </svg>
+                        ) : (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M2 12s3.5-7 10-7c2.09 0 3.87.63 5.32 1.5M22 12s-3.5 7-10 7c-2.09 0-3.87-.63-5.32-1.5" />
+                            <path d="M3 3l18 18" />
+                            <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
                     <button
@@ -966,20 +1014,60 @@ export default function OnboardingWizard({
             {/* todavía no esté confirmado, sin depender de editingCreds:   */}
             {/* la versión anterior quedaba oculta ahí y nunca se veía.    */}
             {step1Saved && !siteSelectionConfirmed && (
-              <div style={{ marginTop: 12, padding: 14, border: "1px solid #d2d2d7", borderRadius: 8, background: "#f5f5f7" }}>
+              <div style={{ marginTop: 12, borderLeft: "2px solid #e5e5ea", paddingLeft: 14 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, color: "#1d1d1f" }}>
                   Confirma el sitio con el que trabajará esta cuenta
                 </div>
                 <div style={{ fontSize: 12, color: "#6e6e73", marginBottom: 10 }}>
-                  Si esta cuenta de {productName} da acceso a más de un sitio, elige uno solo: esta cuenta de SEO TOTAL trabajará únicamente con él. Para el otro, crea otra cuenta.
+                  Si esta cuenta de {productName} da acceso a más de un sitio, elige uno solo: esta cuenta de SEO TOTAL trabajará únicamente con él. Para el otro, crea otra cuenta. La verificación puede tardar varios minutos: no cierres esta pantalla mientras se completa.
                 </div>
 
                 {!detectJob || detectJob.status === "error" ? (
                   <div>
                     {detectJob?.status === "error" && (
-                      <div style={{ marginBottom: 10, fontSize: 12, color: "#ff3b30" }}>
-                        ❌ No pudimos conectar con tu plataforma. Verifica el usuario y la contraseña en Configuración y vuelve a intentarlo.
-                      </div>
+                      isLoginFailureMessage(detectJob.errorMessage || "") ? (
+                        <div
+                          style={{
+                            marginBottom: 12,
+                            padding: "12px 14px",
+                            borderRadius: 8,
+                            background: "rgba(255, 59, 48, 0.08)",
+                            border: "1px solid rgba(255, 59, 48, 0.3)",
+                            fontSize: 12,
+                          }}
+                        >
+                          <p style={{ margin: "0 0 6px 0", fontWeight: 700, color: "#ff3b30" }}>
+                            No pudimos conectarnos con tu cuenta de {productName}
+                          </p>
+                          <p style={{ margin: "0 0 8px 0", color: "#1d1d1f", lineHeight: 1.5 }}>
+                            Esto casi siempre significa que la contraseña guardada ya no es la correcta.
+                            Debes resetearla en la plataforma y volver a guardarla arriba, en el Paso 1.
+                          </p>
+                          <a
+                            href={platformForgotPasswordUrl(platformDomain)}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 6,
+                              background: "#1d1d1f",
+                              color: "#ffffff",
+                              padding: "7px 14px",
+                              borderRadius: 6,
+                              fontSize: 12,
+                              fontWeight: 700,
+                              textDecoration: "none",
+                            }}
+                          >
+                            Resetear contraseña de la plataforma ahora ↗
+                          </a>
+                        </div>
+                      ) : (
+                        <div style={{ marginBottom: 10, fontSize: 12, color: "#ff3b30" }}>
+                          ❌ {detectJob.errorMessage || "No pudimos conectar con tu plataforma. Verifica el usuario y la contraseña en Configuración y vuelve a intentarlo."}
+                        </div>
+                      )
                     )}
                     <button
                       type="button"
@@ -1133,14 +1221,7 @@ export default function OnboardingWizard({
                   </div>
                 </div>
               ) : (
-                <div
-                  style={{
-                    background: "#f5f5f7",
-                    border: "1px solid #d2d2d7",
-                    borderRadius: 8,
-                    padding: "14px 16px",
-                  }}
-                >
+                <div>
                   {syncingCategories || categorySyncInProgress ? (
                     <CategorySyncProgress
                       status={
@@ -1154,7 +1235,7 @@ export default function OnboardingWizard({
                   ) : (
                     <>
                       <p style={{ margin: "0 0 10px 0", fontSize: 13, color: "#1d1d1f", fontWeight: 500 }}>
-                        Haz clic a continuación para conectar con tu cuenta de {productName} y descargar tus categorías:
+                        Haz clic a continuación para conectar con tu cuenta de {productName} y descargar tus categorías. Puede tardar varios minutos: no cierres esta pantalla mientras se completa.
                       </p>
                       <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
                         <button
@@ -1292,14 +1373,7 @@ export default function OnboardingWizard({
                   </button>
                 </div>
               ) : (
-                <div
-                  style={{
-                    background: "#f5f5f7",
-                    border: "1px solid #d2d2d7",
-                    borderRadius: 8,
-                    padding: "14px 16px",
-                  }}
-                >
+                <div>
                   <p style={{ fontSize: 13, color: "#1d1d1f", margin: "0 0 10px 0", fontWeight: 500 }}>
                     Elige el idioma principal para tus artículos:
                   </p>
@@ -1392,47 +1466,61 @@ export default function OnboardingWizard({
             }
           >
             <div style={{ marginTop: 10 }}>
-              {/* Bloque del video tutorial: SIEMPRE VISIBLE */}
-              <div
-                style={{
-                  background: "#f5f5f7",
-                  border: "1px solid #d2d2d7",
-                  borderRadius: 8,
-                  padding: "14px 16px",
-                  marginBottom: 14,
-                  fontSize: 13,
-                  color: "#1d1d1f",
-                  lineHeight: 1.5,
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                  <span style={{ fontSize: 16 }}></span>
-                  <strong style={{ fontSize: 14, color: "#1d1d1f" }}>¿No tienes el Google Search Console?</strong>
-                </div>
-                <p style={{ margin: "0 0 10px 0", fontSize: 13, color: "#6e6e73" }}>
-                  Aprende cómo activarte paso a paso con este video tutorial:
-                </p>
-                <a
-                  href="https://youtu.be/c9aOFmvaHHo?si=0K0XfnbJPE2j8OMt&t=5"
-                  target="_blank"
-                  rel="noreferrer"
+              {/* Explicación en lenguaje simple de para qué sirve este paso,
+                  y por qué es obligatorio (pedido de Milton, 16/9/2026). */}
+              <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "#1d1d1f", lineHeight: 1.55 }}>
+                <strong>¿Para qué sirve esto?</strong> Google Search Console le dice a SEO TOTAL qué
+                está buscando de verdad la gente que llega a tu sitio en Google. Con esa información,
+                la Inteligencia Artificial elige y escribe artículos sobre los temas que a tu audiencia
+                realmente le interesan, en vez de adivinar. <strong>Es obligatorio</strong>: sin esta
+                conexión, SEO TOTAL no puede posicionar tus artículos en Google. Si todavía no lo has
+                hecho, complétalo ahora.
+              </p>
+
+              {/* Bloque del video tutorial: solo para .net y .site — el
+                  video muestra la marca 10minutesWebsite, así que no debe
+                  verlo una cuenta de marca blanca (tagcrush). Pedido de
+                  Milton, 16/9/2026. */}
+              {!isWhiteLabelPlatform(platformDomain) && (
+                <div
                   style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    background: "#ff3b30",
-                    color: "#ffffff",
-                    textDecoration: "none",
-                    padding: "8px 14px",
-                    borderRadius: 6,
-                    fontWeight: 700,
+                    borderLeft: "2px solid #e5e5ea",
+                    paddingLeft: 14,
+                    marginBottom: 16,
                     fontSize: 13,
-                    boxShadow: "none",
+                    color: "#1d1d1f",
+                    lineHeight: 1.5,
                   }}
                 >
-                  ▶Ver video: Cómo activar Google Search Console ↗
-                </a>
-              </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                    <span style={{ fontSize: 16 }}></span>
+                    <strong style={{ fontSize: 14, color: "#1d1d1f" }}>¿No tienes el Google Search Console?</strong>
+                  </div>
+                  <p style={{ margin: "0 0 10px 0", fontSize: 13, color: "#6e6e73" }}>
+                    Aprende cómo activarte paso a paso con este video tutorial:
+                  </p>
+                  <a
+                    href="https://youtu.be/c9aOFmvaHHo?si=0K0XfnbJPE2j8OMt&t=5"
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      background: "#ff3b30",
+                      color: "#ffffff",
+                      textDecoration: "none",
+                      padding: "8px 14px",
+                      borderRadius: 6,
+                      fontWeight: 700,
+                      fontSize: 13,
+                      boxShadow: "none",
+                    }}
+                  >
+                    ▶Ver video: Cómo activar Google Search Console ↗
+                  </a>
+                </div>
+              )}
 
               {!step3Done ? (
                 <p style={{ fontSize: 13, color: "#6e6e73", margin: 0 }}>
@@ -1470,17 +1558,15 @@ export default function OnboardingWizard({
 
                   <div
                     style={{
-                      background: "#f5f5f7",
-                      border: "1px solid #e5e5ea",
-                      borderRadius: 8,
-                      padding: "12px 14px",
+                      borderLeft: "2px solid #e5e5ea",
+                      paddingLeft: 14,
                       marginBottom: 12,
                       fontSize: 13,
                       color: "#6e6e73",
                       lineHeight: 1.5,
                     }}
                   >
-                    <p style={{ margin: "0 0 4px 0", fontWeight: 700 }}>
+                    <p style={{ margin: "0 0 4px 0", fontWeight: 700, color: "#1d1d1f" }}>
                       Instrucción antes de conectar:
                     </p>
                     <p style={{ margin: 0 }}>
@@ -1577,10 +1663,8 @@ export default function OnboardingWizard({
                           {(!googleData.sites || googleData.sites.length === 0) && (
                             <div
                               style={{
-                                background: "#f5f5f7",
-                                border: "1px solid #f5f5f7",
-                                borderRadius: 8,
-                                padding: "10px 14px",
+                                borderLeft: "2px solid #e5e5ea",
+                                paddingLeft: 14,
                                 fontSize: 13,
                                 color: "#6e6e73",
                               }}
@@ -1792,12 +1876,12 @@ function StepCard({
               fontWeight: 600,
               flexShrink: 0,
               background: isDone
-                ? "#f5f5f7"
+                ? "rgba(52, 199, 89, 0.15)"
                 : isActive
                   ? "#1d1d1f"
                   : "#f5f5f7",
               color: isDone
-                ? "#1d1d1f"
+                ? "#16803c"
                 : isActive
                   ? "#ffffff"
                   : "#6e6e73",

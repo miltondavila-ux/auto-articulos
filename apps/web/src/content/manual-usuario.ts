@@ -10,24 +10,24 @@ Este manual explica cómo usar la plataforma desde la perspectiva de una persona
 
 ## Antes de empezar (Asistente de Configuración Inicial)
 
-Cuando ingresas a tu cuenta por primera vez o aún no tienes artículos publicados, Inicio te muestra el **Asistente de Configuración Inicial Paso a Paso**. Este asistente te guía de forma secuencial por los 4 pasos esenciales:
+Cuando ingresas a tu cuenta por primera vez o aún no tienes artículos publicados, Inicio te muestra únicamente el **Asistente de Configuración Inicial Paso a Paso**: el banner de bienvenida con los días de prueba que te quedan, una explicación de los 4 pasos en orden y la guía paso a paso. Mientras esto no esté completo, el menú superior y los cuatro accesos directos (01-04) permanecen ocultos a propósito, para que no te distraigas con secciones que todavía están bloqueadas.
 
-1. **Paso 1 (Cuenta de la plataforma):** Guarda tu usuario y contraseña de la plataforma. Si no recuerdas esa clave, puedes restablecerla o crear una nueva en segundos desde el enlace directo de recuperación de la plataforma incluido en el asistente. Al guardar, el paso queda en **"Pendiente de verificar"** (ámbar): tus datos se guardan cifrados, pero todavía no se ha comprobado que sirvan para entrar. Se vuelve verde solo cuando la sincronización del Paso 2 logra entrar de verdad a tu cuenta — esa es la única prueba real de que el usuario y la contraseña son correctos. Si el Paso 2 falla diciendo que no pudo iniciar sesión, revisa esas credenciales entrando a mano a tu plataforma y vuelve a guardarlas aquí.
-2. **Paso 2 (Sincronizar categorías):** Descarga en vivo las categorías reales de tu web para clasificar tus artículos. Mientras corre verás una **barra de progreso con las etapas** (En cola → Entrando a tu plataforma → Guardando categorías), un cronómetro y un **Detalle del proceso** desplegable que registra con hora exacta qué fue pasando: cuándo se envió la solicitud, cuándo un procesador la tomó y cómo terminó. Si algo falla, ahí aparece el motivo real. Puede tardar varios minutos según la cola de trabajo; la pantalla se actualiza sola y no hace falta recargar ni volver a pulsar. Verás lo mismo si sincronizas desde Configuración.
-3. **Paso 3 (Idioma de redacción):** Confirma el idioma principal en el que la Inteligencia Artificial redactará tus contenidos.
-4. **Paso 4 (Google Search Console):** Abre Search Console en una pestaña contigua de tu navegador para comprobar que esté activo con la cuenta de Google dueña de tu web, y luego conéctalo mediante Google OAuth seleccionando tu sitio.
-5. **Meta final:** Al completar los 4 pasos, se desbloquea el acceso para publicar tu primer artículo o explorar Oportunidades SEO.
+1. **Paso 1 (Cuenta de la plataforma):** Guarda tu usuario y contraseña de la plataforma. Puedes mostrar u ocultar la contraseña que escribes con el ícono de ojo dentro del campo. Si no recuerdas esa clave, puedes restablecerla o crear una nueva en segundos desde el enlace directo de recuperación de la plataforma incluido en el asistente. Al guardar, el paso queda en **"Pendiente de verificar"**: tus datos se guardan cifrados, pero todavía no se ha comprobado que sirvan para entrar. Se pone verde en cuanto un login real funciona — ya sea porque la detección de tu sitio lo confirma, o porque la sincronización del Paso 2 logra entrar de verdad a tu cuenta. Si el login falla en cualquiera de los dos casos, el sistema nunca te deja con un error sin explicación: siempre te dice que debes resetear tu contraseña de la plataforma y te da el enlace exacto para hacerlo.
+2. **Confirmar el sitio:** Si tu cuenta de la plataforma da acceso a más de un sitio, se detecta en vivo cuál eliges — esta cuenta trabajará únicamente con ese sitio para siempre; para el otro, se crea otra cuenta. La detección puede tardar varios minutos: no cierres la pantalla mientras se completa.
+3. **Paso 2 (Sincronizar categorías):** Descarga en vivo las categorías reales de tu web para clasificar tus artículos. Mientras corre verás una **barra de progreso con las etapas** (En cola → Entrando a tu plataforma → Guardando categorías), un cronómetro y un **Detalle del proceso** desplegable que registra con hora exacta qué fue pasando: cuándo se envió la solicitud, cuándo un procesador la tomó y cómo terminó. Si algo falla, ahí aparece el motivo real. Puede tardar varios minutos según la cola de trabajo; la pantalla se actualiza sola y no hace falta recargar ni volver a pulsar. Verás lo mismo si sincronizas desde Configuración.
+4. **Paso 3 (Idioma de redacción):** Confirma el idioma principal en el que la Inteligencia Artificial redactará tus contenidos.
+5. **Paso 4 (Google Search Console):** Google Search Console le dice a la plataforma qué está buscando de verdad la gente que llega a tu sitio en Google, para que la Inteligencia Artificial elija y escriba sobre esos temas reales en vez de adivinar — es obligatorio, sin esta conexión no se pueden posicionar tus artículos. Abre Search Console en una pestaña contigua de tu navegador para comprobar que esté activo con la cuenta de Google dueña de tu web, y luego conéctalo mediante Google OAuth seleccionando tu sitio.
+6. **Meta final:** Al completar los 4 pasos ves una pantalla de "¡Felicitaciones!" con acceso directo a Oportunidades SEO o a publicar un artículo. Esa pantalla se queda visible durante toda esa visita — no desaparece de golpe apenas terminas el último paso. En tu siguiente visita a Inicio, ya con todo listo, entras directo al panel de métricas de rendimiento.
 
-También puedes volver a abrir el Asistente en cualquier momento desde **Configuración** (/dashboard/configuracion/inicial).
+También puedes volver a abrir el Asistente en cualquier momento desde **Configuración** (/dashboard/configuracion/inicial); si ya completaste los 4 pasos, esa pantalla no vuelve a mostrar el asistente, solo una confirmación corta con acceso directo a Oportunidades.
 
 ## Inicio
 
 Ruta: /dashboard
 
 Inicio es tu centro de operaciones:
-- **Para cuentas nuevas (sin artículos aún):** Muestra de forma prioritaria el Asistente de Configuración Inicial para que completes tu puesta a punto sin distracciones.
-- **Para cuentas con artículos publicados:** Muestra el panel de métricas de rendimiento (artículos publicados hoy, en el mes, límites y gráfico de actividad).
-- Justo debajo de la explicación de Inicio hay cuatro accesos directos numerados (01-04) a **Publicaciones propias**, **Oportunidades SEO/AEO**, **Oportunidades para Redes Sociales** y **Publicaciones en Curso**, para ir directo a cualquiera de esas cuatro pantallas sin pasar por el menú.
+- **Para cuentas nuevas (sin artículos aún):** Muestra de forma exclusiva el Asistente de Configuración Inicial, sin menú ni accesos directos, para que completes tu puesta a punto sin distracciones.
+- **Para cuentas con artículos publicados:** Muestra el panel de métricas de rendimiento (artículos publicados hoy, en el mes, límites y gráfico de actividad), el menú superior completo y cuatro accesos directos numerados (01-04) a **Publicaciones propias**, **Oportunidades SEO/AEO**, **Oportunidades para Redes Sociales** y **Publicaciones en Curso**.
 - Desde el menú superior tienes acceso a: Cómo Funciona, Publicaciones, Historial, Actualizaciones y Configuración.
 
 ## Cada módulo se explica solo
@@ -88,6 +88,8 @@ tuyas y hasta 2 logos (solo la primera foto y el primer logo son
 obligatorios; el resto es opcional y le da al sistema más variedad para
 elegir — se usan cuando el generador de imágenes con IA para redes sociales
 está activo en tu cuenta, lo activa el administrador).
+
+**Firma y disclosure:** el campo de firma ahora se llama "Firma al Final del Artículo y Disclosure". Además de firmar profesionalmente, se recomienda incluir una aclaración legal (disclosure) indicando que no eres asesor en materias legales, fiscales, financieras o de seguros, con un ejemplo genérico como guía (con placeholders de nombre, profesión y estado/país, sin datos de personas reales).
 
 **Ubicaciones para títulos geolocalizados:** escribe, separadas por comas,
 las ciudades o países de donde son tus clientes reales (ej. "Colombia,
@@ -166,6 +168,8 @@ Paso 3, revisa y publica. Aparecen las propuestas agrupadas por categoría, con 
 
 Nada se publica sin que tú lo mandes. Las sugerencias ayudan a decidir, pero la decisión es tuya: revisa que cada título sea adecuado para tu negocio y tu audiencia.
 
+**Publicar en lote mixto de varias categorías a la vez:** cada título tiene una casilla de selección. Puedes marcar títulos de distintas categorías al mismo tiempo; en cuanto marcas alguno aparece el botón verde "Publicar selección" con un contador, que agrupa automáticamente por categoría y publica solo lo que elegiste, respetando los mismos cupos de siempre. Los títulos que no marques quedan sin tocar en Oportunidades.
+
 ## Oportunidades Redes
 
 **Este módulo está en prueba.** Todavía no está disponible para todas las cuentas: se está activando poco a poco. Si no aparece en tu menú, no es que te falte algo por configurar.
@@ -175,6 +179,8 @@ Ruta: /dashboard/oportunidades-redes
 Aquí puedes revisar propuestas de contenido para redes sociales. Las propuestas pendientes se pueden aprobar, editar o descartar explicando el motivo. Si algo falla, abre el detalle del error para ver qué ocurrió antes de intentarlo otra vez. El botón **Borrar todas las oportunidades**, junto a "Publicar todo el lote", elimina de una vez todas las propuestas pendientes (pide confirmación antes de borrar y no se puede deshacer).
 
 Consejo: edita el texto si necesitas adaptar el tono a tu marca antes de aprobarlo.
+
+**Generar 1 propuesta por cada red conectada de una vez:** el botón "📲 Generar 1 por cada red (Todas)" crea, en un solo paso, una propuesta para cada red social que tengas conectada (en vez de generar red por red con los botones individuales, que siguen funcionando igual).
 
 ## Historial
 
@@ -262,6 +268,8 @@ Guarda las credenciales de la plataforma, sincroniza categorías e idiomas y eli
 Ruta: /dashboard/configuracion/contenido
 
 Define la firma de los artículos, teléfono de contacto, hasta 3 fotos tuyas y hasta 2 logos, el estilo de redacción por defecto, y las ubicaciones para títulos geolocalizados. Solo la primera foto y el primer logo son obligatorios; el resto es opcional y le da al sistema más variedad para elegir. Estas imágenes se usan cuando el generador de imágenes con IA para redes sociales está activo en tu cuenta (lo activa el administrador).
+
+El campo de firma se llama "Firma al Final del Artículo y Disclosure": además de tu firma, se sugiere agregar una aclaración legal (disclosure) que indique que no eres asesor en materias legales, fiscales, financieras o de seguros.
 
 **Ubicaciones para títulos geolocalizados:** escribe, separadas por comas, las ciudades o países de donde son tus clientes reales (ej. "Colombia, Bogotá, Ecuador, Caracas") y por separado dónde está u opera tu negocio (ej. "Miami, Orlando, Homestead"). Oportunidades puede combinar ambos datos para crear títulos ultra segmentados como "Cómo invertir en propiedades en Homestead si vives en Colombia". Dejar los campos vacíos no cambia nada de tu cuenta.
 

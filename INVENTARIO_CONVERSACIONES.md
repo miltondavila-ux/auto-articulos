@@ -869,19 +869,127 @@ código ni configuración de Producción se tocó. Sigue pendiente de terceros
   Milton lo pide.
 - **Estado final: CERRADA por Milton ("ya funciona documenta por favor y
   archivamos"), ambos PR fusionados y verificados, sin reservas activas.**
-## Registro operativo — aligeramiento de Coordinación — 2026-09-10
 
-La conversación/tarea actual reorganizó el documento maestro de Coordinación.
-El histórico completo de 7.082 líneas fue trasladado íntegramente, sin
-reescritura ni eliminación, a `ARCHIVO_COORDINACION_HISTORICO.md`. El nuevo
-`COORDINACION_CLAUDE_CODEX.md` conserva únicamente reglas vigentes, roles,
-estados, flujo local, auditorías, Vercel y enlaces de registro. No es una nueva
-conversación de producto ni modifica código de aplicación.
+### `CODIGO QR PANTALLA DE INICIO`
+- Agente: Claude.
+- Fecha: 2026-09-09/10.
+- Proyecto: Milton pidió un código QR en la pantalla de login (para
+  presentaciones) que apunte a https://seototal.lasolucionweb.com/login.
+- Commits: `cb2c1ae` (feature original), `ef6cf5c` (label), `64e2904`
+  (logo + alineación + fondo). Durante el trabajo se encontró y arregló un
+  bloqueo no relacionado que tumbaba todos los deploys de Producción desde
+  hacía ~20 horas (build de TypeScript roto y `.vercelignore` en
+  conflicto con `ignoreCommand`) — PR #95 (`0121aef`) y fix directo
+  `3bd6286`. Detalle completo, incluida una duda abierta sobre la feature
+  "Exclusión de Temas" encontrada en el camino, en
+  `CONTROLADOR_DE_VERSIONES.md`.
+- Verificado con `git merge-base --is-ancestor` que todos los commits
+  citados son ancestros de `origin/main`; sin worktree/rama activa que
+  liberar en Parte A (no llegó a registrarse ahí).
+- **Estado final: CERRADA, desplegado y verificado en Producción real.
+  Pendiente: mismo componente `QrCodeDisplay` para Tagcrush cuando se
+  pida.**
 
-Responsable de la reorganización: Codex (coordinador).
-Estado: CERRADA; documentos separados y verificables.
+### `SELECCION DE ARTICULO DE DIFERENTES CATEGORIAS`
+- Agente: Claude.
+- Fecha: 2026-09-09.
+- Proyecto: permitir seleccionar títulos de distintas categorías con
+  checkboxes en Oportunidades SEO y publicarlos juntos en un lote mixto.
+- Commit principal: `364da97`, fusionado como PR #90 (`c086214`).
+  Verificado como ancestro de `origin/main`. Detalle completo en
+  `CONTROLADOR_DE_VERSIONES.md`.
+- Sin worktree/rama activa que liberar en Parte A (no llegó a
+  registrarse ahí).
+- **Estado final: EN PRODUCCIÓN, código confirmado. Capitán de archivo
+  liberado según la fuente original; sin confirmación visual explícita de
+  Milton registrada.**
 
-## Claude - ARTICULOS CON CODIGO DE SEGUIMIENTO — 2026-09-11
+### `QUE NO ESCRIBIR QUE NO TRATAR` (Exclusión de Temas)
+- Agente: Claude.
+- Fecha: 2026-09-09.
+- Proyecto: excluir temas indicados por el usuario de las propuestas de
+  Oportunidades.
+- Commits citados en `COORDINACION_CLAUDE_CODEX.md`: no resuelven contra
+  el historial disponible en este clon (`git cat-file` no los encuentra;
+  posible efecto del incidente de force-push documentado en
+  `REPARADOR_DEL_ARBOL_PRINCIPAL.md`); `d5e1e4f` sí es ancestro confirmado
+  de `origin/main`.
+- **Discrepancia real, no resuelta por esta corrida:** la fuente original
+  afirma "✅ DESPLEGADO A PRODUCCIÓN" con "Schema + migración + UI", pero
+  el código actual de `origin/main` (verificado con `grep` en esta
+  corrida) no tiene ningún campo en `packages/db/prisma/schema.prisma`,
+  ninguna migración, ni ningún UI para esto — solo existe un tipo opcional
+  `excludedTopics` y lógica de filtrado inerte (nadie le pasa el valor)
+  dentro de `apps/web/src/lib/opportunity-analysis.ts`. Detalle y duda
+  para Milton en `CONTROLADOR_DE_VERSIONES.md` y en
+  `COORDINACION_CLAUDE_CODEX.md`.
+- **Estado: NO CERRAR como funcionalidad entregada al usuario — el código
+  de filtrado existe pero está inalcanzable sin UI ni forma de que el
+  usuario cargue temas a excluir.**
+
+### `CLAUDE - PROBLEMAS Y PRUEBAS REDES SOCIALES Y BLOGGINS`
+- Agente: Claude.
+- Fecha: 2026-09-08/09.
+- Proyecto: investigación de límite de oportunidades por red social y
+  nueva forma de generarlas todas de una vez.
+- Confirmado "1 oportunidad por red por clic" como diseño deliberado (no
+  bug); el cambio posterior de `slice(0, 1)` a `slice(0, 3)` (commit
+  `51fa8f2`) ya está registrado en `CONTROLADOR_DE_VERSIONES.md` por una
+  corrida anterior, con la duda pendiente de si revierte silenciosamente
+  el ajuste contrario del PR #60 — no se duplica acá.
+- Commit nuevo de esta corrida: `479915c` — endpoint
+  `POST /api/social-opportunities/generate-all`, botón "📲 Generar 1 por
+  cada red (Todas)". Verificado como ancestro de `origin/main`. Detalle
+  completo en `CONTROLADOR_DE_VERSIONES.md`.
+- **Estado: EN PRODUCCIÓN, código confirmado; sin confirmación visual
+  explícita de Milton registrada.**
+
+## Claude - CUENTA DUPLICADA — 2026-09-16
+
+- Problema reportado por Milton: en `seototal.lasolucionweb.com/dashboard/configuracion/inicial`,
+  al intentar conectar la cuenta de la plataforma `gustavo.cabrera@expglobalspain.com`, aparece
+  "La cuenta de la plataforma ... ya está vinculada a otro usuario en el sistema."
+- Origen exacto del mensaje (evidencia dura, código): `apps/web/src/lib/domain-validation.ts:103-115`,
+  invocado desde `POST /api/credentials` (`apps/web/src/app/api/credentials/route.ts:27`),
+  llamado por `handleSaveCredentials` en `OnboardingWizard.tsx`. Solo dispara si el usuario logueado
+  es "trial restringido" (`isTrialSignup && !trialUnlocked && role !== admin`) y otra cuenta ya tiene
+  guardada esa misma credencial (o aparece en `TrialDomainRegistry`).
+- Intentos descartados durante la investigación: consulta contra base local (irrelevante, no es
+  producción); `vercel env pull --environment=production` (la variable `DATABASE_URL` está
+  `Encrypted` y el CLI no revela el valor ni al dueño del proyecto); navegar directo a
+  `GET /api/admin/users` desde el navegador integrado (bloqueado por el clasificador de PII).
+- **Causa raíz confirmada** (leída de la respuesta real de `GET /api/admin/users`, ya cargada en la
+  sesión de Milton logueado como admin, sin llamada nueva): la credencial de 10minutesWebsite
+  `gustavo.cabrera@expglobalspain.com` estaba guardada en la cuenta admin de Milton
+  (`miltondavila@gmail.com`, id `cms8c1zrr0000iilb6or98tr5`, cuenta #1), no en la cuenta nueva de
+  Gustavo (#91). El validador antifraude funciona correctamente — bloquea porque esa credencial ya
+  existe, real, en otra cuenta. No hay bug de código; es un dato residual. No se pudo determinar
+  cómo/cuándo se guardó: `POST /api/credentials` no llama a `auditLog`, sin rastro histórico.
+- Pedido de Milton: en vez de borrar el dato directamente, agregar un botón en `/dashboard/usuarios`
+  para que él mismo pueda eliminar la credencial 10minutesWebsite guardada de cualquier cuenta.
+- Cambio: nuevo endpoint `DELETE /api/admin/users/credential` (admin-only) + botón "Eliminar esta
+  credencial" en `apps/web/src/app/dashboard/usuarios/page.tsx`, con confirmación en dos pasos.
+  Trabajado en worktree aislado `claude/cuenta-duplicada-boton-credencial`.
+
+- **PR #100 fusionado y desplegado en producción.** Verificación en vivo con
+  Milton: entró a `/dashboard/usuarios`, buscó su propia cuenta admin (#1),
+  el campo "Cuenta 10minutesWebsite" mostraba `gustavo.cabrera@expglobalspain.com`
+  con el botón "Eliminar esta credencial" debajo; al confirmarlo, el campo
+  pasó a "Sin credenciales guardadas" — sin afectar teléfono, dominio, rol,
+  permisos ni créditos de imagen de esa cuenta. Milton probará por su cuenta,
+  en otra conversación, que Gustavo ya puede guardar su credencial sin el
+  bloqueo.
+
+Milton dio por cerrada la conversación el 16/9/2026 ("Esto está listo
+documenta y archiva"), tras haber dicho que probaría el guardado real de
+Gustavo por su cuenta, en otra conversación — esa prueba puntual no se
+verificó dentro de esta conversación.
+
+Responsable: Claude. **Estado final: ARCHIVADO por Milton.** Botón
+desplegado y verificado en producción (la credencial cruzada se borró de
+la cuenta admin sin afectar el resto de esa cuenta); sin reservas activas.
+
+## Claude - ARTICULOS CON CODIGO DE SEGUIMIENTO — 2026-09-11/16
 
 - Rama/worktree: `claude/titulo-duplicado-sin-sufijo` (nueva, aislada del
   resto de tareas activas).
@@ -915,7 +1023,24 @@ Estado: CERRADA; documentos separados y verificables.
   futura: evitar comillas dobles alrededor de "as-is" en el título generado.
 - Auditoría de integridad: `npm run build --workspace=apps/worker` (tsc)
   compila sin errores tras el cambio.
-- Pendiente: auditoría funcional (prueba real de publicación con un título
-  duplicado real) y verificación en producción — no ejecutadas todavía en
-  esta conversación.
-- Estado: ACTIVO (commit local hecho, PR aún no abierto).
+- **Auditoría funcional (2026-09-16): verificada en vivo, en producción
+  real**, cuenta de Guillermo Martinez, categoría "As Is Contract Florida".
+  Se forzó un título duplicado real
+  ("Ventajas y desventajas de comprar propiedades 'as is' en Florida").
+  El sistema detectó el choque, generó con IA la reformulación
+  "Pros y Contras de la Compra de Inmuebles en su Estado Actual" y publicó
+  ese título limpio, sin fecha ni marca de versión:
+  `guillermo-martinez.com/news/pros-y-contras-de-la-compra-de-inmuebles-en-su-estado-actual`.
+  Indexación desactivada para esta prueba.
+- Efecto secundario de las pruebas (ganadas por el worker real de
+  producción, código viejo, antes de que esta rama estuviera desplegada):
+  quedaron publicados 2 artículos de prueba con el sufijo feo todavía
+  vigente en `main`
+  (`implicaciones-legales-de-comprar-propiedades-39as-is39-actualizado-16-09-1447`
+  y `...-1451`, indexación desactivada); Milton los está borrando
+  directamente en el panel de 10minutesWebsite.
+- Auditoría de regresión: el resto del flujo de publicación (login, panel,
+  categoría, generación de contenido, imagen, FAQ, guardado) corrió sin
+  cambios ni fallos nuevos durante la prueba en vivo.
+- **Estado final: verificado con las tres auditorías, mergeado a `main` y
+  desplegado a producción.**

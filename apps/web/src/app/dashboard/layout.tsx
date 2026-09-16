@@ -129,10 +129,10 @@ export default async function DashboardLayout({
               color: "#1d1d1f",
             }}
           >
-            SEO TOTAL
+            LA Solución AI
           </h1>
           <p className="eyebrow" style={{ margin: "4px 0 0" }}>
-            Generación de contenido y posicionamiento inteligente
+            Generación de contenido para posicionamiento inteligente
           </p>
         </div>
         <div

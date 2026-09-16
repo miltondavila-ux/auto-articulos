@@ -202,3 +202,38 @@ reservas activas — son solo limpieza pendiente. No se borró ninguna en esta
 corrida (borrar ramas remotas es una acción que esta tarea programada no
 está autorizada a tomar por su cuenta); queda para que Milton decida si
 vale la pena limpiarlas.
+
+### Force-push accidental sobre `main` perdió temporalmente la integración MCP y el endpoint `generate-all` — 2026-09-10 (reparado, no por esta tarea)
+
+Agregado por la tarea programada diaria de propagación (2026-09-11) al
+revisar el rango de commits nuevo en `COORDINACION_CLAUDE_CODEX.md`.
+
+Otra sesión de Claude detectó, el 2026-09-10, que uno o más force-push
+anteriores sobre `main` habían desviado la rama de su línea real,
+perdiendo silenciosamente (sin conflicto visible) trabajo ya fusionado:
+`apps/worker/src/mcpQueue.ts`, `mcpPublisher.ts`, `browserPublisher.ts`,
+`publisher.ts`, `mcp-client.ts` y la migración `add_mcp_publish_method`
+(integración MCP), además del endpoint
+`apps/web/src/app/api/social-opportunities/generate-all/route.ts`
+(commit original `479915c`).
+
+Reparado de forma no destructiva con dos merges de reconciliación, sin
+descartar ningún trabajo: `56ceb31` ("reconciliar dos líneas divergentes
+de main", con el único conflicto real en
+`COORDINACION_CLAUDE_CODEX.md` resuelto conservando ambos bloques en
+orden cronológico) y `ebba45f` ("recuperar endpoint generate-all perdido
+en force-push"). Ningún `reset --hard` ni force-push nuevo se usó para la
+reparación.
+
+Verificado por esta corrida contra `origin/main` actual: los cinco
+archivos de MCP y la migración existen en el árbol; el endpoint
+`generate-all` también existe y su botón en la UI
+("📲 Generar 1 por cada red (Todas)") funciona (ver
+`CONTROLADOR_DE_VERSIONES.md`).
+
+**No se identificó en esta corrida quién ejecutó el/los force-push
+original(es) ni cuándo exactamente** — la fuente disponible documenta la
+reparación, no la causa raíz del force-push en sí. Queda como duda abierta
+para Milton: sigue sin resolverse qué sesión/agente hizo el force-push y
+si el protocolo de "no destrucción" necesita un refuerzo adicional más
+allá de lo ya escrito en este documento.
