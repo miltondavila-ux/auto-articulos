@@ -971,4 +971,15 @@ código ni configuración de Producción se tocó. Sigue pendiente de terceros
   credencial" en `apps/web/src/app/dashboard/usuarios/page.tsx`, con confirmación en dos pasos.
   Trabajado en worktree aislado `claude/cuenta-duplicada-boton-credencial`.
 
-Responsable: Claude. Estado: ACTIVO — pendiente PR, merge y verificación en producción.
+- **PR #100 fusionado y desplegado en producción.** Verificación en vivo con
+  Milton: entró a `/dashboard/usuarios`, buscó su propia cuenta admin (#1),
+  el campo "Cuenta 10minutesWebsite" mostraba `gustavo.cabrera@expglobalspain.com`
+  con el botón "Eliminar esta credencial" debajo; al confirmarlo, el campo
+  pasó a "Sin credenciales guardadas" — sin afectar teléfono, dominio, rol,
+  permisos ni créditos de imagen de esa cuenta. Milton probará por su cuenta,
+  en otra conversación, que Gustavo ya puede guardar su credencial sin el
+  bloqueo.
+
+Responsable: Claude. Estado: CERRADO — botón desplegado y verificado en
+producción. Pendiente (fuera de esta conversación): que Milton confirme que
+Gustavo puede completar su Paso 1 sin el error.
