@@ -184,7 +184,17 @@ function collidesWithIntent(
       // el modelo ya filtró duplicados obvios. Bajar umbral para LONGTAIL.
       minRatio = 0.5;
     }
-    if (tokenSetsOverlap(candidate.tokens, signature.tokens, minTokens, minRatio)) {
+    // EXCEPCION 2026-09-17 (mismo hallazgo real que la de mas abajo): dos
+    // needKey geolocalizados difieren, por diseño, solo en la ubicacion
+    // (ej. "invertir_propiedad_miami_hispano_colombia" vs
+    // "..._hispano_mexico") — con needKey cortos, ese unico token distinto
+    // no basta para bajar la razon de solapamiento del umbral relajado, así
+    // que sin esta excepcion el mismo bug de "colision falsa" reaparece aqui
+    // aunque ya se arreglo el respaldo por texto visible completo.
+    if (
+      !(candidate.isGeoLocationCombo && signature.isGeoLocationCombo) &&
+      tokenSetsOverlap(candidate.tokens, signature.tokens, minTokens, minRatio)
+    ) {
       return true;
     }
     // Respaldo determinista 2026-09-16 (hallazgo real: "Comparativa de
@@ -212,8 +222,7 @@ function collidesWithIntent(
     // (que SI incluye ambas ubicaciones) sigue protegiendo contra que el
     // modelo repita la misma combinacion dos veces.
     if (
-      !candidate.isGeoLocationCombo &&
-      !signature.isGeoLocationCombo &&
+      !(candidate.isGeoLocationCombo && signature.isGeoLocationCombo) &&
       tokenSetsOverlap(candidate.titleTokens, signature.titleTokens, 3, 0.6)
     ) {
       return true;
