@@ -2437,3 +2437,36 @@ también).
 Responsable: Claude. Estado: EN PRODUCCIÓN. Verificación en vivo completa
 solo para PR #107; PR #109 y #111 pendientes de reverificación cuando la
 cuenta de pruebas esté libre.
+
+## Versión desplegada — 2026-09-17 — Titulos geolocalizados dejan de perderse en Oportunidades (PR #117-#121)
+
+Fecha: 2026-09-17. Commits/PRs (todos en `apps/web/src/lib/opportunity-analysis.ts`):
+- PR #117 (`ec7e007`): instrumentación de diagnóstico opcional (`OPPORTUNITY_DEBUG=1`, apagada por defecto) + script/workflow `diagnose-ignacio-cubas.yml` de solo lectura.
+- PR #118 (`0be336f`): log adicional del rationale crudo rechazado, para confirmar causa raíz con texto real.
+- PR #119 (`cecb542`): `applyOpportunityItems` distingue fuente `"evidence"` vs `"geo"`; el paso dedicado de geolocalización deja de exigir cita de GSC/GA/Bing (nunca la tuvo por diseño) y en su lugar exige `titleUsesDeclaredGeoCombo` (usar de verdad una ubicación de cliente y una de negocio declaradas).
+- PR #120 (`3bcb496`) y PR #121 (`1a260a3`): el respaldo de canibalización por texto visible y por needKey con umbral relajado dejan de comparar entre sí dos títulos geolocalizados (`isGeoLocationCombo`), porque por diseño solo difieren en la ubicación de cliente.
+
+Causa raíz: desde el PR #111 (16/9/2026), los guardarraíles de "evidencia
+citada" y "canibalización" —diseñados para el lote principal de
+Search Console/GA/Bing— se aplicaban también al paso dedicado de
+geolocalización (cliente x negocio, PR #61/#66), cuya evidencia real es la
+declaración directa de ubicaciones por el dueño de la cuenta, no una cita
+de búsqueda. Resultado: cualquier cuenta con `clientLocations` +
+`businessLocations` configurados perdía en silencio el 100% de sus
+títulos geolocalizados. Encontrado con evidencia real (no simulada) en la
+cuenta de Ignacio Cubas, vía el workflow de diagnóstico.
+
+Auditorías: `tsc --noEmit` y `npm run build --workspace=apps/web` limpios
+en los cinco commits (worktree aislado en `/tmp/wt-longtail-ignacio`,
+node_modules propios, sin depender de los symlinks del repo principal —
+ver protocolo del capitán). Verificación en Producción real: re-ejecutando
+el mismo diagnóstico contra la cuenta real de Ignacio Cubas tras cada fix,
+de `status: "no_new"` a `status: "ok"` con 6 oportunidades reales y 0
+rechazadas por colisión. No hizo falta que Milton iniciara sesión en
+ninguna cuenta de cliente.
+
+Sin migraciones de schema. Sin cambio de modelo de IA (`gpt-4o-mini` se
+mantiene, elegido por costo — la causa raíz era un guardarraíl de código,
+no el modelo).
+
+Responsable: Claude. Estado: EN PRODUCCIÓN, verificado en vivo.
