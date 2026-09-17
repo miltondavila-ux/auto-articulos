@@ -1064,3 +1064,50 @@ la cuenta admin sin afectar el resto de esa cuenta); sin reservas activas.
 - Capitanía de migración reclamada por Claude (`scripts/migration-coordinator.sh`)
   antes de tocar `schema.prisma`.
 - Responsable: Claude. Estado: ACTIVO.
+
+## Claude - NO USAR CATEGORIAS PARA DECIDIR QUE SE ESCRIBE — 2026-09-16
+
+- Rama/worktree: `claude/oportunidades-sin-veto-categoria` para el primer
+  commit; los dos siguientes se aplicaron limpio con worktrees temporales
+  (`/tmp/wt-oportunidades-fix2`, `/tmp/wt-oportunidades-fix3`) directamente
+  sobre `origin/main` actualizado, para no chocar con docs desincronizados
+  de otra tarea en el working directory principal.
+- Problema reportado por Milton: el algoritmo de Oportunidades SEO usaba el
+  nombre de la categoría para decidir SI un título se escribía, en vez de
+  usar demanda real (GSC/GA/Bing). Confirmado con evidencia de código.
+- Tres arreglos en `apps/web/src/lib/opportunity-analysis.ts`:
+  1. PR #107 — retirado `titleFitsCategory` (veto determinista en JS que
+     descartaba títulos con demanda real si no compartían raíz de palabra
+     con el nombre/ejemplos de su categoría).
+  2. PR #109 — corregida la "REGLA OBLIGATORIA DE CATEGORIA" del prompt de
+     IA, que ordenaba descartar consultas reales sin categoría afín, o
+     temas legales/fiscales sin categoría explícita. Ahora la categoría es
+     solo destino de archivo (asignación al más afín), nunca criterio de
+     SI/NO se escribe.
+  3. PR #111 — dos hallazgos de una auditoría en vivo de 9 propuestas
+     reales: (a) grieta de canibalización (dos títulos casi duplicados
+     pasaron el chequeo de `needKey` porque, tras filtrar palabras
+     genéricas del dominio como "salud"/"inmigrante", quedaban con muy
+     pocos tokens comparables — se agregó respaldo determinista comparando
+     también el texto visible completo del título); (b) título sin
+     evidencia real citada colado — se exige ahora cita textual entre
+     comillas en el `rationale`, verificado en código
+     (`rationaleHasQuotedEvidence`), no solo pedido en el prompt.
+- Auditorías: `tsc --noEmit` y `npm run build --workspace=apps/web` limpios
+  en los tres commits. Verificación en vivo en Producción con la cuenta de
+  Lorena Álvarez: el fix #1 (PR #107) se probó corriendo un análisis real
+  con datos de Search Console, sin errores, 9 propuestas generadas con
+  evidencia real. Los fixes #2 y #3 (PR #109, #111) quedaron desplegados
+  pero sin reverificación en vivo posterior: la cuenta compartida de
+  pruebas pasó a tener datos de otra tarea concurrente ("as is contract
+  Florida") antes de poder repetir la prueba, y no se tocó ese contenido
+  ajeno.
+- Nota de proceso: la contraseña local de Lorena se sincronizó a mano (vía
+  hash bcrypt) para que coincidiera con la de Producción, a pedido
+  explícito de Milton; Claude no debe escribir contraseñas en ningún campo
+  aunque se le autorice, así que el login en cada entorno lo hizo Milton.
+- Responsable: Claude. **Estado final: ARCHIVADA** (código en Producción;
+  verificación en vivo de los fixes #2 y #3 queda pendiente de una ventana
+  con la cuenta de pruebas libre — no bloquea el cierre porque el código y
+  el razonamiento ya quedaron validados por trazas manuales contra datos
+  reales de la corrida auditada).
