@@ -1111,3 +1111,28 @@ la cuenta admin sin afectar el resto de esa cuenta); sin reservas activas.
   con la cuenta de pruebas libre — no bloquea el cierre porque el código y
   el razonamiento ya quedaron validados por trazas manuales contra datos
   reales de la corrida auditada).
+
+## Claude - BOTON DE FORZAR ANALISIS DE OPORTUNIDADES — 2026-09-17
+
+Milton reportó que en /dashboard/oportunidades desapareció el botón que
+permitía forzar una nueva búsqueda cuando el sistema no encontraba
+oportunidades nuevas, sin que él lo hubiera pedido.
+
+Auditoría: el commit `43e6963` ("remove opportunity analysis cooldown",
+04/09/2026) quitó correctamente el enfriamiento de 3 días, pero de paso
+eliminó todo el estado `canForce` y el botón "Analizar de todas formas
+ahora" — el texto de ayuda de la propia página seguía mencionando
+"Forzar análisis" sin que el botón existiera.
+
+Fix: rama `claude/forzar-analisis-oportunidades` (worktree aislado desde
+`origin/main`, sin tocar la rama de trabajo con cambios sin commitear de
+otra tarea). Se restauró `canForce` y el botón "Forzar análisis ahora"
+dentro del mensaje de "no hay oportunidades nuevas", reutilizando
+`analyze(true)` ya existente; sin cambios de backend ni de schema.
+
+Auditorías: `tsc --noEmit` y `npm run build` (apps/web) limpios. Sin
+migraciones, un solo archivo modificado. Verificación en vivo en
+Producción queda pendiente de Milton (PR #116).
+
+Responsable: Claude. Estado: ACTIVO — esperando revisión/merge de PR #116
+y verificación de Milton en Producción.
