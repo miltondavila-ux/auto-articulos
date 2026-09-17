@@ -778,7 +778,10 @@ Si genuinamente ninguna combinacion tiene sentido real para este negocio, respon
         // rationale debe nombrar textualmente (entre comillas) la consulta,
         // página o cluster real que lo respalda, tal como exige el prompt.
         if (!rationaleHasQuotedEvidence(rationale)) {
-          if (debugEnabled) debugCounters.rejectedNoQuotedEvidence++;
+          if (debugEnabled) {
+            debugCounters.rejectedNoQuotedEvidence++;
+            console.log(`[OPPORTUNITY_DEBUG] Rechazado por falta de cita textual. Titulo: "${text}" | rationale crudo: ${JSON.stringify(rationale)}`);
+          }
           continue;
         }
         // Garantía determinista contra temas excluidos: si el usuario indicó
