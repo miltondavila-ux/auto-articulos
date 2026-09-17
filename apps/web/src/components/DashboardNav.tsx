@@ -91,7 +91,12 @@ export default function DashboardNav() {
         const step3 =
           typeof meData.contentLanguage === "string" && meData.contentLanguage.trim().length > 0;
         const step4 = Boolean(googleData.connected && googleData.siteUrl);
-        if (!cancelled) setHideForSetup(!(step1 && step2 && step3 && step4));
+        if (!cancelled) {
+          // Los administradores necesitan conservar el menú para supervisar y
+          // configurar el sistema aunque su propia cuenta esté incompleta.
+          setIsAdmin(meData?.role === "admin" || Boolean(meData?.isActingAdmin));
+          setHideForSetup(!(step1 && step2 && step3 && step4));
+        }
       })
       .catch(() => {
         if (!cancelled) setHideForSetup(false);
@@ -219,7 +224,9 @@ export default function DashboardNav() {
     </span>
   );
 
-  if (hideForSetup) return null;
+  // El wizard oculta la navegación a usuarios normales; los administradores
+  // siempre conservan el menú inicial para poder administrar la plataforma.
+  if (hideForSetup && !isAdmin) return null;
 
   return (
     <nav style={{ position: "relative", marginTop: 18, marginBottom: 28 }}>
