@@ -437,6 +437,11 @@ export async function publishArticle(
       await onStep(`Panel "${categoryPanel}" seleccionado.`);
     }
 
+    // Ver comentario de getHighestArticleNumber: esta lectura "antes" es la
+    // base para confirmar un guardado real más adelante, aunque la búsqueda
+    // por título falle.
+    const articleCountBeforeSave = await getHighestArticleNumber(page, baseUrl);
+
     const { summary, contentHtml, finalTitle } = await createArticleDraft(
       page,
       baseUrl,
@@ -469,6 +474,7 @@ export async function publishArticle(
       baseUrl,
       finalTitle,
       credentials.contentLanguage,
+      articleCountBeforeSave,
       onStep,
     );
 
@@ -2347,6 +2353,58 @@ async function getNewestRow(listPage: Page): Promise<ArticleRow | null> {
 }
 
 /**
+ * Pedido directo de Milton (17/9/2026): la búsqueda por título exacto en
+ * `findArticleByTitle` (DataTables server-side) es frágil — se confirmó en
+ * vivo que puede reportar "no encontrado" para un artículo que SÍ se guardó
+ * (títulos con comillas simples como 'as is', o una indexación server-side
+ * que todavía no reflejó el guardado más reciente). Cuando eso pasa, el
+ * llamador de más arriba (queue.ts) interpretaba `articleUrl: null` como que
+ * el guardado había fallado de verdad y reintentaba el título completo desde
+ * cero — generando contenido, título e IMAGEN nuevos y publicando un
+ * artículo real adicional sobre el mismo tema, sin que el usuario se
+ * enterara (visto en producción: 3 artículos reales duplicados a partir de
+ * un solo título, todos con "Con errores" en el panel). Este número se toma
+ * ANTES de guardar (en publishArticle, antes de abrir el formulario) para
+ * poder comparar después: si el número más alto del listado subió respecto
+ * a este valor, es evidencia real e independiente del texto del título de
+ * que SÍ se creó un artículo nuevo — la cuenta está reservada en exclusiva
+ * para este worker mientras dura la publicación (ver reservation.ts), así
+ * que ningún otro proceso puede haber creado esa fila mientras tanto.
+ */
+async function getHighestArticleNumber(
+  page: Page,
+  baseUrl: string,
+): Promise<number | null> {
+  try {
+    await page.goto(`${baseUrl}/dashboard/user_buyer_seller_articles.php`, {
+      waitUntil: "domcontentloaded",
+      timeout: NAV_TIMEOUT_MS,
+    });
+    await page
+      .waitForFunction(
+        () => {
+          const firstCell = document.querySelector("table tbody tr td");
+          const text = (firstCell?.textContent ?? "").trim();
+          return text.length > 0 && !/loading/i.test(text);
+        },
+        undefined,
+        { timeout: 15_000 },
+      )
+      .catch(() => {});
+    const newest = await getNewestRow(page);
+    // 0 es un valor real y válido (cuenta sin artículos todavía), no un
+    // "no se pudo leer": solo `null` significa que no hay base confiable.
+    return newest?.num ?? 0;
+  } catch {
+    // `null` (no 0): si no se pudo leer el listado ahora, no hay base
+    // confiable para comparar más adelante. Devolver 0 por error haría que
+    // CUALQUIER artículo viejo con N° bajo se confundiera con uno nuevo —
+    // la comparación de más abajo debe desactivarse, no asumir "cero antes".
+    return null;
+  }
+}
+
+/**
  * Busca el artículo por el título REAL que la IA le asignó (guardado antes
  * de guardar el formulario), usando el buscador del propio listado en vez de
  * confiar en la posición o el N° de fila. Usamos la API de DataTables por
@@ -2479,6 +2537,7 @@ async function saveAndGetUrl(
   baseUrl: string,
   expectedTitle: string,
   contentLanguage: string | null | undefined,
+  articleCountBeforeSave: number | null,
   onStep: OnStep,
 ): Promise<{ url: string | null; titleUsed: string }> {
   // Causa raíz encontrada leyendo el JS del sitio (15/8/2026, cuenta de
@@ -2817,8 +2876,36 @@ async function saveAndGetUrl(
         waitUntil: "domcontentloaded",
         timeout: NAV_TIMEOUT_MS,
       });
+      await page
+        .waitForFunction(
+          () => {
+            const firstCell = document.querySelector("table tbody tr td");
+            const text = (firstCell?.textContent ?? "").trim();
+            return text.length > 0 && !/loading/i.test(text);
+          },
+          undefined,
+          { timeout: 15_000 },
+        )
+        .catch(() => {});
+      // Se lee el N° más alto ANTES de aplicar el filtro de búsqueda de
+      // findArticleByTitle (que deja la tabla filtrada) para poder usarlo
+      // como evidencia independiente si la búsqueda por texto no encuentra
+      // nada — ver comentario de getHighestArticleNumber.
+      const newestOnUnfilteredList = await getNewestRow(page);
+
       const href = await findArticleByTitle(page, titleInUse);
       if (href) return { url: href, titleUsed: titleInUse };
+
+      if (
+        newestOnUnfilteredList?.href &&
+        articleCountBeforeSave !== null &&
+        newestOnUnfilteredList.num > articleCountBeforeSave
+      ) {
+        await onStep(
+          `El artículo no apareció en la búsqueda por título exacto, pero el listado tiene un artículo nuevo (N° ${newestOnUnfilteredList.num}, antes N° ${articleCountBeforeSave}) creado durante esta misma publicación. Se usa como confirmación real en vez de reintentar y duplicar el artículo.`,
+        );
+        return { url: newestOnUnfilteredList.href, titleUsed: titleInUse };
+      }
     } catch (err) {
       // Bug real de producción (15/8/2026, cuenta de Lorena Álvarez):
       // net::ERR_ABORTED en este goto no se atrapaba, así que un solo fallo
