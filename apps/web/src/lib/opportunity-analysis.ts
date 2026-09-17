@@ -517,6 +517,25 @@ export async function analyzeSeoOpportunities(input: {
     .sort((a, b) => b.impressions - a.impressions)
     .slice(0, 20);
 
+  // Instrumentación de diagnóstico, apagada por defecto (OPPORTUNITY_DEBUG=1),
+  // sin ningún cambio de comportamiento cuando está apagada: cuenta cuántos
+  // títulos propone el modelo por lote y en qué guardarraíl exacto se pierde
+  // cada uno, para poder diagnosticar con evidencia real por qué una cuenta
+  // termina en "no_new" en vez de adivinar.
+  const debugEnabled = process.env.OPPORTUNITY_DEBUG === "1";
+  const debugCounters = {
+    batches: 0,
+    batchesFailed: 0,
+    modelProposedTitles: 0,
+    rejectedInvalidCategory: 0,
+    rejectedEmptyOrDuplicateExact: 0,
+    rejectedNoQuotedEvidence: 0,
+    rejectedExcludedTopic: 0,
+    rejectedBadYear: 0,
+    rejectedCollision: 0,
+    accepted: 0,
+  };
+
   const seen = new Set(input.existingTitles.map(normalizeTitle));
   // Bug real encontrado el 11/8/2026 (cuenta de Lorena Álvarez, dejó de
   // recibir oportunidades nuevas): antes, apenas un lote proponía ALGO para
@@ -647,16 +666,23 @@ ${JSON.stringify(input.existingTitles)}
 OPORTUNIDADES YA CREADAS EN ESTA CORRIDA, POR CATEGORIA, CON SU needKey (NO CANIBALIZAR NI REPETIR needKey, NI DENTRO DE LA MISMA CATEGORIA NI CONTRA OTRA CATEGORIA DISTINTA):
 ${JSON.stringify(alreadyProposedByCategory)}`;
 
+    if (debugEnabled) debugCounters.batches++;
     let parsed: Record<string, unknown>;
     try {
       parsed = await callOpenAiWithRetry(prompt, apiKey);
     } catch (err) {
+      if (debugEnabled) debugCounters.batchesFailed++;
       console.error(`Lote ${batchIndex + 1} fallo, continuando con siguientes lotes:`, err);
       continue;
     }
 
     const opportunities = parsed.opportunities;
     if (!Array.isArray(opportunities)) continue;
+    if (debugEnabled) {
+      console.log(
+        `[OPPORTUNITY_DEBUG] Lote ${batchIndex + 1}/${batchesToProcess.length}: ${batch.length} filas de evidencia, modelo devolvio ${opportunities.length} categorias.`,
+      );
+    }
     applyOpportunityItems(opportunities);
   }
 
@@ -706,6 +732,10 @@ Si genuinamente ninguna combinacion tiene sentido real para este negocio, respon
     }
   }
 
+  if (debugEnabled) {
+    console.log("[OPPORTUNITY_DEBUG] Resumen final:", JSON.stringify(debugCounters, null, 2));
+  }
+
   if (allResult.length === 0) {
     return { status: "no_new" };
   }
@@ -736,19 +766,29 @@ Si genuinamente ninguna combinacion tiene sentido real para este negocio, respon
         const value = candidate as Record<string, unknown>;
         if (typeof value.text !== "string") continue;
         const text = value.text.trim();
+        if (debugEnabled && text) debugCounters.modelProposedTitles++;
         const normalized = normalizeTitle(text);
-        if (!text || seen.has(normalized)) continue;
+        if (!text || seen.has(normalized)) {
+          if (debugEnabled && text) debugCounters.rejectedEmptyOrDuplicateExact++;
+          continue;
+        }
         const rationale =
           typeof value.rationale === "string" ? value.rationale.trim() : "";
         // Garantía determinista contra títulos sin evidencia citada: el
         // rationale debe nombrar textualmente (entre comillas) la consulta,
         // página o cluster real que lo respalda, tal como exige el prompt.
-        if (!rationaleHasQuotedEvidence(rationale)) continue;
+        if (!rationaleHasQuotedEvidence(rationale)) {
+          if (debugEnabled) debugCounters.rejectedNoQuotedEvidence++;
+          continue;
+        }
         // Garantía determinista contra temas excluidos: si el usuario indicó
         // que no quiere ciertos temas, rechazar CUALQUIER título que los mencione,
         // sin importar cuán buena sea la evidencia. Esta validación corre AQUÍ
         // (en JavaScript), no solo en el prompt, para garantizar cumplimiento.
-        if (titleTouchesExcludedTopic(text)) continue;
+        if (titleTouchesExcludedTopic(text)) {
+          if (debugEnabled) debugCounters.rejectedExcludedTopic++;
+          continue;
+        }
         // Garantía determinista contra años inventados O desactualizados:
         // cada año en el título debe tener evidencia real Y estar dentro de
         // la ventana de recencia aceptable (año actual ±1), sin excepción.
@@ -758,7 +798,10 @@ Si genuinamente ninguna combinacion tiene sentido real para este negocio, respon
               !isYearAcceptablyRecent(year) ||
               !hasContextualEvidenceForYear(text, year, evidenceRows),
           )
-        ) continue;
+        ) {
+          if (debugEnabled) debugCounters.rejectedBadYear++;
+          continue;
+        }
         // La categoría es solo el lugar de archivo, no un criterio para
         // decidir si el título se escribe: ya no se descarta un título con
         // demanda real (GSC/GA/Bing) por no compartir vocabulario con el
@@ -769,10 +812,14 @@ Si genuinamente ninguna combinacion tiene sentido real para este negocio, respon
         // actual) — cierra el hueco real de canibalización cruzada entre
         // categorías. NO compara contra lo ya publicado (ver nota arriba,
         // en la inicialización de intentSignatures).
-        if (collidesWithIntent(signature, intentSignatures)) continue;
+        if (collidesWithIntent(signature, intentSignatures)) {
+          if (debugEnabled) debugCounters.rejectedCollision++;
+          continue;
+        }
         seen.add(normalized);
         intentSignatures.push(signature);
         if (needKey) needKeyByTitle.set(text, needKey);
+        if (debugEnabled) debugCounters.accepted++;
         newTitles.push({ text, rationale });
       }
 
