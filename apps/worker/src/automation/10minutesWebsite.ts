@@ -470,6 +470,7 @@ export async function publishArticle(
       finalTitle,
       credentials.contentLanguage,
       onStep,
+      disableIndexing,
     );
 
       return { articleUrl, finalTitle: titleUsed, summary };
@@ -841,12 +842,20 @@ async function createArticleDraft(
   // viene marcado (indexación activada) por defecto, igual que en el sitio.
   // Se verificó en vivo que el checkbox queda con opacity:0 y width:0 (el
   // "lever" visual lo tapa), por eso hace falta "force" para des/marcarlo.
+  //
+  // Bug real encontrado auditando "CHECK DE NO INDEXACION" (17/9/2026): este
+  // intento temprano no basta. `saveAndGetUrl()` dispara `change` sobre
+  // `#type` en CADA intento de guardado (`revalidateTitleAndForm()`, incluso
+  // en el primero) para re-habilitar `#save_art` — el mismo evento que
+  // reconstruye el formulario y deja `#activate_indexing` de vuelta en su
+  // valor por defecto (marcado = indexación activada), pisando lo que se
+  // desmarca acá. Además, el `.catch(() => {})` tragaba cualquier fallo de
+  // `setChecked` y el paso igual reportaba éxito sin haber verificado nada.
+  // Se deja este intento temprano como best-effort (no hace daño), pero la
+  // aplicación que de verdad cuenta ahora ocurre justo antes de cada clic de
+  // guardado, en `saveAndGetUrl()`, con lectura real del estado del checkbox.
   if (disableIndexing) {
-    await page
-      .locator("#activate_indexing")
-      .setChecked(false, { force: true })
-      .catch(() => {});
-    await onStep("Indexación en buscadores desactivada para este artículo.");
+    await applyIndexingPreference(page, disableIndexing, async () => {});
   }
 
   if (promptText) {
@@ -2474,12 +2483,44 @@ async function findSimilarArticleLinks(
   }
 }
 
+// Aplica la preferencia de indexación y VERIFICA el resultado real leyendo
+// el DOM, en vez de asumir éxito. Ver el bug documentado en
+// `createArticleDraft()` (17/9/2026): el checkbox real puede volver a su
+// valor por defecto (marcado) después de este punto si el sitio vuelve a
+// disparar `change` sobre `#type`, por eso `saveAndGetUrl()` la vuelve a
+// llamar justo antes de cada clic de guardado.
+async function applyIndexingPreference(
+  page: Page,
+  disableIndexing: boolean,
+  onStep: OnStep,
+): Promise<boolean> {
+  if (!disableIndexing) return true;
+  await page
+    .locator("#activate_indexing")
+    .setChecked(false, { force: true })
+    .catch(() => {});
+  const isChecked = await page
+    .locator("#activate_indexing")
+    .isChecked()
+    .catch(() => null);
+  const confirmed = isChecked === false;
+  if (!confirmed) {
+    await onStep(
+      `Aviso: no se pudo confirmar que la indexación quedó desactivada (estado real leído del formulario: ${
+        isChecked === null ? "no se pudo leer el checkbox" : isChecked ? "sigue activada" : "desactivada"
+      }).`,
+    );
+  }
+  return confirmed;
+}
+
 async function saveAndGetUrl(
   page: Page,
   baseUrl: string,
   expectedTitle: string,
   contentLanguage: string | null | undefined,
   onStep: OnStep,
+  disableIndexing: boolean,
 ): Promise<{ url: string | null; titleUsed: string }> {
   // Causa raíz encontrada leyendo el JS del sitio (15/8/2026, cuenta de
   // Lorena Álvarez): el botón real de guardar, #save_art, arranca
@@ -2513,6 +2554,7 @@ async function saveAndGetUrl(
   // muestre el error de duplicado (p. ej. porque el botón nunca se
   // habilitó a tiempo para el título mutado).
   let hitDuplicateTitle = false;
+  let indexingConfirmed = false;
   const MAX_SAVE_ATTEMPTS = 3;
   const titleAttempts: string[] = [];
 
@@ -2580,6 +2622,16 @@ async function saveAndGetUrl(
   for (let saveAttempt = 1; saveAttempt <= MAX_SAVE_ATTEMPTS; saveAttempt++) {
     await onStep("Guardando y publicando el artículo...");
     await revalidateTitleAndForm();
+
+    // El `change` de #type que dispara `revalidateTitleAndForm()` (arriba)
+    // es justo lo que puede devolver `#activate_indexing` a su valor por
+    // defecto (marcado). Se vuelve a aplicar y a VERIFICAR acá, en cada
+    // intento, justo antes del clic real de guardado — no basta con
+    // hacerlo una sola vez al principio del flujo (ver comentario en
+    // `createArticleDraft()`, 17/9/2026).
+    if (disableIndexing) {
+      indexingConfirmed = await applyIndexingPreference(page, disableIndexing, onStep);
+    }
 
     // Bug real encontrado en producción (15/8/2026, cuenta de Lorena
     // Álvarez, en el reintento por título duplicado): 300ms alcanza cuando
@@ -2805,6 +2857,17 @@ async function saveAndGetUrl(
     }
 
     break;
+  }
+
+  if (disableIndexing && !indexingConfirmed) {
+    await onStep(
+      "ATENCIÓN: el artículo se guardó, pero no se pudo confirmar que la " +
+        "indexación en buscadores haya quedado desactivada. Verifica " +
+        "manualmente el artículo en el sitio y desactívala ahí si sigue " +
+        "activada.",
+    );
+  } else if (disableIndexing) {
+    await onStep("Indexación en buscadores desactivada para este artículo (verificado).");
   }
 
   await onStep(
