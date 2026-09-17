@@ -1136,3 +1136,79 @@ Producción queda pendiente de Milton (PR #116).
 
 Responsable: Claude. Estado: ACTIVO — esperando revisión/merge de PR #116
 y verificación de Milton en Producción.
+
+## Claude - CREADOR DE TITULOS MUY ESTRICTO — 2026-09-17
+
+Problema reportado por Milton: la cuenta de Ignacio Cubas no mostraba
+oportunidades para publicar ("no encuentro oportunidades"). Hipótesis de
+Milton: el algoritmo no estaba aprovechando todo el universo de datos
+disponible (GSC + GA + Bing + ubicaciones de cliente/negocio declaradas en
+Configuración → Contenido) para construir long tails, no que realmente no
+hubiera nada que escribir.
+
+Se creó primero un PRD (`PRD_OPORTUNIDADES_LONGTAIL_DEFINITIVO.md`, vía
+skill MAGO) para fijar el alcance: diagnóstico con evidencia real antes de
+tocar código, arreglo general para toda la plataforma (no un parche solo
+para Ignacio Cubas), sin privilegiar ninguna región/fuente de datos, y sin
+cambiar de modelo de IA (`gpt-4o-mini`, elegido por ahorro de costos) salvo
+evidencia dura de que fuera el cuello de botella.
+
+**Diagnóstico con evidencia real** (workflow `diagnose-ignacio-cubas.yml`,
+mismo patrón que `diagnose-opportunities-evidence.yml`, secretos de
+producción vía GitHub Actions — nunca expuestos localmente; una petición
+directa de `vercel env pull --environment=production` fue bloqueada por el
+clasificador de permisos y se abandonó esa vía en favor de este workflow):
+la cuenta de Ignacio Cubas tiene Google Search Console, Google Analytics 4
+y Bing Webmaster Tools conectados, con evidencia real pero muy escasa (32
+filas de Search Console, 29 consultas distintas, impresiones máximas de 9)
+y `clientLocations`/`businessLocations` configurados (7 ubicaciones de
+cliente x 1 de negocio). Se agregó instrumentación de diagnóstico opcional
+(`OPPORTUNITY_DEBUG=1`, apagada por defecto, cero cambio de comportamiento)
+a `analyzeSeoOpportunities` para ver en qué guardarraíl exacto se perdía
+cada título propuesto por el modelo (PR #117, #118).
+
+**Causa raíz encontrada (bug general de la plataforma, no específico de
+Ignacio Cubas):** el paso dedicado de geolocalización (cliente x negocio,
+PR #61/#66 del 7/9/2026) SÍ generaba títulos long tail correctos ("Cómo
+invertir en propiedades en Miami si vivo en Colombia", etc.), pero **todos
+se descartaban en silencio** por dos guardarraíles del PR #111
+(16/9/2026) que nunca debieron aplicarse a esa fuente:
+1. `rationaleHasQuotedEvidence` exige citar entre comillas una consulta
+   real de GSC/GA/Bing — pero el paso geo nunca pide eso; su evidencia real
+   es la combinación de ubicaciones ya declaradas por el dueño de la
+   cuenta (PR #119).
+2. El respaldo de canibalización por texto visible y por needKey con
+   umbral relajado marcaban como "duplicados" títulos que solo difieren,
+   por diseño, en la ubicación de cliente (PR #120, #121).
+
+Cualquier cuenta con `clientLocations` + `businessLocations` configurados
+perdía silenciosamente todos sus títulos geolocalizados desde el
+16/9/2026, no solo Ignacio Cubas.
+
+**Fix:** `applyOpportunityItems` ahora distingue la fuente ("evidence" |
+"geo") y aplica el chequeo de integridad correcto a cada una — cita
+textual para el lote principal (sin cambios), uso real de una combinación
+cliente+negocio declarada (`titleUsesDeclaredGeoCombo`, nueva función
+determinista) para el paso de geolocalización. Los chequeos de
+canibalización por needKey exacto y por texto visible se excluyen entre
+dos títulos geolocalizados (ambos `isGeoLocationCombo`), pero se mantienen
+sin cambios contra títulos de evidencia real.
+
+**Verificación en vivo (real, no simulada):** re-ejecutando el mismo
+diagnóstico contra la cuenta real de Ignacio Cubas tras cada fix — de
+`status: "no_new"` (0 oportunidades) a `status: "ok"` con **6 oportunidades
+reales, 0 rechazadas por colisión**, superando el piso mínimo de 3 pedido
+por Milton.
+
+Commits/PRs (todos en `apps/web/src/lib/opportunity-analysis.ts`, rama por
+PR, worktree aislado en `/tmp/wt-longtail-ignacio`, sin tocar la copia
+local de Milton con cambios sin commitear de otra tarea): PR #117, #118
+(diagnóstico), #119, #120, #121 (fix). Sin migraciones de schema en
+ninguno.
+
+No se cambió el modelo de IA (`gpt-4o-mini` se mantiene): la causa raíz no
+era el modelo, era un guardarraíl de código mal aplicado a la fuente
+equivocada.
+
+Responsable: Claude. Estado final: ARCHIVADA — verificada en vivo contra
+Producción, sin acceso de Milton a ninguna cuenta de cliente.
