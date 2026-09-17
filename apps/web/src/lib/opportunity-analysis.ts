@@ -134,9 +134,17 @@ interface IntentSignature {
   tokens: Set<string>;
   titleTokens: Set<string>;
   source: string;
+  // Titulo geolocalizado (paso dedicado cliente x negocio): ver nota en
+  // collidesWithIntent sobre por que se excluye del respaldo por texto
+  // visible completo.
+  isGeoLocationCombo: boolean;
 }
 
-function buildIntentSignature(source: string, needKey?: string): IntentSignature {
+function buildIntentSignature(
+  source: string,
+  needKey?: string,
+  isGeoLocationCombo = false,
+): IntentSignature {
   const key = needKey?.trim();
   return {
     needKeyNormalized: key ? normalizeTitle(key) : null,
@@ -145,6 +153,7 @@ function buildIntentSignature(source: string, needKey?: string): IntentSignature
     // needKey): sirven de respaldo independiente del needKey mas abajo.
     titleTokens: intentTokens(source),
     source,
+    isGeoLocationCombo,
   };
 }
 
@@ -188,7 +197,25 @@ function collidesWithIntent(
     // compara tambien el texto visible completo, con un umbral algo mas
     // estricto que el relajado de needKey, para no depender solo de que
     // el modelo haya etiquetado bien la necesidad.
-    if (tokenSetsOverlap(candidate.titleTokens, signature.titleTokens, 3, 0.6)) {
+    // EXCEPCION 2026-09-17 (mismo diagnostico real de Ignacio Cubas que
+    // encontro el bug de rationaleHasQuotedEvidence en geo): dos titulos
+    // geolocalizados solo difieren, por diseño, en la ubicacion de cliente
+    // ("...si vivo en Colombia" vs "...si vivo en Mexico") — el resto de la
+    // frase es el mismo template a proposito. Ese es precisamente el patron
+    // que este respaldo por texto crudo esta hecho para atrapar, así que
+    // sin esta excepcion descarta como "duplicados" combinaciones que la
+    // regla de geolocalizacion (mas abajo en el prompt) declara
+    // explicitamente como necesidades distintas ("cada combinacion
+    // cliente+negocio distinta cuenta como una necesidad realmente
+    // distinta"). Ya se verifico por separado (titleUsesDeclaredGeoCombo)
+    // que cada titulo geo usa una combinacion real y unica; el needKey
+    // (que SI incluye ambas ubicaciones) sigue protegiendo contra que el
+    // modelo repita la misma combinacion dos veces.
+    if (
+      !candidate.isGeoLocationCombo &&
+      !signature.isGeoLocationCombo &&
+      tokenSetsOverlap(candidate.titleTokens, signature.titleTokens, 3, 0.6)
+    ) {
       return true;
     }
   }
@@ -868,7 +895,7 @@ Si genuinamente ninguna combinacion tiene sentido real para este negocio, respon
         // demanda real (GSC/GA/Bing) por no compartir vocabulario con el
         // nombre de su categoría (antes: titleFitsCategory como veto aquí).
         const needKey = typeof value.needKey === "string" ? value.needKey.trim() : undefined;
-        const signature = buildIntentSignature(text, needKey);
+        const signature = buildIntentSignature(text, needKey, source === "geo");
         // Chequeo GLOBAL a esta corrida (cualquier categoría, no solo la
         // actual) — cierra el hueco real de canibalización cruzada entre
         // categorías. NO compara contra lo ya publicado (ver nota arriba,
