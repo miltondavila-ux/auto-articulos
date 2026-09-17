@@ -2395,3 +2395,45 @@ Estado: commit `5dcd965` confirmado como ancestro de `origin/main` (código
 en producción), pero sin confirmación visual explícita de Milton en
 producción registrada en `COORDINACION_CLAUDE_CODEX.md` — solo pruebas en
 local documentadas.
+
+## Versión desplegada — 2026-09-16 — Categoría deja de decidir qué se escribe (PR #107, #109, #111)
+
+Fecha: 2026-09-16. Commits/PRs: `61d62ec`→`fd21104` (PR #107, merge
+`8546eed`), `6788379` (PR #109, merge `50f5f55`), `c625825` (PR #111, merge
+confirmado por `gh pr view 111 --json state,mergedAt`). Archivo tocado en
+los tres: `apps/web/src/lib/opportunity-analysis.ts`.
+
+Cambios:
+1. PR #107 — retirado el veto determinista `titleFitsCategory` (descartaba
+   títulos con demanda real de GSC/GA/Bing si no compartían raíz de palabra
+   con el nombre/ejemplos de su categoría). Se eliminó también el código
+   muerto que solo lo alimentaba (`distinctiveVocabularyByCategory`,
+   `sharesWordRoot`, `tokensShareRoot`).
+2. PR #109 — reescrita la "REGLA OBLIGATORIA DE CATEGORIA" del prompt de
+   IA (renombrada "REGLA DE ASIGNACION DE CATEGORIA"): ya no instruye a la
+   IA a descartar consultas reales sin categoría afín ni temas
+   legales/fiscales sin categoría explícita. La categoría pasa a ser solo
+   destino de archivo.
+3. PR #111 — `IntentSignature` ahora incluye `titleTokens` (texto visible
+   completo del título, siempre calculado) como respaldo de
+   `collidesWithIntent` independiente del `needKey` autodeclarado por la
+   IA, más `rationaleHasQuotedEvidence()` que descarta en código cualquier
+   título cuyo `rationale` no cite textualmente entre comillas la
+   evidencia real (antes solo se le pedía al modelo, sin verificación).
+
+Auditorías: `tsc --noEmit` y `npm run build --workspace=apps/web` limpios
+en los tres commits (verificados antes de cada push). Verificación en vivo
+en Producción (`seototal.lasolucionweb.com`) con la cuenta de Lorena
+Álvarez: el fix #1 se corrió en vivo con datos reales de Search Console
+(9 propuestas generadas, sin errores, evidencia real citada en cada una).
+Los fixes #2 y #3 quedaron desplegados sin repetir la prueba en vivo — la
+cuenta compartida de pruebas pasó a tener oportunidades pendientes de otra
+tarea concurrente antes de poder reintentar, y no se tocó ese contenido
+ajeno. La lógica nueva de canibalización/evidencia se validó por trazas
+manuales contra los 9 títulos reales de la corrida auditada (confirmó que
+el par casi-duplicado se habría descartado y el título sin evidencia
+también).
+
+Responsable: Claude. Estado: EN PRODUCCIÓN. Verificación en vivo completa
+solo para PR #107; PR #109 y #111 pendientes de reverificación cuando la
+cuenta de pruebas esté libre.

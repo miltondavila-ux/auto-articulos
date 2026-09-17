@@ -7295,3 +7295,27 @@ rango revisado no menciona ideas sueltas nuevas para más adelante ni
 No hubo ninguna acción destructiva, migración ni deploy en esta corrida.
 
 Responsable: Claude (tarea programada diaria de propagación).
+
+## ARCHIVADO — NO USAR CATEGORIAS PARA DECIDIR QUE SE ESCRIBE — 2026-09-16
+
+Milton reportó que el algoritmo de Oportunidades SEO parecía usar el nombre
+de la categoría para decidir SI un título se escribía. Confirmado con
+evidencia de código en `apps/web/src/lib/opportunity-analysis.ts`: había un
+veto determinista en JS (`titleFitsCategory`) y una regla estricta en el
+prompt de IA que ordenaban descartar títulos/consultas reales que no
+calzaran con el nombre de la categoría. Ambos se retiraron (PR #107, #109)
+para que la decisión de escribir dependa solo de demanda real
+(GSC/GA/Bing) y no-canibalización; la categoría queda como destino de
+archivo únicamente. Una auditoría en vivo de una corrida real (9
+propuestas, cuenta de Lorena Álvarez) encontró además una grieta de
+canibalización y un título sin evidencia citada; ambos se corrigieron con
+guardarraíles deterministas nuevos (PR #111).
+
+PR #107, #109 y #111 fusionados a `main`, desplegados en Producción. El
+fix #1 (PR #107) se verificó en vivo corriendo un análisis real; los fixes
+#2 y #3 (PR #109, #111) no se reverificaron en vivo porque la cuenta
+compartida de pruebas pasó a tener datos de otra tarea concurrente
+("as is contract Florida") antes de poder reintentar — no se tocó ese
+contenido ajeno. Detalle completo en `INVENTARIO_CONVERSACIONES.md` y
+`CONTROLADOR_DE_VERSIONES.md`. Responsable: Claude. Estado final:
+ARCHIVADA.
