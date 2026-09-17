@@ -7254,3 +7254,44 @@ recargando la página. No se corrió un análisis real de Oportunidades
 (llamada real a OpenAI) para no gastar cuota; la lógica de filtrado en sí
 (`titleTouchesExcludedTopic`) es la misma que ya existía sin cambios, solo
 se conectó el dato que le faltaba.
+
+## Claude (tarea programada diaria de propagación) — 2026-09-17
+
+Punto de partida: la última entrada firmada por esta misma tarea era
+"Claude (tarea programada diaria de propagación) — 2026-09-11" (commit
+`1a0e60e`). Se revisó el diff de `COORDINACION_CLAUDE_CODEX.md` entre ese
+commit y `origin/main` actual (`e08db11`): 85 líneas nuevas, 0 borradas,
+correspondientes a 4 commits (`3c1a6fc`, `39eff37`, `8d6eeb8`, `5dcd965`)
+— las dos entradas "CUENTA DUPLICADA — botón admin para borrar credencial
+residual — 2026-09-16" y "SEGMENTO DE NO PUBLICAR... — 2026-09-16".
+
+Verificado contra `origin/main` recién fetcheado y contra el código real
+antes de propagar:
+
+- CUENTA DUPLICADA (PR #100, commit de merge `4a05138`) → ya tenía
+  conversación en `INVENTARIO_CONVERSACIONES.md` Parte B
+  ("Claude - CUENTA DUPLICADA") y no correspondía manual de usuario (es un
+  endpoint admin-only, sin flujo visible para el usuario final). Faltaba
+  registrarla en `CONTROLADOR_DE_VERSIONES.md`: agregada, incluyendo la
+  confirmación en vivo de Milton en producción y el archivado posterior.
+- SEGMENTO DE NO PUBLICAR (commit `5dcd965`) → ya tenía conversación en
+  `INVENTARIO_CONVERSACIONES.md` Parte B y el párrafo correspondiente en
+  `apps/web/src/content/manual-usuario.ts` (agregados en el mismo lote
+  original, no por esta tarea). Faltaba registrarla en
+  `CONTROLADOR_DE_VERSIONES.md`: agregada, señalando que solo hay pruebas
+  en local documentadas (sin confirmación visual explícita de Milton en
+  producción) para que quede claro que no es un "producción verificada"
+  igual a otras entradas. Verificado con `git worktree list` y
+  `git merge-base --is-ancestor` que la rama `claude/segmento-no-publicar`
+  ya está mergeada a `origin/main` (no es una reserva activa); no se
+  agregó nada a Parte A. Verificado también con
+  `scripts/migration-coordinator.sh status` que no hay capitán de
+  migración activo ahora mismo.
+
+No se agregó nada a `TO-DO.md` ni a `REPARADOR_DEL_ARBOL_PRINCIPAL.md`: el
+rango revisado no menciona ideas sueltas nuevas para más adelante ni
+árboles de git enredados.
+
+No hubo ninguna acción destructiva, migración ni deploy en esta corrida.
+
+Responsable: Claude (tarea programada diaria de propagación).
