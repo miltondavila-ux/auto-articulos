@@ -2313,3 +2313,85 @@ https://seototal.lasolucionweb.com/login. Pendiente: Tagcrush (usar el
 mismo componente `QrCodeDisplay` con la URL de tagcrush.net cuando se
 pida). La duda sobre "Exclusión de Temas" señalada arriba queda sin
 resolver para que Milton decida.
+
+## Versión desplegada — 2026-09-16 — Botón admin para borrar credencial 10minutesWebsite residual (PR #100)
+
+Fecha y hora: 2026-09-16 12:50 -0400 (commit `3c1a6fc`).
+Versión/commit: `3c1a6fc` ("feat: botón admin para borrar credencial
+10minutesWebsite residual"), mergeado a `main` en el commit de merge
+`4a05138` (PR #100, rama `claude/cuenta-duplicada-boton-credencial`).
+Conversación/proyecto: `Claude - CUENTA DUPLICADA` (ver
+`INVENTARIO_CONVERSACIONES.md`, Parte B).
+
+Cambios: causa raíz del bloqueo "ya está vinculada a otro usuario en el
+sistema" que veía Gustavo Cabrera (#91, cuenta nueva en trial) al intentar
+guardar sus credenciales de 10minutesWebsite: esa misma credencial ya
+estaba guardada como dato residual en la cuenta admin de Milton
+(`miltondavila@gmail.com`, #1), sin rastro de auditoría de cómo llegó ahí.
+El validador antifraude en `apps/web/src/lib/domain-validation.ts` no
+tenía ningún bug. Se agregó un nuevo endpoint `DELETE
+/api/admin/users/credential` (admin-only, `requireAdmin`) que borra
+únicamente la fila `Credential` de una cuenta para la plataforma
+10minutesWebsite, y un botón "Eliminar esta credencial" en
+`/dashboard/usuarios`, junto al campo de cuenta 10minutesWebsite, con
+confirmación en dos pasos. Archivos:
+`apps/web/src/app/api/admin/users/credential/route.ts` (nuevo),
+`apps/web/src/app/dashboard/usuarios/page.tsx`.
+
+Migraciones: ninguna (sin cambio de schema).
+
+Auditoría (según `COORDINACION_CLAUDE_CODEX.md`): Milton confirmó en vivo
+que el campo "Cuenta 10minutesWebsite" de su propia cuenta admin (#1) pasó
+a "Sin credenciales guardadas" tras usar el botón, sin afectar el resto de
+su cuenta.
+
+Responsable: Claude.
+Estado: DESPLEGADO Y VERIFICADO EN PRODUCCIÓN por Milton (confirmación en
+vivo registrada en `COORDINACION_CLAUDE_CODEX.md`). La conversación
+"CUENTA DUPLICADA" quedó luego archivada por Milton (sin código ni
+migración adicional en ese cierre).
+
+## Versión — 2026-09-16 — Segmento de No Publicar en Configuración → Contenido (completa "Exclusión de Temas")
+
+Fecha y hora: 2026-09-16 16:15 -0400 (commit `5dcd965`, ancestro
+confirmado de `origin/main`).
+Versión/commit: `5dcd965` ("feat: Segmento de No Publicar en
+Configuración > Contenido"), trabajado en worktree aislado
+`.worktrees/segmento-no-publicar`, rama `claude/segmento-no-publicar`.
+Conversación/proyecto: `SEGMENTO DE NO PUBLICAR` (ver
+`INVENTARIO_CONVERSACIONES.md`, Parte B), que corrige la entrada
+"ARCHIVADO — Exclusión de Temas... 2026-09-09" — esa entrada afirmaba
+"✅ DESPLEGADO A PRODUCCIÓN" con "Schema + migración + UI", pero el código
+real solo tenía el filtro determinista sin columna en schema, sin
+migración y sin campo en la interfaz (nadie podía cargar el valor).
+
+Cambios: columna `excludedTopics String?` agregada a `User` en
+`packages/db/prisma/schema.prisma` + migración
+`20260916180000_add_excluded_topics`; `apps/web/src/lib/current-user.ts`
+expone el campo en `getCurrentUser()`; `apps/web/src/app/api/me/route.ts`
+lo expone en `GET` y lo acepta/valida (máx. 500 caracteres) en `PATCH`;
+`apps/web/src/app/api/opportunities/route.ts` ahora lee
+`user.excludedTopics` y lo pasa a `analyzeSeoOpportunities` (antes nunca
+se pasaba, el filtro quedaba inerte); nueva sección "Segmento de No
+Publicar" con el campo "Temas a excluir" en
+`apps/web/src/app/dashboard/configuracion/contenido/page.tsx`. Manual de
+usuario (`apps/web/src/content/manual-usuario.ts`) actualizado en el mismo
+lote.
+
+Migraciones: sí — `20260916180000_add_excluded_topics` (columna nueva,
+sin borrar datos existentes).
+
+Auditoría (según `COORDINACION_CLAUDE_CODEX.md`): probado en local contra
+la base de datos local (`postgresql://127.0.0.1:5432/autoarticulos`) con
+la cuenta de pruebas de Lorena Álvarez (contraseña reseteada solo en la
+base LOCAL): typecheck limpio, `npm run build` completo sin errores,
+columna confirmada por SQL directo, guardado confirmado por `PATCH
+/api/me` (200) y por lectura directa de la fila en Postgres, persistencia
+confirmada recargando la página. No se corrió un análisis real de
+Oportunidades (llamada real a OpenAI) para no gastar cuota.
+
+Responsable: Claude.
+Estado: commit `5dcd965` confirmado como ancestro de `origin/main` (código
+en producción), pero sin confirmación visual explícita de Milton en
+producción registrada en `COORDINACION_CLAUDE_CODEX.md` — solo pruebas en
+local documentadas.
