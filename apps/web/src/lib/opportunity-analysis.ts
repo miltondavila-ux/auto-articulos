@@ -208,6 +208,37 @@ function rationaleHasQuotedEvidence(rationale: string): boolean {
   );
 }
 
+// Bug real encontrado 17/9/2026 (cuenta de Ignacio Cubas, diagnóstico con
+// evidencia real vía GitHub Actions): rationaleHasQuotedEvidence se estaba
+// aplicando también a los títulos del PASO DEDICADO DE GEOLOCALIZACIÓN
+// (cliente x negocio), cuyo prompt (ver más abajo) nunca les pide citar una
+// consulta de Search Console/GA/Bing — su "evidencia" es que combinan
+// EXACTAMENTE una ubicación de cliente y una de negocio ya declaradas por
+// el dueño de la cuenta (ver REGLA OBLIGATORIA DE GEOLOCALIZACION en el
+// prompt principal: estas ubicaciones NO necesitan evidencia de datos, son
+// reales por declaración directa). Resultado real: los 6-7 títulos long
+// tail geolocalizados que el paso dedicado SÍ generaba correctamente para
+// Ignacio Cubas se descartaban TODOS, en silencio, porque su rationale
+// nunca traía una cita entre comillas — no por falta de evidencia real, sino
+// porque se les exigía el tipo de evidencia equivocado. Esta función es el
+// chequeo determinista equivalente para esa fuente: en vez de una cita
+// textual, exige que el título use de verdad al menos una ubicación de
+// cliente Y una de negocio de las listas declaradas (comparación normalizada,
+// sin acentos/mayúsculas), para no perder la garantía de "nada inventado".
+function titleUsesDeclaredGeoCombo(
+  text: string,
+  clientLocations: string[],
+  businessLocations: string[],
+): boolean {
+  const normalizedTitle = normalizeTitle(text);
+  const usesAny = (locations: string[]) =>
+    locations.some((location) => {
+      const normalizedLocation = normalizeTitle(location);
+      return normalizedLocation.length > 0 && normalizedTitle.includes(normalizedLocation);
+    });
+  return usesAny(clientLocations) && usesAny(businessLocations);
+}
+
 function hasContextualEvidenceForYear(
   title: string,
   year: string,
@@ -530,6 +561,7 @@ export async function analyzeSeoOpportunities(input: {
     rejectedInvalidCategory: 0,
     rejectedEmptyOrDuplicateExact: 0,
     rejectedNoQuotedEvidence: 0,
+    rejectedGeoComboNotUsed: 0,
     rejectedExcludedTopic: 0,
     rejectedBadYear: 0,
     rejectedCollision: 0,
@@ -683,7 +715,7 @@ ${JSON.stringify(alreadyProposedByCategory)}`;
         `[OPPORTUNITY_DEBUG] Lote ${batchIndex + 1}/${batchesToProcess.length}: ${batch.length} filas de evidencia, modelo devolvio ${opportunities.length} categorias.`,
       );
     }
-    applyOpportunityItems(opportunities);
+    applyOpportunityItems(opportunities, "evidence");
   }
 
   // PASO DEDICADO DE GEOLOCALIZACION (7/9/2026, pedido explicito de Milton:
@@ -726,7 +758,7 @@ Si genuinamente ninguna combinacion tiene sentido real para este negocio, respon
     try {
       const parsedGeo = await callOpenAiWithRetry(geoPrompt, apiKey);
       const geoOpportunities = parsedGeo.opportunities;
-      if (Array.isArray(geoOpportunities)) applyOpportunityItems(geoOpportunities);
+      if (Array.isArray(geoOpportunities)) applyOpportunityItems(geoOpportunities, "geo");
     } catch (err) {
       console.error("Paso dedicado de geolocalizacion fallo (no bloquea el resto del analisis):", err);
     }
@@ -747,7 +779,13 @@ Si genuinamente ninguna combinacion tiene sentido real para este negocio, respon
   // duplicado exacto, anio real y reciente, y sin colision de needKey/
   // intencion contra nada ya aceptado en esta corrida. Factor comun para que
   // ambas fuentes respeten las mismas garantias, sin duplicar la logica.
-  function applyOpportunityItems(opportunities: unknown[]) {
+  // `source` distingue el UNICO chequeo que de verdad difiere entre las dos
+  // fuentes (ver titleUsesDeclaredGeoCombo mas arriba): "evidence" exige cita
+  // textual de un dato real de GSC/GA/Bing; "geo" exige en cambio que el
+  // titulo use de verdad una ubicacion de cliente y una de negocio ya
+  // declaradas, porque esos titulos nunca tienen (ni deben tener) una cita
+  // de busqueda real detras.
+  function applyOpportunityItems(opportunities: unknown[], source: "evidence" | "geo") {
     for (const item of opportunities) {
       if (!item || typeof item !== "object") continue;
       const group = item as Record<string, unknown>;
@@ -774,15 +812,35 @@ Si genuinamente ninguna combinacion tiene sentido real para este negocio, respon
         }
         const rationale =
           typeof value.rationale === "string" ? value.rationale.trim() : "";
-        // Garantía determinista contra títulos sin evidencia citada: el
-        // rationale debe nombrar textualmente (entre comillas) la consulta,
-        // página o cluster real que lo respalda, tal como exige el prompt.
-        if (!rationaleHasQuotedEvidence(rationale)) {
-          if (debugEnabled) {
-            debugCounters.rejectedNoQuotedEvidence++;
-            console.log(`[OPPORTUNITY_DEBUG] Rechazado por falta de cita textual. Titulo: "${text}" | rationale crudo: ${JSON.stringify(rationale)}`);
+        if (source === "evidence") {
+          // Garantía determinista contra títulos sin evidencia citada: el
+          // rationale debe nombrar textualmente (entre comillas) la consulta,
+          // página o cluster real que lo respalda, tal como exige el prompt.
+          if (!rationaleHasQuotedEvidence(rationale)) {
+            if (debugEnabled) {
+              debugCounters.rejectedNoQuotedEvidence++;
+              console.log(`[OPPORTUNITY_DEBUG] Rechazado por falta de cita textual. Titulo: "${text}" | rationale crudo: ${JSON.stringify(rationale)}`);
+            }
+            continue;
           }
-          continue;
+        } else {
+          // Garantía determinista equivalente para el paso de geolocalización
+          // (ver titleUsesDeclaredGeoCombo): su evidencia real es la
+          // combinación de ubicaciones declaradas por el dueño de la cuenta,
+          // no una cita de Search Console/GA/Bing.
+          if (
+            !titleUsesDeclaredGeoCombo(
+              text,
+              input.clientLocations ?? [],
+              input.businessLocations ?? [],
+            )
+          ) {
+            if (debugEnabled) {
+              debugCounters.rejectedGeoComboNotUsed++;
+              console.log(`[OPPORTUNITY_DEBUG] Rechazado (geo): no usa una combinacion cliente+negocio declarada. Titulo: "${text}"`);
+            }
+            continue;
+          }
         }
         // Garantía determinista contra temas excluidos: si el usuario indicó
         // que no quiere ciertos temas, rechazar CUALQUIER título que los mencione,
