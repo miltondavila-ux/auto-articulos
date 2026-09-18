@@ -7456,3 +7456,14 @@ PR #125, commit `3aa0266`, rama `claude/mensajes-error-humanizados-ia`, worktree
 **Capitán de migración:** Claude — revisará y aplicará el lote completo. Motivo:
 Bing: 3 enlaces del componente apuntan a /dashboard/configuracion/indexacion
 (sin migraciones). Nadie más ejecuta Prisma hasta su liberación.
+
+**Capitán de migración liberó el lote:** Claude. Resultado: PR #139
+(https://github.com/miltondavila-ux/auto-articulos/pull/139) fusionado a main
+(`9df2f10`), desplegado en Producción, sin migraciones.
+
+### Cierre — BING WEBMASTER DIRECCION DE DEVOLUCION — 2026-09-18
+
+Tarea cerrada. PR #127 (callback), `d52c647` (redirecciones del componente,
+otra sesión) y PR #139 (3 enlaces) dejan todo el retorno de Bing en
+`/dashboard/configuracion/indexacion`. Pendiente solo la prueba en vivo con
+una cuenta de Bing, a cargo de Milton. Estado final: ARCHIVADA.

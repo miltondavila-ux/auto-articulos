@@ -2580,7 +2580,7 @@ con los PR #127/#128 de Bing). Verificación en vivo en Producción pendiente.
 
 Responsable: Claude. Estado: EN PRODUCCIÓN — verificación en vivo pendiente.
 
-## Versión en curso — 2026-09-18 — Bing Webmaster: enlaces a Indexación
+## Versión desplegada — 2026-09-18 — Bing Webmaster: enlaces a Indexación
 
 `apps/web/src/components/BingWebmasterSection.tsx`: los enlaces "Volver a
 conectar", "Revisar configuración de Bing" y "Revisar configuración" apuntaban a
@@ -2589,4 +2589,6 @@ el remanente del PR #127 (las redirecciones del callback y de `router.replace`
 ya estaban corregidas). Sin migraciones ni schema; el manual no menciona estos
 enlaces, no requiere cambio.
 
-Responsable: Claude. Estado: PR abierto, pendiente de fusión y verificación.
+PR #139 fusionado (`9df2f10`); Vercel Production completado.
+
+Responsable: Claude. Estado: EN PRODUCCIÓN.
