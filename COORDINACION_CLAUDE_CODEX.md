@@ -7433,3 +7433,9 @@ PR #125, commit `3aa0266`, rama `claude/mensajes-error-humanizados-ia`, worktree
 - Responsable siguiente: Milton (autorización), luego Claude.
 
 **Estado final:** error de publicación **ARCHIVADA**; mensajes inteligentes (PR #125) **PAUSADO**.
+
+## Claude - BING WEBMASTER DIRECCION DE DEVOLUCION — enlaces — 2026-09-18
+
+**Capitán de migración:** Claude — revisará y aplicará el lote completo. Motivo:
+Bing: 3 enlaces del componente apuntan a /dashboard/configuracion/indexacion
+(sin migraciones). Nadie más ejecuta Prisma hasta su liberación.

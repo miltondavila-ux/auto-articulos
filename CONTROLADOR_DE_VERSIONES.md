@@ -2579,3 +2579,14 @@ regresión/entrega APROBADA (Vercel Preview pasó; sin solapamiento de archivos
 con los PR #127/#128 de Bing). Verificación en vivo en Producción pendiente.
 
 Responsable: Claude. Estado: EN PRODUCCIÓN — verificación en vivo pendiente.
+
+## Versión en curso — 2026-09-18 — Bing Webmaster: enlaces a Indexación
+
+`apps/web/src/components/BingWebmasterSection.tsx`: los enlaces "Volver a
+conectar", "Revisar configuración de Bing" y "Revisar configuración" apuntaban a
+`/dashboard/configuracion`; ahora a `/dashboard/configuracion/indexacion`. Cierra
+el remanente del PR #127 (las redirecciones del callback y de `router.replace`
+ya estaban corregidas). Sin migraciones ni schema; el manual no menciona estos
+enlaces, no requiere cambio.
+
+Responsable: Claude. Estado: PR abierto, pendiente de fusión y verificación.
