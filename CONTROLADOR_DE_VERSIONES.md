@@ -2501,3 +2501,18 @@ ya lee `?bing=` con `useSearchParams`) y regresión/entrega (checks del PR y
 Vercel Preview antes de fusionar).
 
 Responsable: Claude. Estado: PR abierto, pendiente de fusión y verificación.
+
+## Versión — 2026-09-18 — CHECK DE NO INDEXACION (worker)
+
+Commit `0d20b9b` (squash en `main`: `e8a8b18`, PR #114). Archivo:
+`apps/worker/src/automation/10minutesWebsite.ts` (+68/−5). La preferencia de
+indexación se aplica y verifica leyendo el DOM justo antes de cada clic de
+guardado; si no se confirma, el run lo informa. Sin migraciones ni cambios de
+schema. Sin cambio de versiones de software.
+
+Auditoría 1: APROBADA (un archivo, sin secretos, worktree aislado).
+Auditoría 2: APROBADA (`tsc --noEmit` limpio; fallos de `vitest` preexistentes
+en `main`, confirmados con `git stash`).
+Auditoría 3: PENDIENTE (corrida en vivo con `worker-test.yml`). El worker de
+producción ya usa el código (corridas del 2026-09-18 sobre `main` posterior).
+Responsable: Claude. Estado: EN PRODUCCIÓN — verificación en vivo pendiente.

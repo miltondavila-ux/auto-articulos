@@ -1219,3 +1219,14 @@ equivocada.
 
 Responsable: Claude. Estado final: ARCHIVADA — verificada en vivo contra
 Producción, sin acceso de Milton a ninguna cuenta de cliente.
+
+## Claude - CHECK DE NO INDEXACION — 2026-09-18
+
+- Estado: ARCHIVADA. Responsable: Claude.
+- Alcance: la opción "no indexar" no se respetaba al publicar en
+  10minutesWebsite/TagCrush. Archivo: `apps/worker/src/automation/10minutesWebsite.ts`.
+- Rama/worktree: `claude/check-no-indexacion` (eliminada tras fusionar),
+  worktree aislado desde `origin/main`. PR #114 → `main` (`e8a8b18`).
+- Reservas: ninguna activa. No se tocaron los documentos de coordinación
+  durante el fix por estar en reescritura de otra tarea; se registran aquí.
+- Pendiente no bloqueante: verificación en vivo con la cuenta de Lorena.
