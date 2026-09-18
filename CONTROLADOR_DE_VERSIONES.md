@@ -2831,3 +2831,18 @@ por GitHub Actions completada sin `--accept-data-loss` y con RLS correcto.
 Producción se registra después del deployment final.
 
 Responsable: CODEX - CREADOR DE TITULOS MUY ESTRICTO. Estado: EN DESPLIEGUE.
+## Cierre — 2026-09-18 — REPARACIÓN DEL MOTOR DE OPORTUNIDADES
+
+PR #144 quedó fusionada en `main` mediante el commit `1c19f07`.
+
+```text
+Deployment Vercel: dpl_GXQ165nD88E1xhgPK875DC1GHw4V · Production · Ready
+URL: https://auto-articulos-186ny2rvh-luna-portex-intelligence.vercel.app
+Dominio: https://seototal.lasolucionweb.com
+Migración: workflow 35402599238 · completada sin --accept-data-loss
+Salud: /login 200 · /privacidad 200 · /api/me 401 · /dashboard 307→/login
+```
+
+Las tres auditorías quedaron cerradas: integridad, funcionalidad y producción.
+No se ejecutaron operaciones destructivas ni se modificó el flujo de publicación.
+Responsable: CODEX - CREADOR DE TITULOS MUY ESTRICTO. Estado: CERRADA.
