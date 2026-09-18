@@ -4626,6 +4626,15 @@ el texto existente.
 
 Responsable: Claude (tarea programada diaria de propagación).
 
+## PRUEBA VISUAL DE COLOR EN ACCESOS DEL INICIO — 2026-09-18
+
+Para probar una presentación más dinámica, las tarjetas 02, 03 y 04 del Inicio
+usan respectivamente `#c6c6c6`, `#919191` y `#5e5e5e`, con texto oscuro o claro
+según el contraste necesario. La tarjeta 01 permanece blanca y no se altera
+el comportamiento responsive del grid.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+
 ## AJUSTE RESPONSIVE DEL GRÁFICO DE RITMO — 2026-09-18
 
 El gráfico **Tu ritmo — últimos 14 días** ahora ocupa todo el ancho disponible

@@ -2526,3 +2526,9 @@ Las métricas, alertas de configuración y accesos directos permanecen intactos.
 
 El panel **Tu ritmo — últimos 14 días** pasó a ocupar todo el ancho disponible,
 manteniendo su adaptación responsive. No hay cambios de schema ni migraciones.
+
+## Cambio preparado — 2026-09-18 — Prueba visual de color en tarjetas
+
+Las tarjetas 02, 03 y 04 del Inicio reciben fondos `#c6c6c6`, `#919191` y
+`#5e5e5e`, respectivamente, con contraste de texto adaptado. La tarjeta 01
+permanece blanca y no se modifican rutas ni funcionalidad.
