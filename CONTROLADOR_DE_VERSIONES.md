@@ -2541,5 +2541,15 @@ deshabilita el botón y no envía nada; el artículo no aparece en el listado.
 
 Auditoría 1: APROBADA (un archivo de código + este registro, sin secretos).
 Auditoría 2: APROBADA (sintaxis TypeScript sin diagnósticos; `git diff --check`).
-Auditoría 3: PENDIENTE — reintento en vivo en MPM Realty Group tras la fusión.
-Responsable: Claude. Estado: PREPARADA.
+Auditoría 3: APROBADA EN VIVO (18/9/2026, MPM Realty Group). PR #133
+fusionado a las 11:37; reintento del lote: los artículos 1 y 2 (5 y 7 fallos
+previos) se publicaron en el segundo intento de guardado (11:42 y 11:46); el
+lote pasó de 5/9 a 8/9. En esos logs el sitio termina de guardar unos segundos
+después del clic: el robot antes lo daba por perdido a los 1-2 s.
+Problema conocido, NO resuelto: el artículo 5 sigue fallando porque el sitio
+responde "There is already an article with this title" (título duplicado
+real) y la detección de duplicados del robot solo reconoce el formulario en
+español (`#titlees` / "existe"), no el inglés (`#title`). Posible causa
+adicional: intentos anteriores "fallidos" pudieron haber guardado artículos
+reales en el sitio; conviene revisar duplicados en el listado de la cuenta.
+Responsable: Claude. Estado: EN PRODUCCIÓN — VERIFICADA EN VIVO (parcial: 8/9).
