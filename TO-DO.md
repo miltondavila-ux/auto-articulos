@@ -3,6 +3,12 @@
 Este documento es un buzón de ideas de Milton, no un plan de trabajo ni una
 cola de tareas automática.
 
+## Cierre documental — 2026-09-18
+
+**SIMPLIFICACION DEL SETUP INICIAL**: PR #143 fusionado a `main` (`d6ba5f8`),
+desplegado y verificado en Producción. Sin migraciones ni cambios de schema.
+Estado: **ARCHIVADA**; no quedan acciones pendientes de este lote.
+
 ## Regla obligatoria para cualquier agente (Claude, Codex, Antigravity)
 
 **Este archivo SOLO GUARDA. Ningún agente ejecuta, propone iniciar ni empieza

@@ -2816,6 +2816,26 @@ Milton; hay que pegarlos en Producción. La verificación de qué permiso de la 
 queda para la Fase 2b.
 
 Responsable: Claude. Estado: EN PRODUCCIÓN — verificación en vivo pendiente (Milton).
+## Versión desplegada y archivada — 2026-09-18 — Simplificación del setup inicial
+
+Proyecto: **SIMPLIFICACION DEL SETUP INICIAL**. PR #143:
+https://github.com/miltondavila-ux/auto-articulos/pull/143. Merge a `main`:
+`d6ba5f8580cc9ad4072ed1941b7f05ee4207ca07`.
+
+Se documenta el cierre del lote de interfaz: copy coherente en dashboard,
+menú, módulos, manual y asistente/MCP; cuatro tarjetas principales; Historial
+dentro de Publicaciones; Actualizaciones dentro de Configuración; tarjetas
+responsive y con contraste reforzado; gráfico de ritmo a ancho completo; retiro
+del aviso de inactividad. Se conservaron rutas, permisos, endpoints, scopes e
+integraciones. Sin cambios de schema ni migraciones.
+
+Auditorías aprobadas: `git diff --check`; `npm run verify` completo con Prisma,
+typecheck, builds y 20 tests del worker; Preview Vercel Ready y login correcto.
+Producción confirmada en Vercel con deployment
+`dpl_7XmpajPXMfJoBWqsNN5eKqhHD2tA`, estado `READY`, alias
+`seototal.lasolucionweb.com` y login HTTP 200.
+
+Responsable: Codex. Estado final: **ARCHIVADA — EN PRODUCCIÓN Y VERIFICADA**.
 ## Versión — 2026-09-18 — REPARACIÓN DEL MOTOR DE OPORTUNIDADES
 
 PR #144 (`codex/reparacion-del-motor`), integrada tras validar Preview y migración.
