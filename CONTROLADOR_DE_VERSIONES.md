@@ -2816,6 +2816,26 @@ Milton; hay que pegarlos en Producción. La verificación de qué permiso de la 
 queda para la Fase 2b.
 
 Responsable: Claude. Estado: EN PRODUCCIÓN — verificación en vivo pendiente (Milton).
+## Versión desplegada y archivada — 2026-09-18 — Simplificación del setup inicial
+
+Proyecto: **SIMPLIFICACION DEL SETUP INICIAL**. PR #143:
+https://github.com/miltondavila-ux/auto-articulos/pull/143. Merge a `main`:
+`d6ba5f8580cc9ad4072ed1941b7f05ee4207ca07`.
+
+Se documenta el cierre del lote de interfaz: copy coherente en dashboard,
+menú, módulos, manual y asistente/MCP; cuatro tarjetas principales; Historial
+dentro de Publicaciones; Actualizaciones dentro de Configuración; tarjetas
+responsive y con contraste reforzado; gráfico de ritmo a ancho completo; retiro
+del aviso de inactividad. Se conservaron rutas, permisos, endpoints, scopes e
+integraciones. Sin cambios de schema ni migraciones.
+
+Auditorías aprobadas: `git diff --check`; `npm run verify` completo con Prisma,
+typecheck, builds y 20 tests del worker; Preview Vercel Ready y login correcto.
+Producción confirmada en Vercel con deployment
+`dpl_7XmpajPXMfJoBWqsNN5eKqhHD2tA`, estado `READY`, alias
+`seototal.lasolucionweb.com` y login HTTP 200.
+
+Responsable: Codex. Estado final: **ARCHIVADA — EN PRODUCCIÓN Y VERIFICADA**.
 ## Versión — 2026-09-18 — REPARACIÓN DEL MOTOR DE OPORTUNIDADES
 
 PR #144 (`codex/reparacion-del-motor`), integrada tras validar Preview y migración.
@@ -2831,18 +2851,88 @@ por GitHub Actions completada sin `--accept-data-loss` y con RLS correcto.
 Producción se registra después del deployment final.
 
 Responsable: CODEX - CREADOR DE TITULOS MUY ESTRICTO. Estado: EN DESPLIEGUE.
-## Cierre — 2026-09-18 — REPARACIÓN DEL MOTOR DE OPORTUNIDADES
 
-PR #144 quedó fusionada en `main` mediante el commit `1c19f07`.
+
+## Versión preparada — 2026-09-18 — CREACION DE PUBLICACIONES PROPIAS (títulos con la IA del sistema)
+
+Rama `claude/creacion-publicaciones-propias`. Nueva opción "Crear con la IA del sistema" en
+`/dashboard/publicar` (Publicaciones propias) para usuarios sin datos de GSC/GA/Bing: formulario de
+5 datos efímeros, hasta 9 títulos a elegir, tope de 3 solicitudes por día por usuario, sin repetir
+títulos ya creados u ofrecidos, y caja "PROMPT PUBLICACIONES PROPIAS" en Administración → Prompts
+(solo administrador). Los títulos marcados se agregan a la caja Títulos y siguen el flujo normal.
+Manual de usuario actualizado en el mismo lote. Especificación: `MASTER_BLUEPRINT_CREACION_DE_PUBLICACIONES_PROPIAS.md`
+y `FASE_0_CREACION_DE_PUBLICACIONES_PROPIAS.md`.
+
+**PUNTO DE RETORNO (última versión buena conocida, registrada ANTES de fusionar):**
 
 ```text
-Deployment Vercel: dpl_GXQ165nD88E1xhgPK875DC1GHw4V · Production · Ready
-URL: https://auto-articulos-186ny2rvh-luna-portex-intelligence.vercel.app
-Dominio: https://seototal.lasolucionweb.com
-Migración: workflow 35402599238 · completada sin --accept-data-loss
-Salud: /login 200 · /privacidad 200 · /api/me 401 · /dashboard 307→/login
+Commit de Producción previo: e7f529c (= origin/main antes de esta fusión)
+Etiqueta de Git:             pre-creacion-publicaciones-propias-e7f529c-20260918  (apunta a e7f529c, ya en el remoto)
+Deployment Vercel previo:    6534121110 · Production · success
+                             https://auto-articulos-5nya73b0a-luna-portex-intelligence.vercel.app
+Dominio público:             https://seototal.lasolucionweb.com
+Vercel público:              «All Systems Operational», 0 incidentes sin resolver (22:3x UTC)
+Línea base medida 2026-09-18 22:43 UTC (antes de fusionar):
+  /login 200 · /privacidad 200 · /api/me 401 · /dashboard 307→/login
+  /dashboard/publicar 307→/login · /api/title-generation 401 · /api/admin/title-generation-prompt 401
+  (las rutas nuevas dan 401 igual que antes porque el middleware pide sesión a todo /api: no prueban
+   que estén desplegadas; la prueba será el deployment del commit de fusión y el uso real de Milton)
 ```
 
-Las tres auditorías quedaron cerradas: integridad, funcionalidad y producción.
-No se ejecutaron operaciones destructivas ni se modificó el flujo de publicación.
-Responsable: CODEX - CREADOR DE TITULOS MUY ESTRICTO. Estado: CERRADA.
+**Migración (aditiva, ya aplicada):** `20260918190000_add_title_generation_requests` crea la tabla
+nueva y vacía `TitleGenerationRequest` (con `IF NOT EXISTS`, repetible). **Milton la aplicó a mano en
+PRODUCCIÓN (editor SQL de Supabase) antes de esta fusión, el 2026-09-18**, fuera del script de
+capitanía (la capitanía activa, de `CODEX - CREADOR DE TITULOS MUY ESTRICTO`, no cambia). Claude no
+tiene acceso a producción y **no lo pudo verificar**: consta por lo declarado por Milton.
+`schema.prisma` solo suma el modelo nuevo y una relación inversa en `User`: **ninguna columna nueva en
+tablas existentes**, así que ninguna consulta actual (login, /dashboard) depende de la tabla nueva.
+Si la tabla no existiera en producción, solo fallaría la opción de IA (mostraría "no se pudo verificar");
+el modo "Poner títulos a mano" y el resto de la app no se ven afectados.
+
+Verificación previa (Controlador, «Verificación obligatoria»): archivos eliminados en el PR: 0 ·
+migraciones: 1 (aditiva, solo tabla nueva) · cambios en `schema.prisma`: solo el modelo nuevo ·
+cambios en `vercel.json`/workflows/middleware: 0 · no se tocó `/api/runs`, el worker, categorías ni
+Configuración · `tsc --noEmit` 0 errores · `npm run build` exit 0 (rutas `/api/title-generation`,
+`/api/admin/title-generation-prompt` y `maxDuration: 60` presentes) · 32/32 pruebas (20 unitarias +
+12 de integración contra una base `*_test` con la IA simulada: tope 3/día con 5 solicitudes
+simultáneas, cero repetidos, fallo sin consumo, retención de 90 días) · rama sin conflictos con `main`
+tras rebasar sobre `e7f529c`.
+
+Auditorías: integridad APROBADA (15 archivos, todos en alcance; sin secretos; sin caracteres de
+control) · funcional APROBADA (pruebas anteriores + flujo completo en navegador con usuaria y
+administrador, permisos 403/401, móvil sin scroll horizontal) · regresión APROBADA (rebase sobre
+`origin/main` con conflicto de `manual-usuario.ts` resuelto conservando ambos lados; tipos, pruebas y
+build repetidos sobre el resultado).
+
+**Lo NO verificado por Claude:** (1) la IA real de OpenAI con el prompt de Milton: el `.env.local` no
+tiene `OPENAI_API_KEY` y las pruebas usaron una IA simulada; en producción la clave ya existe (la usa
+Oportunidades). (2) La tabla en producción (ver arriba). (3) Logs de runtime de Vercel.
+
+**Comportamiento al desplegar (inerte hasta que Milton pegue el prompt):** sin prompt en Administración,
+la opción "Crear con la IA del sistema" aparece pero dice "Esta función aún no está disponible" y no
+gasta IA ni solicitudes. El único cambio visible para los usuarios es el selector "Poner títulos a mano /
+Crear con la IA del sistema" en la sección Títulos de Publicar.
+
+**Cómo revertir en un caso extremo:**
+
+1. Más rápido, sin tocar Git: en el panel de Vercel, `Deployments` → deployment `6534121110`
+   (`e7f529c`) → volver a promoverlo a Production (rollback de Vercel).
+2. Por Git, de forma incremental (no destructiva): desde `main`, rama nueva y
+   `git revert -m 1 <commit de fusión de este PR>`, abrir PR y pasar las tres auditorías. Comparar con
+   `git diff pre-creacion-publicaciones-propias-e7f529c-20260918..main`.
+3. NO usar `reset --hard`, `push --force` ni restaurar snapshots parciales (regla de Protección).
+4. Datos: la tabla `TitleGenerationRequest` queda vacía e inerte si se revierte el código, y la clave
+   `title_generation_prompt` de `SystemSetting` también; pueden quedarse.
+
+Deployment: PENDIENTE (se registra tras fusionar). Verificación en Producción: PENDIENTE.
+Responsable: Claude. Estado: PREPARADA — fusión autorizada por Milton el 2026-09-18 («envía a producción»).
+## Cierre — 2026-09-18 — REPARACIÓN DEL MOTOR DE OPORTUNIDADES
+
+PR #144 quedó fusionada en `main` mediante `1c19f07`. Deployment de Vercel:
+`dpl_GXQ165nD88E1xhgPK875DC1GHw4V`, Production `Ready`, dominio
+`https://seototal.lasolucionweb.com`. La migración controlada `35402599238`
+terminó sin `--accept-data-loss`. Salud verificada: `/login` 200,
+`/privacidad` 200, `/api/me` 401 y `/dashboard` 307 a login.
+
+Auditorías de integridad, funcionalidad y producción cerradas. Responsable:
+CODEX - CREADOR DE TITULOS MUY ESTRICTO. Estado: CERRADA.

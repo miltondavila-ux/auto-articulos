@@ -1390,11 +1390,17 @@ PR #125, commit `3aa0266`, rama `claude/mensajes-error-humanizados-ia`, worktree
 - Migraciones: ninguna. Producción/Preview: sin cambios ni despliegues.
 - Pendiente: Fase 0 y aprobación de Milton; crear clave de API de Composio con permisos de escritura
   en Connected accounts y Session tool execution (la pega Milton en el módulo, nunca en chat).
+
+## ARCHIVADO — SIMPLIFICACION DEL SETUP INICIAL — 2026-09-18
+
+PR #143 fusionado a `main` (`d6ba5f8`) y desplegado en Vercel Production.
+Deployment `dpl_7XmpajPXMfJoBWqsNN5eKqhHD2tA` en `READY`; el dominio
+`seototal.lasolucionweb.com` quedó verificado con login HTTP 200. `npm run
+verify` pasó completo con 20 pruebas del worker. Sin schema ni migraciones;
+reservas liberadas. Estado final: ARCHIVADA.
 ## CIERRE — CODEX - CREADOR DE TITULOS MUY ESTRICTO — REPARACIÓN DEL MOTOR
 
-- PR #144 fusionada en `main`: `1c19f07`.
-- Deployment de Producción: `dpl_GXQ165nD88E1xhgPK875DC1GHw4V`, estado `Ready`.
+- PR #144 fusionada: `1c19f07`.
+- Producción: deployment `dpl_GXQ165nD88E1xhgPK875DC1GHw4V`, estado `Ready`.
 - Migración controlada: workflow `35402599238`, sin pérdida de datos.
-- Salud verificada en producción: login, privacidad y protecciones de sesión correctos.
-- Reserva y worktree: liberados documentalmente; no quedan cambios funcionales pendientes.
-- Estado final: CERRADA — EN PRODUCCIÓN.
+- Reserva liberada. Estado final: CERRADA — EN PRODUCCIÓN.

@@ -7559,6 +7559,21 @@ Tarea cerrada. PR #127 (callback), `d52c647` (redirecciones del componente,
 otra sesión) y PR #139 (3 enlaces) dejan todo el retorno de Bing en
 `/dashboard/configuracion/indexacion`. Pendiente solo la prueba en vivo con
 una cuenta de Bing, a cargo de Milton. Estado final: ARCHIVADA.
+## CIERRE Y ARCHIVO — SIMPLIFICACION DEL SETUP INICIAL — 2026-09-18
+
+PR #143 fusionado a `main` con `d6ba5f8` y verificado en Producción. El lote
+incluye la simplificación del setup, la coherencia de nombres y textos en toda
+la interfaz, manual y asistente/MCP, la reorganización del menú, mejoras
+responsive/contraste y el gráfico a ancho completo. Se conservaron las rutas y
+las integraciones existentes; no hubo schema ni migraciones.
+
+Auditorías: `npm run verify` completo, Preview Vercel Ready, login de Preview
+HTTP 200 y producción `dpl_7XmpajPXMfJoBWqsNN5eKqhHD2tA` Ready con
+`https://seototal.lasolucionweb.com` respondiendo HTTP 200.
+
+Reservas liberadas. No quedan acciones de implementación pendientes en este
+lote. Estado final: **ARCHIVADA — EN PRODUCCIÓN Y VERIFICADA**. Responsable:
+Codex.
 ## Reserva activa — CODEX - CREADOR DE TITULOS MUY ESTRICTO — REPARACIÓN DEL MOTOR
 
 - Rama: `codex/reparacion-del-motor`; worktree: `/private/tmp/codex-reparacion-motor`.
