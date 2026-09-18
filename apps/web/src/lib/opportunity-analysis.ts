@@ -467,6 +467,16 @@ interface ProcessedRow {
   opportunityScore: number;
 }
 
+type ExternalEvidenceRow = {
+  source: string;
+  query?: string;
+  page?: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+};
+
 function processPerformanceData(
   currentRows: GoogleSearchAnalyticsRow[],
   previousRows: GoogleSearchAnalyticsRow[],
@@ -549,6 +559,10 @@ export async function analyzeSeoOpportunities(input: {
   // (Configuración → Contenido). Ver uso más abajo: excludedKeywords /
   // titleTouchesExcludedTopic.
   excludedTopics?: string;
+  // Señales normalizadas de fuentes externas. Se convierten a filas de
+  // evidencia para que GA4 o Bing puedan iniciar el análisis cuando GSC no
+  // esté conectado, sin perder la procedencia en la consulta entregada a IA.
+  externalEvidenceRows?: ExternalEvidenceRow[];
 }): Promise<OpportunityAnalysisResult> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("OPENAI_API_KEY no esta configurada.");
@@ -564,8 +578,18 @@ export async function analyzeSeoOpportunities(input: {
   // evidencia real exigido a cada título.
   const BATCH_SIZE = 100;
   const MAX_BATCHES = 20;
+  const externalRows: GoogleSearchAnalyticsRow[] = (input.externalEvidenceRows ?? [])
+    .filter((row) => (row.query ?? row.page ?? "").trim().length > 0)
+    .map((row) => ({
+      keys: [`[${row.source}] ${row.query ?? row.page ?? ""}`],
+      clicks: row.clicks,
+      impressions: row.impressions,
+      ctr: row.ctr,
+      position: row.position,
+    }));
+  const allCurrentRows = [...input.currentRows, ...externalRows];
   const batches = buildPerformanceBatches(
-    input.currentRows,
+    allCurrentRows,
     input.previousRows,
     BATCH_SIZE,
   );
@@ -616,7 +640,7 @@ export async function analyzeSeoOpportunities(input: {
   const allResult: OpportunityAnalysisGroup[] = [];
   const validCategoryIds = new Set(input.categories.map((item) => item.id));
   const evidenceRows = [
-    ...input.currentRows,
+    ...allCurrentRows,
     ...input.previousRows,
     ...input.countryRows,
   ];

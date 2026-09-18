@@ -9,6 +9,10 @@ import { getCurrentUserId } from "@/lib/current-user";
 import { analyzeSeoOpportunities } from "@/lib/opportunity-analysis";
 import { getGoogleAnalyticsSignals, summarizeGoogleAnalyticsSignals } from "@/lib/google-analytics-signals";
 import { getBingSignals, summarizeBingSignals } from "@/lib/bing-signals";
+import {
+  readFreshOpportunityEvidenceCache,
+  writeOpportunityEvidenceCache,
+} from "@/lib/opportunity-evidence-cache";
 import { platformProductNameOrNeutral } from "@auto-articulos/shared";
 
 
@@ -96,12 +100,6 @@ export async function POST(request: Request) {
   const integration = await prisma.searchIntegration.findFirst({
     where: { userId, provider: "google", ...(selectedSiteDomain ? { siteDomain: selectedSiteDomain } : {}) },
   });
-  if (!integration?.siteUrl) {
-    return NextResponse.json(
-      { error: "Conecta Google Search Console y elige una propiedad primero." },
-      { status: 400 },
-    );
-  }
   const selectedPanel = user.selectedSitePanel || panel;
   const categories = await prisma.category.findMany({
     where: { userId, panel: selectedPanel, source: { not: "archived" }, ...(selectedSiteDomain ? { siteDomain: selectedSiteDomain } : {}) },
@@ -117,62 +115,56 @@ export async function POST(request: Request) {
 
 
   try {
+    // Ventana de evidencia: 90 días consecutivos (45 actuales + 45 de
+    // comparación), dejando los últimos 3 días fuera por el retraso normal
+    // de Search Console. Las fuentes GA4/Bing conservan sus periodos propios
+    // y se fusionan después, sin hacer depender la cobertura de una sola API.
     const end = new Date();
     end.setUTCDate(end.getUTCDate() - 3);
     const currentStart = new Date(end);
-    currentStart.setUTCDate(currentStart.getUTCDate() - 27);
+    currentStart.setUTCDate(currentStart.getUTCDate() - 44);
     const previousEnd = new Date(currentStart);
     previousEnd.setUTCDate(previousEnd.getUTCDate() - 1);
     const previousStart = new Date(previousEnd);
-    previousStart.setUTCDate(previousStart.getUTCDate() - 27);
-    const accessToken = await getGoogleAccessToken(
-      decryptSecret(integration.encryptedRefreshToken),
-    );
-    const [currentRows, previousRows, countryRows, existing] = await Promise.all([
-      queryGoogleSearchAnalytics(
-        accessToken,
-        integration.siteUrl,
-        isoDate(currentStart),
-        isoDate(end),
-      ),
-      queryGoogleSearchAnalytics(
-        accessToken,
-        integration.siteUrl,
-        isoDate(previousStart),
-        isoDate(previousEnd),
-      ),
-      // Distribución geográfica real (países que ya generan impresiones/clics)
-      // para que el análisis de oportunidades pueda segmentar títulos por
-      // ubicación real en vez de inventarla — pedido explícito del usuario,
-      // 5/8/2026. Search Console no expone ciudad como dimensión propia; el
-      // nivel de ciudad/condado se infiere del texto real de las consultas.
-      queryGoogleSearchAnalytics(
-        accessToken,
-        integration.siteUrl,
-        isoDate(currentStart),
-        isoDate(end),
-        ["country"],
-      ),
-      prisma.title.findMany({
-        where: {
-          run: { userId },
-          status: "success",
-          articleUrl: { not: null },
-        },
-        select: { text: true, finalTitle: true, run: { select: { categoryId: true } } },
-        orderBy: { processedAt: "desc" },
-        take: 1000,
-      }),
-    ]);
-    if (currentRows.length === 0) {
-      return NextResponse.json(
-        {
-          error:
-            "Search Console todavía no tiene datos de rendimiento para esta propiedad.",
-        },
-        { status: 422 },
+    previousStart.setUTCDate(previousStart.getUTCDate() - 44);
+    const existingPromise = prisma.title.findMany({
+      where: {
+        run: { userId },
+        status: "success",
+        articleUrl: { not: null },
+      },
+      select: { text: true, finalTitle: true, run: { select: { categoryId: true } } },
+      orderBy: { processedAt: "desc" },
+      take: 1000,
+    });
+    const cacheScope = { userId, siteDomain: selectedSiteDomain, panel: selectedPanel };
+    const cachedGsc = await readFreshOpportunityEvidenceCache<{
+      currentRows: Awaited<ReturnType<typeof queryGoogleSearchAnalytics>>;
+      previousRows: Awaited<ReturnType<typeof queryGoogleSearchAnalytics>>;
+      countryRows: Awaited<ReturnType<typeof queryGoogleSearchAnalytics>>;
+    }>({ ...cacheScope, source: "gsc" });
+    let currentRows = cachedGsc?.currentRows ?? [];
+    let previousRows = cachedGsc?.previousRows ?? [];
+    let countryRows = cachedGsc?.countryRows ?? [];
+    if (!cachedGsc && integration?.siteUrl) {
+      const accessToken = await getGoogleAccessToken(
+        decryptSecret(integration.encryptedRefreshToken),
+      );
+      [currentRows, previousRows, countryRows] = await Promise.all([
+        queryGoogleSearchAnalytics(accessToken, integration.siteUrl, isoDate(currentStart), isoDate(end)),
+        queryGoogleSearchAnalytics(accessToken, integration.siteUrl, isoDate(previousStart), isoDate(previousEnd)),
+        // Distribución geográfica real por país; las ciudades se obtienen de
+        // las consultas y del contexto declarado, no de esta dimensión.
+        queryGoogleSearchAnalytics(accessToken, integration.siteUrl, isoDate(currentStart), isoDate(end), ["country"]),
+      ]);
+      await writeOpportunityEvidenceCache(
+        { ...cacheScope, source: "gsc" },
+        JSON.parse(JSON.stringify({ currentRows, previousRows, countryRows })),
+        previousStart,
+        end,
       );
     }
+    const existing = await existingPromise;
     // Ejemplos reales de lo que YA se publicó en cada categoría (pedido de
     // Milton, 2/9/2026, caso Guillermo Martínez): el nombre de la categoría
     // sola no basta para que la IA sepa qué tema cubre de verdad. Con hasta
@@ -194,9 +186,49 @@ export async function POST(request: Request) {
     }));
 
     const [googleAnalyticsSignals, bingSignals] = await Promise.all([
-      getGoogleAnalyticsSignals(userId),
-      getBingSignals(userId),
+      readFreshOpportunityEvidenceCache<{ connected: boolean; propertyId?: string; rows: Array<{ pagePath?: string; sessions: number; activeUsers: number; engagementRate?: number; conversions?: number }>; error?: string }>({ ...cacheScope, source: "ga4" }).then(async (cached) => {
+        if (cached) return cached;
+        const fresh = await getGoogleAnalyticsSignals(userId);
+        if (fresh.connected) {
+          await writeOpportunityEvidenceCache({ ...cacheScope, source: "ga4" }, JSON.parse(JSON.stringify(fresh)));
+        }
+        return fresh;
+      }),
+      readFreshOpportunityEvidenceCache<{ connected: boolean; siteUrl?: string; rows: Array<{ query: string; clicks: number; impressions: number; position: number }>; error?: string }>({ ...cacheScope, source: "bing" }).then(async (cached) => {
+        if (cached) return cached;
+        const fresh = await getBingSignals(userId);
+        if (fresh.connected) {
+          await writeOpportunityEvidenceCache({ ...cacheScope, source: "bing" }, JSON.parse(JSON.stringify(fresh)));
+        }
+        return fresh;
+      }),
     ]);
+    if (currentRows.length === 0 && googleAnalyticsSignals.rows.length === 0 && bingSignals.rows.length === 0) {
+      return NextResponse.json(
+        { error: "No hay evidencia disponible en GSC, Google Analytics o Bing Webmaster Tools." },
+        { status: 422 },
+      );
+    }
+    const externalEvidenceRows = [
+      ...googleAnalyticsSignals.rows.map((row) => ({
+        source: "google-analytics-4",
+        query: row.pagePath ?? "",
+        page: row.pagePath ?? "",
+        clicks: 0,
+        impressions: row.sessions,
+        ctr: 0,
+        position: 0,
+      })),
+      ...bingSignals.rows.map((row) => ({
+        source: "bing-webmaster-tools",
+        query: row.query,
+        page: "",
+        clicks: row.clicks,
+        impressions: row.impressions,
+        ctr: row.impressions > 0 ? row.clicks / row.impressions : 0,
+        position: row.position,
+      })),
+    ];
     const analysis = await analyzeSeoOpportunities({
       categories: categoriesWithExamples,
       currentRows,
@@ -210,6 +242,7 @@ export async function POST(request: Request) {
       clientLocations,
       businessLocations,
       excludedTopics: user.excludedTopics ?? undefined,
+      externalEvidenceRows,
     });
 
     const now = new Date();
