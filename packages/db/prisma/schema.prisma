@@ -211,6 +211,7 @@ model User {
   oauthAccessTokens          OAuthAccessToken[]
   oauthRefreshTokens         OAuthRefreshToken[]
   trialDomainRegistries      TrialDomainRegistry[]
+  titleGenerationRequests    TitleGenerationRequest[]
 }
 
 // Credenciales del authorization server propio para el enlace de cuentas MCP.
@@ -521,6 +522,35 @@ model McpConnection {
 
   @@unique([userId, provider])
   @@index([userId])
+}
+
+// CREACION DE PUBLICACIONES PROPIAS — una fila por solicitud de títulos con la
+// IA del sistema (Publicaciones propias, arranque en frío sin datos de
+// GSC/GA/Bing). Sirve para tres cosas y nada más: (1) hacer cumplir el tope de
+// 3 solicitudes por día, (2) no volver a ofrecer un título ya ofrecido, y
+// (3) que el administrador revise qué se pide y qué devuelve el prompt maestro.
+model TitleGenerationRequest {
+  id            String   @id @default(cuid())
+  userId        String
+  // Día de la solicitud con la MISMA convención que el contador de
+  // publicaciones (medianoche del servidor), formato "YYYY-MM-DD".
+  dayKey        String
+  // 1..3. El @@unique hace atómico el tope: dos pestañas a la vez no pueden
+  // tomar la misma solicitud del día.
+  slot          Int
+  categoryId    String
+  categoryName  String
+  // Lo que el usuario escribió en el formulario. NULL = ya purgado (se borra a
+  // los 90 días; los títulos ofrecidos se conservan porque impiden repetir).
+  inputs        Json?
+  offeredTitles String[] @default([])
+  createdAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dayKey, slot])
+  @@index([userId, createdAt])
+  @@index([createdAt])
 }
 
 model Category {
