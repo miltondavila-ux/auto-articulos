@@ -4634,6 +4634,27 @@ Google y para quienes desean publicar contenido propio directamente en su web.
 
 Responsable: Codex. Estado: EN REVISIÓN LOCAL.
 
+## CIERRE Y ARCHIVO — SIMPLIFICACION DEL SETUP INICIAL — 2026-09-18
+
+El lote fue validado en el worktree aislado y promovido mediante el PR #143:
+https://github.com/miltondavila-ux/auto-articulos/pull/143. Antes del merge se
+integró `origin/main` y se resolvió el conflicto conservando las correcciones
+de producción de Bing Webmaster junto con el nuevo lenguaje del setup.
+
+Verificaciones aprobadas: `npm run verify` completo (Prisma generate, typecheck
+web, build web, build worker y 20 pruebas); `git diff --check`; Preview Vercel
+Ready; login del Preview HTTP 200. No hubo cambios de schema ni migraciones.
+
+Producción confirmada después del merge: `main` en
+`d6ba5f8580cc9ad4072ed1941b7f05ee4207ca07`; Vercel deployment
+`dpl_7XmpajPXMfJoBWqsNN5eKqhHD2tA` en estado `READY`; dominio
+`https://seototal.lasolucionweb.com`; login HTTP 200.
+
+Se liberan las reservas de la tarea. No quedan acciones de implementación
+pendientes en este lote. Estado final: **ARCHIVADA — EN PRODUCCIÓN Y VERIFICADA**.
+
+Responsable: Codex.
+
 ## MEJORA FINAL DE LEGIBILIDAD EN TARJETAS — 2026-09-18
 
 Se reforzó la jerarquía tipográfica de los accesos del Inicio: números en

@@ -384,3 +384,8 @@ HANDOFF, solo alimenta ideas hacia él).
   duplicados y (b) el `rationale` de cada título cita entre comillas una
   consulta real. Solo el PR #107 quedó verificado en vivo. Pendiente, no
   autorizado para ejecutar sin Milton.
+- **ARCHIVADO — SIMPLIFICACION DEL SETUP INICIAL (18/9/2026):** PR #143
+  fusionado a `main` (`d6ba5f8`) y verificado en Producción con Vercel
+  deployment `dpl_7XmpajPXMfJoBWqsNN5eKqhHD2tA`; sin migraciones ni cambios de
+  schema. `npm run verify` completo y login de
+  `https://seototal.lasolucionweb.com` HTTP 200. No quedan acciones pendientes.

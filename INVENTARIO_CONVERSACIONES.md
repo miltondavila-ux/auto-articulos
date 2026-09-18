@@ -1333,3 +1333,11 @@ PR #125, commit `3aa0266`, rama `claude/mensajes-error-humanizados-ia`, worktree
 - Responsable siguiente: Milton (autorización), luego Claude.
 
 **Estado final:** error de publicación **ARCHIVADA**; mensajes inteligentes (PR #125) **PAUSADO**.
+## ARCHIVADO — SIMPLIFICACION DEL SETUP INICIAL — 2026-09-18
+
+PR #143 fusionado a `main` con `d6ba5f8` y desplegado en Vercel Production.
+Deployment `dpl_7XmpajPXMfJoBWqsNN5eKqhHD2tA` en `READY`, dominio
+`seototal.lasolucionweb.com` verificado con HTTP 200 en login. `npm run verify`
+pasó completo con 20 pruebas del worker. Sin schema ni migraciones. Se
+actualizaron interfaz, menú, manual y asistente/MCP; se conservaron rutas,
+permisos e integraciones. Reservas liberadas. Estado final: ARCHIVADA.

@@ -2566,6 +2566,34 @@ PR #127 fusionado a `main` (`cd6fd3e`); Vercel Preview aprobado y deployment de 
 
 Responsable: Claude. Estado: EN PRODUCCIÓN.
 
+## Versión desplegada y archivada — 2026-09-18 — Simplificación del setup inicial
+
+Proyecto: **SIMPLIFICACION DEL SETUP INICIAL**. Rama de trabajo:
+`claude/simplificacion-setup-inicial`. PR #143:
+https://github.com/miltondavila-ux/auto-articulos/pull/143. La rama se sincronizó
+con `origin/main` antes de promoverla; se conservó el paso recomendado de Bing
+Webmaster y se corrigió la secuencia del wizard para que el paso final quede
+como Paso 6.
+
+Alcance cerrado: copy coherente en dashboard, menú, módulos, manual de usuario
+y asistente/MCP; cuatro tarjetas principales con sus nombres aprobados; Historial
+dentro de Publicaciones; Actualizaciones dentro de Configuración; tarjetas
+responsive con contraste reforzado; gráfico de ritmo a ancho completo; y retiro
+del aviso de inactividad. Se conservaron rutas, permisos, endpoints, scopes e
+integraciones existentes. Sin cambios de schema ni migraciones.
+
+Auditoría 1: APROBADA (`git diff --check`, worktree aislado, sin secretos).
+Auditoría 2: APROBADA (`npm run verify`: Prisma generate, typecheck de web,
+build de web, build del worker y 20 tests del worker). Auditoría 3: APROBADA;
+Preview Vercel `https://auto-articulos-iyqfd3ymx-luna-portex-intelligence.vercel.app`
+en estado Ready y respuesta correcta de login.
+
+Merge a `main`: `d6ba5f8580cc9ad4072ed1941b7f05ee4207ca07`. Vercel Production:
+deployment `dpl_7XmpajPXMfJoBWqsNN5eKqhHD2tA`, estado `READY`, alias
+`seototal.lasolucionweb.com`; comprobación final del login: HTTP 200.
+
+Responsable: Codex. Estado final: **ARCHIVADA — EN PRODUCCIÓN Y VERIFICADA**.
+
 ## Versión — 2026-09-18 — CHECK DE NO INDEXACION (worker)
 
 Commit `0d20b9b` (squash en `main`: `e8a8b18`, PR #114). Archivo:
