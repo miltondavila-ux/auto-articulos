@@ -7,7 +7,7 @@ const MAX_STORED_MESSAGES = 30;
 const quickQuestions = [
   "¿Cómo publico un artículo?",
   "¿Cómo conecto Google?",
-  "¿Dónde veo oportunidades SEO?",
+  "¿Dónde publico contenido con ayuda de la IA avanzada?",
 ];
 
 type ConversationMessage = {

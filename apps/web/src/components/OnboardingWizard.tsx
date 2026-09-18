@@ -615,14 +615,16 @@ export default function OnboardingWizard({
   const step2Done = step1Done && categories.length > 0;
   const step3Done = step1Done && step2Done && Boolean(contentLanguage);
   const step4Done = step1Done && step2Done && step3Done && Boolean(googleData?.connected && googleData?.siteUrl);
+  const bingDone = Boolean(bingData?.connected && bingData?.siteUrl);
   const step5Done = step1Done && step2Done && step3Done && step4Done && hasPublishedAny;
 
-  // Determinar paso activo exacto (1..5)
+  // Determinar paso activo exacto (1..6). Bing es recomendado, pero no bloquea
+  // el acceso al paso final cuando ya se completó la configuración principal.
   let activeStep = 1;
   if (step1Done && !step2Done) activeStep = 2;
   else if (step1Done && step2Done && !step3Done) activeStep = 3;
   else if (step1Done && step2Done && step3Done && !step4Done) activeStep = 4;
-  else if (step1Done && step2Done && step3Done && step4Done) activeStep = 5;
+  else if (step1Done && step2Done && step3Done && step4Done) activeStep = bingDone ? 6 : 5;
 
   const totalCoreSteps = 4;
   // El progreso cuenta el Paso 1 solo si está VERIFICADO de verdad: si no, el
@@ -1753,16 +1755,16 @@ export default function OnboardingWizard({
           </StepCard>
 
           {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-          {/* PASO 5: Bing Webmaster Tools (recomendado, no bloqueante)   */}
+          {/* PASO 5: Bing Webmaster Tools (recomendado, no bloqueante) */}
           {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
           <StepCard
             stepNumber={5}
             title="Conectar Bing Webmaster Tools"
             subtitle="Indexa tus artículos también en Bing, Yahoo y el buscador de ChatGPT/Copilot para sumar una fuente extra de visitas."
-            isDone={Boolean(bingData?.connected && bingData?.siteUrl)}
-            isActive={step4Done && !(bingData?.connected && bingData?.siteUrl)}
+            isDone={bingDone}
+            isActive={step4Done && !bingDone}
             badgeText={
-              bingData?.connected && bingData?.siteUrl
+              bingDone
                 ? "Bing Conectado"
                 : "Recomendado"
             }
@@ -1834,13 +1836,13 @@ export default function OnboardingWizard({
           {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
           <StepCard
             stepNumber={6}
-            title="Crear y Explorar Oportunidades SEO"
-            subtitle="Tu plataforma está lista. Ahora dirígete al módulo de Oportunidades para que la IA analice las búsquedas de tu audiencia en Google y te sugiera los mejores temas listos para publicar."
+            title="Crear y explorar contenido con ayuda de la IA avanzada"
+            subtitle="Tu plataforma está lista. Ahora dirígete a Publica contenido con ayuda de la IA avanzada para que la IA analice las búsquedas de tu audiencia en Google y te sugiera los mejores temas listos para publicar."
             isDone={step5Done}
-            isActive={activeStep === 5}
+            isActive={activeStep === 6}
             badgeText={
               step5Done
-                ? "Oportunidades en marcha"
+                ? "Publicación inteligente en marcha"
                 : allCoreDone
                   ? "¡Listo para empezar!"
                   : "Pendiente"
@@ -1849,7 +1851,7 @@ export default function OnboardingWizard({
             <div style={{ marginTop: 10 }}>
               {!allCoreDone ? (
                 <p style={{ fontSize: 13, color: "#6e6e73", margin: 0 }}>
-                  Completa los 4 pasos anteriores para comenzar a generar oportunidades de posicionamiento SEO.
+                  Completa los 4 pasos anteriores para comenzar a generar contenido inteligente para posicionarte.
                 </p>
               ) : (
                 <div
@@ -1864,7 +1866,7 @@ export default function OnboardingWizard({
                     ¡Felicitaciones! Has completado todos los pasos de configuración inicial.
                   </p>
                   <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "#1d1d1f", lineHeight: 1.5 }}>
-                    El siguiente paso es ingresar al módulo de <strong>Oportunidades</strong>. La Inteligencia Artificial analizará las consultas de tus clientes potenciales en Google y creará ideas de contenido listas para publicar con 1 solo clic.
+                    El siguiente paso es entrar en <strong>Publica contenido con ayuda de la IA avanzada</strong>. La Inteligencia Artificial analizará las consultas de tus clientes potenciales en Google y creará ideas de contenido listas para publicar con 1 solo clic.
                   </p>
                   <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
                     <Link
@@ -1883,7 +1885,7 @@ export default function OnboardingWizard({
                         boxShadow: "none",
                       }}
                     >
-                      Ir a Crear Oportunidades SEO →
+                      Ir a Publica contenido con ayuda de la IA avanzada →
                     </Link>
                     <Link
                       href="/dashboard/publicar"

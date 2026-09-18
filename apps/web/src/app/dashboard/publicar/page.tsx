@@ -268,7 +268,7 @@ export default function PublicarPage() {
             <li><strong>Elige una categoría:</strong> indica el tema o servicio del artículo.</li>
             <li><strong>Elige el idioma y el estilo:</strong> define cómo redactará la inteligencia artificial.</li>
             <li><strong>Escribe o pega los títulos:</strong> coloca un título por línea; cada uno será un artículo independiente.</li>
-            <li><strong>Revisa y pulsa “Iniciar”:</strong> el sistema procesará los artículos uno por uno y mostrará el resultado en <strong>Publicaciones en Curso</strong>.</li>
+            <li><strong>Revisa y pulsa “Iniciar”:</strong> el sistema procesará los artículos uno por uno y mostrará el resultado en <strong>Progreso de las publicaciones</strong>.</li>
           </ol>
         </section>
         {!hasImageCredits && (
@@ -360,7 +360,7 @@ export default function PublicarPage() {
               href="/dashboard/publicaciones-en-curso"
               style={{ color: "#0071e3", fontWeight: 500 }}
             >
-              Ver progreso en Publicaciones en Curso
+              Ver progreso de las publicaciones
             </Link>
             .
           </div>

@@ -268,7 +268,7 @@ export default function ConfiguracionContenidoPage() {
           <li><strong>Elige el estilo de redacción:</strong> el tono con el que la inteligencia artificial escribe por defecto.</li>
           <li><strong>Escribe la firma:</strong> el texto que se agrega automáticamente al final de cada artículo nuevo.</li>
           <li><strong>Indica ubicaciones (opcional):</strong> de dónde son tus clientes y dónde opera tu negocio, para títulos más segmentados.</li>
-          <li><strong>Segmento de no publicar (opcional):</strong> temas que Oportunidades debe descartar siempre, sin importar la demanda real.</li>
+          <li><strong>Segmento de no publicar (opcional):</strong> temas que la publicación inteligente debe descartar siempre, sin importar la demanda real.</li>
           <li><strong>Guarda tu teléfono:</strong> se usa en los botones de WhatsApp y llamada de tus artículos.</li>
           <li><strong>Sube tus fotos y logo:</strong> se usan al crear imágenes para redes sociales.</li>
         </ol>
@@ -395,7 +395,7 @@ export default function ConfiguracionContenidoPage() {
           <h2 style={h2Style}>Ubicaciones para Títulos Geolocalizados</h2>
           <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 12 }}>
             Cuéntanos de dónde son tus clientes reales y dónde está o vende tu
-            negocio. Con esta información, Oportunidades puede crear títulos
+            negocio. Con esta información, la publicación inteligente puede crear títulos
             ultra segmentados que combinan ambas (ej. &quot;Cómo invertir en
             propiedades en Homestead si vives en Colombia&quot;). Escribe
             varias ciudades o países separados por comas. Dejar vacío no
@@ -440,7 +440,7 @@ export default function ConfiguracionContenidoPage() {
           <h2 style={h2Style}>Segmento de No Publicar</h2>
           <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 12 }}>
             Escribe aquí, separados por comas, los temas o palabras que NO
-            quieres que Oportunidades tome en cuenta al proponer títulos
+            quieres que la publicación inteligente tome en cuenta al proponer títulos
             nuevos. Cualquier título que toque uno de estos temas se descarta
             automáticamente antes de mostrarse. Dejar vacío no cambia nada de
             tu cuenta.

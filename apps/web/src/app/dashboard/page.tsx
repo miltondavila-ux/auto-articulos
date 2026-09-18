@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import ModuleIntro, { IntroP, Modulo } from "@/components/ModuleIntro";
 import Link from "next/link";
-import { Card, Grid, Text } from "@tremor/react";
+import { Card, Grid } from "@tremor/react";
 import type { RunRow } from "@/types/dashboard";
 import PerformanceDashboard from "@/components/PerformanceDashboard";
 import OnboardingWizard from "@/components/OnboardingWizard";
@@ -15,11 +15,34 @@ interface PublishedNotification {
   url: string | null;
 }
 
+interface ConfigurationAlert {
+  id: string;
+  label: string;
+  actionUrl: string;
+  actionLabel: string;
+}
+
 const QUICK_LINKS = [
-  { href: "/dashboard/publicar", label: "Publicaciones propias" },
-  { href: "/dashboard/oportunidades", label: "Oportunidades SEO/AEO" },
-  { href: "/dashboard/oportunidades-redes", label: "Oportunidades para Redes Sociales" },
-  { href: "/dashboard/publicaciones-en-curso", label: "Publicaciones en Curso" },
+  {
+    href: "/dashboard/como-funciona",
+    label: "Cómo funciona esta aplicación",
+    description: "Conoce cómo SEO TOTAL te ayuda a crear, publicar y distribuir contenido.",
+  },
+  {
+    href: "/dashboard/publicar",
+    label: "Publica tus propios títulos",
+    description: "Escribe tus títulos y publícalos directamente en tu página web. Es ideal si estás comenzando y todavía no tienes registros de indexación en Google, o si simplemente quieres publicar contenido propio.",
+  },
+  {
+    href: "/dashboard/oportunidades",
+    label: "Publica contenido con ayuda de la IA avanzada",
+    description: "SEO TOTAL analiza Google, Bing, Analytics y otros datos para encontrar temas con posibilidades reales y ayudarte a crear artículos para tu página web.",
+  },
+  {
+    href: "/dashboard/oportunidades-redes",
+    label: "Difunde tu contenido en blogs externos y redes sociales",
+    description: "Lleva tus artículos ya publicados a microblogs, blogs externos y redes sociales en lote, y crea tu avatar de autoridad en internet.",
+  },
 ];
 
 export default function InicioPage() {
@@ -32,6 +55,7 @@ export default function InicioPage() {
   // al crear la cuenta. Desaparece solo cuando el trial termina de verdad,
   // no con un botón de cerrar (pedido explícito de Milton, 16/9/2026).
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
+  const [configurationAlerts, setConfigurationAlerts] = useState<ConfigurationAlert[]>([]);
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
@@ -118,23 +142,40 @@ export default function InicioPage() {
 
   const checkWizardStatus = useCallback(async () => {
     try {
-      const [credRes, catRes, meRes, googleRes] = await Promise.all([
+      const [credRes, catRes, meRes, googleRes, configurationRes] = await Promise.all([
         fetch("/api/credentials", { cache: "no-store" }),
         fetch("/api/categories", { cache: "no-store" }),
         fetch("/api/me", { cache: "no-store" }),
         fetch("/api/search-integrations/google", { cache: "no-store" }),
+        fetch("/api/configuration-status", { cache: "no-store" }),
       ]);
 
       const credData = credRes.ok ? await credRes.json() : {};
       const catData = catRes.ok ? await catRes.json() : {};
       const meData = meRes.ok ? await meRes.json() : {};
       const googleData = googleRes.ok ? await googleRes.json() : {};
+      const configurationData = configurationRes.ok ? await configurationRes.json() : null;
 
       const step1 = Boolean(credData.configured);
       const step2 = Array.isArray(catData.categories) && catData.categories.length > 0;
       const step3 = typeof meData.contentLanguage === "string" && meData.contentLanguage.trim().length > 0;
       const step4 = Boolean(googleData.connected && googleData.siteUrl);
       const complete = step1 && step2 && step3 && step4;
+
+      const alertIds = new Set([
+        "google-analytics",
+        "bing-webmaster",
+        "geolocation",
+        "signature",
+        "excluded-topics",
+      ]);
+      const pendingAlerts = Array.isArray(configurationData?.checks)
+        ? configurationData.checks.filter(
+            (check: ConfigurationAlert & { configured: boolean }) =>
+              alertIds.has(check.id) && !check.configured,
+          )
+        : [];
+      setConfigurationAlerts(pendingAlerts);
 
       if (!complete) everIncompleteRef.current = true;
       setShowWizard(everIncompleteRef.current ? true : !complete);
@@ -221,22 +262,58 @@ export default function InicioPage() {
               Si no sabes por dónde empezar, <Modulo id="como-funciona" /> lo explica entero en tres pasos.
             </IntroP>
             <IntroP>
-              Justo abajo tienes 4 botones: elige el que corresponda a lo que quieres hacer ahora.
+          Justo abajo tienes 4 botones: elige el que corresponda a lo que quieres hacer ahora.
             </IntroP>
           </>
         )}
+        {configurationAlerts.length > 0 && (
+          <p style={{ margin: "14px 0 0", fontSize: 14, lineHeight: 1.55, color: "#1d1d1f" }}>
+            <strong>ALERTAS:</strong>{" "}
+            Para aprovechar mejor SEO TOTAL, todavía puedes completar estos ajustes:{" "}
+            {configurationAlerts.map((alert, index) => (
+              <span key={alert.id}>
+                {index > 0 && (index === configurationAlerts.length - 1 ? " y " : ", ")}
+                <Link href={alert.actionUrl} style={{ color: "#0066cc", fontWeight: 600 }}>
+                  {alert.label}
+                </Link>
+              </span>
+            ))}
+            .
+          </p>
+        )}
       </ModuleIntro>
       {showWizard === false && (
-        <Grid numItemsSm={2} numItemsLg={4} className="gap-4" style={{ marginTop: 20, marginBottom: 20 }}>
+        <Grid numItemsSm={2} numItemsLg={4} className="gap-4 items-stretch" style={{ marginTop: 20, marginBottom: 20 }}>
           {QUICK_LINKS.map((l, i) => (
-            <Link key={l.href} href={l.href} style={{ textDecoration: "none" }}>
-              <Card>
-                <Text>{String(i + 1).padStart(2, "0")}</Text>
-                <p style={{ marginTop: 8, fontSize: 15, fontWeight: 600, color: "#1d1d1f", lineHeight: 1.4 }}>
+            (() => {
+              const darkCard = i === 1;
+              const coloredCard = i > 1;
+              const primaryText = coloredCard ? "#ffffff" : "#111111";
+              const secondaryText = coloredCard ? "#ffffff" : "#111111";
+
+              return (
+                <Link key={l.href} href={l.href} style={{ display: "flex", height: "100%", textDecoration: "none" }}>
+              <Card
+                style={{
+                  flex: 1,
+                  boxSizing: "border-box",
+                  background: darkCard ? "#c6c6c6" : i === 2 ? "#919191" : i === 3 ? "#5e5e5e" : "#ffffff",
+                  borderColor: i === 0 ? "rgba(0, 0, 0, 0.08)" : "transparent",
+                }}
+              >
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, lineHeight: 1.2, color: primaryText, letterSpacing: "0.02em" }}>
+                  {String(i + 1).padStart(2, "0")}
+                </p>
+                <p style={{ marginTop: 12, fontSize: 16, fontWeight: 700, color: primaryText, lineHeight: 1.35 }}>
                   {l.label}
                 </p>
+                <p style={{ margin: "10px 0 0", fontSize: 13, fontWeight: 500, lineHeight: 1.5, color: secondaryText }}>
+                  {l.description}
+                </p>
               </Card>
-            </Link>
+                </Link>
+              );
+            })()
           ))}
         </Grid>
       )}
@@ -322,7 +399,7 @@ export default function InicioPage() {
             href="/dashboard/publicaciones-en-curso"
             style={{ color: "#0066cc", fontWeight: 600, textDecoration: "underline" }}
           >
-            Ver progreso en Publicaciones en Curso
+            Ver progreso de las publicaciones
           </Link>
           .
         </div>
@@ -330,4 +407,3 @@ export default function InicioPage() {
     </div>
   );
 }
-

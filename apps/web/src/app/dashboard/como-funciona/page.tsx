@@ -4,7 +4,7 @@ import type { CSSProperties } from "react";
 import { EnPrueba, Modulo } from "@/components/ModuleIntro";
 
 export const metadata: Metadata = {
-  title: "Cómo funciona — SEO TOTAL",
+  title: "Cómo funciona esta aplicación — SEO TOTAL",
   description:
     "Qué hace SEO TOTAL, en qué orden ocurre y qué debes hacer tú en cada paso.",
 };
@@ -152,7 +152,7 @@ const PASOS = [
         guardados en <Modulo id="historial" /> con su enlace.
       </>,
     ],
-    accion: { texto: "Ver Oportunidades SEO/AEO", href: "/dashboard/oportunidades" },
+    accion: { texto: "Publica contenido con ayuda de la IA avanzada", href: "/dashboard/oportunidades" },
   },
   {
     numero: 3,
@@ -179,7 +179,7 @@ const PASOS = [
       </>,
     ],
     accion: {
-      texto: "Ver Oportunidades para Redes Sociales",
+      texto: "Difunde tu contenido en blogs externos y redes sociales",
       href: "/dashboard/oportunidades-redes",
     },
   },
