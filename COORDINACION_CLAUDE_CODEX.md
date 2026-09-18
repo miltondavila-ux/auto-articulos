@@ -7448,3 +7448,114 @@ nada a `INVENTARIO_CONVERSACIONES.md` Parte A por esto.
 No hubo ninguna acción destructiva, migración ni deploy en esta corrida.
 
 Responsable: Claude (tarea programada diaria de propagación).
+
+## Claude - BING WEBMASTER DIRECCION DE DEVOLUCION — 2026-09-18
+
+**Capitán de migración:** Claude — revisará y aplicará el lote completo. Motivo:
+Bing Webmaster: el retorno OAuth vuelve a /dashboard/configuracion/indexacion
+(sin migraciones). Nadie más ejecuta Prisma hasta su liberación.
+
+## ARCHIVADO — CHECK DE NO INDEXACION — 2026-09-18
+
+Milton reportó que la opción "no indexar" al crear artículos/lotes en
+10minutesWebsite y TagCrush no se respetaba. Causa confirmada en
+`apps/worker/src/automation/10minutesWebsite.ts`: el checkbox
+`#activate_indexing` se desmarcaba una sola vez al inicio, y
+`saveAndGetUrl()` dispara `change` sobre `#type` en cada intento de guardado
+(incluso el primero), lo que puede devolverlo a su valor por defecto
+(indexación activada) justo antes de guardar. Además el error de
+`setChecked` se tragaba en silencio y el paso reportaba éxito sin verificar.
+
+Fix (PR #114, fusionado a `main` en `e8a8b18`, sin migraciones): nueva
+`applyIndexingPreference()` que desmarca y verifica leyendo el DOM, aplicada
+justo antes de cada clic de guardado; si no se puede confirmar, el run
+registra "ATENCIÓN..." en vez de un falso éxito. Aplica a los tres servidores
+(net, site, tagcrush) porque comparten el mismo código. La línea MCP
+(`mcpPublisher.ts`) envía `indexar` a la API y no estaba afectada.
+
+Auditorías 1 y 2 aprobadas (integridad; `tsc --noEmit` limpio, fallos de
+`vitest` preexistentes en `main`). Auditoría 3 (verificación en vivo con
+`worker-test.yml` y la cuenta de Lorena) **pendiente**: no se corrió porque
+esa cuenta tenía datos de otra tarea. El worker ya ejecuta el código nuevo
+(checkout fresco de `main` en cada corrida). Al primer artículo real con
+"no indexar", revisar en el log el mensaje "Indexación ... desactivada
+(verificado)".
+
+Responsable: Claude. Estado final: ARCHIVADA (verificación en vivo pendiente,
+no bloquea el cierre).
+
+**Capitán de migración liberó el lote:** Claude. Resultado: PR #127
+(https://github.com/miltondavila-ux/auto-articulos/pull/127) fusionado a main
+(`cd6fd3e`), desplegado en Producción (Vercel: Deployment has completed), sin
+migraciones. Manual actualizado en el mismo lote.
+
+## Claude - BOTON VIDEO EXPLICATIVO BING WEBMASTER — 2026-09-17
+
+Rama `claude/boton-video-bing-webmaster`, worktree
+`.worktrees/boton-video-bing-webmaster`, sin migraciones de schema. Nuevo
+paso "Conectar Bing Webmaster Tools" en el wizard de Inicio
+(`OnboardingWizard.tsx`), recomendado y no bloqueante, reutilizando el
+componente y las rutas OAuth de Bing que ya existían. Detalle completo en
+`INVENTARIO_CONVERSACIONES.md`. Estado: ACTIVO — abriendo PR con el
+enlace del video real ya incluido.
+
+## ARCHIVADO — BING WEBMASTER SITEMAP — 2026-09-18
+
+Al conectar Bing Webmaster ahora se elige el sitio que coincide con el dominio
+de la cuenta, se autocompleta el sitemap (el de Bing o `/sitemap.xml`), se
+valida como XML del mismo dominio y se envía a Bing. PR #128 (`0a7af58`),
+commits `d52c647` y `6d339b7`, sin migraciones. Reservas liberadas y worktree
+retirado. Detalle en `INVENTARIO_CONVERSACIONES.md`.
+
+**Capitán de migración:** Claude — reclamó y liberó el lote (cierre documental
+de BING WEBMASTER SITEMAP, solo documentación, sin migraciones ni schema).
+**Capitán de migración liberó el lote:** Claude. Resultado: PR #136 (solo
+documentación) con el cierre de BING WEBMASTER SITEMAP; sin migraciones.
+Código ya en Producción por el PR #128 (`0a7af58`). Estado: ARCHIVADA.
+
+`INVENTARIO_CONVERSACIONES.md`. PR #126 fusionado a `main` (`c294aff`),
+sin migraciones. Reservas liberadas (`OnboardingWizard.tsx`). Estado final:
+ARCHIVADA.
+
+## ARCHIVADO — CLAUDE - ERROR AL PUBLICAR — 2026-09-18 (cierre 13:03 EDT)
+
+**Identidad:** proyecto `CLAUDE - ERROR AL PUBLICAR`. Responsable: Claude. Cuenta afectada: MPM Realty Group (panel inglés).
+
+**Síntoma:** los artículos no se publicaban ("El artículo no aparece en el listado tras guardar"); llegó a haber 4 de 9 fallidos con hasta 7 intentos cada uno.
+
+**Causa raíz (confirmada con logs reales, no adivinada):** hoy el sitio 10minutesWebsite tarda más de lo normal en procesar el guardado. Tras el clic en "Guardar cambios", `saveAndGetUrl()` miraba a los 1-2 s, veía el formulario todavía abierto y daba el artículo por perdido, aunque el sitio lo terminaba guardando. Efecto colateral: intentos marcados como fallidos que sí se guardaron dejaron **artículos repetidos** en el sitio público de MPM (p. ej. "From Agent to Top Producer: Essential Strategies" y "...: A Practical Guide"; "Productive REALTORS®: Key Habits for Success" y "Habits of Highly Productive REALTORS®"; "Essential Steps After Earning Your Florida Real Estate License" y "Strategies for Success After Your Florida Real Estate License"; "From License Holder to Real Estate Business Owner" y "From Agent to Business Owner in Real Estate"). Borrarlos es decisión de Milton; el sistema no tocó el sitio.
+
+**Fix vigente:** PR #133 (`aea076d`, `apps/worker/src/automation/10minutesWebsite.ts`, +13 líneas, sin migraciones): si el sitio aún no aceptó el guardado y no hay título duplicado, espera 15 s y reintenta (hasta `MAX_SAVE_ATTEMPTS`) con el ciclo de revalidación existente. El worker toma `main` en cada corrida, así que ya está activo.
+
+**Camino descartado (registrado para no repetirlo):** PR #131 (`def4793`) revirtió `eee0e0b` suponiendo que la navegación previa al formulario causaba el fallo; el reintento en vivo con #131 activo falló igual. Revertido por PR #132 (`30d9e37`); la protección contra artículos duplicados sigue en producción. PR #134 y #135: solo registro en `CONTROLADOR_DE_VERSIONES.md`.
+
+**Auditorías:** 1 (integridad) aprobada: un archivo de código, sin migraciones, schema, OAuth ni secretos. 2 (funcional) aprobada con reserva: sintaxis TypeScript sin diagnósticos y `git diff --check` limpio; **no** hubo typecheck completo del worker ni `vitest` (el entorno aislado no tiene dependencias instaladas). 3 (producción en vivo) aprobada por Milton y por esta sesión: lote MPM 5/9 → 9/9 "Completado" (18/9, 11:15-12:00); la tanda nueva "Lead Generation Client Acquisition" (desde las 12:42) iba 5/9 publicados sin fallos ni reintentos manuales al momento del cierre.
+
+**Reservas liberadas:** `apps/worker/src/automation/10minutesWebsite.ts` (bloque de guardado). Worktrees retirados: `restaurar-flujo-guardado`, `restaurar-proteccion-duplicados`, `guardado-esperar-validacion`, `registro-guardado-verificado`, `registro-9de9`. Restos sin commit de esta tarea eliminados del checkout principal (respaldo en el scratchpad de la sesión; el contenido está en `3aa0266`). No se tocó ningún cambio ajeno.
+
+### Pendiente APARTE (no forma parte del error resuelto): mensajes de error inteligentes — PAUSADO
+
+PR #125, commit `3aa0266`, rama `claude/mensajes-error-humanizados-ia`, worktree `.worktrees/mensajes-error-ia` (limpio). Traduce cualquier error crudo de la automatización con IA a una explicación simple más una acción del propio usuario (`humanizeError.ts` nuevo, +84; `queue.ts` +15/−4; `10minutesWebsite.ts` +1/−1). Sin migraciones, schema, OAuth ni secretos; `git diff --check` limpio; se fusiona sin conflictos sobre `main`. **No está fusionado ni en producción** (por eso los logs siguen mostrando errores crudos de Playwright) y **no tiene prueba en vivo**. Alcance conocido: traduce la línea `Error:` del log y el mensaje de Historial, no las líneas `DIAGNÓSTICO [...]`.
+- Reserva que se conserva: `apps/worker/src/humanizeError.ts`, el `catch` de `processRunTitle` en `queue.ts` y las 2 líneas de `login()`.
+- Falta: autorización de Milton para fusionar y verificación en vivo (provocar un error real; comprobar que sin `OPENAI_API_KEY` o con la IA caída se conserva el mensaje original).
+- Otra tarea aparte: la detección de títulos duplicados solo reconoce el formulario en español (`#titlees`/"existe"); en el panel inglés el sitio responde "There is already an article with this title" y el robot no lo reformula.
+- Responsable siguiente: Milton (autorización), luego Claude.
+
+**Estado final:** error de publicación **ARCHIVADA**; mensajes inteligentes (PR #125) **PAUSADO**.
+
+## Claude - BING WEBMASTER DIRECCION DE DEVOLUCION — enlaces — 2026-09-18
+
+**Capitán de migración:** Claude — revisará y aplicará el lote completo. Motivo:
+Bing: 3 enlaces del componente apuntan a /dashboard/configuracion/indexacion
+(sin migraciones). Nadie más ejecuta Prisma hasta su liberación.
+
+**Capitán de migración liberó el lote:** Claude. Resultado: PR #139
+(https://github.com/miltondavila-ux/auto-articulos/pull/139) fusionado a main
+(`9df2f10`), desplegado en Producción, sin migraciones.
+
+### Cierre — BING WEBMASTER DIRECCION DE DEVOLUCION — 2026-09-18
+
+Tarea cerrada. PR #127 (callback), `d52c647` (redirecciones del componente,
+otra sesión) y PR #139 (3 enlaces) dejan todo el retorno de Bing en
+`/dashboard/configuracion/indexacion`. Pendiente solo la prueba en vivo con
+una cuenta de Bing, a cargo de Milton. Estado final: ARCHIVADA.
