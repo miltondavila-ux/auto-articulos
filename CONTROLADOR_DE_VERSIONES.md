@@ -2470,3 +2470,19 @@ mantiene, elegido por costo — la causa raíz era un guardarraíl de código,
 no el modelo).
 
 Responsable: Claude. Estado: EN PRODUCCIÓN, verificado en vivo.
+
+## Versión desplegada — 2026-09-17 — Restauración del botón de forzar análisis
+
+PR #116 (`ff00f9b`, merge a `main` confirmado el 2026-09-17) restauró en
+`apps/web/src/app/dashboard/oportunidades/page.tsx` el estado `canForce` y
+el botón "Forzar análisis ahora" cuando el análisis no encuentra nuevas
+oportunidades. El endpoint y el schema no cambiaron; no hubo migraciones.
+
+Auditoría de integridad: un solo archivo de código, sin secretos ni cambios
+fuera del alcance. Auditoría funcional: `tsc --noEmit` y `npm run build`
+(`apps/web`) limpios. Auditoría de regresión/entrega: PR con 2 checks
+aprobados, deployment automático de Vercel confirmado y prueba en vivo hecha
+por Milton en Producción con una cuenta de pruebas; el botón apareció después
+de ejecutar el análisis sin resultados nuevos.
+
+Responsable: Claude. Estado: EN PRODUCCIÓN, verificado en vivo por Milton.
