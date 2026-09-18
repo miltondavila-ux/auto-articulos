@@ -1338,8 +1338,9 @@ PR #125, commit `3aa0266`, rama `claude/mensajes-error-humanizados-ia`, worktree
 ## Claude - CONEXION COMPOSIO — 2026-09-18
 
 - Estado: ACTIVO. Fase 0 aprobada por Milton el 2026-09-18 (`FASE_0_ARQUITECTURA_CONEXION_COMPOSIO.md`).
-  Fase 1 (módulo de Administración) implementada y auditada en local; commit local en la rama, SIN push, SIN PR
-  y SIN despliegue (requieren autorización de Milton). Responsable: Claude.
+  Fase 1 (módulo de Administración) implementada y auditada en local. PR #142 abierto; Milton autorizó push, PR
+  y fusión (opción A) el 2026-09-18. Punto de retorno en el Controlador de Versiones (etiqueta
+  `pre-composio-fase1-20260918` = `068a0b1`). Responsable: Claude.
 - Alcance: camino paralelo para que los clientes conecten Google (Search Console, Analytics)
   y Meta (Facebook, Instagram) mediante Composio, con interruptor por app en Administración.
   Business Profile y Threads quedan fuera (Composio no tiene toolkit).

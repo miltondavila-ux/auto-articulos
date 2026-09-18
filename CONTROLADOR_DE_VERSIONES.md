@@ -2592,3 +2592,52 @@ enlaces, no requiere cambio.
 PR #139 fusionado (`9df2f10`); Vercel Production completado.
 
 Responsable: Claude. Estado: EN PRODUCCIÓN.
+
+## Versión desplegada — 2026-09-18 — CONEXION COMPOSIO, Fase 1 (módulo Composio en Administración)
+
+PR #142 (`claude/conexion-composio`), commits `73dc766` y `a1fefed` más el de este registro.
+Nuevo módulo de solo administradores en `/dashboard/composio` (clave de API de
+Composio cifrada, auth configs verificados, cuentas conectadas) y "Administración"
+como grupo del menú (Usuarios · Composio). Manual de usuario actualizado en el mismo
+lote. Sin cambios de schema, sin migraciones, sin tocar integraciones existentes
+de Google ni de Meta, `vercel.json`, workflows, middleware ni dependencias.
+
+**PUNTO DE RETORNO (última versión buena conocida, registrada ANTES de fusionar):**
+
+```text
+Commit de Producción previo: 068a0b1 (= origin/main antes del PR #142)
+Etiqueta de Git:             pre-composio-fase1-20260918  (apunta a 068a0b1)
+Deployment Vercel previo:    6529270912 · Production · success
+                             https://auto-articulos-oqjlawfxn-luna-portex-intelligence.vercel.app
+Dominio público:             https://seototal.lasolucionweb.com
+Línea base medida 2026-09-18 21:23 UTC (antes de fusionar):
+  /login 200 · /privacidad 200 · /api/me 401 · /dashboard 307→/login
+  /dashboard/composio 307→/login · /api/admin/composio 401
+```
+
+Verificación previa (Controlador, «Verificación obligatoria»): archivos eliminados
+en el PR: 0 · migraciones: 0 · cambios en `schema.prisma`: 0 · cambios en
+`vercel.json`/workflows/proxy: 0 · `tsc --noEmit` 0 errores · `npm run build`
+exit 0 · rama `MERGEABLE`/`CLEAN` sin conflictos con `main`.
+
+Auditorías: integridad APROBADA · funcional APROBADA (12 pruebas de librería, pruebas
+HTTP reales, verificación visual y camino feliz con la clave real de Milton en base
+local) · regresión APROBADA. Anomalía registrada: Vercel NO generó Preview para este
+PR (sin check, estado ni comentario tras más de 4 minutos; el PR #141 sí lo tuvo).
+Milton autorizó fusionar sin Preview (opción A) el 2026-09-18, asumiendo ese riesgo.
+
+**Cómo revertir en un caso extremo (no hay migraciones ni datos que deshacer):**
+
+1. Más rápido, sin tocar Git: en el panel de Vercel, `Deployments` → deployment
+   `6529270912` (`068a0b1`) → volver a promoverlo a Production (rollback de Vercel).
+2. Por Git, de forma incremental (no destructiva): desde `main`, rama nueva y
+   `git revert -m 1 <commit de fusión del PR #142>`, abrir PR y pasar las tres
+   auditorías. Comparar con `git diff pre-composio-fase1-20260918..main`.
+3. NO usar `reset --hard`, `push --force` ni restaurar snapshots parciales (regla de
+   Protección de este documento).
+4. Datos: el módulo solo escribe filas `composio_*` en `SystemSetting`, inertes si se
+   revierte el código. Pueden quedarse o borrarse (`DELETE FROM "SystemSetting" WHERE
+   key LIKE 'composio_%'`) sin afectar nada más.
+
+Deployment: PENDIENTE (se registra tras fusionar). Verificación en Producción: PENDIENTE.
+Responsable: Claude. Estado: FUSIÓN AUTORIZADA — pendiente de deployment y verificación.
