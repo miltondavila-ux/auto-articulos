@@ -1355,8 +1355,21 @@ PR #125, commit `3aa0266`, rama `claude/mensajes-error-humanizados-ia`, worktree
   pruebas HTTP reales (sin sesión 401, no admin 403, admin 200/400/409, Composio real rechaza clave falsa) y
   revisión visual como admin. (3) Regresión OK: único archivo existente tocado con lógica es `DashboardNav.tsx`
   (el enlace único «Administración» pasa a grupo desplegable; sin más referencias a `ADMIN_TAB`).
-- NO verificado aún (requiere la clave real de Milton): camino feliz contra Composio real (guardar clave válida,
-  verificar un auth config real, listar cuentas conectadas) y qué permiso de la clave cubre `tools/execute`.
+- Camino feliz verificado el 2026-09-18 con la clave real de Milton, solo en la base LOCAL (el módulo aún no está
+  desplegado): clave aceptada por Composio y guardada cifrada; «Probar conexión» y «Ver cuentas conectadas»
+  responden bien (proyecto sin cuentas aún); los 4 auth configs se verifican contra Composio real; el control de
+  toolkit equivocado (ID de Instagram en Facebook) y de ID inexistente rechazan con mensaje claro.
+- Pendiente de verificar: qué permiso de la clave cubre `tools/execute` (se prueba en la Fase 2b).
+- Configuración hecha EN Composio (no vive en el repo), proyecto `10minuteswebsite_workspace_first_project`:
+  clave de API `AUTO ARTICULOS` con lectura general y escritura solo en «Session tool execution» y «Connected
+  accounts». 4 auth configs, todos OAuth 2.0 + Composio Managed, con permisos mínimos:
+  Search Console = webmasters, webmasters.readonly, userinfo.profile, userinfo.email (por defecto);
+  Analytics = analytics.readonly, userinfo.profile (se quitó `analytics`, que permite editar);
+  Facebook = public_profile, pages_show_list, pages_read_engagement, pages_manage_posts, business_management
+  (mismos que pide hoy la app propia; se quitaron email, mensajería, métricas y otros 3);
+  Instagram = instagram_business_basic, instagram_business_content_publish (se quitaron mensajes, comentarios e
+  insights). Nota: Instagram por Composio usa «Instagram Login», un flujo distinto al de la app propia
+  (que pasa por Facebook Login + Página); a validar en la Fase 3.
 - Reservas: `DashboardNav.tsx`. No se toca `usuarios/page.tsx` (cambio sin atribuir de otra tarea en el árbol principal).
 - Migraciones: ninguna. Producción/Preview: sin cambios ni despliegues.
 - Pendiente: Fase 0 y aprobación de Milton; crear clave de API de Composio con permisos de escritura
