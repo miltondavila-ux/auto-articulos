@@ -27,7 +27,7 @@ Ruta: /dashboard
 
 Inicio es tu centro de operaciones:
 - **Para cuentas nuevas (sin artículos aún):** Muestra de forma exclusiva el Asistente de Configuración Inicial, sin menú ni accesos directos, para que completes tu puesta a punto sin distracciones.
-- **Para cuentas con artículos publicados:** Muestra el panel de métricas de rendimiento (artículos publicados hoy, en el mes, límites y gráfico de actividad), el menú superior completo y cuatro accesos directos numerados (01-04) a **Publica tus propios títulos**, **Publica contenido con ayuda de la IA avanzada**, **Difunde tus artículos en blogs externos y redes sociales** y el resto de accesos disponibles en el menú.
+- **Para cuentas con artículos publicados:** Muestra el panel de métricas de rendimiento (artículos publicados hoy, en el mes, límites y gráfico de actividad), el menú superior completo y cuatro accesos directos numerados (01-04) a **Publica tus propios títulos**, **Publica contenido con ayuda de la IA avanzada**, **Difunde tu contenido en blogs externos y redes sociales** y el resto de accesos disponibles en el menú.
 - Desde el menú superior tienes acceso a: Cómo funciona esta aplicación, Publicaciones, Historial, Actualizaciones y Configuración.
 
 ## Cada módulo se explica solo
@@ -44,7 +44,7 @@ El menú superior tiene, en este orden: **Inicio**, **Cómo funciona esta aplica
 
 - **Publica tus propios títulos** (/dashboard/publicar): escribe tus títulos y publícalos directamente en tu página web.
 - **Publica contenido con ayuda de la IA avanzada** (/dashboard/oportunidades): SEO TOTAL analiza Google, Bing, Analytics y otras herramientas para encontrar temas con posibilidades reales y ayudarte a crear artículos para tu página web.
-- **Difunde tus artículos en blogs externos y redes sociales** (/dashboard/oportunidades-redes): lleva tus artículos ya publicados a microblogs, blogs externos y redes sociales en lote, y crea tu avatar de autoridad en internet.
+- **Difunde tu contenido en blogs externos y redes sociales** (/dashboard/oportunidades-redes): lleva tus artículos ya publicados a microblogs, blogs externos y redes sociales en lote, y crea tu avatar de autoridad en internet.
 - **Progreso de las publicaciones** (/dashboard/publicaciones-en-curso): consulta qué artículos se están generando, publicando o esperando. Este acceso permanece en el menú.
 
 En computadora, Publicaciones se abre al pulsarlo y se cierra al elegir una opción, al pulsar fuera o con la tecla Escape. En teléfono y tableta no se despliega: las cuatro opciones aparecen listadas debajo del título Publicaciones.
@@ -177,7 +177,7 @@ Nada se publica sin que tú lo mandes. Las sugerencias ayudan a decidir, pero la
 
 **Publicar en lote mixto de varias categorías a la vez:** cada título tiene una casilla de selección. Puedes marcar títulos de distintas categorías al mismo tiempo; en cuanto marcas alguno aparece el botón verde "Publicar selección" con un contador, que agrupa automáticamente por categoría y publica solo lo que elegiste, respetando los mismos cupos de siempre. Los títulos que no marques quedan sin tocar en el contenido inteligente.
 
-## Difunde tus artículos en blogs externos y redes sociales
+## Difunde tu contenido en blogs externos y redes sociales
 
 **Este módulo está en prueba.** Todavía no está disponible para todas las cuentas: se está activando poco a poco. Si no aparece en tu menú, no es que te falte algo por configurar.
 
@@ -213,7 +213,7 @@ Lo explica en tres pasos:
 
 1. **Configura tu cuenta.** Es lo primero y lo único que no se puede saltar. Si no estás seguro de haberlo dejado todo listo, entra en Configuración y revísalo. Si algo no queda claro, la burbuja de ayuda está en la esquina de todas las pantallas.
 2. **Publica tus artículos.** Hay dos caminos y puedes usar los dos: publicar tus propios títulos dentro del cupo dinámico de tu cuenta, o dejar que el sistema decida por ti desde **Publica contenido con ayuda de la IA avanzada**, donde consulta Google Search Console y Bing. Cuando la inteligencia artificial haya decidido, publicas de uno en uno o por lotes según el saldo diario, mensual y por lote disponible.
-3. **Lleva lo publicado a las redes.** Desde Difunde tus artículos en blogs externos y redes sociales, los artículos más relevantes pasan a tus redes de forma repartida y equilibrada, sin parecer spam.
+3. **Lleva lo publicado a las redes.** Desde Difunde tu contenido en blogs externos y redes sociales, los artículos más relevantes pasan a tus redes de forma repartida y equilibrada, sin parecer spam.
 
 Cierra explicando para qué sirve todo esto: posicionarte con autoridad en internet. Aparecer en los resultados de la inteligencia artificial, de Google y de Bing es lo más importante que le puede pasar a tu negocio en internet.
 
@@ -311,7 +311,7 @@ Ruta: /dashboard/historial
 
 Historial agrupa las ejecuciones por categoría y conserva los resultados de publicación, errores, reintentos, indexación y redes cuando están disponibles. Puedes borrar el historial terminado si ya no lo necesitas; esa acción no se puede deshacer y no cancela un lote que esté en curso.
 
-## Difunde tus artículos en blogs externos y redes sociales
+## Difunde tu contenido en blogs externos y redes sociales
 
 Ruta: /dashboard/oportunidades-redes
 

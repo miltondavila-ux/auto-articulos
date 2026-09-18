@@ -39,7 +39,7 @@ const BASE_ENTRIES: NavEntry[] = [
       {
         id: "oportunidades-redes",
         href: "/dashboard/oportunidades-redes",
-        label: "Difunde tus artículos en blogs externos y redes sociales",
+        label: "Difunde tu contenido en blogs externos y redes sociales",
       },
       {
         id: "publicaciones-en-curso",

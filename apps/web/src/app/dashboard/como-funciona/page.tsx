@@ -179,7 +179,7 @@ const PASOS = [
       </>,
     ],
     accion: {
-      texto: "Difunde tus artículos en blogs externos y redes sociales",
+      texto: "Difunde tu contenido en blogs externos y redes sociales",
       href: "/dashboard/oportunidades-redes",
     },
   },

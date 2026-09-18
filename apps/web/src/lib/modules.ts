@@ -33,7 +33,7 @@ export const SYSTEM_MODULES: SystemModule[] = [
   },
   {
     id: "oportunidades-redes",
-    label: "Difunde tus artículos en blogs externos y redes sociales",
+    label: "Difunde tu contenido en blogs externos y redes sociales",
     href: "/dashboard/oportunidades-redes",
     description: "Distribución de contenido e ideas para redes sociales.",
   },

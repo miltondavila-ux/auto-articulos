@@ -395,7 +395,7 @@ export default function OportunidadesRedesPage() {
                 letterSpacing: "-0.03em",
               }}
             >
-              Difunde tus artículos en blogs externos y redes sociales
+              Difunde tu contenido en blogs externos y redes sociales
             </h1>
             <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
               <strong style={{ fontWeight: 600 }}>Este módulo está en prueba</strong>

@@ -4633,7 +4633,7 @@ menú, las tarjetas del dashboard, los módulos, el manual de usuario y los
 mensajes del asistente/MCP para alinear el vocabulario visible con los nombres
 aprobados por Milton. El dashboard conserva cuatro tarjetas principales:
 **Cómo funciona esta aplicación**, **Publica tus propios títulos**, **Publica
-contenido con ayuda de la IA avanzada** y **Difunde tus artículos en blogs
+contenido con ayuda de la IA avanzada** y **Difunde tu contenido en blogs
 externos y redes sociales**. **Progreso de las publicaciones** queda como
 acceso del menú, no como quinta tarjeta.
 

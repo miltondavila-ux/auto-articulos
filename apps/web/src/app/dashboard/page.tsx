@@ -40,7 +40,7 @@ const QUICK_LINKS = [
   },
   {
     href: "/dashboard/oportunidades-redes",
-    label: "Difunde tus artículos en blogs externos y redes sociales",
+    label: "Difunde tu contenido en blogs externos y redes sociales",
     description: "Lleva tus artículos ya publicados a microblogs, blogs externos y redes sociales en lote, y crea tu avatar de autoridad en internet.",
   },
 ];

@@ -69,7 +69,7 @@ const MODULOS = {
   publicar: { etiqueta: "Publica tus propios títulos", href: "/dashboard/publicar" },
   oportunidades: { etiqueta: "Publica contenido con ayuda de la IA avanzada", href: "/dashboard/oportunidades" },
   "oportunidades-redes": {
-    etiqueta: "Difunde tus artículos en blogs externos y redes sociales",
+    etiqueta: "Difunde tu contenido en blogs externos y redes sociales",
     href: "/dashboard/oportunidades-redes",
   },
   "publicaciones-en-curso": {
