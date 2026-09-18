@@ -2486,3 +2486,18 @@ por Milton en Producción con una cuenta de pruebas; el botón apareció despué
 de ejecutar el análisis sin resultados nuevos.
 
 Responsable: Claude. Estado: EN PRODUCCIÓN, verificado en vivo por Milton.
+
+## Versión en curso — 2026-09-18 — Retorno de Bing Webmaster a Indexación
+
+`apps/web/src/app/api/search-integrations/bing/callback/route.ts`: las tres
+redirecciones del callback OAuth de Bing (conexión exitosa, error de estado y
+error de token) ahora vuelven a `/dashboard/configuracion/indexacion`, donde
+vive `BingWebmasterSection`, en vez de `/dashboard/configuracion`. Manual de
+usuario actualizado en el mismo lote. Sin migraciones ni cambios de schema.
+
+Auditorías: integridad (3 líneas de código + 1 de manual + registros, sin
+secretos), funcional (cambio de rutas de redirección; `BingWebmasterSection`
+ya lee `?bing=` con `useSearchParams`) y regresión/entrega (checks del PR y
+Vercel Preview antes de fusionar).
+
+Responsable: Claude. Estado: PR abierto, pendiente de fusión y verificación.
