@@ -4626,6 +4626,14 @@ el texto existente.
 
 Responsable: Claude (tarea programada diaria de propagación).
 
+## ELIMINACIÓN DEL AVISO DE INACTIVIDAD DEL INICIO — 2026-09-18
+
+Se retiró del dashboard el aviso ámbar que mostraba cuántos días habían
+pasado sin publicar y el enlace para ver contenido inteligente. Se conservaron
+las métricas, alertas de configuración, accesos directos y gráficos del Inicio.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+
 ## REORGANIZACIÓN DEL MENÚ — 2026-09-18
 
 Se movió **Historial** dentro del desplegable **Publicaciones** y

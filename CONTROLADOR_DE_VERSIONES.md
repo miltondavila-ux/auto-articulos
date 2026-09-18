@@ -2516,3 +2516,8 @@ Se sustituyó la altura fija de las tarjetas de accesos directos por un grid
 flexible: las tarjetas de cada fila mantienen la misma altura y el contenido
 puede crecer de forma natural en responsive. No hay cambios de schema,
 migraciones, rutas ni permisos.
+
+## Cambio preparado — 2026-09-18 — Retirar aviso de inactividad
+
+Se eliminó el Callout del Inicio que mostraba los días sin publicar y su CTA.
+Las métricas, alertas de configuración y accesos directos permanecen intactos.
