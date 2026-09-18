@@ -7408,27 +7408,28 @@ componente y las rutas OAuth de Bing que ya existían. Detalle completo en
 sin migraciones. Reservas liberadas (`OnboardingWizard.tsx`). Estado final:
 ARCHIVADA.
 
-## PAUSADO — CLAUDE - ERROR AL PUBLICAR — 2026-09-18 (cierre 12:47 EDT)
+## ARCHIVADO — CLAUDE - ERROR AL PUBLICAR — 2026-09-18 (cierre 13:03 EDT)
 
-**Identidad:** proyecto `CLAUDE - ERROR AL PUBLICAR` (nombre recibido literal: "ERROR AL PUBLICAR"). Responsable: Claude. Cuenta afectada: MPM Realty Group (panel inglés); prueba con Lorena Álvarez sin regresión conocida.
+**Identidad:** proyecto `CLAUDE - ERROR AL PUBLICAR`. Responsable: Claude. Cuenta afectada: MPM Realty Group (panel inglés).
 
-**Rama / worktree que se conserva:** `claude/mensajes-error-humanizados-ia` en `.worktrees/mensajes-error-ia` (limpio, sin cambios sin commit). PR #125 abierto, MERGEABLE/CLEAN, **no fusionado**.
+**Síntoma:** los artículos no se publicaban ("El artículo no aparece en el listado tras guardar"); llegó a haber 4 de 9 fallidos con hasta 7 intentos cada uno.
 
-**Commits y estado real de cada uno:**
-- `3aa0266` — traducir errores de automatización con IA (`apps/worker/src/humanizeError.ts` nuevo, +84; `apps/worker/src/queue.ts` +15/−4; `apps/worker/src/automation/10minutesWebsite.ts` +1/−1). PR #125. **NO está en `origin/main` y no existe ninguna versión posterior que lo reemplace. NO está en producción.**
-- `def4793` (PR #131) — revirtió `eee0e0b`; hipótesis incorrecta, comprobada en vivo. Revertido por `30d9e37` (PR #132): la protección contra artículos duplicados está de vuelta en producción.
-- `aea076d` (PR #133) — `saveAndGetUrl()` espera y reintenta el guardado en vez de rendirse tras un clic. **En producción y verificado en vivo** el 18/9/2026 en MPM Realty Group: lote 5/9 → 9/9 "Completado". Es la causa raíz real del error de guardado (el sitio hoy tarda más en procesar el guardado; el robot lo daba por perdido a los 1-2 s).
-- PR #134 y #135 — solo registro en `CONTROLADOR_DE_VERSIONES.md`.
+**Causa raíz (confirmada con logs reales, no adivinada):** hoy el sitio 10minutesWebsite tarda más de lo normal en procesar el guardado. Tras el clic en "Guardar cambios", `saveAndGetUrl()` miraba a los 1-2 s, veía el formulario todavía abierto y daba el artículo por perdido, aunque el sitio lo terminaba guardando. Efecto colateral: intentos marcados como fallidos que sí se guardaron dejaron **artículos repetidos** en el sitio público de MPM (p. ej. "From Agent to Top Producer: Essential Strategies" y "...: A Practical Guide"; "Productive REALTORS®: Key Habits for Success" y "Habits of Highly Productive REALTORS®"; "Essential Steps After Earning Your Florida Real Estate License" y "Strategies for Success After Your Florida Real Estate License"; "From License Holder to Real Estate Business Owner" y "From Agent to Business Owner in Real Estate"). Borrarlos es decisión de Milton; el sistema no tocó el sitio.
 
-**Pruebas del PR #125:** `git diff --check` limpio; sin migraciones, schema, OAuth ni secretos literales en el diff; `humanizeError.ts` compila solo con `tsc --noEmit`; sintaxis de los 3 archivos sin diagnósticos; el PR se fusiona limpio sobre `origin/main` actual (`git merge-tree`). **No hay typecheck completo del worker ni `vitest`** en este entorno (el worktree no tiene dependencias instaladas; los errores de módulo `@auto-articulos/*` son preexistentes). **Sin prueba en vivo**: por eso los logs de hoy aún muestran errores crudos de Playwright.
+**Fix vigente:** PR #133 (`aea076d`, `apps/worker/src/automation/10minutesWebsite.ts`, +13 líneas, sin migraciones): si el sitio aún no aceptó el guardado y no hay título duplicado, espera 15 s y reintenta (hasta `MAX_SAVE_ATTEMPTS`) con el ciclo de revalidación existente. El worker toma `main` en cada corrida, así que ya está activo.
 
-**Reservas:** esta tarea nunca registró una reserva en la Parte A al iniciar (descuido del agente, corregido con este registro). Reserva mínima que se conserva mientras el PR siga abierto: `humanizeError.ts`, el `catch` de `processRunTitle` en `queue.ts` y las 2 líneas de `login()`. Liberado: 5 worktrees de la sesión (`restaurar-flujo-guardado`, `restaurar-proteccion-duplicados`, `guardado-esperar-validacion`, `registro-guardado-verificado`, `registro-9de9`; sus PR #131-#135 están fusionados) y los restos idénticos a `3aa0266` que estaban sin commit en el checkout principal (respaldo del parche en el scratchpad de la sesión; el contenido está a salvo en `3aa0266` y en `origin/claude/mensajes-error-humanizados-ia`). No se tocó ningún cambio ajeno del checkout principal.
+**Camino descartado (registrado para no repetirlo):** PR #131 (`def4793`) revirtió `eee0e0b` suponiendo que la navegación previa al formulario causaba el fallo; el reintento en vivo con #131 activo falló igual. Revertido por PR #132 (`30d9e37`); la protección contra artículos duplicados sigue en producción. PR #134 y #135: solo registro en `CONTROLADOR_DE_VERSIONES.md`.
 
-**Trabajo pendiente (qué falta exactamente):**
-1. Autorización de Milton para fusionar el PR #125 (la orden de cierre prohibía fusionar).
-2. Verificación en vivo tras la fusión: provocar/esperar un error real y confirmar que el usuario ve una explicación simple con una acción propia, no el volcado de Playwright; confirmar que sin `OPENAI_API_KEY` o con la IA caída se conserva el mensaje original.
-3. Alcance conocido: la traducción cubre la línea `Error:` del log en vivo y el mensaje guardado en Historial; **no** traduce las líneas de diagnóstico (`DIAGNÓSTICO [...]`, `Diagnóstico de guardado`), que siguen técnicas. Decidir si se ampliará.
-4. Tarea aparte: la detección de títulos duplicados solo reconoce el formulario en español (`#titlees`/"existe"); en el panel inglés el sitio responde "There is already an article with this title" y el robot no lo reformula.
-5. Decisión de Milton: en el sitio público de MPM hay artículos repetidos creados por intentos que la app marcó como fallidos.
+**Auditorías:** 1 (integridad) aprobada: un archivo de código, sin migraciones, schema, OAuth ni secretos. 2 (funcional) aprobada con reserva: sintaxis TypeScript sin diagnósticos y `git diff --check` limpio; **no** hubo typecheck completo del worker ni `vitest` (el entorno aislado no tiene dependencias instaladas). 3 (producción en vivo) aprobada por Milton y por esta sesión: lote MPM 5/9 → 9/9 "Completado" (18/9, 11:15-12:00); la tanda nueva "Lead Generation Client Acquisition" (desde las 12:42) iba 5/9 publicados sin fallos ni reintentos manuales al momento del cierre.
 
-**Responsable siguiente:** Milton (autorización de fusión) y luego Claude para la verificación en vivo. **Estado final: PAUSADO** — no ARCHIVADO, porque `3aa0266` no está integrado ni funciona en producción.
+**Reservas liberadas:** `apps/worker/src/automation/10minutesWebsite.ts` (bloque de guardado). Worktrees retirados: `restaurar-flujo-guardado`, `restaurar-proteccion-duplicados`, `guardado-esperar-validacion`, `registro-guardado-verificado`, `registro-9de9`. Restos sin commit de esta tarea eliminados del checkout principal (respaldo en el scratchpad de la sesión; el contenido está en `3aa0266`). No se tocó ningún cambio ajeno.
+
+### Pendiente APARTE (no forma parte del error resuelto): mensajes de error inteligentes — PAUSADO
+
+PR #125, commit `3aa0266`, rama `claude/mensajes-error-humanizados-ia`, worktree `.worktrees/mensajes-error-ia` (limpio). Traduce cualquier error crudo de la automatización con IA a una explicación simple más una acción del propio usuario (`humanizeError.ts` nuevo, +84; `queue.ts` +15/−4; `10minutesWebsite.ts` +1/−1). Sin migraciones, schema, OAuth ni secretos; `git diff --check` limpio; se fusiona sin conflictos sobre `main`. **No está fusionado ni en producción** (por eso los logs siguen mostrando errores crudos de Playwright) y **no tiene prueba en vivo**. Alcance conocido: traduce la línea `Error:` del log y el mensaje de Historial, no las líneas `DIAGNÓSTICO [...]`.
+- Reserva que se conserva: `apps/worker/src/humanizeError.ts`, el `catch` de `processRunTitle` en `queue.ts` y las 2 líneas de `login()`.
+- Falta: autorización de Milton para fusionar y verificación en vivo (provocar un error real; comprobar que sin `OPENAI_API_KEY` o con la IA caída se conserva el mensaje original).
+- Otra tarea aparte: la detección de títulos duplicados solo reconoce el formulario en español (`#titlees`/"existe"); en el panel inglés el sitio responde "There is already an article with this title" y el robot no lo reformula.
+- Responsable siguiente: Milton (autorización), luego Claude.
+
+**Estado final:** error de publicación **ARCHIVADA**; mensajes inteligentes (PR #125) **PAUSADO**.
