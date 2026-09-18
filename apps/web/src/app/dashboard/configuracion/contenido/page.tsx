@@ -37,6 +37,8 @@ export default function ConfiguracionContenidoPage() {
   const [clientLocations, setClientLocations] = useState("");
   const [businessLocations, setBusinessLocations] = useState("");
   const [savingLocations, setSavingLocations] = useState(false);
+  const [excludedTopics, setExcludedTopics] = useState("");
+  const [savingExcludedTopics, setSavingExcludedTopics] = useState(false);
   const [phone, setPhone] = useState("");
   const [savingPhone, setSavingPhone] = useState(false);
   const [profilePhotoUrls, setProfilePhotoUrls] = useState<Record<"profile" | "profile2" | "profile3", string | null>>({ profile: null, profile2: null, profile3: null });
@@ -70,6 +72,7 @@ export default function ConfiguracionContenidoPage() {
       setPhone(data.phone ?? "");
       setClientLocations(data.clientLocations ?? "");
       setBusinessLocations(data.businessLocations ?? "");
+      setExcludedTopics(data.excludedTopics ?? "");
       setProfilePhotoUrls({ profile: data.profilePhotoUrl ?? null, profile2: data.profilePhotoUrl2 ?? null, profile3: data.profilePhotoUrl3 ?? null });
       setBusinessLogoUrls({ logo: data.businessLogoUrl ?? null, logo2: data.businessLogoUrl2 ?? null });
     }
@@ -145,6 +148,26 @@ export default function ConfiguracionContenidoPage() {
       setBanner({ type: "info", text: "Ubicaciones guardadas." });
     } finally {
       setSavingLocations(false);
+    }
+  }
+
+  async function handleSaveExcludedTopics() {
+    setSavingExcludedTopics(true);
+    setBanner(null);
+    try {
+      const res = await fetch("/api/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ excludedTopics }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setBanner({ type: "error", text: data.error ?? "Error al guardar los temas a evitar" });
+        return;
+      }
+      setBanner({ type: "info", text: "Temas que no quieres publicar guardados." });
+    } finally {
+      setSavingExcludedTopics(false);
     }
   }
 
@@ -404,6 +427,32 @@ export default function ConfiguracionContenidoPage() {
               style={disabledStyle(secondaryButtonStyle, savingLocations)}
             >
               {savingLocations ? "Guardando..." : "Guardar ubicaciones"}
+            </button>
+          </div>
+        </section>
+
+        {/* Segmento de No Publicar */}
+        <section style={sectionStyle}>
+          <h2 style={h2Style}>Qué no decir en los artículos</h2>
+          <p style={{ fontSize: 13, color: "#6e6e73", marginBottom: 12 }}>
+            Escribe, separados por comas, los temas o palabras que no quieres
+            que Oportunidades use al proponer títulos. Los títulos que toquen
+            esos temas se descartan automáticamente.
+          </p>
+          <input
+            type="text"
+            value={excludedTopics}
+            onChange={(e) => setExcludedTopics(e.target.value)}
+            placeholder="Ej: seguros de vida, criptomonedas, política"
+            style={{ ...inputStyle, width: "100%" }}
+          />
+          <div style={{ marginTop: 12 }}>
+            <button
+              onClick={handleSaveExcludedTopics}
+              disabled={savingExcludedTopics}
+              style={disabledStyle(secondaryButtonStyle, savingExcludedTopics)}
+            >
+              {savingExcludedTopics ? "Guardando..." : "Guardar temas a evitar"}
             </button>
           </div>
         </section>

@@ -15,11 +15,39 @@ interface PublishedNotification {
   url: string | null;
 }
 
+interface ConfigurationAlert {
+  id: string;
+  label: string;
+  actionUrl: string;
+  actionLabel: string;
+}
+
 const QUICK_LINKS = [
-  { href: "/dashboard/publicar", label: "Publicaciones propias" },
-  { href: "/dashboard/oportunidades", label: "Oportunidades SEO/AEO" },
-  { href: "/dashboard/oportunidades-redes", label: "Oportunidades para Redes Sociales" },
-  { href: "/dashboard/publicaciones-en-curso", label: "Publicaciones en Curso" },
+  {
+    href: "/dashboard/como-funciona",
+    label: "Cómo funciona",
+    description: "Si deseas saber cómo funciona la aplicación y cómo te ayuda, este es el sitio.",
+  },
+  {
+    href: "/dashboard/publicar",
+    label: "Publicaciones propias",
+    description: "Publica artículos con tus propios títulos y decide qué quieres publicar.",
+  },
+  {
+    href: "/dashboard/oportunidades",
+    label: "Oportunidades SEO/AEO",
+    description: "Publica artículos y deja que el sistema tome el control según los indicadores de Google Search Console, Bing y Google Analytics.",
+  },
+  {
+    href: "/dashboard/oportunidades-redes",
+    label: "Oportunidades para Redes Sociales",
+    description: "Crea contenido para compartir tus artículos y oportunidades en tus redes sociales.",
+  },
+  {
+    href: "/dashboard/publicaciones-en-curso",
+    label: "Publicaciones en Curso",
+    description: "Consulta el progreso de los artículos que se están generando y publicando.",
+  },
 ];
 
 export default function InicioPage() {
@@ -32,6 +60,7 @@ export default function InicioPage() {
   // al crear la cuenta. Desaparece solo cuando el trial termina de verdad,
   // no con un botón de cerrar (pedido explícito de Milton, 16/9/2026).
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
+  const [configurationAlerts, setConfigurationAlerts] = useState<ConfigurationAlert[]>([]);
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
@@ -118,23 +147,40 @@ export default function InicioPage() {
 
   const checkWizardStatus = useCallback(async () => {
     try {
-      const [credRes, catRes, meRes, googleRes] = await Promise.all([
+      const [credRes, catRes, meRes, googleRes, configurationRes] = await Promise.all([
         fetch("/api/credentials", { cache: "no-store" }),
         fetch("/api/categories", { cache: "no-store" }),
         fetch("/api/me", { cache: "no-store" }),
         fetch("/api/search-integrations/google", { cache: "no-store" }),
+        fetch("/api/configuration-status", { cache: "no-store" }),
       ]);
 
       const credData = credRes.ok ? await credRes.json() : {};
       const catData = catRes.ok ? await catRes.json() : {};
       const meData = meRes.ok ? await meRes.json() : {};
       const googleData = googleRes.ok ? await googleRes.json() : {};
+      const configurationData = configurationRes.ok ? await configurationRes.json() : null;
 
       const step1 = Boolean(credData.configured);
       const step2 = Array.isArray(catData.categories) && catData.categories.length > 0;
       const step3 = typeof meData.contentLanguage === "string" && meData.contentLanguage.trim().length > 0;
       const step4 = Boolean(googleData.connected && googleData.siteUrl);
       const complete = step1 && step2 && step3 && step4;
+
+      const alertIds = new Set([
+        "google-analytics",
+        "bing-webmaster",
+        "geolocation",
+        "signature",
+        "excluded-topics",
+      ]);
+      const pendingAlerts = Array.isArray(configurationData?.checks)
+        ? configurationData.checks.filter(
+            (check: ConfigurationAlert & { configured: boolean }) =>
+              alertIds.has(check.id) && !check.configured,
+          )
+        : [];
+      setConfigurationAlerts(pendingAlerts);
 
       if (!complete) everIncompleteRef.current = true;
       setShowWizard(everIncompleteRef.current ? true : !complete);
@@ -221,9 +267,24 @@ export default function InicioPage() {
               Si no sabes por dónde empezar, <Modulo id="como-funciona" /> lo explica entero en tres pasos.
             </IntroP>
             <IntroP>
-              Justo abajo tienes 4 botones: elige el que corresponda a lo que quieres hacer ahora.
+              Justo abajo tienes 5 botones: elige el que corresponda a lo que quieres hacer ahora.
             </IntroP>
           </>
+        )}
+        {configurationAlerts.length > 0 && (
+          <p style={{ margin: "14px 0 0", fontSize: 14, lineHeight: 1.55, color: "#1d1d1f" }}>
+            <strong>ALERTAS:</strong>{" "}
+            Para aprovechar mejor SEO TOTAL, todavía puedes completar estos ajustes:{" "}
+            {configurationAlerts.map((alert, index) => (
+              <span key={alert.id}>
+                {index > 0 && (index === configurationAlerts.length - 1 ? " y " : ", ")}
+                <Link href={alert.actionUrl} style={{ color: "#0066cc", fontWeight: 600 }}>
+                  {alert.label}
+                </Link>
+              </span>
+            ))}
+            .
+          </p>
         )}
       </ModuleIntro>
       {showWizard === false && (
@@ -234,6 +295,9 @@ export default function InicioPage() {
                 <Text>{String(i + 1).padStart(2, "0")}</Text>
                 <p style={{ marginTop: 8, fontSize: 15, fontWeight: 600, color: "#1d1d1f", lineHeight: 1.4 }}>
                   {l.label}
+                </p>
+                <p style={{ margin: "8px 0 0", fontSize: 12, lineHeight: 1.45, color: "#6e6e73" }}>
+                  {l.description}
                 </p>
               </Card>
             </Link>
@@ -330,4 +394,3 @@ export default function InicioPage() {
     </div>
   );
 }
-

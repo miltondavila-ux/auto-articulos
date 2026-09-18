@@ -12,9 +12,7 @@ import {
   Flex,
   ProgressBar,
   LineChart,
-  BarList,
   Callout,
-  Badge,
 } from "@tremor/react";
 
 interface DashboardStats {
@@ -28,14 +26,6 @@ interface DashboardStats {
   daysSinceLastPublish: number | null;
   streak: number;
   chart: { date: string; label: string; "Artículos publicados": number }[];
-  googleConnected: boolean;
-  googleSiteUrl: string | null;
-  topCategories: {
-    name: string;
-    impressions: number;
-    clicks: number;
-    opportunities: number;
-  }[];
   pendingOpportunityTitles: number;
 }
 
@@ -252,54 +242,6 @@ export default function PerformanceDashboard() {
                 </>
               );
             })()}
-          </Card>
-        </Col>
-        <Col>
-          <Card>
-            <Title>Google Search Console</Title>
-            {stats.googleConnected ? (
-              <>
-                <Badge color="emerald" className="mt-2">
-                  Conectado
-                </Badge>
-                <Text className="mt-3 text-xs" title={stats.googleSiteUrl ?? ""}>
-                  Propiedad: {stats.googleSiteUrl}
-                </Text>
-                <Text className="mt-4 font-medium">
-                  Categorías con más impresiones
-                </Text>
-                {stats.topCategories.length > 0 ? (
-                  <div className="mt-2">
-                    <BarList
-                      data={stats.topCategories.map((c) => ({
-                        name: c.name,
-                        value: c.impressions,
-                      }))}
-                    />
-                  </div>
-                ) : (
-                  <Text className="mt-2 text-xs">
-                    Todavía no hay datos de impresiones.
-                  </Text>
-                )}
-              </>
-            ) : (
-              <>
-                <Badge color="gray" className="mt-2">
-                  No conectado
-                </Badge>
-                <Text className="mt-3 text-xs">
-                  Conecta Google Search Console para que el sistema entienda qué
-                  busca la gente y sugiera oportunidades reales.
-                </Text>
-                <Link
-                  href="/dashboard/configuracion"
-                  className="mt-3 inline-block text-xs font-semibold text-blue-400 no-underline"
-                >
-                  Conectar ahora →
-                </Link>
-              </>
-            )}
           </Card>
         </Col>
       </Grid>

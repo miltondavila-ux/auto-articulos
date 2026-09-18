@@ -73,6 +73,8 @@ model User {
   // comportamiento para cuentas que no lo llenen.
   clientLocations                   String?
   businessLocations                 String?
+  // Temas o palabras que el usuario no quiere que Oportunidades proponga.
+  excludedTopics                    String?
   // Se actualiza cada vez que termina un análisis de oportunidades (haya
   // encontrado categorías nuevas o no) — permite mostrar "último análisis"
   // y aplicar la espera mínima de 7 días cuando no hay nada nuevo, sin
