@@ -22,7 +22,18 @@ export function defaultSitemapUrl(siteUrl: string) {
   }
 }
 
-export async function checkSitemapReachable(url: string): Promise<SitemapCheck> {
+export async function checkSitemapReachable(url: string, siteUrl?: string | null): Promise<SitemapCheck> {
+  // Solo se consultan URLs http(s) del propio sitio, para que el servidor no
+  // sirva de proxy hacia direcciones internas o ajenas.
+  try {
+    const parsed = new URL(url);
+    if (!/^https?:$/.test(parsed.protocol)) return { ok: false, reason: "La URL del sitemap no es http(s)." };
+    if (siteUrl && normalizeDomain(parsed.hostname) !== normalizeDomain(siteUrl)) {
+      return { ok: false, reason: "El sitemap debe estar en el mismo dominio del sitio." };
+    }
+  } catch {
+    return { ok: false, reason: "La URL del sitemap no es válida." };
+  }
   try {
     const res = await fetch(url, {
       redirect: "follow",
@@ -73,7 +84,7 @@ export async function autoConfigureBing(
     // La detección en Bing es opcional; se prueba la ruta estándar.
   }
   candidate ??= defaultSitemapUrl(siteUrl);
-  const sitemapCheck = await checkSitemapReachable(candidate);
+  const sitemapCheck = await checkSitemapReachable(candidate, siteUrl);
   if (!sitemapCheck.ok) return { siteUrl, sitemapUrl: null, sitemapCheck };
 
   sitemapUrl = candidate;

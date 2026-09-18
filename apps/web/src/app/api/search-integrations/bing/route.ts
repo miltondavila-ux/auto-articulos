@@ -34,7 +34,7 @@ export async function GET() {
         // No bloquear la carga: el usuario aún puede elegirlo a mano.
       }
     } else {
-      sitemapCheck = await checkSitemapReachable(sitemapUrl);
+      sitemapCheck = await checkSitemapReachable(sitemapUrl, siteUrl);
     }
 
     return NextResponse.json({
@@ -96,7 +96,7 @@ export async function PATCH(request: NextRequest) {
         { status: 403 },
       );
     const finalSitemapUrl = sitemapUrl.trim() || defaultSitemapUrl(siteUrl);
-    const sitemapCheck = await checkSitemapReachable(finalSitemapUrl);
+    const sitemapCheck = await checkSitemapReachable(finalSitemapUrl, siteUrl);
     // Con sitemap escrito a mano se guarda igual (puede estar tras un
     // firewall); con el autocompletado solo si realmente responde.
     const keep = sitemapUrl.trim() ? finalSitemapUrl : sitemapCheck.ok ? finalSitemapUrl : "";
