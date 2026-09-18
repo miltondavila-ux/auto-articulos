@@ -4626,6 +4626,14 @@ el texto existente.
 
 Responsable: Claude (tarea programada diaria de propagación).
 
+## AJUSTE DE CONTRASTE EN TARJETAS — 2026-09-18
+
+Se reforzó el contraste de las tarjetas de color del Inicio: la tarjeta 02 usa
+texto negro sólido sobre `#c6c6c6`, y las tarjetas 03 y 04 usan texto blanco
+sólido sobre `#919191` y `#5e5e5e`. La tarjeta 01 permanece blanca.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+
 ## PRUEBA VISUAL DE COLOR EN ACCESOS DEL INICIO — 2026-09-18
 
 Para probar una presentación más dinámica, las tarjetas 02, 03 y 04 del Inicio

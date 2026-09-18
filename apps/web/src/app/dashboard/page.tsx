@@ -285,26 +285,35 @@ export default function InicioPage() {
       {showWizard === false && (
         <Grid numItemsSm={2} numItemsLg={4} className="gap-4 items-stretch" style={{ marginTop: 20, marginBottom: 20 }}>
           {QUICK_LINKS.map((l, i) => (
-            <Link key={l.href} href={l.href} style={{ display: "flex", height: "100%", textDecoration: "none" }}>
+            (() => {
+              const darkCard = i === 1;
+              const coloredCard = i > 1;
+              const primaryText = coloredCard ? "#ffffff" : "#111111";
+              const secondaryText = coloredCard ? "#ffffff" : "#111111";
+
+              return (
+                <Link key={l.href} href={l.href} style={{ display: "flex", height: "100%", textDecoration: "none" }}>
               <Card
                 style={{
                   flex: 1,
                   boxSizing: "border-box",
-                  background: i === 1 ? "#c6c6c6" : i === 2 ? "#919191" : i === 3 ? "#5e5e5e" : "#ffffff",
+                  background: darkCard ? "#c6c6c6" : i === 2 ? "#919191" : i === 3 ? "#5e5e5e" : "#ffffff",
                   borderColor: i === 0 ? "rgba(0, 0, 0, 0.08)" : "transparent",
                 }}
               >
-                <Text style={{ color: i === 0 || i === 1 ? "#1d1d1f" : "#ffffff" }}>
+                <Text style={{ color: primaryText }}>
                   {String(i + 1).padStart(2, "0")}
                 </Text>
-                <p style={{ marginTop: 8, fontSize: 15, fontWeight: 600, color: i === 0 || i === 1 ? "#1d1d1f" : "#ffffff", lineHeight: 1.4 }}>
+                <p style={{ marginTop: 8, fontSize: 15, fontWeight: 600, color: primaryText, lineHeight: 1.4 }}>
                   {l.label}
                 </p>
-                <p style={{ margin: "8px 0 0", fontSize: 12, lineHeight: 1.45, color: i === 0 || i === 1 ? "#4a4a4a" : "rgba(255, 255, 255, 0.88)" }}>
+                <p style={{ margin: "8px 0 0", fontSize: 12, lineHeight: 1.45, color: secondaryText, opacity: coloredCard ? 1 : 0.95 }}>
                   {l.description}
                 </p>
               </Card>
-            </Link>
+                </Link>
+              );
+            })()
           ))}
         </Grid>
       )}

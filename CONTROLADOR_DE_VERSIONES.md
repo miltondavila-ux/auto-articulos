@@ -2532,3 +2532,8 @@ manteniendo su adaptación responsive. No hay cambios de schema ni migraciones.
 Las tarjetas 02, 03 y 04 del Inicio reciben fondos `#c6c6c6`, `#919191` y
 `#5e5e5e`, respectivamente, con contraste de texto adaptado. La tarjeta 01
 permanece blanca y no se modifican rutas ni funcionalidad.
+
+## Cambio preparado — 2026-09-18 — Contraste de texto reforzado
+
+Se sustituyeron los grises tenues de las tarjetas de color por texto negro o
+blanco sólido según el fondo, para mejorar la legibilidad.
