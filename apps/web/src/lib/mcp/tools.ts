@@ -61,7 +61,7 @@ export const TOOLS: ToolDef[] = [
     name: "listar_oportunidades",
     title: "Listar oportunidades",
     description:
-      "Devuelve las oportunidades SEO guardadas, agrupadas por categoría, con la cantidad de títulos y las impresiones de cada una. Solo lectura: no publica ni modifica nada. Úsala antes de publicar para saber qué hay pendiente.",
+      "Devuelve el contenido inteligente guardado, agrupado por categoría, con la cantidad de títulos y las impresiones de cada una. Solo lectura: no publica ni modifica nada. Úsala antes de publicar para saber qué hay pendiente.",
     inputSchema: {
       type: "object",
       properties: {
@@ -101,7 +101,7 @@ export const TOOLS: ToolDef[] = [
     name: "crear_oportunidades",
     title: "Crear oportunidades",
     description:
-      "Analiza Google Search Console y genera nuevas oportunidades SEO agrupadas por categoría. No publica ningún artículo — solo propone títulos para revisar. Requiere que Google Search Console esté conectado. Se recomienda no repetir el análisis antes de 3 días; si el usuario insiste explícitamente, pasa forzar=true.",
+      "Analiza Google Search Console y otras señales de internet para crear contenido inteligente agrupado por categoría. No publica ningún artículo — solo propone títulos para revisar. Requiere que Google Search Console esté conectado. Se recomienda no repetir el análisis antes de 3 días; si el usuario insiste explícitamente, pasa forzar=true.",
     inputSchema: {
       type: "object",
       properties: {

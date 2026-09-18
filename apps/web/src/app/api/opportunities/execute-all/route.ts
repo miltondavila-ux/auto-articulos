@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
 
   const avisoDeCupo =
     pendingCount > 0
-      ? `Se enviaron a publicar ${acumulado} títulos porque tu cupo disponible actual es de ${available} artículos. Los ${pendingCount} restantes quedaron pendientes en Oportunidades.`
+      ? `Se enviaron a publicar ${acumulado} títulos porque tu cupo disponible actual es de ${available} artículos. Los ${pendingCount} restantes quedaron pendientes en contenido inteligente.`
       : null;
 
   const normalizedContentLanguage =

@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 const MODULES = [
-  { id: "publicar", href: "/dashboard/publicar", icon: "✍️", label: "Publicaciones Propias", description: "Genera y publica artículos nuevos, individuales o en lote." },
-  { id: "oportunidades", href: "/dashboard/oportunidades", icon: "🎯", label: "Oportunidades SEO/AEO", description: "Descubre búsquedas y temas con potencial para posicionarte." },
-  { id: "oportunidades-redes", href: "/dashboard/oportunidades-redes", icon: "📣", label: "Oportunidades para Redes", description: "Ideas listas para distribuir tu contenido en redes sociales." },
-  { id: "publicaciones-en-curso", href: "/dashboard/publicaciones-en-curso", icon: "⏳", label: "Publicaciones en curso", description: "Consulta el progreso de tus artículos y publicaciones activas." },
+  { id: "publicar", href: "/dashboard/publicar", icon: "✍️", label: "Publica tus propios títulos", description: "Escribe tus títulos y publícalos directamente en tu página web." },
+  { id: "oportunidades", href: "/dashboard/oportunidades", icon: "🎯", label: "Publica contenido con ayuda de la IA avanzada", description: "Encuentra temas con posibilidades reales y crea artículos para tu página web." },
+  { id: "oportunidades-redes", href: "/dashboard/oportunidades-redes", icon: "📣", label: "Difunde tus artículos en blogs externos y redes sociales", description: "Lleva tus artículos publicados a microblogs, blogs externos y redes sociales en lote." },
+  { id: "publicaciones-en-curso", href: "/dashboard/publicaciones-en-curso", icon: "⏳", label: "Progreso de las publicaciones", description: "Consulta el progreso de tus artículos y publicaciones activas." },
 ];
 
 export default function ComienzaAqui() {

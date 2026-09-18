@@ -4625,6 +4625,28 @@ Verificaciones hechas con `git fetch origin` + `git merge-base
 el texto existente.
 
 Responsable: Claude (tarea programada diaria de propagación).
+
+## AUDITORÍA DE COHERENCIA DE NOMBRES Y MENSAJES — 2026-09-18
+
+La tarea `claude/simplificacion-setup-inicial` revisó la interfaz local, el
+menú, las tarjetas del dashboard, los módulos, el manual de usuario y los
+mensajes del asistente/MCP para alinear el vocabulario visible con los nombres
+aprobados por Milton. El dashboard conserva cuatro tarjetas principales:
+**Cómo funciona esta aplicación**, **Publica tus propios títulos**, **Publica
+contenido con ayuda de la IA avanzada** y **Difunde tus artículos en blogs
+externos y redes sociales**. **Progreso de las publicaciones** queda como
+acceso del menú, no como quinta tarjeta.
+
+Se conservaron las rutas, permisos, scopes, nombres de herramientas internas y
+endpoints existentes para no romper enlaces ni integraciones. Esta tanda no
+modifica schema ni migraciones. La vista local se mantiene disponible en
+`http://localhost:3201` y no se hizo deploy ni push a producción.
+
+Pendiente antes de promover: ejecutar las validaciones finales, revisar el
+diff completo y verificar el despliegue en Vercel/producción conforme al
+controlador de versiones.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
 ## PUNTO DE MIGRACIÓN A CLAUDE — 2026-09-04
 
 Codex: Esta entrada deja el contexto completo para continuar la conversación `CODEX - AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`.

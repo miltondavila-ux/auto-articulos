@@ -54,8 +54,8 @@ function empathyMessage(stats: DashboardStats): {
     return {
       color: "amber",
       title: `Han pasado ${stats.daysSinceLastPublish} días sin publicar`,
-      text: "No pasa nada — pero el posicionamiento avanza más rápido con contenido constante. ¿Vemos las oportunidades sugeridas?",
-      cta: { label: "Ver oportunidades", href: "/dashboard/oportunidades" },
+      text: "No pasa nada — pero el posicionamiento avanza más rápido con contenido constante. ¿Vemos las propuestas de contenido inteligente?",
+      cta: { label: "Ver contenido inteligente", href: "/dashboard/oportunidades" },
     };
   }
   if (stats.daysSinceLastPublish === 0) {
@@ -68,8 +68,8 @@ function empathyMessage(stats: DashboardStats): {
   return {
     color: "blue",
     title: `Última publicación hace ${stats.daysSinceLastPublish} día${stats.daysSinceLastPublish === 1 ? "" : "s"}`,
-    text: "Cuando quieras retomar, ya tienes oportunidades listas para ejecutar.",
-    cta: { label: "Ver oportunidades", href: "/dashboard/oportunidades" },
+    text: "Cuando quieras retomar, ya tienes contenido inteligente listo para ejecutar.",
+    cta: { label: "Ver contenido inteligente", href: "/dashboard/oportunidades" },
   };
 }
 
@@ -162,13 +162,13 @@ export default function PerformanceDashboard() {
         </Card>
 
         <Card>
-          <Text>Oportunidades listas</Text>
+          <Text>Contenido listo para publicar</Text>
           <Metric>{stats.pendingOpportunityTitles}</Metric>
           <Link
             href="/dashboard/oportunidades"
             className="mt-3 inline-block text-xs font-semibold text-blue-400 no-underline"
           >
-            Ver oportunidades →
+            Ver contenido inteligente →
           </Link>
         </Card>
       </Grid>

@@ -184,10 +184,10 @@ export default function OportunidadesRedesPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setMessage({ kind: "success", text: data.message || "Oportunidades generadas para todas las redes." });
+        setMessage({ kind: "success", text: data.message || "Contenido preparado para todas las redes." });
         loadOpportunities();
       } else {
-        setMessage({ kind: "error", text: data.error || "Error al generar oportunidades." });
+        setMessage({ kind: "error", text: data.error || "Error al preparar las publicaciones." });
       }
     } catch (err: any) {
       setMessage({ kind: "error", text: err.message });
@@ -319,7 +319,7 @@ export default function OportunidadesRedesPage() {
   const [deletingAll, setDeletingAll] = useState(false);
 
   async function handleDeleteAll() {
-    if (!window.confirm("¿Borrar todas las oportunidades pendientes? Esta acción no se puede deshacer.")) return;
+    if (!window.confirm("¿Borrar todas las publicaciones pendientes? Esta acción no se puede deshacer.")) return;
     setDeletingAll(true);
     setMessage(null);
     try {
@@ -395,7 +395,7 @@ export default function OportunidadesRedesPage() {
                 letterSpacing: "-0.03em",
               }}
             >
-              Oportunidades en Redes Sociales
+              Difunde tus artículos en blogs externos y redes sociales
             </h1>
             <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
               <strong style={{ fontWeight: 600 }}>Este módulo está en prueba</strong>
@@ -580,7 +580,7 @@ export default function OportunidadesRedesPage() {
                 className="secondary"
                 style={{ ...secondaryButtonStyle, ...uniformButtonSize, marginTop: 14 }}
               >
-                Ver publicaciones en curso
+                Ver progreso de las publicaciones
               </button>
             </section>
           ) : (

@@ -2486,3 +2486,19 @@ por Milton en Producción con una cuenta de pruebas; el botón apareció despué
 de ejecutar el análisis sin resultados nuevos.
 
 Responsable: Claude. Estado: EN PRODUCCIÓN, verificado en vivo por Milton.
+
+## Cambio preparado — 2026-09-18 — Coherencia del lenguaje de la interfaz
+
+Rama: `claude/simplificacion-setup-inicial`.
+
+Se preparó una actualización de copy de extremo a extremo: tarjetas del
+dashboard, navegación, introducciones de módulos, asistente de configuración,
+manual de usuario, textos de Analytics y mensajes del asistente/MCP. El quinto
+acceso, **Progreso de las publicaciones**, se mantiene únicamente en el menú.
+Las rutas técnicas y permisos no se renombraron para conservar compatibilidad.
+
+No hay cambios de schema ni migraciones en este lote. La revisión se mantiene
+en el worktree aislado `/Users/miltondavila/Creador de articulos/.worktrees/simplificacion-setup-inicial`.
+No se hizo push ni deploy; el estado es PREPARADA PARA VALIDACIÓN LOCAL.
+
+Responsable: Codex. Estado: EN REVISIÓN.

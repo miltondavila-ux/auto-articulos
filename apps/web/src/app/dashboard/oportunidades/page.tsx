@@ -231,7 +231,7 @@ export default function OportunidadesPage() {
   const analysisStages = [
     "Consultando datos de Search Console",
     "Comparando impresiones y tendencias",
-    "Creando oportunidades long tail",
+    "Creando artículos inteligentes de cola larga",
     "Validando duplicados y canibalización",
   ];
   const currentStage = Math.min(
@@ -264,8 +264,8 @@ export default function OportunidadesPage() {
         setMessage({
           kind: "info",
           text: force
-            ? "Con la información actual de Search Console no encontramos nuevas oportunidades para publicar, ni siquiera forzando el análisis."
-            : "Con la información actual de Search Console no encontramos nuevas oportunidades para publicar. Puedes volver a analizar cuando quieras si conectas nuevas fuentes o aparecen datos nuevos, o forzar una nueva búsqueda ahora mismo.",
+            ? "Con la información actual de Search Console no encontramos nuevos temas para publicar, ni siquiera forzando el análisis."
+            : "Con la información actual de Search Console no encontramos nuevos temas para publicar. Puedes volver a analizar cuando quieras si conectas nuevas fuentes o aparecen datos nuevos, o forzar una nueva búsqueda ahora mismo.",
         });
         if (!force) setCanForce(true);
       } else {
@@ -344,7 +344,7 @@ export default function OportunidadesPage() {
     setMessage({
       kind: "info",
       text: pendingCount > 0
-        ? `Se publicarán ${publishedCount} títulos según tu cupo. Quedaron ${pendingCount} títulos pendientes en Oportunidades.`
+        ? `Se publicarán ${publishedCount} títulos según tu cupo. Quedaron ${pendingCount} títulos pendientes en contenido inteligente.`
         : `Se publicarán ${publishedCount} títulos. No quedaron títulos pendientes.`,
     });
     if (typeof data.workerWarning === "string") {
@@ -403,7 +403,7 @@ export default function OportunidadesPage() {
     setMessage({
       kind: "info",
       text: pendingCount > 0
-        ? `Se publicarán ${publishedCount} títulos según tu cupo. Quedaron ${pendingCount} títulos pendientes en Oportunidades.`
+        ? `Se publicarán ${publishedCount} títulos según tu cupo. Quedaron ${pendingCount} títulos pendientes en contenido inteligente.`
         : `Se publicarán ${publishedCount} títulos. No quedaron títulos pendientes.`,
     });
     if (typeof data.workerWarning === "string") {
@@ -456,7 +456,7 @@ export default function OportunidadesPage() {
   if (!loading && disclosureAcceptedAt === null) {
     return (
       <section style={sectionStyle}>
-        <h2 style={h2Style}>Aviso importante sobre Oportunidades</h2>
+        <h2 style={h2Style}>Aviso importante sobre la publicación inteligente</h2>
         <p style={{ color: "#16181d", fontSize: 14, lineHeight: 1.6 }}>
           Las oportunidades que vas a ver aquí son generadas mediante un
           algoritmo automatizado conectado a fuentes como Google Search
@@ -535,7 +535,7 @@ export default function OportunidadesPage() {
             Leer antes de ejecutar
           </p>
           <h2 id="oportunidades-instrucciones" style={h2Style}>
-            Oportunidades SEO
+            Publica contenido con ayuda de la IA avanzada
           </h2>
           <p style={{ color: "#1d1d1f", fontSize: 14, lineHeight: 1.55 }}>
             El objetivo de este módulo es ayudarte a encontrar temas que tus
@@ -547,10 +547,10 @@ export default function OportunidadesPage() {
             servicios que ofreces.
           </p>
           <ol style={{ color: "#1d1d1f", fontSize: 14, lineHeight: 1.55, paddingLeft: 22 }}>
-            <li>Busca temas para tu blog: pulsa “Analizar oportunidades” o “Actualizar análisis”. El sistema buscará temas que puedan ayudarte a aparecer en internet.</li>
+            <li>Busca temas para tu blog: pulsa “Analizar contenido” o “Actualizar análisis”. El sistema buscará temas que puedan ayudarte a aparecer en internet.</li>
             <li>Revisa cada propuesta: verás para qué categoría es, por qué puede ser útil y qué título tendría el artículo. Elige solo las propuestas que quieras publicar.</li>
             <li>Elige cómo se escribirán: selecciona el idioma y el estilo de los artículos que vas a crear. Estas opciones solo aplican a esta publicación.</li>
-            <li>Publica los artículos: puedes publicar una categoría o todas las propuestas. El sistema escribirá cada artículo, le añadirá una imagen y lo publicará en el blog de tu página web. El avance se muestra en “Publicaciones en Curso”.</li>
+            <li>Publica los artículos: puedes publicar una categoría o todas las propuestas. El sistema escribirá cada artículo, le añadirá una imagen y lo publicará en el blog de tu página web. El avance se muestra en “Progreso de las publicaciones”.</li>
           </ol>
           <p style={{ color: "#1d1d1f", fontSize: 14, fontWeight: 700, marginBottom: 6 }}>
             Reglas importantes
@@ -603,7 +603,7 @@ export default function OportunidadesPage() {
             disabled={analysisButtonDisabled}
             title={
               hasPendingOpportunities
-                ? "No puedes actualizar el análisis mientras haya oportunidades pendientes. Publícalas o bórralas primero."
+                ? "No puedes actualizar el análisis mientras haya contenido pendiente. Publícalo o bórralo primero."
                 : undefined
             }
             style={disabledStyle({ ...buttonStyle, marginTop: 0 }, analysisButtonDisabled)}
@@ -612,7 +612,7 @@ export default function OportunidadesPage() {
               ? "Analizando Search Console..."
               : groups.length
                 ? "Actualizar análisis"
-                : "Analizar oportunidades"}
+                : "Analizar contenido"}
           </button>
           {hasPendingOpportunities && !analyzing && (
             <span role="status" style={{ fontSize: 12, color: "#6e6e73" }}>
@@ -745,7 +745,7 @@ export default function OportunidadesPage() {
                 gap: 4,
               }}
             >
-              <strong>Faltan configuraciones para aprovechar Oportunidades:</strong>
+              <strong>Faltan configuraciones para aprovechar la publicación inteligente:</strong>
               <ul style={{ margin: "4px 0 0 18px", padding: 0 }}>
                 {(!setupStatus.googleConnected || !setupStatus.hasSiteUrl) && (
                   <li>
@@ -1067,8 +1067,8 @@ export default function OportunidadesPage() {
       {!loading && groups.length === 0 && (
         <section style={sectionStyle}>
           <p className="muted" style={{ margin: 0 }}>
-            Todavía no hay oportunidades guardadas. Presiona el botón para crear
-            el primer análisis.
+            Todavía no hay contenido inteligente guardado. Presiona el botón para
+            crear el primer análisis.
           </p>
         </section>
       )}

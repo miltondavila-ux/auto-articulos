@@ -15,7 +15,7 @@ export interface SystemModule {
 export const SYSTEM_MODULES: SystemModule[] = [
   {
     id: "como-funciona",
-    label: "Cómo Funciona",
+    label: "Cómo funciona esta aplicación",
     href: "/dashboard/como-funciona",
     description: "Explicación visual del flujo de trabajo y automatización del sistema.",
   },
@@ -27,19 +27,19 @@ export const SYSTEM_MODULES: SystemModule[] = [
   },
   {
     id: "oportunidades",
-    label: "Oportunidades",
+    label: "Publica contenido con ayuda de la IA avanzada",
     href: "/dashboard/oportunidades",
-    description: "Análisis de oportunidades SEO con Google Search Console y Bing.",
+    description: "Creación de artículos con datos de Google, Bing, Analytics y otras herramientas de internet.",
   },
   {
     id: "oportunidades-redes",
-    label: "Oportunidades Redes",
+    label: "Difunde tus artículos en blogs externos y redes sociales",
     href: "/dashboard/oportunidades-redes",
     description: "Distribución de contenido e ideas para redes sociales.",
   },
   {
     id: "publicaciones-en-curso",
-    label: "Publicaciones en Curso",
+    label: "Progreso de las publicaciones",
     href: "/dashboard/publicaciones-en-curso",
     description: "Monitoreo en tiempo real de artículos y lotes en procesamiento.",
   },

@@ -305,7 +305,7 @@ export async function GET() {
       configured: Boolean(user?.excludedTopics?.trim()),
       required: false,
       section: "content",
-      description: "Temas o palabras que Oportunidades debe evitar al proponer artículos.",
+      description: "Temas o palabras que la publicación inteligente debe evitar al proponer artículos.",
       actionUrl: "/dashboard/configuracion/contenido",
       actionLabel: "Configurar temas a evitar",
     },

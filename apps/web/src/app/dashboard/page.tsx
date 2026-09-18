@@ -25,28 +25,23 @@ interface ConfigurationAlert {
 const QUICK_LINKS = [
   {
     href: "/dashboard/como-funciona",
-    label: "Cómo funciona",
-    description: "Si deseas saber cómo funciona la aplicación y cómo te ayuda, este es el sitio.",
+    label: "Cómo funciona esta aplicación",
+    description: "Conoce cómo SEO TOTAL te ayuda a crear, publicar y distribuir contenido.",
   },
   {
     href: "/dashboard/publicar",
-    label: "Publicaciones propias",
-    description: "Publica artículos con tus propios títulos y decide qué quieres publicar.",
+    label: "Publica tus propios títulos",
+    description: "Escribe tus títulos y publícalos directamente en tu página web.",
   },
   {
     href: "/dashboard/oportunidades",
-    label: "Oportunidades SEO/AEO",
-    description: "Publica artículos y deja que el sistema tome el control según los indicadores de Google Search Console, Bing y Google Analytics.",
+    label: "Publica contenido con ayuda de la IA avanzada",
+    description: "SEO TOTAL analiza Google, Bing, Analytics y otros datos para encontrar temas con posibilidades reales y ayudarte a crear artículos para tu página web.",
   },
   {
     href: "/dashboard/oportunidades-redes",
-    label: "Oportunidades para Redes Sociales",
-    description: "Crea contenido para compartir tus artículos y oportunidades en tus redes sociales.",
-  },
-  {
-    href: "/dashboard/publicaciones-en-curso",
-    label: "Publicaciones en Curso",
-    description: "Consulta el progreso de los artículos que se están generando y publicando.",
+    label: "Difunde tus artículos en blogs externos y redes sociales",
+    description: "Lleva tus artículos ya publicados a microblogs, blogs externos y redes sociales en lote, y crea tu avatar de autoridad en internet.",
   },
 ];
 
@@ -267,7 +262,7 @@ export default function InicioPage() {
               Si no sabes por dónde empezar, <Modulo id="como-funciona" /> lo explica entero en tres pasos.
             </IntroP>
             <IntroP>
-              Justo abajo tienes 5 botones: elige el que corresponda a lo que quieres hacer ahora.
+          Justo abajo tienes 4 botones: elige el que corresponda a lo que quieres hacer ahora.
             </IntroP>
           </>
         )}
@@ -386,7 +381,7 @@ export default function InicioPage() {
             href="/dashboard/publicaciones-en-curso"
             style={{ color: "#0066cc", fontWeight: 600, textDecoration: "underline" }}
           >
-            Ver progreso en Publicaciones en Curso
+            Ver progreso de las publicaciones
           </Link>
           .
         </div>

@@ -109,7 +109,7 @@ export async function GET() {
     const gscItem = {
       id: "google-search-console",
       label: "Google Search Console no conectado",
-      description: "Conecta tu propiedad de Google Search Console para analizar oportunidades SEO y tráfico real.",
+      description: "Conecta tu propiedad de Google Search Console para crear contenido inteligente con tráfico real.",
       actionUrl: "/dashboard/configuracion?tab=integrations#google",
       actionLabel: "Conectar Google Search Console",
     };

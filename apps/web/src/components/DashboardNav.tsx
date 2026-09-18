@@ -29,22 +29,22 @@ function isGroup(entry: NavEntry): entry is TabGroup {
 // corta; Historial queda justo debajo del grupo, como pidió.
 const BASE_ENTRIES: NavEntry[] = [
   { href: "/dashboard", label: "Inicio" },
-  { id: "como-funciona", href: "/dashboard/como-funciona", label: "Cómo Funciona" },
+  { id: "como-funciona", href: "/dashboard/como-funciona", label: "Cómo funciona esta aplicación" },
   {
     group: "publicaciones",
     label: "Publicaciones",
     items: [
-      { id: "publicar", href: "/dashboard/publicar", label: "Publicaciones propias" },
-      { id: "oportunidades", href: "/dashboard/oportunidades", label: "Oportunidades SEO/AEO" },
+      { id: "publicar", href: "/dashboard/publicar", label: "Publica tus propios títulos" },
+      { id: "oportunidades", href: "/dashboard/oportunidades", label: "Publica contenido con ayuda de la IA avanzada" },
       {
         id: "oportunidades-redes",
         href: "/dashboard/oportunidades-redes",
-        label: "Oportunidades para Redes Sociales",
+        label: "Difunde tus artículos en blogs externos y redes sociales",
       },
       {
         id: "publicaciones-en-curso",
         href: "/dashboard/publicaciones-en-curso",
-        label: "Publicaciones en Curso",
+        label: "Progreso de las publicaciones",
       },
     ],
   },
