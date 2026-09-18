@@ -2564,3 +2564,18 @@ Business Owner" y "From Agent to Business Owner in Real Estate"). Borrarlos es
 decisión suya. La detección de títulos duplicados sigue reconociendo solo el
 formulario en español.
 Responsable: Claude. Estado: EN PRODUCCIÓN — VERIFICADA EN VIVO (9/9).
+
+## Versión desplegada — 2026-09-18 — Paso de Bing Webmaster Tools en el wizard de Inicio
+
+PR #126 fusionado a `main` (`c294aff`), sin migraciones ni cambios de schema.
+`apps/web/src/components/OnboardingWizard.tsx`: nuevo Paso 5 "Conectar Bing
+Webmaster Tools" (recomendado, no bloqueante, con botón de video
+`https://www.youtube.com/watch?v=N9p7O965ooA`), que reutiliza
+`BingWebmasterSection`; el paso final de Oportunidades pasa a ser el Paso 6.
+
+Auditorías: integridad APROBADA (alcance de un componente + registros, sin
+secretos); funcional APROBADA (`tsc --noEmit` y `npm run build` limpios);
+regresión/entrega APROBADA (Vercel Preview pasó; sin solapamiento de archivos
+con los PR #127/#128 de Bing). Verificación en vivo en Producción pendiente.
+
+Responsable: Claude. Estado: EN PRODUCCIÓN — verificación en vivo pendiente.
