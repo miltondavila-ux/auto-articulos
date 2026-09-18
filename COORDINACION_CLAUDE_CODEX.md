@@ -7356,3 +7356,9 @@ nada a `INVENTARIO_CONVERSACIONES.md` Parte A por esto.
 No hubo ninguna acción destructiva, migración ni deploy en esta corrida.
 
 Responsable: Claude (tarea programada diaria de propagación).
+
+## Claude - BING WEBMASTER DIRECCION DE DEVOLUCION — 2026-09-18
+
+**Capitán de migración:** Claude — revisará y aplicará el lote completo. Motivo:
+Bing Webmaster: el retorno OAuth vuelve a /dashboard/configuracion/indexacion
+(sin migraciones). Nadie más ejecuta Prisma hasta su liberación.
