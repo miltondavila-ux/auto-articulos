@@ -2905,6 +2905,19 @@ async function saveAndGetUrl(
           similar,
         );
       }
+      // Evidencia real del 18/9/2026 (MPM Realty Group, panel inglés): los
+      // guardados fallidos hacían el clic a los 0s y el sitio lo ignoraba
+      // (botón se deshabilita, nada se envía); el mismo artículo se publicó
+      // en un intento donde el robot esperó ~33s a que el sitio terminara su
+      // validación antes del clic. Darse por vencido tras un solo clic
+      // convertía una validación lenta en un fallo definitivo.
+      if (saveAttempt < MAX_SAVE_ATTEMPTS) {
+        await onStep(
+          `El sitio todavía no aceptó el guardado (intento ${saveAttempt} de ${MAX_SAVE_ATTEMPTS}). Se espera a que termine su validación y se vuelve a intentar.`,
+        );
+        await page.waitForTimeout(15_000);
+        continue;
+      }
       // Si el sitio no habilitó el guardado, no tiene sentido navegar y
       // esperar 90 segundos buscando una publicación que nunca se envió.
       // Devuelve inmediatamente para que queue.ts registre el intento y,
