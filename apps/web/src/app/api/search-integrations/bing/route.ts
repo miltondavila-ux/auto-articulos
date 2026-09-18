@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
-import { listBingSites, listBingSitemaps } from "@auto-articulos/shared";
+import { listBingSites } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
 import { getBingTokenForIntegration } from "@/lib/bing-token";
+import { autoConfigureBing, checkSitemapReachable, defaultSitemapUrl, type SitemapCheck } from "@/lib/bing-sitemap";
 import { validateAndRegisterTrialDomain } from "@/lib/domain-validation";
 
 async function integrationFor(userId: string) {
@@ -18,36 +19,33 @@ export async function GET() {
     const accessToken = await getBingTokenForIntegration(integration);
     const sites = await listBingSites(accessToken);
 
-    // Pedido explícito del usuario (11/8/2026): Google ya detecta el
-    // sitemap automáticamente (ver /api/search-integrations/google); Bing
-    // obligaba siempre a escribirlo a mano. Mismo criterio: solo si ya hay
-    // un sitio elegido pero todavía no se guardó un sitemap, y sin bloquear
-    // la carga de la página si Bing no devuelve nada o falla.
+    let siteUrl = integration.siteUrl;
     let sitemapUrl = integration.sitemapUrl;
-    if (!sitemapUrl && integration.siteUrl) {
+    let sitemapCheck: SitemapCheck | undefined;
+    let syncedNow = false;
+    if (!siteUrl || !sitemapUrl) {
       try {
-        const detected = await listBingSitemaps(accessToken, integration.siteUrl);
-        if (detected.length > 0) {
-          sitemapUrl = detected[0];
-          await prisma.searchIntegration.update({
-            where: { id: integration.id },
-            data: { sitemapUrl },
-          });
-        }
+        const auto = await autoConfigureBing(integration, accessToken, sites);
+        siteUrl = auto.siteUrl;
+        sitemapUrl = auto.sitemapUrl;
+        sitemapCheck = auto.sitemapCheck;
+        syncedNow = !!auto.synced;
       } catch {
-        // No bloquear la carga de la página si falla la detección
-        // automática — el usuario todavía puede escribirlo a mano.
+        // No bloquear la carga: el usuario aún puede elegirlo a mano.
       }
+    } else {
+      sitemapCheck = await checkSitemapReachable(sitemapUrl);
     }
 
     return NextResponse.json({
       connected: true,
-      siteUrl: integration.siteUrl,
+      siteUrl,
       sitemapUrl,
+      sitemapCheck,
       sites,
-      lastSitemapSyncAt: integration.lastSitemapSyncAt,
-      lastSitemapSyncStatus: integration.lastSitemapSyncStatus,
-      lastSitemapSyncError: integration.lastSitemapSyncError,
+      lastSitemapSyncAt: syncedNow ? new Date() : integration.lastSitemapSyncAt,
+      lastSitemapSyncStatus: syncedNow ? "success" : integration.lastSitemapSyncStatus,
+      lastSitemapSyncError: syncedNow ? null : integration.lastSitemapSyncError,
     });
   } catch (error) {
     return NextResponse.json({
@@ -97,11 +95,16 @@ export async function PATCH(request: NextRequest) {
         { error: "El sitio no pertenece a esta cuenta." },
         { status: 403 },
       );
+    const finalSitemapUrl = sitemapUrl.trim() || defaultSitemapUrl(siteUrl);
+    const sitemapCheck = await checkSitemapReachable(finalSitemapUrl);
+    // Con sitemap escrito a mano se guarda igual (puede estar tras un
+    // firewall); con el autocompletado solo si realmente responde.
+    const keep = sitemapUrl.trim() ? finalSitemapUrl : sitemapCheck.ok ? finalSitemapUrl : "";
     await prisma.searchIntegration.update({
       where: { id: integration.id },
-      data: { siteUrl, sitemapUrl: sitemapUrl.trim() },
+      data: { siteUrl, sitemapUrl: keep },
     });
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, sitemapUrl: keep, sitemapCheck });
   } catch (error) {
     return NextResponse.json(
       {

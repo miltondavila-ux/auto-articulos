@@ -1219,3 +1219,19 @@ equivocada.
 
 Responsable: Claude. Estado final: ARCHIVADA — verificada en vivo contra
 Producción, sin acceso de Milton a ninguna cuenta de cliente.
+
+## Claude - BING WEBMASTER SITEMAP — 2026-09-18
+
+Problema: al conectar Bing Webmaster en Configuración → Indexación, el sistema
+no seleccionaba el sitio ni colocaba/validaba `dominio/sitemap.xml`. Causa: el
+autodetectado solo corría si ya había `siteUrl` guardado (que nunca se elegía
+solo) y solo leía sitemaps ya registrados en Bing. Corrección (rama
+`claude/bing-sitemap-autodetect`, worktree `.worktrees/bing-sitemap-autodetect`,
+sin migraciones): nuevo `apps/web/src/lib/bing-sitemap.ts` (elige el sitio que
+coincide con el dominio de la cuenta, usa el sitemap de Bing o `/sitemap.xml`,
+lo valida como XML y lo envía a Bing); `bing/route.ts` GET/PATCH lo usan; la UI
+muestra "validado" o el motivo, y los `router.replace` apuntan a
+`/dashboard/configuracion/indexacion`. Archivos reservados: los tres
+mencionados. Nota: `callback/route.ts` tiene un cambio sin commitear de otra
+tarea en el árbol principal; no se tocó. Estado: ACTIVO, pendiente de
+autorización para PR/Producción.
