@@ -8,6 +8,17 @@ detalle técnico completo de cada cambio; este archivo es el índice de
 propietarios que permite, sin leer 3000 líneas, saber quién está activo y
 sobre qué.
 
+## CODEX - CREADOR DE TITULOS MUY ESTRICTO — REPARACIÓN DEL MOTOR — 2026-09-18
+
+- Rama: `codex/reparacion-del-motor`.
+- Worktree: `/private/tmp/codex-reparacion-motor`.
+- Primera fase: caché de evidencia SEO por fuente, GSC a 90 días y análisis
+  con GA4/Bing cuando GSC no esté disponible.
+- Commit local: `5ab58ae`.
+- Auditorías locales: Prisma schema válido, TypeScript limpio y build de
+  `apps/web` completo con 85 páginas.
+- Estado: ACTIVA — pendiente de revisión de PR/Preview; Producción no tocada.
+
 Estructura:
 - **PARTE A** — estado de reservas verificado EN VIVO contra git (no contra lo
   que el documento *dice*, sino contra lo que `git worktree list` y el

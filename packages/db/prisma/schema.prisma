@@ -193,6 +193,7 @@ model User {
   languageSyncJobs           LanguageSyncJob[]
   searchIntegrations         SearchIntegration[]
   opportunityGroups          OpportunityGroup[]
+  opportunityEvidenceCaches  OpportunityEvidenceCache[]
   businessProfileIntegration BusinessProfileIntegration?
   threadsIntegration         ThreadsIntegration?
   twitterIntegration         TwitterIntegration?
@@ -628,6 +629,31 @@ model OpportunityTitle {
   group OpportunityGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@index([groupId])
+}
+
+// Snapshot reutilizable de evidencia SEO externa. Se separa por fuente para
+// que GSC, GA4 y Bing puedan caducar y actualizarse de forma independiente,
+// sin repetir consultas costosas cuando el informe aún está vigente.
+model OpportunityEvidenceCache {
+  id          String   @id @default(cuid())
+  userId      String
+  siteDomain  String   @default("")
+  panel       String   @default("")
+  source      String
+  payload     Json
+  fetchedAt   DateTime
+  expiresAt   DateTime
+  periodStart DateTime?
+  periodEnd   DateTime?
+  status      String   @default("ok")
+  errorMessage String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, siteDomain, panel, source])
+  @@index([userId, expiresAt])
 }
 
 enum CategorySyncStatus {
