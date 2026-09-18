@@ -7404,5 +7404,6 @@ Rama `claude/boton-video-bing-webmaster`, worktree
 paso "Conectar Bing Webmaster Tools" en el wizard de Inicio
 (`OnboardingWizard.tsx`), recomendado y no bloqueante, reutilizando el
 componente y las rutas OAuth de Bing que ya existían. Detalle completo en
-`INVENTARIO_CONVERSACIONES.md`. Estado: ACTIVO — abriendo PR con el
-enlace del video real ya incluido.
+`INVENTARIO_CONVERSACIONES.md`. PR #126 fusionado a `main` (`c294aff`),
+sin migraciones. Reservas liberadas (`OnboardingWizard.tsx`). Estado final:
+ARCHIVADA.
