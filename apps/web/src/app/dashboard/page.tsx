@@ -31,7 +31,7 @@ const QUICK_LINKS = [
   {
     href: "/dashboard/publicar",
     label: "Publica tus propios títulos",
-    description: "Escribe tus títulos y publícalos directamente en tu página web.",
+    description: "Escribe tus títulos y publícalos directamente en tu página web. Es ideal si estás comenzando y todavía no tienes registros de indexación en Google, o si simplemente quieres publicar contenido propio.",
   },
   {
     href: "/dashboard/oportunidades",

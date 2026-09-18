@@ -4626,6 +4626,14 @@ el texto existente.
 
 Responsable: Claude (tarea programada diaria de propagación).
 
+## ACLARACIÓN PARA PUBLICAR TÍTULOS PROPIOS — 2026-09-18
+
+La explicación de **Publica tus propios títulos** ahora aclara que este acceso
+es útil para principiantes que todavía no tienen registros de indexación en
+Google y para quienes desean publicar contenido propio directamente en su web.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+
 ## MEJORA FINAL DE LEGIBILIDAD EN TARJETAS — 2026-09-18
 
 Se reforzó la jerarquía tipográfica de los accesos del Inicio: números en

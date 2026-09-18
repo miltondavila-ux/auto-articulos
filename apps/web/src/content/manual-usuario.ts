@@ -42,7 +42,7 @@ El menú superior tiene, en este orden: **Inicio**, **Cómo funciona esta aplica
 
 **Publicaciones** no es una pantalla: es un grupo que se despliega. Dentro están cinco accesos relacionados con publicar y revisar tus resultados:
 
-- **Publica tus propios títulos** (/dashboard/publicar): escribe tus títulos y publícalos directamente en tu página web.
+- **Publica tus propios títulos** (/dashboard/publicar): escribe tus títulos y publícalos directamente en tu página web. Es la opción recomendada si estás comenzando y todavía no tienes registros de indexación en Google, o si quieres publicar contenido propio.
 - **Publica contenido con ayuda de la IA avanzada** (/dashboard/oportunidades): SEO TOTAL analiza Google, Bing, Analytics y otras herramientas para encontrar temas con posibilidades reales y ayudarte a crear artículos para tu página web.
 - **Difunde tu contenido en blogs externos y redes sociales** (/dashboard/oportunidades-redes): lleva tus artículos ya publicados a microblogs, blogs externos y redes sociales en lote, y crea tu avatar de autoridad en internet.
 - **Progreso de las publicaciones** (/dashboard/publicaciones-en-curso): consulta qué artículos se están generando, publicando o esperando. Este acceso permanece en el menú.

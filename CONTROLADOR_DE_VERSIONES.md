@@ -2542,3 +2542,9 @@ blanco sólido según el fondo, para mejorar la legibilidad.
 
 Se reforzaron números, títulos y descripciones con mayor tamaño/peso y colores
 puros de alto contraste. No se modifican rutas ni comportamiento responsive.
+
+## Cambio preparado — 2026-09-18 — Explicación de publicación de títulos propios
+
+Se aclaró en el dashboard, Comienza aquí y el manual que publicar títulos
+propios sirve para comenzar sin registros de indexación en Google o para
+publicar contenido escrito directamente por el usuario.
