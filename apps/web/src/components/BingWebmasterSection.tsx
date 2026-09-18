@@ -128,7 +128,7 @@ export default function BingWebmasterSection() {
     setMessage({
       text: "Bing Webmaster Tools desconectado.",
       type: "info",
-      link: { label: "Volver a conectar", href: "/dashboard/configuracion" },
+      link: { label: "Volver a conectar", href: "/dashboard/configuracion/indexacion" },
     });
     load();
   }
@@ -167,7 +167,7 @@ export default function BingWebmasterSection() {
         setMessage({
           text: value.error ?? "No se pudo ejecutar la indexación masiva.",
           type: "error",
-          link: { label: "Revisar configuración de Bing", href: "/dashboard/configuracion" },
+          link: { label: "Revisar configuración de Bing", href: "/dashboard/configuracion/indexacion" },
         });
       }
       await load();
@@ -192,7 +192,7 @@ export default function BingWebmasterSection() {
         setMessage({
           text: value.error ?? "No se pudo enviar el sitemap.",
           type: "error",
-          link: { label: "Revisar configuración", href: "/dashboard/configuracion" },
+          link: { label: "Revisar configuración", href: "/dashboard/configuracion/indexacion" },
         });
       }
       await load();
