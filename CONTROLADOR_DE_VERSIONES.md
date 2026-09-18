@@ -2552,4 +2552,15 @@ real) y la detección de duplicados del robot solo reconoce el formulario en
 español (`#titlees` / "existe"), no el inglés (`#title`). Posible causa
 adicional: intentos anteriores "fallidos" pudieron haber guardado artículos
 reales en el sitio; conviene revisar duplicados en el listado de la cuenta.
-Responsable: Claude. Estado: EN PRODUCCIÓN — VERIFICADA EN VIVO (parcial: 8/9).
+Actualización 18/9/2026 12:00: tras otro "Reintentar", el artículo 5 se publicó
+(título nuevo de la IA, sin choque) y el lote quedó en 9/9 "Completado".
+Pendiente para Milton: en el sitio público de MPM hay artículos repetidos
+creados por intentos que la app marcó como fallidos (p. ej. "From Agent to Top
+Producer: A Practical Guide" y "...: Essential Strategies"; "Habits of Highly
+Productive REALTORS®" y "Productive REALTORS®: Key Habits"; "Strategies for
+Success After Your Florida Real Estate License" y "Essential Steps After
+Earning Your Florida Real Estate License"; "From License Holder to Real Estate
+Business Owner" y "From Agent to Business Owner in Real Estate"). Borrarlos es
+decisión suya. La detección de títulos duplicados sigue reconociendo solo el
+formulario en español.
+Responsable: Claude. Estado: EN PRODUCCIÓN — VERIFICADA EN VIVO (9/9).
