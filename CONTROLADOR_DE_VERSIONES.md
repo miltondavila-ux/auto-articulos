@@ -2487,6 +2487,68 @@ de ejecutar el análisis sin resultados nuevos.
 
 Responsable: Claude. Estado: EN PRODUCCIÓN, verificado en vivo por Milton.
 
+## Cambio preparado — 2026-09-18 — Coherencia del lenguaje de la interfaz
+
+Rama: `claude/simplificacion-setup-inicial`.
+
+Se preparó una actualización de copy de extremo a extremo: tarjetas del
+dashboard, navegación, introducciones de módulos, asistente de configuración,
+manual de usuario, textos de Analytics y mensajes del asistente/MCP. El quinto
+acceso, **Progreso de las publicaciones**, se mantiene únicamente en el menú.
+Las rutas técnicas y permisos no se renombraron para conservar compatibilidad.
+
+No hay cambios de schema ni migraciones en este lote. La revisión se mantiene
+en el worktree aislado `/Users/miltondavila/Creador de articulos/.worktrees/simplificacion-setup-inicial`.
+No se hizo push ni deploy; el estado es PREPARADA PARA VALIDACIÓN LOCAL.
+
+## Cambio preparado — 2026-09-18 — Menú agrupado por función
+
+**Historial** ahora vive dentro de **Publicaciones** y **Actualizaciones**
+dentro de **Configuración**. Se conservaron las URLs, permisos y módulos
+existentes. `tsc --noEmit` pasó; no hay cambios de schema ni migraciones.
+
+Responsable: Codex. Estado: EN REVISIÓN. Commit de la implementación:
+`6bc04a2`.
+
+## Cambio preparado — 2026-09-18 — Tarjetas del Inicio responsive
+
+Se sustituyó la altura fija de las tarjetas de accesos directos por un grid
+flexible: las tarjetas de cada fila mantienen la misma altura y el contenido
+puede crecer de forma natural en responsive. No hay cambios de schema,
+migraciones, rutas ni permisos.
+
+## Cambio preparado — 2026-09-18 — Retirar aviso de inactividad
+
+Se eliminó el Callout del Inicio que mostraba los días sin publicar y su CTA.
+Las métricas, alertas de configuración y accesos directos permanecen intactos.
+
+## Cambio preparado — 2026-09-18 — Gráfico de ritmo a ancho completo
+
+El panel **Tu ritmo — últimos 14 días** pasó a ocupar todo el ancho disponible,
+manteniendo su adaptación responsive. No hay cambios de schema ni migraciones.
+
+## Cambio preparado — 2026-09-18 — Prueba visual de color en tarjetas
+
+Las tarjetas 02, 03 y 04 del Inicio reciben fondos `#c6c6c6`, `#919191` y
+`#5e5e5e`, respectivamente, con contraste de texto adaptado. La tarjeta 01
+permanece blanca y no se modifican rutas ni funcionalidad.
+
+## Cambio preparado — 2026-09-18 — Contraste de texto reforzado
+
+Se sustituyeron los grises tenues de las tarjetas de color por texto negro o
+blanco sólido según el fondo, para mejorar la legibilidad.
+
+## Cambio preparado — 2026-09-18 — Jerarquía tipográfica de tarjetas
+
+Se reforzaron números, títulos y descripciones con mayor tamaño/peso y colores
+puros de alto contraste. No se modifican rutas ni comportamiento responsive.
+
+## Cambio preparado — 2026-09-18 — Explicación de publicación de títulos propios
+
+Se aclaró en el dashboard, Comienza aquí y el manual que publicar títulos
+propios sirve para comenzar sin registros de indexación en Google o para
+publicar contenido escrito directamente por el usuario.
+
 ## Versión desplegada — 2026-09-18 — Retorno de Bing Webmaster a Indexación
 
 `apps/web/src/app/api/search-integrations/bing/callback/route.ts`: las tres

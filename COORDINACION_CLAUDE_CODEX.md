@@ -4625,6 +4625,98 @@ Verificaciones hechas con `git fetch origin` + `git merge-base
 el texto existente.
 
 Responsable: Claude (tarea programada diaria de propagación).
+
+## ACLARACIÓN PARA PUBLICAR TÍTULOS PROPIOS — 2026-09-18
+
+La explicación de **Publica tus propios títulos** ahora aclara que este acceso
+es útil para principiantes que todavía no tienen registros de indexación en
+Google y para quienes desean publicar contenido propio directamente en su web.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+
+## MEJORA FINAL DE LEGIBILIDAD EN TARJETAS — 2026-09-18
+
+Se reforzó la jerarquía tipográfica de los accesos del Inicio: números en
+negrita, títulos más grandes y marcados, descripciones ligeramente mayores y
+texto en negro o blanco sólido según el fondo, sin grises de baja legibilidad.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+
+## AJUSTE DE CONTRASTE EN TARJETAS — 2026-09-18
+
+Se reforzó el contraste de las tarjetas de color del Inicio: la tarjeta 02 usa
+texto negro sólido sobre `#c6c6c6`, y las tarjetas 03 y 04 usan texto blanco
+sólido sobre `#919191` y `#5e5e5e`. La tarjeta 01 permanece blanca.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+
+## PRUEBA VISUAL DE COLOR EN ACCESOS DEL INICIO — 2026-09-18
+
+Para probar una presentación más dinámica, las tarjetas 02, 03 y 04 del Inicio
+usan respectivamente `#c6c6c6`, `#919191` y `#5e5e5e`, con texto oscuro o claro
+según el contraste necesario. La tarjeta 01 permanece blanca y no se altera
+el comportamiento responsive del grid.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+
+## AJUSTE RESPONSIVE DEL GRÁFICO DE RITMO — 2026-09-18
+
+El gráfico **Tu ritmo — últimos 14 días** ahora ocupa todo el ancho disponible
+del dashboard. Se eliminó la columna vacía reservada a la derecha y se mantuvo
+el comportamiento responsive del grid para pantallas pequeñas.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+
+## ELIMINACIÓN DEL AVISO DE INACTIVIDAD DEL INICIO — 2026-09-18
+
+Se retiró del dashboard el aviso ámbar que mostraba cuántos días habían
+pasado sin publicar y el enlace para ver contenido inteligente. Se conservaron
+las métricas, alertas de configuración, accesos directos y gráficos del Inicio.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+
+## REORGANIZACIÓN DEL MENÚ — 2026-09-18
+
+Se movió **Historial** dentro del desplegable **Publicaciones** y
+**Actualizaciones** dentro del desplegable **Configuración**. Las rutas
+existentes se conservaron; solo cambió la navegación visible. El manual de
+usuario se actualizó para reflejar los cinco accesos de Publicaciones y los
+dos accesos de Configuración.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+
+## AUDITORÍA DE COHERENCIA DE NOMBRES Y MENSAJES — 2026-09-18
+
+La tarea `claude/simplificacion-setup-inicial` revisó la interfaz local, el
+menú, las tarjetas del dashboard, los módulos, el manual de usuario y los
+mensajes del asistente/MCP para alinear el vocabulario visible con los nombres
+aprobados por Milton. El dashboard conserva cuatro tarjetas principales:
+**Cómo funciona esta aplicación**, **Publica tus propios títulos**, **Publica
+contenido con ayuda de la IA avanzada** y **Difunde tu contenido en blogs
+externos y redes sociales**. **Progreso de las publicaciones** queda como
+acceso del menú, no como quinta tarjeta.
+
+Se conservaron las rutas, permisos, scopes, nombres de herramientas internas y
+endpoints existentes para no romper enlaces ni integraciones. Esta tanda no
+modifica schema ni migraciones. La vista local se mantiene disponible en
+`http://localhost:3201` y no se hizo deploy ni push a producción.
+
+Pendiente antes de promover: ejecutar las validaciones finales, revisar el
+diff completo y verificar el despliegue en Vercel/producción conforme al
+controlador de versiones.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL. Commit de la implementación:
+`6bc04a2`.
+
+## AJUSTE RESPONSIVE DE TARJETAS DEL INICIO — 2026-09-18
+
+Se eliminó la altura fija de las cuatro tarjetas del Inicio. Ahora el grid y
+los enlaces se estiran por fila para que todas las tarjetas de una misma fila
+tengan la misma altura, mientras cada fila conserva una altura natural según
+su contenido en pantallas pequeñas. No se cambia la cantidad de accesos, las
+rutas ni la funcionalidad.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
 ## PUNTO DE MIGRACIÓN A CLAUDE — 2026-09-04
 
 Codex: Esta entrada deja el contexto completo para continuar la conversación `CODEX - AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`.

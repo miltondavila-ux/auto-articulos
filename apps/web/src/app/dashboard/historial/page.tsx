@@ -1063,7 +1063,7 @@ function HistorialRedes() {
         </summary>
         <div style={{ marginTop: 14 }}>
           <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
-            Descartadas a propósito con el botón "Descartar" en Oportunidades.
+            Descartadas a propósito con el botón "Descartar" en Publica contenido con ayuda de la IA avanzada.
             Si cambias de opinión, puedes reintentarlas desde aquí.
           </p>
           {batchMessage && (

@@ -98,7 +98,7 @@ export default function PublicacionesEnCursoPage() {
 
   return (
     <div>
-      <ModuleIntro titulo="Publicaciones en Curso">
+      <ModuleIntro titulo="Progreso de las publicaciones">
         <IntroP>
           Esta pantalla es la sala de espera. Aquí ves lo que se está publicando ahora mismo, tanto artículos como publicaciones en redes sociales, con su avance y la etapa concreta en la que va cada uno.
         </IntroP>

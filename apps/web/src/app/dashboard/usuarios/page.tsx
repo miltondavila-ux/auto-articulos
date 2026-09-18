@@ -3021,7 +3021,7 @@ function UserCard({
             {new Date(user.createdAt).toLocaleDateString()}
           </Field>
 
-          <Field label="Aviso de Oportunidades">
+          <Field label="Aviso de contenido inteligente">
             {user.opportunitiesDisclosureAcceptedAt
               ? `Aceptado el ${new Date(
                   user.opportunitiesDisclosureAcceptedAt,
@@ -3390,4 +3390,3 @@ function UserHistorial({ email }: { email: string }) {
     </details>
   );
 }
-

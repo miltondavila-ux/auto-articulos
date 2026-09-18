@@ -17,9 +17,9 @@ Cuando ingresas a tu cuenta por primera vez o aún no tienes artículos publicad
 3. **Paso 2 (Sincronizar categorías):** Descarga en vivo las categorías reales de tu web para clasificar tus artículos. Mientras corre verás una **barra de progreso con las etapas** (En cola → Entrando a tu plataforma → Guardando categorías), un cronómetro y un **Detalle del proceso** desplegable que registra con hora exacta qué fue pasando: cuándo se envió la solicitud, cuándo un procesador la tomó y cómo terminó. Si algo falla, ahí aparece el motivo real. Puede tardar varios minutos según la cola de trabajo; la pantalla se actualiza sola y no hace falta recargar ni volver a pulsar. Verás lo mismo si sincronizas desde Configuración.
 4. **Paso 3 (Idioma de redacción):** Confirma el idioma principal en el que la Inteligencia Artificial redactará tus contenidos.
 5. **Paso 4 (Google Search Console):** Google Search Console le dice a la plataforma qué está buscando de verdad la gente que llega a tu sitio en Google, para que la Inteligencia Artificial elija y escriba sobre esos temas reales en vez de adivinar — es obligatorio, sin esta conexión no se pueden posicionar tus artículos. Abre Search Console en una pestaña contigua de tu navegador para comprobar que esté activo con la cuenta de Google dueña de tu web, y luego conéctalo mediante Google OAuth seleccionando tu sitio.
-6. **Meta final:** Al completar los 4 pasos ves una pantalla de "¡Felicitaciones!" con acceso directo a Oportunidades SEO o a publicar un artículo. Esa pantalla se queda visible durante toda esa visita — no desaparece de golpe apenas terminas el último paso. En tu siguiente visita a Inicio, ya con todo listo, entras directo al panel de métricas de rendimiento.
+6. **Meta final:** Al completar los 4 pasos ves una pantalla de "¡Felicitaciones!" con acceso directo a publicar contenido con ayuda de la IA avanzada o a publicar un artículo. Esa pantalla se queda visible durante toda esa visita — no desaparece de golpe apenas terminas el último paso. En tu siguiente visita a Inicio, ya con todo listo, entras directo al panel de métricas de rendimiento.
 
-También puedes volver a abrir el Asistente en cualquier momento desde **Configuración** (/dashboard/configuracion/inicial); si ya completaste los 4 pasos, esa pantalla no vuelve a mostrar el asistente, solo una confirmación corta con acceso directo a Oportunidades.
+También puedes volver a abrir el Asistente en cualquier momento desde **Configuración** (/dashboard/configuracion/inicial); si ya completaste los 4 pasos, esa pantalla no vuelve a mostrar el asistente, solo una confirmación corta con acceso directo a **Publica contenido con ayuda de la IA avanzada**.
 
 ## Inicio
 
@@ -27,8 +27,8 @@ Ruta: /dashboard
 
 Inicio es tu centro de operaciones:
 - **Para cuentas nuevas (sin artículos aún):** Muestra de forma exclusiva el Asistente de Configuración Inicial, sin menú ni accesos directos, para que completes tu puesta a punto sin distracciones.
-- **Para cuentas con artículos publicados:** Muestra el panel de métricas de rendimiento (artículos publicados hoy, en el mes, límites y gráfico de actividad), el menú superior completo y cuatro accesos directos numerados (01-04) a **Publicaciones propias**, **Oportunidades SEO/AEO**, **Oportunidades para Redes Sociales** y **Publicaciones en Curso**.
-- Desde el menú superior tienes acceso a: Cómo Funciona, Publicaciones, Historial, Actualizaciones y Configuración.
+- **Para cuentas con artículos publicados:** Muestra el panel de métricas de rendimiento (artículos publicados hoy, en el mes, límites y gráfico de actividad), el menú superior completo y cuatro accesos directos numerados (01-04) a **Publica tus propios títulos**, **Publica contenido con ayuda de la IA avanzada**, **Difunde tu contenido en blogs externos y redes sociales** y el resto de accesos disponibles en el menú.
+- Desde el menú superior tienes acceso a: Cómo funciona esta aplicación, Publicaciones y Configuración. Historial está dentro de Publicaciones y Actualizaciones dentro de Configuración.
 
 ## Cada módulo se explica solo
 
@@ -38,16 +38,17 @@ Dentro de esas explicaciones, el nombre de cualquier módulo aparece en MAYÚSCU
 
 ## El menú
 
-El menú superior tiene, en este orden: **Inicio**, **Cómo Funciona**, **Publicaciones**, **Historial**, **Actualizaciones** y **Configuración**. Los administradores ven además **Administración**, que también se despliega y contiene **Usuarios** (/dashboard/usuarios) y **Composio** (/dashboard/composio).
+El menú superior tiene, en este orden: **Inicio**, **Cómo funciona esta aplicación**, **Publicaciones** y **Configuración**. Dentro de **Publicaciones** están tus títulos, el contenido inteligente, la difusión en blogs externos y redes sociales, el progreso y el historial. Dentro de **Configuración** están la configuración general y las actualizaciones. Los administradores ven además **Administración**, que también se despliega y contiene **Usuarios** (/dashboard/usuarios) y **Composio** (/dashboard/composio).
 
-**Publicaciones** no es una pantalla: es un grupo que se despliega. Dentro están las cuatro pantallas relacionadas con publicar:
+**Publicaciones** no es una pantalla: es un grupo que se despliega. Dentro están cinco accesos relacionados con publicar y revisar tus resultados:
 
-- **Publicaciones propias** (/dashboard/publicar): tus propios títulos.
-- **Oportunidades SEO/AEO** (/dashboard/oportunidades): las que propone el sistema a partir de Google Search Console.
-- **Oportunidades para Redes Sociales** (/dashboard/oportunidades-redes): llevar artículos ya publicados a tus redes.
-- **Publicaciones en Curso** (/dashboard/publicaciones-en-curso): lo que se está publicando ahora mismo.
+- **Publica tus propios títulos** (/dashboard/publicar): escribe tus títulos y publícalos directamente en tu página web. Es la opción recomendada si estás comenzando y todavía no tienes registros de indexación en Google, o si quieres publicar contenido propio.
+- **Publica contenido con ayuda de la IA avanzada** (/dashboard/oportunidades): SEO TOTAL analiza Google, Bing, Analytics y otras herramientas para encontrar temas con posibilidades reales y ayudarte a crear artículos para tu página web.
+- **Difunde tu contenido en blogs externos y redes sociales** (/dashboard/oportunidades-redes): lleva tus artículos ya publicados a microblogs, blogs externos y redes sociales en lote, y crea tu avatar de autoridad en internet.
+- **Progreso de las publicaciones** (/dashboard/publicaciones-en-curso): consulta qué artículos se están generando, publicando o esperando. Este acceso permanece en el menú.
+- **Historial** (/dashboard/historial): revisa las publicaciones anteriores, sus resultados, errores e intentos.
 
-En computadora, Publicaciones se abre al pulsarlo y se cierra al elegir una opción, al pulsar fuera o con la tecla Escape. En teléfono y tableta no se despliega: las cuatro opciones aparecen listadas debajo del título Publicaciones.
+En computadora, Publicaciones se abre al pulsarlo y se cierra al elegir una opción, al pulsar fuera o con la tecla Escape. En teléfono y tableta no se despliega: las cinco opciones aparecen listadas debajo del título Publicaciones.
 
 Si el administrador te oculta algún módulo, simplemente no aparece en el menú. Si te oculta los cuatro, el grupo Publicaciones desaparece entero.
 
@@ -94,13 +95,13 @@ está activo en tu cuenta, lo activa el administrador).
 **Ubicaciones para títulos geolocalizados:** escribe, separadas por comas,
 las ciudades o países de donde son tus clientes reales (ej. "Colombia,
 Bogotá, Ecuador, Caracas") y por separado dónde está u opera tu negocio (ej.
-"Miami, Orlando, Homestead"). Oportunidades puede combinar ambos datos para
+"Miami, Orlando, Homestead"). La publicación inteligente puede combinar ambos datos para
 crear títulos ultra segmentados como "Cómo invertir en propiedades en
 Homestead si vives en Colombia". Dejar los campos vacíos no cambia nada de
 tu cuenta.
 
 **Segmento de No Publicar:** escribe, separados por comas, los temas o
-palabras que no quieres que Oportunidades tome en cuenta al proponer
+palabras que no quieres que la publicación inteligente tome en cuenta al proponer
 títulos nuevos (ej. "seguros de vida, criptomonedas, política"). Cualquier
 título que toque uno de esos temas se descarta automáticamente antes de
 mostrarse, sin importar cuánta demanda real tenga. Dejarlo vacío no cambia
@@ -108,7 +109,7 @@ nada de tu cuenta.
 
 ### Buscadores
 
-Puedes conectar Google Search Console y Bing Webmaster. Selecciona la propiedad o sitio correcto después de conectar la cuenta. Estas conexiones permiten analizar oportunidades y, cuando la indexación está activada, enviar artículos a buscadores según la configuración disponible.
+Puedes conectar Google Search Console y Bing Webmaster. Selecciona la propiedad o sitio correcto después de conectar la cuenta. Estas conexiones permiten analizar contenido inteligente y, cuando la indexación está activada, enviar artículos a buscadores según la configuración disponible.
 
 ### Redes sociales
 
@@ -132,7 +133,7 @@ Si una red no aparece, primero pide al administrador que active el permiso corre
 
 ### Personalización del contenido
 
-Puedes elegir tu idioma habitual de redacción, agregar una firma al final de los artículos y guardar teléfono de contacto para los botones de llamada o WhatsApp dentro de tus artículos. También puedes subir tu foto y logo para piezas de redes sociales y definir instrucciones para el estilo de imágenes e infografías. Además puedes indicar en dónde están tus clientes y en dónde está tu negocio para que Oportunidades cree títulos ultra geolocalizados combinando ambos datos, y escribir un Segmento de No Publicar con los temas que Oportunidades debe descartar siempre.
+Puedes elegir tu idioma habitual de redacción, agregar una firma al final de los artículos y guardar teléfono de contacto para los botones de llamada o WhatsApp dentro de tus artículos. También puedes subir tu foto y logo para piezas de redes sociales y definir instrucciones para el estilo de imágenes e infografías. Además puedes indicar en dónde están tus clientes y en dónde está tu negocio para que la publicación inteligente cree títulos ultra geolocalizados combinando ambos datos, y escribir un Segmento de No Publicar con los temas que la publicación inteligente debe descartar siempre.
 
 Consejo: escribe instrucciones de imagen sencillas y concretas; por ejemplo, el estilo visual, colores o tipo de público. Si las dejas vacías, se usa el estilo predeterminado.
 
@@ -149,15 +150,15 @@ Usa Publicar cuando ya tienes los títulos que quieres convertir en artículos.
 5. Deja activada la indexación si quieres que los artículos se consideren para buscadores. Márcala como desactivada solo si no quieres indexar ese lote.
 6. Pulsa “Iniciar”.
 
-Solo puede haber una ejecución activa a la vez. Si ya hay una, abre Publicaciones en Curso y espera a que termine antes de iniciar otra.
+Solo puede haber una ejecución activa a la vez. Si ya hay una, abre Progreso de las publicaciones y espera a que termine antes de iniciar otra.
 
-## Publicaciones en Curso
+## Progreso de las publicaciones
 
 Ruta: /dashboard/publicaciones-en-curso
 
 Esta pantalla muestra el avance de la ejecución actual. Úsala para saber si los artículos continúan procesándose. Si no hay una ejecución activa, puedes volver a Publicar para iniciar una nueva.
 
-## Oportunidades SEO
+## Publica contenido con ayuda de la IA avanzada
 
 Ruta: /dashboard/oportunidades
 
@@ -167,17 +168,17 @@ Con eso se arman títulos de cola larga. Es más sencillo de lo que suena: en ve
 
 La pantalla está separada en tres pasos.
 
-Paso 1, pide el análisis. Si tienes más de un sitio, eliges para cuál generar oportunidades y pulsas Analizar. Tarda unos minutos y no debes cerrar la página. Si te falta conectar Google Search Console, elegir la propiedad, sincronizar categorías o configurar el idioma, la propia pantalla te lo dice con un enlace directo a donde se arregla.
+Paso 1, pide el análisis. Si tienes más de un sitio, eliges para cuál generar contenido y pulsas Analizar. Tarda unos minutos y no debes cerrar la página. Si te falta conectar Google Search Console, elegir la propiedad, sincronizar categorías o configurar el idioma, la propia pantalla te lo dice con un enlace directo a donde se arregla.
 
 Paso 2, elige cómo se escribirán. Seleccionas el idioma de los artículos y el estilo de escritura. También puedes desactivar la indexación en buscadores, aunque por defecto queda activada, que es lo normal si quieres que Google los encuentre. Estas opciones solo afectan a lo que publiques desde esta pantalla; no cambian tu configuración general.
 
-Paso 3, revisa y publica. Aparecen las propuestas agrupadas por categoría, con su explicación, impresiones y clics. Puedes eliminar los títulos que no te convenzan, publicar un título suelto, una categoría completa o todas de una vez. Respeta el máximo de títulos por lote: si una categoría lo supera, publícala en partes o elimina títulos antes. Si prefieres empezar de cero, el botón **Borrar todas las oportunidades** elimina de una vez todas las propuestas pendientes (pide confirmación antes de borrar y no se puede deshacer).
+Paso 3, revisa y publica. Aparecen las propuestas agrupadas por categoría, con su explicación, impresiones y clics. Puedes eliminar los títulos que no te convenzan, publicar un título suelto, una categoría completa o todas de una vez. Respeta el máximo de títulos por lote: si una categoría lo supera, publícala en partes o elimina títulos antes. Si prefieres empezar de cero, el botón **Borrar todo el contenido pendiente** elimina de una vez todas las propuestas (pide confirmación antes de borrar y no se puede deshacer).
 
 Nada se publica sin que tú lo mandes. Las sugerencias ayudan a decidir, pero la decisión es tuya: revisa que cada título sea adecuado para tu negocio y tu audiencia.
 
-**Publicar en lote mixto de varias categorías a la vez:** cada título tiene una casilla de selección. Puedes marcar títulos de distintas categorías al mismo tiempo; en cuanto marcas alguno aparece el botón verde "Publicar selección" con un contador, que agrupa automáticamente por categoría y publica solo lo que elegiste, respetando los mismos cupos de siempre. Los títulos que no marques quedan sin tocar en Oportunidades.
+**Publicar en lote mixto de varias categorías a la vez:** cada título tiene una casilla de selección. Puedes marcar títulos de distintas categorías al mismo tiempo; en cuanto marcas alguno aparece el botón verde "Publicar selección" con un contador, que agrupa automáticamente por categoría y publica solo lo que elegiste, respetando los mismos cupos de siempre. Los títulos que no marques quedan sin tocar en el contenido inteligente.
 
-## Oportunidades Redes
+## Difunde tu contenido en blogs externos y redes sociales
 
 **Este módulo está en prueba.** Todavía no está disponible para todas las cuentas: se está activando poco a poco. Si no aparece en tu menú, no es que te falte algo por configurar.
 
@@ -197,7 +198,7 @@ Historial conserva las ejecuciones anteriores y el estado de los títulos. Puede
 
 Si un artículo muestra un error, lee el mensaje antes de repetir la acción. Si el problema indica una conexión, revisa primero Configuración.
 
-## Cómo Funciona
+## Cómo funciona esta aplicación
 
 Ruta: /dashboard/como-funciona
 
@@ -212,8 +213,8 @@ También explica por qué las redes sociales cuentan para el posicionamiento: qu
 Lo explica en tres pasos:
 
 1. **Configura tu cuenta.** Es lo primero y lo único que no se puede saltar. Si no estás seguro de haberlo dejado todo listo, entra en Configuración y revísalo. Si algo no queda claro, la burbuja de ayuda está en la esquina de todas las pantallas.
-2. **Publica tus artículos.** Hay dos caminos y puedes usar los dos: publicar tus propios títulos dentro del cupo dinámico de tu cuenta, o dejar que el sistema decida por ti desde Oportunidades, donde consulta Google Search Console y Bing. Cuando la inteligencia artificial haya decidido, publicas de uno en uno o por lotes según el saldo diario, mensual y por lote disponible.
-3. **Lleva lo publicado a las redes.** Desde Oportunidades para Redes Sociales, los artículos más relevantes pasan a tus redes de forma repartida y equilibrada, sin parecer spam.
+2. **Publica tus artículos.** Hay dos caminos y puedes usar los dos: publicar tus propios títulos dentro del cupo dinámico de tu cuenta, o dejar que el sistema decida por ti desde **Publica contenido con ayuda de la IA avanzada**, donde consulta Google Search Console y Bing. Cuando la inteligencia artificial haya decidido, publicas de uno en uno o por lotes según el saldo diario, mensual y por lote disponible.
+3. **Lleva lo publicado a las redes.** Desde Difunde tu contenido en blogs externos y redes sociales, los artículos más relevantes pasan a tus redes de forma repartida y equilibrada, sin parecer spam.
 
 Cierra explicando para qué sirve todo esto: posicionarte con autoridad en internet. Aparecer en los resultados de la inteligencia artificial, de Google y de Bing es lo más importante que le puede pasar a tu negocio en internet.
 
@@ -250,7 +251,7 @@ Ruta: /dashboard/configuracion/indexacion
 3. El sitemap se detecta automáticamente cuando es posible. Si no se encuentra, escribe su URL y guarda la configuración.
 4. Puedes pulsar **Enviar sitemap ahora** para un envío inmediato. Después, SEO TOTAL lo envía automáticamente cada noche.
 
-Google Search Console permite usar Oportunidades SEO, consultar el estado de indexación y enviar el sitemap. Si no ves tu sitio en la lista, revisa que la misma cuenta de Google sea propietaria o usuaria autorizada de esa propiedad.
+Google Search Console permite usar Publica contenido con ayuda de la IA avanzada, consultar el estado de indexación y enviar el sitemap. Si no ves tu sitio en la lista, revisa que la misma cuenta de Google sea propietaria o usuaria autorizada de esa propiedad.
 
 ### Bing Webmaster Tools
 
@@ -278,20 +279,20 @@ Define la firma de los artículos, teléfono de contacto, hasta 3 fotos tuyas y 
 
 El campo de firma se llama "Firma al Final del Artículo y Disclosure": además de tu firma, se sugiere agregar una aclaración legal (disclosure) que indique que no eres asesor en materias legales, fiscales, financieras o de seguros.
 
-**Ubicaciones para títulos geolocalizados:** escribe, separadas por comas, las ciudades o países de donde son tus clientes reales (ej. "Colombia, Bogotá, Ecuador, Caracas") y por separado dónde está u opera tu negocio (ej. "Miami, Orlando, Homestead"). Oportunidades puede combinar ambos datos para crear títulos ultra segmentados como "Cómo invertir en propiedades en Homestead si vives en Colombia". Dejar los campos vacíos no cambia nada de tu cuenta.
+**Ubicaciones para títulos geolocalizados:** escribe, separadas por comas, las ciudades o países de donde son tus clientes reales (ej. "Colombia, Bogotá, Ecuador, Caracas") y por separado dónde está u opera tu negocio (ej. "Miami, Orlando, Homestead"). La publicación inteligente puede combinar ambos datos para crear títulos ultra segmentados como "Cómo invertir en propiedades en Homestead si vives en Colombia". Dejar los campos vacíos no cambia nada de tu cuenta.
 
 Paso a paso para usarlo:
 1. Entra a Configuración → Contenido (esta sección).
 2. En "¿En dónde están tus clientes?" escribe las ciudades o países de tus clientes reales, separados por comas.
 3. En "¿En dónde está tu negocio?" escribe las ciudades donde operas o vendes, separadas por comas.
 4. Presiona "Guardar ubicaciones".
-5. Ve a Oportunidades SEO/AEO. Si ya tenés propuestas pendientes de antes, publícalas o elimínalas primero (el sistema no deja analizar de nuevo con pendientes sin resolver).
-6. Presiona "Analizar oportunidades" (o "Actualizar análisis" si ya corriste uno antes).
+5. Ve a Publica contenido con ayuda de la IA avanzada. Si ya tenés propuestas pendientes de antes, publícalas o elimínalas primero (el sistema no deja analizar de nuevo con pendientes sin resolver).
+6. Presiona "Analizar contenido" (o "Actualizar análisis" si ya corriste uno antes).
 7. Revisa los resultados: los títulos geolocalizados aparecen mezclados con el resto de las propuestas, organizados por categoría, combinando explícitamente una ubicación de cliente con una de negocio (ej. "si vivo en Colombia").
 
 Si dejás cualquiera de los dos campos vacío, esta combinación no se genera — necesita ambas listas llenas. Cuantas más ubicaciones pongas en cada campo, más combinaciones intenta cubrir el sistema (por ejemplo, 4 ciudades de clientes × 3 de negocio = hasta 12 combinaciones), siempre que tengan sentido real para tus categorías.
 
-**Segmento de No Publicar:** en el campo "Temas a excluir" escribe, separados por comas, los temas o palabras que no quieres que Oportunidades tome en cuenta al proponer títulos (ej. "seguros de vida, criptomonedas, política") y presiona "Guardar segmento de no publicar". Cualquier título nuevo que toque uno de esos temas se descarta automáticamente antes de mostrarse en Oportunidades, sin importar cuánta demanda real tenga. Dejarlo vacío no cambia nada de tu cuenta.
+**Segmento de No Publicar:** en el campo "Temas a excluir" escribe, separados por comas, los temas o palabras que no quieres que la publicación inteligente tome en cuenta al proponer títulos (ej. "seguros de vida, criptomonedas, política") y presiona "Guardar segmento de no publicar". Cualquier título nuevo que toque uno de esos temas se descarta automáticamente antes de mostrarse en el contenido inteligente, sin importar cuánta demanda real tenga. Dejarlo vacío no cambia nada de tu cuenta.
 
 ### Estado de configuración
 
@@ -311,7 +312,7 @@ Ruta: /dashboard/historial
 
 Historial agrupa las ejecuciones por categoría y conserva los resultados de publicación, errores, reintentos, indexación y redes cuando están disponibles. Puedes borrar el historial terminado si ya no lo necesitas; esa acción no se puede deshacer y no cancela un lote que esté en curso.
 
-## Oportunidades de redes sociales
+## Difunde tu contenido en blogs externos y redes sociales
 
 Ruta: /dashboard/oportunidades-redes
 
@@ -328,7 +329,7 @@ La plataforma cuenta con un diseño minimalista y limpio en blanco impecable, si
 
 ## Pre-Validación Inteligente antes de Publicar
 
-Tanto en **Publicar** (/dashboard/publicar) como en **Oportunidades SEO** (/dashboard/oportunidades), el sistema cuenta con un panel de protección preventiva (**PreValidationGuard**):
+Tanto en **Publica tus propios títulos** (/dashboard/publicar) como en **Publica contenido con ayuda de la IA avanzada** (/dashboard/oportunidades), el sistema cuenta con un panel de protección preventiva (**PreValidationGuard**):
 - Si falta algún requisito previo (credenciales de la plataforma, categorías sincronizadas, idioma de redacción o Search Console), la plataforma te muestra una tarjeta clara con un checklist interactivo indicando exactamente qué falta y un botón directo para resolverlo.
 - **Créditos de imagen:** Si ya recibiste créditos, pulsa **Ya recibí mis créditos** para intentar publicar de inmediato. Esa confirmación es solo para el intento actual: si refrescas la pantalla o vuelves más tarde, el aviso puede reaparecer hasta que una publicación real confirme que ya hay créditos disponibles. El estado real de tu cuenta solo cambia automáticamente cuando una creación de artículo comprueba, tras agotar los reintentos, que 10minutesWebsite realmente se quedó sin créditos — nunca por errores pasajeros o visitas a la pantalla.
 
@@ -358,9 +359,9 @@ Si aparece el aviso de créditos de imagen, significa que la pantalla todavía n
 
 Si un título falla y el mensaje explica que la categoría ya no existe en tu sitio (por ejemplo, porque se borró o se renombró desde la última vez que sincronizaste), entra a Configuración → Cuenta y pulsa "Sincronizar categorías ahora" para refrescar la lista, y luego vuelve a intentar ese título.
 
-### No veo Oportunidades SEO
+### No veo Publica contenido con ayuda de la IA avanzada
 
-En Configuración conecta Google Search Console, selecciona una propiedad, sincroniza categorías y guarda un idioma de redacción. Luego vuelve a Oportunidades para analizar.
+En Configuración conecta Google Search Console, selecciona una propiedad, sincroniza categorías y guarda un idioma de redacción. Luego vuelve a **Publica contenido con ayuda de la IA avanzada** para analizar.
 
 ### No se publica en una red social
 

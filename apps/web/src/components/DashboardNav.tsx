@@ -25,32 +25,38 @@ function isGroup(entry: NavEntry): entry is TabGroup {
 }
 
 // Orden del menú definido por Milton (18/8/2026). Todo lo que tiene que ver
-// con publicar vive dentro de PUBLICACIONES para que la barra principal quede
-// corta; Historial queda justo debajo del grupo, como pidió.
+// con publicar e historial vive dentro de PUBLICACIONES para que la barra
+// principal quede corta. Actualizaciones vive dentro de CONFIGURACIÓN.
 const BASE_ENTRIES: NavEntry[] = [
   { href: "/dashboard", label: "Inicio" },
-  { id: "como-funciona", href: "/dashboard/como-funciona", label: "Cómo Funciona" },
+  { id: "como-funciona", href: "/dashboard/como-funciona", label: "Cómo funciona esta aplicación" },
   {
     group: "publicaciones",
     label: "Publicaciones",
     items: [
-      { id: "publicar", href: "/dashboard/publicar", label: "Publicaciones propias" },
-      { id: "oportunidades", href: "/dashboard/oportunidades", label: "Oportunidades SEO/AEO" },
+      { id: "publicar", href: "/dashboard/publicar", label: "Publica tus propios títulos" },
+      { id: "oportunidades", href: "/dashboard/oportunidades", label: "Publica contenido con ayuda de la IA avanzada" },
       {
         id: "oportunidades-redes",
         href: "/dashboard/oportunidades-redes",
-        label: "Oportunidades para Redes Sociales",
+        label: "Difunde tu contenido en blogs externos y redes sociales",
       },
       {
         id: "publicaciones-en-curso",
         href: "/dashboard/publicaciones-en-curso",
-        label: "Publicaciones en Curso",
+        label: "Progreso de las publicaciones",
       },
+      { id: "historial", href: "/dashboard/historial", label: "Historial" },
     ],
   },
-  { id: "historial", href: "/dashboard/historial", label: "Historial" },
-  { id: "actualizaciones", href: "/dashboard/actualizaciones", label: "Actualizaciones" },
-  { id: "configuracion", href: "/dashboard/configuracion", label: "Configuración" },
+  {
+    group: "configuracion",
+    label: "Configuración",
+    items: [
+      { id: "configuracion", href: "/dashboard/configuracion", label: "Configuración general" },
+      { id: "actualizaciones", href: "/dashboard/actualizaciones", label: "Actualizaciones" },
+    ],
+  },
 ];
 
 // Administración pasó de ser un solo enlace a un grupo para alojar módulos de
