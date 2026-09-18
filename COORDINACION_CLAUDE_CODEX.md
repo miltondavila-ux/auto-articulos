@@ -7414,3 +7414,6 @@ de la cuenta, se autocompleta el sitemap (el de Bing o `/sitemap.xml`), se
 valida como XML del mismo dominio y se envía a Bing. PR #128 (`0a7af58`),
 commits `d52c647` y `6d339b7`, sin migraciones. Reservas liberadas y worktree
 retirado. Detalle en `INVENTARIO_CONVERSACIONES.md`.
+
+**Capitán de migración:** Claude — reclamó y liberó el lote (cierre documental
+de BING WEBMASTER SITEMAP, solo documentación, sin migraciones ni schema).
