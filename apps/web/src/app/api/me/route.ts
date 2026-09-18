@@ -18,6 +18,7 @@ export const revalidate = 0;
 const MAX_ARTICLE_SIGNATURE_LEN = 700;
 // Suficiente para varias decenas de ciudades/países separados por comas.
 const MAX_LOCATIONS_LEN = 500;
+// Suficiente para varias decenas de temas separados por comas.
 const MAX_EXCLUDED_TOPICS_LEN = 500;
 
 export async function GET() {
@@ -186,7 +187,10 @@ export async function PATCH(request: NextRequest) {
   if ("excludedTopics" in body) {
     const { excludedTopics } = body;
     if (excludedTopics !== null && typeof excludedTopics !== "string") {
-      return NextResponse.json({ error: "excludedTopics debe ser texto o null" }, { status: 400 });
+      return NextResponse.json(
+        { error: "excludedTopics debe ser texto o null" },
+        { status: 400 },
+      );
     }
     const trimmed = typeof excludedTopics === "string" ? excludedTopics.trim() : "";
     if (trimmed.length > MAX_EXCLUDED_TOPICS_LEN) {

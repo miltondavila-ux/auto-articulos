@@ -2313,3 +2313,176 @@ https://seototal.lasolucionweb.com/login. Pendiente: Tagcrush (usar el
 mismo componente `QrCodeDisplay` con la URL de tagcrush.net cuando se
 pida). La duda sobre "Exclusión de Temas" señalada arriba queda sin
 resolver para que Milton decida.
+
+## Versión desplegada — 2026-09-16 — Botón admin para borrar credencial 10minutesWebsite residual (PR #100)
+
+Fecha y hora: 2026-09-16 12:50 -0400 (commit `3c1a6fc`).
+Versión/commit: `3c1a6fc` ("feat: botón admin para borrar credencial
+10minutesWebsite residual"), mergeado a `main` en el commit de merge
+`4a05138` (PR #100, rama `claude/cuenta-duplicada-boton-credencial`).
+Conversación/proyecto: `Claude - CUENTA DUPLICADA` (ver
+`INVENTARIO_CONVERSACIONES.md`, Parte B).
+
+Cambios: causa raíz del bloqueo "ya está vinculada a otro usuario en el
+sistema" que veía Gustavo Cabrera (#91, cuenta nueva en trial) al intentar
+guardar sus credenciales de 10minutesWebsite: esa misma credencial ya
+estaba guardada como dato residual en la cuenta admin de Milton
+(`miltondavila@gmail.com`, #1), sin rastro de auditoría de cómo llegó ahí.
+El validador antifraude en `apps/web/src/lib/domain-validation.ts` no
+tenía ningún bug. Se agregó un nuevo endpoint `DELETE
+/api/admin/users/credential` (admin-only, `requireAdmin`) que borra
+únicamente la fila `Credential` de una cuenta para la plataforma
+10minutesWebsite, y un botón "Eliminar esta credencial" en
+`/dashboard/usuarios`, junto al campo de cuenta 10minutesWebsite, con
+confirmación en dos pasos. Archivos:
+`apps/web/src/app/api/admin/users/credential/route.ts` (nuevo),
+`apps/web/src/app/dashboard/usuarios/page.tsx`.
+
+Migraciones: ninguna (sin cambio de schema).
+
+Auditoría (según `COORDINACION_CLAUDE_CODEX.md`): Milton confirmó en vivo
+que el campo "Cuenta 10minutesWebsite" de su propia cuenta admin (#1) pasó
+a "Sin credenciales guardadas" tras usar el botón, sin afectar el resto de
+su cuenta.
+
+Responsable: Claude.
+Estado: DESPLEGADO Y VERIFICADO EN PRODUCCIÓN por Milton (confirmación en
+vivo registrada en `COORDINACION_CLAUDE_CODEX.md`). La conversación
+"CUENTA DUPLICADA" quedó luego archivada por Milton (sin código ni
+migración adicional en ese cierre).
+
+## Versión — 2026-09-16 — Segmento de No Publicar en Configuración → Contenido (completa "Exclusión de Temas")
+
+Fecha y hora: 2026-09-16 16:15 -0400 (commit `5dcd965`, ancestro
+confirmado de `origin/main`).
+Versión/commit: `5dcd965` ("feat: Segmento de No Publicar en
+Configuración > Contenido"), trabajado en worktree aislado
+`.worktrees/segmento-no-publicar`, rama `claude/segmento-no-publicar`.
+Conversación/proyecto: `SEGMENTO DE NO PUBLICAR` (ver
+`INVENTARIO_CONVERSACIONES.md`, Parte B), que corrige la entrada
+"ARCHIVADO — Exclusión de Temas... 2026-09-09" — esa entrada afirmaba
+"✅ DESPLEGADO A PRODUCCIÓN" con "Schema + migración + UI", pero el código
+real solo tenía el filtro determinista sin columna en schema, sin
+migración y sin campo en la interfaz (nadie podía cargar el valor).
+
+Cambios: columna `excludedTopics String?` agregada a `User` en
+`packages/db/prisma/schema.prisma` + migración
+`20260916180000_add_excluded_topics`; `apps/web/src/lib/current-user.ts`
+expone el campo en `getCurrentUser()`; `apps/web/src/app/api/me/route.ts`
+lo expone en `GET` y lo acepta/valida (máx. 500 caracteres) en `PATCH`;
+`apps/web/src/app/api/opportunities/route.ts` ahora lee
+`user.excludedTopics` y lo pasa a `analyzeSeoOpportunities` (antes nunca
+se pasaba, el filtro quedaba inerte); nueva sección "Segmento de No
+Publicar" con el campo "Temas a excluir" en
+`apps/web/src/app/dashboard/configuracion/contenido/page.tsx`. Manual de
+usuario (`apps/web/src/content/manual-usuario.ts`) actualizado en el mismo
+lote.
+
+Migraciones: sí — `20260916180000_add_excluded_topics` (columna nueva,
+sin borrar datos existentes).
+
+Auditoría (según `COORDINACION_CLAUDE_CODEX.md`): probado en local contra
+la base de datos local (`postgresql://127.0.0.1:5432/autoarticulos`) con
+la cuenta de pruebas de Lorena Álvarez (contraseña reseteada solo en la
+base LOCAL): typecheck limpio, `npm run build` completo sin errores,
+columna confirmada por SQL directo, guardado confirmado por `PATCH
+/api/me` (200) y por lectura directa de la fila en Postgres, persistencia
+confirmada recargando la página. No se corrió un análisis real de
+Oportunidades (llamada real a OpenAI) para no gastar cuota.
+
+Responsable: Claude.
+Estado: commit `5dcd965` confirmado como ancestro de `origin/main` (código
+en producción), pero sin confirmación visual explícita de Milton en
+producción registrada en `COORDINACION_CLAUDE_CODEX.md` — solo pruebas en
+local documentadas.
+
+## Versión desplegada — 2026-09-16 — Categoría deja de decidir qué se escribe (PR #107, #109, #111)
+
+Fecha: 2026-09-16. Commits/PRs: `61d62ec`→`fd21104` (PR #107, merge
+`8546eed`), `6788379` (PR #109, merge `50f5f55`), `c625825` (PR #111, merge
+confirmado por `gh pr view 111 --json state,mergedAt`). Archivo tocado en
+los tres: `apps/web/src/lib/opportunity-analysis.ts`.
+
+Cambios:
+1. PR #107 — retirado el veto determinista `titleFitsCategory` (descartaba
+   títulos con demanda real de GSC/GA/Bing si no compartían raíz de palabra
+   con el nombre/ejemplos de su categoría). Se eliminó también el código
+   muerto que solo lo alimentaba (`distinctiveVocabularyByCategory`,
+   `sharesWordRoot`, `tokensShareRoot`).
+2. PR #109 — reescrita la "REGLA OBLIGATORIA DE CATEGORIA" del prompt de
+   IA (renombrada "REGLA DE ASIGNACION DE CATEGORIA"): ya no instruye a la
+   IA a descartar consultas reales sin categoría afín ni temas
+   legales/fiscales sin categoría explícita. La categoría pasa a ser solo
+   destino de archivo.
+3. PR #111 — `IntentSignature` ahora incluye `titleTokens` (texto visible
+   completo del título, siempre calculado) como respaldo de
+   `collidesWithIntent` independiente del `needKey` autodeclarado por la
+   IA, más `rationaleHasQuotedEvidence()` que descarta en código cualquier
+   título cuyo `rationale` no cite textualmente entre comillas la
+   evidencia real (antes solo se le pedía al modelo, sin verificación).
+
+Auditorías: `tsc --noEmit` y `npm run build --workspace=apps/web` limpios
+en los tres commits (verificados antes de cada push). Verificación en vivo
+en Producción (`seototal.lasolucionweb.com`) con la cuenta de Lorena
+Álvarez: el fix #1 se corrió en vivo con datos reales de Search Console
+(9 propuestas generadas, sin errores, evidencia real citada en cada una).
+Los fixes #2 y #3 quedaron desplegados sin repetir la prueba en vivo — la
+cuenta compartida de pruebas pasó a tener oportunidades pendientes de otra
+tarea concurrente antes de poder reintentar, y no se tocó ese contenido
+ajeno. La lógica nueva de canibalización/evidencia se validó por trazas
+manuales contra los 9 títulos reales de la corrida auditada (confirmó que
+el par casi-duplicado se habría descartado y el título sin evidencia
+también).
+
+Responsable: Claude. Estado: EN PRODUCCIÓN. Verificación en vivo completa
+solo para PR #107; PR #109 y #111 pendientes de reverificación cuando la
+cuenta de pruebas esté libre.
+
+## Versión desplegada — 2026-09-17 — Titulos geolocalizados dejan de perderse en Oportunidades (PR #117-#121)
+
+Fecha: 2026-09-17. Commits/PRs (todos en `apps/web/src/lib/opportunity-analysis.ts`):
+- PR #117 (`ec7e007`): instrumentación de diagnóstico opcional (`OPPORTUNITY_DEBUG=1`, apagada por defecto) + script/workflow `diagnose-ignacio-cubas.yml` de solo lectura.
+- PR #118 (`0be336f`): log adicional del rationale crudo rechazado, para confirmar causa raíz con texto real.
+- PR #119 (`cecb542`): `applyOpportunityItems` distingue fuente `"evidence"` vs `"geo"`; el paso dedicado de geolocalización deja de exigir cita de GSC/GA/Bing (nunca la tuvo por diseño) y en su lugar exige `titleUsesDeclaredGeoCombo` (usar de verdad una ubicación de cliente y una de negocio declaradas).
+- PR #120 (`3bcb496`) y PR #121 (`1a260a3`): el respaldo de canibalización por texto visible y por needKey con umbral relajado dejan de comparar entre sí dos títulos geolocalizados (`isGeoLocationCombo`), porque por diseño solo difieren en la ubicación de cliente.
+
+Causa raíz: desde el PR #111 (16/9/2026), los guardarraíles de "evidencia
+citada" y "canibalización" —diseñados para el lote principal de
+Search Console/GA/Bing— se aplicaban también al paso dedicado de
+geolocalización (cliente x negocio, PR #61/#66), cuya evidencia real es la
+declaración directa de ubicaciones por el dueño de la cuenta, no una cita
+de búsqueda. Resultado: cualquier cuenta con `clientLocations` +
+`businessLocations` configurados perdía en silencio el 100% de sus
+títulos geolocalizados. Encontrado con evidencia real (no simulada) en la
+cuenta de Ignacio Cubas, vía el workflow de diagnóstico.
+
+Auditorías: `tsc --noEmit` y `npm run build --workspace=apps/web` limpios
+en los cinco commits (worktree aislado en `/tmp/wt-longtail-ignacio`,
+node_modules propios, sin depender de los symlinks del repo principal —
+ver protocolo del capitán). Verificación en Producción real: re-ejecutando
+el mismo diagnóstico contra la cuenta real de Ignacio Cubas tras cada fix,
+de `status: "no_new"` a `status: "ok"` con 6 oportunidades reales y 0
+rechazadas por colisión. No hizo falta que Milton iniciara sesión en
+ninguna cuenta de cliente.
+
+Sin migraciones de schema. Sin cambio de modelo de IA (`gpt-4o-mini` se
+mantiene, elegido por costo — la causa raíz era un guardarraíl de código,
+no el modelo).
+
+Responsable: Claude. Estado: EN PRODUCCIÓN, verificado en vivo.
+
+## Versión desplegada — 2026-09-17 — Restauración del botón de forzar análisis
+
+PR #116 (`ff00f9b`, merge a `main` confirmado el 2026-09-17) restauró en
+`apps/web/src/app/dashboard/oportunidades/page.tsx` el estado `canForce` y
+el botón "Forzar análisis ahora" cuando el análisis no encuentra nuevas
+oportunidades. El endpoint y el schema no cambiaron; no hubo migraciones.
+
+Auditoría de integridad: un solo archivo de código, sin secretos ni cambios
+fuera del alcance. Auditoría funcional: `tsc --noEmit` y `npm run build`
+(`apps/web`) limpios. Auditoría de regresión/entrega: PR con 2 checks
+aprobados, deployment automático de Vercel confirmado y prueba en vivo hecha
+por Milton en Producción con una cuenta de pruebas; el botón apareció después
+de ejecutar el análisis sin resultados nuevos.
+
+Responsable: Claude. Estado: EN PRODUCCIÓN, verificado en vivo por Milton.

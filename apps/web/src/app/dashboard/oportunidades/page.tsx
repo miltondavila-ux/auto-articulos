@@ -71,6 +71,10 @@ export default function OportunidadesPage() {
     kind: "error" | "info" | "success";
     text: string;
   } | null>(null);
+  // Restaurado a pedido de Milton (17/9/2026): si el análisis no encuentra
+  // oportunidades nuevas, el usuario puede forzar una nueva búsqueda de
+  // inmediato en vez de quedarse sin ninguna opción en el mensaje.
+  const [canForce, setCanForce] = useState(false);
   const [hasImageCredits, setHasImageCredits] = useState(true);
   const [showImageCreditsModal, setShowImageCreditsModal] = useState(false);
   // Pedido explícito del usuario (11/8/2026, cuenta de Lorena Álvarez, ya
@@ -244,6 +248,7 @@ export default function OportunidadesPage() {
   async function analyze(force = false) {
     setAnalyzing(true);
     setMessage(null);
+    setCanForce(false);
     try {
       const response = await fetch("/api/opportunities", {
         method: "POST",
@@ -258,8 +263,11 @@ export default function OportunidadesPage() {
       if (data.noNewOpportunities) {
         setMessage({
           kind: "info",
-          text: "Con la información actual de Search Console no encontramos nuevas oportunidades para publicar. Puedes volver a analizar cuando quieras si conectas nuevas fuentes o aparecen datos nuevos.",
+          text: force
+            ? "Con la información actual de Search Console no encontramos nuevas oportunidades para publicar, ni siquiera forzando el análisis."
+            : "Con la información actual de Search Console no encontramos nuevas oportunidades para publicar. Puedes volver a analizar cuando quieras si conectas nuevas fuentes o aparecen datos nuevos, o forzar una nueva búsqueda ahora mismo.",
         });
+        if (!force) setCanForce(true);
       } else {
         setMessage({
           kind: "success",
@@ -1037,6 +1045,21 @@ export default function OportunidadesPage() {
           }}
         >
           {message.text}
+          {canForce && (
+            <div style={{ marginTop: 10 }}>
+              <button
+                onClick={() => analyze(true)}
+                disabled={analyzing}
+                className="secondary"
+                style={{
+                  fontSize: 13,
+                  padding: "6px 14px",
+                }}
+              >
+                {analyzing ? "Analizando..." : "Forzar análisis ahora"}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

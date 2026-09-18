@@ -99,6 +99,13 @@ crear títulos ultra segmentados como "Cómo invertir en propiedades en
 Homestead si vives en Colombia". Dejar los campos vacíos no cambia nada de
 tu cuenta.
 
+**Segmento de No Publicar:** escribe, separados por comas, los temas o
+palabras que no quieres que Oportunidades tome en cuenta al proponer
+títulos nuevos (ej. "seguros de vida, criptomonedas, política"). Cualquier
+título que toque uno de esos temas se descarta automáticamente antes de
+mostrarse, sin importar cuánta demanda real tenga. Dejarlo vacío no cambia
+nada de tu cuenta.
+
 ### Buscadores
 
 Puedes conectar Google Search Console y Bing Webmaster. Selecciona la propiedad o sitio correcto después de conectar la cuenta. Estas conexiones permiten analizar oportunidades y, cuando la indexación está activada, enviar artículos a buscadores según la configuración disponible.
@@ -125,7 +132,7 @@ Si una red no aparece, primero pide al administrador que active el permiso corre
 
 ### Personalización del contenido
 
-Puedes elegir tu idioma habitual de redacción, agregar una firma al final de los artículos y guardar teléfono de contacto para los botones de llamada o WhatsApp dentro de tus artículos. También puedes subir tu foto y logo para piezas de redes sociales y definir instrucciones para el estilo de imágenes e infografías. Además puedes indicar en dónde están tus clientes y en dónde está tu negocio para que Oportunidades cree títulos ultra geolocalizados combinando ambos datos.
+Puedes elegir tu idioma habitual de redacción, agregar una firma al final de los artículos y guardar teléfono de contacto para los botones de llamada o WhatsApp dentro de tus artículos. También puedes subir tu foto y logo para piezas de redes sociales y definir instrucciones para el estilo de imágenes e infografías. Además puedes indicar en dónde están tus clientes y en dónde está tu negocio para que Oportunidades cree títulos ultra geolocalizados combinando ambos datos, y escribir un Segmento de No Publicar con los temas que Oportunidades debe descartar siempre.
 
 Consejo: escribe instrucciones de imagen sencillas y concretas; por ejemplo, el estilo visual, colores o tipo de público. Si las dejas vacías, se usa el estilo predeterminado.
 
@@ -267,7 +274,7 @@ Guarda las credenciales de la plataforma, sincroniza categorías e idiomas y eli
 
 Ruta: /dashboard/configuracion/contenido
 
-Define la firma de los artículos, teléfono de contacto, hasta 3 fotos tuyas y hasta 2 logos, el estilo de redacción por defecto, y las ubicaciones para títulos geolocalizados. Solo la primera foto y el primer logo son obligatorios; el resto es opcional y le da al sistema más variedad para elegir. Estas imágenes se usan cuando el generador de imágenes con IA para redes sociales está activo en tu cuenta (lo activa el administrador).
+Define la firma de los artículos, teléfono de contacto, hasta 3 fotos tuyas y hasta 2 logos, el estilo de redacción por defecto, las ubicaciones para títulos geolocalizados, y el Segmento de No Publicar. Solo la primera foto y el primer logo son obligatorios; el resto es opcional y le da al sistema más variedad para elegir. Estas imágenes se usan cuando el generador de imágenes con IA para redes sociales está activo en tu cuenta (lo activa el administrador).
 
 El campo de firma se llama "Firma al Final del Artículo y Disclosure": además de tu firma, se sugiere agregar una aclaración legal (disclosure) que indique que no eres asesor en materias legales, fiscales, financieras o de seguros.
 
@@ -283,6 +290,8 @@ Paso a paso para usarlo:
 7. Revisa los resultados: los títulos geolocalizados aparecen mezclados con el resto de las propuestas, organizados por categoría, combinando explícitamente una ubicación de cliente con una de negocio (ej. "si vivo en Colombia").
 
 Si dejás cualquiera de los dos campos vacío, esta combinación no se genera — necesita ambas listas llenas. Cuantas más ubicaciones pongas en cada campo, más combinaciones intenta cubrir el sistema (por ejemplo, 4 ciudades de clientes × 3 de negocio = hasta 12 combinaciones), siempre que tengan sentido real para tus categorías.
+
+**Segmento de No Publicar:** en el campo "Temas a excluir" escribe, separados por comas, los temas o palabras que no quieres que Oportunidades tome en cuenta al proponer títulos (ej. "seguros de vida, criptomonedas, política") y presiona "Guardar segmento de no publicar". Cualquier título nuevo que toque uno de esos temas se descarta automáticamente antes de mostrarse en Oportunidades, sin importar cuánta demanda real tenga. Dejarlo vacío no cambia nada de tu cuenta.
 
 ### Estado de configuración
 

@@ -122,28 +122,6 @@ function tokenSetsOverlap(
   return intersection >= minTokens && intersection / smaller >= minRatio;
 }
 
-// Comparación laxa por raíz de palabra (primeros ~6 caracteres), no por
-// coincidencia exacta de token — necesaria porque el stemmer de arriba solo
-// quita plurales simples ("s"/"es"), no variantes reales del español como
-// "embarazo" vs "embarazada" o "inmigrante" vs "inmigración". Sin esto, un
-// título legítimo sobre embarazo podía quedar "sin vocabulario compartido"
-// con su propia categoría solo por usar una palabra emparentada distinta.
-function sharesWordRoot(a: string, b: string): boolean {
-  const minLen = Math.min(a.length, b.length);
-  if (minLen < 5) return a === b;
-  const prefixLen = Math.min(6, minLen);
-  return a.slice(0, prefixLen) === b.slice(0, prefixLen);
-}
-
-function tokensShareRoot(a: Set<string>, b: Set<string>): boolean {
-  for (const tokenA of a) {
-    for (const tokenB of b) {
-      if (sharesWordRoot(tokenA, tokenB)) return true;
-    }
-  }
-  return false;
-}
-
 // Firma estructurada de intención: el modelo declara, por cada título, un
 // "needKey" corto (objeto + contexto + perfil + ubicación real, SIN verbo ni
 // formato) que representa la necesidad que resuelve. Al ser una etiqueta
@@ -154,15 +132,28 @@ function tokensShareRoot(a: Set<string>, b: Set<string>): boolean {
 interface IntentSignature {
   needKeyNormalized: string | null;
   tokens: Set<string>;
+  titleTokens: Set<string>;
   source: string;
+  // Titulo geolocalizado (paso dedicado cliente x negocio): ver nota en
+  // collidesWithIntent sobre por que se excluye del respaldo por texto
+  // visible completo.
+  isGeoLocationCombo: boolean;
 }
 
-function buildIntentSignature(source: string, needKey?: string): IntentSignature {
+function buildIntentSignature(
+  source: string,
+  needKey?: string,
+  isGeoLocationCombo = false,
+): IntentSignature {
   const key = needKey?.trim();
   return {
     needKeyNormalized: key ? normalizeTitle(key) : null,
     tokens: intentTokens(key && key.length > 0 ? key : source),
+    // Tokens del titulo visible, SIEMPRE calculados (no solo cuando falta
+    // needKey): sirven de respaldo independiente del needKey mas abajo.
+    titleTokens: intentTokens(source),
     source,
+    isGeoLocationCombo,
   };
 }
 
@@ -193,11 +184,95 @@ function collidesWithIntent(
       // el modelo ya filtró duplicados obvios. Bajar umbral para LONGTAIL.
       minRatio = 0.5;
     }
-    if (tokenSetsOverlap(candidate.tokens, signature.tokens, minTokens, minRatio)) {
+    // EXCEPCION 2026-09-17 (mismo hallazgo real que la de mas abajo): dos
+    // needKey geolocalizados difieren, por diseño, solo en la ubicacion
+    // (ej. "invertir_propiedad_miami_hispano_colombia" vs
+    // "..._hispano_mexico") — con needKey cortos, ese unico token distinto
+    // no basta para bajar la razon de solapamiento del umbral relajado, así
+    // que sin esta excepcion el mismo bug de "colision falsa" reaparece aqui
+    // aunque ya se arreglo el respaldo por texto visible completo.
+    if (
+      !(candidate.isGeoLocationCombo && signature.isGeoLocationCombo) &&
+      tokenSetsOverlap(candidate.tokens, signature.tokens, minTokens, minRatio)
+    ) {
+      return true;
+    }
+    // Respaldo determinista 2026-09-16 (hallazgo real: "Comparativa de
+    // seguros de salud en Miami... para inmigrantes" vs "Comparativa de
+    // seguros médicos en Miami: ¿Cuál es el mejor para ti?" pasaron como
+    // no-colisión porque sus needKey, tras filtrar palabras genéricas del
+    // dominio como "salud"/"inmigrante", quedaban con muy pocos tokens
+    // comparables). El needKey es autodeclarado por el modelo y puede
+    // divergir aunque el titulo visible sea, en esencia, el mismo. Se
+    // compara tambien el texto visible completo, con un umbral algo mas
+    // estricto que el relajado de needKey, para no depender solo de que
+    // el modelo haya etiquetado bien la necesidad.
+    // EXCEPCION 2026-09-17 (mismo diagnostico real de Ignacio Cubas que
+    // encontro el bug de rationaleHasQuotedEvidence en geo): dos titulos
+    // geolocalizados solo difieren, por diseño, en la ubicacion de cliente
+    // ("...si vivo en Colombia" vs "...si vivo en Mexico") — el resto de la
+    // frase es el mismo template a proposito. Ese es precisamente el patron
+    // que este respaldo por texto crudo esta hecho para atrapar, así que
+    // sin esta excepcion descarta como "duplicados" combinaciones que la
+    // regla de geolocalizacion (mas abajo en el prompt) declara
+    // explicitamente como necesidades distintas ("cada combinacion
+    // cliente+negocio distinta cuenta como una necesidad realmente
+    // distinta"). Ya se verifico por separado (titleUsesDeclaredGeoCombo)
+    // que cada titulo geo usa una combinacion real y unica; el needKey
+    // (que SI incluye ambas ubicaciones) sigue protegiendo contra que el
+    // modelo repita la misma combinacion dos veces.
+    if (
+      !(candidate.isGeoLocationCombo && signature.isGeoLocationCombo) &&
+      tokenSetsOverlap(candidate.titleTokens, signature.titleTokens, 3, 0.6)
+    ) {
       return true;
     }
   }
   return false;
+}
+
+// Garantía determinista 2026-09-16 (hallazgo real: se coló un título -
+// "Relación entre seguros de vida y salud en Miami" - cuyo rationale no
+// citaba ninguna consulta, página o cluster real, solo decía "una necesidad
+// que no está cubierta"). El prompt ya exige citar textualmente entre
+// comillas la evidencia real que respalda cada título; esta función hace esa
+// exigencia verificable en código en vez de confiar solo en que el modelo la
+// cumpla.
+function rationaleHasQuotedEvidence(rationale: string): boolean {
+  return /['"‘’“”]([^'"‘’“”]{4,})['"‘’“”]/.test(
+    rationale,
+  );
+}
+
+// Bug real encontrado 17/9/2026 (cuenta de Ignacio Cubas, diagnóstico con
+// evidencia real vía GitHub Actions): rationaleHasQuotedEvidence se estaba
+// aplicando también a los títulos del PASO DEDICADO DE GEOLOCALIZACIÓN
+// (cliente x negocio), cuyo prompt (ver más abajo) nunca les pide citar una
+// consulta de Search Console/GA/Bing — su "evidencia" es que combinan
+// EXACTAMENTE una ubicación de cliente y una de negocio ya declaradas por
+// el dueño de la cuenta (ver REGLA OBLIGATORIA DE GEOLOCALIZACION en el
+// prompt principal: estas ubicaciones NO necesitan evidencia de datos, son
+// reales por declaración directa). Resultado real: los 6-7 títulos long
+// tail geolocalizados que el paso dedicado SÍ generaba correctamente para
+// Ignacio Cubas se descartaban TODOS, en silencio, porque su rationale
+// nunca traía una cita entre comillas — no por falta de evidencia real, sino
+// porque se les exigía el tipo de evidencia equivocado. Esta función es el
+// chequeo determinista equivalente para esa fuente: en vez de una cita
+// textual, exige que el título use de verdad al menos una ubicación de
+// cliente Y una de negocio de las listas declaradas (comparación normalizada,
+// sin acentos/mayúsculas), para no perder la garantía de "nada inventado".
+function titleUsesDeclaredGeoCombo(
+  text: string,
+  clientLocations: string[],
+  businessLocations: string[],
+): boolean {
+  const normalizedTitle = normalizeTitle(text);
+  const usesAny = (locations: string[]) =>
+    locations.some((location) => {
+      const normalizedLocation = normalizeTitle(location);
+      return normalizedLocation.length > 0 && normalizedTitle.includes(normalizedLocation);
+    });
+  return usesAny(clientLocations) && usesAny(businessLocations);
 }
 
 function hasContextualEvidenceForYear(
@@ -225,12 +300,11 @@ const PROMPT_HEADER = [
   "- Piensa como un usuario real: que mas buscaria alguien que ya busco esto?",
   "- La meta es VOLUMEN de oportunidades reales, no solo las mas faciles",
   "",
-  "REGLA OBLIGATORIA DE CATEGORIA (ESTRICTA, sin excepciones):",
-  "- Cada titulo que propongas para una categoria debe tratar el MISMO tema que esa categoria, segun su nombre y sus EJEMPLOS DE TITULOS YA PUBLICADOS (van junto a cada categoria en CATEGORIAS PERMITIDAS).",
-  "- PROHIBIDO mezclar o combinar en un mismo titulo el tema de dos categorias distintas, y PROHIBIDO poner un titulo en una categoria solo porque una consulta comparte una palabra generica con su nombre.",
-  "- Si una consulta real de los datos no encaja tematicamente con NINGUNA categoria permitida, descartala: no la fuerces en la categoria que mas se le parezca.",
-  "- Las consultas de leyes, regulaciones, impuestos o cumplimiento solo pueden asignarse a una categoria cuyo nombre o ejemplos publicados indiquen explicitamente ese ambito legal/fiscal; si no existe esa categoria, descartalas aunque compartan ciudad, pais o perfil con otra categoria.",
-  "- PROHIBIDO inventar un titulo que no se pueda justificar con evidencia real presente en RENDIMIENTO ACTUAL (Search Console), SEÑALES DE GOOGLE ANALYTICS o SEÑALES DE BING que se te dan mas abajo. El 'rationale' de cada titulo debe nombrar la consulta, pagina, tendencia o señal concreta que lo respalda.",
+  "REGLA DE ASIGNACION DE CATEGORIA (organizativa, NO es un filtro de negocio):",
+  "- La categoria es UNICAMENTE el lugar del blog donde el articulo queda archivado. NUNCA es el criterio para decidir SI un tema se escribe: esa decision depende exclusivamente de que exista evidencia real (Search Console, Google Analytics o Bing) y de que no canibalice una necesidad ya cubierta (ver regla de cero canibalizacion mas abajo).",
+  "- PROHIBIDO descartar una consulta, pagina o tendencia real con evidencia solo porque no calza perfecto con el nombre o los ejemplos de ninguna categoria existente: asignala a la categoria PERMITIDA cuyo tema sea el MAS CERCANO. Si de verdad ninguna categoria es remotamente afin (tema completamente ajeno al negocio del usuario), puedes omitirla, pero la falta de coincidencia de palabras con el nombre de la categoria NUNCA es motivo de descarte por si sola.",
+  "- Evita mezclar en un mismo titulo dos temas completamente distintos; esto es una regla de claridad editorial del titulo, no una excusa para descartar la consulta.",
+  "- PROHIBIDO inventar un titulo que no se pueda justificar con evidencia real presente en RENDIMIENTO ACTUAL (Search Console), SEÑALES DE GOOGLE ANALYTICS o SEÑALES DE BING que se te dan mas abajo. El 'rationale' de cada titulo debe CITAR TEXTUALMENTE entre comillas la consulta o pagina real que lo respalda (ej: la consulta 'seguros de salud en miami'); si el titulo es una rama inferida que no tiene una consulta exacta propia, cita en cambio la consulta o cluster real del que se deriva (ej: 'se deriva del cluster de consultas sobre seguros de salud en Miami'). Un rationale sin ninguna cita textual entre comillas de un dato real NO es valido.",
   "",
   "REGLA OBLIGATORIA DE CERO CANIBALIZACION (ESTRICTA, sin excepciones):",
   "- Canibalizar significa que dos titulos apuntan a la MISMA pregunta o necesidad principal. NO es canibalizacion pertenecer al mismo universo tematico: un articulo sobre una receta puede abrir subtemas sobre ingredientes, herramientas, tecnicas, errores, conservacion y perfiles de usuario.",
@@ -279,7 +353,7 @@ const PROMPT_HEADER = [
   "- Crear nuevas tematicas long tail derivadas de consultas exitosas, no solo variaciones de redaccion",
   "- Identificar nichos no explotados basados en datos reales",
   "- Usar ubicaciones y perfiles de cliente que aparezcan en las consultas, paginas o titulos existentes",
-  "- Proponer intenciones de busqueda nuevas que se infieran de los patrones de las consultas existentes, siempre dentro del tema de la categoria (ver REGLA OBLIGATORIA DE CATEGORIA arriba)",
+  "- Proponer intenciones de busqueda nuevas que se infieran de los patrones de las consultas existentes, asignandolas luego a la categoria mas afin (ver REGLA DE ASIGNACION DE CATEGORIA arriba)",
   "",
   "PRECAUCIONES (no restricciones):",
   "- Si no tienes evidencia directa para un detalle muy especifico (precio exacto, cifra concreta), mantenlo generico pero relevante",
@@ -288,7 +362,7 @@ const PROMPT_HEADER = [
   "- Copiar exactamente titulos que ya existen en TITULOS YA EXISTENTES",
   "- Repetir la misma pregunta principal bajo una redaccion diferente (ver REGLA OBLIGATORIA DE CERO CANIBALIZACION arriba)",
   "- Datos completamente falsos sin ninguna base en los datos",
-  "- Mezclar el tema de dos categorias en un mismo titulo (ver REGLA OBLIGATORIA DE CATEGORIA)",
+  "- Mezclar el tema de dos categorias en un mismo titulo (ver REGLA DE ASIGNACION DE CATEGORIA)",
   "",
   "TRIPLE SEGMENTACION (REGLA CLAVE - aplicar en TODOS los titulos):",
   "Cada titulo debe combinar naturalmente 3 niveles cuando la evidencia lo permita:",
@@ -510,6 +584,26 @@ export async function analyzeSeoOpportunities(input: {
     .sort((a, b) => b.impressions - a.impressions)
     .slice(0, 20);
 
+  // Instrumentación de diagnóstico, apagada por defecto (OPPORTUNITY_DEBUG=1),
+  // sin ningún cambio de comportamiento cuando está apagada: cuenta cuántos
+  // títulos propone el modelo por lote y en qué guardarraíl exacto se pierde
+  // cada uno, para poder diagnosticar con evidencia real por qué una cuenta
+  // termina en "no_new" en vez de adivinar.
+  const debugEnabled = process.env.OPPORTUNITY_DEBUG === "1";
+  const debugCounters = {
+    batches: 0,
+    batchesFailed: 0,
+    modelProposedTitles: 0,
+    rejectedInvalidCategory: 0,
+    rejectedEmptyOrDuplicateExact: 0,
+    rejectedNoQuotedEvidence: 0,
+    rejectedGeoComboNotUsed: 0,
+    rejectedExcludedTopic: 0,
+    rejectedBadYear: 0,
+    rejectedCollision: 0,
+    accepted: 0,
+  };
+
   const seen = new Set(input.existingTitles.map(normalizeTitle));
   // Bug real encontrado el 11/8/2026 (cuenta de Lorena Álvarez, dejó de
   // recibir oportunidades nuevas): antes, apenas un lote proponía ALGO para
@@ -527,68 +621,15 @@ export async function analyzeSeoOpportunities(input: {
     ...input.countryRows,
   ];
 
-  // Garantía determinista contra categoría↔título mal asignados (7/9/2026 y
-  // 8/9/2026, hallazgo real confirmado en producción: un título sin ninguna
-  // mención de "deducible" cayó en la categoría "Deducibles", y uno sin
-  // mención de embarazo/bebé cayó en "Embarazo y Bebés"). El modelo puede
-  // asignar mal aunque se le den ejemplos, así que se valida en código: cada
-  // categoría tiene un "vocabulario distintivo" (palabras de su nombre y de
-  // sus ejemplos ya publicados que NO son genéricas — es decir, que no se
-  // repiten en casi todas las demás categorías de la cuenta, como "seguros",
-  // "salud" o "florida" en una cuenta de seguros de salud en Florida). Un
-  // título nuevo debe compartir la raíz de al menos una palabra de ese
-  // vocabulario con la categoría a la que el modelo lo asignó; si no
-  // comparte nada, se descarta (no se reasigna a ciegas — mejor perder un
-  // título que publicarlo en el lugar equivocado). Si una categoría no tiene
-  // vocabulario distintivo (nombre y ejemplos 100% genéricos), no se puede
-  // juzgar y no se bloquea nada — evita falsos rechazos en cuentas con
-  // categorías de nombres muy parecidos entre sí.
-  // "seleccion" y "problema" son cubetas canónicas MUY amplias (agrupan
-  // elegir/mejor/mejores/opciones y errores/error/problemas/soluciones,
-  // ver stemIntentToken) — sirven para detectar canibalización, pero como
-  // vocabulario de categoría son ruido puro: casi cualquier categoría tiene
-  // un ejemplo con "mejores X" o "errores comunes", así que dejarlas pasar
-  // aquí volvía a aceptar títulos genéricos sin relación real con el tema.
-  const CATEGORY_VOCAB_NOISE = new Set(["seleccion", "problema"]);
-  const categoryVocabTokens = (value: string): Set<string> => {
-    const tokens = intentTokens(value);
-    for (const noise of CATEGORY_VOCAB_NOISE) tokens.delete(noise);
-    return tokens;
-  };
-  const nameTokensByCategory = new Map<string, Set<string>>();
-  const exampleTokensByCategory = new Map<string, Set<string>>();
-  for (const category of input.categories) {
-    nameTokensByCategory.set(category.id, categoryVocabTokens(category.name));
-    const exampleTokens = new Set<string>();
-    for (const example of category.publishedExamples ?? []) {
-      for (const token of categoryVocabTokens(example)) exampleTokens.add(token);
-    }
-    exampleTokensByCategory.set(category.id, exampleTokens);
-  }
-  const categoryCount = input.categories.length;
-  const countCategoriesWithToken = (map: Map<string, Set<string>>, token: string) => {
-    let count = 0;
-    for (const tokens of map.values()) if (tokens.has(token)) count++;
-    return count;
-  };
-  const isGenericAcrossCategories = (map: Map<string, Set<string>>, token: string) =>
-    categoryCount > 1 && countCategoriesWithToken(map, token) > categoryCount / 2;
-  const distinctiveVocabularyByCategory = new Map<string, Set<string>>();
-  for (const category of input.categories) {
-    const distinctive = new Set<string>();
-    for (const token of nameTokensByCategory.get(category.id) ?? []) {
-      if (!isGenericAcrossCategories(nameTokensByCategory, token)) distinctive.add(token);
-    }
-    for (const token of exampleTokensByCategory.get(category.id) ?? []) {
-      if (!isGenericAcrossCategories(exampleTokensByCategory, token)) distinctive.add(token);
-    }
-    distinctiveVocabularyByCategory.set(category.id, distinctive);
-  }
-  const titleFitsCategory = (text: string, categoryId: string): boolean => {
-    const distinctive = distinctiveVocabularyByCategory.get(categoryId);
-    if (!distinctive || distinctive.size === 0) return true;
-    return tokensShareRoot(categoryVocabTokens(text), distinctive);
-  };
+  // 2026-09-16: se retiró aquí el veto determinista "titleFitsCategory"
+  // (vocabulario distintivo de la categoría contra el título). La categoría
+  // es solo el lugar de archivo del artículo; decidir SI se escribe un
+  // título depende de la demanda real (GSC/GA/Bing, ya inyectada arriba en
+  // el prompt) y de no-canibalización (needKey más abajo), no del nombre de
+  // la categoría. Motivo del retiro: el propio veto había descartado antes
+  // títulos con demanda real por no compartir raíz de palabra con el nombre
+  // de su categoría (caso real: título sin "deducible" en categoría
+  // "Deducibles"). Ver registro en COORDINACION_CLAUDE_CODEX.md.
 
   // Palabras clave de temas excluidos, parseadas desde input.excludedTopics
   const excludedKeywords = new Set<string>();
@@ -693,17 +734,24 @@ ${JSON.stringify(input.existingTitles)}
 OPORTUNIDADES YA CREADAS EN ESTA CORRIDA, POR CATEGORIA, CON SU needKey (NO CANIBALIZAR NI REPETIR needKey, NI DENTRO DE LA MISMA CATEGORIA NI CONTRA OTRA CATEGORIA DISTINTA):
 ${JSON.stringify(alreadyProposedByCategory)}`;
 
+    if (debugEnabled) debugCounters.batches++;
     let parsed: Record<string, unknown>;
     try {
       parsed = await callOpenAiWithRetry(prompt, apiKey);
     } catch (err) {
+      if (debugEnabled) debugCounters.batchesFailed++;
       console.error(`Lote ${batchIndex + 1} fallo, continuando con siguientes lotes:`, err);
       continue;
     }
 
     const opportunities = parsed.opportunities;
     if (!Array.isArray(opportunities)) continue;
-    applyOpportunityItems(opportunities);
+    if (debugEnabled) {
+      console.log(
+        `[OPPORTUNITY_DEBUG] Lote ${batchIndex + 1}/${batchesToProcess.length}: ${batch.length} filas de evidencia, modelo devolvio ${opportunities.length} categorias.`,
+      );
+    }
+    applyOpportunityItems(opportunities, "evidence");
   }
 
   // PASO DEDICADO DE GEOLOCALIZACION (7/9/2026, pedido explicito de Milton:
@@ -746,10 +794,14 @@ Si genuinamente ninguna combinacion tiene sentido real para este negocio, respon
     try {
       const parsedGeo = await callOpenAiWithRetry(geoPrompt, apiKey);
       const geoOpportunities = parsedGeo.opportunities;
-      if (Array.isArray(geoOpportunities)) applyOpportunityItems(geoOpportunities);
+      if (Array.isArray(geoOpportunities)) applyOpportunityItems(geoOpportunities, "geo");
     } catch (err) {
       console.error("Paso dedicado de geolocalizacion fallo (no bloquea el resto del analisis):", err);
     }
+  }
+
+  if (debugEnabled) {
+    console.log("[OPPORTUNITY_DEBUG] Resumen final:", JSON.stringify(debugCounters, null, 2));
   }
 
   if (allResult.length === 0) {
@@ -763,7 +815,13 @@ Si genuinamente ninguna combinacion tiene sentido real para este negocio, respon
   // duplicado exacto, anio real y reciente, y sin colision de needKey/
   // intencion contra nada ya aceptado en esta corrida. Factor comun para que
   // ambas fuentes respeten las mismas garantias, sin duplicar la logica.
-  function applyOpportunityItems(opportunities: unknown[]) {
+  // `source` distingue el UNICO chequeo que de verdad difiere entre las dos
+  // fuentes (ver titleUsesDeclaredGeoCombo mas arriba): "evidence" exige cita
+  // textual de un dato real de GSC/GA/Bing; "geo" exige en cambio que el
+  // titulo use de verdad una ubicacion de cliente y una de negocio ya
+  // declaradas, porque esos titulos nunca tienen (ni deben tener) una cita
+  // de busqueda real detras.
+  function applyOpportunityItems(opportunities: unknown[], source: "evidence" | "geo") {
     for (const item of opportunities) {
       if (!item || typeof item !== "object") continue;
       const group = item as Record<string, unknown>;
@@ -782,13 +840,52 @@ Si genuinamente ninguna combinacion tiene sentido real para este negocio, respon
         const value = candidate as Record<string, unknown>;
         if (typeof value.text !== "string") continue;
         const text = value.text.trim();
+        if (debugEnabled && text) debugCounters.modelProposedTitles++;
         const normalized = normalizeTitle(text);
-        if (!text || seen.has(normalized)) continue;
+        if (!text || seen.has(normalized)) {
+          if (debugEnabled && text) debugCounters.rejectedEmptyOrDuplicateExact++;
+          continue;
+        }
+        const rationale =
+          typeof value.rationale === "string" ? value.rationale.trim() : "";
+        if (source === "evidence") {
+          // Garantía determinista contra títulos sin evidencia citada: el
+          // rationale debe nombrar textualmente (entre comillas) la consulta,
+          // página o cluster real que lo respalda, tal como exige el prompt.
+          if (!rationaleHasQuotedEvidence(rationale)) {
+            if (debugEnabled) {
+              debugCounters.rejectedNoQuotedEvidence++;
+              console.log(`[OPPORTUNITY_DEBUG] Rechazado por falta de cita textual. Titulo: "${text}" | rationale crudo: ${JSON.stringify(rationale)}`);
+            }
+            continue;
+          }
+        } else {
+          // Garantía determinista equivalente para el paso de geolocalización
+          // (ver titleUsesDeclaredGeoCombo): su evidencia real es la
+          // combinación de ubicaciones declaradas por el dueño de la cuenta,
+          // no una cita de Search Console/GA/Bing.
+          if (
+            !titleUsesDeclaredGeoCombo(
+              text,
+              input.clientLocations ?? [],
+              input.businessLocations ?? [],
+            )
+          ) {
+            if (debugEnabled) {
+              debugCounters.rejectedGeoComboNotUsed++;
+              console.log(`[OPPORTUNITY_DEBUG] Rechazado (geo): no usa una combinacion cliente+negocio declarada. Titulo: "${text}"`);
+            }
+            continue;
+          }
+        }
         // Garantía determinista contra temas excluidos: si el usuario indicó
         // que no quiere ciertos temas, rechazar CUALQUIER título que los mencione,
         // sin importar cuán buena sea la evidencia. Esta validación corre AQUÍ
         // (en JavaScript), no solo en el prompt, para garantizar cumplimiento.
-        if (titleTouchesExcludedTopic(text)) continue;
+        if (titleTouchesExcludedTopic(text)) {
+          if (debugEnabled) debugCounters.rejectedExcludedTopic++;
+          continue;
+        }
         // Garantía determinista contra años inventados O desactualizados:
         // cada año en el título debe tener evidencia real Y estar dentro de
         // la ventana de recencia aceptable (año actual ±1), sin excepción.
@@ -798,27 +895,29 @@ Si genuinamente ninguna combinacion tiene sentido real para este negocio, respon
               !isYearAcceptablyRecent(year) ||
               !hasContextualEvidenceForYear(text, year, evidenceRows),
           )
-        ) continue;
-        // Garantía determinista contra categoría↔título mal asignados: el
-        // título debe compartir al menos una raíz de palabra con el
-        // vocabulario distintivo de la categoría a la que el modelo lo
-        // asignó (ver cálculo de distinctiveVocabularyByCategory arriba).
-        if (!titleFitsCategory(text, group.categoryId)) continue;
+        ) {
+          if (debugEnabled) debugCounters.rejectedBadYear++;
+          continue;
+        }
+        // La categoría es solo el lugar de archivo, no un criterio para
+        // decidir si el título se escribe: ya no se descarta un título con
+        // demanda real (GSC/GA/Bing) por no compartir vocabulario con el
+        // nombre de su categoría (antes: titleFitsCategory como veto aquí).
         const needKey = typeof value.needKey === "string" ? value.needKey.trim() : undefined;
-        const signature = buildIntentSignature(text, needKey);
+        const signature = buildIntentSignature(text, needKey, source === "geo");
         // Chequeo GLOBAL a esta corrida (cualquier categoría, no solo la
         // actual) — cierra el hueco real de canibalización cruzada entre
         // categorías. NO compara contra lo ya publicado (ver nota arriba,
         // en la inicialización de intentSignatures).
-        if (collidesWithIntent(signature, intentSignatures)) continue;
+        if (collidesWithIntent(signature, intentSignatures)) {
+          if (debugEnabled) debugCounters.rejectedCollision++;
+          continue;
+        }
         seen.add(normalized);
         intentSignatures.push(signature);
         if (needKey) needKeyByTitle.set(text, needKey);
-        newTitles.push({
-          text,
-          rationale:
-            typeof value.rationale === "string" ? value.rationale.trim() : "",
-        });
+        if (debugEnabled) debugCounters.accepted++;
+        newTitles.push({ text, rationale });
       }
 
       if (newTitles.length === 0) continue;

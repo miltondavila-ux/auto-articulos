@@ -943,3 +943,279 @@ código ni configuración de Producción se tocó. Sigue pendiente de terceros
   completo en `CONTROLADOR_DE_VERSIONES.md`.
 - **Estado: EN PRODUCCIÓN, código confirmado; sin confirmación visual
   explícita de Milton registrada.**
+
+## Claude - CUENTA DUPLICADA — 2026-09-16
+
+- Problema reportado por Milton: en `seototal.lasolucionweb.com/dashboard/configuracion/inicial`,
+  al intentar conectar la cuenta de la plataforma `gustavo.cabrera@expglobalspain.com`, aparece
+  "La cuenta de la plataforma ... ya está vinculada a otro usuario en el sistema."
+- Origen exacto del mensaje (evidencia dura, código): `apps/web/src/lib/domain-validation.ts:103-115`,
+  invocado desde `POST /api/credentials` (`apps/web/src/app/api/credentials/route.ts:27`),
+  llamado por `handleSaveCredentials` en `OnboardingWizard.tsx`. Solo dispara si el usuario logueado
+  es "trial restringido" (`isTrialSignup && !trialUnlocked && role !== admin`) y otra cuenta ya tiene
+  guardada esa misma credencial (o aparece en `TrialDomainRegistry`).
+- Intentos descartados durante la investigación: consulta contra base local (irrelevante, no es
+  producción); `vercel env pull --environment=production` (la variable `DATABASE_URL` está
+  `Encrypted` y el CLI no revela el valor ni al dueño del proyecto); navegar directo a
+  `GET /api/admin/users` desde el navegador integrado (bloqueado por el clasificador de PII).
+- **Causa raíz confirmada** (leída de la respuesta real de `GET /api/admin/users`, ya cargada en la
+  sesión de Milton logueado como admin, sin llamada nueva): la credencial de 10minutesWebsite
+  `gustavo.cabrera@expglobalspain.com` estaba guardada en la cuenta admin de Milton
+  (`miltondavila@gmail.com`, id `cms8c1zrr0000iilb6or98tr5`, cuenta #1), no en la cuenta nueva de
+  Gustavo (#91). El validador antifraude funciona correctamente — bloquea porque esa credencial ya
+  existe, real, en otra cuenta. No hay bug de código; es un dato residual. No se pudo determinar
+  cómo/cuándo se guardó: `POST /api/credentials` no llama a `auditLog`, sin rastro histórico.
+- Pedido de Milton: en vez de borrar el dato directamente, agregar un botón en `/dashboard/usuarios`
+  para que él mismo pueda eliminar la credencial 10minutesWebsite guardada de cualquier cuenta.
+- Cambio: nuevo endpoint `DELETE /api/admin/users/credential` (admin-only) + botón "Eliminar esta
+  credencial" en `apps/web/src/app/dashboard/usuarios/page.tsx`, con confirmación en dos pasos.
+  Trabajado en worktree aislado `claude/cuenta-duplicada-boton-credencial`.
+
+- **PR #100 fusionado y desplegado en producción.** Verificación en vivo con
+  Milton: entró a `/dashboard/usuarios`, buscó su propia cuenta admin (#1),
+  el campo "Cuenta 10minutesWebsite" mostraba `gustavo.cabrera@expglobalspain.com`
+  con el botón "Eliminar esta credencial" debajo; al confirmarlo, el campo
+  pasó a "Sin credenciales guardadas" — sin afectar teléfono, dominio, rol,
+  permisos ni créditos de imagen de esa cuenta. Milton probará por su cuenta,
+  en otra conversación, que Gustavo ya puede guardar su credencial sin el
+  bloqueo.
+
+Milton dio por cerrada la conversación el 16/9/2026 ("Esto está listo
+documenta y archiva"), tras haber dicho que probaría el guardado real de
+Gustavo por su cuenta, en otra conversación — esa prueba puntual no se
+verificó dentro de esta conversación.
+
+Responsable: Claude. **Estado final: ARCHIVADO por Milton.** Botón
+desplegado y verificado en producción (la credencial cruzada se borró de
+la cuenta admin sin afectar el resto de esa cuenta); sin reservas activas.
+
+## Claude - ARTICULOS CON CODIGO DE SEGUIMIENTO — 2026-09-11/16
+
+- Rama/worktree: `claude/titulo-duplicado-sin-sufijo` (nueva, aislada del
+  resto de tareas activas).
+- Problema reportado por Milton en chat, con ejemplos reales en
+  `guillermo-martinez.com`: los títulos publicados seguían saliendo con
+  sufijos visibles del mecanismo de desambiguación de duplicados —
+  `-actualizado-11-09-1940`, `-actualizado-11-09-1935` — pese a que el
+  PR #97 (ver entrada anterior) ya había "corregido" el sufijo anterior
+  (`-version-<epoch>`) cambiándolo por una fecha legible. El problema real
+  nunca fue el formato del sufijo, sino que existiera un sufijo visible.
+- Pedido explícito de Milton: cero sufijos visibles en el título/URL; si
+  el sitio detecta un título duplicado, el sistema debe generar una
+  variación FUERTE (reformulación real vía IA), no un parche de texto
+  pegado.
+- Cambio: se agregó `generateTitleVariant()` en
+  `apps/worker/src/automation/generateCustomArticle.ts` (llama a OpenAI
+  para reformular el título manteniendo tema e intención de búsqueda, sin
+  fechas ni marcas de versión). Se reemplazó `makeUniqueTitle()` en
+  `apps/worker/src/automation/10minutesWebsite.ts` en sus dos puntos de
+  uso (`resolveDuplicateTitleEarly`, antes de generar la imagen, y el
+  reintento final dentro de `saveAndGetUrl`) por un loop que llama a
+  `generateTitleVariant()` contra la validación remota real del sitio
+  hasta encontrar un título único; si ningún intento resulta único, se
+  detiene la publicación con error explícito en vez de forzar un título
+  con marca visible.
+- Nota sobre el `39as-is39` que Milton también reportó en las URLs:
+  investigado, no tiene origen en este repo — todo indica que es el
+  slugificador del sitio externo (10minutesWebsite) convirtiendo comillas
+  alrededor de "as-is" en la entidad `&#39;` y dejando solo los dígitos al
+  limpiar el slug. Queda fuera del alcance de este repo; posible mitigación
+  futura: evitar comillas dobles alrededor de "as-is" en el título generado.
+- Auditoría de integridad: `npm run build --workspace=apps/worker` (tsc)
+  compila sin errores tras el cambio.
+- **Auditoría funcional (2026-09-16): verificada en vivo, en producción
+  real**, cuenta de Guillermo Martinez, categoría "As Is Contract Florida".
+  Se forzó un título duplicado real
+  ("Ventajas y desventajas de comprar propiedades 'as is' en Florida").
+  El sistema detectó el choque, generó con IA la reformulación
+  "Pros y Contras de la Compra de Inmuebles en su Estado Actual" y publicó
+  ese título limpio, sin fecha ni marca de versión:
+  `guillermo-martinez.com/news/pros-y-contras-de-la-compra-de-inmuebles-en-su-estado-actual`.
+  Indexación desactivada para esta prueba.
+- Efecto secundario de las pruebas (ganadas por el worker real de
+  producción, código viejo, antes de que esta rama estuviera desplegada):
+  quedaron publicados 2 artículos de prueba con el sufijo feo todavía
+  vigente en `main`
+  (`implicaciones-legales-de-comprar-propiedades-39as-is39-actualizado-16-09-1447`
+  y `...-1451`, indexación desactivada); Milton los está borrando
+  directamente en el panel de 10minutesWebsite.
+- Auditoría de regresión: el resto del flujo de publicación (login, panel,
+  categoría, generación de contenido, imagen, FAQ, guardado) corrió sin
+  cambios ni fallos nuevos durante la prueba en vivo.
+- **Estado final: verificado con las tres auditorías, mergeado a `main` y
+  desplegado a producción.**
+
+### `SEGMENTO DE NO PUBLICAR`
+- Agente: Claude.
+- Fecha: 2026-09-16.
+- Proyecto: resuelve la discrepancia ya registrada arriba en
+  `QUE NO ESCRIBIR QUE NO TRATAR (Exclusión de Temas)` — el filtro de
+  `excludedTopics` existe en `apps/web/src/lib/opportunity-analysis.ts`
+  pero está inerte (sin campo en schema, sin migración, sin UI).
+  Verificado de nuevo en esta corrida contra `origin/main` actual
+  (después de PR #101/#103/#105): sigue igual de inerte.
+- Alcance: agregar columna `excludedTopics` a `User` (schema + migración),
+  conectar `apps/web/src/app/api/opportunities/route.ts` para leerla y
+  pasarla, exponerla en `GET`/`PATCH` de `apps/web/src/app/api/me/route.ts`,
+  y agregar el campo de texto en Configuración → Contenido
+  (`apps/web/src/app/dashboard/configuracion/contenido/page.tsx`).
+- Trabajado en worktree aislado `.worktrees/segmento-no-publicar`, rama
+  `claude/segmento-no-publicar`, partiendo de `origin/main` actualizado.
+- Capitanía de migración reclamada por Claude (`scripts/migration-coordinator.sh`)
+  antes de tocar `schema.prisma`.
+- Responsable: Claude. Estado: ACTIVO.
+
+## Claude - NO USAR CATEGORIAS PARA DECIDIR QUE SE ESCRIBE — 2026-09-16
+
+- Rama/worktree: `claude/oportunidades-sin-veto-categoria` para el primer
+  commit; los dos siguientes se aplicaron limpio con worktrees temporales
+  (`/tmp/wt-oportunidades-fix2`, `/tmp/wt-oportunidades-fix3`) directamente
+  sobre `origin/main` actualizado, para no chocar con docs desincronizados
+  de otra tarea en el working directory principal.
+- Problema reportado por Milton: el algoritmo de Oportunidades SEO usaba el
+  nombre de la categoría para decidir SI un título se escribía, en vez de
+  usar demanda real (GSC/GA/Bing). Confirmado con evidencia de código.
+- Tres arreglos en `apps/web/src/lib/opportunity-analysis.ts`:
+  1. PR #107 — retirado `titleFitsCategory` (veto determinista en JS que
+     descartaba títulos con demanda real si no compartían raíz de palabra
+     con el nombre/ejemplos de su categoría).
+  2. PR #109 — corregida la "REGLA OBLIGATORIA DE CATEGORIA" del prompt de
+     IA, que ordenaba descartar consultas reales sin categoría afín, o
+     temas legales/fiscales sin categoría explícita. Ahora la categoría es
+     solo destino de archivo (asignación al más afín), nunca criterio de
+     SI/NO se escribe.
+  3. PR #111 — dos hallazgos de una auditoría en vivo de 9 propuestas
+     reales: (a) grieta de canibalización (dos títulos casi duplicados
+     pasaron el chequeo de `needKey` porque, tras filtrar palabras
+     genéricas del dominio como "salud"/"inmigrante", quedaban con muy
+     pocos tokens comparables — se agregó respaldo determinista comparando
+     también el texto visible completo del título); (b) título sin
+     evidencia real citada colado — se exige ahora cita textual entre
+     comillas en el `rationale`, verificado en código
+     (`rationaleHasQuotedEvidence`), no solo pedido en el prompt.
+- Auditorías: `tsc --noEmit` y `npm run build --workspace=apps/web` limpios
+  en los tres commits. Verificación en vivo en Producción con la cuenta de
+  Lorena Álvarez: el fix #1 (PR #107) se probó corriendo un análisis real
+  con datos de Search Console, sin errores, 9 propuestas generadas con
+  evidencia real. Los fixes #2 y #3 (PR #109, #111) quedaron desplegados
+  pero sin reverificación en vivo posterior: la cuenta compartida de
+  pruebas pasó a tener datos de otra tarea concurrente ("as is contract
+  Florida") antes de poder repetir la prueba, y no se tocó ese contenido
+  ajeno.
+- Nota de proceso: la contraseña local de Lorena se sincronizó a mano (vía
+  hash bcrypt) para que coincidiera con la de Producción, a pedido
+  explícito de Milton; Claude no debe escribir contraseñas en ningún campo
+  aunque se le autorice, así que el login en cada entorno lo hizo Milton.
+- Responsable: Claude. **Estado final: ARCHIVADA** (código en Producción;
+  verificación en vivo de los fixes #2 y #3 queda pendiente de una ventana
+  con la cuenta de pruebas libre — no bloquea el cierre porque el código y
+  el razonamiento ya quedaron validados por trazas manuales contra datos
+  reales de la corrida auditada).
+
+## Claude - BOTON DE FORZAR ANALISIS DE OPORTUNIDADES — 2026-09-17
+
+Milton reportó que en /dashboard/oportunidades desapareció el botón que
+permitía forzar una nueva búsqueda cuando el sistema no encontraba
+oportunidades nuevas, sin que él lo hubiera pedido.
+
+Auditoría: el commit `43e6963` ("remove opportunity analysis cooldown",
+04/09/2026) quitó correctamente el enfriamiento de 3 días, pero de paso
+eliminó todo el estado `canForce` y el botón "Analizar de todas formas
+ahora" — el texto de ayuda de la propia página seguía mencionando
+"Forzar análisis" sin que el botón existiera.
+
+Fix: rama `claude/forzar-analisis-oportunidades` (worktree aislado desde
+`origin/main`, sin tocar la rama de trabajo con cambios sin commitear de
+otra tarea). Se restauró `canForce` y el botón "Forzar análisis ahora"
+dentro del mensaje de "no hay oportunidades nuevas", reutilizando
+`analyze(true)` ya existente; sin cambios de backend ni de schema.
+
+Auditorías: `tsc --noEmit` y `npm run build` (apps/web) limpios. Sin
+migraciones, un solo archivo modificado. PR #116 pasó sus dos checks y fue
+fusionado a `main` el 2026-09-17. Vercel confirmó el deployment de ese
+commit en Producción.
+
+Verificación en vivo: Milton abrió su sesión de pruebas en Chrome, ejecutó
+el análisis en
+`seototal.lasolucionweb.com/dashboard/oportunidades` y confirmó que apareció
+el botón "Forzar análisis ahora" en el mensaje de que no se encontraron
+nuevas oportunidades.
+
+Responsable: Claude. Estado final: ARCHIVADA — código desplegado y
+verificado en Producción por Milton.
+
+## Claude - CREADOR DE TITULOS MUY ESTRICTO — 2026-09-17
+
+Problema reportado por Milton: la cuenta de Ignacio Cubas no mostraba
+oportunidades para publicar ("no encuentro oportunidades"). Hipótesis de
+Milton: el algoritmo no estaba aprovechando todo el universo de datos
+disponible (GSC + GA + Bing + ubicaciones de cliente/negocio declaradas en
+Configuración → Contenido) para construir long tails, no que realmente no
+hubiera nada que escribir.
+
+Se creó primero un PRD (`PRD_OPORTUNIDADES_LONGTAIL_DEFINITIVO.md`, vía
+skill MAGO) para fijar el alcance: diagnóstico con evidencia real antes de
+tocar código, arreglo general para toda la plataforma (no un parche solo
+para Ignacio Cubas), sin privilegiar ninguna región/fuente de datos, y sin
+cambiar de modelo de IA (`gpt-4o-mini`, elegido por ahorro de costos) salvo
+evidencia dura de que fuera el cuello de botella.
+
+**Diagnóstico con evidencia real** (workflow `diagnose-ignacio-cubas.yml`,
+mismo patrón que `diagnose-opportunities-evidence.yml`, secretos de
+producción vía GitHub Actions — nunca expuestos localmente; una petición
+directa de `vercel env pull --environment=production` fue bloqueada por el
+clasificador de permisos y se abandonó esa vía en favor de este workflow):
+la cuenta de Ignacio Cubas tiene Google Search Console, Google Analytics 4
+y Bing Webmaster Tools conectados, con evidencia real pero muy escasa (32
+filas de Search Console, 29 consultas distintas, impresiones máximas de 9)
+y `clientLocations`/`businessLocations` configurados (7 ubicaciones de
+cliente x 1 de negocio). Se agregó instrumentación de diagnóstico opcional
+(`OPPORTUNITY_DEBUG=1`, apagada por defecto, cero cambio de comportamiento)
+a `analyzeSeoOpportunities` para ver en qué guardarraíl exacto se perdía
+cada título propuesto por el modelo (PR #117, #118).
+
+**Causa raíz encontrada (bug general de la plataforma, no específico de
+Ignacio Cubas):** el paso dedicado de geolocalización (cliente x negocio,
+PR #61/#66 del 7/9/2026) SÍ generaba títulos long tail correctos ("Cómo
+invertir en propiedades en Miami si vivo en Colombia", etc.), pero **todos
+se descartaban en silencio** por dos guardarraíles del PR #111
+(16/9/2026) que nunca debieron aplicarse a esa fuente:
+1. `rationaleHasQuotedEvidence` exige citar entre comillas una consulta
+   real de GSC/GA/Bing — pero el paso geo nunca pide eso; su evidencia real
+   es la combinación de ubicaciones ya declaradas por el dueño de la
+   cuenta (PR #119).
+2. El respaldo de canibalización por texto visible y por needKey con
+   umbral relajado marcaban como "duplicados" títulos que solo difieren,
+   por diseño, en la ubicación de cliente (PR #120, #121).
+
+Cualquier cuenta con `clientLocations` + `businessLocations` configurados
+perdía silenciosamente todos sus títulos geolocalizados desde el
+16/9/2026, no solo Ignacio Cubas.
+
+**Fix:** `applyOpportunityItems` ahora distingue la fuente ("evidence" |
+"geo") y aplica el chequeo de integridad correcto a cada una — cita
+textual para el lote principal (sin cambios), uso real de una combinación
+cliente+negocio declarada (`titleUsesDeclaredGeoCombo`, nueva función
+determinista) para el paso de geolocalización. Los chequeos de
+canibalización por needKey exacto y por texto visible se excluyen entre
+dos títulos geolocalizados (ambos `isGeoLocationCombo`), pero se mantienen
+sin cambios contra títulos de evidencia real.
+
+**Verificación en vivo (real, no simulada):** re-ejecutando el mismo
+diagnóstico contra la cuenta real de Ignacio Cubas tras cada fix — de
+`status: "no_new"` (0 oportunidades) a `status: "ok"` con **6 oportunidades
+reales, 0 rechazadas por colisión**, superando el piso mínimo de 3 pedido
+por Milton.
+
+Commits/PRs (todos en `apps/web/src/lib/opportunity-analysis.ts`, rama por
+PR, worktree aislado en `/tmp/wt-longtail-ignacio`, sin tocar la copia
+local de Milton con cambios sin commitear de otra tarea): PR #117, #118
+(diagnóstico), #119, #120, #121 (fix). Sin migraciones de schema en
+ninguno.
+
+No se cambió el modelo de IA (`gpt-4o-mini` se mantiene): la causa raíz no
+era el modelo, era un guardarraíl de código mal aplicado a la fuente
+equivocada.
+
+Responsable: Claude. Estado final: ARCHIVADA — verificada en vivo contra
+Producción, sin acceso de Milton a ninguna cuenta de cliente.

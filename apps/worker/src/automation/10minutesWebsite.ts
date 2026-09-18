@@ -12,7 +12,7 @@ import {
   replacePhonePlaceholders,
 } from "../phonePlaceholders";
 import { resolveContentLanguageOption } from "./contentLanguage";
-import { generateCustomArticle } from "./generateCustomArticle";
+import { generateCustomArticle, generateTitleVariant } from "./generateCustomArticle";
 
 export interface TenMinutesWebsiteCredentials {
   username: string;
@@ -437,6 +437,11 @@ export async function publishArticle(
       await onStep(`Panel "${categoryPanel}" seleccionado.`);
     }
 
+    // Ver comentario de getHighestArticleNumber: esta lectura "antes" es la
+    // base para confirmar un guardado real más adelante, aunque la búsqueda
+    // por título falle.
+    const articleCountBeforeSave = await getHighestArticleNumber(page, baseUrl);
+
     const { summary, contentHtml, finalTitle } = await createArticleDraft(
       page,
       baseUrl,
@@ -468,7 +473,10 @@ export async function publishArticle(
       page,
       baseUrl,
       finalTitle,
+      credentials.contentLanguage,
+      articleCountBeforeSave,
       onStep,
+      disableIndexing,
     );
 
       return { articleUrl, finalTitle: titleUsed, summary };
@@ -840,12 +848,20 @@ async function createArticleDraft(
   // viene marcado (indexación activada) por defecto, igual que en el sitio.
   // Se verificó en vivo que el checkbox queda con opacity:0 y width:0 (el
   // "lever" visual lo tapa), por eso hace falta "force" para des/marcarlo.
+  //
+  // Bug real encontrado auditando "CHECK DE NO INDEXACION" (17/9/2026): este
+  // intento temprano no basta. `saveAndGetUrl()` dispara `change` sobre
+  // `#type` en CADA intento de guardado (`revalidateTitleAndForm()`, incluso
+  // en el primero) para re-habilitar `#save_art` — el mismo evento que
+  // reconstruye el formulario y deja `#activate_indexing` de vuelta en su
+  // valor por defecto (marcado = indexación activada), pisando lo que se
+  // desmarca acá. Además, el `.catch(() => {})` tragaba cualquier fallo de
+  // `setChecked` y el paso igual reportaba éxito sin haber verificado nada.
+  // Se deja este intento temprano como best-effort (no hace daño), pero la
+  // aplicación que de verdad cuenta ahora ocurre justo antes de cada clic de
+  // guardado, en `saveAndGetUrl()`, con lectura real del estado del checkbox.
   if (disableIndexing) {
-    await page
-      .locator("#activate_indexing")
-      .setChecked(false, { force: true })
-      .catch(() => {});
-    await onStep("Indexación en buscadores desactivada para este artículo.");
+    await applyIndexingPreference(page, disableIndexing, async () => {});
   }
 
   if (promptText) {
@@ -1367,7 +1383,12 @@ async function createArticleDraft(
   // remota que usa el sitio (no una búsqueda aproximada, que daría falsos
   // positivos con títulos parecidos pero distintos) ahora, antes de la
   // imagen, para mutar el título desde el inicio si ya existe.
-  const resolvedTitle = await resolveDuplicateTitleEarly(page, finalTitle, onStep);
+  const resolvedTitle = await resolveDuplicateTitleEarly(
+    page,
+    finalTitle,
+    requestedContentLanguage,
+    onStep,
+  );
 
   return { summary, contentHtml, finalTitle: resolvedTitle };
 }
@@ -1382,40 +1403,11 @@ async function createArticleDraft(
  * escribir en el campo antes de continuar.
  */
 /**
- * Un número incremental no basta: puede existir ya porque otro intento
- * anterior o una publicación manual usó exactamente el mismo sufijo. La
- * marca corta de tiempo evita que el validador remoto vuelva a rechazar la
- * segunda oportunidad del mismo artículo. Función de módulo (antes vivía
- * solo dentro de saveAndGetUrl) para poder mutar el título temprano, antes
- * de generar la imagen, y no solo al momento final de guardar.
- *
- * Bug real en producción (10/9/2026, cuenta de Lorena Álvarez): el sufijo
- * anterior (" — versión 5380210-1", un epoch crudo) quedaba visible tal
- * cual en el título publicado y en la URL — Milton nunca pidió que esta
- * marca de unicidad interna se viera, solo que el guardado no fallara por
- * choque de título. Se reemplaza por una fecha/hora legible en español,
- * que además comunica algo real (cuándo se generó esta versión) en vez de
- * un número sin sentido para el lector.
+ * Corre la MISMA regla `remote` de jQuery Validate que usa el sitio sobre
+ * `#titlees` (ya lleno en este punto) para saber si el título actualmente
+ * escrito en el campo choca con uno existente en la cuenta.
  */
-function makeUniqueTitle(baseTitle: string, attempt: number): string {
-  const now = new Date();
-  const dd = String(now.getDate()).padStart(2, "0");
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  const hh = String(now.getHours()).padStart(2, "0");
-  const min = String(now.getMinutes()).padStart(2, "0");
-  const marca = `${dd}/${mm} ${hh}:${min}${attempt > 1 ? ` · ${attempt}` : ""}`;
-  const uniqueness = ` (actualizado ${marca})`;
-  return `${baseTitle.slice(0, 200 - uniqueness.length)}${uniqueness}`;
-}
-
-async function resolveDuplicateTitleEarly(
-  page: Page,
-  title: string,
-  onStep: OnStep,
-): Promise<string> {
-  // Pedido directo de Milton (30/8/2026): que se vea que el sistema está
-  // revisando esto, no solo enterarse cuando encuentra un choque.
-  await onStep("Validando si el artículo está repetido...");
+async function checkTitleDuplicate(page: Page): Promise<boolean> {
   await page
     .evaluate(() => {
       const jq = (window as unknown as {
@@ -1447,7 +1439,7 @@ async function resolveDuplicateTitleEarly(
     )
     .catch(() => {});
 
-  const isDuplicate = await page
+  return page
     .evaluate(() => {
       const jq = (window as unknown as {
         jQuery?: (selector: string) => {
@@ -1462,17 +1454,63 @@ async function resolveDuplicateTitleEarly(
       );
     })
     .catch(() => false);
+}
 
-  if (!isDuplicate) return title;
+/**
+ * Pedido directo de Milton (11/9/2026): nada de sufijos visibles (fechas,
+ * números de versión, marcas de unicidad) pegados al título publicado — eso
+ * ya se había intentado antes y seguía filtrándose al título real y a la
+ * URL. Si el sitio marca el título como duplicado, se le pide al modelo una
+ * reformulación real (mismo tema, redacción distinta) y se reintenta la
+ * validación remota. Solo si el modelo no logra una variante única tras
+ * varios intentos se detiene la publicación con un error explícito, en vez
+ * de forzar un título con una marca interna que nadie pidió que se viera.
+ */
+async function resolveDuplicateTitleEarly(
+  page: Page,
+  title: string,
+  contentLanguage: string,
+  onStep: OnStep,
+): Promise<string> {
+  // Pedido directo de Milton (30/8/2026): que se vea que el sistema está
+  // revisando esto, no solo enterarse cuando encuentra un choque.
+  await onStep("Validando si el artículo está repetido...");
 
-  const mutatedTitle = makeUniqueTitle(title, 1);
+  if (!(await checkTitleDuplicate(page))) return title;
+
   const titleField = page.locator("#titlees");
-  await titleField.fill(mutatedTitle).catch(() => {});
-  await titleField.press("Tab").catch(() => {});
-  await onStep(
-    `El título "${title}" ya existe en la cuenta. Se usa "${mutatedTitle}" desde ahora, antes de generar la imagen.`,
+  const attempts: string[] = [];
+  const maxAttempts = 4;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    await onStep(
+      `El título "${title}" ya existe en la cuenta. Generando una reformulación distinta (intento ${attempt}/${maxAttempts})...`,
+    );
+
+    let candidate: string;
+    try {
+      candidate = await generateTitleVariant(title, contentLanguage, attempts);
+    } catch (error) {
+      throw new Error(
+        `El título "${title}" ya existe en la cuenta y no se pudo generar una reformulación: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+    attempts.push(candidate);
+
+    await titleField.fill(candidate).catch(() => {});
+    await titleField.press("Tab").catch(() => {});
+
+    if (!(await checkTitleDuplicate(page))) {
+      await onStep(`Título reformulado y validado: "${candidate}".`);
+      return candidate;
+    }
+  }
+
+  throw new Error(
+    `El título "${title}" ya existe en la cuenta y ninguna de las ${maxAttempts} reformulaciones generadas resultó única. Se detiene sin publicar para no forzar un título con una marca de unicidad visible.`,
   );
-  return mutatedTitle;
 }
 
 async function diagnoseEditorState(page: Page): Promise<{
@@ -2324,6 +2362,58 @@ async function getNewestRow(listPage: Page): Promise<ArticleRow | null> {
 }
 
 /**
+ * Pedido directo de Milton (17/9/2026): la búsqueda por título exacto en
+ * `findArticleByTitle` (DataTables server-side) es frágil — se confirmó en
+ * vivo que puede reportar "no encontrado" para un artículo que SÍ se guardó
+ * (títulos con comillas simples como 'as is', o una indexación server-side
+ * que todavía no reflejó el guardado más reciente). Cuando eso pasa, el
+ * llamador de más arriba (queue.ts) interpretaba `articleUrl: null` como que
+ * el guardado había fallado de verdad y reintentaba el título completo desde
+ * cero — generando contenido, título e IMAGEN nuevos y publicando un
+ * artículo real adicional sobre el mismo tema, sin que el usuario se
+ * enterara (visto en producción: 3 artículos reales duplicados a partir de
+ * un solo título, todos con "Con errores" en el panel). Este número se toma
+ * ANTES de guardar (en publishArticle, antes de abrir el formulario) para
+ * poder comparar después: si el número más alto del listado subió respecto
+ * a este valor, es evidencia real e independiente del texto del título de
+ * que SÍ se creó un artículo nuevo — la cuenta está reservada en exclusiva
+ * para este worker mientras dura la publicación (ver reservation.ts), así
+ * que ningún otro proceso puede haber creado esa fila mientras tanto.
+ */
+async function getHighestArticleNumber(
+  page: Page,
+  baseUrl: string,
+): Promise<number | null> {
+  try {
+    await page.goto(`${baseUrl}/dashboard/user_buyer_seller_articles.php`, {
+      waitUntil: "domcontentloaded",
+      timeout: NAV_TIMEOUT_MS,
+    });
+    await page
+      .waitForFunction(
+        () => {
+          const firstCell = document.querySelector("table tbody tr td");
+          const text = (firstCell?.textContent ?? "").trim();
+          return text.length > 0 && !/loading/i.test(text);
+        },
+        undefined,
+        { timeout: 15_000 },
+      )
+      .catch(() => {});
+    const newest = await getNewestRow(page);
+    // 0 es un valor real y válido (cuenta sin artículos todavía), no un
+    // "no se pudo leer": solo `null` significa que no hay base confiable.
+    return newest?.num ?? 0;
+  } catch {
+    // `null` (no 0): si no se pudo leer el listado ahora, no hay base
+    // confiable para comparar más adelante. Devolver 0 por error haría que
+    // CUALQUIER artículo viejo con N° bajo se confundiera con uno nuevo —
+    // la comparación de más abajo debe desactivarse, no asumir "cero antes".
+    return null;
+  }
+}
+
+/**
  * Busca el artículo por el título REAL que la IA le asignó (guardado antes
  * de guardar el formulario), usando el buscador del propio listado en vez de
  * confiar en la posición o el N° de fila. Usamos la API de DataTables por
@@ -2451,11 +2541,45 @@ async function findSimilarArticleLinks(
   }
 }
 
+// Aplica la preferencia de indexación y VERIFICA el resultado real leyendo
+// el DOM, en vez de asumir éxito. Ver el bug documentado en
+// `createArticleDraft()` (17/9/2026): el checkbox real puede volver a su
+// valor por defecto (marcado) después de este punto si el sitio vuelve a
+// disparar `change` sobre `#type`, por eso `saveAndGetUrl()` la vuelve a
+// llamar justo antes de cada clic de guardado.
+async function applyIndexingPreference(
+  page: Page,
+  disableIndexing: boolean,
+  onStep: OnStep,
+): Promise<boolean> {
+  if (!disableIndexing) return true;
+  await page
+    .locator("#activate_indexing")
+    .setChecked(false, { force: true })
+    .catch(() => {});
+  const isChecked = await page
+    .locator("#activate_indexing")
+    .isChecked()
+    .catch(() => null);
+  const confirmed = isChecked === false;
+  if (!confirmed) {
+    await onStep(
+      `Aviso: no se pudo confirmar que la indexación quedó desactivada (estado real leído del formulario: ${
+        isChecked === null ? "no se pudo leer el checkbox" : isChecked ? "sigue activada" : "desactivada"
+      }).`,
+    );
+  }
+  return confirmed;
+}
+
 async function saveAndGetUrl(
   page: Page,
   baseUrl: string,
   expectedTitle: string,
+  contentLanguage: string | null | undefined,
+  articleCountBeforeSave: number | null,
   onStep: OnStep,
+  disableIndexing: boolean,
 ): Promise<{ url: string | null; titleUsed: string }> {
   // Causa raíz encontrada leyendo el JS del sitio (15/8/2026, cuenta de
   // Lorena Álvarez): el botón real de guardar, #save_art, arranca
@@ -2489,7 +2613,9 @@ async function saveAndGetUrl(
   // muestre el error de duplicado (p. ej. porque el botón nunca se
   // habilitó a tiempo para el título mutado).
   let hitDuplicateTitle = false;
+  let indexingConfirmed = false;
   const MAX_SAVE_ATTEMPTS = 3;
+  const titleAttempts: string[] = [];
 
   const revalidateTitleAndForm = async () => {
     // La plataforma usa jQuery Validate con una regla remota en #titlees.
@@ -2555,6 +2681,16 @@ async function saveAndGetUrl(
   for (let saveAttempt = 1; saveAttempt <= MAX_SAVE_ATTEMPTS; saveAttempt++) {
     await onStep("Guardando y publicando el artículo...");
     await revalidateTitleAndForm();
+
+    // El `change` de #type que dispara `revalidateTitleAndForm()` (arriba)
+    // es justo lo que puede devolver `#activate_indexing` a su valor por
+    // defecto (marcado). Se vuelve a aplicar y a VERIFICAR acá, en cada
+    // intento, justo antes del clic real de guardado — no basta con
+    // hacerlo una sola vez al principio del flujo (ver comentario en
+    // `createArticleDraft()`, 17/9/2026).
+    if (disableIndexing) {
+      indexingConfirmed = await applyIndexingPreference(page, disableIndexing, onStep);
+    }
 
     // Bug real encontrado en producción (15/8/2026, cuenta de Lorena
     // Álvarez, en el reintento por título duplicado): 300ms alcanza cuando
@@ -2708,7 +2844,26 @@ async function saveAndGetUrl(
     }
 
     if (isDuplicateTitle && saveAttempt < MAX_SAVE_ATTEMPTS) {
-      const mutatedTitle = makeUniqueTitle(expectedTitle, saveAttempt + 1);
+      // Pedido directo de Milton (11/9/2026): nunca pegar una marca de
+      // unicidad visible (fecha, versión) al título; se le pide al modelo
+      // una reformulación real del título, igual que en
+      // resolveDuplicateTitleEarly, en vez de mutar el string a mano.
+      let mutatedTitle: string;
+      try {
+        mutatedTitle = await generateTitleVariant(
+          expectedTitle,
+          contentLanguage?.trim() || "es",
+          titleAttempts,
+        );
+      } catch (error) {
+        await onStep(
+          `El título "${expectedTitle}" ya existe en la cuenta y no se pudo generar una reformulación: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+        break;
+      }
+      titleAttempts.push(mutatedTitle);
       const titleField = page.locator("#titlees");
       await titleField.fill(mutatedTitle).catch(() => {});
       // La regla `remote` de jQuery Validate se dispara al perder el foco.
@@ -2763,6 +2918,17 @@ async function saveAndGetUrl(
     break;
   }
 
+  if (disableIndexing && !indexingConfirmed) {
+    await onStep(
+      "ATENCIÓN: el artículo se guardó, pero no se pudo confirmar que la " +
+        "indexación en buscadores haya quedado desactivada. Verifica " +
+        "manualmente el artículo en el sitio y desactívala ahí si sigue " +
+        "activada.",
+    );
+  } else if (disableIndexing) {
+    await onStep("Indexación en buscadores desactivada para este artículo (verificado).");
+  }
+
   await onStep(
     `Buscando el artículo publicado por su título: "${titleInUse}"...`,
   );
@@ -2773,8 +2939,36 @@ async function saveAndGetUrl(
         waitUntil: "domcontentloaded",
         timeout: NAV_TIMEOUT_MS,
       });
+      await page
+        .waitForFunction(
+          () => {
+            const firstCell = document.querySelector("table tbody tr td");
+            const text = (firstCell?.textContent ?? "").trim();
+            return text.length > 0 && !/loading/i.test(text);
+          },
+          undefined,
+          { timeout: 15_000 },
+        )
+        .catch(() => {});
+      // Se lee el N° más alto ANTES de aplicar el filtro de búsqueda de
+      // findArticleByTitle (que deja la tabla filtrada) para poder usarlo
+      // como evidencia independiente si la búsqueda por texto no encuentra
+      // nada — ver comentario de getHighestArticleNumber.
+      const newestOnUnfilteredList = await getNewestRow(page);
+
       const href = await findArticleByTitle(page, titleInUse);
       if (href) return { url: href, titleUsed: titleInUse };
+
+      if (
+        newestOnUnfilteredList?.href &&
+        articleCountBeforeSave !== null &&
+        newestOnUnfilteredList.num > articleCountBeforeSave
+      ) {
+        await onStep(
+          `El artículo no apareció en la búsqueda por título exacto, pero el listado tiene un artículo nuevo (N° ${newestOnUnfilteredList.num}, antes N° ${articleCountBeforeSave}) creado durante esta misma publicación. Se usa como confirmación real en vez de reintentar y duplicar el artículo.`,
+        );
+        return { url: newestOnUnfilteredList.href, titleUsed: titleInUse };
+      }
     } catch (err) {
       // Bug real de producción (15/8/2026, cuenta de Lorena Álvarez):
       // net::ERR_ABORTED en este goto no se atrapaba, así que un solo fallo
