@@ -1342,7 +1342,9 @@ PR #125, commit `3aa0266`, rama `claude/mensajes-error-humanizados-ia`, worktree
   y fusión (opción A) el 2026-09-18. Punto de retorno en el Controlador de Versiones (etiqueta
   `pre-composio-fase1-20260918` = `068a0b1`, corregido: ver entrada «fusión DIFERIDA»). La fusión estuvo
   BLOQUEADA por un incidente de Vercel y porque `main` avanzó a `d6ba5f8` (#143); condiciones cumplidas a las
-  22:32 UTC. Punto de retorno FINAL: etiqueta `pre-composio-fase1-d6ba5f8-20260918`. Responsable: Claude.
+  22:32 UTC. PR #142 FUSIONADO (`f0fd534`, 22:35 UTC) y desplegado en Producción (Vercel 6534042292, success).
+  Punto de retorno: etiqueta `pre-composio-fase1-d6ba5f8-20260918`. Falta verificación en vivo del módulo por
+  Milton y pegar la clave en Producción. Rama `claude/conexion-composio` conservada (fusionada). Responsable: Claude.
 - Alcance: camino paralelo para que los clientes conecten Google (Search Console, Analytics)
   y Meta (Facebook, Instagram) mediante Composio, con interruptor por app en Administración.
   Business Profile y Threads quedan fuera (Composio no tiene toolkit).

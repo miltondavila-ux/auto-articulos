@@ -2783,3 +2783,36 @@ ni `push --force`. El módulo solo escribe filas `composio_*` inertes en `System
 Fusión autorizada por Milton (opción A, 2026-09-18) y reafirmada con «sigue». Deployment de la
 fusión y verificación en Producción: se registran tras fusionar.
 Responsable: Claude. Estado: LISTA PARA FUSIONAR.
+
+## Versión desplegada — 2026-09-18 — CONEXION COMPOSIO, Fase 1 (módulo Composio en Administración)
+
+PR #142 fusionado a `main` (`f0fd534`, 2026-09-18 22:35:16 UTC), con merge commit. Sin migraciones ni
+cambios de schema. Registra el resultado de las entradas anteriores de CONEXION COMPOSIO (que no se
+reescriben).
+
+```text
+Commit de fusión:     f0fd534   (head del PR: 0b09faf)
+Deployment Vercel:    6534042292 · Production · success · creado 22:36:00 UTC (31 s tras fusionar)
+                      https://auto-articulos-15u33xmb0-luna-portex-intelligence.vercel.app
+Preview previo:       build de Vercel en success sobre el head 0b09faf
+PUNTO DE RETORNO:     etiqueta pre-composio-fase1-d6ba5f8-20260918 (= d6ba5f8, deployment 6533344463)
+Salud medida 22:36 UTC en https://seototal.lasolucionweb.com (idéntica a la línea base):
+  /login 200 · /privacidad 200 · /api/me 401 · /dashboard 307→/login
+  /dashboard/composio 307→/login · /api/admin/composio, /accounts y /auth-configs 401
+```
+
+Verificación pendiente (no completada por esta tarea): (1) que el módulo abra en Producción con una
+sesión de administrador y guarde la clave de Composio — solo Milton puede hacerlo; las respuestas 401
+sin sesión NO lo prueban, porque el proxy bloquea todo `/api/admin/*` (una ruta inexistente también
+da 401); (2) logs de runtime de Vercel: no hay acceso desde esta sesión (CLI sin sesión iniciada).
+
+Rollback (sin migraciones): promover en Vercel el deployment `6533344463` (`d6ba5f8`), o en rama nueva
+`git revert -m 1 f0fd534` con las tres auditorías; comparar con `git diff
+pre-composio-fase1-d6ba5f8-20260918..main`. Sin `reset --hard` ni `push --force`. El módulo solo
+escribe filas `composio_*` inertes en `SystemSetting`.
+
+Pendientes conocidos: la clave y los 4 auth configs de Composio se registraron solo en la base LOCAL de
+Milton; hay que pegarlos en Producción. La verificación de qué permiso de la clave cubre `tools/execute`
+queda para la Fase 2b.
+
+Responsable: Claude. Estado: EN PRODUCCIÓN — verificación en vivo pendiente (Milton).
