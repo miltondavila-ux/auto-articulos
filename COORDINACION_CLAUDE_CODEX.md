@@ -7396,3 +7396,13 @@ no bloquea el cierre).
 (https://github.com/miltondavila-ux/auto-articulos/pull/127) fusionado a main
 (`cd6fd3e`), desplegado en Producción (Vercel: Deployment has completed), sin
 migraciones. Manual actualizado en el mismo lote.
+
+## Claude - BOTON VIDEO EXPLICATIVO BING WEBMASTER — 2026-09-17
+
+Rama `claude/boton-video-bing-webmaster`, worktree
+`.worktrees/boton-video-bing-webmaster`, sin migraciones de schema. Nuevo
+paso "Conectar Bing Webmaster Tools" en el wizard de Inicio
+(`OnboardingWizard.tsx`), recomendado y no bloqueante, reutilizando el
+componente y las rutas OAuth de Bing que ya existían. Detalle completo en
+`INVENTARIO_CONVERSACIONES.md`. Estado: ACTIVO — abriendo PR con el
+enlace del video real ya incluido.

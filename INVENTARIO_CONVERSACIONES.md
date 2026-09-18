@@ -1230,3 +1230,48 @@ Producción, sin acceso de Milton a ninguna cuenta de cliente.
 - Reservas: ninguna activa. No se tocaron los documentos de coordinación
   durante el fix por estar en reescritura de otra tarea; se registran aquí.
 - Pendiente no bloqueante: verificación en vivo con la cuenta de Lorena.
+
+## Claude - BOTON VIDEO EXPLICATIVO BING WEBMASTER — 2026-09-17
+
+Rama `claude/boton-video-bing-webmaster`, worktree
+`.worktrees/boton-video-bing-webmaster`, creado desde `origin/main`, sin
+migraciones de schema. Motivo: replicar en el wizard inicial (Inicio →
+Configuración) el mismo patrón del Paso 4 (Google Search Console) —
+explicación en lenguaje simple + botón de video tutorial + botón de
+conexión — para Bing Webmaster Tools, que ya tenía toda la integración
+OAuth/backend lista (`packages/shared/src/bing-webmaster.ts`,
+`/api/search-integrations/bing/*`, componente `BingWebmasterSection.tsx`
+ya usado en Configuración → Indexación) pero no aparecía en el wizard de
+Inicio.
+
+Cambio: nuevo `StepCard` "Paso 5: Conectar Bing Webmaster Tools" en
+`apps/web/src/components/OnboardingWizard.tsx`, insertado entre el Paso 4
+(GSC) y el paso final (renumerado de 5 a 6), marcado como recomendado y
+NO bloqueante — no cambia `allCoreDone` ni el gating de los 4 pasos
+obligatorios existentes. Reutiliza `BingWebmasterSection` (ya probado en
+Configuración) para toda la lógica de conexión, selección de sitio y
+sitemap, en vez de duplicarla. Se agregó `bingData` (solo lectura, para
+pintar el badge/check) al `loadAll()` del wizard.
+
+El enlace del botón "Ver video: Cómo activar Bing Webmaster Tools" quedó
+resuelto con el video real entregado por Milton el 18/9/2026:
+`https://www.youtube.com/watch?v=N9p7O965ooA`.
+
+Probado: `npm install` + `npx tsc --noEmit` + `npm run build` en el
+worktree, todos sin errores. No se probó en vivo en navegador (requiere
+sesión autenticada y base de datos local) — pendiente verificación en
+Producción tras el deployment.
+
+Responsable: Claude. Estado: ACTIVO — abriendo PR con el enlace del video
+ya incluido.
+
+Nota no bloqueante (detectada al fusionar contra `main` tras PR #127): el
+botón de conexión de este nuevo paso usa `BingWebmasterSection`, cuyo
+`/api/search-integrations/bing/connect` no acepta `returnTo` — a
+diferencia del de Google. Tras conectar desde el wizard de Inicio, Bing
+redirige siempre a Configuración → Indexación (antes `/dashboard/configuracion`,
+ahora `/dashboard/configuracion/indexacion` por el PR #127), no de vuelta
+al wizard. No se tocó `bing/connect` ni `bing/callback` en este lote
+porque el PR #127 los tenía reservados/capitaneados al mismo tiempo.
+Pendiente para una tarea aparte: agregar soporte de `returnTo` a esas dos
+rutas si Milton quiere que el usuario vuelva al wizard de Inicio.
