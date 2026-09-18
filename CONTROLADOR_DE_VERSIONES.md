@@ -2487,7 +2487,7 @@ de ejecutar el análisis sin resultados nuevos.
 
 Responsable: Claude. Estado: EN PRODUCCIÓN, verificado en vivo por Milton.
 
-## Versión en curso — 2026-09-18 — Retorno de Bing Webmaster a Indexación
+## Versión desplegada — 2026-09-18 — Retorno de Bing Webmaster a Indexación
 
 `apps/web/src/app/api/search-integrations/bing/callback/route.ts`: las tres
 redirecciones del callback OAuth de Bing (conexión exitosa, error de estado y
@@ -2500,7 +2500,9 @@ secretos), funcional (cambio de rutas de redirección; `BingWebmasterSection`
 ya lee `?bing=` con `useSearchParams`) y regresión/entrega (checks del PR y
 Vercel Preview antes de fusionar).
 
-Responsable: Claude. Estado: PR abierto, pendiente de fusión y verificación.
+PR #127 fusionado a `main` (`cd6fd3e`); Vercel Preview aprobado y deployment de Producción completado. Pendiente: prueba en vivo del flujo completo de conexión por Milton (requiere sesión de Bing).
+
+Responsable: Claude. Estado: EN PRODUCCIÓN.
 
 ## Versión — 2026-09-18 — CHECK DE NO INDEXACION (worker)
 

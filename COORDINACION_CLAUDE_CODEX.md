@@ -7391,3 +7391,8 @@ esa cuenta tenía datos de otra tarea. El worker ya ejecuta el código nuevo
 
 Responsable: Claude. Estado final: ARCHIVADA (verificación en vivo pendiente,
 no bloquea el cierre).
+
+**Capitán de migración liberó el lote:** Claude. Resultado: PR #127
+(https://github.com/miltondavila-ux/auto-articulos/pull/127) fusionado a main
+(`cd6fd3e`), desplegado en Producción (Vercel: Deployment has completed), sin
+migraciones. Manual actualizado en el mismo lote.
