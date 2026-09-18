@@ -48,6 +48,7 @@ refrescar esta tabla; no confiar en la fecha si pasó mucho tiempo.
 | `/private/tmp/cambio-cantidad-articulos-20260902` | `codex/cambio-cantidad-articulos-20260902` | 1 | Codex — cambio de cantidad de artículos | No aparece mencionado como cerrado en Coordinación; verificar con Codex si sigue vivo o es un residuo. |
 | `/private/tmp/mcp-publicacion-20260907` | `claude/mcp-publicacion-20260907` (PR #76) | 1 | Claude — "MCP 10MWS" | Andamiaje de la nueva línea de ejecución de publicación vía MCP (ahora con alcance ampliado a un selector multi-plataforma, no solo 10MWS — ver Coordinación), enviado como PR #76 (`open`, sin fusionar). Reserva sigue activa sobre `packages/db/prisma/schema.prisma` y `apps/worker/src/queue.ts` hasta que se fusione o se cierre. Sin cambio de comportamiento por defecto (`publishMethod` queda en `BROWSER`). Auditoría 3 (integración/producción) bloqueada a propósito — no existe todavía servidor MCP real de 10MWS ni migración aplicada. Detalle completo en `COORDINACION_CLAUDE_CODEX.md`. |
 | `/tmp/fix-tiles-flex-20260908` | `claude/fix-tiles-flex-20260908` | 1 | Claude — "ORDEN DE USUARIOS ACTIVOS EN ADMIN" (hotfix visual sobre PR #70) | Reserva: `apps/web/src/app/dashboard/usuarios/page.tsx` — arregla que las tarjetas de resumen se veían en fila (aplastadas) por el reset global `button { display: inline-flex }`. |
+| `/Users/miltondavila/Creador de articulos/.worktrees/mensajes-error-ia` | `claude/mensajes-error-humanizados-ia` (PR #125) | 1 (`3aa0266`) | Claude — `CLAUDE - ERROR AL PUBLICAR` (solo el pendiente de mensajes inteligentes; el error de publicación está ARCHIVADO) | **PAUSADO**. Espera autorización de Milton para fusionar el PR #125 y verificación en vivo. Reserva mínima: `apps/worker/src/humanizeError.ts` (nuevo), `apps/worker/src/queue.ts` (`catch` de `processRunTitle`), `apps/worker/src/automation/10minutesWebsite.ts` (2 líneas de `login()`). |
 
 ### Ya terminados y fusionados (el worktree quedó suelto, pero el trabajo YA está en producción — no son reservas activas)
 
@@ -1293,3 +1294,29 @@ al wizard. No se tocó `bing/connect` ni `bing/callback` en este lote
 porque el PR #127 los tenía reservados/capitaneados al mismo tiempo.
 Pendiente para una tarea aparte: agregar soporte de `returnTo` a esas dos
 rutas si Milton quiere que el usuario vuelva al wizard de Inicio.
+
+## ARCHIVADO — CLAUDE - ERROR AL PUBLICAR — 2026-09-18 (cierre 13:03 EDT)
+
+**Identidad:** proyecto `CLAUDE - ERROR AL PUBLICAR`. Responsable: Claude. Cuenta afectada: MPM Realty Group (panel inglés).
+
+**Síntoma:** los artículos no se publicaban ("El artículo no aparece en el listado tras guardar"); llegó a haber 4 de 9 fallidos con hasta 7 intentos cada uno.
+
+**Causa raíz (confirmada con logs reales, no adivinada):** hoy el sitio 10minutesWebsite tarda más de lo normal en procesar el guardado. Tras el clic en "Guardar cambios", `saveAndGetUrl()` miraba a los 1-2 s, veía el formulario todavía abierto y daba el artículo por perdido, aunque el sitio lo terminaba guardando. Efecto colateral: intentos marcados como fallidos que sí se guardaron dejaron **artículos repetidos** en el sitio público de MPM (p. ej. "From Agent to Top Producer: Essential Strategies" y "...: A Practical Guide"; "Productive REALTORS®: Key Habits for Success" y "Habits of Highly Productive REALTORS®"; "Essential Steps After Earning Your Florida Real Estate License" y "Strategies for Success After Your Florida Real Estate License"; "From License Holder to Real Estate Business Owner" y "From Agent to Business Owner in Real Estate"). Borrarlos es decisión de Milton; el sistema no tocó el sitio.
+
+**Fix vigente:** PR #133 (`aea076d`, `apps/worker/src/automation/10minutesWebsite.ts`, +13 líneas, sin migraciones): si el sitio aún no aceptó el guardado y no hay título duplicado, espera 15 s y reintenta (hasta `MAX_SAVE_ATTEMPTS`) con el ciclo de revalidación existente. El worker toma `main` en cada corrida, así que ya está activo.
+
+**Camino descartado (registrado para no repetirlo):** PR #131 (`def4793`) revirtió `eee0e0b` suponiendo que la navegación previa al formulario causaba el fallo; el reintento en vivo con #131 activo falló igual. Revertido por PR #132 (`30d9e37`); la protección contra artículos duplicados sigue en producción. PR #134 y #135: solo registro en `CONTROLADOR_DE_VERSIONES.md`.
+
+**Auditorías:** 1 (integridad) aprobada: un archivo de código, sin migraciones, schema, OAuth ni secretos. 2 (funcional) aprobada con reserva: sintaxis TypeScript sin diagnósticos y `git diff --check` limpio; **no** hubo typecheck completo del worker ni `vitest` (el entorno aislado no tiene dependencias instaladas). 3 (producción en vivo) aprobada por Milton y por esta sesión: lote MPM 5/9 → 9/9 "Completado" (18/9, 11:15-12:00); la tanda nueva "Lead Generation Client Acquisition" (desde las 12:42) iba 5/9 publicados sin fallos ni reintentos manuales al momento del cierre.
+
+**Reservas liberadas:** `apps/worker/src/automation/10minutesWebsite.ts` (bloque de guardado). Worktrees retirados: `restaurar-flujo-guardado`, `restaurar-proteccion-duplicados`, `guardado-esperar-validacion`, `registro-guardado-verificado`, `registro-9de9`. Restos sin commit de esta tarea eliminados del checkout principal (respaldo en el scratchpad de la sesión; el contenido está en `3aa0266`). No se tocó ningún cambio ajeno.
+
+### Pendiente APARTE (no forma parte del error resuelto): mensajes de error inteligentes — PAUSADO
+
+PR #125, commit `3aa0266`, rama `claude/mensajes-error-humanizados-ia`, worktree `.worktrees/mensajes-error-ia` (limpio). Traduce cualquier error crudo de la automatización con IA a una explicación simple más una acción del propio usuario (`humanizeError.ts` nuevo, +84; `queue.ts` +15/−4; `10minutesWebsite.ts` +1/−1). Sin migraciones, schema, OAuth ni secretos; `git diff --check` limpio; se fusiona sin conflictos sobre `main`. **No está fusionado ni en producción** (por eso los logs siguen mostrando errores crudos de Playwright) y **no tiene prueba en vivo**. Alcance conocido: traduce la línea `Error:` del log y el mensaje de Historial, no las líneas `DIAGNÓSTICO [...]`.
+- Reserva que se conserva: `apps/worker/src/humanizeError.ts`, el `catch` de `processRunTitle` en `queue.ts` y las 2 líneas de `login()`.
+- Falta: autorización de Milton para fusionar y verificación en vivo (provocar un error real; comprobar que sin `OPENAI_API_KEY` o con la IA caída se conserva el mensaje original).
+- Otra tarea aparte: la detección de títulos duplicados solo reconoce el formulario en español (`#titlees`/"existe"); en el panel inglés el sitio responde "There is already an article with this title" y el robot no lo reformula.
+- Responsable siguiente: Milton (autorización), luego Claude.
+
+**Estado final:** error de publicación **ARCHIVADA**; mensajes inteligentes (PR #125) **PAUSADO**.
