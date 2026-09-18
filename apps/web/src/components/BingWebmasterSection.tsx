@@ -26,6 +26,7 @@ export default function BingWebmasterSection() {
     connected: boolean;
     siteUrl?: string | null;
     sitemapUrl?: string | null;
+    sitemapCheck?: { ok: boolean; reason?: string };
     sites: Site[];
     error?: string;
     lastSitemapSyncAt?: string | null;
@@ -75,7 +76,7 @@ export default function BingWebmasterSection() {
       const t = setTimeout(() => {
         load().finally(() => setReconectando(false));
       }, 2500);
-      router.replace("/dashboard/configuracion");
+      router.replace("/dashboard/configuracion/indexacion");
       return () => clearTimeout(t);
     }
     load();
@@ -92,7 +93,7 @@ export default function BingWebmasterSection() {
         type: "error",
       });
       setConnecting(false);
-      router.replace("/dashboard/configuracion");
+      router.replace("/dashboard/configuracion/indexacion");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -111,6 +112,9 @@ export default function BingWebmasterSection() {
         link: { label: "Ver historial de artículos", href: "/dashboard/historial" },
       });
       load();
+      if (value.sitemapCheck && !value.sitemapCheck.ok) {
+        setMessage({ text: `Sitio guardado, pero el sitemap no se pudo validar: ${value.sitemapCheck.reason}`, type: "error" });
+      }
     } else {
       setMessage({
         text: value.error ?? "No se pudo guardar.",
@@ -124,7 +128,7 @@ export default function BingWebmasterSection() {
     setMessage({
       text: "Bing Webmaster Tools desconectado.",
       type: "info",
-      link: { label: "Volver a conectar", href: "/dashboard/configuracion" },
+      link: { label: "Volver a conectar", href: "/dashboard/configuracion/indexacion" },
     });
     load();
   }
@@ -163,7 +167,7 @@ export default function BingWebmasterSection() {
         setMessage({
           text: value.error ?? "No se pudo ejecutar la indexación masiva.",
           type: "error",
-          link: { label: "Revisar configuración de Bing", href: "/dashboard/configuracion" },
+          link: { label: "Revisar configuración de Bing", href: "/dashboard/configuracion/indexacion" },
         });
       }
       await load();
@@ -188,7 +192,7 @@ export default function BingWebmasterSection() {
         setMessage({
           text: value.error ?? "No se pudo enviar el sitemap.",
           type: "error",
-          link: { label: "Revisar configuración", href: "/dashboard/configuracion" },
+          link: { label: "Revisar configuración", href: "/dashboard/configuracion/indexacion" },
         });
       }
       await load();
@@ -303,7 +307,11 @@ export default function BingWebmasterSection() {
           </select>
           {data.sitemapUrl && !editingSitemap ? (
             <div style={{ fontSize: 13, color: "#1d1d1f" }}>
-              ✓ Sitemap detectado: {data.sitemapUrl}{" "}
+              {data.sitemapCheck && !data.sitemapCheck.ok ? "⚠" : "✓"} Sitemap{" "}
+              {data.sitemapCheck && !data.sitemapCheck.ok ? "guardado (no validado)" : "validado"}: {data.sitemapUrl}{" "}
+              {data.sitemapCheck && !data.sitemapCheck.ok && (
+                <span style={{ color: "#ff3b30", fontSize: 12 }}>({data.sitemapCheck.reason})</span>
+              )}{" "}
               <button
                 type="button"
                 onClick={() => setEditingSitemap(true)}

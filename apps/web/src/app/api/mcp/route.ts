@@ -69,7 +69,7 @@ async function manejar(mensaje: JsonRpcRequest, scopes: string[]) {
         capabilities: { tools: { listChanged: false } },
         serverInfo: { name: "auto-articulos", version: "0.1.0" },
         instructions:
-          "Herramientas de SEO TOTAL: consultar y generar oportunidades SEO, y publicar artículos. Publicar tiene consecuencias públicas reales: usa siempre publicar_categoria con confirmar=false primero y pide confirmación explícita al usuario antes de publicar.",
+          "Herramientas de SEO TOTAL: consultar y generar contenido inteligente, y publicar artículos. Publicar tiene consecuencias públicas reales: usa siempre publicar_categoria con confirmar=false primero y pide confirmación explícita al usuario antes de publicar.",
       });
 
     // El cliente avisa que terminó el handshake. No espera respuesta.

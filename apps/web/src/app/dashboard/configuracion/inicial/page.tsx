@@ -100,7 +100,7 @@ export default function ConfiguracionInicialPage() {
               fontWeight: 700,
             }}
           >
-            Ir a Crear Oportunidades SEO →
+            Ir a Publica contenido con ayuda de la IA avanzada →
           </Link>
         </div>
       ) : (

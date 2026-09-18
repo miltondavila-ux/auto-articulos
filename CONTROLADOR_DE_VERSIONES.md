@@ -2487,7 +2487,69 @@ de ejecutar el análisis sin resultados nuevos.
 
 Responsable: Claude. Estado: EN PRODUCCIÓN, verificado en vivo por Milton.
 
-## Versión en curso — 2026-09-18 — Retorno de Bing Webmaster a Indexación
+## Cambio preparado — 2026-09-18 — Coherencia del lenguaje de la interfaz
+
+Rama: `claude/simplificacion-setup-inicial`.
+
+Se preparó una actualización de copy de extremo a extremo: tarjetas del
+dashboard, navegación, introducciones de módulos, asistente de configuración,
+manual de usuario, textos de Analytics y mensajes del asistente/MCP. El quinto
+acceso, **Progreso de las publicaciones**, se mantiene únicamente en el menú.
+Las rutas técnicas y permisos no se renombraron para conservar compatibilidad.
+
+No hay cambios de schema ni migraciones en este lote. La revisión se mantiene
+en el worktree aislado `/Users/miltondavila/Creador de articulos/.worktrees/simplificacion-setup-inicial`.
+No se hizo push ni deploy; el estado es PREPARADA PARA VALIDACIÓN LOCAL.
+
+## Cambio preparado — 2026-09-18 — Menú agrupado por función
+
+**Historial** ahora vive dentro de **Publicaciones** y **Actualizaciones**
+dentro de **Configuración**. Se conservaron las URLs, permisos y módulos
+existentes. `tsc --noEmit` pasó; no hay cambios de schema ni migraciones.
+
+Responsable: Codex. Estado: EN REVISIÓN. Commit de la implementación:
+`6bc04a2`.
+
+## Cambio preparado — 2026-09-18 — Tarjetas del Inicio responsive
+
+Se sustituyó la altura fija de las tarjetas de accesos directos por un grid
+flexible: las tarjetas de cada fila mantienen la misma altura y el contenido
+puede crecer de forma natural en responsive. No hay cambios de schema,
+migraciones, rutas ni permisos.
+
+## Cambio preparado — 2026-09-18 — Retirar aviso de inactividad
+
+Se eliminó el Callout del Inicio que mostraba los días sin publicar y su CTA.
+Las métricas, alertas de configuración y accesos directos permanecen intactos.
+
+## Cambio preparado — 2026-09-18 — Gráfico de ritmo a ancho completo
+
+El panel **Tu ritmo — últimos 14 días** pasó a ocupar todo el ancho disponible,
+manteniendo su adaptación responsive. No hay cambios de schema ni migraciones.
+
+## Cambio preparado — 2026-09-18 — Prueba visual de color en tarjetas
+
+Las tarjetas 02, 03 y 04 del Inicio reciben fondos `#c6c6c6`, `#919191` y
+`#5e5e5e`, respectivamente, con contraste de texto adaptado. La tarjeta 01
+permanece blanca y no se modifican rutas ni funcionalidad.
+
+## Cambio preparado — 2026-09-18 — Contraste de texto reforzado
+
+Se sustituyeron los grises tenues de las tarjetas de color por texto negro o
+blanco sólido según el fondo, para mejorar la legibilidad.
+
+## Cambio preparado — 2026-09-18 — Jerarquía tipográfica de tarjetas
+
+Se reforzaron números, títulos y descripciones con mayor tamaño/peso y colores
+puros de alto contraste. No se modifican rutas ni comportamiento responsive.
+
+## Cambio preparado — 2026-09-18 — Explicación de publicación de títulos propios
+
+Se aclaró en el dashboard, Comienza aquí y el manual que publicar títulos
+propios sirve para comenzar sin registros de indexación en Google o para
+publicar contenido escrito directamente por el usuario.
+
+## Versión desplegada — 2026-09-18 — Retorno de Bing Webmaster a Indexación
 
 `apps/web/src/app/api/search-integrations/bing/callback/route.ts`: las tres
 redirecciones del callback OAuth de Bing (conexión exitosa, error de estado y
@@ -2500,7 +2562,9 @@ secretos), funcional (cambio de rutas de redirección; `BingWebmasterSection`
 ya lee `?bing=` con `useSearchParams`) y regresión/entrega (checks del PR y
 Vercel Preview antes de fusionar).
 
-Responsable: Claude. Estado: PR abierto, pendiente de fusión y verificación.
+PR #127 fusionado a `main` (`cd6fd3e`); Vercel Preview aprobado y deployment de Producción completado. Pendiente: prueba en vivo del flujo completo de conexión por Milton (requiere sesión de Bing).
+
+Responsable: Claude. Estado: EN PRODUCCIÓN.
 
 ## Versión — 2026-09-18 — CHECK DE NO INDEXACION (worker)
 
@@ -2517,19 +2581,253 @@ Auditoría 3: PENDIENTE (corrida en vivo con `worker-test.yml`). El worker de
 producción ya usa el código (corridas del 2026-09-18 sobre `main` posterior).
 Responsable: Claude. Estado: EN PRODUCCIÓN — verificación en vivo pendiente.
 
-## Preparación — 2026-09-18 — REPARACIÓN DEL MOTOR, fase 1
+## Versión — 2026-09-18 — ERROR AL PUBLICAR (MPM Realty Group): reversión #131, restauración #132 y espera de validación al guardar
 
-Commit: `5ab58ae` en `codex/reparacion-del-motor`.
+Conversación/proyecto: `ERROR AL PUBLICAR`. Cuenta afectada: MPM Realty Group
+(panel inglés). Síntoma: el robot hace clic en "Guardar cambios", el sitio
+deshabilita el botón y no envía nada; el artículo no aparece en el listado.
 
-Cambios: tabla `OpportunityEvidenceCache` y migración SQL aditiva; caché
-independiente para GSC/GA4/Bing con TTL de 7/14/14 días; GSC amplía la
-ventana a 90 días; GA4 y Bing pueden iniciar el análisis cuando GSC no esté
-disponible; las señales externas se incorporan a los lotes de evidencia sin
-alterar publicación ni el modelo `gpt-4o-mini`.
+- PR #131 (`def4793`): revirtió `eee0e0b` (navegación al listado antes del
+  formulario) por ser el único cambio incondicional posterior a la versión
+  estable `54379d8`. **No era la causa**: reintento en vivo con #131 activo
+  falló igual (18/9/2026 11:17).
+- PR #132 (`30d9e37`): revirtió #131; la protección contra artículos
+  duplicados vuelve a estar en producción.
+- Este cambio (rama `claude/guardado-esperar-validacion`): en
+  `saveAndGetUrl()`, si tras el clic el sitio no acepta el guardado y no hay
+  título duplicado, se espera 15 s y se reintenta (hasta `MAX_SAVE_ATTEMPTS`)
+  en vez de rendirse tras un solo clic. Base: en los logs, el artículo que sí
+  se publicó tras varios fallos fue el intento donde el robot esperó ~33 s a
+  la validación del sitio antes del clic; los fallidos hacían el clic a 0 s.
+  Un archivo de código, +13 líneas, sin migraciones ni cambio de versiones.
 
-Auditorías locales: `prisma validate` aprobado con variables dummy,
-`tsc --noEmit` aprobado y build de `apps/web` aprobado (85 páginas). Sin
-deployment ni aplicación de migración en Producción.
+Auditoría 1: APROBADA (un archivo de código + este registro, sin secretos).
+Auditoría 2: APROBADA (sintaxis TypeScript sin diagnósticos; `git diff --check`).
+Auditoría 3: APROBADA EN VIVO (18/9/2026, MPM Realty Group). PR #133
+fusionado a las 11:37; reintento del lote: los artículos 1 y 2 (5 y 7 fallos
+previos) se publicaron en el segundo intento de guardado (11:42 y 11:46); el
+lote pasó de 5/9 a 8/9. En esos logs el sitio termina de guardar unos segundos
+después del clic: el robot antes lo daba por perdido a los 1-2 s.
+Problema conocido, NO resuelto: el artículo 5 sigue fallando porque el sitio
+responde "There is already an article with this title" (título duplicado
+real) y la detección de duplicados del robot solo reconoce el formulario en
+español (`#titlees` / "existe"), no el inglés (`#title`). Posible causa
+adicional: intentos anteriores "fallidos" pudieron haber guardado artículos
+reales en el sitio; conviene revisar duplicados en el listado de la cuenta.
+Actualización 18/9/2026 12:00: tras otro "Reintentar", el artículo 5 se publicó
+(título nuevo de la IA, sin choque) y el lote quedó en 9/9 "Completado".
+Pendiente para Milton: en el sitio público de MPM hay artículos repetidos
+creados por intentos que la app marcó como fallidos (p. ej. "From Agent to Top
+Producer: A Practical Guide" y "...: Essential Strategies"; "Habits of Highly
+Productive REALTORS®" y "Productive REALTORS®: Key Habits"; "Strategies for
+Success After Your Florida Real Estate License" y "Essential Steps After
+Earning Your Florida Real Estate License"; "From License Holder to Real Estate
+Business Owner" y "From Agent to Business Owner in Real Estate"). Borrarlos es
+decisión suya. La detección de títulos duplicados sigue reconociendo solo el
+formulario en español.
+Responsable: Claude. Estado: EN PRODUCCIÓN — VERIFICADA EN VIVO (9/9).
 
-Estado: PREPARADA PARA PR/ PREVIEW; requiere auditoría de migración y
-verificación de Preview antes de cualquier decisión de Producción.
+## Versión desplegada — 2026-09-18 — Paso de Bing Webmaster Tools en el wizard de Inicio
+
+PR #126 fusionado a `main` (`c294aff`), sin migraciones ni cambios de schema.
+`apps/web/src/components/OnboardingWizard.tsx`: nuevo Paso 5 "Conectar Bing
+Webmaster Tools" (recomendado, no bloqueante, con botón de video
+`https://www.youtube.com/watch?v=N9p7O965ooA`), que reutiliza
+`BingWebmasterSection`; el paso final de Oportunidades pasa a ser el Paso 6.
+
+Auditorías: integridad APROBADA (alcance de un componente + registros, sin
+secretos); funcional APROBADA (`tsc --noEmit` y `npm run build` limpios);
+regresión/entrega APROBADA (Vercel Preview pasó; sin solapamiento de archivos
+con los PR #127/#128 de Bing). Verificación en vivo en Producción pendiente.
+
+Responsable: Claude. Estado: EN PRODUCCIÓN — verificación en vivo pendiente.
+
+## Versión desplegada — 2026-09-18 — Bing Webmaster: enlaces a Indexación
+
+`apps/web/src/components/BingWebmasterSection.tsx`: los enlaces "Volver a
+conectar", "Revisar configuración de Bing" y "Revisar configuración" apuntaban a
+`/dashboard/configuracion`; ahora a `/dashboard/configuracion/indexacion`. Cierra
+el remanente del PR #127 (las redirecciones del callback y de `router.replace`
+ya estaban corregidas). Sin migraciones ni schema; el manual no menciona estos
+enlaces, no requiere cambio.
+
+PR #139 fusionado (`9df2f10`); Vercel Production completado.
+
+Responsable: Claude. Estado: EN PRODUCCIÓN.
+
+## Versión desplegada — 2026-09-18 — CONEXION COMPOSIO, Fase 1 (módulo Composio en Administración)
+
+PR #142 (`claude/conexion-composio`), commits `73dc766` y `a1fefed` más el de este registro.
+Nuevo módulo de solo administradores en `/dashboard/composio` (clave de API de
+Composio cifrada, auth configs verificados, cuentas conectadas) y "Administración"
+como grupo del menú (Usuarios · Composio). Manual de usuario actualizado en el mismo
+lote. Sin cambios de schema, sin migraciones, sin tocar integraciones existentes
+de Google ni de Meta, `vercel.json`, workflows, middleware ni dependencias.
+
+**PUNTO DE RETORNO (última versión buena conocida, registrada ANTES de fusionar):**
+
+```text
+Commit de Producción previo: 068a0b1 (= origin/main antes del PR #142)
+Etiqueta de Git:             pre-composio-fase1-20260918  (apunta a 068a0b1)
+Deployment Vercel previo:    6529270912 · Production · success
+                             https://auto-articulos-oqjlawfxn-luna-portex-intelligence.vercel.app
+Dominio público:             https://seototal.lasolucionweb.com
+Línea base medida 2026-09-18 21:23 UTC (antes de fusionar):
+  /login 200 · /privacidad 200 · /api/me 401 · /dashboard 307→/login
+  /dashboard/composio 307→/login · /api/admin/composio 401
+```
+
+Verificación previa (Controlador, «Verificación obligatoria»): archivos eliminados
+en el PR: 0 · migraciones: 0 · cambios en `schema.prisma`: 0 · cambios en
+`vercel.json`/workflows/proxy: 0 · `tsc --noEmit` 0 errores · `npm run build`
+exit 0 · rama `MERGEABLE`/`CLEAN` sin conflictos con `main`.
+
+Auditorías: integridad APROBADA · funcional APROBADA (12 pruebas de librería, pruebas
+HTTP reales, verificación visual y camino feliz con la clave real de Milton en base
+local) · regresión APROBADA. Anomalía registrada: Vercel NO generó Preview para este
+PR (sin check, estado ni comentario tras más de 4 minutos; el PR #141 sí lo tuvo).
+Milton autorizó fusionar sin Preview (opción A) el 2026-09-18, asumiendo ese riesgo.
+
+**Cómo revertir en un caso extremo (no hay migraciones ni datos que deshacer):**
+
+1. Más rápido, sin tocar Git: en el panel de Vercel, `Deployments` → deployment
+   `6529270912` (`068a0b1`) → volver a promoverlo a Production (rollback de Vercel).
+2. Por Git, de forma incremental (no destructiva): desde `main`, rama nueva y
+   `git revert -m 1 <commit de fusión del PR #142>`, abrir PR y pasar las tres
+   auditorías. Comparar con `git diff pre-composio-fase1-20260918..main`.
+3. NO usar `reset --hard`, `push --force` ni restaurar snapshots parciales (regla de
+   Protección de este documento).
+4. Datos: el módulo solo escribe filas `composio_*` en `SystemSetting`, inertes si se
+   revierte el código. Pueden quedarse o borrarse (`DELETE FROM "SystemSetting" WHERE
+   key LIKE 'composio_%'`) sin afectar nada más.
+
+Deployment: PENDIENTE (se registra tras fusionar). Verificación en Producción: PENDIENTE.
+Responsable: Claude. Estado: FUSIÓN AUTORIZADA — pendiente de deployment y verificación.
+
+## Corrección del punto de retorno y fusión DIFERIDA — 2026-09-18 — CONEXION COMPOSIO, Fase 1 (PR #142)
+
+Corrige y complementa la entrada anterior de CONEXION COMPOSIO (que no se reescribe).
+
+**Qué cambió.** Mientras el PR #142 esperaba, `main` avanzó a `d6ba5f8` (PR #143,
+`simplificacion-setup-inicial`, fusionado 2026-09-18 21:35:38Z). La etiqueta
+`pre-composio-fase1-20260918` (`068a0b1`) sigue siendo cierta como «Producción antes de
+#143», pero **ya no es el punto de retorno correcto de mi cambio**: volver a `068a0b1`
+deshacería también el PR #143. Regla vigente: el punto de retorno de la fusión de #142 es
+el commit que esté en Producción **inmediatamente antes** de fusionarla, y se etiqueta en
+ese momento (`pre-composio-fase1-<sha>-<fecha>`), después de verificarlo sano.
+
+**Estado medido 2026-09-18 21:52 UTC.**
+
+```text
+Producción (Vercel):  068a0b1, sana — /login 200 · /privacidad 200 · /api/me 401 · /dashboard 307→/login
+                      (idéntico a la línea base)
+d6ba5f8 (PR #143):    SIN deployment en GitHub tras 16 min de fusionado
+Preview de #142:      «Building» desde 21:34 UTC, sin terminar
+Vercel (público):     incidente ACTIVO «Deployment stuck in initializing state»;
+                      Builds y Build & Deploy en degraded_performance
+```
+
+**Integración hecha.** `origin/main` (`d6ba5f8`) se fusionó dentro de `claude/conexion-composio`
+(commit `116c04c`, merge sin reescribir historia). Único conflicto real:
+`apps/web/src/content/manual-usuario.ts` (párrafo «El menú»), resuelto conservando el texto
+nuevo de `main` y añadiendo la frase sobre Administración. `DashboardNav.tsx` y este
+documento se combinaron sin conflicto. Sobre el resultado integrado: `tsc --noEmit` 0
+errores, `npm run build` exit 0, y verificación visual del menú como administrador
+(Inicio · Cómo funciona esta aplicación · Publicaciones · Configuración · Administración
+[Usuarios, Composio]). El diff contra `origin/main` contiene solo los archivos de esta tarea.
+
+**Decisión: FUSIÓN DIFERIDA.** Milton autorizó fusionar (opción A). Se difiere porque
+Coordinación §7 prohíbe ejecutar acciones que puedan tumbar Producción sin poder verificar
+`Ready`, y hoy hay un incidente de Vercel y una línea base en movimiento. No hay ningún
+cambio en Producción por parte de esta tarea.
+
+**Condiciones para fusionar (todas):**
+1. El incidente de Vercel resuelto (o Milton lo confirma por escrito).
+2. `d6ba5f8` desplegado en Producción con estado `success` y salud verificada.
+3. Etiqueta `pre-composio-fase1-<sha vigente>-<fecha>` creada sobre el commit en Producción.
+4. `origin/main` sin cambios nuevos (si los hay, se integran y se repiten tsc y build).
+5. Preview de #142 verde, o autorización explícita de Milton sin Preview.
+6. Tras fusionar: deployment en `Ready`, dominio y logs de runtime verificados, y el módulo
+   abierto por Milton en Producción con su clave.
+
+Migraciones: ninguna. Rollback tras fusionar: promover en Vercel el deployment de la
+etiqueta correspondiente, o `git revert -m 1 <fusión de #142>` en rama nueva (sin
+`reset --hard` ni `push --force`); el módulo solo escribe filas `composio_*` inertes.
+
+Responsable: Claude. Estado: BLOQUEADO — dependencia externa (incidente de Vercel);
+PR #142 abierto y sin conflictos con `main`.
+
+## Condiciones cumplidas y punto de retorno FINAL — 2026-09-18 22:3x UTC — CONEXION COMPOSIO, Fase 1 (PR #142)
+
+Cierra las condiciones de la entrada «fusión DIFERIDA» (que no se reescribe).
+
+```text
+1. Vercel:            «All Systems Operational» (22:32 UTC); el incidente quedó resuelto.
+2. Producción:        d6ba5f8 desplegado — deployment 6533344463, success (21:52 UTC).
+                      Salud 22:32 UTC idéntica a la línea base: /login 200 · /privacidad 200 ·
+                      /api/me 401 · /dashboard 307→/login · /dashboard/composio 307→/login ·
+                      /api/admin/composio 401.
+3. ETIQUETA FINAL:    pre-composio-fase1-d6ba5f8-20260918  (apunta a d6ba5f8)
+                      = PUNTO DE RETORNO de la fusión del PR #142.
+                      Sustituye a pre-composio-fase1-20260918 (068a0b1), que dejaría fuera el PR #143.
+4. origin/main:       sin cambios nuevos (d6ba5f8).
+5. Preview de #142:   build de Vercel en success (head a3eac95). El Preview está protegido por el
+                      login de Vercel (302), por lo que la evidencia es el estado del build.
+```
+
+**Cómo revertir en un caso extremo** (sin migraciones): promover en Vercel el deployment
+`6533344463` (`d6ba5f8`), o en rama nueva `git revert -m 1 <fusión del PR #142>` con las tres
+auditorías; comparar con `git diff pre-composio-fase1-d6ba5f8-20260918..main`. Sin `reset --hard`
+ni `push --force`. El módulo solo escribe filas `composio_*` inertes en `SystemSetting`.
+
+Fusión autorizada por Milton (opción A, 2026-09-18) y reafirmada con «sigue». Deployment de la
+fusión y verificación en Producción: se registran tras fusionar.
+Responsable: Claude. Estado: LISTA PARA FUSIONAR.
+
+## Versión desplegada — 2026-09-18 — CONEXION COMPOSIO, Fase 1 (módulo Composio en Administración)
+
+PR #142 fusionado a `main` (`f0fd534`, 2026-09-18 22:35:16 UTC), con merge commit. Sin migraciones ni
+cambios de schema. Registra el resultado de las entradas anteriores de CONEXION COMPOSIO (que no se
+reescriben).
+
+```text
+Commit de fusión:     f0fd534   (head del PR: 0b09faf)
+Deployment Vercel:    6534042292 · Production · success · creado 22:36:00 UTC (31 s tras fusionar)
+                      https://auto-articulos-15u33xmb0-luna-portex-intelligence.vercel.app
+Preview previo:       build de Vercel en success sobre el head 0b09faf
+PUNTO DE RETORNO:     etiqueta pre-composio-fase1-d6ba5f8-20260918 (= d6ba5f8, deployment 6533344463)
+Salud medida 22:36 UTC en https://seototal.lasolucionweb.com (idéntica a la línea base):
+  /login 200 · /privacidad 200 · /api/me 401 · /dashboard 307→/login
+  /dashboard/composio 307→/login · /api/admin/composio, /accounts y /auth-configs 401
+```
+
+Verificación pendiente (no completada por esta tarea): (1) que el módulo abra en Producción con una
+sesión de administrador y guarde la clave de Composio — solo Milton puede hacerlo; las respuestas 401
+sin sesión NO lo prueban, porque el proxy bloquea todo `/api/admin/*` (una ruta inexistente también
+da 401); (2) logs de runtime de Vercel: no hay acceso desde esta sesión (CLI sin sesión iniciada).
+
+Rollback (sin migraciones): promover en Vercel el deployment `6533344463` (`d6ba5f8`), o en rama nueva
+`git revert -m 1 f0fd534` con las tres auditorías; comparar con `git diff
+pre-composio-fase1-d6ba5f8-20260918..main`. Sin `reset --hard` ni `push --force`. El módulo solo
+escribe filas `composio_*` inertes en `SystemSetting`.
+
+Pendientes conocidos: la clave y los 4 auth configs de Composio se registraron solo en la base LOCAL de
+Milton; hay que pegarlos en Producción. La verificación de qué permiso de la clave cubre `tools/execute`
+queda para la Fase 2b.
+
+Responsable: Claude. Estado: EN PRODUCCIÓN — verificación en vivo pendiente (Milton).
+## Versión — 2026-09-18 — REPARACIÓN DEL MOTOR DE OPORTUNIDADES
+
+PR #144 (`codex/reparacion-del-motor`), integrada tras validar Preview y migración.
+Se añadió `OpportunityEvidenceCache` con migración aditiva; caché independiente
+para GSC/GA4/Bing con TTL 7/14/14 días; ventana GSC de 90 días; y fallback
+multifuente para que GA4 o Bing puedan iniciar el análisis cuando GSC no esté
+disponible. Se conservaron exclusiones, geolocalización, deduplicación y
+`gpt-4o-mini` como primera fase.
+
+Auditorías: local aprobada (`prisma validate`, `tsc --noEmit`, build de Next con
+85 páginas y `git diff --check`); Preview de Vercel `READY`; migración controlada
+por GitHub Actions completada sin `--accept-data-loss` y con RLS correcto.
+Producción se registra después del deployment final.
+
+Responsable: CODEX - CREADOR DE TITULOS MUY ESTRICTO. Estado: EN DESPLIEGUE.

@@ -4625,6 +4625,98 @@ Verificaciones hechas con `git fetch origin` + `git merge-base
 el texto existente.
 
 Responsable: Claude (tarea programada diaria de propagación).
+
+## ACLARACIÓN PARA PUBLICAR TÍTULOS PROPIOS — 2026-09-18
+
+La explicación de **Publica tus propios títulos** ahora aclara que este acceso
+es útil para principiantes que todavía no tienen registros de indexación en
+Google y para quienes desean publicar contenido propio directamente en su web.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+
+## MEJORA FINAL DE LEGIBILIDAD EN TARJETAS — 2026-09-18
+
+Se reforzó la jerarquía tipográfica de los accesos del Inicio: números en
+negrita, títulos más grandes y marcados, descripciones ligeramente mayores y
+texto en negro o blanco sólido según el fondo, sin grises de baja legibilidad.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+
+## AJUSTE DE CONTRASTE EN TARJETAS — 2026-09-18
+
+Se reforzó el contraste de las tarjetas de color del Inicio: la tarjeta 02 usa
+texto negro sólido sobre `#c6c6c6`, y las tarjetas 03 y 04 usan texto blanco
+sólido sobre `#919191` y `#5e5e5e`. La tarjeta 01 permanece blanca.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+
+## PRUEBA VISUAL DE COLOR EN ACCESOS DEL INICIO — 2026-09-18
+
+Para probar una presentación más dinámica, las tarjetas 02, 03 y 04 del Inicio
+usan respectivamente `#c6c6c6`, `#919191` y `#5e5e5e`, con texto oscuro o claro
+según el contraste necesario. La tarjeta 01 permanece blanca y no se altera
+el comportamiento responsive del grid.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+
+## AJUSTE RESPONSIVE DEL GRÁFICO DE RITMO — 2026-09-18
+
+El gráfico **Tu ritmo — últimos 14 días** ahora ocupa todo el ancho disponible
+del dashboard. Se eliminó la columna vacía reservada a la derecha y se mantuvo
+el comportamiento responsive del grid para pantallas pequeñas.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+
+## ELIMINACIÓN DEL AVISO DE INACTIVIDAD DEL INICIO — 2026-09-18
+
+Se retiró del dashboard el aviso ámbar que mostraba cuántos días habían
+pasado sin publicar y el enlace para ver contenido inteligente. Se conservaron
+las métricas, alertas de configuración, accesos directos y gráficos del Inicio.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+
+## REORGANIZACIÓN DEL MENÚ — 2026-09-18
+
+Se movió **Historial** dentro del desplegable **Publicaciones** y
+**Actualizaciones** dentro del desplegable **Configuración**. Las rutas
+existentes se conservaron; solo cambió la navegación visible. El manual de
+usuario se actualizó para reflejar los cinco accesos de Publicaciones y los
+dos accesos de Configuración.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+
+## AUDITORÍA DE COHERENCIA DE NOMBRES Y MENSAJES — 2026-09-18
+
+La tarea `claude/simplificacion-setup-inicial` revisó la interfaz local, el
+menú, las tarjetas del dashboard, los módulos, el manual de usuario y los
+mensajes del asistente/MCP para alinear el vocabulario visible con los nombres
+aprobados por Milton. El dashboard conserva cuatro tarjetas principales:
+**Cómo funciona esta aplicación**, **Publica tus propios títulos**, **Publica
+contenido con ayuda de la IA avanzada** y **Difunde tu contenido en blogs
+externos y redes sociales**. **Progreso de las publicaciones** queda como
+acceso del menú, no como quinta tarjeta.
+
+Se conservaron las rutas, permisos, scopes, nombres de herramientas internas y
+endpoints existentes para no romper enlaces ni integraciones. Esta tanda no
+modifica schema ni migraciones. La vista local se mantiene disponible en
+`http://localhost:3201` y no se hizo deploy ni push a producción.
+
+Pendiente antes de promover: ejecutar las validaciones finales, revisar el
+diff completo y verificar el despliegue en Vercel/producción conforme al
+controlador de versiones.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL. Commit de la implementación:
+`6bc04a2`.
+
+## AJUSTE RESPONSIVE DE TARJETAS DEL INICIO — 2026-09-18
+
+Se eliminó la altura fija de las cuatro tarjetas del Inicio. Ahora el grid y
+los enlaces se estiran por fila para que todas las tarjetas de una misma fila
+tengan la misma altura, mientras cada fila conserva una altura natural según
+su contenido en pantallas pequeñas. No se cambia la cantidad de accesos, las
+rutas ni la funcionalidad.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
 ## PUNTO DE MIGRACIÓN A CLAUDE — 2026-09-04
 
 Codex: Esta entrada deja el contexto completo para continuar la conversación `CODEX - AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`.
@@ -7392,14 +7484,89 @@ esa cuenta tenía datos de otra tarea. El worker ya ejecuta el código nuevo
 Responsable: Claude. Estado final: ARCHIVADA (verificación en vivo pendiente,
 no bloquea el cierre).
 
-## Reserva activa — CODEX - CREADOR DE TITULOS MUY ESTRICTO — 2026-09-18
+**Capitán de migración liberó el lote:** Claude. Resultado: PR #127
+(https://github.com/miltondavila-ux/auto-articulos/pull/127) fusionado a main
+(`cd6fd3e`), desplegado en Producción (Vercel: Deployment has completed), sin
+migraciones. Manual actualizado en el mismo lote.
 
-- Rama: `codex/reparacion-del-motor`.
-- Worktree aislado: `/private/tmp/codex-reparacion-motor`.
-- Alcance: caché de evidencia SEO por fuente, ventana GSC de 90 días y
-  fallback multifuente para que GA4 o Bing puedan aportar evidencia cuando GSC
-  no esté disponible.
-- Migración: `20260918190000_add_opportunity_evidence_cache`.
+## Claude - BOTON VIDEO EXPLICATIVO BING WEBMASTER — 2026-09-17
+
+Rama `claude/boton-video-bing-webmaster`, worktree
+`.worktrees/boton-video-bing-webmaster`, sin migraciones de schema. Nuevo
+paso "Conectar Bing Webmaster Tools" en el wizard de Inicio
+(`OnboardingWizard.tsx`), recomendado y no bloqueante, reutilizando el
+componente y las rutas OAuth de Bing que ya existían. Detalle completo en
+`INVENTARIO_CONVERSACIONES.md`. Estado: ACTIVO — abriendo PR con el
+enlace del video real ya incluido.
+
+## ARCHIVADO — BING WEBMASTER SITEMAP — 2026-09-18
+
+Al conectar Bing Webmaster ahora se elige el sitio que coincide con el dominio
+de la cuenta, se autocompleta el sitemap (el de Bing o `/sitemap.xml`), se
+valida como XML del mismo dominio y se envía a Bing. PR #128 (`0a7af58`),
+commits `d52c647` y `6d339b7`, sin migraciones. Reservas liberadas y worktree
+retirado. Detalle en `INVENTARIO_CONVERSACIONES.md`.
+
+**Capitán de migración:** Claude — reclamó y liberó el lote (cierre documental
+de BING WEBMASTER SITEMAP, solo documentación, sin migraciones ni schema).
+**Capitán de migración liberó el lote:** Claude. Resultado: PR #136 (solo
+documentación) con el cierre de BING WEBMASTER SITEMAP; sin migraciones.
+Código ya en Producción por el PR #128 (`0a7af58`). Estado: ARCHIVADA.
+
+`INVENTARIO_CONVERSACIONES.md`. PR #126 fusionado a `main` (`c294aff`),
+sin migraciones. Reservas liberadas (`OnboardingWizard.tsx`). Estado final:
+ARCHIVADA.
+
+## ARCHIVADO — CLAUDE - ERROR AL PUBLICAR — 2026-09-18 (cierre 13:03 EDT)
+
+**Identidad:** proyecto `CLAUDE - ERROR AL PUBLICAR`. Responsable: Claude. Cuenta afectada: MPM Realty Group (panel inglés).
+
+**Síntoma:** los artículos no se publicaban ("El artículo no aparece en el listado tras guardar"); llegó a haber 4 de 9 fallidos con hasta 7 intentos cada uno.
+
+**Causa raíz (confirmada con logs reales, no adivinada):** hoy el sitio 10minutesWebsite tarda más de lo normal en procesar el guardado. Tras el clic en "Guardar cambios", `saveAndGetUrl()` miraba a los 1-2 s, veía el formulario todavía abierto y daba el artículo por perdido, aunque el sitio lo terminaba guardando. Efecto colateral: intentos marcados como fallidos que sí se guardaron dejaron **artículos repetidos** en el sitio público de MPM (p. ej. "From Agent to Top Producer: Essential Strategies" y "...: A Practical Guide"; "Productive REALTORS®: Key Habits for Success" y "Habits of Highly Productive REALTORS®"; "Essential Steps After Earning Your Florida Real Estate License" y "Strategies for Success After Your Florida Real Estate License"; "From License Holder to Real Estate Business Owner" y "From Agent to Business Owner in Real Estate"). Borrarlos es decisión de Milton; el sistema no tocó el sitio.
+
+**Fix vigente:** PR #133 (`aea076d`, `apps/worker/src/automation/10minutesWebsite.ts`, +13 líneas, sin migraciones): si el sitio aún no aceptó el guardado y no hay título duplicado, espera 15 s y reintenta (hasta `MAX_SAVE_ATTEMPTS`) con el ciclo de revalidación existente. El worker toma `main` en cada corrida, así que ya está activo.
+
+**Camino descartado (registrado para no repetirlo):** PR #131 (`def4793`) revirtió `eee0e0b` suponiendo que la navegación previa al formulario causaba el fallo; el reintento en vivo con #131 activo falló igual. Revertido por PR #132 (`30d9e37`); la protección contra artículos duplicados sigue en producción. PR #134 y #135: solo registro en `CONTROLADOR_DE_VERSIONES.md`.
+
+**Auditorías:** 1 (integridad) aprobada: un archivo de código, sin migraciones, schema, OAuth ni secretos. 2 (funcional) aprobada con reserva: sintaxis TypeScript sin diagnósticos y `git diff --check` limpio; **no** hubo typecheck completo del worker ni `vitest` (el entorno aislado no tiene dependencias instaladas). 3 (producción en vivo) aprobada por Milton y por esta sesión: lote MPM 5/9 → 9/9 "Completado" (18/9, 11:15-12:00); la tanda nueva "Lead Generation Client Acquisition" (desde las 12:42) iba 5/9 publicados sin fallos ni reintentos manuales al momento del cierre.
+
+**Reservas liberadas:** `apps/worker/src/automation/10minutesWebsite.ts` (bloque de guardado). Worktrees retirados: `restaurar-flujo-guardado`, `restaurar-proteccion-duplicados`, `guardado-esperar-validacion`, `registro-guardado-verificado`, `registro-9de9`. Restos sin commit de esta tarea eliminados del checkout principal (respaldo en el scratchpad de la sesión; el contenido está en `3aa0266`). No se tocó ningún cambio ajeno.
+
+### Pendiente APARTE (no forma parte del error resuelto): mensajes de error inteligentes — PAUSADO
+
+PR #125, commit `3aa0266`, rama `claude/mensajes-error-humanizados-ia`, worktree `.worktrees/mensajes-error-ia` (limpio). Traduce cualquier error crudo de la automatización con IA a una explicación simple más una acción del propio usuario (`humanizeError.ts` nuevo, +84; `queue.ts` +15/−4; `10minutesWebsite.ts` +1/−1). Sin migraciones, schema, OAuth ni secretos; `git diff --check` limpio; se fusiona sin conflictos sobre `main`. **No está fusionado ni en producción** (por eso los logs siguen mostrando errores crudos de Playwright) y **no tiene prueba en vivo**. Alcance conocido: traduce la línea `Error:` del log y el mensaje de Historial, no las líneas `DIAGNÓSTICO [...]`.
+- Reserva que se conserva: `apps/worker/src/humanizeError.ts`, el `catch` de `processRunTitle` en `queue.ts` y las 2 líneas de `login()`.
+- Falta: autorización de Milton para fusionar y verificación en vivo (provocar un error real; comprobar que sin `OPENAI_API_KEY` o con la IA caída se conserva el mensaje original).
+- Otra tarea aparte: la detección de títulos duplicados solo reconoce el formulario en español (`#titlees`/"existe"); en el panel inglés el sitio responde "There is already an article with this title" y el robot no lo reformula.
+- Responsable siguiente: Milton (autorización), luego Claude.
+
+**Estado final:** error de publicación **ARCHIVADA**; mensajes inteligentes (PR #125) **PAUSADO**.
+
+## Claude - BING WEBMASTER DIRECCION DE DEVOLUCION — enlaces — 2026-09-18
+
+**Capitán de migración:** Claude — revisará y aplicará el lote completo. Motivo:
+Bing: 3 enlaces del componente apuntan a /dashboard/configuracion/indexacion
+(sin migraciones). Nadie más ejecuta Prisma hasta su liberación.
+
+**Capitán de migración liberó el lote:** Claude. Resultado: PR #139
+(https://github.com/miltondavila-ux/auto-articulos/pull/139) fusionado a main
+(`9df2f10`), desplegado en Producción, sin migraciones.
+
+### Cierre — BING WEBMASTER DIRECCION DE DEVOLUCION — 2026-09-18
+
+Tarea cerrada. PR #127 (callback), `d52c647` (redirecciones del componente,
+otra sesión) y PR #139 (3 enlaces) dejan todo el retorno de Bing en
+`/dashboard/configuracion/indexacion`. Pendiente solo la prueba en vivo con
+una cuenta de Bing, a cargo de Milton. Estado final: ARCHIVADA.
+## Reserva activa — CODEX - CREADOR DE TITULOS MUY ESTRICTO — REPARACIÓN DEL MOTOR
+
+- Rama: `codex/reparacion-del-motor`; worktree: `/private/tmp/codex-reparacion-motor`.
+- PR: #144. Preview de Vercel `READY` y checks correctos.
+- Migración `20260918190000_add_opportunity_evidence_cache` aplicada por workflow
+  controlado, sin `--accept-data-loss`, antes del merge.
+- Alcance: caché de evidencia SEO por fuente, GSC 90 días y análisis que acepta
+  evidencia independiente de GSC, GA4 o Bing.
 - Capitán: `CODEX - CREADOR DE TITULOS MUY ESTRICTO`.
-- Estado: implementación local verificada; sin deployment ni migración en
-  Producción.
+- Estado: merge autorizado y despliegue de Producción en curso; sin rollback
+  destructivo ni cambios fuera del alcance.

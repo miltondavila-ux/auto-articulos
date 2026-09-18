@@ -20,10 +20,10 @@ function OAuthConsentContent() {
   const canPublish = params.scope?.split(" ").includes("oportunidades:publicar") ?? false;
   const requester = isChatGPT ? "ChatGPT" : "Alexa";
   const consentDescription = isChatGPT
-    ? "ChatGPT solicita acceso de solo lectura a tus oportunidades SEO y al estado de publicaciones. No podrá crear oportunidades ni publicar artículos."
+    ? "ChatGPT solicita acceso de solo lectura a tu contenido inteligente y al estado de publicaciones. No podrá crear contenido ni publicar artículos."
     : canPublish
-      ? "Alexa solicita acceso a tus oportunidades SEO y, si lo autorizas explícitamente, podrá iniciar publicaciones usando las mismas reglas y límites de tu cuenta."
-      : "Alexa solicita acceso de solo lectura a tus oportunidades SEO y al estado de publicaciones.";
+      ? "Alexa solicita acceso a tu contenido inteligente y, si lo autorizas explícitamente, podrá iniciar publicaciones usando las mismas reglas y límites de tu cuenta."
+      : "Alexa solicita acceso de solo lectura a tu contenido inteligente y al estado de publicaciones.";
 
   async function decide(approve: boolean) {
     setSending(true);

@@ -118,7 +118,7 @@ export default function BusinessProfileSection() {
         )}
       </div>
       <p className="lead-copy" style={{ margin: "0 0 14px 0" }}>
-        Cuando el sistema detecte una oportunidad para Google Business Profile en Oportunidades Redes, preparará una publicación con el formato permitido por Google, imagen y enlace al artículo. No se publicará cada artículo automáticamente.
+        Cuando el sistema detecte una oportunidad para Google Business Profile en Difunde tu contenido en blogs externos y redes sociales, preparará una publicación con el formato permitido por Google, imagen y enlace al artículo. No se publicará cada artículo automáticamente.
       </p>
       {!data?.connected ? (
         <div>

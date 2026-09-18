@@ -16,6 +16,7 @@ import type { CategoryRow, LanguageRow, RunRow } from "@/types/dashboard";
 import CategorySyncProgress, {
   type CategorySyncStatus,
 } from "@/components/CategorySyncProgress";
+import BingWebmasterSection from "@/components/BingWebmasterSection";
 
 interface OnboardingWizardProps {
   variant?: "standalone" | "embedded";
@@ -71,6 +72,14 @@ export default function OnboardingWizard({
     sitemapUrl?: string | null;
     sites?: { siteUrl: string; permissionLevel: string }[];
   } | null>(null);
+  // Solo para pintar el badge/checkmark del Paso Bing en el wizard; la
+  // conexión, selección de sitio y sitemap las maneja BingWebmasterSection
+  // (el mismo componente ya usado en Configuración → Indexación), no se
+  // duplica esa lógica aquí.
+  const [bingData, setBingData] = useState<{
+    connected: boolean;
+    siteUrl?: string | null;
+  } | null>(null);
   const [hasPublishedAny, setHasPublishedAny] = useState(false);
 
   // Estados de edición manual para pasos completados
@@ -115,13 +124,14 @@ export default function OnboardingWizard({
   // mensaje que lo decía nunca llegaba a verse.
   const loadAll = useCallback(async (surfaceLastSyncError = false) => {
     try {
-      const [credRes, catRes, langRes, meRes, googleRes, runsRes, siteRes, detectRes] =
+      const [credRes, catRes, langRes, meRes, googleRes, bingRes, runsRes, siteRes, detectRes] =
         await Promise.all([
           fetch("/api/credentials", { cache: "no-store" }),
           fetch("/api/categories", { cache: "no-store" }),
           fetch("/api/languages", { cache: "no-store" }),
           fetch("/api/me", { cache: "no-store" }),
           fetch("/api/search-integrations/google", { cache: "no-store" }),
+          fetch("/api/search-integrations/bing", { cache: "no-store" }),
           fetch("/api/runs", { cache: "no-store" }),
           fetch("/api/site-selection", { cache: "no-store" }),
           fetch("/api/site-selection/detect", { cache: "no-store" }),
@@ -178,6 +188,10 @@ export default function OnboardingWizard({
         } else if (data.sites && data.sites.length > 0) {
           setSelectedGoogleSite(data.sites[0].siteUrl);
         }
+      }
+      if (bingRes.ok) {
+        const data = await bingRes.json();
+        setBingData(data);
       }
       if (runsRes.ok) {
         const data = await runsRes.json();
@@ -601,14 +615,16 @@ export default function OnboardingWizard({
   const step2Done = step1Done && categories.length > 0;
   const step3Done = step1Done && step2Done && Boolean(contentLanguage);
   const step4Done = step1Done && step2Done && step3Done && Boolean(googleData?.connected && googleData?.siteUrl);
+  const bingDone = Boolean(bingData?.connected && bingData?.siteUrl);
   const step5Done = step1Done && step2Done && step3Done && step4Done && hasPublishedAny;
 
-  // Determinar paso activo exacto (1..5)
+  // Determinar paso activo exacto (1..6). Bing es recomendado, pero no bloquea
+  // el acceso al paso final cuando ya se completó la configuración principal.
   let activeStep = 1;
   if (step1Done && !step2Done) activeStep = 2;
   else if (step1Done && step2Done && !step3Done) activeStep = 3;
   else if (step1Done && step2Done && step3Done && !step4Done) activeStep = 4;
-  else if (step1Done && step2Done && step3Done && step4Done) activeStep = 5;
+  else if (step1Done && step2Done && step3Done && step4Done) activeStep = bingDone ? 6 : 5;
 
   const totalCoreSteps = 4;
   // El progreso cuenta el Paso 1 solo si está VERIFICADO de verdad: si no, el
@@ -1739,17 +1755,94 @@ export default function OnboardingWizard({
           </StepCard>
 
           {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-          {/* PASO 5: META FINAL - CREAR Y EXPLORAR OPORTUNIDADES SEO */}
+          {/* PASO 5: Bing Webmaster Tools (recomendado, no bloqueante) */}
           {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
           <StepCard
             stepNumber={5}
-            title="Crear y Explorar Oportunidades SEO"
-            subtitle="Tu plataforma está lista. Ahora dirígete al módulo de Oportunidades para que la IA analice las búsquedas de tu audiencia en Google y te sugiera los mejores temas listos para publicar."
+            title="Conectar Bing Webmaster Tools"
+            subtitle="Indexa tus artículos también en Bing, Yahoo y el buscador de ChatGPT/Copilot para sumar una fuente extra de visitas."
+            isDone={bingDone}
+            isActive={step4Done && !bingDone}
+            badgeText={
+              bingDone
+                ? "Bing Conectado"
+                : "Recomendado"
+            }
+          >
+            <div style={{ marginTop: 10 }}>
+              <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "#1d1d1f", lineHeight: 1.55 }}>
+                <strong>¿Para qué sirve esto?</strong> Bing Webmaster Tools hace por el buscador
+                de Microsoft lo mismo que Google Search Console hace por Google: le avisa que tu
+                sitio existe para que indexe tus artículos más rápido. Bing además alimenta los
+                resultados de Yahoo y el buscador de Copilot/ChatGPT, así que conectarlo te suma
+                una fuente extra de visitas. A diferencia del Paso 4, este paso es{" "}
+                <strong>recomendado pero no obligatorio</strong>: puedes seguir usando SEO TOTAL
+                sin completarlo.
+              </p>
+
+              {!isWhiteLabelPlatform(platformDomain) && (
+                <div
+                  style={{
+                    borderLeft: "2px solid #e5e5ea",
+                    paddingLeft: 14,
+                    marginBottom: 16,
+                    fontSize: 13,
+                    color: "#1d1d1f",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                    <span style={{ fontSize: 16 }}></span>
+                    <strong style={{ fontSize: 14, color: "#1d1d1f" }}>¿No tienes el Bing Webmaster Tools?</strong>
+                  </div>
+                  <p style={{ margin: "0 0 10px 0", fontSize: 13, color: "#6e6e73" }}>
+                    Aprende cómo activarte paso a paso con este video tutorial:
+                  </p>
+                  <a
+                    href="https://www.youtube.com/watch?v=N9p7O965ooA"
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      background: "#ff3b30",
+                      color: "#ffffff",
+                      textDecoration: "none",
+                      padding: "8px 14px",
+                      borderRadius: 6,
+                      fontWeight: 700,
+                      fontSize: 13,
+                      boxShadow: "none",
+                    }}
+                  >
+                    ▶Ver video: Cómo activar Bing Webmaster Tools ↗
+                  </a>
+                </div>
+              )}
+
+              {!step4Done ? (
+                <p style={{ fontSize: 13, color: "#6e6e73", margin: 0 }}>
+                  El botón de conexión se desbloqueará automáticamente al completar el Paso 4.
+                </p>
+              ) : (
+                <BingWebmasterSection />
+              )}
+            </div>
+          </StepCard>
+
+          {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+          {/* PASO 6: META FINAL - CREAR Y EXPLORAR OPORTUNIDADES SEO */}
+          {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+          <StepCard
+            stepNumber={6}
+            title="Crear y explorar contenido con ayuda de la IA avanzada"
+            subtitle="Tu plataforma está lista. Ahora dirígete a Publica contenido con ayuda de la IA avanzada para que la IA analice las búsquedas de tu audiencia en Google y te sugiera los mejores temas listos para publicar."
             isDone={step5Done}
-            isActive={activeStep === 5}
+            isActive={activeStep === 6}
             badgeText={
               step5Done
-                ? "Oportunidades en marcha"
+                ? "Publicación inteligente en marcha"
                 : allCoreDone
                   ? "¡Listo para empezar!"
                   : "Pendiente"
@@ -1758,7 +1851,7 @@ export default function OnboardingWizard({
             <div style={{ marginTop: 10 }}>
               {!allCoreDone ? (
                 <p style={{ fontSize: 13, color: "#6e6e73", margin: 0 }}>
-                  Completa los 4 pasos anteriores para comenzar a generar oportunidades de posicionamiento SEO.
+                  Completa los 4 pasos anteriores para comenzar a generar contenido inteligente para posicionarte.
                 </p>
               ) : (
                 <div
@@ -1773,7 +1866,7 @@ export default function OnboardingWizard({
                     ¡Felicitaciones! Has completado todos los pasos de configuración inicial.
                   </p>
                   <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "#1d1d1f", lineHeight: 1.5 }}>
-                    El siguiente paso es ingresar al módulo de <strong>Oportunidades</strong>. La Inteligencia Artificial analizará las consultas de tus clientes potenciales en Google y creará ideas de contenido listas para publicar con 1 solo clic.
+                    El siguiente paso es entrar en <strong>Publica contenido con ayuda de la IA avanzada</strong>. La Inteligencia Artificial analizará las consultas de tus clientes potenciales en Google y creará ideas de contenido listas para publicar con 1 solo clic.
                   </p>
                   <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
                     <Link
@@ -1792,7 +1885,7 @@ export default function OnboardingWizard({
                         boxShadow: "none",
                       }}
                     >
-                      Ir a Crear Oportunidades SEO →
+                      Ir a Publica contenido con ayuda de la IA avanzada →
                     </Link>
                     <Link
                       href="/dashboard/publicar"

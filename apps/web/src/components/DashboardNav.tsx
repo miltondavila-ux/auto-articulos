@@ -25,35 +25,50 @@ function isGroup(entry: NavEntry): entry is TabGroup {
 }
 
 // Orden del menú definido por Milton (18/8/2026). Todo lo que tiene que ver
-// con publicar vive dentro de PUBLICACIONES para que la barra principal quede
-// corta; Historial queda justo debajo del grupo, como pidió.
+// con publicar e historial vive dentro de PUBLICACIONES para que la barra
+// principal quede corta. Actualizaciones vive dentro de CONFIGURACIÓN.
 const BASE_ENTRIES: NavEntry[] = [
   { href: "/dashboard", label: "Inicio" },
-  { id: "como-funciona", href: "/dashboard/como-funciona", label: "Cómo Funciona" },
+  { id: "como-funciona", href: "/dashboard/como-funciona", label: "Cómo funciona esta aplicación" },
   {
     group: "publicaciones",
     label: "Publicaciones",
     items: [
-      { id: "publicar", href: "/dashboard/publicar", label: "Publicaciones propias" },
-      { id: "oportunidades", href: "/dashboard/oportunidades", label: "Oportunidades SEO/AEO" },
+      { id: "publicar", href: "/dashboard/publicar", label: "Publica tus propios títulos" },
+      { id: "oportunidades", href: "/dashboard/oportunidades", label: "Publica contenido con ayuda de la IA avanzada" },
       {
         id: "oportunidades-redes",
         href: "/dashboard/oportunidades-redes",
-        label: "Oportunidades para Redes Sociales",
+        label: "Difunde tu contenido en blogs externos y redes sociales",
       },
       {
         id: "publicaciones-en-curso",
         href: "/dashboard/publicaciones-en-curso",
-        label: "Publicaciones en Curso",
+        label: "Progreso de las publicaciones",
       },
+      { id: "historial", href: "/dashboard/historial", label: "Historial" },
     ],
   },
-  { id: "historial", href: "/dashboard/historial", label: "Historial" },
-  { id: "actualizaciones", href: "/dashboard/actualizaciones", label: "Actualizaciones" },
-  { id: "configuracion", href: "/dashboard/configuracion", label: "Configuración" },
+  {
+    group: "configuracion",
+    label: "Configuración",
+    items: [
+      { id: "configuracion", href: "/dashboard/configuracion", label: "Configuración general" },
+      { id: "actualizaciones", href: "/dashboard/actualizaciones", label: "Actualizaciones" },
+    ],
+  },
 ];
 
-const ADMIN_TAB: TabItem = { href: "/dashboard/usuarios", label: "Administración" };
+// Administración pasó de ser un solo enlace a un grupo para alojar módulos de
+// plataforma como Composio sin tocar la página de usuarios.
+const ADMIN_GROUP: TabGroup = {
+  group: "administracion",
+  label: "Administración",
+  items: [
+    { href: "/dashboard/usuarios", label: "Usuarios" },
+    { href: "/dashboard/composio", label: "Composio" },
+  ],
+};
 
 export default function DashboardNav() {
   const pathname = usePathname();
@@ -166,7 +181,7 @@ export default function DashboardNav() {
     return !tab.id || !disabledModules.includes(tab.id);
   }
 
-  const rawEntries: NavEntry[] = isAdmin ? [...BASE_ENTRIES, ADMIN_TAB] : BASE_ENTRIES;
+  const rawEntries: NavEntry[] = isAdmin ? [...BASE_ENTRIES, ADMIN_GROUP] : BASE_ENTRIES;
 
   // Un grupo cuyos módulos están todos ocultos desaparece entero, en vez de
   // quedar como un desplegable vacío.

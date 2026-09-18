@@ -65,15 +65,15 @@ export function IntroP({ children }: { children: ReactNode }) {
  */
 const MODULOS = {
   inicio: { etiqueta: "Inicio", href: "/dashboard" },
-  "como-funciona": { etiqueta: "Cómo Funciona", href: "/dashboard/como-funciona" },
-  publicar: { etiqueta: "Publicaciones propias", href: "/dashboard/publicar" },
-  oportunidades: { etiqueta: "Oportunidades SEO/AEO", href: "/dashboard/oportunidades" },
+  "como-funciona": { etiqueta: "Cómo funciona esta aplicación", href: "/dashboard/como-funciona" },
+  publicar: { etiqueta: "Publica tus propios títulos", href: "/dashboard/publicar" },
+  oportunidades: { etiqueta: "Publica contenido con ayuda de la IA avanzada", href: "/dashboard/oportunidades" },
   "oportunidades-redes": {
-    etiqueta: "Oportunidades para Redes Sociales",
+    etiqueta: "Difunde tu contenido en blogs externos y redes sociales",
     href: "/dashboard/oportunidades-redes",
   },
   "publicaciones-en-curso": {
-    etiqueta: "Publicaciones en Curso",
+    etiqueta: "Progreso de las publicaciones",
     href: "/dashboard/publicaciones-en-curso",
   },
   historial: { etiqueta: "Historial", href: "/dashboard/historial" },

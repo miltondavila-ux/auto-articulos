@@ -50,6 +50,7 @@ refrescar esta tabla; no confiar en la fecha si pasó mucho tiempo.
 
 | Worktree | Rama | Commits sin fusionar | Dueño / conversación (según el propio commit o Coordinación) | Nota |
 |---|---|---|---|---|
+| `/Users/miltondavila/Creador de articulos/.worktrees/conexion-composio` | `claude/conexion-composio` | 0 (Fase 1 en curso, sin commit) | Claude — `CONEXION COMPOSIO` | Reserva 2026-09-18: `apps/web/src/lib/composio.ts`, `apps/web/src/app/api/admin/composio/**`, `apps/web/src/app/dashboard/composio/**`, `apps/web/src/components/DashboardNav.tsx`, `apps/web/src/content/manual-usuario.ts` (secciones «El menú» y «Administración»). Sin migraciones ni schema en la Fase 1. No toca `usuarios/page.tsx`. |
 | `/private/tmp/doc-coordinacion-sept3` | `claude/doc-coordinacion-sept3` | 1 | Claude — esta misma sesión, "DOCUMENTO DE COORDINACION - SEPT 3" | Soy yo, ahora mismo. |
 | `/Users/miltondavila/Creador de articulos/.worktrees/google-api-verification` | `codex/google-api-verification` | 1 | Codex — commit `7908b01` "chore: prepare Google OAuth domain and verification pages", hecho hoy 19:06 | Muy reciente; probablemente Codex trabajando en paralelo ahora mismo en `CODEX - GPT-5 - VERIFICACION DE API'S DE GOOGLE`. |
 | `/private/tmp/limites-globales-articulos` | `codex/limites-globales-articulos` | 1 | Codex — proyecto `LIMITES GLOBALES DE ARTICULOS` | Coincide con la decisión de Milton (2026-09-02): **PAUSADO, no tocar ni integrar**. |
@@ -59,6 +60,7 @@ refrescar esta tabla; no confiar en la fecha si pasó mucho tiempo.
 | `/private/tmp/cambio-cantidad-articulos-20260902` | `codex/cambio-cantidad-articulos-20260902` | 1 | Codex — cambio de cantidad de artículos | No aparece mencionado como cerrado en Coordinación; verificar con Codex si sigue vivo o es un residuo. |
 | `/private/tmp/mcp-publicacion-20260907` | `claude/mcp-publicacion-20260907` (PR #76) | 1 | Claude — "MCP 10MWS" | Andamiaje de la nueva línea de ejecución de publicación vía MCP (ahora con alcance ampliado a un selector multi-plataforma, no solo 10MWS — ver Coordinación), enviado como PR #76 (`open`, sin fusionar). Reserva sigue activa sobre `packages/db/prisma/schema.prisma` y `apps/worker/src/queue.ts` hasta que se fusione o se cierre. Sin cambio de comportamiento por defecto (`publishMethod` queda en `BROWSER`). Auditoría 3 (integración/producción) bloqueada a propósito — no existe todavía servidor MCP real de 10MWS ni migración aplicada. Detalle completo en `COORDINACION_CLAUDE_CODEX.md`. |
 | `/tmp/fix-tiles-flex-20260908` | `claude/fix-tiles-flex-20260908` | 1 | Claude — "ORDEN DE USUARIOS ACTIVOS EN ADMIN" (hotfix visual sobre PR #70) | Reserva: `apps/web/src/app/dashboard/usuarios/page.tsx` — arregla que las tarjetas de resumen se veían en fila (aplastadas) por el reset global `button { display: inline-flex }`. |
+| `/Users/miltondavila/Creador de articulos/.worktrees/mensajes-error-ia` | `claude/mensajes-error-humanizados-ia` (PR #125) | 1 (`3aa0266`) | Claude — `CLAUDE - ERROR AL PUBLICAR` (solo el pendiente de mensajes inteligentes; el error de publicación está ARCHIVADO) | **PAUSADO**. Espera autorización de Milton para fusionar el PR #125 y verificación en vivo. Reserva mínima: `apps/worker/src/humanizeError.ts` (nuevo), `apps/worker/src/queue.ts` (`catch` de `processRunTitle`), `apps/worker/src/automation/10minutesWebsite.ts` (2 líneas de `login()`). |
 
 ### Ya terminados y fusionados (el worktree quedó suelto, pero el trabajo YA está en producción — no son reservas activas)
 
@@ -1231,6 +1233,22 @@ equivocada.
 Responsable: Claude. Estado final: ARCHIVADA — verificada en vivo contra
 Producción, sin acceso de Milton a ninguna cuenta de cliente.
 
+## Claude - BING WEBMASTER SITEMAP — 2026-09-18
+
+Problema: al conectar Bing Webmaster en Configuración → Indexación, el sistema
+no seleccionaba el sitio ni colocaba/validaba `dominio/sitemap.xml`. Causa: el
+autodetectado solo corría si ya había `siteUrl` guardado (que nunca se elegía
+solo) y solo leía sitemaps ya registrados en Bing. Corrección (rama
+`claude/bing-sitemap-autodetect`, worktree `.worktrees/bing-sitemap-autodetect`,
+sin migraciones): nuevo `apps/web/src/lib/bing-sitemap.ts` (elige el sitio que
+coincide con el dominio de la cuenta, usa el sitemap de Bing o `/sitemap.xml`,
+lo valida como XML y lo envía a Bing); `bing/route.ts` GET/PATCH lo usan; la UI
+muestra "validado" o el motivo, y los `router.replace` apuntan a
+`/dashboard/configuracion/indexacion`. Archivos reservados: los tres
+mencionados. Nota: `callback/route.ts` tiene un cambio sin commitear de otra
+tarea en el árbol principal; no se tocó. Estado: ACTIVO, pendiente de
+autorización para PR/Producción.
+
 ## Claude - CHECK DE NO INDEXACION — 2026-09-18
 
 - Estado: ARCHIVADA. Responsable: Claude.
@@ -1241,3 +1259,134 @@ Producción, sin acceso de Milton a ninguna cuenta de cliente.
 - Reservas: ninguna activa. No se tocaron los documentos de coordinación
   durante el fix por estar en reescritura de otra tarea; se registran aquí.
 - Pendiente no bloqueante: verificación en vivo con la cuenta de Lorena.
+
+## Claude - BOTON VIDEO EXPLICATIVO BING WEBMASTER — 2026-09-17
+
+Rama `claude/boton-video-bing-webmaster`, worktree
+`.worktrees/boton-video-bing-webmaster`, creado desde `origin/main`, sin
+migraciones de schema. Motivo: replicar en el wizard inicial (Inicio →
+Configuración) el mismo patrón del Paso 4 (Google Search Console) —
+explicación en lenguaje simple + botón de video tutorial + botón de
+conexión — para Bing Webmaster Tools, que ya tenía toda la integración
+OAuth/backend lista (`packages/shared/src/bing-webmaster.ts`,
+`/api/search-integrations/bing/*`, componente `BingWebmasterSection.tsx`
+ya usado en Configuración → Indexación) pero no aparecía en el wizard de
+Inicio.
+
+Cambio: nuevo `StepCard` "Paso 5: Conectar Bing Webmaster Tools" en
+`apps/web/src/components/OnboardingWizard.tsx`, insertado entre el Paso 4
+(GSC) y el paso final (renumerado de 5 a 6), marcado como recomendado y
+NO bloqueante — no cambia `allCoreDone` ni el gating de los 4 pasos
+obligatorios existentes. Reutiliza `BingWebmasterSection` (ya probado en
+Configuración) para toda la lógica de conexión, selección de sitio y
+sitemap, en vez de duplicarla. Se agregó `bingData` (solo lectura, para
+pintar el badge/check) al `loadAll()` del wizard.
+
+El enlace del botón "Ver video: Cómo activar Bing Webmaster Tools" quedó
+resuelto con el video real entregado por Milton el 18/9/2026:
+`https://www.youtube.com/watch?v=N9p7O965ooA`.
+
+Probado: `npm install` + `npx tsc --noEmit` + `npm run build` en el
+worktree, todos sin errores. No se probó en vivo en navegador (requiere
+sesión autenticada y base de datos local) — pendiente verificación en
+Producción tras el deployment.
+
+Responsable: Claude. Estado final: ARCHIVADA — PR #126 fusionado a `main`
+(`c294aff`, 18/9/2026) con el enlace real del video. Sin reservas activas:
+`OnboardingWizard.tsx` liberado; rama y worktree de trabajo eliminados.
+Verificación en vivo en Producción pendiente (no bloquea el cierre).
+
+Nota no bloqueante (detectada al fusionar contra `main` tras PR #127): el
+botón de conexión de este nuevo paso usa `BingWebmasterSection`, cuyo
+`/api/search-integrations/bing/connect` no acepta `returnTo` — a
+diferencia del de Google. Tras conectar desde el wizard de Inicio, Bing
+redirige siempre a Configuración → Indexación (antes `/dashboard/configuracion`,
+ahora `/dashboard/configuracion/indexacion` por el PR #127), no de vuelta
+al wizard. No se tocó `bing/connect` ni `bing/callback` en este lote
+porque el PR #127 los tenía reservados/capitaneados al mismo tiempo.
+Pendiente para una tarea aparte: agregar soporte de `returnTo` a esas dos
+rutas si Milton quiere que el usuario vuelva al wizard de Inicio.
+
+### Cierre — CLAUDE - Sonnet 5 - BING WEBMASTER SITEMAP — 2026-09-18
+
+Estado final: **ARCHIVADA**. Commit válido: `d52c647` + `6d339b7`, integrados a
+`main` por el PR #128 (`0a7af58`) y presentes en `origin/main`; ninguna
+versión posterior reemplaza `bing-sitemap.ts`. Vercel `success`;
+`/api/search-integrations/bing` responde 401 sin sesión (esperado). Sin
+migraciones, OAuth, secretos ni schema. `git diff --check` limpio y `tsc` sin
+errores en archivos de Bing. Reservas (`bing-sitemap.ts`, `bing/route.ts`,
+`BingWebmasterSection.tsx`) **liberadas**; worktree
+`.worktrees/bing-sitemap-autodetect` y rama local retirados sin cambios sin
+commit. Pendiente no bloqueante: verificación en vivo con una cuenta de Bing
+conectada. Responsable: Claude.
+
+## ARCHIVADO — CLAUDE - ERROR AL PUBLICAR — 2026-09-18 (cierre 13:03 EDT)
+
+**Identidad:** proyecto `CLAUDE - ERROR AL PUBLICAR`. Responsable: Claude. Cuenta afectada: MPM Realty Group (panel inglés).
+
+**Síntoma:** los artículos no se publicaban ("El artículo no aparece en el listado tras guardar"); llegó a haber 4 de 9 fallidos con hasta 7 intentos cada uno.
+
+**Causa raíz (confirmada con logs reales, no adivinada):** hoy el sitio 10minutesWebsite tarda más de lo normal en procesar el guardado. Tras el clic en "Guardar cambios", `saveAndGetUrl()` miraba a los 1-2 s, veía el formulario todavía abierto y daba el artículo por perdido, aunque el sitio lo terminaba guardando. Efecto colateral: intentos marcados como fallidos que sí se guardaron dejaron **artículos repetidos** en el sitio público de MPM (p. ej. "From Agent to Top Producer: Essential Strategies" y "...: A Practical Guide"; "Productive REALTORS®: Key Habits for Success" y "Habits of Highly Productive REALTORS®"; "Essential Steps After Earning Your Florida Real Estate License" y "Strategies for Success After Your Florida Real Estate License"; "From License Holder to Real Estate Business Owner" y "From Agent to Business Owner in Real Estate"). Borrarlos es decisión de Milton; el sistema no tocó el sitio.
+
+**Fix vigente:** PR #133 (`aea076d`, `apps/worker/src/automation/10minutesWebsite.ts`, +13 líneas, sin migraciones): si el sitio aún no aceptó el guardado y no hay título duplicado, espera 15 s y reintenta (hasta `MAX_SAVE_ATTEMPTS`) con el ciclo de revalidación existente. El worker toma `main` en cada corrida, así que ya está activo.
+
+**Camino descartado (registrado para no repetirlo):** PR #131 (`def4793`) revirtió `eee0e0b` suponiendo que la navegación previa al formulario causaba el fallo; el reintento en vivo con #131 activo falló igual. Revertido por PR #132 (`30d9e37`); la protección contra artículos duplicados sigue en producción. PR #134 y #135: solo registro en `CONTROLADOR_DE_VERSIONES.md`.
+
+**Auditorías:** 1 (integridad) aprobada: un archivo de código, sin migraciones, schema, OAuth ni secretos. 2 (funcional) aprobada con reserva: sintaxis TypeScript sin diagnósticos y `git diff --check` limpio; **no** hubo typecheck completo del worker ni `vitest` (el entorno aislado no tiene dependencias instaladas). 3 (producción en vivo) aprobada por Milton y por esta sesión: lote MPM 5/9 → 9/9 "Completado" (18/9, 11:15-12:00); la tanda nueva "Lead Generation Client Acquisition" (desde las 12:42) iba 5/9 publicados sin fallos ni reintentos manuales al momento del cierre.
+
+**Reservas liberadas:** `apps/worker/src/automation/10minutesWebsite.ts` (bloque de guardado). Worktrees retirados: `restaurar-flujo-guardado`, `restaurar-proteccion-duplicados`, `guardado-esperar-validacion`, `registro-guardado-verificado`, `registro-9de9`. Restos sin commit de esta tarea eliminados del checkout principal (respaldo en el scratchpad de la sesión; el contenido está en `3aa0266`). No se tocó ningún cambio ajeno.
+
+### Pendiente APARTE (no forma parte del error resuelto): mensajes de error inteligentes — PAUSADO
+
+PR #125, commit `3aa0266`, rama `claude/mensajes-error-humanizados-ia`, worktree `.worktrees/mensajes-error-ia` (limpio). Traduce cualquier error crudo de la automatización con IA a una explicación simple más una acción del propio usuario (`humanizeError.ts` nuevo, +84; `queue.ts` +15/−4; `10minutesWebsite.ts` +1/−1). Sin migraciones, schema, OAuth ni secretos; `git diff --check` limpio; se fusiona sin conflictos sobre `main`. **No está fusionado ni en producción** (por eso los logs siguen mostrando errores crudos de Playwright) y **no tiene prueba en vivo**. Alcance conocido: traduce la línea `Error:` del log y el mensaje de Historial, no las líneas `DIAGNÓSTICO [...]`.
+- Reserva que se conserva: `apps/worker/src/humanizeError.ts`, el `catch` de `processRunTitle` en `queue.ts` y las 2 líneas de `login()`.
+- Falta: autorización de Milton para fusionar y verificación en vivo (provocar un error real; comprobar que sin `OPENAI_API_KEY` o con la IA caída se conserva el mensaje original).
+- Otra tarea aparte: la detección de títulos duplicados solo reconoce el formulario en español (`#titlees`/"existe"); en el panel inglés el sitio responde "There is already an article with this title" y el robot no lo reformula.
+- Responsable siguiente: Milton (autorización), luego Claude.
+
+**Estado final:** error de publicación **ARCHIVADA**; mensajes inteligentes (PR #125) **PAUSADO**.
+
+## Claude - CONEXION COMPOSIO — 2026-09-18
+
+- Estado: ACTIVO. Fase 0 aprobada por Milton el 2026-09-18 (`FASE_0_ARQUITECTURA_CONEXION_COMPOSIO.md`).
+  Fase 1 (módulo de Administración) implementada y auditada en local. PR #142 abierto; Milton autorizó push, PR
+  y fusión (opción A) el 2026-09-18. Punto de retorno en el Controlador de Versiones (etiqueta
+  `pre-composio-fase1-20260918` = `068a0b1`, corregido: ver entrada «fusión DIFERIDA»). La fusión estuvo
+  BLOQUEADA por un incidente de Vercel y porque `main` avanzó a `d6ba5f8` (#143); condiciones cumplidas a las
+  22:32 UTC. PR #142 FUSIONADO (`f0fd534`, 22:35 UTC) y desplegado en Producción (Vercel 6534042292, success).
+  Punto de retorno: etiqueta `pre-composio-fase1-d6ba5f8-20260918`. Falta verificación en vivo del módulo por
+  Milton y pegar la clave en Producción. Rama `claude/conexion-composio` conservada (fusionada). Responsable: Claude.
+- Alcance: camino paralelo para que los clientes conecten Google (Search Console, Analytics)
+  y Meta (Facebook, Instagram) mediante Composio, con interruptor por app en Administración.
+  Business Profile y Threads quedan fuera (Composio no tiene toolkit).
+- Rama/worktree: `claude/conexion-composio` / `.worktrees/conexion-composio`, base `origin/main` `068a0b1`.
+- Documento maestro: `MASTER_BLUEPRINT_CONEXION_COMPOSIO.md` (raíz de la rama).
+- Archivos de la Fase 1 (en el commit de la rama): `apps/web/src/lib/composio.ts`,
+  `apps/web/src/app/api/admin/composio/` (route, accounts, auth-configs), `apps/web/src/app/dashboard/composio/`,
+  `apps/web/src/components/DashboardNav.tsx` (Administración pasa a grupo: Usuarios · Composio),
+  `apps/web/src/content/manual-usuario.ts`, más los dos documentos `.md` del proyecto.
+- Auditorías Fase 1 (2026-09-18): (1) Integridad OK: sin schema/migraciones/workflows, sin secretos, sin archivos de otros
+  agentes. (2) Funcional OK: `tsc` 0 errores, `next build` exit 0, 12 pruebas de la librería contra la base local
+  (clave cifrada en reposo, máscara, validaciones, 401/429/red, auth config coincide/no coincide/404, limpieza),
+  pruebas HTTP reales (sin sesión 401, no admin 403, admin 200/400/409, Composio real rechaza clave falsa) y
+  revisión visual como admin. (3) Regresión OK: único archivo existente tocado con lógica es `DashboardNav.tsx`
+  (el enlace único «Administración» pasa a grupo desplegable; sin más referencias a `ADMIN_TAB`).
+- Camino feliz verificado el 2026-09-18 con la clave real de Milton, solo en la base LOCAL (el módulo aún no está
+  desplegado): clave aceptada por Composio y guardada cifrada; «Probar conexión» y «Ver cuentas conectadas»
+  responden bien (proyecto sin cuentas aún); los 4 auth configs se verifican contra Composio real; el control de
+  toolkit equivocado (ID de Instagram en Facebook) y de ID inexistente rechazan con mensaje claro.
+- Pendiente de verificar: qué permiso de la clave cubre `tools/execute` (se prueba en la Fase 2b).
+- Configuración hecha EN Composio (no vive en el repo), proyecto `10minuteswebsite_workspace_first_project`:
+  clave de API `AUTO ARTICULOS` con lectura general y escritura solo en «Session tool execution» y «Connected
+  accounts». 4 auth configs, todos OAuth 2.0 + Composio Managed, con permisos mínimos:
+  Search Console = webmasters, webmasters.readonly, userinfo.profile, userinfo.email (por defecto);
+  Analytics = analytics.readonly, userinfo.profile (se quitó `analytics`, que permite editar);
+  Facebook = public_profile, pages_show_list, pages_read_engagement, pages_manage_posts, business_management
+  (mismos que pide hoy la app propia; se quitaron email, mensajería, métricas y otros 3);
+  Instagram = instagram_business_basic, instagram_business_content_publish (se quitaron mensajes, comentarios e
+  insights). Nota: Instagram por Composio usa «Instagram Login», un flujo distinto al de la app propia
+  (que pasa por Facebook Login + Página); a validar en la Fase 3.
+- Reservas: `DashboardNav.tsx`. No se toca `usuarios/page.tsx` (cambio sin atribuir de otra tarea en el árbol principal).
+- Migraciones: ninguna. Producción/Preview: sin cambios ni despliegues.
+- Pendiente: Fase 0 y aprobación de Milton; crear clave de API de Composio con permisos de escritura
+  en Connected accounts y Session tool execution (la pega Milton en el módulo, nunca en chat).

@@ -376,3 +376,11 @@ HANDOFF, solo alimenta ideas hacia él).
   - `apps/web/src/app/layout.tsx`
   - `apps/web/src/components/DashboardNav.tsx`
   - `apps/web/src/app/dashboard/layout.tsx`
+
+- **(17/9/2026)** Reverificar en vivo, con la cuenta de Lorena Álvarez y sin
+  otra tarea usando la cuenta a la vez, los PR #109 y #111 de
+  `NO USAR CATEGORIAS PARA DECIDIR QUE SE ESCRIBE` (ya en Producción): correr
+  "Analizar oportunidades" y confirmar que (a) no aparecen títulos casi
+  duplicados y (b) el `rationale` de cada título cita entre comillas una
+  consulta real. Solo el PR #107 quedó verificado en vivo. Pendiente, no
+  autorizado para ejecutar sin Milton.
