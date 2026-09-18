@@ -7319,3 +7319,40 @@ compartida de pruebas pasó a tener datos de otra tarea concurrente
 contenido ajeno. Detalle completo en `INVENTARIO_CONVERSACIONES.md` y
 `CONTROLADOR_DE_VERSIONES.md`. Responsable: Claude. Estado final:
 ARCHIVADA.
+
+## Claude (tarea programada diaria de propagación) — 2026-09-18
+
+Punto de partida: la última entrada firmada por esta misma tarea era
+"Claude (tarea programada diaria de propagación) — 2026-09-17" (commit
+`fd9d7ca`). Se revisó el diff de `COORDINACION_CLAUDE_CODEX.md` entre ese
+commit y `origin/main` actual (`eda2b6b`): un solo commit nuevo tocó este
+documento, `6655f79` ("docs: archivar NO USAR CATEGORIAS PARA DECIDIR QUE
+SE ESCRIBE"), que agregó la entrada "ARCHIVADO — NO USAR CATEGORIAS PARA
+DECIDIR QUE SE ESCRIBE — 2026-09-16" (justo arriba de esta).
+
+Verificado que no hace falta propagar nada más: ese mismo commit `6655f79`
+ya agregó, en el mismo lote, el registro correspondiente en
+`INVENTARIO_CONVERSACIONES.md` (Parte B, "Claude - NO USAR CATEGORIAS PARA
+DECIDIR QUE SE ESCRIBE — 2026-09-16", estado ARCHIVADA) y en
+`CONTROLADOR_DE_VERSIONES.md` ("Versión desplegada — 2026-09-16 —
+Categoría deja de decidir qué se escribe (PR #107, #109, #111)"). No
+correspondía nada en `apps/web/src/content/manual-usuario.ts`: el cambio
+es una corrección interna de qué títulos se seleccionan para escribir
+(quita un veto por nombre de categoría), no una pantalla, flujo, mensaje,
+permiso o módulo nuevo visible para el usuario final — el manual ya
+describe las propuestas como agrupadas por categoría, lo cual sigue siendo
+cierto. Tampoco correspondía nada a `TO-DO.md` ni a
+`REPARADOR_DEL_ARBOL_PRINCIPAL.md`: la entrada no menciona ideas sueltas
+nuevas para más adelante ni árboles de git enredados.
+
+Nota sin acción requerida: la rama `claude/oportunidades-sin-veto-categoria`
+mencionada en esa entrada sigue existiendo en `origin` pero NO está
+mergeada a `origin/main` (verificado con `git merge-base --is-ancestor`);
+su reemplazo `claude/oportunidades-sin-veto-categoria-clean` sí está
+mergeado. Es el primer intento abandonado que la propia entrada dice haber
+sustituido por un worktree limpio, no una reserva activa — no se agregó
+nada a `INVENTARIO_CONVERSACIONES.md` Parte A por esto.
+
+No hubo ninguna acción destructiva, migración ni deploy en esta corrida.
+
+Responsable: Claude (tarea programada diaria de propagación).
