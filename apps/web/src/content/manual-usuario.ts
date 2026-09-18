@@ -28,7 +28,7 @@ Ruta: /dashboard
 Inicio es tu centro de operaciones:
 - **Para cuentas nuevas (sin artículos aún):** Muestra de forma exclusiva el Asistente de Configuración Inicial, sin menú ni accesos directos, para que completes tu puesta a punto sin distracciones.
 - **Para cuentas con artículos publicados:** Muestra el panel de métricas de rendimiento (artículos publicados hoy, en el mes, límites y gráfico de actividad), el menú superior completo y cuatro accesos directos numerados (01-04) a **Publica tus propios títulos**, **Publica contenido con ayuda de la IA avanzada**, **Difunde tu contenido en blogs externos y redes sociales** y el resto de accesos disponibles en el menú.
-- Desde el menú superior tienes acceso a: Cómo funciona esta aplicación, Publicaciones, Historial, Actualizaciones y Configuración.
+- Desde el menú superior tienes acceso a: Cómo funciona esta aplicación, Publicaciones y Configuración. Historial está dentro de Publicaciones y Actualizaciones dentro de Configuración.
 
 ## Cada módulo se explica solo
 
@@ -38,16 +38,17 @@ Dentro de esas explicaciones, el nombre de cualquier módulo aparece en MAYÚSCU
 
 ## El menú
 
-El menú superior tiene, en este orden: **Inicio**, **Cómo funciona esta aplicación**, **Publicaciones**, **Historial**, **Actualizaciones** y **Configuración**. Los administradores ven además **Administración**.
+El menú superior tiene, en este orden: **Inicio**, **Cómo funciona esta aplicación**, **Publicaciones** y **Configuración**. Dentro de **Publicaciones** están tus títulos, el contenido inteligente, la difusión en blogs externos y redes sociales, el progreso y el historial. Dentro de **Configuración** están la configuración general y las actualizaciones. Los administradores ven además **Administración**.
 
-**Publicaciones** no es una pantalla: es un grupo que se despliega. Dentro están las cuatro pantallas relacionadas con publicar:
+**Publicaciones** no es una pantalla: es un grupo que se despliega. Dentro están cinco accesos relacionados con publicar y revisar tus resultados:
 
 - **Publica tus propios títulos** (/dashboard/publicar): escribe tus títulos y publícalos directamente en tu página web.
 - **Publica contenido con ayuda de la IA avanzada** (/dashboard/oportunidades): SEO TOTAL analiza Google, Bing, Analytics y otras herramientas para encontrar temas con posibilidades reales y ayudarte a crear artículos para tu página web.
 - **Difunde tu contenido en blogs externos y redes sociales** (/dashboard/oportunidades-redes): lleva tus artículos ya publicados a microblogs, blogs externos y redes sociales en lote, y crea tu avatar de autoridad en internet.
 - **Progreso de las publicaciones** (/dashboard/publicaciones-en-curso): consulta qué artículos se están generando, publicando o esperando. Este acceso permanece en el menú.
+- **Historial** (/dashboard/historial): revisa las publicaciones anteriores, sus resultados, errores e intentos.
 
-En computadora, Publicaciones se abre al pulsarlo y se cierra al elegir una opción, al pulsar fuera o con la tecla Escape. En teléfono y tableta no se despliega: las cuatro opciones aparecen listadas debajo del título Publicaciones.
+En computadora, Publicaciones se abre al pulsarlo y se cierra al elegir una opción, al pulsar fuera o con la tecla Escape. En teléfono y tableta no se despliega: las cinco opciones aparecen listadas debajo del título Publicaciones.
 
 Si el administrador te oculta algún módulo, simplemente no aparece en el menú. Si te oculta los cuatro, el grupo Publicaciones desaparece entero.
 

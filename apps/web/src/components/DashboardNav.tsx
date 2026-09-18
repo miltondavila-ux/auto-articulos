@@ -25,8 +25,8 @@ function isGroup(entry: NavEntry): entry is TabGroup {
 }
 
 // Orden del menú definido por Milton (18/8/2026). Todo lo que tiene que ver
-// con publicar vive dentro de PUBLICACIONES para que la barra principal quede
-// corta; Historial queda justo debajo del grupo, como pidió.
+// con publicar e historial vive dentro de PUBLICACIONES para que la barra
+// principal quede corta. Actualizaciones vive dentro de CONFIGURACIÓN.
 const BASE_ENTRIES: NavEntry[] = [
   { href: "/dashboard", label: "Inicio" },
   { id: "como-funciona", href: "/dashboard/como-funciona", label: "Cómo funciona esta aplicación" },
@@ -46,11 +46,17 @@ const BASE_ENTRIES: NavEntry[] = [
         href: "/dashboard/publicaciones-en-curso",
         label: "Progreso de las publicaciones",
       },
+      { id: "historial", href: "/dashboard/historial", label: "Historial" },
     ],
   },
-  { id: "historial", href: "/dashboard/historial", label: "Historial" },
-  { id: "actualizaciones", href: "/dashboard/actualizaciones", label: "Actualizaciones" },
-  { id: "configuracion", href: "/dashboard/configuracion", label: "Configuración" },
+  {
+    group: "configuracion",
+    label: "Configuración",
+    items: [
+      { id: "configuracion", href: "/dashboard/configuracion", label: "Configuración general" },
+      { id: "actualizaciones", href: "/dashboard/actualizaciones", label: "Actualizaciones" },
+    ],
+  },
 ];
 
 const ADMIN_TAB: TabItem = { href: "/dashboard/usuarios", label: "Administración" };

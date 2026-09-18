@@ -4626,6 +4626,16 @@ el texto existente.
 
 Responsable: Claude (tarea programada diaria de propagación).
 
+## REORGANIZACIÓN DEL MENÚ — 2026-09-18
+
+Se movió **Historial** dentro del desplegable **Publicaciones** y
+**Actualizaciones** dentro del desplegable **Configuración**. Las rutas
+existentes se conservaron; solo cambió la navegación visible. El manual de
+usuario se actualizó para reflejar los cinco accesos de Publicaciones y los
+dos accesos de Configuración.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+
 ## AUDITORÍA DE COHERENCIA DE NOMBRES Y MENSAJES — 2026-09-18
 
 La tarea `claude/simplificacion-setup-inicial` revisó la interfaz local, el
