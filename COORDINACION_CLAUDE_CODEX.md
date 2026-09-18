@@ -7406,3 +7406,11 @@ paso "Conectar Bing Webmaster Tools" en el wizard de Inicio
 componente y las rutas OAuth de Bing que ya existían. Detalle completo en
 `INVENTARIO_CONVERSACIONES.md`. Estado: ACTIVO — abriendo PR con el
 enlace del video real ya incluido.
+
+## ARCHIVADO — BING WEBMASTER SITEMAP — 2026-09-18
+
+Al conectar Bing Webmaster ahora se elige el sitio que coincide con el dominio
+de la cuenta, se autocompleta el sitemap (el de Bing o `/sitemap.xml`), se
+valida como XML del mismo dominio y se envía a Bing. PR #128 (`0a7af58`),
+commits `d52c647` y `6d339b7`, sin migraciones. Reservas liberadas y worktree
+retirado. Detalle en `INVENTARIO_CONVERSACIONES.md`.
