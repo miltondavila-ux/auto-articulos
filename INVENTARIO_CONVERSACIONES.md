@@ -1278,8 +1278,10 @@ worktree, todos sin errores. No se probó en vivo en navegador (requiere
 sesión autenticada y base de datos local) — pendiente verificación en
 Producción tras el deployment.
 
-Responsable: Claude. Estado: ACTIVO — abriendo PR con el enlace del video
-ya incluido.
+Responsable: Claude. Estado final: ARCHIVADA — PR #126 fusionado a `main`
+(`c294aff`, 18/9/2026) con el enlace real del video. Sin reservas activas:
+`OnboardingWizard.tsx` liberado; rama y worktree de trabajo eliminados.
+Verificación en vivo en Producción pendiente (no bloquea el cierre).
 
 Nota no bloqueante (detectada al fusionar contra `main` tras PR #127): el
 botón de conexión de este nuevo paso usa `BingWebmasterSection`, cuyo

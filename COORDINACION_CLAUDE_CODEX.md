@@ -7420,3 +7420,7 @@ de BING WEBMASTER SITEMAP, solo documentación, sin migraciones ni schema).
 **Capitán de migración liberó el lote:** Claude. Resultado: PR #136 (solo
 documentación) con el cierre de BING WEBMASTER SITEMAP; sin migraciones.
 Código ya en Producción por el PR #128 (`0a7af58`). Estado: ARCHIVADA.
+
+`INVENTARIO_CONVERSACIONES.md`. PR #126 fusionado a `main` (`c294aff`),
+sin migraciones. Reservas liberadas (`OnboardingWizard.tsx`). Estado final:
+ARCHIVADA.
