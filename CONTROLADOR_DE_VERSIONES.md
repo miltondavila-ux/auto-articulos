@@ -2926,3 +2926,13 @@ Crear con la IA del sistema" en la sección Títulos de Publicar.
 
 Deployment: PENDIENTE (se registra tras fusionar). Verificación en Producción: PENDIENTE.
 Responsable: Claude. Estado: PREPARADA — fusión autorizada por Milton el 2026-09-18 («envía a producción»).
+## Cierre — 2026-09-18 — REPARACIÓN DEL MOTOR DE OPORTUNIDADES
+
+PR #144 quedó fusionada en `main` mediante `1c19f07`. Deployment de Vercel:
+`dpl_GXQ165nD88E1xhgPK875DC1GHw4V`, Production `Ready`, dominio
+`https://seototal.lasolucionweb.com`. La migración controlada `35402599238`
+terminó sin `--accept-data-loss`. Salud verificada: `/login` 200,
+`/privacidad` 200, `/api/me` 401 y `/dashboard` 307 a login.
+
+Auditorías de integridad, funcionalidad y producción cerradas. Responsable:
+CODEX - CREADOR DE TITULOS MUY ESTRICTO. Estado: CERRADA.

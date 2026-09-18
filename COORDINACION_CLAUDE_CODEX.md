@@ -7585,3 +7585,12 @@ Codex.
 - Capitán: `CODEX - CREADOR DE TITULOS MUY ESTRICTO`.
 - Estado: merge autorizado y despliegue de Producción en curso; sin rollback
   destructivo ni cambios fuera del alcance.
+## Cierre de reserva — CODEX - CREADOR DE TITULOS MUY ESTRICTO — 2026-09-18
+
+PR #144 fue fusionada en `main` (`1c19f07`) y Producción quedó `Ready` en
+Vercel (`dpl_GXQ165nD88E1xhgPK875DC1GHw4V`). La migración aditiva se aplicó
+antes del merge mediante el workflow `35402599238`, sin `--accept-data-loss`.
+
+La salud pública quedó verificada: `/login` y `/privacidad` 200, `/api/me` 401,
+`/dashboard` y `/dashboard/oportunidades` redirigen a `/login`. Se libera la
+reserva de `codex/reparacion-del-motor`. Estado: CERRADA Y EN PRODUCCIÓN.
