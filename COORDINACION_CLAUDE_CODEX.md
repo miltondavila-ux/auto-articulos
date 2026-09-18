@@ -4646,7 +4646,8 @@ Pendiente antes de promover: ejecutar las validaciones finales, revisar el
 diff completo y verificar el despliegue en Vercel/producción conforme al
 controlador de versiones.
 
-Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+Responsable: Codex. Estado: EN REVISIÓN LOCAL. Commit de la implementación:
+`6bc04a2`.
 ## PUNTO DE MIGRACIÓN A CLAUDE — 2026-09-04
 
 Codex: Esta entrada deja el contexto completo para continuar la conversación `CODEX - AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`.

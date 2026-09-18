@@ -2501,4 +2501,5 @@ No hay cambios de schema ni migraciones en este lote. La revisión se mantiene
 en el worktree aislado `/Users/miltondavila/Creador de articulos/.worktrees/simplificacion-setup-inicial`.
 No se hizo push ni deploy; el estado es PREPARADA PARA VALIDACIÓN LOCAL.
 
-Responsable: Codex. Estado: EN REVISIÓN.
+Responsable: Codex. Estado: EN REVISIÓN. Commit de la implementación:
+`6bc04a2`.
