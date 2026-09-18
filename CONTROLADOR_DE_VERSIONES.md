@@ -2703,3 +2703,56 @@ Milton autorizó fusionar sin Preview (opción A) el 2026-09-18, asumiendo ese r
 
 Deployment: PENDIENTE (se registra tras fusionar). Verificación en Producción: PENDIENTE.
 Responsable: Claude. Estado: FUSIÓN AUTORIZADA — pendiente de deployment y verificación.
+
+## Corrección del punto de retorno y fusión DIFERIDA — 2026-09-18 — CONEXION COMPOSIO, Fase 1 (PR #142)
+
+Corrige y complementa la entrada anterior de CONEXION COMPOSIO (que no se reescribe).
+
+**Qué cambió.** Mientras el PR #142 esperaba, `main` avanzó a `d6ba5f8` (PR #143,
+`simplificacion-setup-inicial`, fusionado 2026-09-18 21:35:38Z). La etiqueta
+`pre-composio-fase1-20260918` (`068a0b1`) sigue siendo cierta como «Producción antes de
+#143», pero **ya no es el punto de retorno correcto de mi cambio**: volver a `068a0b1`
+deshacería también el PR #143. Regla vigente: el punto de retorno de la fusión de #142 es
+el commit que esté en Producción **inmediatamente antes** de fusionarla, y se etiqueta en
+ese momento (`pre-composio-fase1-<sha>-<fecha>`), después de verificarlo sano.
+
+**Estado medido 2026-09-18 21:52 UTC.**
+
+```text
+Producción (Vercel):  068a0b1, sana — /login 200 · /privacidad 200 · /api/me 401 · /dashboard 307→/login
+                      (idéntico a la línea base)
+d6ba5f8 (PR #143):    SIN deployment en GitHub tras 16 min de fusionado
+Preview de #142:      «Building» desde 21:34 UTC, sin terminar
+Vercel (público):     incidente ACTIVO «Deployment stuck in initializing state»;
+                      Builds y Build & Deploy en degraded_performance
+```
+
+**Integración hecha.** `origin/main` (`d6ba5f8`) se fusionó dentro de `claude/conexion-composio`
+(commit `116c04c`, merge sin reescribir historia). Único conflicto real:
+`apps/web/src/content/manual-usuario.ts` (párrafo «El menú»), resuelto conservando el texto
+nuevo de `main` y añadiendo la frase sobre Administración. `DashboardNav.tsx` y este
+documento se combinaron sin conflicto. Sobre el resultado integrado: `tsc --noEmit` 0
+errores, `npm run build` exit 0, y verificación visual del menú como administrador
+(Inicio · Cómo funciona esta aplicación · Publicaciones · Configuración · Administración
+[Usuarios, Composio]). El diff contra `origin/main` contiene solo los archivos de esta tarea.
+
+**Decisión: FUSIÓN DIFERIDA.** Milton autorizó fusionar (opción A). Se difiere porque
+Coordinación §7 prohíbe ejecutar acciones que puedan tumbar Producción sin poder verificar
+`Ready`, y hoy hay un incidente de Vercel y una línea base en movimiento. No hay ningún
+cambio en Producción por parte de esta tarea.
+
+**Condiciones para fusionar (todas):**
+1. El incidente de Vercel resuelto (o Milton lo confirma por escrito).
+2. `d6ba5f8` desplegado en Producción con estado `success` y salud verificada.
+3. Etiqueta `pre-composio-fase1-<sha vigente>-<fecha>` creada sobre el commit en Producción.
+4. `origin/main` sin cambios nuevos (si los hay, se integran y se repiten tsc y build).
+5. Preview de #142 verde, o autorización explícita de Milton sin Preview.
+6. Tras fusionar: deployment en `Ready`, dominio y logs de runtime verificados, y el módulo
+   abierto por Milton en Producción con su clave.
+
+Migraciones: ninguna. Rollback tras fusionar: promover en Vercel el deployment de la
+etiqueta correspondiente, o `git revert -m 1 <fusión de #142>` en rama nueva (sin
+`reset --hard` ni `push --force`); el módulo solo escribe filas `composio_*` inertes.
+
+Responsable: Claude. Estado: BLOQUEADO — dependencia externa (incidente de Vercel);
+PR #142 abierto y sin conflictos con `main`.
