@@ -4648,6 +4648,16 @@ controlador de versiones.
 
 Responsable: Codex. Estado: EN REVISIÓN LOCAL. Commit de la implementación:
 `6bc04a2`.
+
+## AJUSTE RESPONSIVE DE TARJETAS DEL INICIO — 2026-09-18
+
+Se eliminó la altura fija de las cuatro tarjetas del Inicio. Ahora el grid y
+los enlaces se estiran por fila para que todas las tarjetas de una misma fila
+tengan la misma altura, mientras cada fila conserva una altura natural según
+su contenido en pantallas pequeñas. No se cambia la cantidad de accesos, las
+rutas ni la funcionalidad.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
 ## PUNTO DE MIGRACIÓN A CLAUDE — 2026-09-04
 
 Codex: Esta entrada deja el contexto completo para continuar la conversación `CODEX - AUDITORIA A ALGORITMO DE PUBLICACIÓN DE ARTICULOS`.

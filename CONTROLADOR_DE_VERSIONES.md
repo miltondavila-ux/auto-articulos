@@ -2503,3 +2503,10 @@ No se hizo push ni deploy; el estado es PREPARADA PARA VALIDACIÓN LOCAL.
 
 Responsable: Codex. Estado: EN REVISIÓN. Commit de la implementación:
 `6bc04a2`.
+
+## Cambio preparado — 2026-09-18 — Tarjetas del Inicio responsive
+
+Se sustituyó la altura fija de las tarjetas de accesos directos por un grid
+flexible: las tarjetas de cada fila mantienen la misma altura y el contenido
+puede crecer de forma natural en responsive. No hay cambios de schema,
+migraciones, rutas ni permisos.
