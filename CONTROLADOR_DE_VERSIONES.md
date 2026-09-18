@@ -2816,7 +2816,6 @@ Milton; hay que pegarlos en Producción. La verificación de qué permiso de la 
 queda para la Fase 2b.
 
 Responsable: Claude. Estado: EN PRODUCCIÓN — verificación en vivo pendiente (Milton).
-
 ## Versión desplegada y archivada — 2026-09-18 — Simplificación del setup inicial
 
 Proyecto: **SIMPLIFICACION DEL SETUP INICIAL**. PR #143:
@@ -2837,3 +2836,18 @@ Producción confirmada en Vercel con deployment
 `seototal.lasolucionweb.com` y login HTTP 200.
 
 Responsable: Codex. Estado final: **ARCHIVADA — EN PRODUCCIÓN Y VERIFICADA**.
+## Versión — 2026-09-18 — REPARACIÓN DEL MOTOR DE OPORTUNIDADES
+
+PR #144 (`codex/reparacion-del-motor`), integrada tras validar Preview y migración.
+Se añadió `OpportunityEvidenceCache` con migración aditiva; caché independiente
+para GSC/GA4/Bing con TTL 7/14/14 días; ventana GSC de 90 días; y fallback
+multifuente para que GA4 o Bing puedan iniciar el análisis cuando GSC no esté
+disponible. Se conservaron exclusiones, geolocalización, deduplicación y
+`gpt-4o-mini` como primera fase.
+
+Auditorías: local aprobada (`prisma validate`, `tsc --noEmit`, build de Next con
+85 páginas y `git diff --check`); Preview de Vercel `READY`; migración controlada
+por GitHub Actions completada sin `--accept-data-loss` y con RLS correcto.
+Producción se registra después del deployment final.
+
+Responsable: CODEX - CREADOR DE TITULOS MUY ESTRICTO. Estado: EN DESPLIEGUE.

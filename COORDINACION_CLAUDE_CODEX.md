@@ -7559,7 +7559,6 @@ Tarea cerrada. PR #127 (callback), `d52c647` (redirecciones del componente,
 otra sesión) y PR #139 (3 enlaces) dejan todo el retorno de Bing en
 `/dashboard/configuracion/indexacion`. Pendiente solo la prueba en vivo con
 una cuenta de Bing, a cargo de Milton. Estado final: ARCHIVADA.
-
 ## CIERRE Y ARCHIVO — SIMPLIFICACION DEL SETUP INICIAL — 2026-09-18
 
 PR #143 fusionado a `main` con `d6ba5f8` y verificado en Producción. El lote
@@ -7575,3 +7574,14 @@ HTTP 200 y producción `dpl_7XmpajPXMfJoBWqsNN5eKqhHD2tA` Ready con
 Reservas liberadas. No quedan acciones de implementación pendientes en este
 lote. Estado final: **ARCHIVADA — EN PRODUCCIÓN Y VERIFICADA**. Responsable:
 Codex.
+## Reserva activa — CODEX - CREADOR DE TITULOS MUY ESTRICTO — REPARACIÓN DEL MOTOR
+
+- Rama: `codex/reparacion-del-motor`; worktree: `/private/tmp/codex-reparacion-motor`.
+- PR: #144. Preview de Vercel `READY` y checks correctos.
+- Migración `20260918190000_add_opportunity_evidence_cache` aplicada por workflow
+  controlado, sin `--accept-data-loss`, antes del merge.
+- Alcance: caché de evidencia SEO por fuente, GSC 90 días y análisis que acepta
+  evidencia independiente de GSC, GA4 o Bing.
+- Capitán: `CODEX - CREADOR DE TITULOS MUY ESTRICTO`.
+- Estado: merge autorizado y despliegue de Producción en curso; sin rollback
+  destructivo ni cambios fuera del alcance.
