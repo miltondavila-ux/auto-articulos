@@ -48,6 +48,7 @@ refrescar esta tabla; no confiar en la fecha si pasó mucho tiempo.
 | `/private/tmp/cambio-cantidad-articulos-20260902` | `codex/cambio-cantidad-articulos-20260902` | 1 | Codex — cambio de cantidad de artículos | No aparece mencionado como cerrado en Coordinación; verificar con Codex si sigue vivo o es un residuo. |
 | `/private/tmp/mcp-publicacion-20260907` | `claude/mcp-publicacion-20260907` (PR #76) | 1 | Claude — "MCP 10MWS" | Andamiaje de la nueva línea de ejecución de publicación vía MCP (ahora con alcance ampliado a un selector multi-plataforma, no solo 10MWS — ver Coordinación), enviado como PR #76 (`open`, sin fusionar). Reserva sigue activa sobre `packages/db/prisma/schema.prisma` y `apps/worker/src/queue.ts` hasta que se fusione o se cierre. Sin cambio de comportamiento por defecto (`publishMethod` queda en `BROWSER`). Auditoría 3 (integración/producción) bloqueada a propósito — no existe todavía servidor MCP real de 10MWS ni migración aplicada. Detalle completo en `COORDINACION_CLAUDE_CODEX.md`. |
 | `/tmp/fix-tiles-flex-20260908` | `claude/fix-tiles-flex-20260908` | 1 | Claude — "ORDEN DE USUARIOS ACTIVOS EN ADMIN" (hotfix visual sobre PR #70) | Reserva: `apps/web/src/app/dashboard/usuarios/page.tsx` — arregla que las tarjetas de resumen se veían en fila (aplastadas) por el reset global `button { display: inline-flex }`. |
+| `/Users/miltondavila/Creador de articulos/.worktrees/mensajes-error-ia` | `claude/mensajes-error-humanizados-ia` (PR #125) | 1 (`3aa0266`) | Claude — `CLAUDE - ERROR AL PUBLICAR` | **PAUSADO** (2026-09-18 12:47 EDT). Espera autorización de Milton para fusionar el PR #125 (MERGEABLE/CLEAN) y verificación en vivo. Reserva mínima: `apps/worker/src/humanizeError.ts` (nuevo), `apps/worker/src/queue.ts` (bloque `catch` de `processRunTitle`), `apps/worker/src/automation/10minutesWebsite.ts` (2 líneas de `login()`). |
 
 ### Ya terminados y fusionados (el worktree quedó suelto, pero el trabajo YA está en producción — no son reservas activas)
 
@@ -1293,3 +1294,28 @@ al wizard. No se tocó `bing/connect` ni `bing/callback` en este lote
 porque el PR #127 los tenía reservados/capitaneados al mismo tiempo.
 Pendiente para una tarea aparte: agregar soporte de `returnTo` a esas dos
 rutas si Milton quiere que el usuario vuelva al wizard de Inicio.
+
+## PAUSADO — CLAUDE - ERROR AL PUBLICAR — 2026-09-18 (cierre 12:47 EDT)
+
+**Identidad:** proyecto `CLAUDE - ERROR AL PUBLICAR` (nombre recibido literal: "ERROR AL PUBLICAR"). Responsable: Claude. Cuenta afectada: MPM Realty Group (panel inglés); prueba con Lorena Álvarez sin regresión conocida.
+
+**Rama / worktree que se conserva:** `claude/mensajes-error-humanizados-ia` en `.worktrees/mensajes-error-ia` (limpio, sin cambios sin commit). PR #125 abierto, MERGEABLE/CLEAN, **no fusionado**.
+
+**Commits y estado real de cada uno:**
+- `3aa0266` — traducir errores de automatización con IA (`apps/worker/src/humanizeError.ts` nuevo, +84; `apps/worker/src/queue.ts` +15/−4; `apps/worker/src/automation/10minutesWebsite.ts` +1/−1). PR #125. **NO está en `origin/main` y no existe ninguna versión posterior que lo reemplace. NO está en producción.**
+- `def4793` (PR #131) — revirtió `eee0e0b`; hipótesis incorrecta, comprobada en vivo. Revertido por `30d9e37` (PR #132): la protección contra artículos duplicados está de vuelta en producción.
+- `aea076d` (PR #133) — `saveAndGetUrl()` espera y reintenta el guardado en vez de rendirse tras un clic. **En producción y verificado en vivo** el 18/9/2026 en MPM Realty Group: lote 5/9 → 9/9 "Completado". Es la causa raíz real del error de guardado (el sitio hoy tarda más en procesar el guardado; el robot lo daba por perdido a los 1-2 s).
+- PR #134 y #135 — solo registro en `CONTROLADOR_DE_VERSIONES.md`.
+
+**Pruebas del PR #125:** `git diff --check` limpio; sin migraciones, schema, OAuth ni secretos literales en el diff; `humanizeError.ts` compila solo con `tsc --noEmit`; sintaxis de los 3 archivos sin diagnósticos; el PR se fusiona limpio sobre `origin/main` actual (`git merge-tree`). **No hay typecheck completo del worker ni `vitest`** en este entorno (el worktree no tiene dependencias instaladas; los errores de módulo `@auto-articulos/*` son preexistentes). **Sin prueba en vivo**: por eso los logs de hoy aún muestran errores crudos de Playwright.
+
+**Reservas:** esta tarea nunca registró una reserva en la Parte A al iniciar (descuido del agente, corregido con este registro). Reserva mínima que se conserva mientras el PR siga abierto: `humanizeError.ts`, el `catch` de `processRunTitle` en `queue.ts` y las 2 líneas de `login()`. Liberado: 5 worktrees de la sesión (`restaurar-flujo-guardado`, `restaurar-proteccion-duplicados`, `guardado-esperar-validacion`, `registro-guardado-verificado`, `registro-9de9`; sus PR #131-#135 están fusionados) y los restos idénticos a `3aa0266` que estaban sin commit en el checkout principal (respaldo del parche en el scratchpad de la sesión; el contenido está a salvo en `3aa0266` y en `origin/claude/mensajes-error-humanizados-ia`). No se tocó ningún cambio ajeno del checkout principal.
+
+**Trabajo pendiente (qué falta exactamente):**
+1. Autorización de Milton para fusionar el PR #125 (la orden de cierre prohibía fusionar).
+2. Verificación en vivo tras la fusión: provocar/esperar un error real y confirmar que el usuario ve una explicación simple con una acción propia, no el volcado de Playwright; confirmar que sin `OPENAI_API_KEY` o con la IA caída se conserva el mensaje original.
+3. Alcance conocido: la traducción cubre la línea `Error:` del log en vivo y el mensaje guardado en Historial; **no** traduce las líneas de diagnóstico (`DIAGNÓSTICO [...]`, `Diagnóstico de guardado`), que siguen técnicas. Decidir si se ampliará.
+4. Tarea aparte: la detección de títulos duplicados solo reconoce el formulario en español (`#titlees`/"existe"); en el panel inglés el sitio responde "There is already an article with this title" y el robot no lo reformula.
+5. Decisión de Milton: en el sitio público de MPM hay artículos repetidos creados por intentos que la app marcó como fallidos.
+
+**Responsable siguiente:** Milton (autorización de fusión) y luego Claude para la verificación en vivo. **Estado final: PAUSADO** — no ARCHIVADO, porque `3aa0266` no está integrado ni funciona en producción.
