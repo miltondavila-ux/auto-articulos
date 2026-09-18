@@ -1404,3 +1404,21 @@ reservas liberadas. Estado final: ARCHIVADA.
 - Producción: deployment `dpl_GXQ165nD88E1xhgPK875DC1GHw4V`, estado `Ready`.
 - Migración controlada: workflow `35402599238`, sin pérdida de datos.
 - Reserva liberada. Estado final: CERRADA — EN PRODUCCIÓN.
+
+## Claude - CREACION DE PUBLICACIONES PROPIAS — 2026-09-18
+
+- **Nombre exacto de la conversación (indicado por Milton):** `CREACION DE PUBLICACIONES PROPIAS`. Identidad:
+  `Claude - Sonnet 5 - CREACION DE PUBLICACIONES PROPIAS`. Nombres anteriores del mismo proyecto:
+  `CLAUDE-5 - PROMPT PUBLICACIONES PROPIAS` y, absorbido por él, `CODEX - GPT-5 - CREACION DE TITULOS CON PROMPTS`.
+- **Proyecto:** opción «Crear con la IA del sistema» en `/dashboard/publicar` para usuarios sin datos de GSC/GA/Bing:
+  hasta 9 títulos, 3 solicitudes por día, sin repetir, prompt maestro solo del administrador. Especificación:
+  `MASTER_BLUEPRINT_CREACION_DE_PUBLICACIONES_PROPIAS.md` y `FASE_0_CREACION_DE_PUBLICACIONES_PROPIAS.md`.
+- **Estado: EN PRODUCCIÓN — verificación en vivo pendiente (Milton).** PR #148 fusionado (`518945b`), deployment de
+  Vercel `6534199413` en `success`; producción idéntica a la línea base. Detalle, punto de retorno y rollback en
+  `CONTROLADOR_DE_VERSIONES.md` (etiqueta `pre-creacion-publicaciones-propias-f23ba3c-20260918`).
+- **Migración:** `20260918190000_add_title_generation_requests` (tabla nueva, aditiva) aplicada **a mano en producción
+  por Milton** antes de fusionar; Claude no la pudo verificar. No se reclamó capitanía de migración.
+- **Reservas:** ninguna (todas liberadas). **Rama/worktree:** `claude/creacion-publicaciones-propias` (fusionada).
+- **Pendiente de Milton:** pegar el prompt en Administración → Prompts y probar con la IA real; hasta entonces la
+  opción dice «Esta función aún no está disponible» y no gasta IA.
+- Responsable: Claude.
