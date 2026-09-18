@@ -53,7 +53,16 @@ const BASE_ENTRIES: NavEntry[] = [
   { id: "configuracion", href: "/dashboard/configuracion", label: "Configuración" },
 ];
 
-const ADMIN_TAB: TabItem = { href: "/dashboard/usuarios", label: "Administración" };
+// Administración pasó de ser un solo enlace a un grupo para alojar módulos de
+// plataforma como Composio sin tocar la página de usuarios.
+const ADMIN_GROUP: TabGroup = {
+  group: "administracion",
+  label: "Administración",
+  items: [
+    { href: "/dashboard/usuarios", label: "Usuarios" },
+    { href: "/dashboard/composio", label: "Composio" },
+  ],
+};
 
 export default function DashboardNav() {
   const pathname = usePathname();
@@ -166,7 +175,7 @@ export default function DashboardNav() {
     return !tab.id || !disabledModules.includes(tab.id);
   }
 
-  const rawEntries: NavEntry[] = isAdmin ? [...BASE_ENTRIES, ADMIN_TAB] : BASE_ENTRIES;
+  const rawEntries: NavEntry[] = isAdmin ? [...BASE_ENTRIES, ADMIN_GROUP] : BASE_ENTRIES;
 
   // Un grupo cuyos módulos están todos ocultos desaparece entero, en vez de
   // quedar como un desplegable vacío.

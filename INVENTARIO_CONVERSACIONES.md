@@ -39,6 +39,7 @@ refrescar esta tabla; no confiar en la fecha si pasó mucho tiempo.
 
 | Worktree | Rama | Commits sin fusionar | Dueño / conversación (según el propio commit o Coordinación) | Nota |
 |---|---|---|---|---|
+| `/Users/miltondavila/Creador de articulos/.worktrees/conexion-composio` | `claude/conexion-composio` | 0 (Fase 1 en curso, sin commit) | Claude — `CONEXION COMPOSIO` | Reserva 2026-09-18: `apps/web/src/lib/composio.ts`, `apps/web/src/app/api/admin/composio/**`, `apps/web/src/app/dashboard/composio/**`, `apps/web/src/components/DashboardNav.tsx`, `apps/web/src/content/manual-usuario.ts` (secciones «El menú» y «Administración»). Sin migraciones ni schema en la Fase 1. No toca `usuarios/page.tsx`. |
 | `/private/tmp/doc-coordinacion-sept3` | `claude/doc-coordinacion-sept3` | 1 | Claude — esta misma sesión, "DOCUMENTO DE COORDINACION - SEPT 3" | Soy yo, ahora mismo. |
 | `/Users/miltondavila/Creador de articulos/.worktrees/google-api-verification` | `codex/google-api-verification` | 1 | Codex — commit `7908b01` "chore: prepare Google OAuth domain and verification pages", hecho hoy 19:06 | Muy reciente; probablemente Codex trabajando en paralelo ahora mismo en `CODEX - GPT-5 - VERIFICACION DE API'S DE GOOGLE`. |
 | `/private/tmp/limites-globales-articulos` | `codex/limites-globales-articulos` | 1 | Codex — proyecto `LIMITES GLOBALES DE ARTICULOS` | Coincide con la decisión de Milton (2026-09-02): **PAUSADO, no tocar ni integrar**. |
@@ -1333,3 +1334,30 @@ PR #125, commit `3aa0266`, rama `claude/mensajes-error-humanizados-ia`, worktree
 - Responsable siguiente: Milton (autorización), luego Claude.
 
 **Estado final:** error de publicación **ARCHIVADA**; mensajes inteligentes (PR #125) **PAUSADO**.
+
+## Claude - CONEXION COMPOSIO — 2026-09-18
+
+- Estado: ACTIVO. Fase 0 aprobada por Milton el 2026-09-18 (`FASE_0_ARQUITECTURA_CONEXION_COMPOSIO.md`).
+  Fase 1 (módulo de Administración) implementada y auditada en local; commit local en la rama, SIN push, SIN PR
+  y SIN despliegue (requieren autorización de Milton). Responsable: Claude.
+- Alcance: camino paralelo para que los clientes conecten Google (Search Console, Analytics)
+  y Meta (Facebook, Instagram) mediante Composio, con interruptor por app en Administración.
+  Business Profile y Threads quedan fuera (Composio no tiene toolkit).
+- Rama/worktree: `claude/conexion-composio` / `.worktrees/conexion-composio`, base `origin/main` `068a0b1`.
+- Documento maestro: `MASTER_BLUEPRINT_CONEXION_COMPOSIO.md` (raíz de la rama).
+- Archivos de la Fase 1 (en el commit de la rama): `apps/web/src/lib/composio.ts`,
+  `apps/web/src/app/api/admin/composio/` (route, accounts, auth-configs), `apps/web/src/app/dashboard/composio/`,
+  `apps/web/src/components/DashboardNav.tsx` (Administración pasa a grupo: Usuarios · Composio),
+  `apps/web/src/content/manual-usuario.ts`, más los dos documentos `.md` del proyecto.
+- Auditorías Fase 1 (2026-09-18): (1) Integridad OK: sin schema/migraciones/workflows, sin secretos, sin archivos de otros
+  agentes. (2) Funcional OK: `tsc` 0 errores, `next build` exit 0, 12 pruebas de la librería contra la base local
+  (clave cifrada en reposo, máscara, validaciones, 401/429/red, auth config coincide/no coincide/404, limpieza),
+  pruebas HTTP reales (sin sesión 401, no admin 403, admin 200/400/409, Composio real rechaza clave falsa) y
+  revisión visual como admin. (3) Regresión OK: único archivo existente tocado con lógica es `DashboardNav.tsx`
+  (el enlace único «Administración» pasa a grupo desplegable; sin más referencias a `ADMIN_TAB`).
+- NO verificado aún (requiere la clave real de Milton): camino feliz contra Composio real (guardar clave válida,
+  verificar un auth config real, listar cuentas conectadas) y qué permiso de la clave cubre `tools/execute`.
+- Reservas: `DashboardNav.tsx`. No se toca `usuarios/page.tsx` (cambio sin atribuir de otra tarea en el árbol principal).
+- Migraciones: ninguna. Producción/Preview: sin cambios ni despliegues.
+- Pendiente: Fase 0 y aprobación de Milton; crear clave de API de Composio con permisos de escritura
+  en Connected accounts y Session tool execution (la pega Milton en el módulo, nunca en chat).
