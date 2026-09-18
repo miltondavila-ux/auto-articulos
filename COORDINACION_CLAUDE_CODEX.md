@@ -7404,6 +7404,23 @@ Rama `claude/boton-video-bing-webmaster`, worktree
 paso "Conectar Bing Webmaster Tools" en el wizard de Inicio
 (`OnboardingWizard.tsx`), recomendado y no bloqueante, reutilizando el
 componente y las rutas OAuth de Bing que ya existían. Detalle completo en
+`INVENTARIO_CONVERSACIONES.md`. Estado: ACTIVO — abriendo PR con el
+enlace del video real ya incluido.
+
+## ARCHIVADO — BING WEBMASTER SITEMAP — 2026-09-18
+
+Al conectar Bing Webmaster ahora se elige el sitio que coincide con el dominio
+de la cuenta, se autocompleta el sitemap (el de Bing o `/sitemap.xml`), se
+valida como XML del mismo dominio y se envía a Bing. PR #128 (`0a7af58`),
+commits `d52c647` y `6d339b7`, sin migraciones. Reservas liberadas y worktree
+retirado. Detalle en `INVENTARIO_CONVERSACIONES.md`.
+
+**Capitán de migración:** Claude — reclamó y liberó el lote (cierre documental
+de BING WEBMASTER SITEMAP, solo documentación, sin migraciones ni schema).
+**Capitán de migración liberó el lote:** Claude. Resultado: PR #136 (solo
+documentación) con el cierre de BING WEBMASTER SITEMAP; sin migraciones.
+Código ya en Producción por el PR #128 (`0a7af58`). Estado: ARCHIVADA.
+
 `INVENTARIO_CONVERSACIONES.md`. PR #126 fusionado a `main` (`c294aff`),
 sin migraciones. Reservas liberadas (`OnboardingWizard.tsx`). Estado final:
 ARCHIVADA.

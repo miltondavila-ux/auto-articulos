@@ -1295,6 +1295,19 @@ porque el PR #127 los tenía reservados/capitaneados al mismo tiempo.
 Pendiente para una tarea aparte: agregar soporte de `returnTo` a esas dos
 rutas si Milton quiere que el usuario vuelva al wizard de Inicio.
 
+### Cierre — CLAUDE - Sonnet 5 - BING WEBMASTER SITEMAP — 2026-09-18
+
+Estado final: **ARCHIVADA**. Commit válido: `d52c647` + `6d339b7`, integrados a
+`main` por el PR #128 (`0a7af58`) y presentes en `origin/main`; ninguna
+versión posterior reemplaza `bing-sitemap.ts`. Vercel `success`;
+`/api/search-integrations/bing` responde 401 sin sesión (esperado). Sin
+migraciones, OAuth, secretos ni schema. `git diff --check` limpio y `tsc` sin
+errores en archivos de Bing. Reservas (`bing-sitemap.ts`, `bing/route.ts`,
+`BingWebmasterSection.tsx`) **liberadas**; worktree
+`.worktrees/bing-sitemap-autodetect` y rama local retirados sin cambios sin
+commit. Pendiente no bloqueante: verificación en vivo con una cuenta de Bing
+conectada. Responsable: Claude.
+
 ## ARCHIVADO — CLAUDE - ERROR AL PUBLICAR — 2026-09-18 (cierre 13:03 EDT)
 
 **Identidad:** proyecto `CLAUDE - ERROR AL PUBLICAR`. Responsable: Claude. Cuenta afectada: MPM Realty Group (panel inglés).
