@@ -7356,3 +7356,53 @@ nada a `INVENTARIO_CONVERSACIONES.md` Parte A por esto.
 No hubo ninguna acción destructiva, migración ni deploy en esta corrida.
 
 Responsable: Claude (tarea programada diaria de propagación).
+
+## Claude - BING WEBMASTER DIRECCION DE DEVOLUCION — 2026-09-18
+
+**Capitán de migración:** Claude — revisará y aplicará el lote completo. Motivo:
+Bing Webmaster: el retorno OAuth vuelve a /dashboard/configuracion/indexacion
+(sin migraciones). Nadie más ejecuta Prisma hasta su liberación.
+
+## ARCHIVADO — CHECK DE NO INDEXACION — 2026-09-18
+
+Milton reportó que la opción "no indexar" al crear artículos/lotes en
+10minutesWebsite y TagCrush no se respetaba. Causa confirmada en
+`apps/worker/src/automation/10minutesWebsite.ts`: el checkbox
+`#activate_indexing` se desmarcaba una sola vez al inicio, y
+`saveAndGetUrl()` dispara `change` sobre `#type` en cada intento de guardado
+(incluso el primero), lo que puede devolverlo a su valor por defecto
+(indexación activada) justo antes de guardar. Además el error de
+`setChecked` se tragaba en silencio y el paso reportaba éxito sin verificar.
+
+Fix (PR #114, fusionado a `main` en `e8a8b18`, sin migraciones): nueva
+`applyIndexingPreference()` que desmarca y verifica leyendo el DOM, aplicada
+justo antes de cada clic de guardado; si no se puede confirmar, el run
+registra "ATENCIÓN..." en vez de un falso éxito. Aplica a los tres servidores
+(net, site, tagcrush) porque comparten el mismo código. La línea MCP
+(`mcpPublisher.ts`) envía `indexar` a la API y no estaba afectada.
+
+Auditorías 1 y 2 aprobadas (integridad; `tsc --noEmit` limpio, fallos de
+`vitest` preexistentes en `main`). Auditoría 3 (verificación en vivo con
+`worker-test.yml` y la cuenta de Lorena) **pendiente**: no se corrió porque
+esa cuenta tenía datos de otra tarea. El worker ya ejecuta el código nuevo
+(checkout fresco de `main` en cada corrida). Al primer artículo real con
+"no indexar", revisar en el log el mensaje "Indexación ... desactivada
+(verificado)".
+
+Responsable: Claude. Estado final: ARCHIVADA (verificación en vivo pendiente,
+no bloquea el cierre).
+
+**Capitán de migración liberó el lote:** Claude. Resultado: PR #127
+(https://github.com/miltondavila-ux/auto-articulos/pull/127) fusionado a main
+(`cd6fd3e`), desplegado en Producción (Vercel: Deployment has completed), sin
+migraciones. Manual actualizado en el mismo lote.
+
+## Claude - BOTON VIDEO EXPLICATIVO BING WEBMASTER — 2026-09-17
+
+Rama `claude/boton-video-bing-webmaster`, worktree
+`.worktrees/boton-video-bing-webmaster`, sin migraciones de schema. Nuevo
+paso "Conectar Bing Webmaster Tools" en el wizard de Inicio
+(`OnboardingWizard.tsx`), recomendado y no bloqueante, reutilizando el
+componente y las rutas OAuth de Bing que ya existían. Detalle completo en
+`INVENTARIO_CONVERSACIONES.md`. Estado: ACTIVO — abriendo PR con el
+enlace del video real ya incluido.

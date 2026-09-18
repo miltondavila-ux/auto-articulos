@@ -2486,3 +2486,70 @@ por Milton en Producción con una cuenta de pruebas; el botón apareció despué
 de ejecutar el análisis sin resultados nuevos.
 
 Responsable: Claude. Estado: EN PRODUCCIÓN, verificado en vivo por Milton.
+
+## Versión desplegada — 2026-09-18 — Retorno de Bing Webmaster a Indexación
+
+`apps/web/src/app/api/search-integrations/bing/callback/route.ts`: las tres
+redirecciones del callback OAuth de Bing (conexión exitosa, error de estado y
+error de token) ahora vuelven a `/dashboard/configuracion/indexacion`, donde
+vive `BingWebmasterSection`, en vez de `/dashboard/configuracion`. Manual de
+usuario actualizado en el mismo lote. Sin migraciones ni cambios de schema.
+
+Auditorías: integridad (3 líneas de código + 1 de manual + registros, sin
+secretos), funcional (cambio de rutas de redirección; `BingWebmasterSection`
+ya lee `?bing=` con `useSearchParams`) y regresión/entrega (checks del PR y
+Vercel Preview antes de fusionar).
+
+PR #127 fusionado a `main` (`cd6fd3e`); Vercel Preview aprobado y deployment de Producción completado. Pendiente: prueba en vivo del flujo completo de conexión por Milton (requiere sesión de Bing).
+
+Responsable: Claude. Estado: EN PRODUCCIÓN.
+
+## Versión — 2026-09-18 — CHECK DE NO INDEXACION (worker)
+
+Commit `0d20b9b` (squash en `main`: `e8a8b18`, PR #114). Archivo:
+`apps/worker/src/automation/10minutesWebsite.ts` (+68/−5). La preferencia de
+indexación se aplica y verifica leyendo el DOM justo antes de cada clic de
+guardado; si no se confirma, el run lo informa. Sin migraciones ni cambios de
+schema. Sin cambio de versiones de software.
+
+Auditoría 1: APROBADA (un archivo, sin secretos, worktree aislado).
+Auditoría 2: APROBADA (`tsc --noEmit` limpio; fallos de `vitest` preexistentes
+en `main`, confirmados con `git stash`).
+Auditoría 3: PENDIENTE (corrida en vivo con `worker-test.yml`). El worker de
+producción ya usa el código (corridas del 2026-09-18 sobre `main` posterior).
+Responsable: Claude. Estado: EN PRODUCCIÓN — verificación en vivo pendiente.
+
+## Versión — 2026-09-18 — ERROR AL PUBLICAR (MPM Realty Group): reversión #131, restauración #132 y espera de validación al guardar
+
+Conversación/proyecto: `ERROR AL PUBLICAR`. Cuenta afectada: MPM Realty Group
+(panel inglés). Síntoma: el robot hace clic en "Guardar cambios", el sitio
+deshabilita el botón y no envía nada; el artículo no aparece en el listado.
+
+- PR #131 (`def4793`): revirtió `eee0e0b` (navegación al listado antes del
+  formulario) por ser el único cambio incondicional posterior a la versión
+  estable `54379d8`. **No era la causa**: reintento en vivo con #131 activo
+  falló igual (18/9/2026 11:17).
+- PR #132 (`30d9e37`): revirtió #131; la protección contra artículos
+  duplicados vuelve a estar en producción.
+- Este cambio (rama `claude/guardado-esperar-validacion`): en
+  `saveAndGetUrl()`, si tras el clic el sitio no acepta el guardado y no hay
+  título duplicado, se espera 15 s y se reintenta (hasta `MAX_SAVE_ATTEMPTS`)
+  en vez de rendirse tras un solo clic. Base: en los logs, el artículo que sí
+  se publicó tras varios fallos fue el intento donde el robot esperó ~33 s a
+  la validación del sitio antes del clic; los fallidos hacían el clic a 0 s.
+  Un archivo de código, +13 líneas, sin migraciones ni cambio de versiones.
+
+Auditoría 1: APROBADA (un archivo de código + este registro, sin secretos).
+Auditoría 2: APROBADA (sintaxis TypeScript sin diagnósticos; `git diff --check`).
+Auditoría 3: APROBADA EN VIVO (18/9/2026, MPM Realty Group). PR #133
+fusionado a las 11:37; reintento del lote: los artículos 1 y 2 (5 y 7 fallos
+previos) se publicaron en el segundo intento de guardado (11:42 y 11:46); el
+lote pasó de 5/9 a 8/9. En esos logs el sitio termina de guardar unos segundos
+después del clic: el robot antes lo daba por perdido a los 1-2 s.
+Problema conocido, NO resuelto: el artículo 5 sigue fallando porque el sitio
+responde "There is already an article with this title" (título duplicado
+real) y la detección de duplicados del robot solo reconoce el formulario en
+español (`#titlees` / "existe"), no el inglés (`#title`). Posible causa
+adicional: intentos anteriores "fallidos" pudieron haber guardado artículos
+reales en el sitio; conviene revisar duplicados en el listado de la cuenta.
+Responsable: Claude. Estado: EN PRODUCCIÓN — VERIFICADA EN VIVO (parcial: 8/9).
