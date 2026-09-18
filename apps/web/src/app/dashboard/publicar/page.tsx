@@ -13,11 +13,16 @@ import {
 } from "@/components/dashboard-ui";
 import ImageCreditsModal from "@/components/ImageCreditsModal";
 import PreValidationGuard from "@/components/PreValidationGuard";
+import AiTitleGenerator from "@/components/AiTitleGenerator";
+import { normalizeTitle } from "@/lib/title-generation-core";
 import type { CategoryRow } from "@/types/dashboard";
 
 export default function PublicarPage() {
   const router = useRouter();
   const [titlesText, setTitlesText] = useState("");
+  // Dos caminos para tener títulos: pegarlos a mano (el de siempre) o pedirlos
+  // a la IA del sistema (CREACION DE PUBLICACIONES PROPIAS).
+  const [titlesMode, setTitlesMode] = useState<"manual" | "ai">("manual");
   const [credentialsConfigured, setCredentialsConfigured] = useState(false);
   const [hasImageCredits, setHasImageCredits] = useState(true);
   const [showImageCreditsModal, setShowImageCreditsModal] = useState(false);
@@ -179,6 +184,32 @@ export default function PublicarPage() {
     .map((line) => line.trim())
     .filter((line) => line.length > 0).length;
   const overLimit = Number.isFinite(effectiveAvailable) && titleCount > effectiveAvailable;
+
+  // Los títulos que el usuario marcó entre los de la IA entran al flujo normal:
+  // se agregan a la caja Títulos (sin duplicar los que ya estén) para que los
+  // revise y publique como siempre. La caja no se reemplaza, se le suma.
+  function handleUseAiTitles(newTitles: string[]) {
+    const existing = titlesText
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+    const known = new Set(existing.map(normalizeTitle));
+    const toAdd = newTitles.filter((title) => {
+      const key = normalizeTitle(title);
+      if (known.has(key)) return false;
+      known.add(key);
+      return true;
+    });
+    setTitlesText([...existing, ...toAdd].join("\n"));
+    setTitlesMode("manual");
+    setBanner({
+      type: "info",
+      text:
+        toAdd.length === 0
+          ? "Esos títulos ya estaban en la caja Títulos."
+          : `Se agregaron ${toAdd.length} título${toAdd.length === 1 ? "" : "s"} a la caja Títulos. Revísalos y presiona Publicar cuando estés listo.`,
+    });
+  }
 
   async function handleIniciar() {
     if (!contentLanguage.trim()) {
@@ -458,6 +489,39 @@ export default function PublicarPage() {
 
         <section style={readySectionStyle(titleCount > 0 && !overLimit)}>
           <h2 style={h2Style}>Títulos</h2>
+          <div
+            role="group"
+            aria-label="Cómo quieres tener los títulos"
+            style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}
+          >
+            {(
+              [
+                ["manual", "Poner títulos a mano"],
+                ["ai", "Crear con la IA del sistema"],
+              ] as const
+            ).map(([mode, label]) => (
+              <button
+                key={mode}
+                type="button"
+                aria-pressed={titlesMode === mode}
+                onClick={() => setTitlesMode(mode)}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: 18,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  border: titlesMode === mode ? "1px solid #1d1d1f" : "1px solid #d2d2d7",
+                  background: titlesMode === mode ? "#1d1d1f" : "#ffffff",
+                  color: titlesMode === mode ? "#ffffff" : "#1d1d1f",
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {titlesMode === "manual" ? (
+          <>
           <p style={{ fontSize: 13, color: "#6e6e73", margin: "0 0 12px" }}>
             Pega un título por línea. Tu cupo disponible actual es de{" "}
             <strong>{Number.isFinite(effectiveAvailable) ? effectiveAvailable : "todos"}</strong> artículos. Lote: {maxTitlesPerBatch || "sin límite"}; diario: {dailyArticleLimit ?? "sin límite"}; mensual: {monthlyArticleLimit ?? "sin límite"}.
@@ -490,6 +554,18 @@ export default function PublicarPage() {
               </span>
             )}
           </div>
+          </>
+          ) : (
+            <AiTitleGenerator
+              categoryId={selectedCategoryId}
+              categoryName={categories.find((category) => category.id === selectedCategoryId)?.name ?? ""}
+              contentLanguage={contentLanguage}
+              languageLabel={languages.find((language) => language.externalId === contentLanguage)?.name ?? ""}
+              publishQuota={Number.isFinite(effectiveAvailable) ? effectiveAvailable : null}
+              disabled={hasActiveRun}
+              onUseTitles={handleUseAiTitles}
+            />
+          )}
         </section>
 
         <section style={sectionStyle}>

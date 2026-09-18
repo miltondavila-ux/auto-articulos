@@ -353,7 +353,7 @@ export async function generateTitlesForUser(params: GenerateParams): Promise<Gen
       throw new TitleGenerationError(
         502,
         "NO_VALID_TITLES",
-        "La IA no pudo generar títulos nuevos esta vez. No se descontó ninguna solicitud; inténtalo de nuevo.",
+        "La IA no pudo generar títulos nuevos esta vez. No se descontó ninguna solicitud. Prueba cambiando el tema o el tipo de cliente.",
       );
     }
 

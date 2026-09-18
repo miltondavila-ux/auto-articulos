@@ -319,6 +319,62 @@ export default function UsuariosPage() {
     }
   }
 
+  // PROMPT PUBLICACIONES PROPIAS (CREACION DE PUBLICACIONES PROPIAS): prompt
+  // maestro global con el que la IA del sistema crea títulos en Publicaciones
+  // propias. Solo el administrador lo ve y lo edita; los usuarios no.
+  const [titlePrompt, setTitlePrompt] = useState("");
+  const [loadingTitlePrompt, setLoadingTitlePrompt] = useState(false);
+  const [savingTitlePrompt, setSavingTitlePrompt] = useState(false);
+  const [titlePromptVariables, setTitlePromptVariables] = useState<string[]>([]);
+  const [titlePromptBanner, setTitlePromptBanner] = useState<{ type: "error" | "info"; text: string } | null>(null);
+
+  async function loadTitlePrompt() {
+    setLoadingTitlePrompt(true);
+    try {
+      const res = await fetch("/api/admin/title-generation-prompt", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        setTitlePrompt(data.prompt ?? "");
+        setTitlePromptVariables(Array.isArray(data.variables) ? data.variables : []);
+      }
+    } catch (e) {
+      console.error("Error al cargar el prompt de publicaciones propias", e);
+    } finally {
+      setLoadingTitlePrompt(false);
+    }
+  }
+
+  async function handleSaveTitlePrompt() {
+    setSavingTitlePrompt(true);
+    setTitlePromptBanner(null);
+    try {
+      const res = await fetch("/api/admin/title-generation-prompt", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: titlePrompt }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setTitlePromptBanner({ type: "error", text: data.error ?? "Error al guardar el prompt" });
+        return;
+      }
+      setTitlePrompt(data.prompt ?? "");
+      const unknown: string[] = Array.isArray(data.unknownPlaceholders) ? data.unknownPlaceholders : [];
+      setTitlePromptBanner({
+        type: "info",
+        text: !data.prompt
+          ? "Prompt guardado vacío: la función \"Crear con la IA del sistema\" queda desactivada para los usuarios."
+          : unknown.length > 0
+            ? `Prompt guardado. Ojo: estas variables no existen y se enviarán tal cual: ${unknown.map((v) => `{{${v}}}`).join(", ")}.`
+            : "Prompt de publicaciones propias guardado con éxito",
+      });
+    } catch (e: any) {
+      setTitlePromptBanner({ type: "error", text: e.message || "Error al conectar con el servidor" });
+    } finally {
+      setSavingTitlePrompt(false);
+    }
+  }
+
   async function loadPrompts() {
     setLoadingPrompts(true);
     try {
@@ -515,6 +571,7 @@ export default function UsuariosPage() {
     if (tab === "prompts") {
       loadPrompts();
       loadAiImagePrompt();
+      loadTitlePrompt();
     }
   }, [tab]);
 
@@ -1845,6 +1902,73 @@ export default function UsuariosPage() {
                   }}
                 >
                   {aiImagePromptBanner.text}
+                </div>
+              )}
+            </>
+          )}
+        </section>
+
+        <section style={sectionStyle}>
+          <h2 style={h2Style}>PROMPT PUBLICACIONES PROPIAS (crear títulos con la IA)</h2>
+          <p style={{ fontSize: 13, color: "#6e6e73" }}>
+            Es el prompt maestro con el que la IA del sistema crea títulos cuando un usuario elige
+            &ldquo;Crear con la IA del sistema&rdquo; en Publicaciones propias. Es global y solo tú lo ves. El
+            sistema agrega solo las reglas de seguridad y el formato de salida (hasta 9 títulos en JSON), así que
+            aquí escribes únicamente tu criterio de redacción. Mientras esté vacío, esa opción aparece desactivada
+            para los usuarios.
+          </p>
+          {titlePromptVariables.length > 0 && (
+            <p style={{ fontSize: 12, color: "#6e6e73" }}>
+              Variables que puedes usar (se reemplazan con lo que escribe el usuario):{" "}
+              {titlePromptVariables.map((v) => (
+                <code
+                  key={v}
+                  style={{ background: "#f5f5f7", borderRadius: 6, padding: "1px 6px", marginRight: 4, whiteSpace: "nowrap" }}
+                >
+                  {`{{${v}}}`}
+                </code>
+              ))}
+            </p>
+          )}
+          {loadingTitlePrompt ? (
+            <p style={{ fontSize: 13, color: "#6e6e73" }}>Cargando...</p>
+          ) : (
+            <>
+              <textarea
+                value={titlePrompt}
+                onChange={(e) => setTitlePrompt(e.target.value)}
+                placeholder="Ej: Eres un estratega SEO. Crea títulos para {{cliente_tipo}} que buscan {{deseo_cliente}} sobre {{tema}}, dando mucho peso a la necesidad, la ciudad, el país, a quién atiende, desde dónde atiende y dónde está el producto..."
+                rows={16}
+                style={{
+                  ...inputStyle,
+                  width: "100%",
+                  resize: "vertical",
+                  fontFamily: "inherit",
+                  lineHeight: 1.5,
+                  marginTop: 12,
+                }}
+              />
+              <div style={{ marginTop: 12 }}>
+                <button
+                  onClick={handleSaveTitlePrompt}
+                  disabled={savingTitlePrompt}
+                  style={disabledStyle(buttonStyle, savingTitlePrompt)}
+                >
+                  {savingTitlePrompt ? "Guardando..." : "Guardar prompt de publicaciones propias"}
+                </button>
+              </div>
+              {titlePromptBanner && (
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: 8,
+                    marginTop: 14,
+                    background: titlePromptBanner.type === "error" ? "#fdecec" : "#eafaf0",
+                    color: titlePromptBanner.type === "error" ? "#d64545" : "#16803c",
+                    fontSize: 13,
+                  }}
+                >
+                  {titlePromptBanner.text}
                 </div>
               )}
             </>

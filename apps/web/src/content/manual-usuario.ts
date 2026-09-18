@@ -141,14 +141,24 @@ Consejo: escribe instrucciones de imagen sencillas y concretas; por ejemplo, el 
 
 Ruta: /dashboard/publicar
 
-Usa Publicar cuando ya tienes los títulos que quieres convertir en artículos.
+Usa Publicar para convertir tus títulos en artículos. Los títulos los puedes poner de dos maneras, y las dos llegan al mismo lugar: la caja **Títulos**.
 
 1. Elige una categoría. Es la sección de tu sitio donde se publicarán los artículos.
 2. Elige el idioma del lote. Solo afecta ese lote; no modifica tu configuración general.
-3. Escribe un título por línea.
+3. En la sección **Títulos** elige cómo quieres tenerlos:
+   - **Poner títulos a mano:** escribe o pega un título por línea (por ejemplo, los que preparaste en otra herramienta).
+   - **Crear con la IA del sistema:** pensada para quien empieza y todavía no tiene datos de Search Console, Analytics ni Bing. Escribe a quién le quieres escribir (cliente tipo), sobre qué tema, qué desea ese cliente, en dónde están tus clientes y en dónde está tu negocio. La IA propone hasta 9 títulos. Marca los que quieras (puedes marcar hasta tu cupo disponible), pulsa **Usar seleccionados** y se agregan a la caja Títulos para que los revises antes de publicar.
 4. Revisa el contador. No puedes superar el máximo de títulos permitido para tu cuenta en un solo lote; divide la lista si es necesario.
 5. Deja activada la indexación si quieres que los artículos se consideren para buscadores. Márcala como desactivada solo si no quieres indexar ese lote.
 6. Pulsa “Iniciar”.
+
+Sobre "Crear con la IA del sistema":
+- Puedes hacer **3 solicitudes por día**; la pantalla te muestra cuántas te quedan ("Te quedan X de 3 solicitudes hoy") y se renuevan cada día.
+- Lo que escribes en ese formulario solo sirve para esos títulos: **no cambia tu configuración** ni lo que guardaste en Configuración → Contenido.
+- Los títulos que no marques se descartan y **no se te volverán a proponer**; tampoco se repiten los que ya creaste antes.
+- La categoría es una de las que ya sincronizaste desde tu sitio. Si necesitas una nueva, créala primero en tu propia página o plataforma y luego sincroniza tus categorías.
+- Si la IA no encuentra títulos nuevos, no se descuenta ninguna solicitud: prueba cambiando el tema o el tipo de cliente.
+- Si ves "Esta función aún no está disponible", todavía no está activada en tu cuenta; mientras tanto puedes pegar tus títulos a mano.
 
 Solo puede haber una ejecución activa a la vez. Si ya hay una, abre Progreso de las publicaciones y espera a que termine antes de iniciar otra.
 
@@ -342,6 +352,7 @@ Solo los administradores tienen acceso a este módulo:
 - **Filtros por Tipo de Cuenta:** Permite filtrar instantáneamente entre *Todos los tipos*, *Usuarios comunes*, *Administradores* y usuarios en periodo de *Free Trial (Prueba Gratuita)*, combinándose con la barra de búsqueda en tiempo real.
 - **Visibilidad de Módulos:** Permite ocultar o activar módulos específicos de forma individual por usuario o de manera global para mantenimiento.
 - **Prompts:** además de los estilos de redacción de artículos, incluye el prompt del generador de imágenes con IA para redes sociales — es global (aplica a todas las cuentas), se edita ahí mismo y no necesita ningún cambio de código para actualizarse.
+- **PROMPT PUBLICACIONES PROPIAS:** en la misma pestaña Prompts está el prompt maestro con el que la IA crea títulos cuando un usuario elige "Crear con la IA del sistema" en Publicar. Solo el administrador lo ve y lo edita; los usuarios no. Mientras esté vacío, esa opción aparece desactivada. Debajo de la caja se listan las variables que se pueden usar (por ejemplo, la del cliente tipo, el tema o las ubicaciones) y, al guardar, se avisa si escribiste alguna que no existe.
 - **Tarjetas de resumen clicables:** en la pestaña "Accesos", las 5 tarjetas de arriba (Usuarios totales, En prueba, Activos, Conectados ahora, Publicaciones totales) no son solo informativas: al hacer clic en cualquiera, la lista de abajo se filtra automáticamente por ese criterio.
 - **Composio (/dashboard/composio):** conecta la plataforma con Composio, un servicio que más adelante permitirá a los clientes conectar sus cuentas de Google y Meta sin las restricciones de una app en prueba. Por ahora el módulo solo prepara la conexión: se pega la clave de API de proyecto de Composio (se comprueba con Composio antes de guardarse, se guarda cifrada y nunca se vuelve a mostrar completa), se registra el "auth config" de cada app (Search Console, Analytics, Facebook e Instagram, cada uno se comprueba antes de guardarse) y se pueden consultar las cuentas conectadas en el proyecto. Todavía no cambia la forma en que se conectan los clientes: sus conexiones actuales siguen funcionando igual. Al eliminar la clave también se eliminan los auth configs.
 
