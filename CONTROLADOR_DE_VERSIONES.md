@@ -2654,3 +2654,132 @@ enlaces, no requiere cambio.
 PR #139 fusionado (`9df2f10`); Vercel Production completado.
 
 Responsable: Claude. Estado: EN PRODUCCIÓN.
+
+## Versión desplegada — 2026-09-18 — CONEXION COMPOSIO, Fase 1 (módulo Composio en Administración)
+
+PR #142 (`claude/conexion-composio`), commits `73dc766` y `a1fefed` más el de este registro.
+Nuevo módulo de solo administradores en `/dashboard/composio` (clave de API de
+Composio cifrada, auth configs verificados, cuentas conectadas) y "Administración"
+como grupo del menú (Usuarios · Composio). Manual de usuario actualizado en el mismo
+lote. Sin cambios de schema, sin migraciones, sin tocar integraciones existentes
+de Google ni de Meta, `vercel.json`, workflows, middleware ni dependencias.
+
+**PUNTO DE RETORNO (última versión buena conocida, registrada ANTES de fusionar):**
+
+```text
+Commit de Producción previo: 068a0b1 (= origin/main antes del PR #142)
+Etiqueta de Git:             pre-composio-fase1-20260918  (apunta a 068a0b1)
+Deployment Vercel previo:    6529270912 · Production · success
+                             https://auto-articulos-oqjlawfxn-luna-portex-intelligence.vercel.app
+Dominio público:             https://seototal.lasolucionweb.com
+Línea base medida 2026-09-18 21:23 UTC (antes de fusionar):
+  /login 200 · /privacidad 200 · /api/me 401 · /dashboard 307→/login
+  /dashboard/composio 307→/login · /api/admin/composio 401
+```
+
+Verificación previa (Controlador, «Verificación obligatoria»): archivos eliminados
+en el PR: 0 · migraciones: 0 · cambios en `schema.prisma`: 0 · cambios en
+`vercel.json`/workflows/proxy: 0 · `tsc --noEmit` 0 errores · `npm run build`
+exit 0 · rama `MERGEABLE`/`CLEAN` sin conflictos con `main`.
+
+Auditorías: integridad APROBADA · funcional APROBADA (12 pruebas de librería, pruebas
+HTTP reales, verificación visual y camino feliz con la clave real de Milton en base
+local) · regresión APROBADA. Anomalía registrada: Vercel NO generó Preview para este
+PR (sin check, estado ni comentario tras más de 4 minutos; el PR #141 sí lo tuvo).
+Milton autorizó fusionar sin Preview (opción A) el 2026-09-18, asumiendo ese riesgo.
+
+**Cómo revertir en un caso extremo (no hay migraciones ni datos que deshacer):**
+
+1. Más rápido, sin tocar Git: en el panel de Vercel, `Deployments` → deployment
+   `6529270912` (`068a0b1`) → volver a promoverlo a Production (rollback de Vercel).
+2. Por Git, de forma incremental (no destructiva): desde `main`, rama nueva y
+   `git revert -m 1 <commit de fusión del PR #142>`, abrir PR y pasar las tres
+   auditorías. Comparar con `git diff pre-composio-fase1-20260918..main`.
+3. NO usar `reset --hard`, `push --force` ni restaurar snapshots parciales (regla de
+   Protección de este documento).
+4. Datos: el módulo solo escribe filas `composio_*` en `SystemSetting`, inertes si se
+   revierte el código. Pueden quedarse o borrarse (`DELETE FROM "SystemSetting" WHERE
+   key LIKE 'composio_%'`) sin afectar nada más.
+
+Deployment: PENDIENTE (se registra tras fusionar). Verificación en Producción: PENDIENTE.
+Responsable: Claude. Estado: FUSIÓN AUTORIZADA — pendiente de deployment y verificación.
+
+## Corrección del punto de retorno y fusión DIFERIDA — 2026-09-18 — CONEXION COMPOSIO, Fase 1 (PR #142)
+
+Corrige y complementa la entrada anterior de CONEXION COMPOSIO (que no se reescribe).
+
+**Qué cambió.** Mientras el PR #142 esperaba, `main` avanzó a `d6ba5f8` (PR #143,
+`simplificacion-setup-inicial`, fusionado 2026-09-18 21:35:38Z). La etiqueta
+`pre-composio-fase1-20260918` (`068a0b1`) sigue siendo cierta como «Producción antes de
+#143», pero **ya no es el punto de retorno correcto de mi cambio**: volver a `068a0b1`
+deshacería también el PR #143. Regla vigente: el punto de retorno de la fusión de #142 es
+el commit que esté en Producción **inmediatamente antes** de fusionarla, y se etiqueta en
+ese momento (`pre-composio-fase1-<sha>-<fecha>`), después de verificarlo sano.
+
+**Estado medido 2026-09-18 21:52 UTC.**
+
+```text
+Producción (Vercel):  068a0b1, sana — /login 200 · /privacidad 200 · /api/me 401 · /dashboard 307→/login
+                      (idéntico a la línea base)
+d6ba5f8 (PR #143):    SIN deployment en GitHub tras 16 min de fusionado
+Preview de #142:      «Building» desde 21:34 UTC, sin terminar
+Vercel (público):     incidente ACTIVO «Deployment stuck in initializing state»;
+                      Builds y Build & Deploy en degraded_performance
+```
+
+**Integración hecha.** `origin/main` (`d6ba5f8`) se fusionó dentro de `claude/conexion-composio`
+(commit `116c04c`, merge sin reescribir historia). Único conflicto real:
+`apps/web/src/content/manual-usuario.ts` (párrafo «El menú»), resuelto conservando el texto
+nuevo de `main` y añadiendo la frase sobre Administración. `DashboardNav.tsx` y este
+documento se combinaron sin conflicto. Sobre el resultado integrado: `tsc --noEmit` 0
+errores, `npm run build` exit 0, y verificación visual del menú como administrador
+(Inicio · Cómo funciona esta aplicación · Publicaciones · Configuración · Administración
+[Usuarios, Composio]). El diff contra `origin/main` contiene solo los archivos de esta tarea.
+
+**Decisión: FUSIÓN DIFERIDA.** Milton autorizó fusionar (opción A). Se difiere porque
+Coordinación §7 prohíbe ejecutar acciones que puedan tumbar Producción sin poder verificar
+`Ready`, y hoy hay un incidente de Vercel y una línea base en movimiento. No hay ningún
+cambio en Producción por parte de esta tarea.
+
+**Condiciones para fusionar (todas):**
+1. El incidente de Vercel resuelto (o Milton lo confirma por escrito).
+2. `d6ba5f8` desplegado en Producción con estado `success` y salud verificada.
+3. Etiqueta `pre-composio-fase1-<sha vigente>-<fecha>` creada sobre el commit en Producción.
+4. `origin/main` sin cambios nuevos (si los hay, se integran y se repiten tsc y build).
+5. Preview de #142 verde, o autorización explícita de Milton sin Preview.
+6. Tras fusionar: deployment en `Ready`, dominio y logs de runtime verificados, y el módulo
+   abierto por Milton en Producción con su clave.
+
+Migraciones: ninguna. Rollback tras fusionar: promover en Vercel el deployment de la
+etiqueta correspondiente, o `git revert -m 1 <fusión de #142>` en rama nueva (sin
+`reset --hard` ni `push --force`); el módulo solo escribe filas `composio_*` inertes.
+
+Responsable: Claude. Estado: BLOQUEADO — dependencia externa (incidente de Vercel);
+PR #142 abierto y sin conflictos con `main`.
+
+## Condiciones cumplidas y punto de retorno FINAL — 2026-09-18 22:3x UTC — CONEXION COMPOSIO, Fase 1 (PR #142)
+
+Cierra las condiciones de la entrada «fusión DIFERIDA» (que no se reescribe).
+
+```text
+1. Vercel:            «All Systems Operational» (22:32 UTC); el incidente quedó resuelto.
+2. Producción:        d6ba5f8 desplegado — deployment 6533344463, success (21:52 UTC).
+                      Salud 22:32 UTC idéntica a la línea base: /login 200 · /privacidad 200 ·
+                      /api/me 401 · /dashboard 307→/login · /dashboard/composio 307→/login ·
+                      /api/admin/composio 401.
+3. ETIQUETA FINAL:    pre-composio-fase1-d6ba5f8-20260918  (apunta a d6ba5f8)
+                      = PUNTO DE RETORNO de la fusión del PR #142.
+                      Sustituye a pre-composio-fase1-20260918 (068a0b1), que dejaría fuera el PR #143.
+4. origin/main:       sin cambios nuevos (d6ba5f8).
+5. Preview de #142:   build de Vercel en success (head a3eac95). El Preview está protegido por el
+                      login de Vercel (302), por lo que la evidencia es el estado del build.
+```
+
+**Cómo revertir en un caso extremo** (sin migraciones): promover en Vercel el deployment
+`6533344463` (`d6ba5f8`), o en rama nueva `git revert -m 1 <fusión del PR #142>` con las tres
+auditorías; comparar con `git diff pre-composio-fase1-d6ba5f8-20260918..main`. Sin `reset --hard`
+ni `push --force`. El módulo solo escribe filas `composio_*` inertes en `SystemSetting`.
+
+Fusión autorizada por Milton (opción A, 2026-09-18) y reafirmada con «sigue». Deployment de la
+fusión y verificación en Producción: se registran tras fusionar.
+Responsable: Claude. Estado: LISTA PARA FUSIONAR.
