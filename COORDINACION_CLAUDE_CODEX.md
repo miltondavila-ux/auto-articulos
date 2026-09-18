@@ -4626,6 +4626,14 @@ el texto existente.
 
 Responsable: Claude (tarea programada diaria de propagación).
 
+## MEJORA FINAL DE LEGIBILIDAD EN TARJETAS — 2026-09-18
+
+Se reforzó la jerarquía tipográfica de los accesos del Inicio: números en
+negrita, títulos más grandes y marcados, descripciones ligeramente mayores y
+texto en negro o blanco sólido según el fondo, sin grises de baja legibilidad.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+
 ## AJUSTE DE CONTRASTE EN TARJETAS — 2026-09-18
 
 Se reforzó el contraste de las tarjetas de color del Inicio: la tarjeta 02 usa

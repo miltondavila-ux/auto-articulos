@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import ModuleIntro, { IntroP, Modulo } from "@/components/ModuleIntro";
 import Link from "next/link";
-import { Card, Grid, Text } from "@tremor/react";
+import { Card, Grid } from "@tremor/react";
 import type { RunRow } from "@/types/dashboard";
 import PerformanceDashboard from "@/components/PerformanceDashboard";
 import OnboardingWizard from "@/components/OnboardingWizard";
@@ -301,13 +301,13 @@ export default function InicioPage() {
                   borderColor: i === 0 ? "rgba(0, 0, 0, 0.08)" : "transparent",
                 }}
               >
-                <Text style={{ color: primaryText }}>
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, lineHeight: 1.2, color: primaryText, letterSpacing: "0.02em" }}>
                   {String(i + 1).padStart(2, "0")}
-                </Text>
-                <p style={{ marginTop: 8, fontSize: 15, fontWeight: 600, color: primaryText, lineHeight: 1.4 }}>
+                </p>
+                <p style={{ marginTop: 12, fontSize: 16, fontWeight: 700, color: primaryText, lineHeight: 1.35 }}>
                   {l.label}
                 </p>
-                <p style={{ margin: "8px 0 0", fontSize: 12, lineHeight: 1.45, color: secondaryText, opacity: coloredCard ? 1 : 0.95 }}>
+                <p style={{ margin: "10px 0 0", fontSize: 13, fontWeight: 500, lineHeight: 1.5, color: secondaryText }}>
                   {l.description}
                 </p>
               </Card>

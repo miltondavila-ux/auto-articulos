@@ -2537,3 +2537,8 @@ permanece blanca y no se modifican rutas ni funcionalidad.
 
 Se sustituyeron los grises tenues de las tarjetas de color por texto negro o
 blanco sólido según el fondo, para mejorar la legibilidad.
+
+## Cambio preparado — 2026-09-18 — Jerarquía tipográfica de tarjetas
+
+Se reforzaron números, títulos y descripciones con mayor tamaño/peso y colores
+puros de alto contraste. No se modifican rutas ni comportamiento responsive.
