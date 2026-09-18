@@ -7391,3 +7391,15 @@ esa cuenta tenía datos de otra tarea. El worker ya ejecuta el código nuevo
 
 Responsable: Claude. Estado final: ARCHIVADA (verificación en vivo pendiente,
 no bloquea el cierre).
+
+## Reserva activa — CODEX - CREADOR DE TITULOS MUY ESTRICTO — 2026-09-18
+
+- Rama: `codex/reparacion-del-motor`.
+- Worktree aislado: `/private/tmp/codex-reparacion-motor`.
+- Alcance: caché de evidencia SEO por fuente, ventana GSC de 90 días y
+  fallback multifuente para que GA4 o Bing puedan aportar evidencia cuando GSC
+  no esté disponible.
+- Migración: `20260918190000_add_opportunity_evidence_cache`.
+- Capitán: `CODEX - CREADOR DE TITULOS MUY ESTRICTO`.
+- Estado: implementación local verificada; sin deployment ni migración en
+  Producción.

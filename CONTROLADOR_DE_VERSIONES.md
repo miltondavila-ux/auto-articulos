@@ -2516,3 +2516,20 @@ en `main`, confirmados con `git stash`).
 Auditoría 3: PENDIENTE (corrida en vivo con `worker-test.yml`). El worker de
 producción ya usa el código (corridas del 2026-09-18 sobre `main` posterior).
 Responsable: Claude. Estado: EN PRODUCCIÓN — verificación en vivo pendiente.
+
+## Preparación — 2026-09-18 — REPARACIÓN DEL MOTOR, fase 1
+
+Commit: `5ab58ae` en `codex/reparacion-del-motor`.
+
+Cambios: tabla `OpportunityEvidenceCache` y migración SQL aditiva; caché
+independiente para GSC/GA4/Bing con TTL de 7/14/14 días; GSC amplía la
+ventana a 90 días; GA4 y Bing pueden iniciar el análisis cuando GSC no esté
+disponible; las señales externas se incorporan a los lotes de evidencia sin
+alterar publicación ni el modelo `gpt-4o-mini`.
+
+Auditorías locales: `prisma validate` aprobado con variables dummy,
+`tsc --noEmit` aprobado y build de `apps/web` aprobado (85 páginas). Sin
+deployment ni aplicación de migración en Producción.
+
+Estado: PREPARADA PARA PR/ PREVIEW; requiere auditoría de migración y
+verificación de Preview antes de cualquier decisión de Producción.
