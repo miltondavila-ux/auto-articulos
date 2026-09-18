@@ -291,7 +291,7 @@ export default function InicioPage() {
         <Grid numItemsSm={2} numItemsLg={4} className="gap-4" style={{ marginTop: 20, marginBottom: 20 }}>
           {QUICK_LINKS.map((l, i) => (
             <Link key={l.href} href={l.href} style={{ textDecoration: "none" }}>
-              <Card>
+              <Card style={{ height: 205, boxSizing: "border-box" }}>
                 <Text>{String(i + 1).padStart(2, "0")}</Text>
                 <p style={{ marginTop: 8, fontSize: 15, fontWeight: 600, color: "#1d1d1f", lineHeight: 1.4 }}>
                   {l.label}
