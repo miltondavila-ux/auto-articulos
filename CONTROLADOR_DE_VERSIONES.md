@@ -2756,3 +2756,30 @@ etiqueta correspondiente, o `git revert -m 1 <fusión de #142>` en rama nueva (s
 
 Responsable: Claude. Estado: BLOQUEADO — dependencia externa (incidente de Vercel);
 PR #142 abierto y sin conflictos con `main`.
+
+## Condiciones cumplidas y punto de retorno FINAL — 2026-09-18 22:3x UTC — CONEXION COMPOSIO, Fase 1 (PR #142)
+
+Cierra las condiciones de la entrada «fusión DIFERIDA» (que no se reescribe).
+
+```text
+1. Vercel:            «All Systems Operational» (22:32 UTC); el incidente quedó resuelto.
+2. Producción:        d6ba5f8 desplegado — deployment 6533344463, success (21:52 UTC).
+                      Salud 22:32 UTC idéntica a la línea base: /login 200 · /privacidad 200 ·
+                      /api/me 401 · /dashboard 307→/login · /dashboard/composio 307→/login ·
+                      /api/admin/composio 401.
+3. ETIQUETA FINAL:    pre-composio-fase1-d6ba5f8-20260918  (apunta a d6ba5f8)
+                      = PUNTO DE RETORNO de la fusión del PR #142.
+                      Sustituye a pre-composio-fase1-20260918 (068a0b1), que dejaría fuera el PR #143.
+4. origin/main:       sin cambios nuevos (d6ba5f8).
+5. Preview de #142:   build de Vercel en success (head a3eac95). El Preview está protegido por el
+                      login de Vercel (302), por lo que la evidencia es el estado del build.
+```
+
+**Cómo revertir en un caso extremo** (sin migraciones): promover en Vercel el deployment
+`6533344463` (`d6ba5f8`), o en rama nueva `git revert -m 1 <fusión del PR #142>` con las tres
+auditorías; comparar con `git diff pre-composio-fase1-d6ba5f8-20260918..main`. Sin `reset --hard`
+ni `push --force`. El módulo solo escribe filas `composio_*` inertes en `SystemSetting`.
+
+Fusión autorizada por Milton (opción A, 2026-09-18) y reafirmada con «sigue». Deployment de la
+fusión y verificación en Producción: se registran tras fusionar.
+Responsable: Claude. Estado: LISTA PARA FUSIONAR.
