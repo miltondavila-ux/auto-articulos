@@ -4626,6 +4626,14 @@ el texto existente.
 
 Responsable: Claude (tarea programada diaria de propagación).
 
+## AJUSTE RESPONSIVE DEL GRÁFICO DE RITMO — 2026-09-18
+
+El gráfico **Tu ritmo — últimos 14 días** ahora ocupa todo el ancho disponible
+del dashboard. Se eliminó la columna vacía reservada a la derecha y se mantuvo
+el comportamiento responsive del grid para pantallas pequeñas.
+
+Responsable: Codex. Estado: EN REVISIÓN LOCAL.
+
 ## ELIMINACIÓN DEL AVISO DE INACTIVIDAD DEL INICIO — 2026-09-18
 
 Se retiró del dashboard el aviso ámbar que mostraba cuántos días habían

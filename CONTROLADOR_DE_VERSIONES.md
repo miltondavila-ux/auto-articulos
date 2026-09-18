@@ -2521,3 +2521,8 @@ migraciones, rutas ni permisos.
 
 Se eliminó el Callout del Inicio que mostraba los días sin publicar y su CTA.
 Las métricas, alertas de configuración y accesos directos permanecen intactos.
+
+## Cambio preparado — 2026-09-18 — Gráfico de ritmo a ancho completo
+
+El panel **Tu ritmo — últimos 14 días** pasó a ocupar todo el ancho disponible,
+manteniendo su adaptación responsive. No hay cambios de schema ni migraciones.

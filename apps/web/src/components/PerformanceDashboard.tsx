@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   Card,
   Grid,
-  Col,
   Metric,
   Text,
   Title,
@@ -117,9 +116,8 @@ export default function PerformanceDashboard() {
         </Card>
       </Grid>
 
-      <Grid numItemsLg={3} className="mt-4 gap-4">
-        <Col numColSpanLg={2}>
-          <Card>
+      <Grid numItemsLg={1} className="mt-4 gap-4">
+        <Card>
             <Title>Tu ritmo — últimos 14 días</Title>
             {(() => {
               /*
@@ -186,8 +184,7 @@ export default function PerformanceDashboard() {
                 </>
               );
             })()}
-          </Card>
-        </Col>
+        </Card>
       </Grid>
     </div>
   );
