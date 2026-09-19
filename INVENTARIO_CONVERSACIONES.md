@@ -1445,3 +1445,6 @@ reservas liberadas. Estado final: ARCHIVADA.
 
 ### Actualización 2026-09-19 19:37 UTC — CONEXION COMPOSIO UX-1
 - UX-1 etapa 1 **DESPLEGADA** (PR #157, `474e8d9`, opt-in). Sin reservas activas ni capitanía de migración. Estado global y plan de la 2b-2 en Coordinación → «Avance … UX-1 etapa 1 FUSIONADA». Conversación PAUSADA a la espera de Milton (clave nueva y «Habilitado» de #2, #3, #40).
+
+### Actualización 2026-09-19 20:33 UTC — CONEXION COMPOSIO: piloto habilitado
+- Clave nueva (`••••EHCE`) y 4 auth configs en Producción; módulo «Conexión por Composio» habilitado a #2, #3 y #40 (3 de 92). Verificado. Detalle en Coordinación → «Avance … piloto HABILITADO». Sin reservas ni capitanía de migración.
