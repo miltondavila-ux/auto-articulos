@@ -34,12 +34,12 @@ const BASE_ENTRIES: NavEntry[] = [
     group: "publicaciones",
     label: "Publicaciones",
     items: [
-      { id: "publicar", href: "/dashboard/publicar", label: "Publica tus propios títulos" },
-      { id: "oportunidades", href: "/dashboard/oportunidades", label: "Publica contenido con ayuda de la IA avanzada" },
+      { id: "publicar", href: "/dashboard/publicar", label: "1) Publica tus propios títulos" },
+      { id: "oportunidades", href: "/dashboard/oportunidades", label: "2) Publica contenido con ayuda de la IA avanzada" },
       {
         id: "oportunidades-redes",
         href: "/dashboard/oportunidades-redes",
-        label: "Difunde tu contenido en blogs externos y redes sociales",
+        label: "3) Difunde tu contenido en blogs externos y redes sociales",
       },
       {
         id: "publicaciones-en-curso",

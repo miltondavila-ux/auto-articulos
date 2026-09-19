@@ -4626,6 +4626,22 @@ el texto existente.
 
 Responsable: Claude (tarea programada diaria de propagación).
 
+## Codex — NUMERACIÓN DEL MENÚ DE PUBLICACIONES — 2026-09-19
+
+Se numeraron las tres opciones principales del menú «Publicaciones» para
+reflejar el flujo de trabajo solicitado:
+
+1. «1) Publica tus propios títulos»
+2. «2) Publica contenido con ayuda de la IA avanzada»
+3. «3) Difunde tu contenido en blogs externos y redes sociales»
+
+Archivo funcional: `apps/web/src/components/DashboardNav.tsx`.
+No se modificó el esquema Prisma, no hubo migraciones ni cambios de datos.
+`git diff --check` pasó correctamente.
+
+Estado: documentado y listo para despliegue productivo autorizado por Milton.
+Responsable: Codex.
+
 ## ACLARACIÓN PARA PUBLICAR TÍTULOS PROPIOS — 2026-09-18
 
 La explicación de **Publica tus propios títulos** ahora aclara que este acceso
