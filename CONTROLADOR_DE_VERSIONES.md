@@ -3093,3 +3093,22 @@ Complementa la entrada «Versión preparada (NO desplegada) — 2b-1» (no se re
 PR #155 abierto. **PUNTO DE RETORNO** registrado antes de fusionar: etiqueta `pre-composio-fase2b1-4543b17-20260919` (= `4543b17`, Producción con deployment success;
 `/login` 200, `/privacidad` 200, `/api/me` 401, `/dashboard` 307→/login). Sin migraciones. Rollback: promover el deployment de esa etiqueta o `git revert -m 1 <fusión>` en rama nueva.
 Estado: LISTA PARA FUSIONAR — pendiente de Preview `success` y fusión.
+
+## Versión desplegada — 2026-09-19 — CONEXION COMPOSIO, Fase 2b-1 (conectar, elegir y probar por Composio)
+
+PR #155 fusionado a `main` (`0701e88`, 2026-09-19 19:24:23 UTC), con merge commit. Sin migraciones ni cambios de schema. Registra el resultado de las entradas «Versión preparada»
+de la 2b-1 (que no se reescriben).
+
+```text
+Commit de fusión:     0701e88 (head del PR: 08672b5; commit propio de código: fdcc50a)
+Deployment Vercel:    Production · success (~50 s tras fusionar)
+PUNTO DE RETORNO:     etiqueta pre-composio-fase2b1-4543b17-20260919 (= 4543b17)
+Salud 2026-09-19 19:26 UTC en https://seototal.lasolucionweb.com (idéntica a la línea base):
+  /login 200 · /privacidad 200 · /api/me 401 · /dashboard 307→/login · /api/composio/status 401 (sin sesión)
+Verificación con cuenta normal (403 en /api/composio/{status,connect,options}, la página redirige, el menú oculta el módulo): OK
+```
+
+Rollback: promover en Vercel el deployment del punto de retorno, o `git revert -m 1 0701e88` en rama nueva con las tres auditorías. No hay datos que deshacer.
+Pendiente NO bloqueante: que Milton pegue la clave nueva y habilite a #2, #3 y #40; verificación como administrador.
+
+Responsable: Claude. Estado: EN PRODUCCIÓN — uso pendiente de la clave nueva y del «Habilitado» de Milton.

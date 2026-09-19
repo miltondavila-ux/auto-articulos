@@ -7876,3 +7876,16 @@ Milton pidió seguir de forma autónoma y registrar cada avance aquí. Estado ac
 - **Punto de retorno:** etiqueta `pre-composio-fase2b1-4543b17-20260919` (= Producción antes de esta fusión, deployment success).
 - **PR #155** (`claude/composio-fase-2b1` → `main`), commit propio `fdcc50a`, HEAD `e68d3ad`. Pendiente: Preview `success`, Vercel operativo y fusión (Milton dio permiso de producción condicionado a Coordinación el 2026-09-19).
 - Tras fusionar, quedan **para Milton**: pegar la clave nueva en Administración → Composio y poner «Habilitado» a #2, #3 y #40.
+
+### Avance 2026-09-19 19:26 UTC — CONEXION COMPOSIO Fase 2b-1: FUSIONADA y DESPLEGADA
+
+- **PR #155 fusionado** a `main` (`0701e88`, 2026-09-19 19:24:23 UTC). Producción (Vercel) `success` en ~50 s; salud idéntica a la línea base: `/login` 200 · `/privacidad` 200 ·
+  `/api/me` 401 · `/dashboard` 307→/login · `/api/composio/status` 401 sin sesión.
+- **Verificado en Producción con una cuenta NORMAL** (sesión abierta en el panel): las rutas `/api/composio/{status,connect,options}` responden **403**, `/dashboard/configuracion/composio`
+  redirige a `/dashboard/configuracion` y `/api/me` incluye `conexion-composio` entre los módulos ocultos → el opt-in funciona y nadie ve nada sin «Habilitado».
+- **PUNTO DE RETORNO** usado: `pre-composio-fase2b1-4543b17-20260919`. Sin migraciones.
+- **Actualiza el bloque «TRASPASO A CODEX»:** la Fase 2b-1 **YA ESTÁ EN PRODUCCIÓN** (ya no «solo en la rama»). Producción = `0701e88`. La rama `claude/composio-fase-2b1` queda fusionada y conservada.
+- **Sigue pendiente de Milton** (lo único que falta para que la 2b-1 sea usable): (1) pegar en Administración → Composio la clave nueva (Read All + escritura en Connected accounts,
+  Session management y Session tool execution; la de Producción `pJfU` no alcanza); (2) poner «Habilitado» a #2 Lorena, #3 Mario y #40 Zulmad. Verificación de administrador (módulo visible
+  como «Conexión por Composio» en Administración → Usuarios) pendiente: la sesión disponible era de una cuenta normal.
+- **Siguiente para quien continúe:** UX-1 según `ESPECIFICACION_CONEXIONES_UNIFICADAS.md` (pantalla Conexiones), en rama nueva desde `origin/main`, por etapas y sin romper las pestañas actuales.
