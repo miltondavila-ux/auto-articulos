@@ -7714,3 +7714,153 @@ auditorías, con punto de retorno `pre-creacion-publicaciones-propias-f23ba3c-20
 `TitleGenerationRequest` aplicada a mano por Milton en producción (no verificada por Claude). Sin capitanía de
 migración reclamada. Función inerte hasta que Milton pegue el prompt en Administración. Ver
 `CONTROLADOR_DE_VERSIONES.md` e `INVENTARIO_CONVERSACIONES.md`.
+
+## Claude — CONEXION COMPOSIO — TRASPASO A CODEX — 2026-09-19
+
+Traspaso pedido por Milton para poder continuar desde Codex. **Leer este bloque completo antes de tocar nada** y,
+antes de programar, los tres documentos de proyecto: `MASTER_BLUEPRINT_CONEXION_COMPOSIO.md`,
+`FASE_0_ARQUITECTURA_CONEXION_COMPOSIO.md` y `ESPECIFICACION_CONEXIONES_UNIFICADAS.md` (esta última recoge las
+decisiones de UX del 2026-09-19).
+
+```text
+IDENTIDAD:            Claude - Sonnet 5 - CONEXION COMPOSIO
+PROYECTO:             Auto Artículos — camino PARALELO para que los clientes conecten Google y Meta por Composio
+ESTADO FINAL:         PAUSADA (traspaso a Codex a pedido de Milton; pasa a TRANSFERIDA cuando Codex lo acepte)
+RAMA:                 claude/composio-fase-2b1 (código de la Fase 2b-1) · este registro: claude/composio-traspaso-codex
+WORKTREE:             /Users/miltondavila/Creador de articulos/.worktrees/conexion-composio
+COMMIT BASE:          18941fd (base de la rama 2b-1) · producción hoy: bbe8863 (Vercel success)
+ÚLTIMO COMMIT:        fdcc50a (propio, 2b-1) · b638b1d (merge de origin/main dentro de la rama, sin conflictos)
+ARCHIVOS MODIFICADOS: ver «Qué hay solo en la rama» más abajo (22 archivos, 0 de schema, 0 migraciones)
+ARCHIVOS RESERVADOS:  los de la rama 2b-1, hasta que Codex acepte el traspaso
+ARCHIVOS LIBERADOS:   capitanía de migración liberada el 2026-09-19 00:59 UTC (Fase 2a); ninguna reserva más
+MIGRACIONES:          2b-1: NINGUNA. Fase 2a (tablas IntegrationRoute / ComposioConnection) ya aplicada en Producción
+PRUEBAS EJECUTADAS:   tsc 0 errores · next build exit 0 · 28 pruebas automáticas · pruebas HTTP y de punta a punta con cuentas reales en local
+PRODUCCIÓN/PREVIEW:   Producción sana en bbe8863 con Fase 1 y 2a. La 2b-1 NO está desplegada: sin PR, sin Preview, sin punto de retorno
+ERRORES O BLOQUEOS:   ver «Pendientes y verificaciones abiertas»
+TRABAJO PENDIENTE:    auditar/desplegar 2b-1 → UX-1 (pantalla Conexiones) → 2b-2..2b-4 → 2c → UX-2
+SIGUIENTE ACCIÓN EXACTA: ver «Siguiente acción exacta»
+RESPONSABLE SIGUIENTE: Codex (a confirmar por Milton)
+FECHA Y HORA DE LIBERACIÓN: 2026-09-19 19:17 UTC
+```
+
+### 1. Qué hay EN PRODUCCIÓN hoy (verificado)
+
+- **Fase 1** (PR #142, `f0fd534`): módulo de Administración `/dashboard/composio`: clave de API de Composio cifrada en
+  `SystemSetting`, verificación de los 4 auth configs, lista de cuentas conectadas, grupo «Administración» en el menú.
+- **Fase 2a** (PR #151, `484a579`): tablas `IntegrationRoute` y `ComposioConnection` + enums (migración
+  `20260918230000_add_composio_connections`, aplicada con la vía `safe_composio_connections` del workflow «Migración manual»,
+  corrida 35411144863, RLS confirmado) + sección «Vía de conexión por app» en Administración. **El interruptor de vía está
+  BLOQUEADO en código** (`COMPOSIO_ROUTING_ENABLED = false` en `apps/web/src/lib/composio-route.ts`): nadie cambia de vía.
+- Puntos de retorno (etiquetas Git): `pre-composio-fase1-d6ba5f8-20260918`, `pre-composio-fase2a-c29d5a5-20260918`.
+- **Ningún cliente ve ningún cambio.** Ningún consumidor (Search Console, Analytics, Facebook, Instagram) lee las tablas nuevas.
+- En producción hay clave de Composio guardada (`••••pJfU`, nombre en Composio «AUTO ARTICULOS PRODUCCION») y los 4 auth
+  configs. **Esa clave NO sirve para la 2b-1** (le falta escritura en «Session management»; ver más abajo).
+
+### 2. Qué hay SOLO en la rama `claude/composio-fase-2b1` (sin auditar, sin desplegar)
+
+Objetivo de la 2b-1: que una persona con el módulo habilitado **conecte, elija (con aprobación) y pruebe** cada app por
+Composio, sin cambiar nada de lo que el sistema usa hoy.
+
+- `packages/shared/src/composio.ts` (+ export en `index.ts`): cliente de Composio y **LISTA BLANCA** de herramientas
+  (`COMPOSIO_TOOL_ALLOWLIST`, `runAllowedTool`, `isToolAllowed`). Ejecuta con **sesiones de Tool Router**, no con `tools/execute`.
+- `apps/web/src/lib/modules.ts`: módulo **opt-in** `conexion-composio` (`optIn: true`): solo administradores y quien tenga
+  «Habilitado» en Administración → Usuarios; `getEffectiveDisabledModules` y `hasOptInModuleAccess`. `user-manual.ts` no lo cuenta
+  al asistente.
+- `apps/web/src/lib/composio-connections.ts`: `startConnection`, `completeConnection` (verifica el callback contra Composio y contra la
+  fila INITIATED de ESA persona), `disconnectApp`, `testConnectedApp`, `getSelectionOptions`, `saveSelection` (revalida contra Google/Meta y
+  aplica `validateAndRegisterTrialDomain`).
+- `apps/web/src/lib/composio-options.ts`: opciones elegibles con **códigos visibles** (sitio con su código exacto, propiedad y cuenta de
+  Analytics, Página de Facebook, cuenta de Instagram), reglas (solo propietario/usuario completo en Search Console; un solo dominio por cuenta;
+  actividad de 28 días por sitio; tráfico por propiedad; recomendar lo que la cuenta ya usa hoy). Nunca devuelve tokens.
+- Rutas: `apps/web/src/app/api/composio/{status,connect,callback,disconnect,test,options,select}/route.ts` (+ `_access.ts`).
+- Pantalla TEMPORAL: `apps/web/src/app/dashboard/configuracion/composio/{page,ComposioConnect}.tsx` y enlace condicionado en
+  `ConfiguracionSubNav.tsx`. **Se retirará cuando exista la pantalla «Conexiones» (UX-1).**
+- Pruebas: `apps/web/src/lib/modules.test.ts`, `composio-options.test.ts`, `apps/worker/src/composio.test.ts`.
+- `ComposioPanel.tsx` (Administración): solo se corrigió el texto de permisos de la clave. `manual-usuario.ts`: sección de Administración.
+
+### 3. Decisiones de Milton (no reabrir sin preguntarle)
+
+- Camino **paralelo** al actual, motivado por las apps de Google/Meta aún sin aprobar (Search Console, Analytics y Business Profile esperan a
+  Google; Facebook, Instagram y Threads a Meta). Business Profile y Threads **no existen en Composio**: siguen por la API propia.
+- **Cuentas piloto:** Lorena Alvarez **#2**, Mario Davila **#3**, Zulmad Antolinez **#40** (ya tienen permisos de Facebook e Instagram). Milton las
+  gestiona con el módulo opt-in en Administración → Usuarios; **no hay lista piloto en código**.
+- **Stories:** Instagram **sí** (`INSTAGRAM_POST_IG_USER_MEDIA` con `media_type: STORIES`, a probar); Facebook **no** existe en Composio → siguen por
+  la API propia mientras Meta aprueba.
+- **UX unificada** (ver `ESPECIFICACION_CONEXIONES_UNIFICADAS.md`): una pantalla «Conexiones» con botones **ANALÍTICAS** y **DIFUSIÓN**, una tarjeta
+  por red, método invisible para el cliente, solo se ve lo que la persona tiene activado; al hacer el switch la conexión vieja se **desactiva pero se
+  guarda 14 días** y el HOME muestra **una alerta solo por Google Search Console** con enlace para reconectar; las pestañas viejas
+  (Indexación y SEO, Redes Sociales) pasarán a redirigir; despliegue por etapas.
+- Instagram por Composio usa **Instagram Login** (flujo distinto al actual, que pasa por la Página de Facebook).
+- `tagcrush` (marca blanca) queda **fuera** del switch: con Composio el cliente ve «Composio» en la pantalla de Google/Meta.
+
+### 4. Hallazgos técnicos VERIFICADOS (para no redescubrirlos)
+
+1. `POST /tools/execute/{slug}` exige el permiso `tool_execution` (escritura), que el diálogo de claves **no ofrece**. Se usa **Tool Router**:
+   `POST /tool_router/session` (permiso `session_management` de **escritura**), `POST /tool_router/session/{id}/execute` («Session tool execution») y
+   `DELETE` de la sesión. La clave necesita **lectura general + escritura en «Connected accounts», «Session management» y «Session tool execution»**.
+2. La sesión se crea con `tools.enable`; **Composio rechaza por su cuenta** lo no permitido (`ToolRouterV2_ToolNotInEnabledList`). Aun así la sesión
+   lista meta-herramientas (`COMPOSIO_REMOTE_BASH_TOOL`, `COMPOSIO_MULTI_EXECUTE_TOOL`…): el código solo ejecuta slugs de la lista blanca; no cambiarlo.
+3. Formas reales: `LIST_SITES` → `{siteEntry:[{permissionLevel,siteUrl}]}`; `LIST_ACCOUNT_SUMMARIES` → `{accountSummaries:[{account,displayName,name,
+   propertySummaries:[{displayName,parent,property,propertyType}]}]}`; `FACEBOOK_LIST_MANAGED_PAGES` **incluye tokens de acceso** (nunca exponerlos);
+   `INSTAGRAM_GET_USER_INFO` → id, username, name. `POST /connected_accounts/link` → `redirect_url`, `connected_account_id`, `expires_at`.
+4. Parámetros obligatorios: Search Console (`site_url`, y `feedpath`/`inspection_url`/`start_date`/`end_date` según herramienta); Analytics `RUN_REPORT`
+   (`property`); Facebook `CREATE_POST` (`page_id`,`message`); Instagram `POST_IG_USER_MEDIA` (`ig_user_id`).
+5. Facebook: autoriza una **cuenta personal** que administre la Página; aparece «Cambio de cuenta» si el navegador actúa como Página.
+6. La pantalla de consentimiento de Google/Meta dice «Composio». Plan gratis de Composio: 100.000 llamadas/mes (tope duro); Scale 29 USD/mes.
+7. Producción aplica el schema con `prisma db push` y luego fuerza RLS; existen vías `safe_*` que ejecutan un SQL concreto. Las migraciones NO se
+   aplican al desplegar.
+8. `next dev` bloquea `127.0.0.1` (usar `localhost`). `apps/web/AGENTS.md`: esta versión de Next.js tiene cambios de API; consultar
+   `node_modules/next/dist/docs/`.
+9. El hook de commit `generate-product-update` falla en local (sin `DATABASE_URL`/`OPENAI_API_KEY`); es inofensivo y **no debe anunciar módulos de
+   administración a los clientes**.
+10. El clasificador del modo automático **deniega fusionar a `main`** salvo permiso explícito de Milton en el chat.
+
+### 5. Configuración creada EN Composio (no vive en el repo; sin secretos)
+
+Proyecto `10minuteswebsite_workspace_first_project`. Claves de API (los valores nunca se guardaron aquí): «AUTO ARTICULOS» (`••••pVDI`, vieja, insuficiente),
+«AUTO ARTICULOS PRODUCCION» (`••••pJfU`, la que está en Producción, **insuficiente**), «AUTO ARTICULOS 2B» (`••••cmBr`, permisos correctos, guardada solo en la
+base LOCAL de Milton). Auth configs (OAuth 2.0 + Composio Managed, permisos mínimos): Search Console `ac_xeK3IXS9_J2A` (webmasters, webmasters.readonly,
+userinfo.profile/email) · Analytics `ac_Z6Vbdtcm0eVR` (analytics.readonly, userinfo.profile) · Facebook `ac_wh7GjfOEBPre` (public_profile, pages_show_list,
+pages_read_engagement, pages_manage_posts, business_management) · Instagram `ac_x-bKQdH0Z3nH` (instagram_business_basic, instagram_business_content_publish).
+Cuentas conectadas de prueba: **0** (se borraron todas al terminar).
+
+### 6. Reglas de oro para quien continúe
+
+- Obedecer este documento completo: rama y worktree propios, reserva de archivos, punto de retorno **antes** de fusionar, tres auditorías, verificación
+  después. Nunca trabajar sobre `main`. Esquema y migración SIEMPRE en el mismo commit.
+- **Producción solo con permiso expreso de Milton** para esa acción y respetando Coordinación. El permiso vigente que dio Milton el 2026-09-19 fue:
+  «tienes permiso para producción siempre y cuando respetes y obedezcas todo el documento de coordinación y sobre todo no rompas nada». Codex debe
+  pedir el suyo.
+- Nunca pedir ni recibir contraseñas ni claves de API por chat: las pega Milton en el módulo.
+- No tocar `vercel.json`, middleware, autenticación ni las integraciones propias existentes sin autorización. No ejecutar `curl … | sh` de Composio.
+- Comprobar el incidente público de Vercel (`vercel-status.com`) antes de fusionar: un incidente ya bloqueó un despliegue el 2026-09-18.
+
+### 7. Cómo reproducir el entorno local
+
+Worktree `.worktrees/conexion-composio` (dependencias instaladas). `cp "/Users/miltondavila/Creador de articulos/.env.local" apps/web/.env.local` (ignorado por git; borrar
+al terminar) · `npx prisma generate --schema=packages/db/prisma/schema.prisma` · base local `autoarticulos` en `127.0.0.1:5432` (rol `miltondavila`; tiene las tablas
+de la Fase 2a y la clave «2B» + 4 auth configs cifrados) · servidor: `cd apps/web && npx next dev -p 3100` · sesión de prueba: firmar con `createSessionToken(userId)`
+de `src/lib/session.ts` (script `tsx`) y poner la cookie `auto_articulos_session` en `localhost`. Pruebas: `cd apps/web && npx tsx --test src/lib/modules.test.ts
+src/lib/composio-options.test.ts` y `cd apps/worker && npx tsx --test src/composio.test.ts`; además `npx tsc --noEmit` y `npm run build` en `apps/web`.
+Estado local dejado: banderas de Facebook/Instagram del admin local en `false`, 0 filas de conexión, servidor detenido.
+
+### 8. Pendientes y verificaciones abiertas
+
+1. **Auditorías de la 2b-1** — integridad, funcional (sobre `main` actual) y regresión — y **punto de retorno** (etiquetar el commit de Producción vigente al momento
+   de fusionar, `pre-composio-fase2b1-<sha>-<fecha>`). Ya hechas en local: `tsc`, 28 pruebas, `next build`, cero schema/migraciones/workflows.
+2. **Clave de Producción:** reemplazar la de `pJfU` por una con **Read All + escritura en Connected accounts, Session management y Session tool execution**
+   (Milton la crea y la pega él mismo; los permisos no se pueden editar).
+3. **Habilitar el módulo** «Conexión por Composio» a #2, #3 y #40 en Administración → Usuarios («Habilitado») cuando la 2b-1 esté desplegada.
+4. **Comprobar la conexión actual de Lorena:** el 2026-09-19 Milton **borró** en Analytics la cuenta `401054988` (propiedad `545454891`), que era una copia
+   duplicada de `534571871`. Si la conexión propia de Lorena usaba `545454891`, sus métricas fallarán; Analytics la guarda ~35 días en la papelera.
+5. **Analytics sin visitas desde el 2026-09-09** en ambas propiedades de esa cuenta (antes 1–46 sesiones/día): posible fallo del código de seguimiento del sitio.
+6. Antifraude: para cuentas de prueba restringidas, `validateAndRegisterTrialDomain` no mira las selecciones de Composio de otras cuentas.
+7. Aviso de privacidad («la conexión la gestiona Composio») y actualización de la política: tarea aparte pendiente.
+
+### 9. Siguiente acción exacta
+
+1. Leer los tres documentos de proyecto y este bloque. Reclamar/registrar la conversación en `INVENTARIO_CONVERSACIONES.md`.
+2. `git fetch`; trabajar en `claude/composio-fase-2b1` (o una rama nueva desde ella); integrar `origin/main`; repetir `tsc`, pruebas y `next build`.
+3. Etiquetar el punto de retorno, abrir PR, esperar el Preview, y **con permiso de Milton** fusionar; verificar despliegue y salud.
+4. Guiar a Milton (paso a paso, uno a la vez) para pegar la clave nueva y habilitar #2, #3 y #40; probar cada app con ellas.
+5. Construir **UX-1** según `ESPECIFICACION_CONEXIONES_UNIFICADAS.md` (pantalla Conexiones, por etapas, sin romper las pestañas actuales).

@@ -3066,3 +3066,23 @@ Migración: `20260918190000_add_title_generation_requests` aplicada a mano en pr
 (aditiva, repetible; sin registrar en `_prisma_migrations`). La capitanía de migración activa
 (`CODEX - CREADOR DE TITULOS MUY ESTRICTO`) no cambia.
 Responsable: Claude. Estado: EN PRODUCCIÓN — verificación en vivo pendiente (Milton).
+
+## Versión preparada (NO desplegada) — 2026-09-19 — CONEXION COMPOSIO, Fase 2b-1 (conectar, elegir y probar por Composio)
+
+Rama `claude/composio-fase-2b1` (commit propio `fdcc50a`, merge de `origin/main` `b638b1d`). **No hay PR, ni Preview, ni punto de retorno, ni despliegue.**
+Sin cambios de schema ni migraciones. Añade el cliente de Composio con lista blanca (`packages/shared/src/composio.ts`), el módulo opt-in
+`conexion-composio`, siete rutas `/api/composio/*` y una página temporal `/dashboard/configuracion/composio` visible solo para administradores y quien
+tenga «Habilitado». Ningún cliente cambia: nada del sistema lee estas conexiones todavía.
+
+Verificación local hecha sobre `main` (`bbe8863`) integrado: `tsc --noEmit` 0 errores · `npm run build` exit 0 (rutas nuevas presentes) · 28 pruebas
+automáticas (web 20, worker 8) · pruebas HTTP (401 sin sesión, 403 sin «Habilitado», 400/409 en entradas inválidas, callback falsificado rechazado) ·
+prueba de punta a punta con cuentas reales de Search Console, Analytics, Facebook e Instagram, con las 4 conexiones borradas al terminar.
+**Pendiente antes de fusionar:** auditoría de integridad, funcional y de regresión con Coordinación, punto de retorno (etiquetar el commit de Producción
+vigente en ese momento), PR, Preview `success`, Vercel operativo y permiso expreso de Milton.
+
+Orden en Producción: (1) fusionar (no hay migración) → (2) verificar despliegue y salud → (3) Milton pega la clave nueva (Read All + escritura en
+Connected accounts, Session management y Session tool execution) → (4) Milton pone «Habilitado» a las cuentas #2, #3 y #40 → (5) probar con ellas.
+Rollback: promover el deployment del punto de retorno o `git revert -m 1 <fusión>` en rama nueva; no hay datos que deshacer (las conexiones de prueba viven en
+`ComposioConnection`, que es aditiva).
+
+Responsable: Claude (traspaso a Codex, ver Coordinación). Estado: PREPARADA — pendiente de auditorías, PR y fusión.
