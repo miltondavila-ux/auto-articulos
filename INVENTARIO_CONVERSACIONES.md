@@ -1451,3 +1451,6 @@ reservas liberadas. Estado final: ARCHIVADA.
 
 ### Actualización 2026-09-19 20:51 UTC — CONEXION COMPOSIO
 - Resolvedor (#160), aviso (#161) y adaptador de Search Console (#162) fusionados, todos inertes. Lorena restaurada por la API principal. Sin reservas ni capitanía de migración. Detalle en Coordinación → «Avance … adaptador FUSIONADO».
+
+### Actualización 2026-09-19 20:59 UTC — CONEXION COMPOSIO: traspaso a Codex (estado vigente)
+- Estado: PAUSADA por límite de cupo/contexto; traspaso a Codex a pedido de Milton (TRANSFERIDA cuando Codex acepte). Producción = main = `7efaacd`. Sin reservas ni capitanía de migración. Bloque consolidado y prompt: Coordinación → «TRASPASO A CODEX · ESTADO VIGENTE» y `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md`.
