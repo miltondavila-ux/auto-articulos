@@ -8,7 +8,7 @@ test("el módulo Composio existe, es opt-in y apunta a su página", () => {
   const mod = SYSTEM_MODULES.find((m) => m.id === "conexion-composio");
   assert.ok(mod);
   assert.equal(mod!.optIn, true);
-  assert.equal(mod!.href, "/dashboard/configuracion/composio");
+  assert.equal(mod!.href, "/dashboard/configuracion/conexiones");
 });
 
 test("opt-in: un usuario normal NO lo ve por defecto (heredar), sin lista global ni overrides", () => {

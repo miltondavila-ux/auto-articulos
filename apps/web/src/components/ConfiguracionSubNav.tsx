@@ -16,7 +16,7 @@ const SECCIONES = [
 ] as const;
 
 /** Módulo opt-in (ver SYSTEM_MODULES): solo aparece para quien lo tenga «Habilitado». */
-const COMPOSIO_SECCION = { href: "/dashboard/configuracion/composio", label: "Conexión Composio" } as const;
+const COMPOSIO_SECCION = { href: "/dashboard/configuracion/conexiones", label: "Conexiones" } as const;
 
 /**
  * Barra de ida y vuelta entre las secciones de Configuración.

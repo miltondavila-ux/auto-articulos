@@ -1,20 +1,10 @@
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/current-user";
-import { canUseComposioModule } from "@/lib/composio-connections";
-import ConfiguracionSubNav from "@/components/ConfiguracionSubNav";
-import ComposioConnect from "./ComposioConnect";
 
-export const dynamic = "force-dynamic";
-
-export default async function ConexionComposioPage() {
-  const user = await getCurrentUser();
-  // Módulo opt-in: solo administradores y quien tenga «Habilitado».
-  if (!canUseComposioModule(user)) redirect("/dashboard/configuracion");
-
-  return (
-    <div>
-      <ConfiguracionSubNav />
-      <ComposioConnect />
-    </div>
-  );
+/**
+ * Dirección antigua de la pestaña temporal «Conexión Composio». Ahora todo vive en
+ * «Conexiones» (ver ESPECIFICACION_CONEXIONES_UNIFICADAS.md); se conserva para no
+ * romper enlaces guardados.
+ */
+export default function ConexionComposioAntigua() {
+  redirect("/dashboard/configuracion/conexiones");
 }

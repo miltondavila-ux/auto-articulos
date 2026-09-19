@@ -7889,3 +7889,23 @@ Milton pidió seguir de forma autónoma y registrar cada avance aquí. Estado ac
   Session management y Session tool execution; la de Producción `pJfU` no alcanza); (2) poner «Habilitado» a #2 Lorena, #3 Mario y #40 Zulmad. Verificación de administrador (módulo visible
   como «Conexión por Composio» en Administración → Usuarios) pendiente: la sesión disponible era de una cuenta normal.
 - **Siguiente para quien continúe:** UX-1 según `ESPECIFICACION_CONEXIONES_UNIFICADAS.md` (pantalla Conexiones), en rama nueva desde `origin/main`, por etapas y sin romper las pestañas actuales.
+
+### Avance 2026-09-19 19:34 UTC — CONEXION COMPOSIO UX-1 (etapa 1): pantalla «Conexiones» — auditorías aprobadas
+
+Rama `claude/composio-ux1-conexiones` (base `3232906`). Cumple la especificación `ESPECIFICACION_CONEXIONES_UNIFICADAS.md`, etapa 1 (**opt-in**: solo administradores y quien tenga «Habilitado»).
+
+- **Qué hace:** nueva pantalla `/dashboard/configuracion/conexiones` con los botones **ANALÍTICAS** (Search Console con etiqueta «Esencial», Analytics, Bing) y **DIFUSIÓN** (Business Profile, Instagram/Facebook/Threads,
+  LinkedIn, Pinterest, Bluesky, Tumblr, Blogger, Dev.to). Se **reutilizan sin modificar** las secciones existentes; la conexión por Composio (`components/ComposioConnect.tsx`, ahora con modo `embedded` y filtro `apps`)
+  aparece debajo de Search Console, Analytics y de Facebook/Instagram («· nueva conexión»), y se **oculta** si la persona no tiene esa red activada (`hidden` desde `listUserConnections`). Misma lógica de visibilidad por red
+  que «Redes Sociales» (copiada, no compartida). Vista en la URL (`?vista=analiticas|difusion`).
+- **Cambios asociados:** el enlace temporal del menú ahora dice «Conexiones»; la dirección antigua `/dashboard/configuracion/composio` **redirige** a la nueva; el retorno de Composio (`/api/composio/callback`) aterriza en
+  Conexiones en la vista correcta; el módulo opt-in apunta a la nueva ruta; manual actualizado.
+- **Auditorías:** (1) integridad APROBADA — 10 archivos, 0 de schema/migraciones/workflows/Vercel/proxy, 0 secretos, 0 depuración; (2) funcional APROBADA — `tsc` 0, `next build` exit 0, 20 pruebas web,
+  comprobación local como administrador (ambos botones, secciones, mensaje de retorno solo en la tarjeta correcta) y como persona normal (Conexiones redirige; Indexación, Redes Sociales y Configuración siguen en 200);
+  (3) regresión APROBADA — **ninguna sección ni pantalla existente de conexión fue modificada**.
+- **Punto de retorno:** etiqueta `pre-composio-ux1-3232906-20260919` (= `3232906`, Producción success).
+- **Deuda a resolver ANTES de retirar las pantallas viejas (UX-2):** 5 archivos enlazan a `/dashboard/configuracion/indexacion` o `/redes-sociales` — `app/api/search-integrations/bing/callback/route.ts`,
+  `app/dashboard/configuracion/page.tsx`, `components/BingWebmasterSection.tsx` (incluye `router.replace`), `content/manual-usuario.ts`. Las secciones existentes, al terminar su autorización, regresan a las pantallas
+  viejas: mientras estas existan no se rompe nada, pero al unificar deben redirigir a Conexiones.
+- **Diferencias conocidas con la especificación (no cambiadas a propósito para no romper nada):** Business Profile hoy se muestra a todos en DIFUSIÓN (la especificación pide que aparezca solo si el administrador lo activa); las dos
+  pestañas viejas siguen visibles para todos hasta UX-2; no existe aún la alerta del HOME ni la desconexión al switch (dependen de los consumidores, etapa 2b-2).
