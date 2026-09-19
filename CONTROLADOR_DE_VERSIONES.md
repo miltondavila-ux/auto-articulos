@@ -2979,3 +2979,40 @@ rama nueva. Las tablas nuevas son aditivas y quedan vacías: pueden permanecer s
 "ComposioConnectionStatus"; DROP TYPE "IntegrationRouteMode";`) sin afectar a ninguna otra tabla.
 
 Responsable: Claude. Estado: PREPARADA — pendiente de PR, fusión, migración y verificación.
+
+## Versión desplegada — 2026-09-19 — CONEXION COMPOSIO, Fase 2a (interruptor por app y tablas nuevas)
+
+PR #151 fusionado a `main` (`484a579`, 2026-09-19 00:57:11 UTC), con merge commit. Migración aditiva
+`20260918230000_add_composio_connections` (2 enums y 2 tablas nuevas). Sin cambio de comportamiento para
+ningún cliente (interruptor de vía bloqueado, ningún consumidor lee las tablas nuevas).
+
+```text
+Commit de fusión:      484a579 (head del PR: d651d9a)
+Deployment Vercel:     Production · success (~50 s tras fusionar)
+PUNTO DE RETORNO:      etiqueta pre-composio-fase2a-c29d5a5-20260918 (= c29d5a5, deployment 6534219219)
+Migración (workflow):  «Migración manual», corrida 35411144863, 2026-09-19 00:58:38 UTC, sobre 484a579
+                       Solo se marcó safe_composio_connections. Pasos: «Aplicar migración segura de
+                       CONEXION COMPOSIO» success («Script executed successfully»); «Aplicar migraciones con
+                       Session pooler» (db push) OMITIDO; «Forzar RLS» success: «todas las tablas de
+                       "public" ya tienen RLS activado».
+Salud 00:59 UTC en https://seototal.lasolucionweb.com, idéntica a la línea base:
+  /login 200 · /privacidad 200 · /api/me 401 · /dashboard 307→/login · /api/admin/composio/routes 401
+```
+
+Se cumplió el orden previsto: código primero (tolera que las tablas no existan) → verificación → migración
+→ verificación. Capitanía de migración liberada (ver Coordinación).
+
+Verificación pendiente (no completada por esta tarea): que Milton abra Administración → Composio en
+Producción y compruebe que «Vía de conexión por app» aparece con los 4 apps y SIN el aviso «Falta aplicar
+la migración» (las respuestas 401 sin sesión no lo prueban; no hay acceso a la base de Producción desde
+esta sesión).
+
+Rollback: promover en Vercel el deployment del punto de retorno, o `git revert -m 1 484a579` en rama
+nueva. Las tablas nuevas son aditivas y están vacías: pueden permanecer sin efecto o borrarse (`DROP TABLE
+"ComposioConnection"; DROP TABLE "IntegrationRoute"; DROP TYPE "ComposioConnectionStatus"; DROP TYPE
+"IntegrationRouteMode";`) sin afectar a ninguna otra tabla.
+
+Pendientes conocidos: la clave de Composio y los 4 auth configs solo están en la base LOCAL de Milton; hay
+que pegarlos en Producción. Fase 2b (conexión de clientes, banner, callback verificado) pendiente.
+
+Responsable: Claude. Estado: EN PRODUCCIÓN — verificación en vivo pendiente (Milton).
