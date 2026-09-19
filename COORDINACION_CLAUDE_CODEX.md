@@ -7959,3 +7959,14 @@ conectar, elegir y probar funciona, pero no cambia lo que el sistema publica ni 
   40 de la web, `next build` exit 0; (3) regresión APROBADA — nadie usa el resolvedor. **Punto de retorno:** `pre-composio-resolvedor-f6dc2d5-20260919` (= `f6dc2d5`).
 - **Siguiente para quien continúe (sin cambios al plan de la 2b-2):** adaptar UN consumidor de Search Console a la vez para que pregunte al resolvedor, siempre con la vía propia como comportamiento por defecto; después la alerta del HOME; después poner `COMPOSIO_CONSUMER_READY.google_search_console = true`
   solo tras probar con las cuentas piloto con Milton presente.
+
+### Avance 2026-09-19 20:43 UTC — CONEXION COMPOSIO: resolvedor FUSIONADO (PR #160, `4501637`) · INCIDENTE MENOR en el piloto · aviso en pantalla
+
+- **Resolvedor de conexión fusionado y desplegado** (PR #160, `4501637`, Producción success, salud intacta). Inerte: `COMPOSIO_CONSUMER_READY` en `false` para las 4 apps; nada lo importa todavía. Punto de retorno `pre-composio-resolvedor-f6dc2d5-20260919`.
+- **INCIDENTE MENOR (2026-09-19):** Milton **desconectó a propósito** la conexión de la API principal de Search Console de **Lorena (#2)** para pasarla a Composio. Como la 2b-2 (consumidores) NO existe, el sistema sigue leyendo solo la conexión principal, y la de Composio
+  quedó `NOT_CONNECTED`: **Lorena se quedó sin Search Console por ninguna vía** (no se le envía el sitemap ni se revisa su indexación). Analytics de Lorena sigue conectado por la API principal (propiedad `534571871`, datos reales). Verificado leyendo `/api/search-integrations/google` y
+  `/api/composio/status` con su sesión abierta en el panel. **Acción:** Milton debe reconectar Search Console de Lorena por el botón de siempre (Indexación y SEO → «Conectar Google Search Console») y elegir de nuevo su sitio; se le explicó.
+- **Lección para el diseño:** mientras no exista la 2b-2, **conectar por Composio SUMA, no reemplaza**. Regla para las cuentas piloto: no desconectar la conexión principal. Corrección: aviso visible en la tarjeta de Composio («Es una conexión adicional, en prueba… no la desconectes»), rama
+  `claude/composio-aviso-no-desconectar` (`ComposioConnect.tsx`, +6 líneas). Auditorías: integridad APROBADA (1 archivo, 0 schema/migraciones/workflows/secretos), funcional APROBADA (`tsc` 0, `next build` exit 0), regresión APROBADA (solo lo ven las cuentas con el módulo habilitado).
+  Punto de retorno: `pre-composio-aviso-4501637-20260919` (= `4501637`).
+- **Para 2b-2:** el paso «desconectar la conexión propia al hacer el switch» debe ocurrir SOLO cuando el consumidor ya use Composio para esa persona (resolvedor + `COMPOSIO_CONSUMER_READY`); nunca antes ni a mano.
