@@ -7864,3 +7864,15 @@ Estado local dejado: banderas de Facebook/Instagram del admin local en `false`, 
 3. Etiquetar el punto de retorno, abrir PR, esperar el Preview, y **con permiso de Milton** fusionar; verificar despliegue y salud.
 4. Guiar a Milton (paso a paso, uno a la vez) para pegar la clave nueva y habilitar #2, #3 y #40; probar cada app con ellas.
 5. Construir **UX-1** según `ESPECIFICACION_CONEXIONES_UNIFICADAS.md` (pantalla Conexiones, por etapas, sin romper las pestañas actuales).
+
+### Avance 2026-09-19 19:22 UTC — CONEXION COMPOSIO Fase 2b-1: auditorías aprobadas y PR abierto
+
+Milton pidió seguir de forma autónoma y registrar cada avance aquí. Estado actualizado del bloque «TRASPASO A CODEX»:
+
+- **Auditoría 1 (integridad) APROBADA:** 22 archivos, 0 de schema/migraciones/workflows/Vercel/proxy, 0 eliminados, 0 secretos, 0 restos de depuración, ningún archivo de otro agente.
+- **Auditoría 2 (funcional) APROBADA:** `tsc` 0 errores · `next build` exit 0 · 28 pruebas (web 20, worker 8) sobre `main` integrado (`4543b17`).
+- **Auditoría 3 (regresión) APROBADA:** los consumidores de la lista de módulos (`DashboardNav`, `ModuleGuard`, `ComienzaAqui`, `redes-sociales`, `social-access`) se
+  identifican por id; el módulo opt-in nuevo no los afecta. La página nueva solo la ve quien tenga «Habilitado» (403 y redirección para el resto).
+- **Punto de retorno:** etiqueta `pre-composio-fase2b1-4543b17-20260919` (= Producción antes de esta fusión, deployment success).
+- **PR #155** (`claude/composio-fase-2b1` → `main`), commit propio `fdcc50a`, HEAD `e68d3ad`. Pendiente: Preview `success`, Vercel operativo y fusión (Milton dio permiso de producción condicionado a Coordinación el 2026-09-19).
+- Tras fusionar, quedan **para Milton**: pegar la clave nueva en Administración → Composio y poner «Habilitado» a #2, #3 y #40.
