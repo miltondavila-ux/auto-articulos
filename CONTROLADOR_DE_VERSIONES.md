@@ -3086,3 +3086,10 @@ Rollback: promover el deployment del punto de retorno o `git revert -m 1 <fusió
 `ComposioConnection`, que es aditiva).
 
 Responsable: Claude (traspaso a Codex, ver Coordinación). Estado: PREPARADA — pendiente de auditorías, PR y fusión.
+
+## Versión preparada (actualización 2026-09-19 19:22 UTC) — CONEXION COMPOSIO, Fase 2b-1: PR #155 con punto de retorno
+
+Complementa la entrada «Versión preparada (NO desplegada) — 2b-1» (no se reescribe). Auditorías de integridad, funcional y de regresión APROBADAS (detalle en Coordinación).
+PR #155 abierto. **PUNTO DE RETORNO** registrado antes de fusionar: etiqueta `pre-composio-fase2b1-4543b17-20260919` (= `4543b17`, Producción con deployment success;
+`/login` 200, `/privacidad` 200, `/api/me` 401, `/dashboard` 307→/login). Sin migraciones. Rollback: promover el deployment de esa etiqueta o `git revert -m 1 <fusión>` en rama nueva.
+Estado: LISTA PARA FUSIONAR — pendiente de Preview `success` y fusión.
