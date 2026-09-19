@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 
 const SECCIONES = [
@@ -13,6 +14,9 @@ const SECCIONES = [
   { href: "/dashboard/configuracion/redes-sociales", label: "Redes Sociales" },
   { href: "/dashboard/configuracion/movil", label: "App Móvil" },
 ] as const;
+
+/** Módulo opt-in (ver SYSTEM_MODULES): solo aparece para quien lo tenga «Habilitado». */
+const COMPOSIO_SECCION = { href: "/dashboard/configuracion/composio", label: "Conexión Composio" } as const;
 
 /**
  * Barra de ida y vuelta entre las secciones de Configuración.
@@ -26,6 +30,24 @@ const SECCIONES = [
  */
 export default function ConfiguracionSubNav() {
   const pathname = usePathname();
+  const [verComposio, setVerComposio] = useState(false);
+
+  useEffect(() => {
+    let vivo = true;
+    fetch("/api/me", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (vivo && data && Array.isArray(data.disabledModules)) {
+          setVerComposio(!data.disabledModules.includes("conexion-composio"));
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
+  const secciones = verComposio ? [...SECCIONES, COMPOSIO_SECCION] : SECCIONES;
 
   const linkStyle = (active: boolean): CSSProperties => ({
     padding: "8px 14px",
@@ -51,7 +73,7 @@ export default function ConfiguracionSubNav() {
         borderBottom: "1px solid #d2d2d7",
       }}
     >
-      {SECCIONES.map((s) => (
+      {secciones.map((s) => (
         <Link key={s.href} href={s.href} style={linkStyle(pathname === s.href)}>
           {s.label}
         </Link>

@@ -6,6 +6,13 @@ export interface SystemModule {
   label: string;
   href: string;
   description: string;
+  /**
+   * Módulo «opt-in»: lo ven los administradores y SOLO las personas a quienes
+   * se les pone «Habilitado» en Administración → Usuarios. Ni «Heredar» ni el
+   * ocultar global lo activan, para que un módulo nuevo nunca aparezca para
+   * todos por descuido. Se quita esta marca cuando se decide abrirlo a todos.
+   */
+  optIn?: boolean;
 }
 
 // El orden es el mismo que el del menú (ver DashboardNav), para que el panel
@@ -60,6 +67,14 @@ export const SYSTEM_MODULES: SystemModule[] = [
     label: "Configuración",
     href: "/dashboard/configuracion",
     description: "Ajustes de cuenta, idioma, integraciones y llaves del sistema.",
+  },
+  {
+    id: "conexion-composio",
+    label: "Conexión por Composio",
+    href: "/dashboard/configuracion/composio",
+    description:
+      "Conectar Search Console, Analytics, Facebook e Instagram a través de Composio. Es opt-in: solo lo ve quien tenga «Habilitado».",
+    optIn: true,
   },
 ];
 
@@ -149,6 +164,10 @@ export function getEffectiveDisabledModules(
     if (access === "enabled") effective.delete(moduleId);
     if (access === "disabled") effective.add(moduleId);
   }
+  // Los módulos opt-in solo se muestran con «Habilitado» explícito.
+  for (const mod of SYSTEM_MODULES) {
+    if (mod.optIn && overrides[mod.id] !== "enabled") effective.add(mod.id);
+  }
   return Array.from(effective);
 }
 
@@ -178,4 +197,17 @@ export function parseUserModuleOverrides(raw?: string | null): ModuleAccessOverr
   } catch {
     return {};
   }
+}
+
+/**
+ * ¿Puede esta persona usar un módulo opt-in? Solo los administradores y quien
+ * tenga «Habilitado» explícito. Es la comprobación del LADO SERVIDOR: ocultar
+ * el enlace en el menú nunca es la única barrera.
+ */
+export function hasOptInModuleAccess(
+  user: { role?: string; disabledModules?: string | null },
+  moduleId: string,
+): boolean {
+  if (user.role === "admin") return true;
+  return parseUserModuleOverrides(user.disabledModules)[moduleId] === "enabled";
 }

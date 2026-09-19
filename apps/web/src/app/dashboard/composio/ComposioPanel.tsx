@@ -217,8 +217,8 @@ export default function ComposioPanel() {
         <p style={mutedStyle}>
           Composio conecta la plataforma con más de mil apps (Gmail, GitHub, Google Sheets…)
           mediante su API. Crea una clave de proyecto en Composio (Platform → API Keys) con
-          lectura general (Read All) y escritura solo en «Connected accounts» y «Session tool
-          execution», y pégala aquí. Se comprueba con Composio antes de guardarse y se almacena
+          lectura general (Read All) y escritura solo en «Connected accounts», «Session
+          management» y «Session tool execution», y pégala aquí. Se comprueba con Composio antes de guardarse y se almacena
           cifrada; nunca se vuelve a mostrar completa.
         </p>
 

@@ -55,7 +55,7 @@ function getModuleCatalogKnowledge(): string {
   return [
     "CATÁLOGO VIGENTE DE MÓDULOS",
     "Usa estos nombres, descripciones y rutas confirmadas cuando la persona pregunte dónde realizar una acción.",
-    ...SYSTEM_MODULES.map((module) => `Módulo: ${module.label}\nRuta: ${module.href}\nUso: ${module.description}`),
+    ...SYSTEM_MODULES.filter((module) => !module.optIn).map((module) => `Módulo: ${module.label}\nRuta: ${module.href}\nUso: ${module.description}`),
   ].join("\n\n");
 }
 
