@@ -3148,3 +3148,8 @@ Estado: PREPARADA — pendiente de Preview `success`, Vercel operativo y fusión
 
 Rama `claude/composio-aviso-no-desconectar`. Un solo archivo de código (`apps/web/src/components/ComposioConnect.tsx`, +6 líneas: aviso en modo incrustado). Sin migraciones ni schema; solo lo ven las cuentas con el módulo habilitado. **PUNTO DE RETORNO:** etiqueta `pre-composio-aviso-4501637-20260919` (= `4501637`, Producción success).
 Auditorías de integridad, funcional (`tsc` 0, `next build` exit 0) y regresión APROBADAS. Motivo: incidente del piloto (ver Coordinación). Estado: PREPARADA — pendiente de Preview `success` y fusión.
+
+## Versión preparada — 2026-09-19 20:48 UTC — CONEXION COMPOSIO, adaptador de Search Console por Composio (2b-2, segunda pieza, INERTE)
+
+Rama `claude/composio-adaptador-gsc`. Sin migraciones ni cambios de schema. Añade `packages/shared/src/composio-search-console.ts` (5 funciones equivalentes a las de `google-search-console.ts`, por Composio) sin ningún consumidor. **No cambia el comportamiento de nadie.**
+Auditorías de integridad, funcional y regresión APROBADAS. **PUNTO DE RETORNO** antes de fusionar: etiqueta `pre-composio-adaptador-gsc-91ecb91-20260919` (= `91ecb91`, Producción success). Rollback: promover ese deployment o `git revert -m 1 <fusión>`. Estado: PREPARADA — pendiente de Preview `success` y fusión.
