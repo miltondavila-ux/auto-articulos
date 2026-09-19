@@ -7980,3 +7980,12 @@ conectar, elegir y probar funciona, pero no cambia lo que el sistema publica ni 
 - **Auditorías:** (1) integridad APROBADA — solo 1 archivo existente tocado (`packages/shared/src/index.ts`, 1 línea), 0 schema/migraciones/workflows/Vercel/secretos; (2) funcional APROBADA — `tsc` web y worker 0 errores, pruebas worker y web completas en verde, `next build` exit 0; (3) regresión APROBADA — nada lo usa. **Punto de retorno:** `pre-composio-adaptador-gsc-91ecb91-20260919` (= `91ecb91`).
 - **Siguiente (sin cambios al plan):** hacer que UN consumidor pregunte al resolvedor y, si la fuente es COMPOSIO, use este adaptador; el primero recomendado es `apps/worker/src/send-daily-sitemaps.ts` (sitemap diario), con la vía propia como comportamiento por defecto y `COMPOSIO_CONSUMER_READY` aún en `false`.
   Aún falta cargar desde la base la conexión (`ComposioConnection` ACTIVE con `siteUrl`) y la marca de «tenía conexión propia» para alimentar `resolveConnection`.
+
+### Avance 2026-09-19 20:51 UTC — CONEXION COMPOSIO: adaptador FUSIONADO (PR #162, `51f5789`) · Lorena RESTAURADA · estado global
+
+- **Adaptador de Search Console por Composio fusionado y desplegado** (PR #162, `51f5789`; Producción success; salud intacta). Inerte, sin consumidores. Punto de retorno: `pre-composio-adaptador-gsc-91ecb91-20260919`.
+- **Lorena (#2) restaurada:** Milton reconectó Search Console por la API principal y **verificado con su sesión** (`/api/search-integrations/google` y `/api/google-analytics`): Search Console conectada → `https://www.segurosdesaludyvida.com/`, sitemap
+  `https://www.segurosdesaludyvida.com/sitemap.xml`; Analytics conectada → propiedad `534571871`. Composio: sus 4 apps `NOT_CONNECTED` (carril paralelo de prueba). `lastSitemapSyncStatus` vacío hasta que corra el envío diario. Milton informó que **todas están conectadas**.
+  Aviso técnico: mientras la app de Google siga en modo de prueba, la autorización puede caducar en pocos días y habrá que reconectar (motivo de fondo de todo el proyecto).
+- **Piezas de la 2b-2 ya en Producción, todas INERTES:** resolvedor (`composio-resolver.ts`), adaptador (`composio-search-console.ts`) y la lista blanca/cliente (`composio.ts`). **Falta:** cargar desde la base la conexión Composio y la marca «tenía conexión propia», adaptar UN consumidor (recomendado `apps/worker/src/send-daily-sitemaps.ts`),
+  la alerta del HOME, y activar `COMPOSIO_CONSUMER_READY.google_search_console` solo tras probar con las cuentas piloto con Milton presente.
