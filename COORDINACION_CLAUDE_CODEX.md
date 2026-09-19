@@ -7947,3 +7947,15 @@ Milton hizo en Producción, con su sesión de administrador (Claude solo guio y 
 conectar, elegir y probar funciona, pero no cambia lo que el sistema publica ni envía.
 
 **Pendiente:** (1) que Lorena, Mario y Zulmad prueben conectar (autorizan ellos en Google/Meta; Composio se ve en la pantalla de permisos); (2) verificaciones abiertas del traspaso: propiedad de Analytics de Lorena y visitas sin registrar desde el 2026-09-09; (3) **2b-2** según el plan de Coordinación.
+
+### Avance 2026-09-19 20:39 UTC — CONEXION COMPOSIO 2b-2 (primera pieza): resolvedor de conexión, INERTE · piloto en marcha
+
+- **Milton informa** (no verificado por Claude: el panel lateral ya no tenía sesión de administrador) que **Lorena (#2) conectó por Composio y todo está bien**. Hasta ese momento Composio mostraba 0 cuentas conectadas; Mario (#3) y Zulmad (#40) sin confirmar.
+- **Nuevo, sin efecto alguno:** `packages/shared/src/composio-resolver.ts` (+ export en `index.ts`) con `methodFor`, `resolveConnection` y `needsReconnectAlert` — lógica PURA que implementa las reglas de `ESPECIFICACION_CONEXIONES_UNIFICADAS.md` §6: método propio → la propia; método Composio → Composio solo si está
+  ACTIVA con elección aprobada, si no la propia queda **ignorada (no borrada)** y se pide reconectar; la alerta del HOME es **solo Search Console**.
+- **Inerte por diseño:** `COMPOSIO_CONSUMER_READY` está en `false` para las 4 apps, así que `methodFor` devuelve SIEMPRE «OWN» aunque el módulo esté habilitado o el interruptor esté en COMPOSIO. **Nada del sistema importa este archivo todavía** (solo su prueba).
+  Se pone en `true` app por app únicamente cuando TODOS sus consumidores usen Composio (2b-2 / 2b-3 / 2b-4) y se pruebe con cuentas piloto reales.
+- **Auditorías:** (1) integridad APROBADA — 3 archivos, 161 líneas, único archivo existente tocado `packages/shared/src/index.ts` (1 línea), 0 schema/migraciones/workflows/Vercel, 0 secretos; (2) funcional APROBADA — `tsc` web y worker 0 errores, 22 pruebas del worker,
+  40 de la web, `next build` exit 0; (3) regresión APROBADA — nadie usa el resolvedor. **Punto de retorno:** `pre-composio-resolvedor-f6dc2d5-20260919` (= `f6dc2d5`).
+- **Siguiente para quien continúe (sin cambios al plan de la 2b-2):** adaptar UN consumidor de Search Console a la vez para que pregunte al resolvedor, siempre con la vía propia como comportamiento por defecto; después la alerta del HOME; después poner `COMPOSIO_CONSUMER_READY.google_search_console = true`
+  solo tras probar con las cuentas piloto con Milton presente.

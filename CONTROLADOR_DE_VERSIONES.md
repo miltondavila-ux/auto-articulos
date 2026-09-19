@@ -3137,3 +3137,9 @@ Verificación con cuenta normal: /conexiones y /composio (antigua) → /dashboar
 Rollback: promover el deployment de la etiqueta o `git revert -m 1 474e8d9` en rama nueva. Nada que deshacer en datos.
 Pendiente NO bloqueante: que Milton habilite el módulo a #2, #3 y #40 y pegue la clave nueva para usar la pantalla con conexiones reales.
 Responsable: Claude. Estado: EN PRODUCCIÓN — opt-in, sin efecto para clientes.
+
+## Versión preparada — 2026-09-19 20:39 UTC — CONEXION COMPOSIO, resolvedor de conexión (2b-2, primera pieza, INERTE)
+
+Rama `claude/composio-resolvedor`. Sin migraciones ni cambios de schema. Añade `packages/shared/src/composio-resolver.ts`: lógica pura sin ningún consumidor; `COMPOSIO_CONSUMER_READY` en `false` para las 4 apps, por lo que el método es siempre «OWN». **No cambia el comportamiento de nadie.**
+Auditorías de integridad, funcional (22 pruebas worker, 40 web, `next build` exit 0) y de regresión APROBADAS. **PUNTO DE RETORNO** antes de fusionar: etiqueta `pre-composio-resolvedor-f6dc2d5-20260919` (= `f6dc2d5`, Producción success). Rollback: promover ese deployment o `git revert -m 1 <fusión>`.
+Estado: PREPARADA — pendiente de Preview `success`, Vercel operativo y fusión.
