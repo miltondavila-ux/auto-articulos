@@ -3121,3 +3121,19 @@ administradores y quien tenga «Habilitado» el módulo «Conexión por Composio
 **PUNTO DE RETORNO** (registrado antes de fusionar): etiqueta `pre-composio-ux1-3232906-20260919` (= `3232906`, Producción success; `/login` 200, `/privacidad` 200, `/api/me` 401, `/dashboard` 307→/login).
 Auditorías de integridad, funcional y de regresión APROBADAS. Rollback: promover el deployment de la etiqueta o `git revert -m 1 <fusión>` en rama nueva.
 Estado: PREPARADA — pendiente de Preview `success`, Vercel operativo y fusión.
+
+## Versión desplegada — 2026-09-19 — CONEXION COMPOSIO, UX-1 etapa 1 (pantalla «Conexiones», opt-in)
+
+PR #157 fusionado a `main` (`474e8d9`, 2026-09-19 19:35:31 UTC), con merge commit. Sin migraciones ni cambios de schema. Registra el resultado de la entrada «Versión preparada» de UX-1 (que no se reescribe).
+
+```text
+Commit de fusión:     474e8d9 (head del PR: d2dd4b7)
+Deployment Vercel:    Production · success
+PUNTO DE RETORNO:     etiqueta pre-composio-ux1-3232906-20260919 (= 3232906)
+Salud 2026-09-19 19:37 UTC (idéntica a la línea base): /login 200 · /privacidad 200 · /api/me 401 · /dashboard 307→/login
+Verificación con cuenta normal: /conexiones y /composio (antigua) → /dashboard/configuracion; /indexacion y /redes-sociales en 200 con sus tarjetas: OK
+```
+
+Rollback: promover el deployment de la etiqueta o `git revert -m 1 474e8d9` en rama nueva. Nada que deshacer en datos.
+Pendiente NO bloqueante: que Milton habilite el módulo a #2, #3 y #40 y pegue la clave nueva para usar la pantalla con conexiones reales.
+Responsable: Claude. Estado: EN PRODUCCIÓN — opt-in, sin efecto para clientes.
