@@ -1,7 +1,7 @@
 import type { ComposioAppId } from "./composio";
 
 /** Estado mínimo que necesitan los consumidores para decidir la vía de conexión. */
-export interface ComposioConnectionState {
+export interface ComposioConnectionSnapshot {
   status: string;
   hasSelection: boolean;
   connectedAccountId: string;
@@ -10,7 +10,7 @@ export interface ComposioConnectionState {
 
 export interface ConnectionState {
   hasOwn: boolean;
-  composio: ComposioConnectionState | null;
+  composio: ComposioConnectionSnapshot | null;
 }
 
 /**
