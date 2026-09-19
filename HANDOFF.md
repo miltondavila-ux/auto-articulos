@@ -182,6 +182,13 @@ automáticamente.
 Escala objetivo real: **~60 usuarios activos**. Actualmente hay **45 usuarios**
 creados en el sistema (1 admin + 44 usuarios normales, incluida Sandra).
 
+### Registro archivado — Codex — Numeración del menú de publicaciones — 2026-09-19
+
+Se archivó el cambio visual solicitado en `apps/web/src/components/DashboardNav.tsx`:
+las tres opciones principales del menú «Publicaciones» ahora muestran los prefijos
+`1)`, `2)` y `3)`. Cambio sin esquema Prisma, migraciones ni modificación de datos.
+La documentación detallada queda en `COORDINACION_CLAUDE_CODEX.md`.
+
 ## Arquitectura
 
 - **Principio Cloud 100% (Independencia de máquina local)**: Todo el código fuente, configuración, workflows y documentación residen exclusivamente en **GitHub** (`https://github.com/miltondavila-ux/auto-articulos.git`). La computadora del usuario **no procesa ni aloja nada**; la plataforma se ejecuta 100% en la nube (Vercel + GitHub Actions + Supabase Pro).

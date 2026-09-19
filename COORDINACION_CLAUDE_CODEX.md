@@ -4626,6 +4626,22 @@ el texto existente.
 
 Responsable: Claude (tarea programada diaria de propagación).
 
+## Codex — NUMERACIÓN DEL MENÚ DE PUBLICACIONES — 2026-09-19
+
+Se numeraron las tres opciones principales del menú «Publicaciones» para
+reflejar el flujo de trabajo solicitado:
+
+1. «1) Publica tus propios títulos»
+2. «2) Publica contenido con ayuda de la IA avanzada»
+3. «3) Difunde tu contenido en blogs externos y redes sociales»
+
+Archivo funcional: `apps/web/src/components/DashboardNav.tsx`.
+No se modificó el esquema Prisma, no hubo migraciones ni cambios de datos.
+`git diff --check` pasó correctamente.
+
+Estado: documentado y listo para despliegue productivo autorizado por Milton.
+Responsable: Codex.
+
 ## ACLARACIÓN PARA PUBLICAR TÍTULOS PROPIOS — 2026-09-18
 
 La explicación de **Publica tus propios títulos** ahora aclara que este acceso
@@ -7594,6 +7610,95 @@ antes del merge mediante el workflow `35402599238`, sin `--accept-data-loss`.
 La salud pública quedó verificada: `/login` y `/privacidad` 200, `/api/me` 401,
 `/dashboard` y `/dashboard/oportunidades` redirigen a `/login`. Se libera la
 reserva de `codex/reparacion-del-motor`. Estado: CERRADA Y EN PRODUCCIÓN.
+
+## Claude — CONEXION COMPOSIO, Fase 2a: capitanía de migración — 2026-09-18
+
+**Capitán de migración:** Claude — revisará y aplicará el lote completo. Motivo: CONEXION COMPOSIO,
+Fase 2a (`FASE_0_ARQUITECTURA_CONEXION_COMPOSIO.md` §6, aprobada por Milton): dos enums y dos tablas
+nuevas (`IntegrationRoute`, `ComposioConnection`) con su migración
+`20260918230000_add_composio_connections`. Nadie más ejecuta Prisma ni el workflow «Migración manual»
+hasta su liberación.
+
+Antes de reclamarla se verificó que la capitanía anterior (PR #139) estaba liberada y que las
+migraciones de las otras tareas activas (`20260918190000_add_title_generation_requests` y
+`20260918190000_add_opportunity_evidence_cache`) ya estaban aplicadas. Rama
+`claude/composio-fase-2a` (worktree `.worktrees/conexion-composio`).
+
+Regla que cumple el lote: schema y migración SQL en el MISMO commit; solo añade (0 líneas
+eliminadas en `schema.prisma`); ninguna tabla ni columna existente cambia; el código tolera que las
+tablas no existan (P2021) y devuelve siempre la vía propia; el interruptor de vía para clientes está
+bloqueado en código (`COMPOSIO_ROUTING_ENABLED = false`) hasta la Fase 2b. Aplicación en Producción:
+solo por la vía nueva `safe_composio_connections` del workflow «Migración manual» (ejecuta únicamente
+ese SQL, idempotente) y después el paso de RLS que el workflow ya corre siempre.
+
+Estado: ACTIVA — pendiente de fusión, aplicación de la migración y verificación.
+
+**Capitán de migración liberó el lote:** Claude — 2026-09-19 00:59 UTC. Resultado: PR #151 fusionado a
+`main` (`484a579`); desplegado en Producción (Vercel success) y salud idéntica a la línea base.
+Migración `20260918230000_add_composio_connections` aplicada en Producción por el workflow «Migración
+manual» (corrida 35411144863, solo `safe_composio_connections`): «Script executed successfully»; el
+paso por defecto (`db push`) quedó omitido; el paso de RLS terminó con «todas las tablas de "public" ya
+tienen RLS activado». Capitanía liberada: ya puede correr Prisma o el workflow de migración cualquier
+otra tarea. Pendiente NO bloqueante: que Milton confirme en Administración → Composio que la sección
+«Vía de conexión por app» aparece sin el aviso «Falta aplicar la migración».
+
+## Claude (tarea programada diaria de propagación) — 2026-09-19
+
+Punto de partida: la última entrada firmada por esta misma tarea era
+"Claude (tarea programada diaria de propagación) — 2026-09-18" (commit
+`d0c0c13`). Se revisó el diff de `COORDINACION_CLAUDE_CODEX.md` entre ese
+commit y `origin/main` actual (`b476556`): 34 commits nuevos tocaron este
+documento, correspondientes a las entradas ya escritas en este mismo
+archivo entre "Claude - BING WEBMASTER DIRECCION DE DEVOLUCION — 2026-09-18"
+y "Claude — CONEXION COMPOSIO, Fase 2a" (cierre `484a579`, 2026-09-19
+00:59 UTC).
+
+Verificación por documento:
+
+- `CONTROLADOR_DE_VERSIONES.md`: ya contenía el registro de cada PR/commit
+  mencionado en el rango (#114/`e8a8b18`, #127/`cd6fd3e`, #133/`aea076d`,
+  #139/`9df2f10`, #143/`d6ba5f8`, #144/`1c19f07`, #151/`484a579`); no hacía
+  falta agregar nada.
+- `INVENTARIO_CONVERSACIONES.md`: ya contenía Parte A (reserva PAUSADA de
+  `claude/mensajes-error-humanizados-ia`, PR #125) y Parte B (BOTON VIDEO
+  EXPLICATIVO BING WEBMASTER, BING WEBMASTER SITEMAP, CHECK DE NO
+  INDEXACION, ERROR AL PUBLICAR, CODEX - CREADOR DE TITULOS MUY ESTRICTO —
+  REPARACIÓN DEL MOTOR con su cierre, CONEXION COMPOSIO y Fase 2a) para
+  cada proyecto nuevo del rango; no hacía falta agregar nada. La reserva de
+  `codex/reparacion-del-motor` y la de `claude/composio-fase-2a` ya
+  figuraban cerradas (verificado con `git merge-base --is-ancestor` contra
+  `origin/main`: ambas ramas están fusionadas, en `1c19f07` y `484a579`
+  respectivamente), así que no correspondía agregarlas a la Parte A.
+- `apps/web/src/content/manual-usuario.ts`: se detectó un cambio visible
+  para el usuario final que NO estaba reflejado: el PR #126 ("BOTON VIDEO
+  EXPLICATIVO BING WEBMASTER") agregó un **Paso 5 opcional y no
+  bloqueante "Conectar Bing Webmaster Tools"** al Asistente de
+  Configuración Inicial (`OnboardingWizard.tsx`, `StepCard stepNumber={5}`,
+  confirmado leyendo el componente actual), con video tutorial incluido.
+  El manual solo describía los pasos 1-4 y la pantalla final. Se agregó un
+  párrafo nuevo en la sección "Antes de empezar (Asistente de Configuración
+  Inicial)" describiendo este Paso 5, sin tocar ni una palabra del texto
+  existente. El resto de cambios visibles del rango (nombres de menú,
+  "Difunde tu contenido...", agrupación de Historial/Actualizaciones,
+  alineación de lenguaje de la interfaz del PR #143) ya estaban reflejados
+  en el manual porque esos mismos commits lo tocaron en el mismo lote
+  (verificado con `git show --stat` de cada commit).
+- `TO-DO.md`: no se agregó nada. La única mención de una tarea futura suelta
+  en el rango (detección de títulos duplicados que no reconoce el
+  formulario en inglés, "#titlees"/"There is already an article with this
+  title") ya está registrada palabra por palabra en
+  `INVENTARIO_CONVERSACIONES.md` (entrada CLAUDE - ERROR AL PUBLICAR, "Otra
+  tarea aparte"), agregada en el mismo lote que la escribió; no se
+  consideró necesario duplicarla como ítem nuevo de `TO-DO.md`.
+- `REPARADOR_DEL_ARBOL_PRINCIPAL.md`: ninguna entrada del rango describe un
+  árbol de git enredado, ramas pisadas o commits mezclados (los merges del
+  rango son sincronizaciones normales de `origin/main` hacia ramas de
+  trabajo); no hacía falta agregar nada.
+
+No hubo ninguna acción destructiva, migración ni deploy en esta corrida.
+No quedó ninguna duda para Milton.
+
+Responsable: Claude (tarea programada diaria de propagación).
 
 ## Cierre — Claude - CREACION DE PUBLICACIONES PROPIAS — 2026-09-18
 

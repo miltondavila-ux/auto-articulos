@@ -50,7 +50,6 @@ refrescar esta tabla; no confiar en la fecha si pasó mucho tiempo.
 
 | Worktree | Rama | Commits sin fusionar | Dueño / conversación (según el propio commit o Coordinación) | Nota |
 |---|---|---|---|---|
-| `/Users/miltondavila/Creador de articulos/.worktrees/conexion-composio` | `claude/conexion-composio` | 0 (Fase 1 en curso, sin commit) | Claude — `CONEXION COMPOSIO` | Reserva 2026-09-18: `apps/web/src/lib/composio.ts`, `apps/web/src/app/api/admin/composio/**`, `apps/web/src/app/dashboard/composio/**`, `apps/web/src/components/DashboardNav.tsx`, `apps/web/src/content/manual-usuario.ts` (secciones «El menú» y «Administración»). Sin migraciones ni schema en la Fase 1. No toca `usuarios/page.tsx`. |
 | `/private/tmp/doc-coordinacion-sept3` | `claude/doc-coordinacion-sept3` | 1 | Claude — esta misma sesión, "DOCUMENTO DE COORDINACION - SEPT 3" | Soy yo, ahora mismo. |
 | `/Users/miltondavila/Creador de articulos/.worktrees/google-api-verification` | `codex/google-api-verification` | 1 | Codex — commit `7908b01` "chore: prepare Google OAuth domain and verification pages", hecho hoy 19:06 | Muy reciente; probablemente Codex trabajando en paralelo ahora mismo en `CODEX - GPT-5 - VERIFICACION DE API'S DE GOOGLE`. |
 | `/private/tmp/limites-globales-articulos` | `codex/limites-globales-articulos` | 1 | Codex — proyecto `LIMITES GLOBALES DE ARTICULOS` | Coincide con la decisión de Milton (2026-09-02): **PAUSADO, no tocar ni integrar**. |
@@ -1404,6 +1403,14 @@ reservas liberadas. Estado final: ARCHIVADA.
 - Producción: deployment `dpl_GXQ165nD88E1xhgPK875DC1GHw4V`, estado `Ready`.
 - Migración controlada: workflow `35402599238`, sin pérdida de datos.
 - Reserva liberada. Estado final: CERRADA — EN PRODUCCIÓN.
+
+## Claude - CONEXION COMPOSIO, Fase 2a — 2026-09-18/19
+
+- Estado: DESPLEGADA EN PRODUCCIÓN (PR #151, `484a579`); capitanía de migración LIBERADA el 2026-09-19 00:59 UTC. Responsable: Claude.
+- Alcance: interruptor por app y tablas `IntegrationRoute` / `ComposioConnection` (aditivas), sin cambio de comportamiento para clientes.
+- Rama/worktree: `claude/composio-fase-2a` / `.worktrees/conexion-composio`, base `origin/main` `c29d5a5`.
+- Punto de retorno: etiqueta `pre-composio-fase2a-c29d5a5-20260918`. Detalle y orden en el Controlador de Versiones.
+- Pendiente: que Milton verifique Administración → Composio en Producción y pegue allí la clave y los 4 auth configs. Reserva de archivos LIBERADA. Rama `claude/composio-fase-2a` conservada (fusionada).
 
 ## Claude - CREACION DE PUBLICACIONES PROPIAS — 2026-09-18
 
