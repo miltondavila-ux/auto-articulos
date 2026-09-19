@@ -50,7 +50,6 @@ refrescar esta tabla; no confiar en la fecha si pasó mucho tiempo.
 
 | Worktree | Rama | Commits sin fusionar | Dueño / conversación (según el propio commit o Coordinación) | Nota |
 |---|---|---|---|---|
-| `/Users/miltondavila/Creador de articulos/.worktrees/conexion-composio` | `claude/composio-fase-2b1` (sin PR) | 1 propio (`fdcc50a`) | Claude — `CONEXION COMPOSIO` (PAUSADA, traspaso a Codex) | Reserva 2026-09-19 hasta que Codex acepte: `packages/shared/src/composio.ts`, `apps/web/src/lib/{modules,composio-connections,composio-options}.ts`, `apps/web/src/app/api/composio/**`, `apps/web/src/app/dashboard/configuracion/composio/**`, `apps/web/src/components/ConfiguracionSubNav.tsx`. Sin schema ni migraciones. |\n| `/private/tmp/doc-coordinacion-sept3` | `claude/doc-coordinacion-sept3` | 1 | Claude — esta misma sesión, "DOCUMENTO DE COORDINACION - SEPT 3" | Soy yo, ahora mismo. |
 | `/Users/miltondavila/Creador de articulos/.worktrees/google-api-verification` | `codex/google-api-verification` | 1 | Codex — commit `7908b01` "chore: prepare Google OAuth domain and verification pages", hecho hoy 19:06 | Muy reciente; probablemente Codex trabajando en paralelo ahora mismo en `CODEX - GPT-5 - VERIFICACION DE API'S DE GOOGLE`. |
 | `/private/tmp/limites-globales-articulos` | `codex/limites-globales-articulos` | 1 | Codex — proyecto `LIMITES GLOBALES DE ARTICULOS` | Coincide con la decisión de Milton (2026-09-02): **PAUSADO, no tocar ni integrar**. |
 | `/private/tmp/meta-threads-callbacks` | `codex/meta-threads-callbacks` | 1 | Codex — proyecto `META THREADS CALLBACKS` | Coincide con la decisión de Milton (2026-09-02): **ACTIVO, no tocar**, continúa en su propia conversación. |
@@ -1439,3 +1438,7 @@ reservas liberadas. Estado final: ARCHIVADA.
 - Producción hoy: Fase 1 y 2a desplegadas (sin cambios para clientes). La 2b-1 NO está desplegada.
 - Reservas de archivos: las de la rama 2b-1, hasta el traspaso. Capitanía de migración: liberada (Fase 2a); la 2b-1 no lleva migración.
 - Detalle completo, decisiones, hallazgos técnicos y siguiente acción exacta: `COORDINACION_CLAUDE_CODEX.md` → «TRASPASO A CODEX».
+
+### Actualización 2026-09-19 19:26 UTC — CONEXION COMPOSIO Fase 2b-1
+- Estado: 2b-1 **DESPLEGADA EN PRODUCCIÓN** (PR #155, `0701e88`). Reserva de archivos de la 2b-1 **LIBERADA** (fila borrada de la tabla de reservas). Sin capitanía de migración.
+- La conversación sigue PAUSADA a la espera de Milton (clave nueva y «Habilitado» de #2, #3, #40) y de la siguiente etapa (UX-1). Detalle: Coordinación → «TRASPASO A CODEX» y «Avance … 2b-1 FUSIONADA».
