@@ -7594,3 +7594,25 @@ antes del merge mediante el workflow `35402599238`, sin `--accept-data-loss`.
 La salud pública quedó verificada: `/login` y `/privacidad` 200, `/api/me` 401,
 `/dashboard` y `/dashboard/oportunidades` redirigen a `/login`. Se libera la
 reserva de `codex/reparacion-del-motor`. Estado: CERRADA Y EN PRODUCCIÓN.
+
+## Claude — CONEXION COMPOSIO, Fase 2a: capitanía de migración — 2026-09-18
+
+**Capitán de migración:** Claude — revisará y aplicará el lote completo. Motivo: CONEXION COMPOSIO,
+Fase 2a (`FASE_0_ARQUITECTURA_CONEXION_COMPOSIO.md` §6, aprobada por Milton): dos enums y dos tablas
+nuevas (`IntegrationRoute`, `ComposioConnection`) con su migración
+`20260918230000_add_composio_connections`. Nadie más ejecuta Prisma ni el workflow «Migración manual»
+hasta su liberación.
+
+Antes de reclamarla se verificó que la capitanía anterior (PR #139) estaba liberada y que las
+migraciones de las otras tareas activas (`20260918190000_add_title_generation_requests` y
+`20260918190000_add_opportunity_evidence_cache`) ya estaban aplicadas. Rama
+`claude/composio-fase-2a` (worktree `.worktrees/conexion-composio`).
+
+Regla que cumple el lote: schema y migración SQL en el MISMO commit; solo añade (0 líneas
+eliminadas en `schema.prisma`); ninguna tabla ni columna existente cambia; el código tolera que las
+tablas no existan (P2021) y devuelve siempre la vía propia; el interruptor de vía para clientes está
+bloqueado en código (`COMPOSIO_ROUTING_ENABLED = false`) hasta la Fase 2b. Aplicación en Producción:
+solo por la vía nueva `safe_composio_connections` del workflow «Migración manual» (ejecuta únicamente
+ese SQL, idempotente) y después el paso de RLS que el workflow ya corre siempre.
+
+Estado: ACTIVA — pendiente de fusión, aplicación de la migración y verificación.
