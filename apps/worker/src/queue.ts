@@ -14,6 +14,7 @@ import { notifyGoogle } from "./googleIndexing";
 import { notifyBing } from "./bingIndexing";
 import { runPatriciaFix } from "./fix-patricia";
 import { processMcpRunTitle } from "./mcpQueue";
+import { humanizeAutomationError } from "./humanizeError";
 
 
 export async function markTitleError(titleId: string, message: string) {
@@ -394,7 +395,15 @@ async function processRunTitle(
       prisma.title.findUniqueOrThrow({ where: { id: nextTitle.id } }),
       prisma.run.findUniqueOrThrow({ where: { id: run.id } }),
     ]);
-    await onStep(`Error: ${message}`);
+    // Cualquier error crudo (timeout de Playwright, HTTP, excepción de red)
+    // pasa por la IA para traducirse a algo entendible + una acción que el
+    // usuario pueda hacer él mismo, en vez de mostrar el volcado técnico.
+    // Nunca bloquea: si la IA falla, se usa `normalizedMessage` tal cual.
+    const friendlyMessage = await humanizeAutomationError(
+      normalizedMessage,
+      platformProductNameOrNeutral(run.user.platformDomain),
+    );
+    await onStep(`Error: ${friendlyMessage}`);
 
     // El mensaje real de la respuesta llega en el idioma que responda
     // 10minutesWebsite (visto tanto en español como en inglés, p. ej.
@@ -495,7 +504,7 @@ async function processRunTitle(
           ? message
           : isImageCreditIssue
             ? displayMessage
-            : message,
+            : friendlyMessage,
       );
       if (!(err instanceof DuplicateTitleError)) {
         // Un título duplicado permanente nunca va a publicarse reintentando
@@ -510,7 +519,7 @@ async function processRunTitle(
       // Vuelve a "pending" para reintentar desde el inicio en el próximo ciclo.
       await prisma.title.update({
         where: { id: nextTitle.id },
-        data: { status: "pending", errorMessage: message },
+        data: { status: "pending", errorMessage: friendlyMessage },
       });
     }
   }
