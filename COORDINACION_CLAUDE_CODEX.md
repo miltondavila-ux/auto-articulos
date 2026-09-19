@@ -7616,3 +7616,12 @@ solo por la vía nueva `safe_composio_connections` del workflow «Migración man
 ese SQL, idempotente) y después el paso de RLS que el workflow ya corre siempre.
 
 Estado: ACTIVA — pendiente de fusión, aplicación de la migración y verificación.
+
+**Capitán de migración liberó el lote:** Claude — 2026-09-19 00:59 UTC. Resultado: PR #151 fusionado a
+`main` (`484a579`); desplegado en Producción (Vercel success) y salud idéntica a la línea base.
+Migración `20260918230000_add_composio_connections` aplicada en Producción por el workflow «Migración
+manual» (corrida 35411144863, solo `safe_composio_connections`): «Script executed successfully»; el
+paso por defecto (`db push`) quedó omitido; el paso de RLS terminó con «todas las tablas de "public" ya
+tienen RLS activado». Capitanía liberada: ya puede correr Prisma o el workflow de migración cualquier
+otra tarea. Pendiente NO bloqueante: que Milton confirme en Administración → Composio que la sección
+«Vía de conexión por app» aparece sin el aviso «Falta aplicar la migración».
