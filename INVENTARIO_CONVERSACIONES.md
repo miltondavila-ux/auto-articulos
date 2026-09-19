@@ -1454,3 +1454,11 @@ reservas liberadas. Estado final: ARCHIVADA.
 
 ### Actualización 2026-09-19 20:59 UTC — CONEXION COMPOSIO: traspaso a Codex (estado vigente)
 - Estado: PAUSADA por límite de cupo/contexto; traspaso a Codex a pedido de Milton (TRANSFERIDA cuando Codex acepte). Producción = main = `7efaacd`. Sin reservas ni capitanía de migración. Bloque consolidado y prompt: Coordinación → «TRASPASO A CODEX · ESTADO VIGENTE» y `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md`.
+
+## Codex - CONEXION COMPOSIO — 2026-09-19
+
+- Estado: ACTIVA. Milton autorizó a Codex continuar como único operador del programa.
+- Alcance actual: CONEXION COMPOSIO, fase 2b-2 (Search Console por Composio), primera pieza: cargador de estado y adaptación posterior del sitemap diario.
+- Rama/worktree: `codex/composio-2b2-search-console` / worktree actual. Base local: `origin/main` `381ea34`.
+- Reservas: `apps/worker/src/send-daily-sitemaps.ts`, cargadores de estado nuevos en web/worker, pruebas asociadas y entradas de coordinación/versionado. Sin schema ni migraciones.
+- Producción: sin cambios; cualquier merge requiere permiso expreso posterior de Milton.

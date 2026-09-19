@@ -5,6 +5,7 @@ import {
   methodFor,
   needsReconnectAlert,
   resolveConnection,
+  buildConnectionState,
   type ComposioAppId,
 } from "@auto-articulos/shared";
 
@@ -25,6 +26,35 @@ test("método OWN: usa la propia si existe; si no, sin conexión", () => {
   assert.deepEqual(resolveConnection({ method: "OWN", hasOwn: false, composio: null }), { source: "NONE", reason: "NOT_CONNECTED" });
   // una conexión Composio activa NO se usa si el método sigue siendo OWN
   assert.deepEqual(resolveConnection({ method: "OWN", hasOwn: true, composio: active }), { source: "OWN" });
+});
+
+test("cargador: expone propia y selección de Composio sin filtrar campos innecesarios", () => {
+  assert.deepEqual(buildConnectionState({
+    own: { id: "own-1" },
+    composio: {
+      status: "ACTIVE",
+      connectedAccountId: "ca-1",
+      siteDomain: "example.com",
+      siteUrl: "https://example.com/",
+    },
+  }), {
+    hasOwn: true,
+    composio: {
+      status: "ACTIVE",
+      hasSelection: true,
+      connectedAccountId: "ca-1",
+      siteUrl: "https://example.com/",
+    },
+  });
+  assert.equal(buildConnectionState({
+    own: { id: "own-1" },
+    composio: {
+      status: "ACTIVE",
+      connectedAccountId: "ca-1",
+      siteDomain: "",
+      siteUrl: null,
+    },
+  }).composio?.hasSelection, false);
 });
 
 test("método COMPOSIO: usa Composio solo si está ACTIVA y con elección aprobada", () => {

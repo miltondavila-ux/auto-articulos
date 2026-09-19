@@ -8098,3 +8098,10 @@ Mario (#3) y Zulmad (#40): sin confirmar que hayan probado. **Regla para el pilo
 ### 10. Prompt de arranque para Codex
 
 Está en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md` (raíz del repositorio). Milton lo pega tal cual en la conversación nueva.
+
+### Avance 2026-09-19 — Codex acepta el traspaso y reclama 2b-2
+
+- Milton autorizó a Codex continuar como único operador del programa.
+- Rama propia: `codex/composio-2b2-search-console`, basada en `origin/main` local `381ea34`; no se ha tocado producción.
+- Reservas: `apps/worker/src/send-daily-sitemaps.ts`, cargadores de estado nuevos en web/worker, pruebas asociadas y documentación de coordinación/versionado.
+- Primer trabajo: implementar el cargador `{ hasOwn, composio: { status, hasSelection, connectedAccountId, siteUrl } }` y probarlo antes de adaptar el consumidor del sitemap diario.
