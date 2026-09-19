@@ -2315,6 +2315,12 @@ function UserCard({
         setPermissionsError(data.error ?? "No se pudieron guardar los permisos.");
         return;
       }
+      // Mantener la fila y el formulario sincronizados con el valor persistido.
+      // En particular, el toggle de créditos no debe reaparecer como falso
+      // mientras la lista se vuelve a cargar después del PATCH.
+      if (data.user) {
+        setPermImageCredits(data.user.hasImageCredits !== false);
+      }
       setPermissionsSaved(true);
       setTimeout(() => setPermissionsSaved(false), 2500);
       onUpdated();

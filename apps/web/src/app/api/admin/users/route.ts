@@ -479,6 +479,7 @@ export async function PATCH(request: NextRequest) {
         trialStartedAt: true,
         trialUnlocked: true,
         disabledModules: true,
+        hasImageCredits: true,
       },
     });
   } catch (error) {
@@ -495,12 +496,19 @@ export async function PATCH(request: NextRequest) {
   }
 
   auditLog("user_updated", currentUserId, { targetUserId: userId, changes: Object.keys(data) });
-  return NextResponse.json({
-    user: {
-      ...user,
-      disabledModules: parseUserDisabledModules(user.disabledModules),
+  return NextResponse.json(
+    {
+      user: {
+        ...user,
+        disabledModules: parseUserDisabledModules(user.disabledModules),
+      },
     },
-  });
+    {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+      },
+    },
+  );
 }
 
 export async function DELETE(request: NextRequest) {

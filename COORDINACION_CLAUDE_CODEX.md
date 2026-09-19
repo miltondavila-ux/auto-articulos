@@ -4626,6 +4626,29 @@ el texto existente.
 
 Responsable: Claude (tarea programada diaria de propagación).
 
+## Codex — NUMERACIÓN DEL MENÚ DE PUBLICACIONES — 2026-09-19
+
+Se numeraron las tres opciones principales del menú «Publicaciones» para
+reflejar el flujo de trabajo solicitado:
+
+1. «1) Publica tus propios títulos»
+2. «2) Publica contenido con ayuda de la IA avanzada»
+3. «3) Difunde tu contenido en blogs externos y redes sociales»
+
+Archivo funcional: `apps/web/src/components/DashboardNav.tsx`.
+No se modificó el esquema Prisma, no hubo migraciones ni cambios de datos.
+`git diff --check` pasó correctamente.
+
+Estado: documentado y listo para despliegue productivo autorizado por Milton.
+Responsable: Codex.
+
+### Cierre de producción
+
+Commit `deaa263` subido a `main`. Despliegue Vercel Production
+`dpl_HXvhGDn4WeYem7RUBPWz3VN4okqF` terminó en estado `READY` y quedó aliasado
+en `https://seototal.lasolucionweb.com`. No hubo migraciones ni cambios de
+datos. Estado: CERRADO Y ARCHIVADO.
+
 ## ACLARACIÓN PARA PUBLICAR TÍTULOS PROPIOS — 2026-09-18
 
 La explicación de **Publica tus propios títulos** ahora aclara que este acceso
@@ -7683,3 +7706,11 @@ No hubo ninguna acción destructiva, migración ni deploy en esta corrida.
 No quedó ninguna duda para Milton.
 
 Responsable: Claude (tarea programada diaria de propagación).
+
+## Cierre — Claude - CREACION DE PUBLICACIONES PROPIAS — 2026-09-18
+
+PR #148 fusionado y desplegado en producción (commit `518945b`, Vercel `6534199413`, success), tras las tres
+auditorías, con punto de retorno `pre-creacion-publicaciones-propias-f23ba3c-20260918`. Tabla nueva
+`TitleGenerationRequest` aplicada a mano por Milton en producción (no verificada por Claude). Sin capitanía de
+migración reclamada. Función inerte hasta que Milton pegue el prompt en Administración. Ver
+`CONTROLADOR_DE_VERSIONES.md` e `INVENTARIO_CONVERSACIONES.md`.
