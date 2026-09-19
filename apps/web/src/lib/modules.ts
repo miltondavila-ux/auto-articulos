@@ -71,9 +71,9 @@ export const SYSTEM_MODULES: SystemModule[] = [
   {
     id: "conexion-composio",
     label: "Conexión por Composio",
-    href: "/dashboard/configuracion/composio",
+    href: "/dashboard/configuracion/conexiones",
     description:
-      "Conectar Search Console, Analytics, Facebook e Instagram a través de Composio. Es opt-in: solo lo ve quien tenga «Habilitado».",
+      "Pantalla única «Conexiones» (ANALÍTICAS y DIFUSIÓN) con la conexión por Composio integrada. Es opt-in: solo la ve quien tenga «Habilitado».",
     optIn: true,
   },
 ];

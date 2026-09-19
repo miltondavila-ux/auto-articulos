@@ -3112,3 +3112,12 @@ Rollback: promover en Vercel el deployment del punto de retorno, o `git revert -
 Pendiente NO bloqueante: que Milton pegue la clave nueva y habilite a #2, #3 y #40; verificación como administrador.
 
 Responsable: Claude. Estado: EN PRODUCCIÓN — uso pendiente de la clave nueva y del «Habilitado» de Milton.
+
+## Versión preparada — 2026-09-19 19:34 UTC — CONEXION COMPOSIO, UX-1 etapa 1 (pantalla «Conexiones», opt-in)
+
+Rama `claude/composio-ux1-conexiones`. Sin migraciones ni cambios de schema. Añade `/dashboard/configuracion/conexiones` (ANALÍTICAS / DIFUSIÓN) reutilizando las secciones actuales sin modificarlas, visible solo para
+administradores y quien tenga «Habilitado» el módulo «Conexión por Composio». **Para el resto de personas nada cambia** (prueba local: redirección de la ruta nueva; Indexación y SEO, Redes Sociales y Configuración siguen en 200).
+
+**PUNTO DE RETORNO** (registrado antes de fusionar): etiqueta `pre-composio-ux1-3232906-20260919` (= `3232906`, Producción success; `/login` 200, `/privacidad` 200, `/api/me` 401, `/dashboard` 307→/login).
+Auditorías de integridad, funcional y de regresión APROBADAS. Rollback: promover el deployment de la etiqueta o `git revert -m 1 <fusión>` en rama nueva.
+Estado: PREPARADA — pendiente de Preview `success`, Vercel operativo y fusión.

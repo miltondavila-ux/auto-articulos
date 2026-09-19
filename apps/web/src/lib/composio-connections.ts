@@ -94,6 +94,8 @@ export interface UserConnectionView {
   selection: string | null;
   available: boolean;
   unavailableReason: string | null;
+  /** La persona no tiene activada esa red (permiso por usuario): la pantalla unificada no la muestra. */
+  hidden: boolean;
 }
 
 interface SelectionFields {
@@ -138,6 +140,7 @@ export async function listUserConnections(user: ConnectingUser): Promise<UserCon
       selection: row ? selectionLabel(app.id, row) : null,
       available: unavailableReason === null,
       unavailableReason,
+      hidden: !userMayConnectApp(user, app.id),
     };
   });
 }

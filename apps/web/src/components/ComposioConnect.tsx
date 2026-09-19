@@ -16,7 +16,24 @@ interface Connection {
   selection: string | null;
   available: boolean;
   unavailableReason: string | null;
+  /** La persona no tiene activada esta red: en modo incrustado no se muestra nada. */
+  hidden: boolean;
 }
+
+interface ComposioConnectProps {
+  /** Apps a mostrar (por defecto, las 4). */
+  apps?: string[];
+  /** Dentro de otra pantalla: sin introducción propia y ocultando redes no activadas. */
+  embedded?: boolean;
+}
+
+/**
+ * Parámetros de la URL leídos UNA vez al cargar el módulo: la pantalla puede tener
+ * varias instancias de este componente y cada una debe ver el resultado del retorno
+ * de Composio aunque otra ya haya limpiado la dirección.
+ */
+const INITIAL_PARAMS: URLSearchParams | null =
+  typeof window === "undefined" ? null : new URLSearchParams(window.location.search);
 
 interface Option {
   id: string;
@@ -71,7 +88,7 @@ const RESULT_MESSAGE: Record<string, { ok: boolean; text: string }> = {
   invalid: { ok: false, text: "No se encontró esa conexión. Inicia la conexión desde aquí." },
 };
 
-export default function ComposioConnect() {
+export default function ComposioConnect({ apps, embedded = false }: ComposioConnectProps = {}) {
   const [connections, setConnections] = useState<Connection[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
@@ -85,10 +102,11 @@ export default function ComposioConnect() {
       setMessage({ ok: false, text: "No se pudo leer el estado de tus conexiones." });
       return null;
     }
-    const list = ((await response.json()) as { connections: Connection[] }).connections;
+    const all = ((await response.json()) as { connections: Connection[] }).connections;
+    const list = all.filter((connection) => (!apps || apps.includes(connection.app)) && !(embedded && connection.hidden));
     setConnections(list);
     return list;
-  }, []);
+  }, [apps, embedded]);
 
   const openChoices = useCallback(async (app: string) => {
     setChoices((current) => ({ ...current, [app]: { loading: true, error: null, options: [], picked: null } }));
@@ -114,12 +132,18 @@ export default function ComposioConnect() {
       // Una app conectada sin elección todavía pide elegir de inmediato.
       list?.filter((c) => c.status === "ACTIVE" && !c.selection && c.available).forEach((c) => void openChoices(c.app));
     });
-    const resultado = new URLSearchParams(window.location.search).get("resultado");
-    if (resultado && RESULT_MESSAGE[resultado]) {
+    const resultado = INITIAL_PARAMS?.get("resultado") ?? null;
+    const appDeVuelta = INITIAL_PARAMS?.get("app") ?? null;
+    if (resultado && RESULT_MESSAGE[resultado] && (!apps || !appDeVuelta || apps.includes(appDeVuelta))) {
       setMessage(RESULT_MESSAGE[resultado]);
-      window.history.replaceState(null, "", window.location.pathname);
+      // Se limpia solo lo del retorno; la pestaña elegida (vista) se conserva.
+      const params = new URLSearchParams(window.location.search);
+      params.delete("resultado");
+      params.delete("app");
+      const rest = params.toString();
+      window.history.replaceState(null, "", window.location.pathname + (rest ? `?${rest}` : ""));
     }
-  }, [load, openChoices]);
+  }, [load, openChoices, apps]);
 
   async function post(path: string, payload: Record<string, unknown>) {
     const response = await fetch(path, {
@@ -205,6 +229,7 @@ export default function ComposioConnect() {
 
   return (
     <div>
+      {!embedded && (
       <section style={sectionStyle}>
         <h2 style={h2Style}>Conexión por Composio</h2>
         <p style={mutedStyle}>
@@ -219,6 +244,12 @@ export default function ComposioConnect() {
           </p>
         )}
       </section>
+      )}
+      {embedded && message && (
+        <p role="status" style={{ fontSize: 14, margin: "8px 0 0", color: message.ok ? "#1a7f37" : "#c62828" }}>
+          {message.text}
+        </p>
+      )}
 
       {connections === null ? (
         <section style={sectionStyle}>
@@ -232,7 +263,9 @@ export default function ComposioConnect() {
           return (
             <section key={connection.app} style={sectionStyle}>
               <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-                <h2 style={{ ...h2Style, marginBottom: 6 }}>{connection.label}</h2>
+                <h2 style={{ ...h2Style, marginBottom: 6 }}>
+                  {embedded ? `${connection.label} · nueva conexión` : connection.label}
+                </h2>
                 <span style={{ fontSize: 13, fontWeight: 600, color: status.color }}>{status.text}</span>
               </div>
               <p style={mutedStyle}>{APP_NOTES[connection.app]}</p>

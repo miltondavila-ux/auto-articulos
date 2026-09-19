@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
-  const back = new URL("/dashboard/configuracion/composio", request.nextUrl.origin);
+  const back = new URL("/dashboard/configuracion/conexiones", request.nextUrl.origin);
   if (!canUseComposioModule(user)) {
     return NextResponse.redirect(new URL("/dashboard", request.nextUrl.origin));
   }
@@ -22,5 +22,7 @@ export async function GET(request: NextRequest) {
   auditLog("composio.connect_completed", user.id, { app, outcome });
   back.searchParams.set("resultado", outcome);
   if (app) back.searchParams.set("app", app);
+  // ANALÍTICAS lee datos (Google); DIFUSIÓN publica (Facebook, Instagram).
+  back.searchParams.set("vista", app === "facebook" || app === "instagram" ? "difusion" : "analiticas");
   return NextResponse.redirect(back);
 }
