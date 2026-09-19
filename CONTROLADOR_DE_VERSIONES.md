@@ -3143,3 +3143,8 @@ Responsable: Claude. Estado: EN PRODUCCIÓN — opt-in, sin efecto para clientes
 Rama `claude/composio-resolvedor`. Sin migraciones ni cambios de schema. Añade `packages/shared/src/composio-resolver.ts`: lógica pura sin ningún consumidor; `COMPOSIO_CONSUMER_READY` en `false` para las 4 apps, por lo que el método es siempre «OWN». **No cambia el comportamiento de nadie.**
 Auditorías de integridad, funcional (22 pruebas worker, 40 web, `next build` exit 0) y de regresión APROBADAS. **PUNTO DE RETORNO** antes de fusionar: etiqueta `pre-composio-resolvedor-f6dc2d5-20260919` (= `f6dc2d5`, Producción success). Rollback: promover ese deployment o `git revert -m 1 <fusión>`.
 Estado: PREPARADA — pendiente de Preview `success`, Vercel operativo y fusión.
+
+## Versión preparada — 2026-09-19 20:43 UTC — CONEXION COMPOSIO, aviso «no desconectes» en la tarjeta de Composio (UX)
+
+Rama `claude/composio-aviso-no-desconectar`. Un solo archivo de código (`apps/web/src/components/ComposioConnect.tsx`, +6 líneas: aviso en modo incrustado). Sin migraciones ni schema; solo lo ven las cuentas con el módulo habilitado. **PUNTO DE RETORNO:** etiqueta `pre-composio-aviso-4501637-20260919` (= `4501637`, Producción success).
+Auditorías de integridad, funcional (`tsc` 0, `next build` exit 0) y regresión APROBADAS. Motivo: incidente del piloto (ver Coordinación). Estado: PREPARADA — pendiente de Preview `success` y fusión.
