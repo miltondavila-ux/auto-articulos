@@ -7970,3 +7970,13 @@ conectar, elegir y probar funciona, pero no cambia lo que el sistema publica ni 
   `claude/composio-aviso-no-desconectar` (`ComposioConnect.tsx`, +6 líneas). Auditorías: integridad APROBADA (1 archivo, 0 schema/migraciones/workflows/secretos), funcional APROBADA (`tsc` 0, `next build` exit 0), regresión APROBADA (solo lo ven las cuentas con el módulo habilitado).
   Punto de retorno: `pre-composio-aviso-4501637-20260919` (= `4501637`).
 - **Para 2b-2:** el paso «desconectar la conexión propia al hacer el switch» debe ocurrir SOLO cuando el consumidor ya use Composio para esa persona (resolvedor + `COMPOSIO_CONSUMER_READY`); nunca antes ni a mano.
+
+### Avance 2026-09-19 20:48 UTC — CONEXION COMPOSIO 2b-2 (segunda pieza): adaptador de Search Console por Composio, INERTE
+
+- **Fusionados antes en esta tanda:** resolvedor (PR #160, `4501637`) y aviso «no desconectes» (PR #161, `91ecb91`); Producción success y salud intacta.
+- **Nuevo, sin efecto alguno:** `packages/shared/src/composio-search-console.ts` (+ export en `index.ts`): `composioListSearchConsoleSites`, `composioListSitemaps`, `composioSubmitSitemap`, `composioInspectUrl`, `composioQuerySearchAnalytics`. Hacen por Composio (sesión de Tool Router + lista blanca) lo que
+  `google-search-console.ts` hace con un token, con las **mismas firmas de respuesta** (`siteEntry`, rutas de sitemap, `indexStatusResult`, filas de Search Analytics) — para que cada consumidor cambie de vía sin reescribirse. Reciben `{ apiKey, userId, connectedAccountId }` en lugar de un token.
+  **Ningún consumidor lo importa todavía** (solo su prueba). Argumentos verificados con las definiciones reales de Composio: `site_url`, `feedpath`, `inspection_url`+`language_code`, `start_date`/`end_date`/`dimensions`/`row_limit`/`data_state`.
+- **Auditorías:** (1) integridad APROBADA — solo 1 archivo existente tocado (`packages/shared/src/index.ts`, 1 línea), 0 schema/migraciones/workflows/Vercel/secretos; (2) funcional APROBADA — `tsc` web y worker 0 errores, pruebas worker y web completas en verde, `next build` exit 0; (3) regresión APROBADA — nada lo usa. **Punto de retorno:** `pre-composio-adaptador-gsc-91ecb91-20260919` (= `91ecb91`).
+- **Siguiente (sin cambios al plan):** hacer que UN consumidor pregunte al resolvedor y, si la fuente es COMPOSIO, use este adaptador; el primero recomendado es `apps/worker/src/send-daily-sitemaps.ts` (sitemap diario), con la vía propia como comportamiento por defecto y `COMPOSIO_CONSUMER_READY` aún en `false`.
+  Aún falta cargar desde la base la conexión (`ComposioConnection` ACTIVE con `siteUrl`) y la marca de «tenía conexión propia» para alimentar `resolveConnection`.
