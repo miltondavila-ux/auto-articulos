@@ -50,7 +50,7 @@ refrescar esta tabla; no confiar en la fecha si pasó mucho tiempo.
 
 | Worktree | Rama | Commits sin fusionar | Dueño / conversación (según el propio commit o Coordinación) | Nota |
 |---|---|---|---|---|
-| `/Users/miltondavila/Creador de articulos/.worktrees/conexion-composio` | `claude/conexion-composio` | 0 (Fase 1 en curso, sin commit) | Claude — `CONEXION COMPOSIO` | Reserva 2026-09-18: `apps/web/src/lib/composio.ts`, `apps/web/src/app/api/admin/composio/**`, `apps/web/src/app/dashboard/composio/**`, `apps/web/src/components/DashboardNav.tsx`, `apps/web/src/content/manual-usuario.ts` (secciones «El menú» y «Administración»). Sin migraciones ni schema en la Fase 1. No toca `usuarios/page.tsx`. |
+| `/Users/miltondavila/Creador de articulos/.worktrees/conexion-composio` | `claude/composio-fase-2a` | Fase 2a en curso | Claude — `CONEXION COMPOSIO` (capitán de migración) | Reserva 2026-09-18/19: `packages/db/prisma/schema.prisma` (solo añadidos), `packages/db/prisma/migrations/20260918230000_add_composio_connections/`, `.github/workflows/migrate.yml` (vía `safe_composio_connections`), `apps/web/src/lib/composio-route.ts`, `apps/web/src/app/api/admin/composio/routes/`, `apps/web/src/app/dashboard/composio/ComposioPanel.tsx`, `apps/web/src/content/manual-usuario.ts`. |
 | `/private/tmp/doc-coordinacion-sept3` | `claude/doc-coordinacion-sept3` | 1 | Claude — esta misma sesión, "DOCUMENTO DE COORDINACION - SEPT 3" | Soy yo, ahora mismo. |
 | `/Users/miltondavila/Creador de articulos/.worktrees/google-api-verification` | `codex/google-api-verification` | 1 | Codex — commit `7908b01` "chore: prepare Google OAuth domain and verification pages", hecho hoy 19:06 | Muy reciente; probablemente Codex trabajando en paralelo ahora mismo en `CODEX - GPT-5 - VERIFICACION DE API'S DE GOOGLE`. |
 | `/private/tmp/limites-globales-articulos` | `codex/limites-globales-articulos` | 1 | Codex — proyecto `LIMITES GLOBALES DE ARTICULOS` | Coincide con la decisión de Milton (2026-09-02): **PAUSADO, no tocar ni integrar**. |
@@ -1404,3 +1404,11 @@ reservas liberadas. Estado final: ARCHIVADA.
 - Producción: deployment `dpl_GXQ165nD88E1xhgPK875DC1GHw4V`, estado `Ready`.
 - Migración controlada: workflow `35402599238`, sin pérdida de datos.
 - Reserva liberada. Estado final: CERRADA — EN PRODUCCIÓN.
+
+## Claude - CONEXION COMPOSIO, Fase 2a — 2026-09-18/19
+
+- Estado: ACTIVA. Responsable: Claude. Capitán de migración reclamado (ver Coordinación).
+- Alcance: interruptor por app y tablas `IntegrationRoute` / `ComposioConnection` (aditivas), sin cambio de comportamiento para clientes.
+- Rama/worktree: `claude/composio-fase-2a` / `.worktrees/conexion-composio`, base `origin/main` `c29d5a5`.
+- Punto de retorno: etiqueta `pre-composio-fase2a-c29d5a5-20260918`. Detalle y orden en el Controlador de Versiones.
+- Pendiente: PR, fusión, aplicar la migración con `safe_composio_connections`, verificar y liberar la capitanía.

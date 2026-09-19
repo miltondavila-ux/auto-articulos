@@ -21,6 +21,21 @@ interface Status {
   verification?: { valid: true } | { valid: false; reason: string };
 }
 
+interface AppRoute {
+  id: string;
+  label: string;
+  route: "OWN" | "COMPOSIO";
+  own: number;
+  composio: number;
+  pending: number;
+}
+
+interface RoutesState {
+  routingEnabled: boolean;
+  tablesReady: boolean;
+  apps: AppRoute[];
+}
+
 interface ConnectedAccount {
   id: string;
   status: string;
@@ -46,6 +61,8 @@ export default function ComposioPanel() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [accounts, setAccounts] = useState<ConnectedAccount[] | null>(null);
+  const [routes, setRoutes] = useState<RoutesState | null>(null);
+  const [routeMessage, setRouteMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [authInputs, setAuthInputs] = useState<Record<string, string>>({});
   const [authMessage, setAuthMessage] = useState<Record<string, { ok: boolean; text: string }>>({});
 
@@ -60,9 +77,15 @@ export default function ComposioPanel() {
     setStatus((await response.json()) as Status);
   }, []);
 
+  const loadRoutes = useCallback(async () => {
+    const response = await fetch("/api/admin/composio/routes", { cache: "no-store" });
+    if (response.ok) setRoutes((await response.json()) as RoutesState);
+  }, []);
+
   useEffect(() => {
     void loadStatus(false);
-  }, [loadStatus]);
+    void loadRoutes();
+  }, [loadStatus, loadRoutes]);
 
   async function save(event: FormEvent) {
     event.preventDefault();
@@ -140,6 +163,28 @@ export default function ComposioPanel() {
         [appId]: { ok: true, text: body.authConfigId ? "Verificado y guardado." : "Quitado." },
       }));
       await loadStatus(false);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function changeRoute(appId: string, route: "OWN" | "COMPOSIO") {
+    if (route === "COMPOSIO" && !window.confirm("¿Pasar esta app a Composio? Los clientes conectados por la vía propia tendrán que reconectar.")) return;
+    setBusy(true);
+    setRouteMessage(null);
+    try {
+      const response = await fetch("/api/admin/composio/routes", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ app: appId, route }),
+      });
+      const body = await response.json();
+      if (!response.ok) {
+        setRouteMessage({ ok: false, text: body.error ?? "No se pudo cambiar la vía." });
+        return;
+      }
+      setRoutes(body as RoutesState);
+      setRouteMessage({ ok: true, text: "Vía actualizada." });
     } finally {
       setBusy(false);
     }
@@ -342,6 +387,75 @@ export default function ComposioPanel() {
                 </tbody>
               </table>
             </div>
+          )}
+        </section>
+      )}
+
+      {routes && (
+        <section style={sectionStyle}>
+          <h2 style={h2Style}>Vía de conexión por app</h2>
+          <p style={mutedStyle}>
+            Elige por cuál vía se conectan los clientes en cada app: la <strong>propia</strong> (la de
+            siempre) o <strong>Composio</strong>. Para el cliente es transparente.{" "}
+            {routes.routingEnabled
+              ? "Al pasar una app a Composio, los clientes ya conectados por la vía propia siguen funcionando hasta que reconecten."
+              : "Por ahora el interruptor está bloqueado en «Propia»: el cambio de vía para clientes se activa en la siguiente fase, y hoy ningún cliente se ve afectado."}
+          </p>
+          {!routes.tablesReady && (
+            <p role="status" style={{ fontSize: 13, color: "#9a6700", margin: "10px 0 0" }}>
+              Falta aplicar la migración de base de datos de esta función. Mientras tanto todas las apps
+              usan la vía propia.
+            </p>
+          )}
+          <div style={{ overflowX: "auto", marginTop: 12 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  <th style={thStyle}>App</th>
+                  <th style={thStyle}>Vía</th>
+                  <th style={thStyle}>Vía propia</th>
+                  <th style={thStyle}>Composio</th>
+                  <th style={thStyle}>Reconexión pendiente</th>
+                </tr>
+              </thead>
+              <tbody>
+                {routes.apps.map((app) => (
+                  <tr key={app.id}>
+                    <td style={tdStyle}>{app.label}</td>
+                    <td style={tdStyle}>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        {(["OWN", "COMPOSIO"] as const).map((mode) => (
+                          <button
+                            key={mode}
+                            type="button"
+                            aria-pressed={app.route === mode}
+                            disabled={busy || app.route === mode || (mode === "COMPOSIO" && !routes.routingEnabled)}
+                            onClick={() => changeRoute(app.id, mode)}
+                            style={{
+                              ...secondaryButtonStyle,
+                              padding: "6px 12px",
+                              fontSize: 13,
+                              ...(app.route === mode ? { background: "#1d1d1f", color: "#ffffff", border: "1px solid #1d1d1f" } : {}),
+                              opacity: busy || (mode === "COMPOSIO" && !routes.routingEnabled) ? 0.5 : 1,
+                            }}
+                          >
+                            {mode === "OWN" ? "Propia" : "Composio"}
+                          </button>
+                        ))}
+                      </div>
+                    </td>
+                    <td style={tdStyle}>{app.own}</td>
+                    <td style={tdStyle}>{app.composio}</td>
+                    <td style={tdStyle}>{app.pending}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {routeMessage && (
+            <p role="status" style={{ fontSize: 13, marginTop: 10, color: routeMessage.ok ? "#1a7f37" : "#c62828" }}>
+              {routeMessage.text}
+            </p>
           )}
         </section>
       )}

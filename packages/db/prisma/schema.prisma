@@ -186,6 +186,7 @@ model User {
 
   credentials                Credential[]
   mcpConnections              McpConnection[]
+  composioConnections         ComposioConnection[]
   runs                       Run[]
   categories                 Category[]
   categorySyncJobs           CategorySyncJob[]
@@ -551,6 +552,68 @@ model TitleGenerationRequest {
   @@unique([userId, dayKey, slot])
   @@index([userId, createdAt])
   @@index([createdAt])
+}
+
+// CONEXION COMPOSIO (Fase 2a, ver FASE_0_ARQUITECTURA_CONEXION_COMPOSIO.md §6).
+// Camino PARALELO al de las integraciones propias: ninguna tabla existente
+// cambia y ningún consumidor actual lee estas tablas todavía.
+enum IntegrationRouteMode {
+  OWN
+  COMPOSIO
+}
+
+enum ComposioConnectionStatus {
+  INITIATED
+  ACTIVE
+  FAILED
+  REVOKED
+}
+
+// Interruptor por app, elegido por el administrador. Una fila por app; sin
+// fila equivale a OWN (la vía propia de siempre). `app` es uno de
+// COMPOSIO_APPS en apps/web/src/lib/composio.ts.
+model IntegrationRoute {
+  app         String               @id
+  route       IntegrationRouteMode @default(OWN)
+  updatedById String?
+  updatedAt   DateTime             @updatedAt
+}
+
+// Conexión de un cliente a una app a través de Composio. Los tokens OAuth NO
+// se guardan aquí: viven en Composio (`connectedAccountId`). La conexión
+// propia anterior NO se toca al conectar por Composio: se conserva 14 días
+// (`legacyRevokeAt`) para poder volver atrás. "Reconexión pendiente" no se
+// guarda: se calcula (interruptor en COMPOSIO + conexión propia + ninguna
+// conexión Composio ACTIVE).
+model ComposioConnection {
+  id                    String                   @id @default(cuid())
+  userId                String
+  app                   String
+  connectedAccountId    String                   @unique
+  status                ComposioConnectionStatus @default(INITIATED)
+  // Selección propia de cada app; todo opcional.
+  siteDomain            String                   @default("")
+  siteUrl               String?
+  sitemapUrl            String?
+  propertyId            String?
+  pageId                String?
+  pageName              String?
+  igAccountId           String?
+  username              String?
+  // Espejo de los campos de sitemap de SearchIntegration.
+  lastSitemapSyncAt     DateTime?
+  lastSitemapSyncStatus String?
+  lastSitemapSyncError  String?
+  activatedAt           DateTime?
+  legacyRevokeAt        DateTime?
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, app, siteDomain])
+  @@index([userId])
+  @@index([status])
 }
 
 model Category {
