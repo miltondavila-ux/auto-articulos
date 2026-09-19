@@ -7989,3 +7989,112 @@ conectar, elegir y probar funciona, pero no cambia lo que el sistema publica ni 
   Aviso técnico: mientras la app de Google siga en modo de prueba, la autorización puede caducar en pocos días y habrá que reconectar (motivo de fondo de todo el proyecto).
 - **Piezas de la 2b-2 ya en Producción, todas INERTES:** resolvedor (`composio-resolver.ts`), adaptador (`composio-search-console.ts`) y la lista blanca/cliente (`composio.ts`). **Falta:** cargar desde la base la conexión Composio y la marca «tenía conexión propia», adaptar UN consumidor (recomendado `apps/worker/src/send-daily-sitemaps.ts`),
   la alerta del HOME, y activar `COMPOSIO_CONSUMER_READY.google_search_console` solo tras probar con las cuentas piloto con Milton presente.
+
+## Claude — CONEXION COMPOSIO — TRASPASO A CODEX · ESTADO VIGENTE 2026-09-19 20:59 UTC
+
+**Este bloque PREVALECE sobre el «TRASPASO A CODEX» y los «Avance …» anteriores de CONEXION COMPOSIO** (no se borran: son el historial). Léelo primero; abre los anteriores solo para el detalle. Milton pidió esta consolidación para poder seguir desde Codex.
+
+```text
+IDENTIDAD:            Claude - Sonnet 5 - CONEXION COMPOSIO
+PROYECTO:             Auto Artículos — camino PARALELO para que clientes conecten Google y Meta por Composio mientras Google/Meta aprueban las apps propias
+ESTADO FINAL:         PAUSADA por límite de cupo/contexto de la conversación (traspaso a Codex a pedido de Milton; TRANSFERIDA cuando Codex lo acepte)
+RAMA:                 ninguna abierta. Todo lo de Claude está FUSIONADO en main (ramas claude/composio-* conservadas)
+WORKTREE:             /Users/miltondavila/Creador de articulos/.worktrees/conexion-composio (limpio; puede reutilizarse o retirarse)
+COMMIT BASE / HEAD:   main = Producción = 7efaacd (Vercel success) al momento de escribir esto
+ARCHIVOS RESERVADOS:  ninguno · capitanía de migración: liberada (Fase 2a); no hay migraciones pendientes
+MIGRACIONES:          solo la de la Fase 2a (20260918230000_add_composio_connections), ya aplicada en Producción
+PRUEBAS:              tsc web y worker 0 errores · worker 29 pruebas · web 40 pruebas · next build exit 0 (última corrida sobre 91ecb91)
+PRODUCCIÓN/PREVIEW:   sana: /login 200 · /privacidad 200 · /api/me 401 · /dashboard 307→/login
+ERRORES O BLOQUEOS:   ninguno técnico. Ver «Verificaciones abiertas»
+SIGUIENTE ACCIÓN EXACTA: ver «Siguiente acción exacta (2b-2)»
+RESPONSABLE SIGUIENTE: Codex (a confirmar por Milton)
+FECHA Y HORA:         2026-09-19 20:59 UTC
+```
+
+### 1. Qué está EN PRODUCCIÓN (todo verificado)
+
+| Etapa | PR / commit | Qué es | Efecto para clientes |
+|---|---|---|---|
+| Fase 1 | #142 `f0fd534` | Administración → Composio: clave cifrada, auth configs, cuentas conectadas | ninguno (solo admin) |
+| Fase 2a | #151 `484a579` | Tablas `IntegrationRoute` y `ComposioConnection` + interruptor por app **bloqueado** (`COMPOSIO_ROUTING_ENABLED=false`) | ninguno |
+| 2b-1 | #155 `0701e88` | Conectar, elegir (con aprobación) y probar por Composio; módulo **opt-in** `conexion-composio`; 7 rutas `/api/composio/*` | solo cuentas con «Habilitado» |
+| UX-1 etapa 1 | #157 `474e8d9` | Pantalla Configuración → **Conexiones** (ANALÍTICAS / DIFUSIÓN), opt-in | solo cuentas con «Habilitado» |
+| Aviso | #161 `91ecb91` | Aviso «conexión adicional, no desconectes la principal» en la tarjeta de Composio | solo habilitados |
+| 2b-2 pieza 1 | #160 `4501637` | `packages/shared/src/composio-resolver.ts`: `methodFor`, `resolveConnection`, `needsReconnectAlert`, `COMPOSIO_CONSUMER_READY` (todo en `false`) | **ninguno: inerte, nada lo importa** |
+| 2b-2 pieza 2 | #162 `51f5789` | `packages/shared/src/composio-search-console.ts`: 5 funciones de Search Console por Composio con las mismas formas de respuesta que `google-search-console.ts` | **ninguno: inerte, nada lo importa** |
+
+Puntos de retorno (etiquetas Git): `pre-composio-fase1-20260918`, `pre-composio-fase1-d6ba5f8-20260918`, `pre-composio-fase2a-c29d5a5-20260918`, `pre-composio-fase2b1-4543b17-20260919`, `pre-composio-ux1-3232906-20260919`, `pre-composio-resolvedor-f6dc2d5-20260919`, `pre-composio-aviso-4501637-20260919`, `pre-composio-adaptador-gsc-91ecb91-20260919`.
+
+**CONCLUSIÓN IMPORTANTE:** hoy **ningún consumidor del sistema lee conexiones de Composio**. Sitemap diario, inspección, métricas y publicación siguen usando SOLO las conexiones de la API principal. Conectar por Composio **suma, no reemplaza** (por eso la alerta del incidente de Lorena).
+
+### 2. Mapa del código (dónde está cada cosa)
+
+- `packages/shared/src/composio.ts` — cliente de Composio, **lista blanca** (`COMPOSIO_TOOL_ALLOWLIST`, `runAllowedTool`, `isToolAllowed`), `createConnectLink`, `getConnectedAccount`, `deleteConnectedAccount`. Ejecuta por **sesiones de Tool Router**.
+- `packages/shared/src/composio-resolver.ts` y `composio-search-console.ts` — piezas inertes de la 2b-2 (arriba).
+- `apps/web/src/lib/composio.ts` — Fase 1 (clave y auth configs cifrados en `SystemSetting`, `COMPOSIO_APPS`). `composio-route.ts` — interruptor por app y resumen. `composio-connections.ts` — conectar/callback/desconectar/probar/opciones/selección. `composio-options.ts` — opciones con códigos visibles y reglas. `modules.ts` — módulo opt-in.
+- Rutas: `apps/web/src/app/api/composio/{status,connect,callback,disconnect,test,options,select}` y `api/admin/composio/{route,accounts,auth-configs,routes}`.
+- UI: `apps/web/src/components/ComposioConnect.tsx` (modo `embedded`), `app/dashboard/configuracion/conexiones/{page,ConexionesView}.tsx`, `app/dashboard/composio/ComposioPanel.tsx` (Administración).
+- Pruebas: `apps/web/src/lib/{modules,composio-options}.test.ts`, `apps/worker/src/{composio,composio-resolver,composio-search-console}.test.ts`.
+- Especificaciones: `MASTER_BLUEPRINT_CONEXION_COMPOSIO.md`, `FASE_0_ARQUITECTURA_CONEXION_COMPOSIO.md`, **`ESPECIFICACION_CONEXIONES_UNIFICADAS.md`** (UX acordada; la más reciente).
+
+### 3. Decisiones de Milton (no reabrir sin preguntarle)
+
+Camino paralelo, no reemplazo · Business Profile y Threads NO existen en Composio (siguen por la API propia) · **cuentas piloto: #2 Lorena Alvarez, #3 Mario Davila, #40 Zulmad Antolinez**, habilitadas con el módulo opt-in (Milton las gestiona en Administración → Usuarios; **no hay lista en código**) ·
+Stories: Instagram sí por Composio (a probar), Facebook no (siguen por la API propia) · UX final: una pantalla «Conexiones» con **ANALÍTICAS** (Search Console «esencial», Analytics, Bing) y **DIFUSIÓN** (Business Profile, Facebook, Instagram, Threads, LinkedIn, Pinterest, Bluesky, Tumblr, Blogger, Dev.to), método invisible para el cliente, cada persona ve solo las redes que tiene activadas ·
+**al hacer el switch:** la conexión propia se **desactiva pero se guarda 14 días** (reversible) y el HOME muestra **una alerta solo por Google Search Console** con enlace para reconectar (lo demás es opcional y nunca alerta) · las pestañas viejas (Indexación y SEO, Redes Sociales) pasarán a redirigir a Conexiones (UX-2) · `tagcrush` (marca blanca) queda fuera del switch · Composio se ve como «Composio» en la pantalla de Google/Meta y se declara al cliente.
+
+### 4. Cómo trabajar con Milton (reglas que él dio)
+
+- **Obedecer siempre este documento** (rama y worktree propios, reservas, punto de retorno ANTES de fusionar, tres auditorías, verificación DESPUÉS; esquema y migración en el mismo commit; nunca trabajar sobre `main`).
+- **Producción solo con permiso expreso.** El vigente (2026-09-19) fue: «tienes permiso para producción siempre y cuando respetes y obedezcas todo el documento de coordinación y sobre todo no rompas nada». Es de Claude; **Codex debe pedir el suyo**. Fusionar a `main` despliega.
+- **Guiarlo paso a paso, UNO A LA VEZ**, en español, corto y concreto; él usa el panel lateral del navegador. Nunca pedir ni recibir **contraseñas ni claves de API por el chat**: las escribe/pega él. Un agente no cierra ni abre sesiones por él.
+- **Registrar cada avance en este documento** (entrada corta al final, formato del bloque de traspaso). No reescribir entradas anteriores.
+- Antes de programar una etapa nueva: comprobar Coordinación, `git fetch`, y que `main` no haya cambiado.
+
+### 5. Rutina de fusión que funciona (repetirla tal cual)
+
+1. `git fetch origin`; rama nueva desde `origin/main`; cambios; commit con archivos EXPLÍCITOS (nunca `git add .`).
+2. Auditorías: (1) integridad — `git diff --stat`, 0 schema/migraciones/workflows/vercel, 0 secretos, 0 depuración; (2) funcional — `npx prisma generate --schema=packages/db/prisma/schema.prisma`, `npx tsc --noEmit` en `apps/web` y `apps/worker`, pruebas (`npx tsx --test …`), `npm run build` en `apps/web`; (3) regresión — qué consumidores existentes toca.
+3. **Etiqueta de retorno** sobre el commit de Producción: `pre-<tema>-<sha>-<fecha>` (verificar que Producción == `origin/main` y `success`), `git push origin refs/tags/…`.
+4. Registrar en este documento y en `CONTROLADOR_DE_VERSIONES.md`; push; `gh pr create`.
+5. Esperar el Preview de Vercel `success` (`gh api repos/miltondavila-ux/auto-articulos/deployments?sha=<head>`); comprobar que Vercel esté «All Systems Operational» (`https://www.vercel-status.com/api/v2/status.json`), `main` sin cambios, PR `MERGEABLE/CLEAN`.
+6. `gh pr merge <n> --merge` → esperar el deployment de Producción → verificar `/login` 200, `/privacidad` 200, `/api/me` 401, `/dashboard` 307 en `https://seototal.lasolucionweb.com` → PR de documentación con el resultado.
+
+**Trampas conocidas:** en zsh una variable con varios archivos NO se separa (`git add $F` falla: usar un arreglo) · el hook de commit `generate-product-update` imprime un error en local (sin `DATABASE_URL`/`OPENAI_API_KEY`): es inofensivo y **no debe anunciar módulos de administración a clientes** · `next dev` bloquea `127.0.0.1` (usar `localhost`) ·
+`prisma format` reformatea TODO el schema: no usarlo (solo añadir líneas) · el clasificador del modo automático deniega fusionar sin permiso expreso · para probar en local: copiar `/Users/miltondavila/Creador de articulos/.env.local` a `apps/web/.env.local` (ignorado por git; borrarlo al terminar), firmar una sesión con `createSessionToken` de `apps/web/src/lib/session.ts` y usar la cookie `auto_articulos_session` en `localhost`; base local `autoarticulos` en `127.0.0.1:5432` ·
+en Producción las migraciones NO se aplican al desplegar: existe el workflow manual «Migración manual» con vías `safe_*` (se añadió `safe_composio_connections`) · `apps/web/AGENTS.md`: esta versión de Next.js tiene cambios de API; consultar `node_modules/next/dist/docs/`.
+
+### 6. Configuración en Composio (sin secretos)
+
+Proyecto `10minuteswebsite_workspace_first_project`. Claves de API (los valores nunca se guardaron aquí): la de **Producción** es `••••EHCE` (nombre «AUTO ARTICULOS PRODUCCION 2B»; Read All + escritura en Connected accounts, Session management y Session tool execution; **son los permisos correctos y no se pueden editar**, si hace falta otra se crea una nueva y la pega Milton).
+Auth configs (OAuth 2.0 + Composio Managed, permisos mínimos) guardados en Producción 4/4: Search Console `ac_xeK3IXS9_J2A` · Analytics `ac_Z6Vbdtcm0eVR` · Facebook `ac_wh7GjfOEBPre` · Instagram `ac_x-bKQdH0Z3nH`. Hallazgos técnicos verificados (formas de respuesta, por qué Tool Router y no `tools/execute`, Instagram Login, Facebook autoriza una cuenta personal): sección 4 del bloque «TRASPASO A CODEX» del 2026-09-19.
+
+### 7. Estado de las cuentas piloto
+
+Módulo habilitado a #2, #3 y #40 (verificado: exactamente 3 de 92). **Lorena (#2):** Search Console y Analytics conectados por la API principal (`https://www.segurosdesaludyvida.com/`, sitemap `…/sitemap.xml`; propiedad `534571871`), verificado con su sesión; sus 4 apps de Composio están `NOT_CONNECTED`. Un incidente ocurrió: Milton desconectó la principal esperando que Composio la sustituyera y quedó sin Search Console un rato; se restauró.
+Mario (#3) y Zulmad (#40): sin confirmar que hayan probado. **Regla para el piloto hasta que la 2b-2 esté activa: NO desconectar la conexión principal.**
+
+### 8. Verificaciones abiertas y riesgos
+
+1. Mientras la app de Google siga en **modo de prueba**, la autorización de Search Console puede caducar en pocos días (habrá que reconectar): es la razón de ser del proyecto.
+2. En el Google usado en las pruebas había **dos propiedades de Analytics duplicadas**; Milton borró la copia (`545454891`, cuenta `401054988`; queda ~35 días en la papelera). Lorena hoy usa `534571871`: correcto.
+3. Ambas propiedades de Analytics **no registraban visitas desde el 2026-09-09** (antes 1–46 sesiones/día): posible fallo del código de seguimiento del sitio de Lorena; pendiente de que Milton lo compruebe en Analytics → Tiempo real.
+4. Antifraude de trials: `validateAndRegisterTrialDomain` no mira las selecciones de Composio de otras cuentas (solo afecta a cuentas de prueba restringidas).
+5. Tarea aparte: actualizar la política de privacidad («la conexión la gestiona Composio»).
+6. Business Profile hoy se muestra a todos en DIFUSIÓN; la especificación pide que aparezca solo si el administrador lo activa (no cambiado a propósito).
+
+### 9. Siguiente acción exacta (2b-2, Search Console por Composio)
+
+**Objetivo:** que una persona con método Composio use, para Search Console, su conexión de Composio; y que quien pasó a Composio sin reconectar vea la alerta del HOME. **Sin cambiar nada para nadie hasta activar `COMPOSIO_CONSUMER_READY.google_search_console`.**
+
+1. Rama nueva desde `origin/main` (`codex/…`), registrar la conversación en `INVENTARIO_CONVERSACIONES.md`, reservar archivos.
+2. **Cargador de estado** (web y worker): dado `userId`+app, devolver `{ hasOwn, composio: { status, hasSelection, connectedAccountId, siteUrl } }` leyendo `SearchIntegration` (provider `google`) y `ComposioConnection`. Es la entrada de `resolveConnection(...)`. Con pruebas contra la base local.
+3. **UN consumidor primero:** `apps/worker/src/send-daily-sitemaps.ts` (sitemap diario). Si `methodFor(...)` es OWN → código de hoy sin tocar; si COMPOSIO y `resolveConnection` da COMPOSIO → `composioSubmitSitemap`/`composioListSitemaps` (`packages/shared/src/composio-search-console.ts`) con `{ apiKey, userId, connectedAccountId }`; si NONE → no enviar y registrar `lastSitemapSyncStatus`. La clave se descifra igual que en web (`SystemSetting` `composio_api_key`, `decryptSecret`; el worker ya tiene `CREDENTIALS_ENCRYPTION_KEY`).
+4. Después, uno a uno, con su prueba: `apps/worker/src/googleIndexing.ts` (inspección), y en web `api/sitemap/send`, `api/titles/[id]/google-inspection`, `api/opportunities`, `api/pre-validation`, `api/configuration-status`, `api/dashboard-stats`, `lib/domain-validation.ts`.
+5. **Alerta del HOME** (`apps/web/src/app/dashboard/page.tsx`): mensaje amarillo no cerrable, solo Search Console, usando `needsReconnectAlert`, con enlace a `/dashboard/configuracion/conexiones?vista=analiticas`. Desaparece sola al reconectar.
+6. Activar `COMPOSIO_CONSUMER_READY.google_search_console = true` **solo** después de probar con Lorena/Mario/Zulmad **con Milton presente**, con punto de retorno, tres auditorías y permiso expreso.
+7. Luego: 2b-3 (Analytics), 2b-4 (Facebook/Instagram; publicar y Stories de Instagram), 2c (revocación a los 14 días de la conexión propia; `IntegrationRoute.updatedAt` marca el switch), UX-2 (abrir Conexiones a todos y redirigir las pestañas viejas: 5 archivos enlazan a ellas — `api/search-integrations/bing/callback/route.ts`, `dashboard/configuracion/page.tsx`, `components/BingWebmasterSection.tsx`, `content/manual-usuario.ts`).
+
+### 10. Prompt de arranque para Codex
+
+Está en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md` (raíz del repositorio). Milton lo pega tal cual en la conversación nueva.
