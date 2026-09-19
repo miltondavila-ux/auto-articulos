@@ -7931,3 +7931,19 @@ en Administración → Usuarios → «Conexión por Composio»; (3) con esas cue
 4. **Alerta del HOME** (solo Search Console): mensaje amarillo no cerrable en `/dashboard` con enlace a Conexiones (ANALÍTICAS) cuando el método es Composio, la persona tenía Search Console propia y no hay conexión Composio ACTIVE; desaparece sola al reconectar.
 5. **Desconexión al switch**: la conexión propia no se borra; queda ignorada 14 días (`IntegrationRoute.updatedAt` marca el switch) y se revoca sola (etapa 2c). Revertir el switch la restaura al instante.
 6. Antes de activar nada para clientes: probar con las cuentas piloto reales, con Milton presente para autorizar; tres auditorías, punto de retorno, Preview, permiso expreso de Milton.
+
+### Avance 2026-09-19 20:33 UTC — CONEXION COMPOSIO: configuración de Producción hecha por Milton y verificada · piloto HABILITADO
+
+Milton hizo en Producción, con su sesión de administrador (Claude solo guio y verificó):
+
+- **Clave nueva de Composio** guardada en Administración → Composio: `••••EHCE` (nombre en Composio «AUTO ARTICULOS PRODUCCION 2B»; Read All + escritura en Connected accounts, Session management y Session tool execution).
+  Composio la **acepta** (`valid: true`). Reemplaza a la de `pJfU`. Al cambiar de clave el sistema borró los 4 auth configs (comportamiento previsto) y Claude los **recargó y verificó contra Composio real**: 4/4
+  (`ac_xeK3IXS9_J2A`, `ac_Z6Vbdtcm0eVR`, `ac_wh7GjfOEBPre`, `ac_x-bKQdH0Z3nH`). Cuentas conectadas en Composio: 0.
+- **Módulo «Conexión por Composio» HABILITADO** en Administración → Usuarios a **#2 Lorena Alvarez, #3 Mario Davila y #40 Zulmad Antolinez**. Verificado leyendo `/api/admin/users`: exactamente **3 de 92** cuentas tienen `conexion-composio = enabled`
+  y ninguna otra tiene valor explícito. Las tres tienen permiso de Facebook e Instagram.
+- **Verificado como administrador en Producción:** `/api/composio/status` 200, el módulo aparece en Administración como «Conexión por Composio · opt-in», `/dashboard/configuracion/conexiones` carga (200).
+
+**Estado global (actualiza el traspaso):** la 2b-1 y UX-1 están en Producción y **ya utilizables por las 3 cuentas piloto** en Configuración → **Conexiones**. Ningún otro cliente ve nada. Las conexiones de Composio de las cuentas piloto **todavía no las lee ningún consumidor** (etapa 2b-2):
+conectar, elegir y probar funciona, pero no cambia lo que el sistema publica ni envía.
+
+**Pendiente:** (1) que Lorena, Mario y Zulmad prueben conectar (autorizan ellos en Google/Meta; Composio se ve en la pantalla de permisos); (2) verificaciones abiertas del traspaso: propiedad de Analytics de Lorena y visitas sin registrar desde el 2026-09-09; (3) **2b-2** según el plan de Coordinación.
