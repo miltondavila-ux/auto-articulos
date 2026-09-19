@@ -7625,3 +7625,61 @@ paso por defecto (`db push`) quedó omitido; el paso de RLS terminó con «todas
 tienen RLS activado». Capitanía liberada: ya puede correr Prisma o el workflow de migración cualquier
 otra tarea. Pendiente NO bloqueante: que Milton confirme en Administración → Composio que la sección
 «Vía de conexión por app» aparece sin el aviso «Falta aplicar la migración».
+
+## Claude (tarea programada diaria de propagación) — 2026-09-19
+
+Punto de partida: la última entrada firmada por esta misma tarea era
+"Claude (tarea programada diaria de propagación) — 2026-09-18" (commit
+`d0c0c13`). Se revisó el diff de `COORDINACION_CLAUDE_CODEX.md` entre ese
+commit y `origin/main` actual (`b476556`): 34 commits nuevos tocaron este
+documento, correspondientes a las entradas ya escritas en este mismo
+archivo entre "Claude - BING WEBMASTER DIRECCION DE DEVOLUCION — 2026-09-18"
+y "Claude — CONEXION COMPOSIO, Fase 2a" (cierre `484a579`, 2026-09-19
+00:59 UTC).
+
+Verificación por documento:
+
+- `CONTROLADOR_DE_VERSIONES.md`: ya contenía el registro de cada PR/commit
+  mencionado en el rango (#114/`e8a8b18`, #127/`cd6fd3e`, #133/`aea076d`,
+  #139/`9df2f10`, #143/`d6ba5f8`, #144/`1c19f07`, #151/`484a579`); no hacía
+  falta agregar nada.
+- `INVENTARIO_CONVERSACIONES.md`: ya contenía Parte A (reserva PAUSADA de
+  `claude/mensajes-error-humanizados-ia`, PR #125) y Parte B (BOTON VIDEO
+  EXPLICATIVO BING WEBMASTER, BING WEBMASTER SITEMAP, CHECK DE NO
+  INDEXACION, ERROR AL PUBLICAR, CODEX - CREADOR DE TITULOS MUY ESTRICTO —
+  REPARACIÓN DEL MOTOR con su cierre, CONEXION COMPOSIO y Fase 2a) para
+  cada proyecto nuevo del rango; no hacía falta agregar nada. La reserva de
+  `codex/reparacion-del-motor` y la de `claude/composio-fase-2a` ya
+  figuraban cerradas (verificado con `git merge-base --is-ancestor` contra
+  `origin/main`: ambas ramas están fusionadas, en `1c19f07` y `484a579`
+  respectivamente), así que no correspondía agregarlas a la Parte A.
+- `apps/web/src/content/manual-usuario.ts`: se detectó un cambio visible
+  para el usuario final que NO estaba reflejado: el PR #126 ("BOTON VIDEO
+  EXPLICATIVO BING WEBMASTER") agregó un **Paso 5 opcional y no
+  bloqueante "Conectar Bing Webmaster Tools"** al Asistente de
+  Configuración Inicial (`OnboardingWizard.tsx`, `StepCard stepNumber={5}`,
+  confirmado leyendo el componente actual), con video tutorial incluido.
+  El manual solo describía los pasos 1-4 y la pantalla final. Se agregó un
+  párrafo nuevo en la sección "Antes de empezar (Asistente de Configuración
+  Inicial)" describiendo este Paso 5, sin tocar ni una palabra del texto
+  existente. El resto de cambios visibles del rango (nombres de menú,
+  "Difunde tu contenido...", agrupación de Historial/Actualizaciones,
+  alineación de lenguaje de la interfaz del PR #143) ya estaban reflejados
+  en el manual porque esos mismos commits lo tocaron en el mismo lote
+  (verificado con `git show --stat` de cada commit).
+- `TO-DO.md`: no se agregó nada. La única mención de una tarea futura suelta
+  en el rango (detección de títulos duplicados que no reconoce el
+  formulario en inglés, "#titlees"/"There is already an article with this
+  title") ya está registrada palabra por palabra en
+  `INVENTARIO_CONVERSACIONES.md` (entrada CLAUDE - ERROR AL PUBLICAR, "Otra
+  tarea aparte"), agregada en el mismo lote que la escribió; no se
+  consideró necesario duplicarla como ítem nuevo de `TO-DO.md`.
+- `REPARADOR_DEL_ARBOL_PRINCIPAL.md`: ninguna entrada del rango describe un
+  árbol de git enredado, ramas pisadas o commits mezclados (los merges del
+  rango son sincronizaciones normales de `origin/main` hacia ramas de
+  trabajo); no hacía falta agregar nada.
+
+No hubo ninguna acción destructiva, migración ni deploy en esta corrida.
+No quedó ninguna duda para Milton.
+
+Responsable: Claude (tarea programada diaria de propagación).
