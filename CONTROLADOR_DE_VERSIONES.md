@@ -3015,4 +3015,54 @@ nueva. Las tablas nuevas son aditivas y están vacías: pueden permanecer sin ef
 Pendientes conocidos: la clave de Composio y los 4 auth configs solo están en la base LOCAL de Milton; hay
 que pegarlos en Producción. Fase 2b (conexión de clientes, banner, callback verificado) pendiente.
 
+## Versión desplegada — 2026-09-18 — CREACION DE PUBLICACIONES PROPIAS (PR #148)
+
+Fusionado el PR #148 (`claude/creacion-publicaciones-propias`) en `main`: commit de fusión `518945b`.
+Completa la entrada anterior «Versión preparada — CREACION DE PUBLICACIONES PROPIAS» (que no se reescribe).
+
+**PUNTO DE RETORNO DEFINITIVO** (sustituye al de la entrada preparada, porque `main` avanzó de `e7f529c` a
+`f23ba3c` antes de fusionar; el punto de retorno es el commit que estaba en Producción inmediatamente antes):
+
+```text
+Commit de Producción previo: f23ba3c (= origin/main justo antes de la fusión; solo documentación sobre 1c19f07)
+Etiqueta de Git:             pre-creacion-publicaciones-propias-f23ba3c-20260918  (apunta a f23ba3c, en el remoto)
+Deployment Vercel previo:    6534165309 · Production · success
+                             https://auto-articulos-6q52ypdkm-luna-portex-intelligence.vercel.app
+(La etiqueta pre-creacion-publicaciones-propias-e7f529c-20260918 sigue siendo cierta como «Producción antes del PR #144»,
+ pero ya no es el retorno correcto de #148: volver a e7f529c deshacería también #144 y #147.)
+```
+
+**Deployment de la fusión:** `6534199413` · Production · **success** · commit `518945b`
+(`https://auto-articulos-8auobszej-luna-portex-intelligence.vercel.app`). Preview del PR (head `03919c4`) pasó antes de fusionar; el PR estaba `MERGEABLE/CLEAN`.
+Compuerta previa: Vercel «All Systems Operational» y 0 incidentes; producción == `origin/main` == `f23ba3c`.
+
+**Verificación en producción (2026-09-18 ~22:50 UTC), idéntica a la línea base:**
+
+```text
+/login 200 · /privacidad 200 · /api/me 401 · /dashboard 307→/login · /dashboard/publicar 307→/login
+/api/title-generation 401 · /api/admin/title-generation-prompt 401
+POST /api/auth/login con credenciales falsas → 401 {"error":"Correo o contraseña incorrectos"}
+  (401 y no 500: la base de datos responde a través del cliente Prisma con el schema nuevo)
+Vercel público: All Systems Operational
+```
+
+**Aún NO verificado (lo hace Milton, que puede iniciar sesión):** (1) que la tabla `TitleGenerationRequest` exista
+en producción (la aplicó Milton a mano; Claude no tiene acceso); (2) la IA real con su prompt; (3) logs de runtime
+de Vercel. Las rutas nuevas dan 401 sin sesión igual que antes (el middleware pide sesión a todo `/api`), así que
+el 401 no prueba por sí solo que estén desplegadas: lo prueba el deployment del commit de fusión.
+
+**Qué debe hacer Milton para activar la función:** en Administración → Prompts pegar el prompt en la caja
+«PROMPT PUBLICACIONES PROPIAS» y guardar; luego, con una cuenta de pruebas, abrir Publicar → «Crear con la IA del
+sistema». Sin prompt, la opción dice «Esta función aún no está disponible» y no gasta IA. Si al abrir la opción IA
+sale «No se pudo verificar…», la tabla no existe en producción: aplicar el SQL de
+`packages/db/prisma/migrations/20260918190000_add_title_generation_requests/migration.sql`.
+
+**Cómo revertir en un caso extremo:** (1) Vercel → `Deployments` → deployment `6534165309` (`f23ba3c`) →
+promover a Production; (2) por Git: rama nueva y `git revert -m 1 518945b`, abrir PR y pasar las tres
+auditorías; comparar con `git diff pre-creacion-publicaciones-propias-f23ba3c-20260918..main`; (3) NO usar
+`reset --hard` ni `push --force`. La tabla y la clave `title_generation_prompt` quedan inertes.
+
+Migración: `20260918190000_add_title_generation_requests` aplicada a mano en producción por Milton antes de fusionar
+(aditiva, repetible; sin registrar en `_prisma_migrations`). La capitanía de migración activa
+(`CODEX - CREADOR DE TITULOS MUY ESTRICTO`) no cambia.
 Responsable: Claude. Estado: EN PRODUCCIÓN — verificación en vivo pendiente (Milton).

@@ -7706,3 +7706,11 @@ No hubo ninguna acción destructiva, migración ni deploy en esta corrida.
 No quedó ninguna duda para Milton.
 
 Responsable: Claude (tarea programada diaria de propagación).
+
+## Cierre — Claude - CREACION DE PUBLICACIONES PROPIAS — 2026-09-18
+
+PR #148 fusionado y desplegado en producción (commit `518945b`, Vercel `6534199413`, success), tras las tres
+auditorías, con punto de retorno `pre-creacion-publicaciones-propias-f23ba3c-20260918`. Tabla nueva
+`TitleGenerationRequest` aplicada a mano por Milton en producción (no verificada por Claude). Sin capitanía de
+migración reclamada. Función inerte hasta que Milton pegue el prompt en Administración. Ver
+`CONTROLADOR_DE_VERSIONES.md` e `INVENTARIO_CONVERSACIONES.md`.
