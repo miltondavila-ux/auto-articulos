@@ -4642,6 +4642,13 @@ No se modificó el esquema Prisma, no hubo migraciones ni cambios de datos.
 Estado: documentado y listo para despliegue productivo autorizado por Milton.
 Responsable: Codex.
 
+### Cierre de producción
+
+Commit `deaa263` subido a `main`. Despliegue Vercel Production
+`dpl_HXvhGDn4WeYem7RUBPWz3VN4okqF` terminó en estado `READY` y quedó aliasado
+en `https://seototal.lasolucionweb.com`. No hubo migraciones ni cambios de
+datos. Estado: CERRADO Y ARCHIVADO.
+
 ## ACLARACIÓN PARA PUBLICAR TÍTULOS PROPIOS — 2026-09-18
 
 La explicación de **Publica tus propios títulos** ahora aclara que este acceso
