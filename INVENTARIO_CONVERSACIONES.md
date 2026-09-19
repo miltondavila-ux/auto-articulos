@@ -1448,3 +1448,6 @@ reservas liberadas. Estado final: ARCHIVADA.
 
 ### Actualización 2026-09-19 20:33 UTC — CONEXION COMPOSIO: piloto habilitado
 - Clave nueva (`••••EHCE`) y 4 auth configs en Producción; módulo «Conexión por Composio» habilitado a #2, #3 y #40 (3 de 92). Verificado. Detalle en Coordinación → «Avance … piloto HABILITADO». Sin reservas ni capitanía de migración.
+
+### Actualización 2026-09-19 20:51 UTC — CONEXION COMPOSIO
+- Resolvedor (#160), aviso (#161) y adaptador de Search Console (#162) fusionados, todos inertes. Lorena restaurada por la API principal. Sin reservas ni capitanía de migración. Detalle en Coordinación → «Avance … adaptador FUSIONADO».
