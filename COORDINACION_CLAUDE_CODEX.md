@@ -7909,3 +7909,25 @@ Rama `claude/composio-ux1-conexiones` (base `3232906`). Cumple la especificació
   viejas: mientras estas existan no se rompe nada, pero al unificar deben redirigir a Conexiones.
 - **Diferencias conocidas con la especificación (no cambiadas a propósito para no romper nada):** Business Profile hoy se muestra a todos en DIFUSIÓN (la especificación pide que aparezca solo si el administrador lo activa); las dos
   pestañas viejas siguen visibles para todos hasta UX-2; no existe aún la alerta del HOME ni la desconexión al switch (dependen de los consumidores, etapa 2b-2).
+
+### Avance 2026-09-19 19:37 UTC — CONEXION COMPOSIO: UX-1 etapa 1 FUSIONADA y DESPLEGADA · estado global actualizado
+
+- **PR #157 fusionado** (`474e8d9`, 2026-09-19 19:35:31 UTC); Producción `success`; salud idéntica a la línea base (`/login` 200 · `/privacidad` 200 · `/api/me` 401 · `/dashboard` 307→/login). Punto de retorno: `pre-composio-ux1-3232906-20260919`.
+- **Verificado en Producción con una cuenta NORMAL:** `/dashboard/configuracion/conexiones` y la dirección antigua `/dashboard/configuracion/composio` llevan a `/dashboard/configuracion`; `indexacion` y `redes-sociales` siguen en 200 con sus tarjetas propias.
+
+**ESTADO GLOBAL HOY (actualiza el bloque «TRASPASO A CODEX»):** en Producción están la Fase 1, la 2a, la **2b-1** (PR #155) y la **UX-1 etapa 1** (PR #157). Producción = `474e8d9`. Todo es **opt-in** o inerte: ningún cliente ve ni usa nada nuevo. Ramas fusionadas y
+conservadas: `claude/composio-fase-2b1`, `claude/composio-ux1-conexiones`.
+
+**Para Milton (nada de esto lo puede hacer un agente):** (1) pegar en Administración → Composio la clave nueva (Read All + escritura en Connected accounts, Session management y Session tool execution; la de Producción `pJfU` no alcanza); (2) poner «Habilitado» a #2 Lorena, #3 Mario y #40 Zulmad
+en Administración → Usuarios → «Conexión por Composio»; (3) con esas cuentas, probar en Configuración → **Conexiones**; (4) comprobar las verificaciones abiertas de la sección 8 del traspaso (Analytics de Lorena, seguimiento sin visitas desde el 9-sep).
+
+**SIGUIENTE ETAPA — 2b-2 (Search Console por Composio). Plan para quien continúe (NO empezada):**
+1. Rama nueva desde `origin/main`; reclamar/registrar en Coordinación; punto de retorno; sin migraciones previstas.
+2. Resolvedor `resolveConnection(userId, app)` en `packages/shared` (o `apps/web/src/lib`): si el método de la persona para esa app es Composio y hay `ComposioConnection` ACTIVE con selección hecha → Composio; si es Composio y aún no reconectó → **ninguna**
+   (red desconectada, decisión P2); si es propio → la conexión de siempre. «Método Composio» = módulo opt-in habilitado para la persona (piloto) **o** interruptor de la app en COMPOSIO (`COMPOSIO_ROUTING_ENABLED`, hoy `false` en `apps/web/src/lib/composio-route.ts`).
+3. Consumidores a adaptar (uno por uno, cada uno con su prueba y siempre con la vía propia como comportamiento por defecto): `apps/worker/src/googleIndexing.ts` (inspección tras publicar), `apps/worker/src/send-daily-sitemaps.ts` (sitemap diario), y en web `api/sitemap/send`,
+   `api/titles/[id]/google-inspection`, `api/opportunities`, `api/pre-validation`, `api/configuration-status`, `api/dashboard-stats`, `lib/domain-validation.ts`. Las funciones de `packages/shared/src/google-search-console.ts` reciben un token de acceso; para Composio se debe crear un adaptador con las herramientas
+   `GOOGLE_SEARCH_CONSOLE_{LIST_SITES,LIST_SITEMAPS,SUBMIT_SITEMAP,INSPECT_URL,SEARCH_ANALYTICS_QUERY}` (argumentos: `site_url`, `feedpath`, `inspection_url`, `start_date`, `end_date`).
+4. **Alerta del HOME** (solo Search Console): mensaje amarillo no cerrable en `/dashboard` con enlace a Conexiones (ANALÍTICAS) cuando el método es Composio, la persona tenía Search Console propia y no hay conexión Composio ACTIVE; desaparece sola al reconectar.
+5. **Desconexión al switch**: la conexión propia no se borra; queda ignorada 14 días (`IntegrationRoute.updatedAt` marca el switch) y se revoca sola (etapa 2c). Revertir el switch la restaura al instante.
+6. Antes de activar nada para clientes: probar con las cuentas piloto reales, con Milton presente para autorizar; tres auditorías, punto de retorno, Preview, permiso expreso de Milton.

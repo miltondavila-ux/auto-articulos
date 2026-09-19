@@ -1442,3 +1442,6 @@ reservas liberadas. Estado final: ARCHIVADA.
 ### Actualización 2026-09-19 19:26 UTC — CONEXION COMPOSIO Fase 2b-1
 - Estado: 2b-1 **DESPLEGADA EN PRODUCCIÓN** (PR #155, `0701e88`). Reserva de archivos de la 2b-1 **LIBERADA** (fila borrada de la tabla de reservas). Sin capitanía de migración.
 - La conversación sigue PAUSADA a la espera de Milton (clave nueva y «Habilitado» de #2, #3, #40) y de la siguiente etapa (UX-1). Detalle: Coordinación → «TRASPASO A CODEX» y «Avance … 2b-1 FUSIONADA».
+
+### Actualización 2026-09-19 19:37 UTC — CONEXION COMPOSIO UX-1
+- UX-1 etapa 1 **DESPLEGADA** (PR #157, `474e8d9`, opt-in). Sin reservas activas ni capitanía de migración. Estado global y plan de la 2b-2 en Coordinación → «Avance … UX-1 etapa 1 FUSIONADA». Conversación PAUSADA a la espera de Milton (clave nueva y «Habilitado» de #2, #3, #40).
