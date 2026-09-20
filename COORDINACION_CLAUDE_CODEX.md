@@ -8228,3 +8228,10 @@ Está en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md` (raíz del repositorio). M
 - Reporte: publicación en LinkedIn falló con HTTP 426 `NONEXISTENT_VERSION` porque `packages/shared/src/linkedin-api.ts` enviaba `Linkedin-Version: 202505`.
 - Corrección preparada: actualizar la versión de Posts/Images API a `202609`, versión vigente según la documentación oficial de LinkedIn; no se cambió OAuth, permisos, payload ni el resto de redes.
 - Pendiente: ejecutar verificación local y desplegar/fusionar conforme al protocolo de este documento. La publicación real requiere reintento con la conexión existente.
+
+### Cierre 2026-09-20 — prueba real de LinkedIn exitosa
+
+- PR #177 (`9414fdc`) fusionado a `main` y desplegado por Vercel.
+- Se reintentó en producción «Seguros Médicos Económicos en Florida: Guía Práctica» desde Historial → Publicaciones en redes → Sin publicar.
+- Resultado verificado en el historial: `LINKEDIN — ✓ Publicado`, 20/09, 07:34 p.m.; las publicaciones sin confirmar bajaron de 11 a 10.
+- Incidente resuelto: la versión `202609` publica correctamente. Se cierra esta intervención.
