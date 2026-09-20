@@ -146,7 +146,9 @@ export async function POST(request: Request) {
     let currentRows = cachedGsc?.currentRows ?? [];
     let previousRows = cachedGsc?.previousRows ?? [];
     let countryRows = cachedGsc?.countryRows ?? [];
-    if (!cachedGsc && integration?.siteUrl) {
+    // Nunca congelar una respuesta vacía de Search Console durante el TTL.
+    const hasCachedGscRows = currentRows.length > 0 || previousRows.length > 0;
+    if ((!cachedGsc || !hasCachedGscRows) && integration?.siteUrl) {
       const accessToken = await getGoogleAccessToken(
         decryptSecret(integration.encryptedRefreshToken),
       );
@@ -157,12 +159,35 @@ export async function POST(request: Request) {
         // las consultas y del contexto declarado, no de esta dimensión.
         queryGoogleSearchAnalytics(accessToken, integration.siteUrl, isoDate(currentStart), isoDate(end), ["country"]),
       ]);
-      await writeOpportunityEvidenceCache(
-        { ...cacheScope, source: "gsc" },
-        JSON.parse(JSON.stringify({ currentRows, previousRows, countryRows })),
-        previousStart,
-        end,
-      );
+      // GSC puede ocultar consultas de bajo volumen al pedir query+page,
+      // aunque sí entregue las páginas. La dimensión page sigue siendo
+      // evidencia real y permite continuar sin inventar consultas.
+      if (currentRows.length === 0) {
+        currentRows = await queryGoogleSearchAnalytics(
+          accessToken,
+          integration.siteUrl,
+          isoDate(currentStart),
+          isoDate(end),
+          ["page"],
+        );
+      }
+      if (previousRows.length === 0) {
+        previousRows = await queryGoogleSearchAnalytics(
+          accessToken,
+          integration.siteUrl,
+          isoDate(previousStart),
+          isoDate(previousEnd),
+          ["page"],
+        );
+      }
+      if (currentRows.length > 0 || previousRows.length > 0 || countryRows.length > 0) {
+        await writeOpportunityEvidenceCache(
+          { ...cacheScope, source: "gsc" },
+          JSON.parse(JSON.stringify({ currentRows, previousRows, countryRows })),
+          previousStart,
+          end,
+        );
+      }
     }
     const existing = await existingPromise;
     // Ejemplos reales de lo que YA se publicó en cada categoría (pedido de

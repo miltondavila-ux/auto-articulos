@@ -1475,3 +1475,11 @@ reservas liberadas. Estado final: ARCHIVADA.
   perdía al renderizar el estado vacío o limpiar el mensaje.
 - Cambio local: CTA persistente en el estado vacío, sin schema ni migración.
 - Estado: EN REVISIÓN — SIN DESPLIEGUE.
+
+## Codex — RECOLECCIÓN GSC PARA CUENTAS NUEVAS / FLOR MENDEZ #94 — 2026-09-20
+
+- Alcance: corregir la recuperación de evidencia de Search Console para
+  cuentas nuevas con datos de páginas pero pocas consultas.
+- Cambio: no cachear respuestas GSC vacías y usar fallback por dimensión
+  `page` cuando `query + page` no devuelve filas.
+- Estado: EN REVISIÓN — SIN DESPLIEGUE.
