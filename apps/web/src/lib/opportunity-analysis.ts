@@ -613,9 +613,7 @@ export async function analyzeSeoOpportunities(input: {
   // títulos propone el modelo por lote y en qué guardarraíl exacto se pierde
   // cada uno, para poder diagnosticar con evidencia real por qué una cuenta
   // termina en "no_new" en vez de adivinar.
-  // Diagnóstico temporal solicitado para auditar la primera pasada real en
-  // Producción; se desactiva después de identificar el filtro responsable.
-  const debugEnabled = true;
+  const debugEnabled = process.env.OPPORTUNITY_DEBUG === "1";
   const debugCounters = {
     batches: 0,
     batchesFailed: 0,
