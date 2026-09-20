@@ -2,11 +2,15 @@ import "dotenv/config";
 import { prisma } from "@auto-articulos/db";
 import {
   decryptSecret,
+  composioSubmitSitemap,
   getGoogleAccessToken,
+  methodFor,
+  resolveConnection,
   submitGoogleSitemap,
   submitBingSitemap,
 } from "@auto-articulos/shared";
 import { getBingTokenForIntegration } from "./bingToken";
+import { loadConnectionState } from "./composio-connection-state";
 
 const CONCURRENCY = 5;
 
@@ -23,6 +27,7 @@ async function submitForUser(integration: {
   encryptedRefreshToken: string;
   siteUrl: string | null;
   sitemapUrl: string | null;
+  siteDomain: string;
 }): Promise<SitemapResult> {
   if (!integration.siteUrl || !integration.sitemapUrl) {
     return {
@@ -35,14 +40,27 @@ async function submitForUser(integration: {
     integration.provider === "bing" ? "Bing Webmaster Tools" : "Google Search Console";
 
   try {
-    const accessToken =
-      integration.provider === "bing"
+    if (integration.provider === "google" && await shouldUseComposio(integration)) {
+      const state = await loadConnectionState(integration.userId, "google_search_console", integration.siteDomain);
+      if (!state.composio?.connectedAccountId || !state.composio.siteUrl) {
+        throw new Error("Search Console requiere reconectar la cuenta por Composio y seleccionar un sitio.");
+      }
+      const apiKey = await getComposioApiKey();
+      if (!apiKey) throw new Error("La conexión por Composio no está configurada.");
+      await composioSubmitSitemap(
+        { apiKey, userId: integration.userId, connectedAccountId: state.composio.connectedAccountId },
+        state.composio.siteUrl,
+        integration.sitemapUrl,
+      );
+    } else {
+      const accessToken = integration.provider === "bing"
         ? await getBingTokenForIntegration(integration)
         : await getGoogleAccessToken(decryptSecret(integration.encryptedRefreshToken));
-    if (integration.provider === "bing") {
-      await submitBingSitemap(accessToken, integration.siteUrl, integration.sitemapUrl);
-    } else {
-      await submitGoogleSitemap(accessToken, integration.siteUrl, integration.sitemapUrl);
+      if (integration.provider === "bing") {
+        await submitBingSitemap(accessToken, integration.siteUrl, integration.sitemapUrl);
+      } else {
+        await submitGoogleSitemap(accessToken, integration.siteUrl, integration.sitemapUrl);
+      }
     }
 
     // Solo se llega aquí si submitGoogleSitemap confirmó una respuesta ok de
@@ -97,6 +115,23 @@ async function submitForUser(integration: {
     );
     return { userId: integration.userId, ok: false, error: message };
   }
+}
+
+async function getComposioApiKey(): Promise<string | null> {
+  const setting = await prisma.systemSetting.findUnique({ where: { key: "composio_api_key" } });
+  if (!setting) return null;
+  try { return decryptSecret(setting.encryptedValue); } catch { return null; }
+}
+
+async function shouldUseComposio(integration: { userId: string; siteDomain: string }): Promise<boolean> {
+  const user = await prisma.user.findUnique({ where: { id: integration.userId }, select: { role: true, disabledModules: true } });
+  const moduleEnabled = user?.role === "admin" || (() => {
+    try { return JSON.parse(user?.disabledModules ?? "{}")?.["conexion-composio"] === "enabled"; }
+    catch { return false; }
+  })();
+  const method = methodFor({ app: "google_search_console", moduleEnabled, routeIsComposio: false });
+  const state = await loadConnectionState(integration.userId, "google_search_console", integration.siteDomain);
+  return resolveConnection({ method, hasOwn: state.hasOwn, composio: state.composio }).source === "COMPOSIO";
 }
 
 export async function sendDailySitemaps(): Promise<SitemapResult[]> {

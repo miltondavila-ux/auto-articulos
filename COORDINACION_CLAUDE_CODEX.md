@@ -8105,3 +8105,10 @@ Está en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md` (raíz del repositorio). M
 - Rama propia: `codex/composio-2b2-search-console`, basada en `origin/main` local `381ea34`; no se ha tocado producción.
 - Reservas: `apps/worker/src/send-daily-sitemaps.ts`, cargadores de estado nuevos en web/worker, pruebas asociadas y documentación de coordinación/versionado.
 - Primer trabajo: implementar el cargador `{ hasOwn, composio: { status, hasSelection, connectedAccountId, siteUrl } }` y probarlo antes de adaptar el consumidor del sitemap diario.
+
+### Avance 2026-09-20 — Codex adapta sitemap diario, todavía INERTE
+
+- `apps/worker/src/send-daily-sitemaps.ts` consulta el estado resuelto para Google Search Console y tiene una ruta preparada para `composioSubmitSitemap`.
+- La vía propia de Google y Bing permanece sin cambios efectivos mientras `COMPOSIO_CONSUMER_READY.google_search_console` siga en `false`.
+- Verificación: TypeScript del worker correcto, 8 pruebas del resolvedor correctas y `git diff --check` limpio.
+- No se activó ninguna bandera, no hay migraciones y no se tocó producción. Pendiente: prueba específica del consumidor y adaptación de `googleIndexing.ts`.
