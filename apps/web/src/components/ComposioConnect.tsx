@@ -25,6 +25,8 @@ interface ComposioConnectProps {
   apps?: string[];
   /** Dentro de otra pantalla: sin introducción propia y ocultando redes no activadas. */
   embedded?: boolean;
+  /** Inserta los controles dentro de la tarjeta nativa del servicio, sin crear otra tarjeta. */
+  inline?: boolean;
 }
 
 /**
@@ -88,7 +90,7 @@ const RESULT_MESSAGE: Record<string, { ok: boolean; text: string }> = {
   invalid: { ok: false, text: "No se encontró esa conexión. Inicia la conexión desde aquí." },
 };
 
-export default function ComposioConnect({ apps, embedded = false }: ComposioConnectProps = {}) {
+export default function ComposioConnect({ apps, embedded = false, inline = false }: ComposioConnectProps = {}) {
   const [connections, setConnections] = useState<Connection[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
@@ -261,15 +263,13 @@ export default function ComposioConnect({ apps, embedded = false }: ComposioConn
           const isBusy = busy === connection.app;
           const choice = choices[connection.app];
           return (
-            <section key={connection.app} style={sectionStyle}>
+            <section key={connection.app} style={inline ? { marginTop: 16, paddingTop: 14, borderTop: "1px solid #e5e5ea" } : sectionStyle}>
               <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-                <h2 style={{ ...h2Style, marginBottom: 6 }}>
-                  {embedded ? `${connection.label} · nueva conexión` : connection.label}
-                </h2>
+                {!inline && <h2 style={{ ...h2Style, marginBottom: 6 }}>{embedded ? `${connection.label} · nueva conexión` : connection.label}</h2>}
                 <span style={{ fontSize: 13, fontWeight: 600, color: status.color }}>{status.text}</span>
               </div>
-              <p style={mutedStyle}>{APP_NOTES[connection.app]}</p>
-              {embedded && (
+              {!inline && <p style={mutedStyle}>{APP_NOTES[connection.app]}</p>}
+              {embedded && !inline && (
                 <p role="note" style={{ margin: "8px 0", padding: "8px 12px", borderRadius: 10, background: "#fff4e5", color: "#8a4b08", fontSize: 13, lineHeight: 1.45 }}>
                   <strong>Es una conexión adicional, en prueba.</strong> No reemplaza a la conexión de arriba: el sistema sigue usando esa,
                   así que <strong>no la desconectes</strong>.
@@ -278,7 +278,7 @@ export default function ComposioConnect({ apps, embedded = false }: ComposioConn
 
               {connection.status === "ACTIVE" && connection.selection && !choice && (
                 <p style={{ fontSize: 14, margin: "8px 0" }}>
-                  <strong>Usando:</strong> {connection.selection}
+                  <strong>{inline ? "Propiedad seleccionada:" : "Usando:"}</strong> {connection.selection}
                 </p>
               )}
 
