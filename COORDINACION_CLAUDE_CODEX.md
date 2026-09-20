@@ -8142,6 +8142,11 @@ Está en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md` (raíz del repositorio). M
 - Activación: `COMPOSIO_CONSUMER_READY.google_search_console` continúa en `false`. No se ha creado PR, no se ha fusionado y no se ha tocado producción.
 - Pendiente antes de activar: prueba real con Lorena/Mario/Zulmad con Milton presente, punto de retorno, Preview y permiso expreso de merge.
 
+### Ajuste UX 2026-09-20 — lenguaje de nueva conexión
+
+- A petición de Milton y según la captura del panel, los textos visibles para la persona usuaria ya no nombran al proveedor: muestran «Conexión completada y verificada», «La conexión respondió correctamente» y «Nueva conexión».
+- El nombre técnico permanece solo en código interno y superficies administrativas donde es necesario.
+
 ### Avance 2026-09-20 — Prevalidación preparada
 
 - `apps/web/src/app/api/pre-validation/route.ts` reconoce una selección Composio válida como Search Console conectado cuando el resolvedor lo permite.
