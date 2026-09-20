@@ -258,10 +258,10 @@ export async function POST(request: Request) {
     const externalEvidenceRows = [
       ...googleAnalyticsSignals.rows.map((row) => ({
         source: "google-analytics-4",
-        query: row.pagePath ?? "",
+        query: row.pageTitle || row.pagePath || "",
         page: row.pagePath ?? "",
         clicks: 0,
-        impressions: row.sessions,
+        impressions: Math.max(row.views ?? 0, row.sessions ?? 0, row.events ?? 0),
         ctr: 0,
         position: 0,
       })),

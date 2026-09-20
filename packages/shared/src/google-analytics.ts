@@ -15,9 +15,13 @@ export type GoogleAnalyticsSummary = {
   endDate: string;
   rows: Array<{
     pagePath?: string;
+    pageTitle?: string;
+    views: number;
+    events: number;
     sessions: number;
     activeUsers: number;
     engagementRate?: number;
+    bounceRate?: number;
     conversions?: number;
   }>;
 };
@@ -70,8 +74,8 @@ export async function queryGoogleAnalyticsSummary(accessToken: string, propertyI
     headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       dateRanges: [{ startDate, endDate }],
-      dimensions: [{ name: "pagePath" }],
-      metrics: [{ name: "sessions" }, { name: "activeUsers" }, { name: "engagementRate" }, { name: "conversions" }],
+      dimensions: [{ name: "pagePath" }, { name: "pageTitle" }],
+      metrics: [{ name: "screenPageViews" }, { name: "sessions" }, { name: "activeUsers" }, { name: "eventCount" }, { name: "engagementRate" }, { name: "bounceRate" }, { name: "conversions" }],
       limit: "10000",
     }),
   });
@@ -81,10 +85,14 @@ export async function queryGoogleAnalyticsSummary(accessToken: string, propertyI
     propertyId, startDate, endDate,
     rows: (data.rows ?? []).map((row) => ({
       pagePath: row.dimensionValues?.[0]?.value,
-      sessions: Number(row.metricValues?.[0]?.value ?? 0),
-      activeUsers: Number(row.metricValues?.[1]?.value ?? 0),
-      engagementRate: Number(row.metricValues?.[2]?.value ?? 0),
-      conversions: Number(row.metricValues?.[3]?.value ?? 0),
+      pageTitle: row.dimensionValues?.[1]?.value,
+      views: Number(row.metricValues?.[0]?.value ?? 0),
+      sessions: Number(row.metricValues?.[1]?.value ?? 0),
+      activeUsers: Number(row.metricValues?.[2]?.value ?? 0),
+      events: Number(row.metricValues?.[3]?.value ?? 0),
+      engagementRate: Number(row.metricValues?.[4]?.value ?? 0),
+      bounceRate: Number(row.metricValues?.[5]?.value ?? 0),
+      conversions: Number(row.metricValues?.[6]?.value ?? 0),
     })),
   } satisfies GoogleAnalyticsSummary;
 }
