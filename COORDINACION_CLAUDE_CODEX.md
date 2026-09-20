@@ -8232,6 +8232,23 @@ Está en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md` (raíz del repositorio). M
 
 Responsable: Codex. Se implementa el borrado separado de publicaciones
 sociales descartadas en historial. Archivos reservados: `apps/web/src/app/api/social-opportunities/route.ts` y `apps/web/src/app/dashboard/historial/page.tsx`. Sin cambios de esquema ni migraciones.
+
+### CIERRE — HISTORICOS REDES LORENA — 2026-09-20
+
+- Se implementó el borrado exclusivo de publicaciones sociales descartadas
+  mediante `DELETE /api/social-opportunities?scope=skipped`, con confirmación
+  visible en `/dashboard/historial`.
+- Se verificó en producción y se eliminaron, con confirmación explícita de
+  Milton, 123 publicaciones descartadas. Las publicaciones históricas y las
+  publicaciones sin confirmar quedaron intactas.
+- PR #178 fue fusionado a `main` con commit `3633d817`.
+- Después se agregó el botón opcional **Borrar sin confirmar**, sin ejecutar
+  ningún borrado automático. Usa `scope=unconfirmed` y excluye estados
+  `pending`, `published` y `skipped`.
+- PR #181 fue fusionado a `main` con commit `899d7a06`; Preview de Vercel
+  aprobado y cambios presentes en `origin/main`.
+- No hubo cambios de esquema, migraciones ni borrado automático al desplegar.
+- Reserva liberada. Estado: CERRADA.
 # Trabajo activo — BOTÓN BORRAR SIN CONFIRMAR — 2026-09-20
 
 Responsable: Codex. Se añade un botón separado para borrar publicaciones
