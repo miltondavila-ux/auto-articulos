@@ -52,6 +52,8 @@ El menú superior tiene, en este orden: **Inicio**, **Cómo funciona esta aplica
 
 En computadora, Publicaciones se abre al pulsarlo y se cierra al elegir una opción, al pulsar fuera o con la tecla Escape. En teléfono y tableta no se despliega: las cinco opciones aparecen listadas debajo del título Publicaciones.
 
+En el menú, los tres primeros accesos aparecen numerados como «1) Publica tus propios títulos», «2) Publica contenido con ayuda de la IA avanzada» y «3) Difunde tu contenido en blogs externos y redes sociales», para reflejar el orden recomendado del flujo de trabajo.
+
 Si el administrador te oculta algún módulo, simplemente no aparece en el menú. Si te oculta los cuatro, el grupo Publicaciones desaparece entero.
 
 ## Configuración
