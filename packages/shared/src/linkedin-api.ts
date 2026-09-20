@@ -17,7 +17,11 @@
  * solo mantiene soporte para los últimos ~12 meses; actualizar este valor
  * periódicamente (no hace falta usar siempre el mes más reciente).
  */
-const LINKEDIN_API_VERSION = "202505";
+// LinkedIn versiona las APIs REST por mes y mantiene cada versión por un
+// mínimo de un año. 202505 quedó fuera de soporte (426 NONEXISTENT_VERSION);
+// mantener la versión vigente evita que las publicaciones fallen al llegar a
+// la API de Posts/Images.
+const LINKEDIN_API_VERSION = "202609";
 
 export interface LinkedInTokenExchangeResult {
   accessToken: string;
