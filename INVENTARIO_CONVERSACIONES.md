@@ -1466,3 +1466,12 @@ reservas liberadas. Estado final: ARCHIVADA.
   `dpl_HXvhGDn4WeYem7RUBPWz3VN4okqF`: READY, aliasado en `https://seototal.lasolucionweb.com`.
 - Reservas: ninguna. Estado final: CERRADA Y ARCHIVADA — EN PRODUCCIÓN. Detalle en
   `COORDINACION_CLAUDE_CODEX.md` y `CONTROLADOR_DE_VERSIONES.md`.
+
+## Codex — BOTÓN DE FORZAR MÁS PUBLICACIONES / FLOR MENDEZ #94 — 2026-09-20
+
+- Alcance: investigar la desaparición recurrente del botón «Forzar análisis
+  ahora» en Oportunidades para Flor Mendez (#94).
+- Hallazgo: el CTA estaba condicionado únicamente al bloque de mensaje y se
+  perdía al renderizar el estado vacío o limpiar el mensaje.
+- Cambio local: CTA persistente en el estado vacío, sin schema ni migración.
+- Estado: EN REVISIÓN — SIN DESPLIEGUE.

@@ -4626,6 +4626,20 @@ el texto existente.
 
 Responsable: Claude (tarea programada diaria de propagación).
 
+## Codex — BOTÓN DE FORZAR MÁS PUBLICACIONES / FLOR MENDEZ #94 — 2026-09-20
+
+- Diagnóstico: el botón «Forzar análisis ahora» solo se renderizaba dentro del
+  aviso de resultado; al quedar la pantalla en estado vacío o limpiarse el
+  aviso, el CTA desaparecía aunque no hubiera oportunidades.
+- Corrección local: el CTA también se muestra en el estado vacío cuando
+  `canForce` está activo, evitando duplicarlo en el aviso cuando no hay grupos.
+  No se tocaron schema, migraciones, datos ni producción.
+- Verificación inicial: `git diff --check` limpio. Pendiente ejecutar
+  typecheck/build y verificar con la sesión de Flor Mendez #94 antes de abrir
+  PR.
+- Reserva activa: `apps/web/src/app/dashboard/oportunidades/page.tsx`.
+- Estado: EN REVISIÓN — SIN DESPLIEGUE.
+
 ## Codex — NUMERACIÓN DEL MENÚ DE PUBLICACIONES — 2026-09-19
 
 Se numeraron las tres opciones principales del menú «Publicaciones» para
