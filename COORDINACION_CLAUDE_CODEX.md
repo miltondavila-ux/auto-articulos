@@ -8178,3 +8178,7 @@ Está en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md` (raíz del repositorio). M
 - `apps/worker/src/googleIndexing.ts` consulta el resolvedor y puede inspeccionar mediante `composioInspectUrl` cuando Search Console esté activado para Composio.
 - Con `COMPOSIO_CONSUMER_READY.google_search_console = false`, el flujo efectivo continúa siendo la API propia.
 - Verificación: TypeScript del worker correcto, 8 pruebas del resolvedor correctas y `git diff --check` limpio.
+# Trabajo activo — HISTORICOS REDES LORENA — 2026-09-20
+
+Responsable: Codex. Se implementa el borrado separado de publicaciones
+sociales descartadas en historial. Archivos reservados: `apps/web/src/app/api/social-opportunities/route.ts` y `apps/web/src/app/dashboard/historial/page.tsx`. Sin cambios de esquema ni migraciones.
