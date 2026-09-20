@@ -3153,3 +3153,51 @@ Auditorías de integridad, funcional (`tsc` 0, `next build` exit 0) y regresión
 
 Rama `claude/composio-adaptador-gsc`. Sin migraciones ni cambios de schema. Añade `packages/shared/src/composio-search-console.ts` (5 funciones equivalentes a las de `google-search-console.ts`, por Composio) sin ningún consumidor. **No cambia el comportamiento de nadie.**
 Auditorías de integridad, funcional y regresión APROBADAS. **PUNTO DE RETORNO** antes de fusionar: etiqueta `pre-composio-adaptador-gsc-91ecb91-20260919` (= `91ecb91`, Producción success). Rollback: promover ese deployment o `git revert -m 1 <fusión>`. Estado: PREPARADA — pendiente de Preview `success` y fusión.
+
+## Versión desplegada — 2026-09-19 — feat(nav): numerar opciones del menú de publicaciones
+
+Commit `deaa263` (autor Milton, agente Codex) subido directo a `main`, sin PR. Cambia únicamente
+`apps/web/src/components/DashboardNav.tsx`: las tres opciones principales del menú «Publicaciones»
+pasan a mostrarse como «1) Publica tus propios títulos», «2) Publica contenido con ayuda de la IA
+avanzada» y «3) Difunde tu contenido en blogs externos y redes sociales». Sin schema, sin
+migraciones, sin cambios de datos. `git diff --check` pasó correctamente (según registro de Codex en
+Coordinación).
+
+Deployment Vercel Production `dpl_HXvhGDn4WeYem7RUBPWz3VN4okqF`: **READY**, aliasado en
+`https://seototal.lasolucionweb.com`. Responsable: Codex. Estado: EN PRODUCCIÓN — CERRADA Y
+ARCHIVADA (ver Coordinación).
+
+## Versión desplegada — 2026-09-19 — CONEXION COMPOSIO, resolvedor de conexión (2b-2, primera pieza, INERTE)
+
+PR #160 fusionado a `main` (`4501637`), con merge commit. Registra el resultado de la entrada
+«Versión preparada — resolvedor de conexión» (que no se reescribe). Deployment Vercel Production:
+**success**; salud idéntica a la línea base. **PUNTO DE RETORNO** usado: `pre-composio-resolvedor-f6dc2d5-20260919`.
+Sigue INERTE: `COMPOSIO_CONSUMER_READY` en `false` para las 4 apps; nadie lo consume todavía. Sin
+migraciones. Responsable: Claude. Estado: EN PRODUCCIÓN — sin efecto para clientes.
+
+## Versión desplegada — 2026-09-19 — CONEXION COMPOSIO, aviso «no desconectes» en la tarjeta de Composio (UX)
+
+PR #161 fusionado a `main` (`91ecb91`), con merge commit. Registra el resultado de la entrada
+«Versión preparada — aviso "no desconectes"» (que no se reescribe). Deployment Vercel Production:
+**success**; salud intacta. **PUNTO DE RETORNO** usado: `pre-composio-aviso-4501637-20260919`. Solo lo
+ven las cuentas piloto con el módulo «Conexión por Composio» habilitado. Sin migraciones. Motivo:
+incidente del piloto con Lorena (#2), ver Coordinación. Responsable: Claude. Estado: EN PRODUCCIÓN.
+
+## Versión desplegada — 2026-09-19 — CONEXION COMPOSIO, adaptador de Search Console por Composio (2b-2, segunda pieza, INERTE)
+
+PR #162 fusionado a `main` (`51f5789`), con merge commit. Registra el resultado de la entrada
+«Versión preparada — adaptador de Search Console por Composio» (que no se reescribe). Deployment
+Vercel Production: **success**; salud intacta. **PUNTO DE RETORNO** usado: `pre-composio-adaptador-gsc-91ecb91-20260919`.
+Sigue INERTE: ningún consumidor lo importa todavía. Sin migraciones. Tras esta fusión, Milton
+reconectó y restauró Search Console y Analytics de Lorena (#2) por la vía principal (verificado por
+Claude con su sesión). Responsable: Claude. Estado: EN PRODUCCIÓN — sin efecto para clientes.
+
+**Estado consolidado del proyecto CONEXION COMPOSIO al 2026-09-19 20:59 UTC** (Producción = `7efaacd`):
+en producción están la Fase 1 (#142 `f0fd534`), la Fase 2a (#151 `484a579`), la 2b-1 (#155 `0701e88`),
+UX-1 etapa 1 (#157 `474e8d9`), el aviso (#161 `91ecb91`) y las dos piezas inertes de la 2b-2 —
+resolvedor (#160 `4501637`) y adaptador de Search Console (#162 `51f5789`). Ningún consumidor real del
+sistema lee todavía conexiones de Composio: conectar por Composio suma, no reemplaza. Proyecto
+PAUSADO por límite de cupo/contexto de la conversación de Claude; traspaso a Codex a pedido de Milton
+(prompt de arranque en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md`). Detalle completo, decisiones y
+siguiente acción exacta: `COORDINACION_CLAUDE_CODEX.md` → «TRASPASO A CODEX · ESTADO VIGENTE
+2026-09-19 20:59 UTC».
