@@ -232,7 +232,7 @@ export async function POST(request: Request) {
     }));
 
     const [googleAnalyticsSignals, bingSignals] = await Promise.all([
-      readFreshOpportunityEvidenceCache<{ connected: boolean; propertyId?: string; rows: Array<{ pagePath?: string; sessions: number; activeUsers: number; engagementRate?: number; conversions?: number }>; error?: string }>({ ...cacheScope, source: "ga4" }).then(async (cached) => {
+      readFreshOpportunityEvidenceCache<{ connected: boolean; propertyId?: string; rows: Array<{ pagePath?: string; pageTitle?: string; views?: number; sessions: number; activeUsers: number; events?: number; engagementRate?: number; bounceRate?: number; conversions?: number }>; error?: string }>({ ...cacheScope, source: "ga4" }).then(async (cached) => {
         if (cached) return cached;
         const fresh = await getGoogleAnalyticsSignals(userId);
         if (fresh.connected) {
