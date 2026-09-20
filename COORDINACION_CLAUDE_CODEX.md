@@ -8112,6 +8112,13 @@ Está en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md` (raíz del repositorio). M
 - La vía propia de Google y Bing permanece sin cambios efectivos mientras `COMPOSIO_CONSUMER_READY.google_search_console` siga en `false`.
 - Verificación: TypeScript del worker correcto, 8 pruebas del resolvedor correctas y `git diff --check` limpio.
 
+### Alcance vigente del piloto — 2026-09-20
+
+- El piloto real queda limitado exclusivamente a Lorena.
+- Mario y Zulmad quedan fuera: no se cambiarán sus sesiones ni se les habilitará la nueva vía.
+- La conexión adicional de Lorena ya fue aprobada y comprobada con su propiedad de Search Console verificada.
+- Pendiente para culminar el piloto: configurar la allowlist de producción con el ID técnico de Lorena, ejecutar las pruebas de consumidores y obtener permiso expreso antes de fusionar o activar producción.
+
 ### Avance 2026-09-20 — Primera ruta web preparada
 
 - `apps/web/src/app/api/sitemap/send/route.ts` usa el resolvedor y el adaptador Composio cuando la conexión está lista.
