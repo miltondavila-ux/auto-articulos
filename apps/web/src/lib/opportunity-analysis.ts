@@ -613,7 +613,9 @@ export async function analyzeSeoOpportunities(input: {
   // títulos propone el modelo por lote y en qué guardarraíl exacto se pierde
   // cada uno, para poder diagnosticar con evidencia real por qué una cuenta
   // termina en "no_new" en vez de adivinar.
-  const debugEnabled = process.env.OPPORTUNITY_DEBUG === "1";
+  // Diagnóstico temporal solicitado para auditar la primera pasada real en
+  // Producción; se desactiva después de identificar el filtro responsable.
+  const debugEnabled = true;
   const debugCounters = {
     batches: 0,
     batchesFailed: 0,
@@ -821,6 +823,36 @@ Si genuinamente ninguna combinacion tiene sentido real para este negocio, respon
       if (Array.isArray(geoOpportunities)) applyOpportunityItems(geoOpportunities, "geo");
     } catch (err) {
       console.error("Paso dedicado de geolocalizacion fallo (no bloquea el resto del analisis):", err);
+    }
+  }
+
+  // Recuperación genérica: si hubo evidencia real pero la primera pasada no
+  // dejó títulos válidos, no declarar `no_new` todavía. Una respuesta del
+  // modelo puede fallar el formato de cita, mezclar categorías o devolver un
+  // JSON demasiado conservador. Esta segunda pasada usa la misma evidencia,
+  // reduce las instrucciones a lo esencial y conserva las validaciones
+  // deterministas de applyOpportunityItems.
+  if (allResult.length === 0 && evidenceRows.length > 0) {
+    const recoveryPrompt = `${PROMPT_HEADER}
+
+RECUPERACION OBLIGATORIA: recibiste evidencia real pero la pasada anterior no produjo titulos validos. Devuelve al menos una oportunidad por cada necesidad claramente respaldada; no respondas con una lista vacia si existe una consulta o pagina util.
+
+CATEGORIAS PERMITIDAS:
+${JSON.stringify(input.categories)}
+
+EVIDENCIA REAL DISPONIBLE:
+${JSON.stringify(evidenceRows.slice(0, 300))}
+
+REGLAS: cada titulo debe usar una categoriaId real, ser long tail, no inventar datos y tener un rationale que cite entre comillas una consulta o pagina exacta de la evidencia. Usa needKey distinto para cada necesidad.
+
+Responde SOLO JSON con este formato: {"opportunities":[{"categoryId":"id","rationale":"... cita exacta ...","impressions":0,"clicks":0,"titles":[{"text":"...","needKey":"...","rationale":"Se basa en la consulta o pagina \"...\"."}]}]}`;
+    try {
+      const recovered = await callOpenAiWithRetry(recoveryPrompt, apiKey);
+      if (Array.isArray(recovered.opportunities)) {
+        applyOpportunityItems(recovered.opportunities, "evidence");
+      }
+    } catch (err) {
+      console.error("Pasada de recuperación de oportunidades falló:", err);
     }
   }
 
