@@ -232,7 +232,7 @@ export async function POST(request: Request) {
     }));
 
     const [googleAnalyticsSignals, bingSignals] = await Promise.all([
-      readFreshOpportunityEvidenceCache<{ connected: boolean; propertyId?: string; rows: Array<{ pagePath?: string; sessions: number; activeUsers: number; engagementRate?: number; conversions?: number }>; error?: string }>({ ...cacheScope, source: "ga4" }).then(async (cached) => {
+      readFreshOpportunityEvidenceCache<{ connected: boolean; propertyId?: string; rows: Array<{ pagePath?: string; pageTitle?: string; views?: number; sessions: number; activeUsers: number; events?: number; engagementRate?: number; bounceRate?: number; conversions?: number }>; error?: string }>({ ...cacheScope, source: "ga4" }).then(async (cached) => {
         if (cached) return cached;
         const fresh = await getGoogleAnalyticsSignals(userId);
         if (fresh.connected) {
@@ -258,10 +258,10 @@ export async function POST(request: Request) {
     const externalEvidenceRows = [
       ...googleAnalyticsSignals.rows.map((row) => ({
         source: "google-analytics-4",
-        query: row.pagePath ?? "",
+        query: row.pageTitle || row.pagePath || "",
         page: row.pagePath ?? "",
         clicks: 0,
-        impressions: row.sessions,
+        impressions: Math.max(row.views ?? 0, row.sessions ?? 0, row.events ?? 0),
         ctr: 0,
         position: 0,
       })),
