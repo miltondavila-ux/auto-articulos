@@ -4,7 +4,7 @@ import { decryptSecret, getGoogleAnalyticsAccessToken, queryGoogleAnalyticsSumma
 export type GoogleAnalyticsSignals = {
   connected: boolean;
   propertyId?: string;
-  rows: Array<{ pagePath?: string; pageTitle?: string; views: number; sessions: number; activeUsers: number; events: number; engagementRate?: number; bounceRate?: number; conversions?: number }>;
+  rows: Array<{ pagePath?: string; pageTitle?: string; views?: number; sessions: number; activeUsers: number; events?: number; engagementRate?: number; bounceRate?: number; conversions?: number }>;
   error?: string;
 };
 
