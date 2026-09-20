@@ -8112,3 +8112,9 @@ Está en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md` (raíz del repositorio). M
 - La vía propia de Google y Bing permanece sin cambios efectivos mientras `COMPOSIO_CONSUMER_READY.google_search_console` siga en `false`.
 - Verificación: TypeScript del worker correcto, 8 pruebas del resolvedor correctas y `git diff --check` limpio.
 - No se activó ninguna bandera, no hay migraciones y no se tocó producción. Pendiente: prueba específica del consumidor y adaptación de `googleIndexing.ts`.
+
+### Avance 2026-09-20 — Codex prepara inspección tras publicar
+
+- `apps/worker/src/googleIndexing.ts` consulta el resolvedor y puede inspeccionar mediante `composioInspectUrl` cuando Search Console esté activado para Composio.
+- Con `COMPOSIO_CONSUMER_READY.google_search_console = false`, el flujo efectivo continúa siendo la API propia.
+- Verificación: TypeScript del worker correcto, 8 pruebas del resolvedor correctas y `git diff --check` limpio.
