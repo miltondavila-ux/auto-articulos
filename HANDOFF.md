@@ -1967,3 +1967,17 @@ base de datos de producción (no solo en el schema del repo); `/login`
 responde 200 en ambos dominios después de la migración;
 `activeSitePanel`/`PromptBox` y relacionados quedaron intactos, pendientes
 de una decisión aparte de Milton sobre si borrarlos.
+
+## Cierre — Wizard final y publicación — 20/9/2026 (Codex)
+
+- Bing Webmaster Tools dejó de aparecer en el wizard inicial; permanece como
+  conexión opcional en Configuración → Indexación.
+- Al completar Google Search Console, el wizard muestra dos opciones: publicar
+  títulos propios o publicar usando la IA avanzada.
+- Se aplicó una interfaz monocromática, sin colores de estado ni emojis, y se
+  actualizó el manual.
+- PR #170 fusionado a `main`, commit `02c96f5`.
+- Vercel deployment `6iUEaDHLmhEhZLqfyiZPKvgH3vMA` completado correctamente.
+- Producción verificada: `/login` respondió HTTP 200.
+
+Estado: CERRADO, DESPLEGADO Y SIN PENDIENTES.
