@@ -327,6 +327,19 @@ export async function GET() {
     },
   ];
 
+  if (resolvedSearchConsole.needsReconnect) {
+    checks.push({
+      id: "google-search-console-reconnect",
+      label: "Reconectar Google Search Console por Composio",
+      configured: false,
+      required: false,
+      section: "seo",
+      description: "Tu conexión principal de Google Search Console está conservada, pero debes reconectar la conexión adicional por Composio.",
+      actionUrl: "/dashboard/configuracion/conexiones?vista=analiticas",
+      actionLabel: "Reconectar Search Console",
+    });
+  }
+
   const requiredTotal = checks.filter((c) => c.required).length;
   const requiredConfigured = checks.filter((c) => c.required && c.configured).length;
   const totalConfigured = checks.filter((c) => c.configured).length;

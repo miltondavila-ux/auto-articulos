@@ -8129,6 +8129,12 @@ Está en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md` (raíz del repositorio). M
 - Conserva las tres consultas existentes (periodo actual, anterior y país) y la caché de evidencia.
 - TypeScript web correcto y `git diff --check` limpio; Composio permanece inerte hasta la activación controlada.
 
+### Avance 2026-09-20 — Alerta de reconexión del HOME preparada
+
+- El estado web ahora expone `needsReconnect` usando `needsReconnectAlert` del resolvedor.
+- `configuration-status` añade una alerta específica de Search Console con enlace a `Conexiones? vista=analiticas`; el HOME la muestra junto a las alertas existentes.
+- Solo aparece con método Composio, conexión propia conservada y ausencia de una conexión Composio activa con selección. TypeScript web correcto.
+
 ### Avance 2026-09-20 — Prevalidación preparada
 
 - `apps/web/src/app/api/pre-validation/route.ts` reconoce una selección Composio válida como Search Console conectado cuando el resolvedor lo permite.
