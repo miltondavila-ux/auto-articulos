@@ -1462,3 +1462,40 @@ reservas liberadas. Estado final: ARCHIVADA.
 - Rama/worktree: `codex/composio-2b2-search-console` / worktree actual. Base local: `origin/main` `381ea34`.
 - Reservas: `apps/worker/src/send-daily-sitemaps.ts`, cargadores de estado nuevos en web/worker, pruebas asociadas y entradas de coordinación/versionado. Sin schema ni migraciones.
 - Producción: sin cambios; cualquier merge requiere permiso expreso posterior de Milton.
+- **Nombre exacto de la conversación:** `NUMERACIÓN DEL MENÚ DE PUBLICACIONES`. Agente: Codex.
+- Alcance: numerar las tres opciones principales del menú «Publicaciones» («1) Publica tus propios
+  títulos», «2) Publica contenido con ayuda de la IA avanzada», «3) Difunde tu contenido en blogs
+  externos y redes sociales») para reflejar el flujo de trabajo. Archivo tocado:
+  `apps/web/src/components/DashboardNav.tsx`. Sin schema, sin migraciones, sin cambios de datos.
+- Commit `deaa263` subido directo a `main` (sin PR). Deployment Vercel Production
+  `dpl_HXvhGDn4WeYem7RUBPWz3VN4okqF`: READY, aliasado en `https://seototal.lasolucionweb.com`.
+- Reservas: ninguna. Estado final: CERRADA Y ARCHIVADA — EN PRODUCCIÓN. Detalle en
+  `COORDINACION_CLAUDE_CODEX.md` y `CONTROLADOR_DE_VERSIONES.md`.
+
+## Codex — BOTÓN DE FORZAR MÁS PUBLICACIONES / FLOR MENDEZ #94 — 2026-09-20
+
+- Alcance: investigar la desaparición recurrente del botón «Forzar análisis
+  ahora» en Oportunidades para Flor Mendez (#94).
+- Hallazgo: el CTA estaba condicionado únicamente al bloque de mensaje y se
+  perdía al renderizar el estado vacío o limpiar el mensaje.
+- Cambio local: CTA persistente en el estado vacío, sin schema ni migración.
+- Estado: EN REVISIÓN — SIN DESPLIEGUE.
+
+## Codex — RECOLECCIÓN GSC PARA CUENTAS NUEVAS / FLOR MENDEZ #94 — 2026-09-20
+
+- Alcance: corregir la recuperación de evidencia de Search Console para
+  cuentas nuevas con datos de páginas pero pocas consultas.
+- Cambio: no cachear respuestas GSC vacías y usar fallback por dimensión
+  `page` cuando `query + page` no devuelve filas.
+- Estado: EN REVISIÓN — SIN DESPLIEGUE.
+
+## Codex — WIZARD CULMINA EN BING — 2026-09-20
+
+- Alcance: retirar Bing Webmaster Tools del wizard inicial, mostrar dos rutas
+  de publicación al completar Google Search Console y aplicar el diseño
+  monocromático aprobado.
+- PR #170 fusionado a `main`, commit `02c96f5`. Vercel deployment
+  `6iUEaDHLmhEhZLqfyiZPKvgH3vMA` completado; producción verificada con
+  `/login` HTTP 200.
+- Sin schema, migración ni cambios de datos. Reservas: ninguna.
+- Estado final: CERRADA, DOCUMENTADA, ARCHIVADA Y EN PRODUCCIÓN.

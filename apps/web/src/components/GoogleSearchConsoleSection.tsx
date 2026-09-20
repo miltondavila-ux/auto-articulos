@@ -7,6 +7,7 @@ import {
   inputStyle,
   secondaryButtonStyle,
 } from "./dashboard-ui";
+import ComposioConnect from "./ComposioConnect";
 
 type Site = { siteUrl: string; permissionLevel: string };
 
@@ -228,6 +229,7 @@ export default function GoogleSearchConsoleSection() {
       <p className="muted" style={{ fontSize: 12, marginTop: 14 }}>
         El sistema enviará tu sitemap a Google todas las noches y consultará el estado de cada URL automáticamente. Si un artículo no se indexa, verás un acceso directo para solicitar la indexación manual desde Search Console.
       </p>
+      <ComposioConnect inline apps={["google_search_console"]} />
     </section>
   );
 }

@@ -15,7 +15,6 @@ import TumblrSection from "@/components/TumblrSection";
 import BlueskySection from "@/components/BlueskySection";
 import DevToSection from "@/components/DevToSection";
 import BloggerSection from "@/components/BloggerSection";
-import ComposioConnect from "@/components/ComposioConnect";
 
 type Vista = "analiticas" | "difusion";
 
@@ -45,7 +44,7 @@ const columna: CSSProperties = { display: "flex", flexDirection: "column", gap: 
  * Pantalla «Conexiones»: una tarjeta por red, en dos grupos. Cada red aparece SOLO si
  * la persona la tiene activada (mismas reglas que las pantallas actuales, copiadas de
  * Redes Sociales / Indexación). Las secciones existentes se reutilizan sin modificarlas;
- * la conexión por Composio se muestra debajo de la red a la que corresponde.
+ * las conexiones alternativas se resuelven por debajo, sin duplicar tarjetas en la interfaz.
  */
 export default function ConexionesView() {
   const [vista, setVista] = useState<Vista>("analiticas");
@@ -121,9 +120,7 @@ export default function ConexionesView() {
               </span>
               <GoogleSearchConsoleSection />
             </div>
-            <ComposioConnect embedded apps={["google_search_console"]} />
             <GoogleAnalyticsSection />
-            <ComposioConnect embedded apps={["google_analytics"]} />
           </div>
           <div id="bing">
             <BingWebmasterSection />
@@ -138,7 +135,6 @@ export default function ConexionesView() {
           {(permisos.threads || permisos.instagram || permisos.facebook || isAdmin || tieneModuloRedes) && (
             <ThreadsSection allowThreads={puede("threads")} allowInstagram={puede("instagram")} allowFacebook={puede("facebook")} isAdmin={isAdmin} />
           )}
-          <ComposioConnect embedded apps={["facebook", "instagram"]} />
           {puede("linkedin") && <LinkedInSection allowed={puede("linkedin")} />}
           {puede("pinterest") && <PinterestSection allowed={puede("pinterest")} />}
           {puede("bluesky") && <BlueskySection allowed={puede("bluesky")} />}

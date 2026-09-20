@@ -4626,6 +4626,50 @@ el texto existente.
 
 Responsable: Claude (tarea programada diaria de propagación).
 
+## Cierre Codex — WIZARD CULMINA EN BING — 2026-09-20
+
+Solicitud: retirar Bing Webmaster Tools del wizard inicial y, al completar
+Google Search Console, mostrar una pantalla final clara con dos caminos:
+publicar títulos propios o publicar usando la IA avanzada.
+
+Implementación: se eliminó Bing del flujo del wizard sin retirar su conexión
+opcional de Configuración → Indexación; se rediseñó el cierre con estética
+monocromática (negro, blanco y grises), opciones numeradas y jerarquía
+visual; se actualizó el manual de usuario.
+
+Auditoría: `git diff --check` OK; no hubo cambios de schema ni migraciones.
+El PR #170 fue fusionado a `main` con commit `02c96f5`. Vercel completó el
+deployment `6iUEaDHLmhEhZLqfyiZPKvgH3vMA` con estado success. Producción fue
+verificada en `https://seototal.lasolucionweb.com/login` y respondió HTTP 200.
+
+Estado: DESPLEGADO EN PRODUCCIÓN. Tarea cerrada y sin reservas activas.
+
+## Codex — RECOLECCIÓN GSC PARA CUENTAS NUEVAS / FLOR MENDEZ #94 — 2026-09-20
+
+- Evidencia revisada: exportación manual de Search Console de Flor con páginas,
+  países e impresiones reales para `flormendezrealtor.com`.
+- Causa raíz: una respuesta vacía de GSC se guardaba 7 días en la caché; además,
+  la consulta `query + page` podía venir vacía por anonimización de consultas
+  de bajo volumen aunque la dimensión `page` sí tuviera datos.
+- Corrección: las cachés vacías ya no bloquean nuevas consultas; si `query + page`
+  devuelve cero filas, el endpoint reintenta por `page` y solo cachea evidencia
+  cuando existe al menos una fila. Sin schema ni migración.
+- Estado: EN REVISIÓN LOCAL — pendiente auditoría y despliegue.
+
+## Codex — BOTÓN DE FORZAR MÁS PUBLICACIONES / FLOR MENDEZ #94 — 2026-09-20
+
+- Diagnóstico: el botón «Forzar análisis ahora» solo se renderizaba dentro del
+  aviso de resultado; al quedar la pantalla en estado vacío o limpiarse el
+  aviso, el CTA desaparecía aunque no hubiera oportunidades.
+- Corrección local: el CTA también se muestra en el estado vacío cuando
+  `canForce` está activo, evitando duplicarlo en el aviso cuando no hay grupos.
+  No se tocaron schema, migraciones, datos ni producción.
+- Verificación inicial: `git diff --check` limpio. Pendiente ejecutar
+  typecheck/build y verificar con la sesión de Flor Mendez #94 antes de abrir
+  PR.
+- Reserva activa: `apps/web/src/app/dashboard/oportunidades/page.tsx`.
+- Estado: EN REVISIÓN — SIN DESPLIEGUE.
+
 ## Codex — NUMERACIÓN DEL MENÚ DE PUBLICACIONES — 2026-09-19
 
 Se numeraron las tres opciones principales del menú «Publicaciones» para
@@ -8178,7 +8222,13 @@ Está en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md` (raíz del repositorio). M
 - `apps/worker/src/googleIndexing.ts` consulta el resolvedor y puede inspeccionar mediante `composioInspectUrl` cuando Search Console esté activado para Composio.
 - Con `COMPOSIO_CONSUMER_READY.google_search_console = false`, el flujo efectivo continúa siendo la API propia.
 - Verificación: TypeScript del worker correcto, 8 pruebas del resolvedor correctas y `git diff --check` limpio.
-# Trabajo activo — HISTORICOS REDES LORENA — 2026-09-20
+### Incidente 2026-09-20 — LinkedIn rechazaba la versión 202505
+
+- Reporte: publicación en LinkedIn falló con HTTP 426 `NONEXISTENT_VERSION` porque `packages/shared/src/linkedin-api.ts` enviaba `Linkedin-Version: 202505`.
+- Corrección preparada: actualizar la versión de Posts/Images API a `202609`, versión vigente según la documentación oficial de LinkedIn; no se cambió OAuth, permisos, payload ni el resto de redes.
+- Pendiente: ejecutar verificación local y desplegar/fusionar conforme al protocolo de este documento. La publicación real requiere reintento con la conexión existente.
+
+### Trabajo activo — HISTORICOS REDES LORENA — 2026-09-20
 
 Responsable: Codex. Se implementa el borrado separado de publicaciones
 sociales descartadas en historial. Archivos reservados: `apps/web/src/app/api/social-opportunities/route.ts` y `apps/web/src/app/dashboard/historial/page.tsx`. Sin cambios de esquema ni migraciones.

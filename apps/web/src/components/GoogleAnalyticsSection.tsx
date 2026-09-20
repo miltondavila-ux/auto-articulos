@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { inputStyle, secondaryButtonStyle, sectionStyle, h2Style } from "./dashboard-ui";
+import ComposioConnect from "./ComposioConnect";
 
 type Property = { propertyId: string; displayName: string; accountName?: string };
 type Summary = { totalSessions: number; totalActiveUsers: number; pagesWithData: number };
@@ -74,5 +75,6 @@ export default function GoogleAnalyticsSection() {
       </div>
     </div>}
     {message && <p style={{ fontSize: 13, margin: "10px 0 0", color: message.includes("no se") || message.includes("No se") ? "#c00" : "#1d1d1f" }}>{message}</p>}
+    <ComposioConnect inline apps={["google_analytics"]} />
   </section>;
 }
