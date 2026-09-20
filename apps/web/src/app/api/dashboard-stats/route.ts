@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
+import { resolveSearchConsoleForUser } from "@/lib/composio-search-console-consumer";
 
 function startOfDay(d: Date) {
   const copy = new Date(d);
@@ -77,6 +78,11 @@ export async function GET() {
     prisma.opportunityTitle.count({ where: { group: { userId } } }),
   ]);
 
+  const resolvedSearchConsole = await resolveSearchConsoleForUser(userId, account.selectedSiteDomain ?? "");
+  const composioSiteUrl = resolvedSearchConsole.source === "COMPOSIO"
+    ? resolvedSearchConsole.state.composio?.siteUrl ?? null
+    : null;
+
   const chartBuckets = new Map<string, number>();
   for (let i = 0; i < daysBack; i++) {
     const d = new Date(chartStart);
@@ -136,8 +142,8 @@ export async function GET() {
     daysSinceLastPublish,
     streak,
     chart,
-    googleConnected: Boolean(integration?.siteUrl),
-    googleSiteUrl: integration?.siteUrl ?? null,
+    googleConnected: Boolean(integration?.siteUrl || composioSiteUrl),
+    googleSiteUrl: integration?.siteUrl ?? composioSiteUrl,
     googleLastSync: integration?.updatedAt ?? null,
     topCategories,
     pendingOpportunityTitles,

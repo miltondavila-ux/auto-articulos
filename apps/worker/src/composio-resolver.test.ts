@@ -5,6 +5,7 @@ import {
   methodFor,
   needsReconnectAlert,
   resolveConnection,
+  buildConnectionState,
   type ComposioAppId,
 } from "@auto-articulos/shared";
 
@@ -25,6 +26,35 @@ test("método OWN: usa la propia si existe; si no, sin conexión", () => {
   assert.deepEqual(resolveConnection({ method: "OWN", hasOwn: false, composio: null }), { source: "NONE", reason: "NOT_CONNECTED" });
   // una conexión Composio activa NO se usa si el método sigue siendo OWN
   assert.deepEqual(resolveConnection({ method: "OWN", hasOwn: true, composio: active }), { source: "OWN" });
+});
+
+test("cargador: expone propia y selección de Composio sin filtrar campos innecesarios", () => {
+  assert.deepEqual(buildConnectionState({
+    own: { id: "own-1" },
+    composio: {
+      status: "ACTIVE",
+      connectedAccountId: "ca-1",
+      siteDomain: "example.com",
+      siteUrl: "https://example.com/",
+    },
+  }), {
+    hasOwn: true,
+    composio: {
+      status: "ACTIVE",
+      hasSelection: true,
+      connectedAccountId: "ca-1",
+      siteUrl: "https://example.com/",
+    },
+  });
+  assert.equal(buildConnectionState({
+    own: { id: "own-1" },
+    composio: {
+      status: "ACTIVE",
+      connectedAccountId: "ca-1",
+      siteDomain: "",
+      siteUrl: null,
+    },
+  }).composio?.hasSelection, false);
 });
 
 test("método COMPOSIO: usa Composio solo si está ACTIVA y con elección aprobada", () => {
@@ -71,5 +101,18 @@ test("si algún día un consumidor está listo, el módulo habilitado o el inter
     assert.equal(methodFor({ app: "google_analytics", moduleEnabled: true, routeIsComposio: true }), "OWN", "las demás apps siguen sin estar listas");
   } finally {
     COMPOSIO_CONSUMER_READY.google_search_console = original;
+  }
+});
+
+test("piloto aislado: solo el usuario incluido en la variable puede usar Composio", () => {
+  const key = "COMPOSIO_PILOT_USERS_GOOGLE_SEARCH_CONSOLE";
+  const original = process.env[key];
+  try {
+    process.env[key] = "lorena-2";
+    assert.equal(methodFor({ app: "google_search_console", userId: "lorena-2", moduleEnabled: true, routeIsComposio: false }), "COMPOSIO");
+    assert.equal(methodFor({ app: "google_search_console", userId: "mario-3", moduleEnabled: true, routeIsComposio: false }), "OWN");
+  } finally {
+    if (original === undefined) delete process.env[key];
+    else process.env[key] = original;
   }
 });

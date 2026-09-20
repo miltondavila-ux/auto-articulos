@@ -83,7 +83,7 @@ const STATUS_LABEL: Record<Connection["status"], { text: string; color: string }
 };
 
 const RESULT_MESSAGE: Record<string, { ok: boolean; text: string }> = {
-  connected: { ok: true, text: "Conexión completada y verificada con Composio. Ahora elige y aprueba lo que usarás." },
+  connected: { ok: true, text: "Conexión completada y verificada. Ahora elige y aprueba lo que usarás." },
   failed: { ok: false, text: "No se pudo completar la conexión. Inténtalo de nuevo." },
   invalid: { ok: false, text: "No se encontró esa conexión. Inicia la conexión desde aquí." },
 };
@@ -178,8 +178,8 @@ export default function ComposioConnect({ apps, embedded = false }: ComposioConn
       if (ok && Array.isArray(body.found)) setFound((current) => ({ ...current, [app]: body.found }));
       const text = ok
         ? body.items !== null && body.items !== undefined
-          ? `Composio respondió correctamente (${body.items} elemento${body.items === 1 ? "" : "s"}).`
-          : "Composio respondió correctamente."
+          ? `La conexión respondió correctamente (${body.items} elemento${body.items === 1 ? "" : "s"}).`
+          : "La conexión respondió correctamente."
         : (body.error ?? "La prueba falló.");
       setProbe((current) => ({ ...current, [app]: `${ok ? "✓" : "✗"} ${text}` }));
     } finally {
@@ -363,7 +363,7 @@ export default function ComposioConnect({ apps, embedded = false }: ComposioConn
                       disabled={busy !== null}
                       style={{ ...buttonStyle, marginTop: 0, opacity: busy !== null ? 0.5 : 1 }}
                     >
-                      {isBusy ? "Abriendo…" : connection.status === "NOT_CONNECTED" ? "Conectar con Composio" : "Reintentar conexión"}
+                      {isBusy ? "Abriendo…" : connection.status === "NOT_CONNECTED" ? "Nueva conexión" : "Reintentar conexión"}
                     </button>
                   )}
                   {connection.status === "ACTIVE" && !choice && (

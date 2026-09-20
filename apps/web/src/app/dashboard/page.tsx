@@ -165,6 +165,7 @@ export default function InicioPage() {
       const alertIds = new Set([
         "google-analytics",
         "bing-webmaster",
+        "google-search-console-reconnect",
         "geolocation",
         "signature",
         "excluded-topics",

@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import {
+  composioQuerySearchAnalytics,
   decryptSecret,
   getGoogleAccessToken,
   queryGoogleSearchAnalytics,
 } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
+import { resolveSearchConsoleForUser } from "@/lib/composio-search-console-consumer";
 import { analyzeSeoOpportunities } from "@/lib/opportunity-analysis";
 import { getGoogleAnalyticsSignals, summarizeGoogleAnalyticsSignals } from "@/lib/google-analytics-signals";
 import { getBingSignals, summarizeBingSignals } from "@/lib/bing-signals";
@@ -186,21 +188,31 @@ export async function POST(request: Request) {
     let countryRows = cachedGsc?.countryRows ?? [];
     // Nunca congelar una respuesta vacía de Search Console durante el TTL.
     const hasCachedGscRows = currentRows.length > 0 || previousRows.length > 0;
-    if ((!cachedGsc || !hasCachedGscRows) && integration?.siteUrl) {
-      const accessToken = await getGoogleAccessToken(
-        decryptSecret(integration.encryptedRefreshToken),
-      );
-      const collected = await collectDeepGoogleEvidence(
-        accessToken,
-        integration.siteUrl,
-        isoDate(currentStart),
-        isoDate(end),
-        isoDate(previousStart),
-        isoDate(previousEnd),
-      );
-      currentRows = collected.currentRows;
-      previousRows = collected.previousRows;
-      countryRows = collected.countryRows;
+    const resolved = integration ? await resolveSearchConsoleForUser(userId, integration.siteDomain) : null;
+    const hasSearchConsole = Boolean(integration?.siteUrl) || resolved?.source === "COMPOSIO";
+    if ((!cachedGsc || !hasCachedGscRows) && hasSearchConsole) {
+      if (resolved?.source === "COMPOSIO") {
+        if (!resolved.apiKey || !resolved.state.composio?.connectedAccountId || !resolved.state.composio.siteUrl) {
+          throw new Error("Search Console requiere reconectar la cuenta por Composio y seleccionar un sitio.");
+        }
+        const query = (start: string, finish: string, dimensions?: string[]) => composioQuerySearchAnalytics(
+          { apiKey: resolved.apiKey!, userId, connectedAccountId: resolved.state.composio!.connectedAccountId },
+          resolved.state.composio!.siteUrl!, start, finish, dimensions,
+        );
+        [currentRows, previousRows, countryRows] = await Promise.all([
+          query(isoDate(currentStart), isoDate(end)),
+          query(isoDate(previousStart), isoDate(previousEnd)),
+          query(isoDate(currentStart), isoDate(end), ["country"]),
+        ]);
+      } else {
+        const collected = await collectDeepGoogleEvidence(
+          await getGoogleAccessToken(decryptSecret(integration!.encryptedRefreshToken)),
+          integration!.siteUrl!, isoDate(currentStart), isoDate(end), isoDate(previousStart), isoDate(previousEnd),
+        );
+        currentRows = collected.currentRows;
+        previousRows = collected.previousRows;
+        countryRows = collected.countryRows;
+      }
       if (currentRows.length > 0 || previousRows.length > 0 || countryRows.length > 0) {
         await writeOpportunityEvidenceCache(
           { ...cacheScope, source: "gsc" },

@@ -25,6 +25,12 @@ export const COMPOSIO_CONSUMER_READY: Record<ComposioAppId, boolean> = {
   instagram: false,
 };
 
+/** Piloto aislado: permite probar una app con usuarios concretos sin activar la vía global. */
+function pilotUserIds(app: ComposioAppId): Set<string> {
+  const raw = process.env[`COMPOSIO_PILOT_USERS_${app.toUpperCase()}`] ?? "";
+  return new Set(raw.split(",").map((id) => id.trim()).filter(Boolean));
+}
+
 export type ConnectionMethod = "OWN" | "COMPOSIO";
 export type ConnectionSource = "OWN" | "COMPOSIO" | "NONE";
 export type NoConnectionReason = "RECONNECT_REQUIRED" | "NOT_CONNECTED";
@@ -32,12 +38,16 @@ export type NoConnectionReason = "RECONNECT_REQUIRED" | "NOT_CONNECTED";
 /** Método de conexión de una persona para una app. */
 export function methodFor(input: {
   app: ComposioAppId;
+  userId?: string;
+  userEmail?: string;
   /** La persona tiene «Habilitado» el módulo «Conexión por Composio». */
   moduleEnabled: boolean;
   /** El interruptor global de esa app está en COMPOSIO. */
   routeIsComposio: boolean;
 }): ConnectionMethod {
-  if (!COMPOSIO_CONSUMER_READY[input.app]) return "OWN";
+  const pilotUsers = pilotUserIds(input.app);
+  const pilotMatch = (input.userId && pilotUsers.has(input.userId)) || (input.userEmail && pilotUsers.has(input.userEmail));
+  if (!COMPOSIO_CONSUMER_READY[input.app] && !pilotMatch) return "OWN";
   return input.routeIsComposio || input.moduleEnabled ? "COMPOSIO" : "OWN";
 }
 

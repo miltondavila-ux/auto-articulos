@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
 import { platformHelpUrl, platformProductNameOrNeutral } from "@auto-articulos/shared";
+import { resolveSearchConsoleForUser } from "@/lib/composio-search-console-consumer";
 
 export async function GET() {
   const userId = await getCurrentUserId();
@@ -37,8 +38,10 @@ export async function GET() {
   const hasContentLanguage = Boolean(user?.contentLanguage && user.contentLanguage.trim().length > 0);
   const contentLanguage = user?.contentLanguage ?? "";
   const googleConnected = Boolean(googleIntegration);
-  const hasGoogleSiteUrl = Boolean(googleIntegration?.siteUrl);
-  const googleSiteUrl = googleIntegration?.siteUrl ?? null;
+  const resolvedSearchConsole = await resolveSearchConsoleForUser(userId, account.selectedSiteDomain ?? "");
+  const composioConnected = resolvedSearchConsole.source === "COMPOSIO" && Boolean(resolvedSearchConsole.state.composio?.siteUrl);
+  const hasGoogleSiteUrl = Boolean(googleIntegration?.siteUrl) || composioConnected;
+  const googleSiteUrl = googleIntegration?.siteUrl ?? resolvedSearchConsole.state.composio?.siteUrl ?? null;
   const hasImageCredits = user?.hasImageCredits ?? true;
 
   const missingForPublish: Array<{
@@ -105,7 +108,7 @@ export async function GET() {
     missingForOpportunities.push(imgCreditItem);
   }
 
-  if (!googleConnected || !hasGoogleSiteUrl) {
+  if ((!googleConnected && !composioConnected) || !hasGoogleSiteUrl) {
     const gscItem = {
       id: "google-search-console",
       label: "Google Search Console no conectado",
@@ -123,7 +126,7 @@ export async function GET() {
     credentialsConfigured &&
     hasCategories &&
     hasContentLanguage &&
-    googleConnected &&
+    (googleConnected || composioConnected) &&
     hasGoogleSiteUrl &&
     hasImageCredits;
 

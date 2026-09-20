@@ -1455,31 +1455,10 @@ reservas liberadas. Estado final: ARCHIVADA.
 ### Actualización 2026-09-19 20:59 UTC — CONEXION COMPOSIO: traspaso a Codex (estado vigente)
 - Estado: PAUSADA por límite de cupo/contexto; traspaso a Codex a pedido de Milton (TRANSFERIDA cuando Codex acepte). Producción = main = `7efaacd`. Sin reservas ni capitanía de migración. Bloque consolidado y prompt: Coordinación → «TRASPASO A CODEX · ESTADO VIGENTE» y `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md`.
 
-## Codex — NUMERACIÓN DEL MENÚ DE PUBLICACIONES — 2026-09-19
+## Codex - CONEXION COMPOSIO — 2026-09-19
 
-- **Nombre exacto de la conversación:** `NUMERACIÓN DEL MENÚ DE PUBLICACIONES`. Agente: Codex.
-- Alcance: numerar las tres opciones principales del menú «Publicaciones» («1) Publica tus propios
-  títulos», «2) Publica contenido con ayuda de la IA avanzada», «3) Difunde tu contenido en blogs
-  externos y redes sociales») para reflejar el flujo de trabajo. Archivo tocado:
-  `apps/web/src/components/DashboardNav.tsx`. Sin schema, sin migraciones, sin cambios de datos.
-- Commit `deaa263` subido directo a `main` (sin PR). Deployment Vercel Production
-  `dpl_HXvhGDn4WeYem7RUBPWz3VN4okqF`: READY, aliasado en `https://seototal.lasolucionweb.com`.
-- Reservas: ninguna. Estado final: CERRADA Y ARCHIVADA — EN PRODUCCIÓN. Detalle en
-  `COORDINACION_CLAUDE_CODEX.md` y `CONTROLADOR_DE_VERSIONES.md`.
-
-## Codex — BOTÓN DE FORZAR MÁS PUBLICACIONES / FLOR MENDEZ #94 — 2026-09-20
-
-- Alcance: investigar la desaparición recurrente del botón «Forzar análisis
-  ahora» en Oportunidades para Flor Mendez (#94).
-- Hallazgo: el CTA estaba condicionado únicamente al bloque de mensaje y se
-  perdía al renderizar el estado vacío o limpiar el mensaje.
-- Cambio local: CTA persistente en el estado vacío, sin schema ni migración.
-- Estado: EN REVISIÓN — SIN DESPLIEGUE.
-
-## Codex — RECOLECCIÓN GSC PARA CUENTAS NUEVAS / FLOR MENDEZ #94 — 2026-09-20
-
-- Alcance: corregir la recuperación de evidencia de Search Console para
-  cuentas nuevas con datos de páginas pero pocas consultas.
-- Cambio: no cachear respuestas GSC vacías y usar fallback por dimensión
-  `page` cuando `query + page` no devuelve filas.
-- Estado: EN REVISIÓN — SIN DESPLIEGUE.
+- Estado: ACTIVA. Milton autorizó a Codex continuar como único operador del programa.
+- Alcance actual: CONEXION COMPOSIO, fase 2b-2 (Search Console por Composio), primera pieza: cargador de estado y adaptación posterior del sitemap diario.
+- Rama/worktree: `codex/composio-2b2-search-console` / worktree actual. Base local: `origin/main` `381ea34`.
+- Reservas: `apps/worker/src/send-daily-sitemaps.ts`, cargadores de estado nuevos en web/worker, pruebas asociadas y entradas de coordinación/versionado. Sin schema ni migraciones.
+- Producción: sin cambios; cualquier merge requiere permiso expreso posterior de Milton.

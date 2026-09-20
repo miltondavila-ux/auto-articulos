@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { getCurrentUserId } from "@/lib/current-user";
 import { platformHelpUrl } from "@auto-articulos/shared";
+import { resolveSearchConsoleForUser } from "@/lib/composio-search-console-consumer";
 
 interface ConfigurationCheck {
   id: string;
@@ -121,6 +122,11 @@ export async function GET() {
     }),
   ]);
 
+  const resolvedSearchConsole = await resolveSearchConsoleForUser(userId, account.selectedSiteDomain ?? "");
+  const searchConsoleConfigured = Boolean(googleIntegration?.siteUrl) || (
+    resolvedSearchConsole.source === "COMPOSIO" && Boolean(resolvedSearchConsole.state.composio?.siteUrl)
+  );
+
   const checks: ConfigurationCheck[] = [
     // ━━━ MÍNIMO PARA PUBLICAR ━━━
     {
@@ -168,7 +174,7 @@ export async function GET() {
     {
       id: "google-search-console",
       label: "Google Search Console",
-      configured: Boolean(googleIntegration?.siteUrl),
+      configured: searchConsoleConfigured,
       required: false,
       section: "seo",
       description: "Conecta tu sitio a Google Search Console para indexar artículos y enviar sitemaps automáticamente.",
@@ -320,6 +326,19 @@ export async function GET() {
       actionLabel: "Configurar ubicaciones",
     },
   ];
+
+  if (resolvedSearchConsole.needsReconnect) {
+    checks.push({
+      id: "google-search-console-reconnect",
+      label: "Reconectar Google Search Console por Composio",
+      configured: false,
+      required: false,
+      section: "seo",
+      description: "Tu conexión principal de Google Search Console está conservada, pero debes reconectar la conexión adicional por Composio.",
+      actionUrl: "/dashboard/configuracion/conexiones?vista=analiticas",
+      actionLabel: "Reconectar Search Console",
+    });
+  }
 
   const requiredTotal = checks.filter((c) => c.required).length;
   const requiredConfigured = checks.filter((c) => c.required && c.configured).length;

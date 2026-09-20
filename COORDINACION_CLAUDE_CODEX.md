@@ -4626,32 +4626,6 @@ el texto existente.
 
 Responsable: Claude (tarea programada diaria de propagación).
 
-## Codex — RECOLECCIÓN GSC PARA CUENTAS NUEVAS / FLOR MENDEZ #94 — 2026-09-20
-
-- Evidencia revisada: exportación manual de Search Console de Flor con páginas,
-  países e impresiones reales para `flormendezrealtor.com`.
-- Causa raíz: una respuesta vacía de GSC se guardaba 7 días en la caché; además,
-  la consulta `query + page` podía venir vacía por anonimización de consultas
-  de bajo volumen aunque la dimensión `page` sí tuviera datos.
-- Corrección: las cachés vacías ya no bloquean nuevas consultas; si `query + page`
-  devuelve cero filas, el endpoint reintenta por `page` y solo cachea evidencia
-  cuando existe al menos una fila. Sin schema ni migración.
-- Estado: EN REVISIÓN LOCAL — pendiente auditoría y despliegue.
-
-## Codex — BOTÓN DE FORZAR MÁS PUBLICACIONES / FLOR MENDEZ #94 — 2026-09-20
-
-- Diagnóstico: el botón «Forzar análisis ahora» solo se renderizaba dentro del
-  aviso de resultado; al quedar la pantalla en estado vacío o limpiarse el
-  aviso, el CTA desaparecía aunque no hubiera oportunidades.
-- Corrección local: el CTA también se muestra en el estado vacío cuando
-  `canForce` está activo, evitando duplicarlo en el aviso cuando no hay grupos.
-  No se tocaron schema, migraciones, datos ni producción.
-- Verificación inicial: `git diff --check` limpio. Pendiente ejecutar
-  typecheck/build y verificar con la sesión de Flor Mendez #94 antes de abrir
-  PR.
-- Reserva activa: `apps/web/src/app/dashboard/oportunidades/page.tsx`.
-- Estado: EN REVISIÓN — SIN DESPLIEGUE.
-
 ## Codex — NUMERACIÓN DEL MENÚ DE PUBLICACIONES — 2026-09-19
 
 Se numeraron las tres opciones principales del menú «Publicaciones» para
@@ -8125,66 +8099,82 @@ Mario (#3) y Zulmad (#40): sin confirmar que hayan probado. **Regla para el pilo
 
 Está en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md` (raíz del repositorio). Milton lo pega tal cual en la conversación nueva.
 
-## Claude (tarea programada diaria de propagación) — 2026-09-20
+### Avance 2026-09-19 — Codex acepta el traspaso y reclama 2b-2
 
-Punto de partida: la última entrada firmada por esta misma tarea era
-"Claude (tarea programada diaria de propagación) — 2026-09-19" (commit
-`18941fd`). Se revisó el diff de `COORDINACION_CLAUDE_CODEX.md` entre ese
-commit y `origin/main` actual (`381ea34`): 16 commits nuevos tocaron este
-documento, correspondientes a la entrada "Codex — NUMERACIÓN DEL MENÚ DE
-PUBLICACIONES — 2026-09-19" (con su cierre de producción), al cierre de
-"CREACION DE PUBLICACIONES PROPIAS — 2026-09-18", y a todo el bloque
-"CONEXION COMPOSIO — TRASPASO A CODEX" con sus "Avance …" (2b-1, UX-1
-etapa 1, piloto habilitado, resolvedor, aviso "no desconectes", adaptador
-de Search Console) hasta el bloque consolidado "ESTADO VIGENTE 2026-09-19
-20:59 UTC".
+- Milton autorizó a Codex continuar como único operador del programa.
+- Rama propia: `codex/composio-2b2-search-console`, basada en `origin/main` local `381ea34`; no se ha tocado producción.
+- Reservas: `apps/worker/src/send-daily-sitemaps.ts`, cargadores de estado nuevos en web/worker, pruebas asociadas y documentación de coordinación/versionado.
+- Primer trabajo: implementar el cargador `{ hasOwn, composio: { status, hasSelection, connectedAccountId, siteUrl } }` y probarlo antes de adaptar el consumidor del sitemap diario.
 
-Verificación por documento:
+### Avance 2026-09-20 — Codex adapta sitemap diario, todavía INERTE
 
-- `INVENTARIO_CONVERSACIONES.md`: Parte B ya contenía, palabra por palabra,
-  el registro completo de CONEXION COMPOSIO hasta la actualización de las
-  20:59 UTC (probablemente escrito en el mismo lote que los commits
-  `docs(coordinacion)` de este rango); no hacía falta agregar nada ahí. Sí
-  faltaba el nombre exacto de la conversación nueva "Codex — NUMERACIÓN
-  DEL MENÚ DE PUBLICACIONES — 2026-09-19" (formato `[AGENTE] - [NOMBRE DEL
-  PROBLEMA]`): se agregó una entrada nueva en Parte B con su alcance,
-  commit `deaa263` y estado CERRADA Y ARCHIVADA. Parte A: verificado con
-  `git worktree list` (worktree único, este propio) y no hay ninguna rama
-  de este rango sin fusionar contra `origin/main` (`claude/composio-*`
-  todas fusionadas; `deaa263` es un commit directo, sin rama propia); no
-  correspondía agregar ninguna fila de reserva activa.
-- `CONTROLADOR_DE_VERSIONES.md`: tenía las "Versión preparada" de
-  resolvedor, aviso y adaptador de Search Console, pero le faltaban sus
-  confirmaciones de despliegue (PR #160 `4501637`, PR #161 `91ecb91`, PR
-  #162 `51f5789`) y el registro del commit directo `deaa263` (numeración
-  del menú, deployment `dpl_HXvhGDn4WeYem7RUBPWz3VN4okqF` READY). Se
-  agregaron las cuatro entradas "Versión desplegada" correspondientes, más
-  un párrafo de estado consolidado del proyecto CONEXION COMPOSIO al
-  2026-09-19 20:59 UTC, sin tocar ninguna entrada existente.
-- `apps/web/src/content/manual-usuario.ts`: la pantalla "Conexiones"
-  (UX-1) ya estaba descrita en detalle (el commit del PR #157 dice
-  explícitamente "manual actualizado" y así es). Se detectó un cambio
-  visible NO reflejado: el menú "Publicaciones" ahora numera sus tres
-  primeras opciones como "1) Publica tus propios títulos", "2) Publica
-  contenido con ayuda de la IA avanzada" y "3) Difunde tu contenido en
-  blogs externos y redes sociales" (confirmado leyendo
-  `apps/web/src/components/DashboardNav.tsx` actual), mientras el manual
-  las describía sin el número. Se agregó una oración nueva aclarando la
-  numeración, sin tocar el texto existente.
-- `TO-DO.md`: se agregó un ítem nuevo en "Pendientes" (con fecha
-  20/9/2026 y origen citado) para la tarea suelta "actualizar la política
-  de privacidad" que el bloque "TRASPASO A CODEX · ESTADO VIGENTE" marca
-  como "tarea aparte pendiente" en su sección de verificaciones abiertas;
-  no estaba registrada en ningún otro documento.
-- `REPARADOR_DEL_ARBOL_PRINCIPAL.md`: ninguna entrada del rango describe
-  un árbol de git enredado, ramas pisadas o commits mezclados (los merges
-  del rango son fusiones normales de PRs y una sincronización de
-  `origin/main` dentro de una rama de trabajo); no hacía falta agregar
-  nada.
+- `apps/worker/src/send-daily-sitemaps.ts` consulta el estado resuelto para Google Search Console y tiene una ruta preparada para `composioSubmitSitemap`.
+- La vía propia de Google y Bing permanece sin cambios efectivos mientras `COMPOSIO_CONSUMER_READY.google_search_console` siga en `false`.
+- Verificación: TypeScript del worker correcto, 8 pruebas del resolvedor correctas y `git diff --check` limpio.
 
-No hubo ninguna acción destructiva, migración ni deploy en esta corrida.
-No quedó ninguna duda nueva para Milton (la única duda del rango, la
-política de privacidad, ya estaba marcada como pendiente por el propio
-proyecto y se reflejó en `TO-DO.md`).
+### Alcance vigente del piloto — 2026-09-20
 
-Responsable: Claude (tarea programada diaria de propagación).
+- El piloto real queda limitado exclusivamente a Lorena.
+- Mario y Zulmad quedan fuera: no se cambiarán sus sesiones ni se les habilitará la nueva vía.
+- La conexión adicional de Lorena ya fue aprobada y comprobada con su propiedad de Search Console verificada.
+- Pendiente para culminar el piloto: configurar la allowlist de producción con el ID técnico de Lorena, ejecutar las pruebas de consumidores y obtener permiso expreso antes de fusionar o activar producción.
+
+### Avance 2026-09-20 — Primera ruta web preparada
+
+- `apps/web/src/app/api/sitemap/send/route.ts` usa el resolvedor y el adaptador Composio cuando la conexión está lista.
+- Se añadió `apps/web/src/lib/composio-search-console-consumer.ts` para centralizar la decisión y no duplicar lectura de módulo/estado.
+- TypeScript web correcto y `git diff --check` limpio. La bandera de consumidores sigue apagada; no cambia el comportamiento actual.
+
+### Avance 2026-09-20 — Inspección manual web preparada
+
+- `apps/web/src/app/api/titles/[id]/google-inspection/route.ts` usa el resolvedor y `composioInspectUrl` cuando corresponde; la redirección GET permanece igual.
+- TypeScript web correcto y `git diff --check` limpio. No se activó la bandera ni se tocó producción.
+
+### Avance 2026-09-20 — Oportunidades web preparadas
+
+- `apps/web/src/app/api/opportunities/route.ts` usa una función de consulta común que selecciona la API propia o `composioQuerySearchAnalytics` según el resolvedor.
+- Conserva las tres consultas existentes (periodo actual, anterior y país) y la caché de evidencia.
+- TypeScript web correcto y `git diff --check` limpio; Composio permanece inerte hasta la activación controlada.
+
+### Avance 2026-09-20 — Alerta de reconexión del HOME preparada
+
+- El estado web ahora expone `needsReconnect` usando `needsReconnectAlert` del resolvedor.
+- `configuration-status` añade una alerta específica de Search Console con enlace a `Conexiones? vista=analiticas`; el HOME la muestra junto a las alertas existentes.
+- Solo aparece con método Composio, conexión propia conservada y ausencia de una conexión Composio activa con selección. TypeScript web correcto.
+
+### Auditoría 2026-09-20 — 2b-2 Search Console preparada
+
+- Integridad: cambios limitados a shared, worker, rutas web, HOME y documentación; sin schema, migraciones, workflows, middleware, autenticación, `vercel.json` ni secretos.
+- Funcional/regresión: worker 30/30 pruebas; web 40 pruebas correctas y una integración de generación de títulos omitida por falta de `TITLE_GENERATION_TEST_DATABASE_URL`; TypeScript worker/web/shared correcto; `next build` completado con 85 páginas; `git diff --check` limpio.
+- Activación: `COMPOSIO_CONSUMER_READY.google_search_console` continúa en `false`. No se ha creado PR, no se ha fusionado y no se ha tocado producción.
+- Pendiente antes de activar: prueba real con Lorena/Mario/Zulmad con Milton presente, punto de retorno, Preview y permiso expreso de merge.
+
+### Ajuste UX 2026-09-20 — lenguaje de nueva conexión
+
+- A petición de Milton y según la captura del panel, los textos visibles para la persona usuaria ya no nombran al proveedor: muestran «Conexión completada y verificada», «La conexión respondió correctamente» y «Nueva conexión».
+- El nombre técnico permanece solo en código interno y superficies administrativas donde es necesario.
+
+### Avance 2026-09-20 — piloto aislado por usuario
+
+- Se añadió una allowlist opcional por variable de entorno (`COMPOSIO_PILOT_USERS_GOOGLE_SEARCH_CONSOLE`) para probar la vía real con una sola cuenta sin activar el interruptor global.
+- Los consumidores worker y web ya pasan `userId` al resolvedor. Sin la variable configurada, el comportamiento permanece OWN.
+- Verificación: prueba específica del piloto 9/9, TypeScript shared/worker/web correcto y `git diff --check` limpio.
+
+### Avance 2026-09-20 — Prevalidación preparada
+
+- `apps/web/src/app/api/pre-validation/route.ts` reconoce una selección Composio válida como Search Console conectado cuando el resolvedor lo permite.
+- Los mensajes y requisitos actuales se conservan para la vía propia; con la bandera apagada no cambia ningún cliente.
+- TypeScript web correcto y `git diff --check` limpio.
+
+### Avance 2026-09-20 — Estados de configuración preparados
+
+- `api/configuration-status` y `api/dashboard-stats` reconocen una selección Composio válida como Search Console conectado.
+- La salida y los cálculos existentes permanecen iguales para la vía propia; con la bandera apagada no cambia el comportamiento.
+- TypeScript web correcto y `git diff --check` limpio.
+- No se activó ninguna bandera, no hay migraciones y no se tocó producción. Pendiente: prueba específica del consumidor y adaptación de `googleIndexing.ts`.
+
+### Avance 2026-09-20 — Codex prepara inspección tras publicar
+
+- `apps/worker/src/googleIndexing.ts` consulta el resolvedor y puede inspeccionar mediante `composioInspectUrl` cuando Search Console esté activado para Composio.
+- Con `COMPOSIO_CONSUMER_READY.google_search_console = false`, el flujo efectivo continúa siendo la API propia.
+- Verificación: TypeScript del worker correcto, 8 pruebas del resolvedor correctas y `git diff --check` limpio.
