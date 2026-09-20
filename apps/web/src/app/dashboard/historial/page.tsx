@@ -492,6 +492,8 @@ function HistorialRedes() {
   const [deletingHistory, setDeletingHistory] = useState(false);
   const [confirmingDeleteSkipped, setConfirmingDeleteSkipped] = useState(false);
   const [deletingSkipped, setDeletingSkipped] = useState(false);
+  const [confirmingDeleteUnconfirmed, setConfirmingDeleteUnconfirmed] = useState(false);
+  const [deletingUnconfirmed, setDeletingUnconfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [socialEvents, setSocialEvents] = useState<Record<string, TitleEventRow[]>>({});
   const [loadingSocialEvent, setLoadingSocialEvent] = useState<string | null>(null);
@@ -690,6 +692,25 @@ function HistorialRedes() {
       setError(err.message);
     } finally {
       setDeletingSkipped(false);
+    }
+  }
+
+  async function handleDeleteUnconfirmed() {
+    setDeletingUnconfirmed(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/social-opportunities?scope=unconfirmed", { method: "DELETE" });
+      if (res.ok) {
+        setConfirmingDeleteUnconfirmed(false);
+        await loadOpportunities();
+      } else {
+        const data = await res.json();
+        setError(data.error || "No se pudieron borrar las publicaciones sin confirmar.");
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setDeletingUnconfirmed(false);
     }
   }
 
@@ -1267,6 +1288,21 @@ function HistorialRedes() {
             <span className="muted" style={{ fontSize: 13 }}>
               {unconfirmedOpportunities.length} publicación{unconfirmedOpportunities.length !== 1 ? "es" : ""}
             </span>
+            {confirmingDeleteUnconfirmed ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 12, color: "#8a4b08" }}>¿Borrar sin confirmar? No se puede deshacer.</span>
+                <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteUnconfirmed(); }} disabled={deletingUnconfirmed} className="secondary" style={{ ...secondaryButtonStyle, color: "#ff3b30", padding: "4px 10px", fontSize: 12 }}>
+                  {deletingUnconfirmed ? "Borrando..." : "Sí, borrar"}
+                </button>
+                <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmingDeleteUnconfirmed(false); }} disabled={deletingUnconfirmed} className="secondary" style={{ ...secondaryButtonStyle, padding: "4px 10px", fontSize: 12 }}>
+                  No
+                </button>
+              </div>
+            ) : (
+              <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmingDeleteUnconfirmed(true); }} className="secondary" style={{ ...secondaryButtonStyle, color: "#ff3b30", padding: "4px 10px", fontSize: 12 }}>
+                Borrar sin confirmar
+              </button>
+            )}
             <button
               onClick={(e) => {
                 e.preventDefault();
