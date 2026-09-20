@@ -1045,7 +1045,7 @@ export default function OportunidadesPage() {
           }}
         >
           {message.text}
-          {canForce && (
+          {canForce && groups.length > 0 && (
             <div style={{ marginTop: 10 }}>
               <button
                 onClick={() => analyze(true)}
@@ -1070,6 +1070,20 @@ export default function OportunidadesPage() {
             Todavía no hay contenido inteligente guardado. Presiona el botón para
             crear el primer análisis.
           </p>
+          {canForce && (
+            <button
+              onClick={() => analyze(true)}
+              disabled={analyzing}
+              className="secondary"
+              style={{
+                fontSize: 13,
+                padding: "6px 14px",
+                marginTop: 12,
+              }}
+            >
+              {analyzing ? "Analizando..." : "Forzar análisis ahora"}
+            </button>
+          )}
         </section>
       )}
 
