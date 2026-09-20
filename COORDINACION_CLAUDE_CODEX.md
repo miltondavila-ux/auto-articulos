@@ -8098,3 +8098,67 @@ Mario (#3) y Zulmad (#40): sin confirmar que hayan probado. **Regla para el pilo
 ### 10. Prompt de arranque para Codex
 
 Está en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md` (raíz del repositorio). Milton lo pega tal cual en la conversación nueva.
+
+## Claude (tarea programada diaria de propagación) — 2026-09-20
+
+Punto de partida: la última entrada firmada por esta misma tarea era
+"Claude (tarea programada diaria de propagación) — 2026-09-19" (commit
+`18941fd`). Se revisó el diff de `COORDINACION_CLAUDE_CODEX.md` entre ese
+commit y `origin/main` actual (`381ea34`): 16 commits nuevos tocaron este
+documento, correspondientes a la entrada "Codex — NUMERACIÓN DEL MENÚ DE
+PUBLICACIONES — 2026-09-19" (con su cierre de producción), al cierre de
+"CREACION DE PUBLICACIONES PROPIAS — 2026-09-18", y a todo el bloque
+"CONEXION COMPOSIO — TRASPASO A CODEX" con sus "Avance …" (2b-1, UX-1
+etapa 1, piloto habilitado, resolvedor, aviso "no desconectes", adaptador
+de Search Console) hasta el bloque consolidado "ESTADO VIGENTE 2026-09-19
+20:59 UTC".
+
+Verificación por documento:
+
+- `INVENTARIO_CONVERSACIONES.md`: Parte B ya contenía, palabra por palabra,
+  el registro completo de CONEXION COMPOSIO hasta la actualización de las
+  20:59 UTC (probablemente escrito en el mismo lote que los commits
+  `docs(coordinacion)` de este rango); no hacía falta agregar nada ahí. Sí
+  faltaba el nombre exacto de la conversación nueva "Codex — NUMERACIÓN
+  DEL MENÚ DE PUBLICACIONES — 2026-09-19" (formato `[AGENTE] - [NOMBRE DEL
+  PROBLEMA]`): se agregó una entrada nueva en Parte B con su alcance,
+  commit `deaa263` y estado CERRADA Y ARCHIVADA. Parte A: verificado con
+  `git worktree list` (worktree único, este propio) y no hay ninguna rama
+  de este rango sin fusionar contra `origin/main` (`claude/composio-*`
+  todas fusionadas; `deaa263` es un commit directo, sin rama propia); no
+  correspondía agregar ninguna fila de reserva activa.
+- `CONTROLADOR_DE_VERSIONES.md`: tenía las "Versión preparada" de
+  resolvedor, aviso y adaptador de Search Console, pero le faltaban sus
+  confirmaciones de despliegue (PR #160 `4501637`, PR #161 `91ecb91`, PR
+  #162 `51f5789`) y el registro del commit directo `deaa263` (numeración
+  del menú, deployment `dpl_HXvhGDn4WeYem7RUBPWz3VN4okqF` READY). Se
+  agregaron las cuatro entradas "Versión desplegada" correspondientes, más
+  un párrafo de estado consolidado del proyecto CONEXION COMPOSIO al
+  2026-09-19 20:59 UTC, sin tocar ninguna entrada existente.
+- `apps/web/src/content/manual-usuario.ts`: la pantalla "Conexiones"
+  (UX-1) ya estaba descrita en detalle (el commit del PR #157 dice
+  explícitamente "manual actualizado" y así es). Se detectó un cambio
+  visible NO reflejado: el menú "Publicaciones" ahora numera sus tres
+  primeras opciones como "1) Publica tus propios títulos", "2) Publica
+  contenido con ayuda de la IA avanzada" y "3) Difunde tu contenido en
+  blogs externos y redes sociales" (confirmado leyendo
+  `apps/web/src/components/DashboardNav.tsx` actual), mientras el manual
+  las describía sin el número. Se agregó una oración nueva aclarando la
+  numeración, sin tocar el texto existente.
+- `TO-DO.md`: se agregó un ítem nuevo en "Pendientes" (con fecha
+  20/9/2026 y origen citado) para la tarea suelta "actualizar la política
+  de privacidad" que el bloque "TRASPASO A CODEX · ESTADO VIGENTE" marca
+  como "tarea aparte pendiente" en su sección de verificaciones abiertas;
+  no estaba registrada en ningún otro documento.
+- `REPARADOR_DEL_ARBOL_PRINCIPAL.md`: ninguna entrada del rango describe
+  un árbol de git enredado, ramas pisadas o commits mezclados (los merges
+  del rango son fusiones normales de PRs y una sincronización de
+  `origin/main` dentro de una rama de trabajo); no hacía falta agregar
+  nada.
+
+No hubo ninguna acción destructiva, migración ni deploy en esta corrida.
+No quedó ninguna duda nueva para Milton (la única duda del rango, la
+política de privacidad, ya estaba marcada como pendiente por el propio
+proyecto y se reflejó en `TO-DO.md`).
+
+Responsable: Claude (tarea programada diaria de propagación).
