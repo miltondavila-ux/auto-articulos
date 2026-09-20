@@ -8122,6 +8122,12 @@ Está en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md` (raíz del repositorio). M
 
 - `apps/web/src/app/api/titles/[id]/google-inspection/route.ts` usa el resolvedor y `composioInspectUrl` cuando corresponde; la redirección GET permanece igual.
 - TypeScript web correcto y `git diff --check` limpio. No se activó la bandera ni se tocó producción.
+
+### Avance 2026-09-20 — Oportunidades web preparadas
+
+- `apps/web/src/app/api/opportunities/route.ts` usa una función de consulta común que selecciona la API propia o `composioQuerySearchAnalytics` según el resolvedor.
+- Conserva las tres consultas existentes (periodo actual, anterior y país) y la caché de evidencia.
+- TypeScript web correcto y `git diff --check` limpio; Composio permanece inerte hasta la activación controlada.
 - No se activó ninguna bandera, no hay migraciones y no se tocó producción. Pendiente: prueba específica del consumidor y adaptación de `googleIndexing.ts`.
 
 ### Avance 2026-09-20 — Codex prepara inspección tras publicar

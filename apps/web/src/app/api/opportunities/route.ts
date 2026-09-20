@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import {
+  composioQuerySearchAnalytics,
   decryptSecret,
   getGoogleAccessToken,
   queryGoogleSearchAnalytics,
 } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
+import { resolveSearchConsoleForUser } from "@/lib/composio-search-console-consumer";
 import { analyzeSeoOpportunities } from "@/lib/opportunity-analysis";
 import { getGoogleAnalyticsSignals, summarizeGoogleAnalyticsSignals } from "@/lib/google-analytics-signals";
 import { getBingSignals, summarizeBingSignals } from "@/lib/bing-signals";
@@ -147,15 +149,24 @@ export async function POST(request: Request) {
     let previousRows = cachedGsc?.previousRows ?? [];
     let countryRows = cachedGsc?.countryRows ?? [];
     if (!cachedGsc && integration?.siteUrl) {
-      const accessToken = await getGoogleAccessToken(
-        decryptSecret(integration.encryptedRefreshToken),
-      );
+      const resolved = await resolveSearchConsoleForUser(userId, integration.siteDomain);
+      const query = resolved.source === "COMPOSIO"
+        ? resolved.apiKey && resolved.state.composio?.connectedAccountId && resolved.state.composio.siteUrl
+          ? (start: string, finish: string, dimensions?: string[]) => composioQuerySearchAnalytics(
+              { apiKey: resolved.apiKey!, userId, connectedAccountId: resolved.state.composio!.connectedAccountId },
+              resolved.state.composio!.siteUrl!, start, finish, dimensions,
+            )
+          : (() => { throw new Error("Search Console requiere reconectar la cuenta por Composio y seleccionar un sitio."); })
+        : async (start: string, finish: string, dimensions?: string[]) => queryGoogleSearchAnalytics(
+            await getGoogleAccessToken(decryptSecret(integration.encryptedRefreshToken)),
+            integration.siteUrl!, start, finish, dimensions,
+          );
       [currentRows, previousRows, countryRows] = await Promise.all([
-        queryGoogleSearchAnalytics(accessToken, integration.siteUrl, isoDate(currentStart), isoDate(end)),
-        queryGoogleSearchAnalytics(accessToken, integration.siteUrl, isoDate(previousStart), isoDate(previousEnd)),
+        query(isoDate(currentStart), isoDate(end)),
+        query(isoDate(previousStart), isoDate(previousEnd)),
         // Distribución geográfica real por país; las ciudades se obtienen de
         // las consultas y del contexto declarado, no de esta dimensión.
-        queryGoogleSearchAnalytics(accessToken, integration.siteUrl, isoDate(currentStart), isoDate(end), ["country"]),
+        query(isoDate(currentStart), isoDate(end), ["country"]),
       ]);
       await writeOpportunityEvidenceCache(
         { ...cacheScope, source: "gsc" },
