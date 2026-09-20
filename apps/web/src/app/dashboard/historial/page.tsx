@@ -1704,6 +1704,8 @@ function renderMessageWithLinks(message: string) {
 function TitleRowWithLog({ title }: { title: TitleRow }) {
   const [fullEvents, setFullEvents] = useState<TitleEventRow[] | null>(null);
   const [loadingEvents, setLoadingEvents] = useState(false);
+  const [inspectionMessage, setInspectionMessage] = useState<string | null>(null);
+  const [inspecting, setInspecting] = useState(false);
 
   async function loadFullEvents() {
     setLoadingEvents(true);
@@ -1715,6 +1717,18 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
       }
     } finally {
       setLoadingEvents(false);
+    }
+  }
+
+  async function inspectIndexing() {
+    setInspecting(true);
+    setInspectionMessage(null);
+    try {
+      const response = await fetch(`/api/titles/${title.id}/google-inspection`, { method: "POST" });
+      const body = await response.json().catch(() => ({}));
+      setInspectionMessage(response.ok ? body.googleIndexingMessage ?? "Comprobación completada." : body.error ?? "No se pudo comprobar la indexación.");
+    } finally {
+      setInspecting(false);
     }
   }
 
@@ -1762,6 +1776,16 @@ function TitleRowWithLog({ title }: { title: TitleRow }) {
               Ver artículo &rarr;
             </a>
             <GoogleIndexingStatus title={title} />
+            <button
+              type="button"
+              onClick={inspectIndexing}
+              disabled={inspecting}
+              className="link-button"
+              style={{ marginTop: 6, padding: 0, border: 0, background: "transparent", fontSize: 12, cursor: inspecting ? "wait" : "pointer" }}
+            >
+              {inspecting ? "Comprobando indexación…" : "Comprobar indexación"}
+            </button>
+            {inspectionMessage && <div style={{ marginTop: 4, fontSize: 12, color: "#6e6e73" }}>{inspectionMessage}</div>}
             {title.threadsPublishStatus && (
               <div
                 style={{
