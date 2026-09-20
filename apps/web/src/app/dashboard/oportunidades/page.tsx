@@ -256,8 +256,13 @@ export default function OportunidadesPage() {
         body: JSON.stringify({ force, panel: selectedPanel }),
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok)
+      if (!response.ok) {
+        // Con cuentas nuevas puede no existir evidencia todavía. Mantener la
+        // opción visible permite reintentar/forzar el análisis desde el mismo
+        // estado vacío, en vez de dejar al usuario sin acción disponible.
+        if (response.status === 422) setCanForce(true);
         throw new Error(data.error ?? "No se pudo completar el análisis.");
+      }
       setGroups(data.groups ?? []);
       if (data.lastAnalysisAt) setLastAnalysisAt(data.lastAnalysisAt);
       if (data.noNewOpportunities) {
@@ -1045,7 +1050,7 @@ export default function OportunidadesPage() {
           }}
         >
           {message.text}
-          {canForce && (
+          {canForce && groups.length > 0 && (
             <div style={{ marginTop: 10 }}>
               <button
                 onClick={() => analyze(true)}
@@ -1070,6 +1075,20 @@ export default function OportunidadesPage() {
             Todavía no hay contenido inteligente guardado. Presiona el botón para
             crear el primer análisis.
           </p>
+          {canForce && (
+            <button
+              onClick={() => analyze(true)}
+              disabled={analyzing}
+              className="secondary"
+              style={{
+                fontSize: 13,
+                padding: "6px 14px",
+                marginTop: 12,
+              }}
+            >
+              {analyzing ? "Analizando..." : "Forzar análisis ahora"}
+            </button>
+          )}
         </section>
       )}
 

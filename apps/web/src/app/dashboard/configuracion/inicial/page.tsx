@@ -56,8 +56,8 @@ export default function ConfiguracionInicialPage() {
       <ModuleIntro titulo="Configuración Inicial">
         {wizardComplete === true ? (
           <IntroP>
-            Ya completaste los 4 pasos: tu plataforma está activa. Esta pantalla ya no se necesita —
-            usa la barra de abajo o el menú principal para ir a cualquier sección.
+            Ya completaste los 4 pasos: tu plataforma está lista para publicar. Elige una de las dos
+            formas de empezar.
           </IntroP>
         ) : (
           <>
@@ -85,23 +85,20 @@ export default function ConfiguracionInicialPage() {
             background: "#ffffff",
           }}
         >
-          <p style={{ margin: "0 0 12px 0", fontSize: 14, color: "#1d1d1f", fontWeight: 600 }}>
-            ✓ Configuración inicial completa.
+          <p style={{ margin: "0 0 8px 0", fontSize: 18, letterSpacing: "-0.02em", color: "#1d1d1f", fontWeight: 700 }}>
+            ✓ Todo está listo para publicar.
           </p>
-          <Link
-            href="/dashboard/oportunidades"
-            style={{
-              background: "#1d1d1f",
-              color: "#fff",
-              textDecoration: "none",
-              padding: "10px 18px",
-              borderRadius: 8,
-              fontSize: 13,
-              fontWeight: 700,
-            }}
-          >
-            Ir a Publica contenido con ayuda de la IA avanzada →
-          </Link>
+          <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "#6e6e73", lineHeight: 1.5 }}>
+            Puedes publicar colocando tus propios títulos o usando la IA avanzada para descubrir temas y preparar contenido.
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+            <Link href="/dashboard/oportunidades" style={{ background: "#1d1d1f", color: "#fff", textDecoration: "none", padding: "14px 16px", borderRadius: 14, fontSize: 13, fontWeight: 700, boxShadow: "0 5px 12px rgba(0, 0, 0, 0.14)" }}>
+              01 · Publicar con IA avanzada →
+            </Link>
+            <Link href="/dashboard/publicar" style={{ background: "#f5f5f7", color: "#1d1d1f", border: "1px solid rgba(60, 60, 67, 0.16)", textDecoration: "none", padding: "13px 16px", borderRadius: 14, fontSize: 13, fontWeight: 600 }}>
+              02 · Publicar mis títulos
+            </Link>
+          </div>
         </div>
       ) : (
         <div>

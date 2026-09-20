@@ -233,6 +233,13 @@ HANDOFF, solo alimenta ideas hacia él).
   `CONTROLADOR_DE_VERSIONES.md` e `INVENTARIO_CONVERSACIONES.md` Parte B.
   Milton decide si vale la pena terminarla (schema + migración + UI) o
   quitar el código muerto.
+- **(20/9/2026, origen: tarea programada diaria de propagación, al revisar
+  `COORDINACION_CLAUDE_CODEX.md` → «CONEXION COMPOSIO — TRASPASO A CODEX ·
+  ESTADO VIGENTE 2026-09-19 20:59 UTC», sección "Verificaciones abiertas y
+  riesgos")** Actualizar la política de privacidad para declarar que, para
+  las cuentas piloto que usan la conexión por Composio, la conexión la
+  gestiona ese servicio. Marcada ahí como "tarea aparte pendiente"; sin
+  fecha límite ni responsable asignado todavía.
 
 ## Hecho
 

@@ -22,6 +22,44 @@ function isoDate(date: Date) {
   return date.toISOString().slice(0, 10);
 }
 
+function mergeEvidenceRows(
+  ...sets: Array<Awaited<ReturnType<typeof queryGoogleSearchAnalytics>>>
+) {
+  const merged = new Map<string, (typeof sets)[number][number]>();
+  for (const rows of sets) {
+    for (const row of rows) {
+      const key = JSON.stringify([row.keys, row.clicks, row.impressions, row.position]);
+      merged.set(key, row);
+    }
+  }
+  return Array.from(merged.values());
+}
+
+async function collectDeepGoogleEvidence(
+  accessToken: string,
+  siteUrl: string,
+  currentStart: string,
+  currentEnd: string,
+  previousStart: string,
+  previousEnd: string,
+) {
+  // Search Console anonimiza algunas consultas de bajo volumen. Una sola
+  // dimensión vacía no significa que la propiedad esté vacía: recorrer varias
+  // vistas permite recuperar páginas, consultas, dispositivos y apariciones.
+  const dimensions = [["query", "page"], ["page"], ["query"], ["device"], ["searchAppearance"]];
+  const [currentProbes, previousProbes, countryRows] = await Promise.all([
+    Promise.all(dimensions.map((d) => queryGoogleSearchAnalytics(accessToken, siteUrl, currentStart, currentEnd, d))),
+    Promise.all(dimensions.slice(0, 3).map((d) => queryGoogleSearchAnalytics(accessToken, siteUrl, previousStart, previousEnd, d))),
+    queryGoogleSearchAnalytics(accessToken, siteUrl, currentStart, currentEnd, ["country"]),
+  ]);
+  return {
+    currentRows: mergeEvidenceRows(...currentProbes),
+    previousRows: mergeEvidenceRows(...previousProbes),
+    countryRows,
+    probeCounts: currentProbes.map((rows, index) => ({ dimensions: dimensions[index], rows: rows.length })),
+  };
+}
+
 async function list(userId: string, siteDomain?: string | null) {
   return prisma.opportunityGroup.findMany({
     where: { userId, ...(siteDomain ? { category: { siteDomain } } : {}) },
@@ -148,32 +186,41 @@ export async function POST(request: Request) {
     let currentRows = cachedGsc?.currentRows ?? [];
     let previousRows = cachedGsc?.previousRows ?? [];
     let countryRows = cachedGsc?.countryRows ?? [];
-    if (!cachedGsc && integration?.siteUrl) {
-      const resolved = await resolveSearchConsoleForUser(userId, integration.siteDomain);
-      const query = resolved.source === "COMPOSIO"
-        ? resolved.apiKey && resolved.state.composio?.connectedAccountId && resolved.state.composio.siteUrl
-          ? (start: string, finish: string, dimensions?: string[]) => composioQuerySearchAnalytics(
-              { apiKey: resolved.apiKey!, userId, connectedAccountId: resolved.state.composio!.connectedAccountId },
-              resolved.state.composio!.siteUrl!, start, finish, dimensions,
-            )
-          : (() => { throw new Error("Search Console requiere reconectar la cuenta por Composio y seleccionar un sitio."); })
-        : async (start: string, finish: string, dimensions?: string[]) => queryGoogleSearchAnalytics(
-            await getGoogleAccessToken(decryptSecret(integration.encryptedRefreshToken)),
-            integration.siteUrl!, start, finish, dimensions,
-          );
-      [currentRows, previousRows, countryRows] = await Promise.all([
-        query(isoDate(currentStart), isoDate(end)),
-        query(isoDate(previousStart), isoDate(previousEnd)),
-        // Distribución geográfica real por país; las ciudades se obtienen de
-        // las consultas y del contexto declarado, no de esta dimensión.
-        query(isoDate(currentStart), isoDate(end), ["country"]),
-      ]);
-      await writeOpportunityEvidenceCache(
-        { ...cacheScope, source: "gsc" },
-        JSON.parse(JSON.stringify({ currentRows, previousRows, countryRows })),
-        previousStart,
-        end,
-      );
+    // Nunca congelar una respuesta vacía de Search Console durante el TTL.
+    const hasCachedGscRows = currentRows.length > 0 || previousRows.length > 0;
+    const resolved = integration ? await resolveSearchConsoleForUser(userId, integration.siteDomain) : null;
+    const hasSearchConsole = Boolean(integration?.siteUrl) || resolved?.source === "COMPOSIO";
+    if ((!cachedGsc || !hasCachedGscRows) && hasSearchConsole) {
+      if (resolved?.source === "COMPOSIO") {
+        if (!resolved.apiKey || !resolved.state.composio?.connectedAccountId || !resolved.state.composio.siteUrl) {
+          throw new Error("Search Console requiere reconectar la cuenta por Composio y seleccionar un sitio.");
+        }
+        const query = (start: string, finish: string, dimensions?: string[]) => composioQuerySearchAnalytics(
+          { apiKey: resolved.apiKey!, userId, connectedAccountId: resolved.state.composio!.connectedAccountId },
+          resolved.state.composio!.siteUrl!, start, finish, dimensions,
+        );
+        [currentRows, previousRows, countryRows] = await Promise.all([
+          query(isoDate(currentStart), isoDate(end)),
+          query(isoDate(previousStart), isoDate(previousEnd)),
+          query(isoDate(currentStart), isoDate(end), ["country"]),
+        ]);
+      } else {
+        const collected = await collectDeepGoogleEvidence(
+          await getGoogleAccessToken(decryptSecret(integration!.encryptedRefreshToken)),
+          integration!.siteUrl!, isoDate(currentStart), isoDate(end), isoDate(previousStart), isoDate(previousEnd),
+        );
+        currentRows = collected.currentRows;
+        previousRows = collected.previousRows;
+        countryRows = collected.countryRows;
+      }
+      if (currentRows.length > 0 || previousRows.length > 0 || countryRows.length > 0) {
+        await writeOpportunityEvidenceCache(
+          { ...cacheScope, source: "gsc" },
+          JSON.parse(JSON.stringify({ currentRows, previousRows, countryRows })),
+          previousStart,
+          end,
+        );
+      }
     }
     const existing = await existingPromise;
     // Ejemplos reales de lo que YA se publicó en cada categoría (pedido de
@@ -197,7 +244,7 @@ export async function POST(request: Request) {
     }));
 
     const [googleAnalyticsSignals, bingSignals] = await Promise.all([
-      readFreshOpportunityEvidenceCache<{ connected: boolean; propertyId?: string; rows: Array<{ pagePath?: string; sessions: number; activeUsers: number; engagementRate?: number; conversions?: number }>; error?: string }>({ ...cacheScope, source: "ga4" }).then(async (cached) => {
+      readFreshOpportunityEvidenceCache<{ connected: boolean; propertyId?: string; rows: Array<{ pagePath?: string; pageTitle?: string; views?: number; sessions: number; activeUsers: number; events?: number; engagementRate?: number; bounceRate?: number; conversions?: number }>; error?: string }>({ ...cacheScope, source: "ga4" }).then(async (cached) => {
         if (cached) return cached;
         const fresh = await getGoogleAnalyticsSignals(userId);
         if (fresh.connected) {
@@ -223,10 +270,10 @@ export async function POST(request: Request) {
     const externalEvidenceRows = [
       ...googleAnalyticsSignals.rows.map((row) => ({
         source: "google-analytics-4",
-        query: row.pagePath ?? "",
+        query: row.pageTitle || row.pagePath || "",
         page: row.pagePath ?? "",
         clicks: 0,
-        impressions: row.sessions,
+        impressions: Math.max(row.views ?? 0, row.sessions ?? 0, row.events ?? 0),
         ctr: 0,
         position: 0,
       })),
