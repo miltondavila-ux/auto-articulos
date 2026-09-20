@@ -8134,6 +8134,12 @@ Está en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md` (raíz del repositorio). M
 - `apps/web/src/app/api/pre-validation/route.ts` reconoce una selección Composio válida como Search Console conectado cuando el resolvedor lo permite.
 - Los mensajes y requisitos actuales se conservan para la vía propia; con la bandera apagada no cambia ningún cliente.
 - TypeScript web correcto y `git diff --check` limpio.
+
+### Avance 2026-09-20 — Estados de configuración preparados
+
+- `api/configuration-status` y `api/dashboard-stats` reconocen una selección Composio válida como Search Console conectado.
+- La salida y los cálculos existentes permanecen iguales para la vía propia; con la bandera apagada no cambia el comportamiento.
+- TypeScript web correcto y `git diff --check` limpio.
 - No se activó ninguna bandera, no hay migraciones y no se tocó producción. Pendiente: prueba específica del consumidor y adaptación de `googleIndexing.ts`.
 
 ### Avance 2026-09-20 — Codex prepara inspección tras publicar
