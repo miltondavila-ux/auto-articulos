@@ -4626,6 +4626,18 @@ el texto existente.
 
 Responsable: Claude (tarea programada diaria de propagación).
 
+## Codex — RECOLECCIÓN GSC PARA CUENTAS NUEVAS / FLOR MENDEZ #94 — 2026-09-20
+
+- Evidencia revisada: exportación manual de Search Console de Flor con páginas,
+  países e impresiones reales para `flormendezrealtor.com`.
+- Causa raíz: una respuesta vacía de GSC se guardaba 7 días en la caché; además,
+  la consulta `query + page` podía venir vacía por anonimización de consultas
+  de bajo volumen aunque la dimensión `page` sí tuviera datos.
+- Corrección: las cachés vacías ya no bloquean nuevas consultas; si `query + page`
+  devuelve cero filas, el endpoint reintenta por `page` y solo cachea evidencia
+  cuando existe al menos una fila. Sin schema ni migración.
+- Estado: EN REVISIÓN LOCAL — pendiente auditoría y despliegue.
+
 ## Codex — BOTÓN DE FORZAR MÁS PUBLICACIONES / FLOR MENDEZ #94 — 2026-09-20
 
 - Diagnóstico: el botón «Forzar análisis ahora» solo se renderizaba dentro del
