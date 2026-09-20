@@ -8232,3 +8232,9 @@ Está en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md` (raíz del repositorio). M
 
 Responsable: Codex. Se implementa el borrado separado de publicaciones
 sociales descartadas en historial. Archivos reservados: `apps/web/src/app/api/social-opportunities/route.ts` y `apps/web/src/app/dashboard/historial/page.tsx`. Sin cambios de esquema ni migraciones.
+# Trabajo activo — BOTÓN BORRAR SIN CONFIRMAR — 2026-09-20
+
+Responsable: Codex. Se añade un botón separado para borrar publicaciones
+sociales sin confirmar, sin ejecutar el borrado automáticamente. Archivos:
+`apps/web/src/app/api/social-opportunities/route.ts` y
+`apps/web/src/app/dashboard/historial/page.tsx`. Sin cambios de esquema.

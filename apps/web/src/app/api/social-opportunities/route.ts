@@ -113,6 +113,8 @@ export async function DELETE(request: NextRequest) {
           ? { userId, status: "pending" }
           : scope === "skipped"
             ? { userId, status: "skipped" }
+            : scope === "unconfirmed"
+              ? { userId, status: { notIn: ["pending", "published", "skipped"] } }
           : { userId, status: { not: "pending" } },
     });
 
