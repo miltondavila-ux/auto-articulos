@@ -20,6 +20,44 @@ function isoDate(date: Date) {
   return date.toISOString().slice(0, 10);
 }
 
+function mergeEvidenceRows(
+  ...sets: Array<Awaited<ReturnType<typeof queryGoogleSearchAnalytics>>>
+) {
+  const merged = new Map<string, (typeof sets)[number][number]>();
+  for (const rows of sets) {
+    for (const row of rows) {
+      const key = JSON.stringify([row.keys, row.clicks, row.impressions, row.position]);
+      merged.set(key, row);
+    }
+  }
+  return Array.from(merged.values());
+}
+
+async function collectDeepGoogleEvidence(
+  accessToken: string,
+  siteUrl: string,
+  currentStart: string,
+  currentEnd: string,
+  previousStart: string,
+  previousEnd: string,
+) {
+  // Search Console anonimiza algunas consultas de bajo volumen. Una sola
+  // dimensión vacía no significa que la propiedad esté vacía: recorrer varias
+  // vistas permite recuperar páginas, consultas, dispositivos y apariciones.
+  const dimensions = [["query", "page"], ["page"], ["query"], ["device"], ["searchAppearance"]];
+  const [currentProbes, previousProbes, countryRows] = await Promise.all([
+    Promise.all(dimensions.map((d) => queryGoogleSearchAnalytics(accessToken, siteUrl, currentStart, currentEnd, d))),
+    Promise.all(dimensions.slice(0, 3).map((d) => queryGoogleSearchAnalytics(accessToken, siteUrl, previousStart, previousEnd, d))),
+    queryGoogleSearchAnalytics(accessToken, siteUrl, currentStart, currentEnd, ["country"]),
+  ]);
+  return {
+    currentRows: mergeEvidenceRows(...currentProbes),
+    previousRows: mergeEvidenceRows(...previousProbes),
+    countryRows,
+    probeCounts: currentProbes.map((rows, index) => ({ dimensions: dimensions[index], rows: rows.length })),
+  };
+}
+
 async function list(userId: string, siteDomain?: string | null) {
   return prisma.opportunityGroup.findMany({
     where: { userId, ...(siteDomain ? { category: { siteDomain } } : {}) },
@@ -152,34 +190,17 @@ export async function POST(request: Request) {
       const accessToken = await getGoogleAccessToken(
         decryptSecret(integration.encryptedRefreshToken),
       );
-      [currentRows, previousRows, countryRows] = await Promise.all([
-        queryGoogleSearchAnalytics(accessToken, integration.siteUrl, isoDate(currentStart), isoDate(end)),
-        queryGoogleSearchAnalytics(accessToken, integration.siteUrl, isoDate(previousStart), isoDate(previousEnd)),
-        // Distribución geográfica real por país; las ciudades se obtienen de
-        // las consultas y del contexto declarado, no de esta dimensión.
-        queryGoogleSearchAnalytics(accessToken, integration.siteUrl, isoDate(currentStart), isoDate(end), ["country"]),
-      ]);
-      // GSC puede ocultar consultas de bajo volumen al pedir query+page,
-      // aunque sí entregue las páginas. La dimensión page sigue siendo
-      // evidencia real y permite continuar sin inventar consultas.
-      if (currentRows.length === 0) {
-        currentRows = await queryGoogleSearchAnalytics(
-          accessToken,
-          integration.siteUrl,
-          isoDate(currentStart),
-          isoDate(end),
-          ["page"],
-        );
-      }
-      if (previousRows.length === 0) {
-        previousRows = await queryGoogleSearchAnalytics(
-          accessToken,
-          integration.siteUrl,
-          isoDate(previousStart),
-          isoDate(previousEnd),
-          ["page"],
-        );
-      }
+      const collected = await collectDeepGoogleEvidence(
+        accessToken,
+        integration.siteUrl,
+        isoDate(currentStart),
+        isoDate(end),
+        isoDate(previousStart),
+        isoDate(previousEnd),
+      );
+      currentRows = collected.currentRows;
+      previousRows = collected.previousRows;
+      countryRows = collected.countryRows;
       if (currentRows.length > 0 || previousRows.length > 0 || countryRows.length > 0) {
         await writeOpportunityEvidenceCache(
           { ...cacheScope, source: "gsc" },
