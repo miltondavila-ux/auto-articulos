@@ -1454,3 +1454,15 @@ reservas liberadas. Estado final: ARCHIVADA.
 
 ### Actualización 2026-09-19 20:59 UTC — CONEXION COMPOSIO: traspaso a Codex (estado vigente)
 - Estado: PAUSADA por límite de cupo/contexto; traspaso a Codex a pedido de Milton (TRANSFERIDA cuando Codex acepte). Producción = main = `7efaacd`. Sin reservas ni capitanía de migración. Bloque consolidado y prompt: Coordinación → «TRASPASO A CODEX · ESTADO VIGENTE» y `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md`.
+
+## Codex — NUMERACIÓN DEL MENÚ DE PUBLICACIONES — 2026-09-19
+
+- **Nombre exacto de la conversación:** `NUMERACIÓN DEL MENÚ DE PUBLICACIONES`. Agente: Codex.
+- Alcance: numerar las tres opciones principales del menú «Publicaciones» («1) Publica tus propios
+  títulos», «2) Publica contenido con ayuda de la IA avanzada», «3) Difunde tu contenido en blogs
+  externos y redes sociales») para reflejar el flujo de trabajo. Archivo tocado:
+  `apps/web/src/components/DashboardNav.tsx`. Sin schema, sin migraciones, sin cambios de datos.
+- Commit `deaa263` subido directo a `main` (sin PR). Deployment Vercel Production
+  `dpl_HXvhGDn4WeYem7RUBPWz3VN4okqF`: READY, aliasado en `https://seototal.lasolucionweb.com`.
+- Reservas: ninguna. Estado final: CERRADA Y ARCHIVADA — EN PRODUCCIÓN. Detalle en
+  `COORDINACION_CLAUDE_CODEX.md` y `CONTROLADOR_DE_VERSIONES.md`.
