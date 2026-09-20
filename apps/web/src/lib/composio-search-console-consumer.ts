@@ -15,7 +15,7 @@ export async function resolveSearchConsoleForUser(userId: string, siteDomain: st
     catch { return false; }
   })();
   const state = await loadConnectionState(userId, "google_search_console", siteDomain);
-  const method = methodFor({ app: "google_search_console", moduleEnabled, routeIsComposio: false });
+  const method = methodFor({ app: "google_search_console", userId, moduleEnabled, routeIsComposio: false });
   const source = resolveConnection({ method, hasOwn: state.hasOwn, composio: state.composio }).source;
   return {
     state,

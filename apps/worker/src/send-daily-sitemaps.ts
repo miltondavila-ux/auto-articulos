@@ -129,7 +129,7 @@ async function shouldUseComposio(integration: { userId: string; siteDomain: stri
     try { return JSON.parse(user?.disabledModules ?? "{}")?.["conexion-composio"] === "enabled"; }
     catch { return false; }
   })();
-  const method = methodFor({ app: "google_search_console", moduleEnabled, routeIsComposio: false });
+  const method = methodFor({ app: "google_search_console", userId: integration.userId, moduleEnabled, routeIsComposio: false });
   const state = await loadConnectionState(integration.userId, "google_search_console", integration.siteDomain);
   return resolveConnection({ method, hasOwn: state.hasOwn, composio: state.composio }).source === "COMPOSIO";
 }

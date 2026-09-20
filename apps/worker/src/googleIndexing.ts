@@ -34,7 +34,7 @@ export async function notifyGoogle(titleId: string, userId: string) {
       try { return JSON.parse(user?.disabledModules ?? "{}")?.["conexion-composio"] === "enabled"; }
       catch { return false; }
     })();
-    const method = methodFor({ app: "google_search_console", moduleEnabled, routeIsComposio: false });
+    const method = methodFor({ app: "google_search_console", userId, moduleEnabled, routeIsComposio: false });
     const resolved = resolveConnection({ method, hasOwn: state.hasOwn, composio: state.composio });
     const inspection = title?.articleUrl && resolved.source === "COMPOSIO" && state.composio?.siteUrl
       ? await composioInspectUrl(

@@ -103,3 +103,16 @@ test("si algún día un consumidor está listo, el módulo habilitado o el inter
     COMPOSIO_CONSUMER_READY.google_search_console = original;
   }
 });
+
+test("piloto aislado: solo el usuario incluido en la variable puede usar Composio", () => {
+  const key = "COMPOSIO_PILOT_USERS_GOOGLE_SEARCH_CONSOLE";
+  const original = process.env[key];
+  try {
+    process.env[key] = "lorena-2";
+    assert.equal(methodFor({ app: "google_search_console", userId: "lorena-2", moduleEnabled: true, routeIsComposio: false }), "COMPOSIO");
+    assert.equal(methodFor({ app: "google_search_console", userId: "mario-3", moduleEnabled: true, routeIsComposio: false }), "OWN");
+  } finally {
+    if (original === undefined) delete process.env[key];
+    else process.env[key] = original;
+  }
+});

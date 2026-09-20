@@ -8147,6 +8147,12 @@ Está en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md` (raíz del repositorio). M
 - A petición de Milton y según la captura del panel, los textos visibles para la persona usuaria ya no nombran al proveedor: muestran «Conexión completada y verificada», «La conexión respondió correctamente» y «Nueva conexión».
 - El nombre técnico permanece solo en código interno y superficies administrativas donde es necesario.
 
+### Avance 2026-09-20 — piloto aislado por usuario
+
+- Se añadió una allowlist opcional por variable de entorno (`COMPOSIO_PILOT_USERS_GOOGLE_SEARCH_CONSOLE`) para probar la vía real con una sola cuenta sin activar el interruptor global.
+- Los consumidores worker y web ya pasan `userId` al resolvedor. Sin la variable configurada, el comportamiento permanece OWN.
+- Verificación: prueba específica del piloto 9/9, TypeScript shared/worker/web correcto y `git diff --check` limpio.
+
 ### Avance 2026-09-20 — Prevalidación preparada
 
 - `apps/web/src/app/api/pre-validation/route.ts` reconoce una selección Composio válida como Search Console conectado cuando el resolvedor lo permite.
