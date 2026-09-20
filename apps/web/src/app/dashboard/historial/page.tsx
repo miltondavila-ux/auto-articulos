@@ -490,6 +490,8 @@ function HistorialRedes() {
   const [loading, setLoading] = useState(true);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deletingHistory, setDeletingHistory] = useState(false);
+  const [confirmingDeleteSkipped, setConfirmingDeleteSkipped] = useState(false);
+  const [deletingSkipped, setDeletingSkipped] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [socialEvents, setSocialEvents] = useState<Record<string, TitleEventRow[]>>({});
   const [loadingSocialEvent, setLoadingSocialEvent] = useState<string | null>(null);
@@ -669,6 +671,25 @@ function HistorialRedes() {
       setError(err.message);
     } finally {
       setDeletingHistory(false);
+    }
+  }
+
+  async function handleDeleteSkipped() {
+    setDeletingSkipped(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/social-opportunities?scope=skipped", { method: "DELETE" });
+      if (res.ok) {
+        setConfirmingDeleteSkipped(false);
+        await loadOpportunities();
+      } else {
+        const data = await res.json();
+        setError(data.error || "No se pudieron borrar las publicaciones descartadas.");
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setDeletingSkipped(false);
     }
   }
 
@@ -1048,6 +1069,21 @@ function HistorialRedes() {
             <span className="muted" style={{ fontSize: 13 }}>
               {skippedOpportunities.length} publicación{skippedOpportunities.length !== 1 ? "es" : ""}
             </span>
+            {confirmingDeleteSkipped ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 12, color: "#8a4b08" }}>¿Borrar descartadas? No se puede deshacer.</span>
+                <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteSkipped(); }} disabled={deletingSkipped} className="secondary" style={{ ...secondaryButtonStyle, color: "#ff3b30", padding: "4px 10px", fontSize: 12 }}>
+                  {deletingSkipped ? "Borrando..." : "Sí, borrar"}
+                </button>
+                <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmingDeleteSkipped(false); }} disabled={deletingSkipped} className="secondary" style={{ ...secondaryButtonStyle, padding: "4px 10px", fontSize: 12 }}>
+                  No
+                </button>
+              </div>
+            ) : (
+              <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmingDeleteSkipped(true); }} className="secondary" style={{ ...secondaryButtonStyle, color: "#ff3b30", padding: "4px 10px", fontSize: 12 }}>
+                Borrar descartadas
+              </button>
+            )}
             <button
               onClick={(e) => {
                 e.preventDefault();

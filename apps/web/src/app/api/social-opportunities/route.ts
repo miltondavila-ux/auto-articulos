@@ -103,12 +103,16 @@ export async function DELETE(request: NextRequest) {
     // scope=pending: usado por el botón "Borrar todas" de Oportunidades en
     // Redes Sociales, para borrar las propuestas pendientes. Sin ese
     // parámetro se mantiene el comportamiento original ("Borrar historial"
-    // en /dashboard/historial): borra solo publicadas o con error.
+    // en /dashboard/historial): borra solo publicadas o con error. El scope
+    // skipped permite borrar únicamente las propuestas descartadas desde
+    // el bloque correspondiente de /dashboard/historial.
     const scope = request.nextUrl.searchParams.get("scope");
     await prisma.socialOpportunity.deleteMany({
       where:
         scope === "pending"
           ? { userId, status: "pending" }
+          : scope === "skipped"
+            ? { userId, status: "skipped" }
           : { userId, status: { not: "pending" } },
     });
 
