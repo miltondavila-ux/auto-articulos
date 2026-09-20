@@ -256,8 +256,13 @@ export default function OportunidadesPage() {
         body: JSON.stringify({ force, panel: selectedPanel }),
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok)
+      if (!response.ok) {
+        // Con cuentas nuevas puede no existir evidencia todavía. Mantener la
+        // opción visible permite reintentar/forzar el análisis desde el mismo
+        // estado vacío, en vez de dejar al usuario sin acción disponible.
+        if (response.status === 422) setCanForce(true);
         throw new Error(data.error ?? "No se pudo completar el análisis.");
+      }
       setGroups(data.groups ?? []);
       if (data.lastAnalysisAt) setLastAnalysisAt(data.lastAnalysisAt);
       if (data.noNewOpportunities) {
