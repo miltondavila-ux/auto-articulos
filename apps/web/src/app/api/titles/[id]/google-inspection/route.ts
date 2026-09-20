@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import {
+  composioInspectUrl,
   decryptSecret,
   getGoogleAccessToken,
   inspectGoogleUrl,
 } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
+import { resolveSearchConsoleForUser } from "@/lib/composio-search-console-consumer";
 
 async function contextFor(userId: string, titleId: string) {
   const title = await prisma.title.findFirst({
@@ -63,14 +65,20 @@ export async function POST(
     );
   }
   try {
-    const token = await getGoogleAccessToken(
-      decryptSecret(integration.encryptedRefreshToken),
-    );
-    const inspection = await inspectGoogleUrl(
-      token,
-      integration.siteUrl,
-      title.articleUrl,
-    );
+    const resolved = await resolveSearchConsoleForUser(userId, integration.siteDomain);
+    const inspection = resolved.source === "COMPOSIO"
+      ? resolved.apiKey && resolved.state.composio?.connectedAccountId && resolved.state.composio.siteUrl
+        ? await composioInspectUrl(
+            { apiKey: resolved.apiKey, userId, connectedAccountId: resolved.state.composio.connectedAccountId },
+            resolved.state.composio.siteUrl,
+            title.articleUrl,
+          )
+        : (() => { throw new Error("Search Console requiere reconectar la cuenta por Composio y seleccionar un sitio."); })()
+      : await inspectGoogleUrl(
+          await getGoogleAccessToken(decryptSecret(integration.encryptedRefreshToken)),
+          integration.siteUrl,
+          title.articleUrl,
+        );
     const indexed = inspection.verdict === "PASS";
     const message = indexed
       ? `Google informa que la URL está indexada${inspection.coverageState ? `: ${inspection.coverageState}` : "."}`

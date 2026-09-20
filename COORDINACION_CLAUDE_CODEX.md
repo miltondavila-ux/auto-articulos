@@ -8117,6 +8117,11 @@ Está en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md` (raíz del repositorio). M
 - `apps/web/src/app/api/sitemap/send/route.ts` usa el resolvedor y el adaptador Composio cuando la conexión está lista.
 - Se añadió `apps/web/src/lib/composio-search-console-consumer.ts` para centralizar la decisión y no duplicar lectura de módulo/estado.
 - TypeScript web correcto y `git diff --check` limpio. La bandera de consumidores sigue apagada; no cambia el comportamiento actual.
+
+### Avance 2026-09-20 — Inspección manual web preparada
+
+- `apps/web/src/app/api/titles/[id]/google-inspection/route.ts` usa el resolvedor y `composioInspectUrl` cuando corresponde; la redirección GET permanece igual.
+- TypeScript web correcto y `git diff --check` limpio. No se activó la bandera ni se tocó producción.
 - No se activó ninguna bandera, no hay migraciones y no se tocó producción. Pendiente: prueba específica del consumidor y adaptación de `googleIndexing.ts`.
 
 ### Avance 2026-09-20 — Codex prepara inspección tras publicar
