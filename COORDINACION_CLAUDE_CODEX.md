@@ -8111,6 +8111,12 @@ Está en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md` (raíz del repositorio). M
 - `apps/worker/src/send-daily-sitemaps.ts` consulta el estado resuelto para Google Search Console y tiene una ruta preparada para `composioSubmitSitemap`.
 - La vía propia de Google y Bing permanece sin cambios efectivos mientras `COMPOSIO_CONSUMER_READY.google_search_console` siga en `false`.
 - Verificación: TypeScript del worker correcto, 8 pruebas del resolvedor correctas y `git diff --check` limpio.
+
+### Avance 2026-09-20 — Primera ruta web preparada
+
+- `apps/web/src/app/api/sitemap/send/route.ts` usa el resolvedor y el adaptador Composio cuando la conexión está lista.
+- Se añadió `apps/web/src/lib/composio-search-console-consumer.ts` para centralizar la decisión y no duplicar lectura de módulo/estado.
+- TypeScript web correcto y `git diff --check` limpio. La bandera de consumidores sigue apagada; no cambia el comportamiento actual.
 - No se activó ninguna bandera, no hay migraciones y no se tocó producción. Pendiente: prueba específica del consumidor y adaptación de `googleIndexing.ts`.
 
 ### Avance 2026-09-20 — Codex prepara inspección tras publicar

@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import {
+  composioSubmitSitemap,
   decryptSecret,
   getGoogleAccessToken,
   submitGoogleSitemap,
 } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
+import { resolveSearchConsoleForUser } from "@/lib/composio-search-console-consumer";
 
 /**
  * Envío manual del sitemap, para cuando el usuario ve que el envío diario
@@ -28,14 +30,20 @@ export async function POST() {
   }
 
   try {
-    const accessToken = await getGoogleAccessToken(
-      decryptSecret(integration.encryptedRefreshToken),
-    );
-    await submitGoogleSitemap(
-      accessToken,
-      integration.siteUrl,
-      integration.sitemapUrl,
-    );
+    const resolved = await resolveSearchConsoleForUser(userId, integration.siteDomain);
+    if (resolved.source === "COMPOSIO") {
+      if (!resolved.apiKey || !resolved.state.composio?.connectedAccountId || !resolved.state.composio.siteUrl) {
+        throw new Error("Search Console requiere reconectar la cuenta por Composio y seleccionar un sitio.");
+      }
+      await composioSubmitSitemap(
+        { apiKey: resolved.apiKey, userId, connectedAccountId: resolved.state.composio.connectedAccountId },
+        resolved.state.composio.siteUrl,
+        integration.sitemapUrl,
+      );
+    } else {
+      const accessToken = await getGoogleAccessToken(decryptSecret(integration.encryptedRefreshToken));
+      await submitGoogleSitemap(accessToken, integration.siteUrl, integration.sitemapUrl);
+    }
 
     const sentAt = new Date();
     const publishedTitles = await prisma.title.findMany({
