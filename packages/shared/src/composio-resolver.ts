@@ -39,12 +39,15 @@ export type NoConnectionReason = "RECONNECT_REQUIRED" | "NOT_CONNECTED";
 export function methodFor(input: {
   app: ComposioAppId;
   userId?: string;
+  userEmail?: string;
   /** La persona tiene «Habilitado» el módulo «Conexión por Composio». */
   moduleEnabled: boolean;
   /** El interruptor global de esa app está en COMPOSIO. */
   routeIsComposio: boolean;
 }): ConnectionMethod {
-  if (!COMPOSIO_CONSUMER_READY[input.app] && !(input.userId && pilotUserIds(input.app).has(input.userId))) return "OWN";
+  const pilotUsers = pilotUserIds(input.app);
+  const pilotMatch = (input.userId && pilotUsers.has(input.userId)) || (input.userEmail && pilotUsers.has(input.userEmail));
+  if (!COMPOSIO_CONSUMER_READY[input.app] && !pilotMatch) return "OWN";
   return input.routeIsComposio || input.moduleEnabled ? "COMPOSIO" : "OWN";
 }
 

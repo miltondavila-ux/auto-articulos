@@ -29,12 +29,12 @@ export async function notifyGoogle(titleId: string, userId: string) {
   try {
     const title = await prisma.title.findUnique({ where: { id: titleId }, select: { articleUrl: true } });
     const state = await loadConnectionState(userId, "google_search_console", integration.siteDomain);
-    const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true, disabledModules: true } });
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, role: true, disabledModules: true } });
     const moduleEnabled = user?.role === "admin" || (() => {
       try { return JSON.parse(user?.disabledModules ?? "{}")?.["conexion-composio"] === "enabled"; }
       catch { return false; }
     })();
-    const method = methodFor({ app: "google_search_console", userId, moduleEnabled, routeIsComposio: false });
+    const method = methodFor({ app: "google_search_console", userId, userEmail: user?.email, moduleEnabled, routeIsComposio: false });
     const resolved = resolveConnection({ method, hasOwn: state.hasOwn, composio: state.composio });
     const inspection = title?.articleUrl && resolved.source === "COMPOSIO" && state.composio?.siteUrl
       ? await composioInspectUrl(
