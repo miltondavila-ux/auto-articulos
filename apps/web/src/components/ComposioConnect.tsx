@@ -231,7 +231,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
 
   return (
     <div>
-      {!embedded && (
+      {!embedded && !inline && (
       <section style={sectionStyle}>
         <h2 style={h2Style}>Conexión por Composio</h2>
         <p style={mutedStyle}>
