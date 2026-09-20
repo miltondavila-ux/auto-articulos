@@ -8135,6 +8135,13 @@ Está en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md` (raíz del repositorio). M
 - `configuration-status` añade una alerta específica de Search Console con enlace a `Conexiones? vista=analiticas`; el HOME la muestra junto a las alertas existentes.
 - Solo aparece con método Composio, conexión propia conservada y ausencia de una conexión Composio activa con selección. TypeScript web correcto.
 
+### Auditoría 2026-09-20 — 2b-2 Search Console preparada
+
+- Integridad: cambios limitados a shared, worker, rutas web, HOME y documentación; sin schema, migraciones, workflows, middleware, autenticación, `vercel.json` ni secretos.
+- Funcional/regresión: worker 30/30 pruebas; web 40 pruebas correctas y una integración de generación de títulos omitida por falta de `TITLE_GENERATION_TEST_DATABASE_URL`; TypeScript worker/web/shared correcto; `next build` completado con 85 páginas; `git diff --check` limpio.
+- Activación: `COMPOSIO_CONSUMER_READY.google_search_console` continúa en `false`. No se ha creado PR, no se ha fusionado y no se ha tocado producción.
+- Pendiente antes de activar: prueba real con Lorena/Mario/Zulmad con Milton presente, punto de retorno, Preview y permiso expreso de merge.
+
 ### Avance 2026-09-20 — Prevalidación preparada
 
 - `apps/web/src/app/api/pre-validation/route.ts` reconoce una selección Composio válida como Search Console conectado cuando el resolvedor lo permite.
