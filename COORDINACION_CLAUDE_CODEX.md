@@ -8222,3 +8222,9 @@ Está en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md` (raíz del repositorio). M
 - `apps/worker/src/googleIndexing.ts` consulta el resolvedor y puede inspeccionar mediante `composioInspectUrl` cuando Search Console esté activado para Composio.
 - Con `COMPOSIO_CONSUMER_READY.google_search_console = false`, el flujo efectivo continúa siendo la API propia.
 - Verificación: TypeScript del worker correcto, 8 pruebas del resolvedor correctas y `git diff --check` limpio.
+
+### Incidente 2026-09-20 — LinkedIn rechazaba la versión 202505
+
+- Reporte: publicación en LinkedIn falló con HTTP 426 `NONEXISTENT_VERSION` porque `packages/shared/src/linkedin-api.ts` enviaba `Linkedin-Version: 202505`.
+- Corrección preparada: actualizar la versión de Posts/Images API a `202609`, versión vigente según la documentación oficial de LinkedIn; no se cambió OAuth, permisos, payload ni el resto de redes.
+- Pendiente: ejecutar verificación local y desplegar/fusionar conforme al protocolo de este documento. La publicación real requiere reintento con la conexión existente.
