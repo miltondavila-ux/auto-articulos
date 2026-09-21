@@ -2,6 +2,16 @@
 
 Última actualización: 2026-09-08, por Claude.
 
+## Cierre final — auditoría editorial y enlaces (20/9/2026, Codex)
+
+Trabajo documentado y archivado. PR #187 quedó fusionado a `main` y la
+versión productiva `dpl_Cns4zW7VtYAbt3ypg4Yjgd4JB1cq` está READY en
+`https://seototal.lasolucionweb.com`. Se verificaron build web (85 rutas),
+build worker, suite 20/20, Preview Vercel y `/login` HTTP 200. La generación
+editorial ya usa identidad/idioma/ubicaciones declaradas por cuenta, evita
+invenciones y no crea oportunidades Facebook Story que no puedan incluir
+enlace clicable. No hubo cambios de esquema ni migraciones.
+
 ## Auditoría LINK ACTIVO EN BLOGGING (20/9/2026, Codex)
 
 Se revisaron los adaptadores de publicación social no-Instagram. Facebook

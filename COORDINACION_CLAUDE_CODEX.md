@@ -1,5 +1,19 @@
 # INCIDENTE CRÍTICO Y PROTOCOLO OBLIGATORIO — 2026-09-08
 
+## Cierre de auditoría editorial y enlaces — Codex — 2026-09-20
+
+- PR #187 fusionado a `main`: mejora de identidad editorial por cuenta,
+  idioma y ubicaciones declaradas; prohibición de inventar biografía,
+  ubicaciones, testimonios, resultados, precios o promesas.
+- Se retiró `facebook-story` del generador de oportunidades porque la API de
+  Page Stories no permite garantizar un enlace clicable. Las publicaciones
+  normales y blogs mantienen enlace por caption, campo nativo o HTML.
+- Auditorías completadas: build web OK (85 rutas), build worker OK, suite
+  worker 20/20, Preview Vercel OK y verificación productiva `/login` HTTP 200.
+- Producción: deployment `dpl_Cns4zW7VtYAbt3ypg4Yjgd4JB1cq`, estado READY,
+  alias `https://seototal.lasolucionweb.com`.
+- Sin cambios de schema ni migraciones. Estado: CERRADO Y ARCHIVADO.
+
 ## Auditoría LINK ACTIVO EN BLOGGING — Codex — 2026-09-20
 
 - Se auditó `apps/worker/src/socialPublish.ts` y los adaptadores de Threads,
