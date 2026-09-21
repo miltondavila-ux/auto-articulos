@@ -362,7 +362,7 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
       )}
 
       {message && <p style={{ color: "#1d1d1f", fontSize: 13, marginTop: 10 }}>{message}</p>}
-      <ComposioConnect inline apps={["facebook", "instagram"]} />
+      <ComposioConnect inline activeOnly apps={["facebook", "instagram"]} />
     </section>
   );
 }

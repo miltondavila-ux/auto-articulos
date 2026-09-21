@@ -27,6 +27,8 @@ interface ComposioConnectProps {
   embedded?: boolean;
   /** Inserta los controles dentro de la tarjeta nativa del servicio, sin crear otra tarjeta. */
   inline?: boolean;
+  /** En tarjetas que ya gestionan la conexión principal, oculta estados alternativos inactivos. */
+  activeOnly?: boolean;
 }
 
 /**
@@ -90,7 +92,7 @@ const RESULT_MESSAGE: Record<string, { ok: boolean; text: string }> = {
   invalid: { ok: false, text: "No se encontró esa conexión. Inicia la conexión desde aquí." },
 };
 
-export default function ComposioConnect({ apps, embedded = false, inline = false }: ComposioConnectProps = {}) {
+export default function ComposioConnect({ apps, embedded = false, inline = false, activeOnly = false }: ComposioConnectProps = {}) {
   const [connections, setConnections] = useState<Connection[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
@@ -105,10 +107,10 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
       return null;
     }
     const all = ((await response.json()) as { connections: Connection[] }).connections;
-    const list = all.filter((connection) => (!apps || apps.includes(connection.app)) && !(embedded && connection.hidden));
+    const list = all.filter((connection) => (!apps || apps.includes(connection.app)) && !(embedded && connection.hidden) && (!activeOnly || connection.status === "ACTIVE"));
     setConnections(list);
     return list;
-  }, [apps, embedded]);
+  }, [apps, embedded, activeOnly]);
 
   const openChoices = useCallback(async (app: string) => {
     setChoices((current) => ({ ...current, [app]: { loading: true, error: null, options: [], picked: null } }));
