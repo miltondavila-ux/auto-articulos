@@ -77,7 +77,7 @@ async function main() {
     runLane("categorías", () => processNextCategorySync(user.id), deadline),
     runLane("detección de sitios", () => processNextSiteDetection(user.id), deadline),
     runLane("idiomas", () => processNextLanguageSync(user.id), deadline),
-    runLane("perfil de negocio", () => processNextBusinessProfilePost(user.id), deadline),
+    runLane("perfil de negocio", () => processNextBusinessProfilePost(user.id, articleUrl), deadline),
     runLane("títulos", () => processNext(user.id), deadline),
     runLane("redes sociales", () => processNextSocialPublish(user.id, articleUrl), deadline),
   ]);
