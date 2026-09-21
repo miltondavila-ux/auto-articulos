@@ -96,7 +96,12 @@ export default function ConexionesView() {
       { n: "04", title: "Instagram", text: "Publica imágenes, carruseles y Reels mediante Composio.", view: "difusion" as Vista },
       { n: "05", title: "Facebook", text: "Publica en la Página de Facebook seleccionada mediante Composio.", view: "difusion" as Vista },
       { n: "06", title: "Threads", text: "Conecta Threads con su integración propia.", view: "difusion" as Vista },
-      { n: "07", title: "Otras redes", text: "LinkedIn, Pinterest, Tumblr, Bluesky, DEV.to y Blogger.", view: "difusion" as Vista },
+      { n: "07", title: "LinkedIn", text: "Publica artículos en tu perfil o página de LinkedIn.", view: "difusion" as Vista },
+      { n: "08", title: "Pinterest", text: "Publica contenido visual en tus tableros de Pinterest.", view: "difusion" as Vista },
+      { n: "09", title: "Tumblr", text: "Publica artículos y contenido en tu blog de Tumblr.", view: "difusion" as Vista },
+      { n: "10", title: "Bluesky", text: "Comparte tus publicaciones en Bluesky.", view: "difusion" as Vista },
+      { n: "11", title: "DEV.to", text: "Publica artículos técnicos en tu cuenta de DEV.to.", view: "difusion" as Vista },
+      { n: "12", title: "Blogger", text: "Publica artículos en tu blog de Blogger.", view: "difusion" as Vista },
     ];
     return <div>
       <ModuleIntro titulo="Conexiones"><IntroP>Elige qué quieres configurar. Cada opción abre su espacio dedicado, con instrucciones y acciones solo de ese segmento.</IntroP></ModuleIntro>
