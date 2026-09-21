@@ -8289,13 +8289,26 @@ Producción y verificación posterior).
 
 ### Cierre — NOMBRES EN EL MENU — 2026-09-20
 
-**Auditoría 3 — Regresión/entrega:** OK. PR #183 (https://github.com/miltondavila-ux/auto-articulos/pull/183)
-con Vercel Preview `success` y mergeable CLEAN; fusionado a `main` con merge commit `dc200d6`;
-deployment Vercel Production `success`; `https://seototal.lasolucionweb.com/login` HTTP 200 y
-`/dashboard` sin sesión redirige a `/login` (comportamiento intacto). No se pudo inspeccionar el menú
-autenticado desde esta sesión (no se ingresan credenciales); **queda pendiente la confirmación visual de
-Milton** con su sesión: el desplegable Publicaciones debe mostrar «1) Artículos propios»,
-«2) Artículos creados con IA», «3) Redes sociales: publicaciones con IA».
+**Triple auditoría posterior a la fusión** (pedida por Milton; el PR #183 ya estaba fusionado y
+desplegado cuando llegó la orden, así que se auditó lo que quedó en Producción).
+
+1. **Integridad — APROBADA.** Las 19 líneas de código eliminadas son todas nombres de menú; ningún
+   `id` ni ruta cambió en los 17 archivos (comparación automática base vs. merge: 0 alterados); los
+   permisos (`ModuleGuard`, `getEffectiveDisabledModules`, `/api/admin/modules`) usan `id` y ruta, no el
+   texto; sin secretos; `middleware.ts`, `vercel.json`, `next.config` y `packages/db/prisma` sin tocar.
+2. **Funcional — APROBADA.** Sobre el código idéntico al fusionado: `tsc --noEmit` limpio, 44/44 pruebas
+   de `apps/web`, build y 20/20 pruebas de `apps/worker`; el manual se renderiza sin restos de plantilla
+   (`${`, `undefined`); `next build` de `apps/web` completo antes del commit.
+3. **Regresión/entrega — APROBADA con una limitación.** Production = `dc200d6` (`success`);
+   `scripts/check-production-baseline.sh` OK con `PRODUCTION_SHA=dc200d6`. En Producción: `/login`,
+   `/privacidad`, `/terminos`, `/icon.png` y `/.well-known/*` responden 200; las pantallas del
+   dashboard sin sesión redirigen (307) a `/login`; `/api/*` protegidas responden 401. **Limitación:** no
+   se pudo comparar HTTP contra el deployment anterior (su URL está protegida por SSO de Vercel) ni leer
+   logs de ejecución (`vercel` sin sesión). El menú autenticado no se pudo inspeccionar (no se ingresan
+   credenciales): **queda pendiente la confirmación visual de Milton** — el desplegable Publicaciones debe
+   mostrar «1) Artículos propios», «2) Artículos creados con IA», «3) Redes sociales: publicaciones con IA».
+
+**Punto de retorno:** revertir el merge `dc200d6` (solo cambia textos; sin migraciones).
 
 ```text
 IDENTIDAD: Claude - Sonnet 5 - NOMBRES EN EL MENU
