@@ -29,6 +29,7 @@ import { put } from "@vercel/blob";
 import sharp from "sharp";
 import { generateAiSocialImage } from "./aiImageGenerator";
 import { formatBloggerSummary } from "./bloggerContent";
+import { deriveDevToEditorialTags, isDevToEligible } from "./devtoEditorial";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
@@ -151,14 +152,7 @@ function decodeHtmlEntities(value: string): string {
 }
 
 export function deriveDevToTags(title: string, summary: string, category: string | null): string[] {
-  const stopWords = new Set(["para", "como", "qué", "que", "una", "uno", "los", "las", "del", "con", "por", "sobre", "desde", "este", "esta", "sus", "más", "cómo"]);
-  const values = [category || "", title, summary].join(" ")
-    .toLocaleLowerCase("es")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .split(/[^a-z0-9]+/)
-    .filter((word: string) => word.length >= 4 && !stopWords.has(word));
-  return Array.from(new Set(values)).slice(0, 4);
+  return deriveDevToEditorialTags(title, summary, category);
 }
 
 function stripHtml(value: string): string {
@@ -865,6 +859,13 @@ async function processDevToJob(job: {
   const articleTitle = title?.finalTitle || job.articleTitle;
   const articleSummary = title?.summary || job.articleTitle;
   const bodyMarkdown = await getArticleBodyMarkdown(job.articleUrl);
+  if (!isDevToEligible(articleTitle, articleSummary, bodyMarkdown)) {
+    throw new Error("DEV.to rechazó la publicación: el artículo no presenta un tema técnico o de desarrollo claramente relevante para su audiencia.");
+  }
+  const tags = deriveDevToTags(articleTitle, articleSummary, title?.run.category.name || null);
+  if (tags.length === 0) {
+    throw new Error("DEV.to rechazó la publicación: no se pudo asignar ningún tag técnico pertinente.");
+  }
   const imageUrl = await getArticleOpenGraphImage(job.articleUrl);
   const result = await createDevToArticle(decryptSecret(integration.encryptedApiKey), {
     title: articleTitle,
@@ -872,7 +873,7 @@ async function processDevToJob(job: {
     canonicalUrl: job.articleUrl,
     description: articleSummary,
     mainImage: imageUrl,
-    tags: deriveDevToTags(articleTitle, articleSummary, title?.run.category.name || null),
+    tags,
     series: title?.run.category.name || null,
   });
   const postUrl = getDevToArticleUrl(result);

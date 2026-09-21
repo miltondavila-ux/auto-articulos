@@ -5,7 +5,7 @@ export type DevToArticle = { id?: number; url?: string; path?: string; user?: { 
 async function devToRequest<T>(path: string, apiKey: string, init: RequestInit = {}): Promise<T> {
   const response = await fetch(`${DEVTO_API}${path}`, {
     ...init,
-    headers: { "Content-Type": "application/json", "api-key": apiKey, ...(init.headers || {}) },
+    headers: { "Content-Type": "application/json", "api-key": apiKey, "User-Agent": "SEO-Total/1.0 (DEV.to integration)", ...(init.headers || {}) },
   });
   if (!response.ok) throw new Error(`DEV.to API falló (${response.status}): ${await response.text()}`);
   return response.json() as Promise<T>;

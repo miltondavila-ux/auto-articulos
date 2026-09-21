@@ -1,6 +1,7 @@
 import { prisma } from "@auto-articulos/db";
 import { decryptSecret, getDevToArticleByPath, getDevToArticleUrl, updateDevToArticle } from "@auto-articulos/shared";
 import { deriveDevToTags, getArticleBodyMarkdown, getArticleOpenGraphImage } from "./socialPublish";
+import { isDevToEligible } from "./devtoEditorial";
 
 async function main() {
   const targetUrl = process.env.DEVTO_TARGET_URL;
@@ -25,6 +26,9 @@ async function main() {
   const articleTitle = title?.finalTitle || "Artículo";
   const articleSummary = title?.summary || articleTitle;
   const bodyMarkdown = await getArticleBodyMarkdown(opportunity.articleUrl);
+  if (!isDevToEligible(articleTitle, articleSummary, bodyMarkdown)) {
+    throw new Error("DEV.to rechazó la reparación: el artículo no es claramente relevante para una audiencia técnica.");
+  }
   const imageUrl = await getArticleOpenGraphImage(opportunity.articleUrl);
   const apiKey = decryptSecret(integration.encryptedApiKey);
   const existing = await getDevToArticleByPath(apiKey, username, slug);
