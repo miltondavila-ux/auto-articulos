@@ -330,6 +330,8 @@ Ruta: /dashboard/historial
 
 Historial agrupa las ejecuciones por categoría y conserva los resultados de publicación, errores, reintentos, indexación y redes cuando están disponibles. Puedes borrar el historial terminado si ya no lo necesitas; esa acción no se puede deshacer y no cancela un lote que esté en curso.
 
+Sobre publicaciones en redes sociales, Historial tiene además dos botones separados, ambos con confirmación previa y sin poder deshacerse: **Borrar descartadas** elimina solo las publicaciones sociales que marcaste como descartadas, y **Borrar sin confirmar** elimina solo las que quedaron sin confirmar (no toca las pendientes, publicadas ni descartadas).
+
 ## ${MENU_NAMES.redes}
 
 Ruta: /dashboard/oportunidades-redes
