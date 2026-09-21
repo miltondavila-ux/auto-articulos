@@ -3,7 +3,6 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
 import ConfiguracionSubNav from "@/components/ConfiguracionSubNav";
-import BrowserTabsConnectionNotice from "@/components/BrowserTabsConnectionNotice";
 import GoogleSearchConsoleSection from "@/components/GoogleSearchConsoleSection";
 import GoogleAnalyticsSection from "@/components/GoogleAnalyticsSection";
 import BingWebmasterSection from "@/components/BingWebmasterSection";
@@ -131,7 +130,6 @@ export default function ConexionesView() {
 
       {vista === "difusion" && (
         <div style={columna}>
-          <BrowserTabsConnectionNotice />
           <BusinessProfileSection />
           {(permisos.threads || permisos.instagram || permisos.facebook || isAdmin || tieneModuloRedes) && (
             <ThreadsSection allowThreads={puede("threads")} allowInstagram={puede("instagram")} allowFacebook={puede("facebook")} isAdmin={isAdmin} />
