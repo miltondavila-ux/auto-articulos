@@ -29,6 +29,8 @@ interface ComposioConnectProps {
   inline?: boolean;
   /** En tarjetas que ya gestionan la conexión principal, oculta estados alternativos inactivos. */
   activeOnly?: boolean;
+  /** Muestra solo el botón de alta para apps aún no conectadas, dentro de la tarjeta anfitriona. */
+  showInactiveActions?: boolean;
 }
 
 /**
@@ -92,7 +94,7 @@ const RESULT_MESSAGE: Record<string, { ok: boolean; text: string }> = {
   invalid: { ok: false, text: "No se encontró esa conexión. Inicia la conexión desde aquí." },
 };
 
-export default function ComposioConnect({ apps, embedded = false, inline = false, activeOnly = false }: ComposioConnectProps = {}) {
+export default function ComposioConnect({ apps, embedded = false, inline = false, activeOnly = false, showInactiveActions = false }: ComposioConnectProps = {}) {
   const [connections, setConnections] = useState<Connection[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
@@ -264,6 +266,13 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
           const status = STATUS_LABEL[connection.status];
           const isBusy = busy === connection.app;
           const choice = choices[connection.app];
+          if (inline && showInactiveActions && connection.status !== "ACTIVE") {
+            return (
+              <button key={connection.app} type="button" onClick={() => connect(connection.app)} disabled={busy !== null} style={{ ...secondaryButtonStyle, marginTop: 12 }}>
+                {isBusy ? "Abriendo…" : `Nueva conexión de ${connection.app === "facebook" ? "Facebook" : "Instagram"}`}
+              </button>
+            );
+          }
           return (
             <section key={connection.app} style={inline ? { marginTop: 16, paddingTop: 14, borderTop: "1px solid #e5e5ea" } : sectionStyle}>
               <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
