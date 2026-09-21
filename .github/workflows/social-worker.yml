@@ -27,6 +27,7 @@ jobs:
       OPENAI_IMAGE_API_KEY: ${{ secrets.OPENAI_IMAGE_API_KEY }}
       FAL_API_KEY: ${{ secrets.FAL_API_KEY }}
       IMAGE_PROVIDER: ${{ vars.IMAGE_PROVIDER }}
+      POSTPEER_GBP_CONSUMER_READY: ${{ vars.POSTPEER_GBP_CONSUMER_READY }}
       BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
       WORKER_SHARD: ${{ matrix.shard }}
     steps:
