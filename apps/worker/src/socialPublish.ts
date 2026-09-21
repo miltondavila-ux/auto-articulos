@@ -56,6 +56,18 @@ async function updateSocialProgress(
   await prisma.socialOpportunity.update({ where: { id }, data });
 }
 
+async function enforceSocialDailyLimit(userId: string, platform: string): Promise<void> {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { socialDailyLimits: true } });
+  const limits = (user?.socialDailyLimits && typeof user.socialDailyLimits === "object" && !Array.isArray(user.socialDailyLimits))
+    ? user.socialDailyLimits as Record<string, unknown> : {};
+  const raw = limits[platform];
+  const limit = typeof raw === "number" && Number.isInteger(raw) ? raw : 1;
+  if (limit < 0) throw new Error(`Límite diario inválido para ${platform}.`);
+  const start = new Date(); start.setHours(0, 0, 0, 0);
+  const published = await prisma.socialOpportunity.count({ where: { userId, platform, status: "published", publishedAt: { gte: start } } });
+  if (published >= limit) throw new Error(`Límite diario alcanzado para ${platform}: ${limit} publicación(es).`);
+}
+
 function describeFetchError(err: unknown): string {
   if (err instanceof Error) {
     const cause = (err as Error & { cause?: unknown }).cause;
@@ -1393,6 +1405,8 @@ export async function processNextSocialPublish(filterUserId?: string, filterArti
       progressPercent: 25,
       progressStage: "Validando el artículo y sus datos",
     });
+
+    await enforceSocialDailyLimit(job.userId, job.platform);
 
     await updateSocialProgress(job.id, {
       progressPercent: 55,

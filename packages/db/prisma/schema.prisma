@@ -30,6 +30,9 @@ model User {
   role                              UserRole  @default(user)
   monthlyArticleLimit               Int?      @default(300)
   dailyArticleLimit                 Int?      @default(5)
+  // Máximo de publicaciones sociales/blog por plataforma y día. JSON para
+  // permitir añadir plataformas sin otra migración; todas empiezan en 1.
+  socialDailyLimits                 Json      @default("{}")
   maxTitlesPerBatch                 Int       @default(20)
   // Encontrado el 2/8/2026: usuarios en Europa (ej. Lidia Capdevila) tienen
   // su cuenta real en 10minutesWebsite.site en vez de .net. El login/las
