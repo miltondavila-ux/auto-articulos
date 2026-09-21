@@ -237,3 +237,35 @@ reparación, no la causa raíz del force-push en sí. Queda como duda abierta
 para Milton: sigue sin resolverse qué sesión/agente hizo el force-push y
 si el protocolo de "no destrucción" necesita un refuerzo adicional más
 allá de lo ya escrito en este documento.
+
+### Merge de PR #173 descartó por completo el lado de `main` en `COORDINACION_CLAUDE_CODEX.md` — 2026-09-21 (hallazgo de la tarea programada diaria de propagación)
+
+Al revisar el rango de commits nuevo en `COORDINACION_CLAUDE_CODEX.md` para la corrida del
+2026-09-21, se detectó que `f020fa6` (merge de PR #173, `codex/composio-2b2-search-console` → `main`,
+2026-09-20 18:53 EDT) resolvió el conflicto de este archivo quedándose enteramente con la versión de
+la rama: `git diff f020fa6 <tip-de-la-rama> -- COORDINACION_CLAUDE_CODEX.md` da 0 líneas, mientras que
+`git diff f020fa6 <main-justo-antes> -- COORDINACION_CLAUDE_CODEX.md` da 178 líneas. La rama venía de
+`origin/main` en `381ea34`, una base ya vieja para cuando se fusionó (varios commits de
+`docs(coordinacion)` habían tocado el archivo en `main` mientras tanto), y quien resolvió el
+conflicto tomó "el lado de la rama" completo en vez de conservar ambos aportes en orden cronológico
+como exige el protocolo de este documento.
+
+Se perdieron tres entradas de `main` que la rama no tenía: "Codex — RECOLECCIÓN GSC PARA CUENTAS
+NUEVAS / FLOR MENDEZ #94 — 2026-09-20", "Codex — BOTÓN DE FORZAR MÁS PUBLICACIONES / FLOR MENDEZ #94
+— 2026-09-20" y el cierre completo de "Claude (tarea programada diaria de propagación) — 2026-09-20"
+(commit original `5820917`, 66 líneas). El código de esas dos primeras conversaciones no se perdió
+(vive en archivos aparte) y sus entradas de coordinación fueron re-escritas por commits posteriores
+independientes (`3b8438b` y otro commit directo) — solo el cierre de la tarea de propagación quedó
+sin restituir hasta hoy. Se recuperó verbatim en `COORDINACION_CLAUDE_CODEX.md`, sección
+"RECUPERACIÓN DE CONTENIDO PERDIDO EN MERGE — 2026-09-21".
+
+Clasificación: **RESPONSABLE NO IDENTIFICADO** — no hay registro de quién ejecutó materialmente el
+merge de PR #173 ni si fue una resolución manual o automática de GitHub. No se tocó ningún commit de
+Producción ni se hizo reset/force-push para esta reparación: la recuperación fue puramente aditiva
+(se transcribió el contenido perdido como texto nuevo). Queda como duda abierta para Milton: además
+del force-push de 2026-09-10 ya señalado arriba, este es un segundo episodio del mismo tipo de
+problema (una fusión que descarta contenido de `main` sin que git marque conflicto para quien
+fusiona) — vale la pena evaluar si conviene una regla más estricta antes de fusionar ramas viejas de
+`COORDINACION_CLAUDE_CODEX.md` (por ejemplo, rebasar la rama contra `main` actual antes de abrir el
+PR, en vez de dejar que GitHub resuelva el conflicto de un archivo que crece por todas las
+conversaciones a la vez).
