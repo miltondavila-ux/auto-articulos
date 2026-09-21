@@ -2,7 +2,6 @@
 
 import { useEffect, useState, type CSSProperties } from "react";
 import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
-import ConfiguracionSubNav from "@/components/ConfiguracionSubNav";
 import GoogleSearchConsoleSection from "@/components/GoogleSearchConsoleSection";
 import GoogleAnalyticsSection from "@/components/GoogleAnalyticsSection";
 import BingWebmasterSection from "@/components/BingWebmasterSection";
@@ -101,7 +100,6 @@ export default function ConexionesView() {
     ];
     return <div>
       <ModuleIntro titulo="Conexiones"><IntroP>Elige qué quieres configurar. Cada opción abre su espacio dedicado, con instrucciones y acciones solo de ese segmento.</IntroP></ModuleIntro>
-      <ConfiguracionSubNav />
       <div style={{ marginTop: 24, borderTop: "1px solid #d2d2d7" }}>
         {tarjetas.map((card) => (
           <button
@@ -149,8 +147,6 @@ export default function ConexionesView() {
           administrador que te dé acceso.
         </IntroP>
       </ModuleIntro>
-      <ConfiguracionSubNav />
-
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", margin: "4px 0 6px" }} role="tablist" aria-label="Tipo de conexión">
         {VISTAS.map((v) => (
           <button key={v.id} type="button" role="tab" aria-selected={vista === v.id} onClick={() => elegir(v.id)} style={botonVista(vista === v.id)}>
