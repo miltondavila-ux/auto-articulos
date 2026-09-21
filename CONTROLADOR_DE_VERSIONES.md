@@ -3211,3 +3211,11 @@ sin cambios de datos, sin tocar `vercel.json`, middleware, autenticación ni sec
 aprobadas en local (ver Coordinación). Producción autorizada por Milton el 2026-09-20; el commit, el
 PR, el Preview, el deployment y la verificación posterior se registran en la siguiente entrada.
 Responsable: Claude. Estado: PREPARADA.
+
+## Versión desplegada — 2026-09-20 — NOMBRES EN EL MENU
+
+PR #183 fusionado a `main` (`dc200d6`, con merge commit; commit propio `c1be7f7`). Registra el
+resultado de la entrada «Versión preparada — NOMBRES EN EL MENU» (que no se reescribe). Vercel Preview
+y Production: **success**; `/login` HTTP 200. Sin migraciones. Producción autorizada por Milton el
+2026-09-20. Punto de retorno: revertir el merge `dc200d6` (solo cambia textos). Pendiente: confirmación
+visual de Milton del menú autenticado. Responsable: Claude. Estado: EN PRODUCCIÓN.
