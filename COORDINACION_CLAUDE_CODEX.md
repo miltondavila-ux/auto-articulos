@@ -8559,3 +8559,9 @@ Responsable: Claude (tarea programada diaria de propagación).
 - A petición de Milton, se añadió una validación para que una conexión Composio activa de Instagram o Facebook no genere ni muestre oportunidades `instagram-story` o `facebook-story`.
 - Las oportunidades ya guardadas no se borran: se filtran del listado mientras esa vía esté activa. Los posts normales continúan disponibles.
 - Sin schema, migraciones, cuentas ni publicaciones modificadas. Verificación local: TypeScript web y `git diff --check` correctos. Pendiente commit, Preview y despliegue según el protocolo.
+
+### Registro 2026-09-21 — endurecimiento final del filtro de Stories
+
+- La primera versión desplegada no ocultó las Stories existentes en la sesión de Lorena, aunque la tarjeta de Conexiones mostraba Instagram y Facebook conectados con selección aprobada.
+- Se endureció la regla: cualquier registro Composio de Instagram/Facebook que no esté en estado `FAILED` bloquea esas Stories, y el filtrado se realiza también en `api/social-opportunities` del servidor. No se borran oportunidades ni se afecta el post normal.
+- Verificación local: TypeScript web y `git diff --check` correctos. Queda pendiente el último Preview y despliegue; después se libera la reserva de estos archivos.
