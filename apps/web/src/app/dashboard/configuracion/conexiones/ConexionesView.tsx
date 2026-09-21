@@ -100,10 +100,38 @@ export default function ConexionesView() {
       { n: "07", title: "Otras redes", text: "LinkedIn, Pinterest, Tumblr, Bluesky, DEV.to y Blogger.", view: "difusion" as Vista },
     ];
     return <div>
-      <ModuleIntro titulo="Conexiones"><IntroP>Elige qué conexión quieres configurar. Cada tarjeta abre un espacio dedicado, con instrucciones y acciones solo de ese segmento.</IntroP></ModuleIntro>
+      <ModuleIntro titulo="Conexiones"><IntroP>Elige qué quieres configurar. Cada opción abre su espacio dedicado, con instrucciones y acciones solo de ese segmento.</IntroP></ModuleIntro>
       <ConfiguracionSubNav />
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, marginTop: 20 }}>
-        {tarjetas.map((card) => <button key={card.n} type="button" onClick={() => elegir(card.view)} style={{ textAlign: "left", minHeight: 170, padding: 24, background: "#fff", border: "1px solid #e5e5ea", borderRadius: 12, color: "#1d1d1f", cursor: "pointer" }}><span style={{ color: "#6e6e73", fontSize: 13 }}>{card.n}</span><h2 style={{ fontSize: 18, margin: "22px 0 10px" }}>{card.title}</h2><p style={{ color: "#6e6e73", fontSize: 13, lineHeight: 1.5, margin: 0 }}>{card.text}</p></button>)}
+      <div style={{ marginTop: 24, borderTop: "1px solid #d2d2d7" }}>
+        {tarjetas.map((card) => (
+          <button
+            key={card.n}
+            type="button"
+            onClick={() => elegir(card.view)}
+            style={{
+              width: "100%",
+              display: "grid",
+              gridTemplateColumns: "42px minmax(0, 1fr) auto",
+              alignItems: "center",
+              gap: 16,
+              padding: "20px 4px",
+              textAlign: "left",
+              background: "transparent",
+              border: 0,
+              borderBottom: "1px solid #e5e5ea",
+              color: "#1d1d1f",
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
+          >
+            <span style={{ color: "#8e8e93", fontSize: 12, letterSpacing: "0.06em" }}>{card.n}</span>
+            <span>
+              <strong style={{ display: "block", fontSize: 17, fontWeight: 600, lineHeight: 1.3 }}>{card.title}</strong>
+              <span style={{ display: "block", marginTop: 5, color: "#6e6e73", fontSize: 13, lineHeight: 1.45 }}>{card.text}</span>
+            </span>
+            <span aria-hidden="true" style={{ color: "#6e6e73", fontSize: 22, lineHeight: 1 }}>→</span>
+          </button>
+        ))}
       </div>
     </div>;
   }
