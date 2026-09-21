@@ -8532,3 +8532,17 @@ El worktree está limpio, la capitanía fue liberada y `POSTPEER_GBP_CONSUMER_RE
 continúa en `false`. Siguiente acción: abrir el PR para revisión; no aplicar
 migraciones, activar la variable ni desplegar hasta completar la autorización y
 la prueba real de integración.
+
+### Decisión final de camino — 2026-09-21
+
+- **Camino aprobado:** abrir un PR separado desde `codex/conexion-postpeer-gbp`.
+- **Antes de producción:** revisar y aprobar el PR; aplicar en orden controlado
+  `20260920210000_add_postpeer_connection` y
+  `20260921123000_add_google_business_publishing_permission`; configurar la
+  clave `postpeer_api_key` y la variable `POSTPEER_GBP_CONSUMER_READY` solo en
+  el momento autorizado; ejecutar una prueba real de conexión y publicación GBP.
+- **Condición de seguridad:** mantener `POSTPEER_GBP_CONSUMER_READY=false` y no
+  tocar producción hasta que la prueba real confirme OAuth, cuenta/ficha,
+  permiso por usuario, creación de `BusinessProfilePost`, lane PostPeer,
+  idempotencia y estado final de publicación.
+- **Firmado:** CODEX - GPT-5 - REPARADOR DEL ARBOL PRINCIPAL.

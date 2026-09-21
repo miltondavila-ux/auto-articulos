@@ -1,8 +1,8 @@
 # MASTER BLUEPRINT — CONEXIÓN POSTPEER + GOOGLE BUSINESS PROFILE
 
-**Proyecto:** Creador de artículos / SEO TOTAL  
-**Nombre de la conversación:** `CONEXION CON POSTPEER`  
-**Fecha:** 2026-09-20  
+**Proyecto:** Creador de artículos / SEO TOTAL
+**Nombre de la conversación:** `CONEXION CON POSTPEER`
+**Fecha:** 2026-09-20
 **Estado:** diseño técnico listo para implementación; no se activan publicaciones reales sin aprobación explícita.
 
 ## 1. Objetivo
