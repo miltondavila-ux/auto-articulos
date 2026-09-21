@@ -63,9 +63,9 @@ const APP_NOTES: Record<string, string> = {
   google_search_console: "Permite enviar tu sitemap, revisar la indexación y consultar tus métricas de búsqueda.",
   google_analytics: "Permite leer las métricas de tu propiedad de Analytics (solo lectura).",
   facebook:
-    "Permite publicar en tu Página. Composio no publica Stories de Facebook: esas se siguen publicando por tu conexión actual.",
+    "Permite publicar en tu Página de Facebook desde SEO TOTAL. Las Stories no se ofrecen cuando esta conexión está activa.",
   instagram:
-    "Permite publicar imágenes, carruseles y Reels en tu cuenta Business o Creator. Las Stories de Instagram están en prueba.",
+    "Permite publicar imágenes, carruseles y Reels en tu cuenta Business o Creator. Las Stories no se ofrecen cuando esta conexión está activa.",
 };
 
 const CHOOSE_TITLE: Record<string, string> = {
@@ -308,7 +308,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
                 {!inline && <h2 style={{ ...h2Style, marginBottom: 6 }}>{embedded ? `${connection.label} · nueva conexión` : connection.label}</h2>}
                 <span style={{ fontSize: 13, fontWeight: 600, color: status.color }}>{status.text}</span>
               </div>
-              {!inline && <p style={mutedStyle}>{APP_NOTES[connection.app]}</p>}
+              <p style={{ ...mutedStyle, margin: "4px 0 0" }}>{APP_NOTES[connection.app]}</p>
               {CONNECTION_STEPS[connection.app] && (
                 <div
                   role="note"
