@@ -15,6 +15,7 @@ import TumblrSection from "@/components/TumblrSection";
 import BlueskySection from "@/components/BlueskySection";
 import DevToSection from "@/components/DevToSection";
 import BloggerSection from "@/components/BloggerSection";
+import PasosAntesDeConectar from "@/components/PasosAntesDeConectar";
 
 type Vista = "analiticas" | "difusion";
 
@@ -139,7 +140,12 @@ export default function ConexionesView() {
           {puede("pinterest") && <PinterestSection allowed={puede("pinterest")} />}
           {puede("bluesky") && <BlueskySection allowed={puede("bluesky")} />}
           {puede("tumblr") && <TumblrSection allowed={puede("tumblr")} />}
-          {puede("blogger") && <BloggerSection allowed={puede("blogger")} />}
+          {puede("blogger") && (
+            <>
+              <PasosAntesDeConectar red="Blogger" />
+              <BloggerSection allowed={puede("blogger")} />
+            </>
+          )}
           {puede("devto") && <DevToSection allowed={puede("devto")} />}
         </div>
       )}
