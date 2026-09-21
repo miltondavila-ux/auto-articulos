@@ -8522,3 +8522,13 @@ migraciones, fusionado cambios ni tocado producción.
 - **Siguiente acción:** Reparador debe revisar el diff y confirmar formalmente: **LOTE POSTPEER
   LIBERADO PARA PR**.
 - **Firmado:** Codex — CONEXION CON POSTPEER.
+
+### Decisión formal del Reparador — 2026-09-21
+
+**LOTE POSTPEER LIBERADO PARA PR.**
+
+La revisión contra `20696f2` no encontró conflictos técnicos ni archivos ajenos.
+El worktree está limpio, la capitanía fue liberada y `POSTPEER_GBP_CONSUMER_READY`
+continúa en `false`. Siguiente acción: abrir el PR para revisión; no aplicar
+migraciones, activar la variable ni desplegar hasta completar la autorización y
+la prueba real de integración.
