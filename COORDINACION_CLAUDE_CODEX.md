@@ -8347,3 +8347,40 @@ SIGUIENTE ACCIÓN EXACTA: Milton abre el menú Publicaciones con su sesión y co
 RESPONSABLE SIGUIENTE: Milton
 FECHA Y HORA DE LIBERACIÓN: 2026-09-20 ~20:25 EDT
 ```
+
+## Cierre — AUDITORÍA PUBLICACIÓN DEV.TO — 2026-09-20/21
+
+**Pedido de Milton:** auditar y llevar a producción el proceso de publicación en DEV.to,
+alineándolo con las prácticas editoriales de la red.
+
+**Cambios aplicados:**
+
+- Se añadió una barrera editorial que rechaza publicaciones sin tema técnico o de desarrollo
+  claramente relevante para la audiencia de DEV.to.
+- Se sustituyó la selección mecánica de palabras por tags editoriales pertinentes, máximo cuatro.
+- Se conservaron `canonical_url`, descripción, imagen principal y serie.
+- Se añadió `User-Agent` identificable a las solicitudes de la API de DEV.to.
+- La reparación de artículos existentes aplica la misma validación editorial.
+- Se añadieron tres pruebas específicas para elegibilidad y tags.
+
+**Auditoría:** Prisma generate OK; worker build OK; web typecheck/build OK; 20/20 tests del worker;
+44/44 tests web; 3/3 tests DEV.to; `git diff --check` OK; sin cambios de schema ni migraciones.
+
+**Entrega:** commit `6388899118d759140ce312501d18ef4caaa34530` en `origin/main`. Worker productivo
+exitoso en GitHub Actions, ejecución `35547333149`. Deployment Vercel productivo
+`dpl_3fQRMJA1efco6nw6igGVpq4mJJS3`, estado `READY`, con alias `seototal.lasolucionweb.com` y
+`auto-articulos-web.vercel.app`; ambos dominios respondieron HTTP 200.
+
+**Decisión editorial:** DEV.to no se usa como canal genérico de backlinks; solo se publican artículos
+con encaje técnico verificable, títulos fieles, tags pertinentes y canonical URL.
+
+```text
+IDENTIDAD: Codex
+PROYECTO: Creador de artículos (SEO TOTAL)
+ESTADO FINAL: CULMINADA — en Producción
+COMMIT: 6388899
+DEPLOYMENT: dpl_3fQRMJA1efco6nw6igGVpq4mJJS3 (READY)
+MIGRACIONES: ninguna
+TRABAJO PENDIENTE: ninguno para este alcance
+FECHA: 2026-09-21 ~00:20 EDT
+```
