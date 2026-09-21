@@ -1519,3 +1519,60 @@ reservas liberadas. Estado final: ARCHIVADA.
   Production: success; `/login` HTTP 200. Reservas liberadas el 2026-09-20 ~20:25 EDT.
 - Estado final: CULMINADA — EN PRODUCCIÓN (pendiente solo la confirmación visual de Milton del menú
   autenticado, que Claude no puede ver sin iniciar sesión). Detalle en `COORDINACION_CLAUDE_CODEX.md`.
+
+## Codex — AUDITORÍA EDITORIAL Y ENLACES — 2026-09-20
+
+- **Nombre exacto de la conversación:** `AUDITORÍA EDITORIAL Y ENLACES`. Agente: Codex.
+- Alcance: identidad editorial por cuenta, idioma y ubicaciones declaradas (prohíbe inventar
+  biografía, ubicaciones, testimonios, resultados, precios o promesas); retiro de `facebook-story`
+  del generador de oportunidades por no garantizar enlace clicable.
+- PR #187 fusionado a `main` (`b169e62`). Vercel Production `dpl_Cns4zW7VtYAbt3ypg4Yjgd4JB1cq`: READY.
+  Sin schema ni migraciones. Reservas: ninguna.
+- Estado final: CERRADA Y ARCHIVADA — EN PRODUCCIÓN. Detalle en `COORDINACION_CLAUDE_CODEX.md` y
+  `CONTROLADOR_DE_VERSIONES.md`.
+
+## Codex — LINK ACTIVO EN BLOGGING — 2026-09-20
+
+- **Nombre exacto de la conversación:** `LINK ACTIVO EN BLOGGING`. Agente: Codex.
+- Alcance: auditoría de `apps/worker/src/socialPublish.ts` y los adaptadores de Threads, X, LinkedIn,
+  Facebook Page, Pinterest, Tumblr, Bluesky, DEV.to y Blogger para confirmar que el enlace completo
+  del artículo sigue siendo clicable en cada canal. Corrección: Facebook Page usa `buildSafeCaption`
+  para no cortar el enlace con un copy largo; Facebook Page Story queda bloqueado explícitamente (la
+  Page Stories API no admite caption ni URL). Se agregó `apps/worker/src/socialLinkContract.test.ts`
+  (2 pruebas de contrato).
+- Incluye también "Incidente 2026-09-20 — LinkedIn rechazaba la versión 202505": la API de LinkedIn
+  devolvía HTTP 426 `NONEXISTENT_VERSION`; corrección: `LINKEDIN_API_VERSION` de `202505` a `202609`.
+- Ambas correcciones fueron aplicadas mediante commits directos de Milton sin PR (`71a042a` y
+  `5bd9e09`), verificados en `origin/main` en esta corrida. Sin schema ni migraciones. Reservas:
+  ninguna. Confirmación de despliegue en Vercel no registrada por escrito (ver
+  `CONTROLADOR_DE_VERSIONES.md`).
+- Estado final: CÓDIGO EN `origin/main`, DESPLIEGUE NO CONFIRMADO POR ESCRITO.
+
+## Codex — HISTORICOS REDES LORENA — 2026-09-20
+
+- **Nombre exacto de la conversación:** `HISTORICOS REDES LORENA`. Agente: Codex.
+- Alcance: borrado separado de publicaciones sociales descartadas en `/dashboard/historial`, sin
+  afectar publicaciones históricas ni sin confirmar. Archivos: `apps/web/src/app/api/social-opportunities/route.ts`
+  y `apps/web/src/app/dashboard/historial/page.tsx`.
+- PR #178 fusionado a `main` (`3633d817`): `DELETE /api/social-opportunities?scope=skipped`,
+  verificado en producción por Milton (123 publicaciones descartadas eliminadas, resto intacto).
+  Después, PR #181 fusionado a `main` (`899d7a06`) agregó el botón opcional **Borrar sin confirmar**
+  (`scope=unconfirmed`), sin borrado automático; Preview de Vercel aprobado. El encabezado suelto
+  "Trabajo activo — BOTÓN BORRAR SIN CONFIRMAR — 2026-09-20" en Coordinación es este mismo alcance,
+  no un proyecto aparte.
+- Sin cambios de esquema, migraciones ni borrado automático al desplegar. Reservas: liberadas.
+- Estado final: CERRADA. Detalle en `COORDINACION_CLAUDE_CODEX.md` y `CONTROLADOR_DE_VERSIONES.md`.
+
+## Codex — AUDITORÍA PUBLICACIÓN DEV.TO — 2026-09-20/21
+
+- **Nombre exacto de la conversación:** `AUDITORÍA PUBLICACIÓN DEV.TO`. Agente: Codex.
+- Alcance (pedido de Milton): auditar y llevar a producción el proceso de publicación en DEV.to,
+  alineándolo con las prácticas editoriales de la red. Barrera editorial para temas técnicos, tags
+  editoriales (máximo cuatro) en vez de selección mecánica de palabras, conserva `canonical_url`,
+  descripción, imagen principal y serie, agrega `User-Agent` identificable; misma validación aplicada
+  a la reparación de artículos existentes.
+- Commit `6388899` en `origin/main`. Worker productivo exitoso en GitHub Actions (`35547333149`).
+  Vercel deployment `dpl_3fQRMJA1efco6nw6igGVpq4mJJS3`: READY, alias `seototal.lasolucionweb.com` y
+  `auto-articulos-web.vercel.app`, ambos HTTP 200. Sin schema ni migraciones. Reservas: ninguna.
+- Estado final: CULMINADA — EN PRODUCCIÓN. Detalle en `COORDINACION_CLAUDE_CODEX.md` y
+  `CONTROLADOR_DE_VERSIONES.md`.
