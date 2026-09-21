@@ -3219,3 +3219,62 @@ resultado de la entrada «Versión preparada — NOMBRES EN EL MENU» (que no se
 y Production: **success**; `/login` HTTP 200. Sin migraciones. Producción autorizada por Milton el
 2026-09-20. Punto de retorno: revertir el merge `dc200d6` (solo cambia textos). Pendiente: confirmación
 visual de Milton del menú autenticado. Responsable: Claude. Estado: EN PRODUCCIÓN.
+
+## Versión desplegada — 2026-09-20 — AUDITORÍA EDITORIAL Y ENLACES
+
+PR #187 (`codex/auditoria-editorial-redes-20260920`) fusionado a `main` (merge `b169e62`). Mejora la
+identidad editorial por cuenta, idioma y ubicaciones declaradas (prohíbe inventar biografía,
+ubicaciones, testimonios, resultados, precios o promesas) y retira `facebook-story` del generador de
+oportunidades porque la API de Page Stories no garantiza un enlace clicable. Auditorías: build web OK
+(85 rutas), build worker OK, suite worker 20/20. Vercel Production: deployment
+`dpl_Cns4zW7VtYAbt3ypg4Yjgd4JB1cq`, estado **READY**, alias `https://seototal.lasolucionweb.com`. Sin
+cambios de schema ni migraciones. Responsable: Codex. Estado: EN PRODUCCIÓN.
+
+## Versión desplegada — 2026-09-20 — WIZARD CULMINA EN BING
+
+PR #170 fusionado a `main` (commit `02c96f5`). Retira Bing Webmaster Tools del wizard inicial (queda
+disponible aparte en Configuración → Indexación) y, al completar Google Search Console, muestra una
+pantalla final con dos caminos: publicar títulos propios o publicar con ayuda de la IA avanzada. Se
+actualizó el manual de usuario en el mismo lote. Vercel deployment `6iUEaDHLmhEhZLqfyiZPKvgH3vMA`
+completado; producción verificada con `/login` HTTP 200. Sin schema ni migraciones. Responsable:
+Codex. Estado: EN PRODUCCIÓN.
+
+## Versión desplegada — 2026-09-20 — HISTORICOS REDES LORENA
+
+PR #178 (`codex/historicos-redes-lorena`) fusionado a `main` (commit `3633d817`): borrado exclusivo de
+publicaciones sociales descartadas mediante `DELETE /api/social-opportunities?scope=skipped`, con
+confirmación visible en `/dashboard/historial`. Verificado en producción por Milton: se eliminaron 123
+publicaciones descartadas; las publicaciones históricas y sin confirmar quedaron intactas. Después,
+PR #181 (`codex/boton-borrar-sin-confirmar`) fusionado a `main` (commit `899d7a06`) agregó el botón
+opcional **Borrar sin confirmar** (`scope=unconfirmed`, excluye `pending`, `published` y `skipped`),
+sin ejecutar ningún borrado automático; Preview de Vercel aprobado y cambios presentes en
+`origin/main` (confirmación explícita de despliegue a Production no registrada en Coordinación para
+este segundo PR). Sin cambios de esquema ni migraciones en ninguno de los dos. Responsable: Codex.
+Estado: EN PRODUCCIÓN (PR #178 confirmado en producción; PR #181 fusionado y en `origin/main`, sin
+confirmación explícita adicional de Production).
+
+## Versión desplegada — 2026-09-20/21 — AUDITORÍA PUBLICACIÓN DEV.TO
+
+Commit `6388899` en `origin/main`: barrera editorial que rechaza publicaciones en DEV.to sin tema
+técnico o de desarrollo relevante, tags editoriales pertinentes (máximo cuatro) en lugar de selección
+mecánica de palabras, conserva `canonical_url`/descripción/imagen/serie, agrega `User-Agent`
+identificable y aplica la misma validación a la reparación de artículos existentes. Auditoría: Prisma
+generate OK, worker build OK, web typecheck/build OK, 20/20 tests worker, 44/44 tests web, 3/3 tests
+DEV.to, `git diff --check` OK, sin schema ni migraciones. Worker productivo exitoso en GitHub Actions
+(ejecución `35547333149`). Vercel deployment `dpl_3fQRMJA1efco6nw6igGVpq4mJJS3`, estado **READY**,
+alias `seototal.lasolucionweb.com` y `auto-articulos-web.vercel.app`, ambos HTTP 200. Responsable:
+Codex. Estado: EN PRODUCCIÓN.
+
+## Commits directos sin confirmación de despliegue registrada — 2026-09-20 — enlace de Facebook Page y versión de LinkedIn
+
+Dos correcciones preparadas por Codex en "Auditoría LINK ACTIVO EN BLOGGING" e "Incidente 2026-09-20 —
+LinkedIn rechazaba la versión 202505" quedaron, según sus propias entradas de Coordinación,
+"pendientes de commit/push y despliegue". Verificado en vivo contra `origin/main` (esta corrida,
+2026-09-21): ambas ya están aplicadas mediante commits directos de Milton, sin PR — `71a042a` ("fix:
+preserve clickable article links on social publishing", usa `buildSafeCaption` en Facebook Page y
+agrega `apps/worker/src/socialLinkContract.test.ts`) y `5bd9e09` ("fix: actualizar version activa de
+LinkedIn API", `LINKEDIN_API_VERSION` de `202505` a `202609`). Sin cambios de schema ni migraciones en
+ninguno de los dos. **No hay en ningún documento una confirmación explícita de que el worker/deploy
+correspondiente ya corrió en producción con estos cambios** — se deja así, sin inventar un estado de
+despliegue no confirmado por escrito. Responsable: Codex (preparación) / Milton (commit directo).
+Estado: EN `origin/main`, DESPLIEGUE NO CONFIRMADO POR ESCRITO.
