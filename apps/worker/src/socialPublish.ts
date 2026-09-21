@@ -1376,6 +1376,11 @@ export async function processNextSocialPublish(filterUserId?: string, filterArti
 
   if (!job) return false;
 
+  // Google Business Profile tiene su propio registro y lane
+  // (BusinessProfilePost). Nunca debe caer en el worker social genérico,
+  // incluso si una oportunidad antigua quedó en estado queued.
+  if (job.platform.trim().toLowerCase() === "google-business") return false;
+
   try {
     const claimed = await prisma.socialOpportunity.updateMany({
       where: { id: job.id, status: "queued" },
