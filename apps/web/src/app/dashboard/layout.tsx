@@ -194,15 +194,6 @@ export default async function DashboardLayout({
           <LogoutButton />
         </div>
       </div>
-      <p
-        className="mobile-notice notice"
-        style={{
-          margin: "0 0 16px",
-        }}
-      >
-        Esta aplicación funciona en el celular, pero se recomienda usarla
-        desde una computadora para una mejor experiencia.
-      </p>
       {blocked ? (
         <TrialBlockedScreen />
       ) : (
