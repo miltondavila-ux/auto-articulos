@@ -8398,3 +8398,103 @@ MIGRACIONES: ninguna
 TRABAJO PENDIENTE: ninguno para este alcance
 FECHA: 2026-09-21 ~00:20 EDT
 ```
+
+## Trabajo activo — CONEXIÓN CON POSTPEER — 2026-09-20
+
+Responsable: Codex. Pedido de Milton: conectar PostPeer para publicar directamente en Google
+Business Profile, reutilizando las decisiones de arquitectura de MAGO/Composio. La API vigente
+confirma conexión OAuth `googlebusiness`, `profileId` por usuario y publicación `POST /v1/posts`
+con `accountId` e `idempotencyKey`.
+
+Se añadió `MASTER_BLUEPRINT_CONEXION_POSTPEER_GBP.md`. La vía será por usuario (`OWN`, `POSTPEER`,
+`NONE`), sin reutilizar el refresh token propio de Google ni guardar un `accountId` global. La
+conexión propia de Business Profile queda intacta; PostPeer será un adaptador paralelo e inerte
+hasta prueba real, tres auditorías y autorización expresa. No se han guardado secretos, ejecutado
+migraciones, fusionado cambios ni tocado producción.
+
+### Avance — implementación inicial PostPeer
+
+- Cliente REST compartido creado con OAuth `googlebusiness`, perfiles, listado de integraciones,
+  health check, publicación multimedia e idempotencia.
+- API administrativa para guardar, verificar y eliminar la clave cifrada.
+- Modelo `PostPeerConnection` y migración añadidos; la migración queda pendiente de capitanía y
+  aplicación controlada.
+- Rutas de conectar, callback, estado y desconexión por usuario añadidas.
+- El worker puede publicar por PostPeer solo con `POSTPEER_GBP_CONSUMER_READY=true` y conexión
+  `ACTIVE`; por defecto conserva la vía propia.
+- Pruebas del cliente añadidas. `prisma`/`tsx` quedaron bloqueados sin salida en este entorno,
+  por lo que no se reportan como aprobadas; `git diff --check` sí pasa.
+
+### Verificación técnica posterior — PostPeer
+
+- Prisma Client generado y schema validado.
+- TypeScript shared, worker y web: correcto.
+- Batería worker/shared: 39/39 correcta, incluyendo 3 pruebas PostPeer.
+- Batería web: 44 correctas; 1 integración omitida por falta de base de pruebas, igual que el
+  baseline existente.
+- Build de producción web: correcto; las rutas `/api/postpeer/*` y `/dashboard/postpeer` aparecen
+  en el bundle.
+- La desconexión ahora revoca también la integración externa en PostPeer antes de marcarla localmente
+  como desconectada.
+- La bandera `POSTPEER_GBP_CONSUMER_READY` continúa en `false`; no se aplicó la migración ni se
+  desplegó producción.
+- Capitán de migración reclamado por Codex para revisar el lote PostPeer; la base remota no se toca
+  sin la configuración autorizada de conexión.
+
+### Avance actual — prueba local PostPeer con Lorena — 2026-09-21
+
+- Se leyó y obedeció este documento antes de continuar.
+- Producción no se ha modificado ni desplegado.
+- La conexión PostPeer local de Lorena está `ACTIVE` para la ficha `Seguros de Salud y Vida`.
+- Se corrigió el callback para volver a `/dashboard/configuracion/redes-sociales` y la interfaz ya
+  muestra el nombre e identificador de la ficha sin instrucciones después de conectar.
+- Se añadió el permiso por usuario `allowGoogleBusinessPublishing`, con migración inseparable:
+  `20260921123000_add_google_business_publishing_permission/migration.sql`.
+- El permiso quedó activado para Lorena únicamente en la base local; el checkbox existe en
+  Administración → Usuarios.
+- La prueba no llegó todavía a publicar porque la copia local de Lorena no contiene sus artículos
+  ni la configuración inicial completa de producción. No se deben alterar las reglas del menú para
+  ocultar ese hecho: el menú aparece automáticamente cuando esos datos están presentes.
+- Se intentó leer producción desde la interfaz administrativa; allí Lorena tiene 458 artículos.
+  No se copiaron contraseñas, tokens ni secretos. La sincronización de artículos/configuración
+  productiva queda pendiente de una vía de exportación o conexión de lectura autorizada.
+- Verificación más reciente: TypeScript web correcto y `git diff --check` correcto.
+- Auditoría local adicional completada: worker 20/20, web 44 correctas con 1 integración
+  omitida por falta de `TITLE_GENERATION_TEST_DATABASE_URL`, TypeScript web/worker/shared correcto,
+  y build web compilado correctamente.
+- El flujo de publicación de Google Business Profile fue corregido para entrar por
+  `BusinessProfilePost` y el lane específico de PostPeer, no por el worker genérico de redes.
+- Por instrucción de Milton, el trabajo queda preparado **solo en local**. No se hará push, merge,
+  migración remota ni despliegue a producción mientras otro programador esté tocando el alcance.
+- El lote quedó aislado en la rama local `codex/conexion-postpeer-gbp`; no se hizo push.
+
+### Cierre local del lote — commits separados — 2026-09-21
+
+- Base: `20696f2`; rama: `codex/conexion-postpeer-gbp`.
+- Commits locales creados, sin push:
+  - `835cdc3` — schema y migraciones PostPeer/permiso GBP.
+  - `5457851` — conexión OAuth/API/panel administrativo de PostPeer.
+  - `930843a` — permiso por usuario, UI y flujo de oportunidades GBP.
+  - `73cd37e` — lane `BusinessProfilePost` del worker con PostPeer.
+- `POSTPEER_GBP_CONSUMER_READY` permanece en `false` en `.env.example`; no se activó producción.
+- Migraciones pendientes de producción: `20260920210000_add_postpeer_connection` y
+  `20260921123000_add_google_business_publishing_permission`.
+- Riesgos restantes: el worktree contiene cambios base ya presentes en el lote; se debe revisar el
+  diff contra `20696f2` antes de cualquier PR. No se ejecutó `git push`, merge, deploy ni
+  `prisma migrate deploy`.
+- Pruebas: TypeScript web/worker/shared OK; worker 20/20; web 44 OK + 1 integración omitida por
+  falta de `TITLE_GENERATION_TEST_DATABASE_URL`; build web OK; `git diff --check` OK.
+- Condición exacta para publicar: liberar el capitán de migración, aprobar el diff/PR, aplicar las
+  dos migraciones en orden controlado, configurar la variable de producción y verificar el lane
+  PostPeer con una prueba real autorizada.
+
+### Auditoría del Reparador — 2026-09-21
+
+- Estado real comprobado: worktree `/Users/miltondavila/.codex/worktrees/b0d4/Creador de articulos`, rama `codex/conexion-postpeer-gbp`, base `20696f2` (igual a `main`); 21 grupos de cambios locales sin commit.
+- Capitán vigente confirmado por `bash scripts/migration-coordinator.sh status`: `Codex — CONEXION CON POSTPEER`, reclamado el `2026-09-21T01:07:50Z`, commit base `20696f2`. No se libera durante esta revisión.
+- Archivos del lote: `.env.example`, `packages/db/prisma/schema.prisma`, las rutas/componentes PostPeer y GBP listados por `git status`, `apps/worker/src/businessProfilePublish.ts`, `packages/shared/src/postpeer-api*`, y las dos migraciones `20260920210000_add_postpeer_connection` y `20260921123000_add_google_business_publishing_permission`.
+- No se identificaron archivos ajenos dentro de este worktree; el checkout principal `/Users/miltondavila/Creador de articulos` permanece separado y sucio por otros trabajos.
+- Integración verificada: `schema.prisma` contiene `PostPeerConnection` y `allowGoogleBusinessPublishing`; ambas migraciones están presentes. GBP entra por `BusinessProfilePost` y `processNextBusinessProfilePost`, con lane PostPeer condicionado por `POSTPEER_GBP_CONSUMER_READY`; no usa el worker social genérico.
+- Auditoría funcional/regresión: Prisma Client generado; TypeScript web/worker/shared correcto; worker 20/20; build worker correcto; build web correcto con 85/85 rutas; `git diff --check` correcto.
+- Auditoría integración/migración: pendiente por diseño. No se ejecutó `prisma migrate deploy`, `prisma db push`, push, merge ni deploy. `POSTPEER_GBP_CONSUMER_READY=false`; faltan autorización para aplicar migraciones, clave `postpeer_api_key`, configuración de producción y prueba real del piloto antes de activar.
+- Decisión: conservar el lote local aislado, no publicar ni crear commit mientras el capitán siga activo y mientras no se complete la validación de integración/migración. El worktree queda preparado para la siguiente revisión.

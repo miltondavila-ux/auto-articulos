@@ -1519,3 +1519,21 @@ reservas liberadas. Estado final: ARCHIVADA.
   Production: success; `/login` HTTP 200. Reservas liberadas el 2026-09-20 ~20:25 EDT.
 - Estado final: CULMINADA — EN PRODUCCIÓN (pendiente solo la confirmación visual de Milton del menú
   autenticado, que Claude no puede ver sin iniciar sesión). Detalle en `COORDINACION_CLAUDE_CODEX.md`.
+
+## Codex — CONEXIÓN CON POSTPEER → GOOGLE BUSINESS PROFILE — 2026-09-21
+
+- Worktree: `/Users/miltondavila/.codex/worktrees/b0d4/Creador de articulos`.
+- Rama: `codex/conexion-postpeer-gbp`; base `20696f2`.
+- Commits locales sin push: `835cdc3`, `5457851`, `930843a`, `73cd37e`.
+- Alcance: conexión PostPeer por usuario, OAuth/callback/estado/desconexión, permiso por usuario,
+  UI administrativa, oportunidad GBP y lane `BusinessProfilePost` del worker.
+- Migraciones incluidas y pendientes de producción:
+  `20260920210000_add_postpeer_connection` y
+  `20260921123000_add_google_business_publishing_permission`.
+- Variable pendiente: `POSTPEER_GBP_CONSUMER_READY=true` solo después de aprobar la prueba real.
+- Pruebas: TypeScript web/worker/shared OK; worker 20/20; web 44 OK + 1 omitida por falta de
+  `TITLE_GENERATION_TEST_DATABASE_URL`; build web OK; `git diff --check` OK.
+- Producción: sin push, sin merge, sin deploy y sin migraciones remotas.
+- Riesgo/bloqueo: capitán de migración activo y coordinación exige revisión antes de tocar producción.
+- Siguiente acción exacta: liberar coordinación, revisar diff contra `20696f2`, abrir PR, aplicar
+  migraciones controladas, configurar variable, ejecutar prueba real autorizada y verificar respuesta.
