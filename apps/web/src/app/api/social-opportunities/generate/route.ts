@@ -378,8 +378,8 @@ async function getConnectedNetworks(userId: string) {
     prisma.blueskyIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.devToIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.bloggerIntegration.findUnique({ where: { userId }, select: { id: true } }),
-    prisma.composioConnection.findFirst({ where: { userId, app: "instagram", status: "ACTIVE" }, select: { connectedAccountId: true, igAccountId: true, username: true } }),
-    prisma.composioConnection.findFirst({ where: { userId, app: "facebook", status: "ACTIVE" }, select: { connectedAccountId: true, pageId: true, pageName: true } }),
+    prisma.composioConnection.findFirst({ where: { userId, app: "instagram", status: { not: "FAILED" } }, select: { connectedAccountId: true, igAccountId: true, username: true } }),
+    prisma.composioConnection.findFirst({ where: { userId, app: "facebook", status: { not: "FAILED" } }, select: { connectedAccountId: true, pageId: true, pageName: true } }),
     prisma.user.findUnique({ where: { id: userId }, select: { role: true, email: true, name: true, firstName: true, lastName: true, businessLocations: true, contentLanguage: true, allowInstagramPublishing: true, allowLinkedInPublishing: true, allowThreadsPublishing: true, allowFacebookPublishing: true, allowPinterestPublishing: true, allowTumblrPublishing: true, allowBlueskyPublishing: true, allowDevToPublishing: true, allowBloggerPublishing: true } }),
   ]);
   const tumblrExpiresAt = await getFreshTumblrExpiry(tumblr, userId);

@@ -7,14 +7,20 @@ export async function GET() {
   try {
     const userId = await getCurrentUserId();
     if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Módulo reservado a administradores y Lorena." }, { status: 403 });
-    const [opportunities, tumblrIntegration] = await Promise.all([
+    const [opportunities, tumblrIntegration, composioConnections] = await Promise.all([
       prisma.socialOpportunity.findMany({
         where: { userId },
         orderBy: { createdAt: "desc" },
       }),
       prisma.tumblrIntegration.findUnique({ where: { userId }, select: { blogIdentifier: true } }),
+      prisma.composioConnection.findMany({ where: { userId, app: { in: ["instagram", "facebook"] }, status: { not: "FAILED" } }, select: { app: true } }),
     ]);
-    const history = opportunities.map((opportunity) => {
+    const composioApps = new Set(composioConnections.map((connection) => connection.app));
+    const history = opportunities.filter((opportunity) => {
+      if (opportunity.platform === "instagram-story" && composioApps.has("instagram")) return false;
+      if (opportunity.platform === "facebook-story" && composioApps.has("facebook")) return false;
+      return true;
+    }).map((opportunity) => {
       const tumblrPostMatch = opportunity.postId?.match(/\/post\/(\d+)(?:\/([^/?#]+))?/i);
       if (
         opportunity.status === "published" &&
