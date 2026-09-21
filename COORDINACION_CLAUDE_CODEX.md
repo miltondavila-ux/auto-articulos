@@ -8546,3 +8546,14 @@ la prueba real de integración.
   permiso por usuario, creación de `BusinessProfilePost`, lane PostPeer,
   idempotencia y estado final de publicación.
 - **Firmado:** CODEX - GPT-5 - REPARADOR DEL ARBOL PRINCIPAL.
+
+### PR separado abierto — 2026-09-21
+
+- PR: [#194](https://github.com/miltondavila-ux/auto-articulos/pull/194).
+- Rama: `codex/conexion-postpeer-gbp` → `main`; 26 archivos incluidos.
+- Estado: abierto; `Vercel Preview Comments` reporta `SUCCESS`. El estado de merge aparece
+  `DIRTY` hasta completar la revisión/checks restantes.
+- Acción realizada: se publicó únicamente la rama aislada y se abrió el PR. No se hizo merge,
+  migración ni deploy; `POSTPEER_GBP_CONSUMER_READY` continúa en `false`.
+- Siguiente acción: revisar los checks restantes y esperar aprobación del PR antes de cualquier
+  operación de producción.

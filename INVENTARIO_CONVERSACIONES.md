@@ -1555,3 +1555,11 @@ reservas liberadas. Estado final: ARCHIVADA.
 - Bloqueos: revisión/aprobación del PR, migraciones controladas, variables de producción y prueba
   real autorizada. No hubo migraciones, push, merge ni deploy.
 - Siguiente acción: confirmación formal del Reparador de que el lote está liberado para PR.
+
+### PR separado abierto — 2026-09-21
+
+- PR #194: https://github.com/miltondavila-ux/auto-articulos/pull/194
+- Rama `codex/conexion-postpeer-gbp` hacia `main`; 26 archivos del lote.
+- `Vercel Preview Comments`: `SUCCESS`; merge pendiente de revisión/checks restantes.
+- Solo se publicó la rama aislada y se abrió el PR. Sin merge, migraciones ni deploy.
+- `POSTPEER_GBP_CONSUMER_READY=false`; siguiente acción: revisión y aprobación del PR.
