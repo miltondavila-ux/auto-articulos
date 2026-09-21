@@ -112,11 +112,15 @@ async function generateAndHostImage(
  * falta el mismo bloqueo por usuario que usa queue.ts, porque esto no abre
  * ninguna sesión de Playwright contra 10minutesWebsite.
  */
-export async function processNextBusinessProfilePost(filterUserId?: string): Promise<boolean> {
+export async function processNextBusinessProfilePost(
+  filterUserId?: string,
+  filterArticleUrl?: string,
+): Promise<boolean> {
   const candidate = await prisma.title.findFirst({
     where: {
       status: "success",
       articleUrl: { not: null },
+      ...(filterArticleUrl ? { articleUrl: filterArticleUrl } : {}),
       summary: { not: null },
       businessProfilePost: null,
       run: {
@@ -207,11 +211,32 @@ export async function processNextBusinessProfilePost(filterUserId?: string): Pro
         sentAt: new Date(),
       },
     });
+    await prisma.socialOpportunity.updateMany({
+      where: { titleId: candidate.id, platform: "google-business" },
+      data: {
+        status: rejected ? "error" : "published",
+        progressPercent: 100,
+        progressStage: rejected ? "Google Business Profile rechazó la publicación" : "Publicado en Google Business Profile mediante PostPeer",
+        errorLog: rejected ? JSON.stringify(result) : null,
+        postId: (result as { id?: string; url?: string }).url || (result as { id?: string }).id || null,
+        publishedAt: rejected ? null : new Date(),
+        finishedAt: new Date(),
+      },
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     await prisma.businessProfilePost.update({
       where: { id: post.id },
       data: { status: "error", googleResponse: message },
+    });
+    await prisma.socialOpportunity.updateMany({
+      where: { titleId: candidate.id, platform: "google-business" },
+      data: {
+        status: "error",
+        errorLog: message,
+        progressStage: "Error al publicar en Google Business Profile mediante PostPeer",
+        finishedAt: new Date(),
+      },
     });
   }
 
