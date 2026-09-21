@@ -1,5 +1,6 @@
 "use client";
 
+import { MENU_NAMES } from "@/lib/menu-names";
 import {
   useEffect,
   useState,
@@ -1912,7 +1913,7 @@ export default function UsuariosPage() {
           <h2 style={h2Style}>PROMPT PUBLICACIONES PROPIAS (crear títulos con la IA)</h2>
           <p style={{ fontSize: 13, color: "#6e6e73" }}>
             Es el prompt maestro con el que la IA del sistema crea títulos cuando un usuario elige
-            &ldquo;Crear con la IA del sistema&rdquo; en Publicaciones propias. Es global y solo tú lo ves. El
+            &ldquo;Crear con la IA del sistema&rdquo; en {MENU_NAMES.propios}. Es global y solo tú lo ves. El
             sistema agrega solo las reglas de seguridad y el formato de salida (hasta 9 títulos en JSON), así que
             aquí escribes únicamente tu criterio de redacción. Mientras esté vacío, esa opción aparece desactivada
             para los usuarios.

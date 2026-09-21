@@ -1,5 +1,6 @@
 "use client";
 
+import { MENU_NAMES } from "@/lib/menu-names";
 import { useCallback, useEffect, useState } from "react";
 import ModuleIntro, { IntroP, Modulo } from "@/components/ModuleIntro";
 import Link from "next/link";
@@ -166,7 +167,7 @@ export default function PublicacionesEnCursoPage() {
         <section style={{ ...sectionStyle, textAlign: "center" }}>
           <h2 style={h2Style}>No hay ninguna ejecución en curso</h2>
           <p style={{ fontSize: 13, color: "#6e6e73" }}>
-            Ve a "Publicar" para elegir una categoría, pegar títulos e iniciar
+            Ve a "{MENU_NAMES.propios}" para elegir una categoría, pegar títulos e iniciar
             una nueva tanda.
           </p>
           <Link href="/dashboard/publicar" style={{ textDecoration: "none" }}>

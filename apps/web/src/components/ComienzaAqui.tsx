@@ -1,12 +1,13 @@
 "use client";
 
+import { MENU_NAMES } from "@/lib/menu-names";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
 const MODULES = [
-  { id: "publicar", href: "/dashboard/publicar", icon: "✍️", label: "Publica tus propios títulos", description: "Escribe tus títulos y publícalos directamente en tu página web. Ideal si estás comenzando sin registros de indexación en Google o si quieres publicar contenido propio." },
-  { id: "oportunidades", href: "/dashboard/oportunidades", icon: "🎯", label: "Publica contenido con ayuda de la IA avanzada", description: "Encuentra temas con posibilidades reales y crea artículos para tu página web." },
-  { id: "oportunidades-redes", href: "/dashboard/oportunidades-redes", icon: "📣", label: "Difunde tu contenido en blogs externos y redes sociales", description: "Lleva tus artículos publicados a microblogs, blogs externos y redes sociales en lote." },
+  { id: "publicar", href: "/dashboard/publicar", icon: "✍️", label: MENU_NAMES.propios, description: "Escribe tus títulos y publícalos directamente en tu página web. Ideal si estás comenzando sin registros de indexación en Google o si quieres publicar contenido propio." },
+  { id: "oportunidades", href: "/dashboard/oportunidades", icon: "🎯", label: MENU_NAMES.ia, description: "Encuentra temas con posibilidades reales y crea artículos para tu página web." },
+  { id: "oportunidades-redes", href: "/dashboard/oportunidades-redes", icon: "📣", label: MENU_NAMES.redes, description: "Lleva tus artículos publicados a microblogs, blogs externos y redes sociales en lote." },
   { id: "publicaciones-en-curso", href: "/dashboard/publicaciones-en-curso", icon: "⏳", label: "Progreso de las publicaciones", description: "Consulta el progreso de tus artículos y publicaciones activas." },
 ];
 

@@ -3201,3 +3201,13 @@ PAUSADO por límite de cupo/contexto de la conversación de Claude; traspaso a C
 (prompt de arranque en `PROMPT_TRASPASO_CODEX_CONEXION_COMPOSIO.md`). Detalle completo, decisiones y
 siguiente acción exacta: `COORDINACION_CLAUDE_CODEX.md` → «TRASPASO A CODEX · ESTADO VIGENTE
 2026-09-19 20:59 UTC».
+
+## Versión preparada — 2026-09-20 — NOMBRES EN EL MENU
+
+Rama `claude/nombres-en-el-menu` sobre `origin/main` `934e121`. Cambia únicamente textos de
+interfaz, manual y asistente: «Artículos propios», «Artículos creados con IA» y «Redes sociales:
+publicaciones con IA» (fuente única `apps/web/src/lib/menu-names.ts`). Sin schema, sin migraciones,
+sin cambios de datos, sin tocar `vercel.json`, middleware, autenticación ni secretos. Auditorías 1 y 2
+aprobadas en local (ver Coordinación). Producción autorizada por Milton el 2026-09-20; el commit, el
+PR, el Preview, el deployment y la verificación posterior se registran en la siguiente entrada.
+Responsable: Claude. Estado: PREPARADA.

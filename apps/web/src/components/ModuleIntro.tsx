@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MENU_NAMES } from "@/lib/menu-names";
 import type { ReactNode } from "react";
 import { sectionStyle } from "./dashboard-ui";
 
@@ -66,10 +67,10 @@ export function IntroP({ children }: { children: ReactNode }) {
 const MODULOS = {
   inicio: { etiqueta: "Inicio", href: "/dashboard" },
   "como-funciona": { etiqueta: "Cómo funciona esta aplicación", href: "/dashboard/como-funciona" },
-  publicar: { etiqueta: "Publica tus propios títulos", href: "/dashboard/publicar" },
-  oportunidades: { etiqueta: "Publica contenido con ayuda de la IA avanzada", href: "/dashboard/oportunidades" },
+  publicar: { etiqueta: MENU_NAMES.propios, href: "/dashboard/publicar" },
+  oportunidades: { etiqueta: MENU_NAMES.ia, href: "/dashboard/oportunidades" },
   "oportunidades-redes": {
-    etiqueta: "Difunde tu contenido en blogs externos y redes sociales",
+    etiqueta: MENU_NAMES.redes,
     href: "/dashboard/oportunidades-redes",
   },
   "publicaciones-en-curso": {

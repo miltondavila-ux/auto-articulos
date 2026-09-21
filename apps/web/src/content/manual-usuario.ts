@@ -1,3 +1,5 @@
+import { MENU_NAMES, MENU_NAMES_ANTERIORES as ANTES } from "../lib/menu-names";
+
 /**
  * Manual base de uso. Se revisa cuando cambia una función estable del sistema.
  * Las novedades y arreglos recientes se agregan en tiempo real desde
@@ -17,11 +19,11 @@ Cuando ingresas a tu cuenta por primera vez o aún no tienes artículos publicad
 3. **Paso 2 (Sincronizar categorías):** Descarga en vivo las categorías reales de tu web para clasificar tus artículos. Mientras corre verás una **barra de progreso con las etapas** (En cola → Entrando a tu plataforma → Guardando categorías), un cronómetro y un **Detalle del proceso** desplegable que registra con hora exacta qué fue pasando: cuándo se envió la solicitud, cuándo un procesador la tomó y cómo terminó. Si algo falla, ahí aparece el motivo real. Puede tardar varios minutos según la cola de trabajo; la pantalla se actualiza sola y no hace falta recargar ni volver a pulsar. Verás lo mismo si sincronizas desde Configuración.
 4. **Paso 3 (Idioma de redacción):** Confirma el idioma principal en el que la Inteligencia Artificial redactará tus contenidos.
 5. **Paso 4 (Google Search Console):** Google Search Console le dice a la plataforma qué está buscando de verdad la gente que llega a tu sitio en Google, para que la Inteligencia Artificial elija y escriba sobre esos temas reales en vez de adivinar — es obligatorio, sin esta conexión no se pueden posicionar tus artículos. Abre Search Console en una pestaña contigua de tu navegador para comprobar que esté activo con la cuenta de Google dueña de tu web, y luego conéctalo mediante Google OAuth seleccionando tu sitio.
-6. **Meta final:** Al completar los 4 pasos ves una pantalla de "¡Felicitaciones!" con acceso directo a publicar contenido con ayuda de la IA avanzada o a publicar un artículo. Esa pantalla se queda visible durante toda esa visita — no desaparece de golpe apenas terminas el último paso. En tu siguiente visita a Inicio, ya con todo listo, entras directo al panel de métricas de rendimiento.
+6. **Meta final:** Al completar los 4 pasos ves una pantalla de "¡Felicitaciones!" con acceso directo a **${MENU_NAMES.ia}** o a **${MENU_NAMES.propios}**. Esa pantalla se queda visible durante toda esa visita — no desaparece de golpe apenas terminas el último paso. En tu siguiente visita a Inicio, ya con todo listo, entras directo al panel de métricas de rendimiento.
 
-Después del Paso 4, el Asistente te confirma que ya estás listo para publicar y muestra dos opciones: colocar tus propios títulos o publicar usando la IA avanzada. Bing Webmaster Tools es opcional y se conecta, si lo deseas, desde Configuración → Indexación; no forma parte del Asistente.
+Después del Paso 4, el Asistente te confirma que ya estás listo para publicar y muestra dos opciones: **${MENU_NAMES.propios}** o **${MENU_NAMES.ia}**. Bing Webmaster Tools es opcional y se conecta, si lo deseas, desde Configuración → Indexación; no forma parte del Asistente.
 
-También puedes volver a abrir el Asistente en cualquier momento desde **Configuración** (/dashboard/configuracion/inicial); si ya completaste los 4 pasos, esa pantalla no vuelve a mostrar el asistente, solo una confirmación corta con acceso directo a **Publica contenido con ayuda de la IA avanzada**.
+También puedes volver a abrir el Asistente en cualquier momento desde **Configuración** (/dashboard/configuracion/inicial); si ya completaste los 4 pasos, esa pantalla no vuelve a mostrar el asistente, solo una confirmación corta con acceso directo a **${MENU_NAMES.ia}**.
 
 ## Inicio
 
@@ -29,7 +31,7 @@ Ruta: /dashboard
 
 Inicio es tu centro de operaciones:
 - **Para cuentas nuevas (sin artículos aún):** Muestra de forma exclusiva el Asistente de Configuración Inicial, sin menú ni accesos directos, para que completes tu puesta a punto sin distracciones.
-- **Para cuentas con artículos publicados:** Muestra el panel de métricas de rendimiento (artículos publicados hoy, en el mes, límites y gráfico de actividad), el menú superior completo y cuatro accesos directos numerados (01-04) a **Publica tus propios títulos**, **Publica contenido con ayuda de la IA avanzada**, **Difunde tu contenido en blogs externos y redes sociales** y el resto de accesos disponibles en el menú.
+- **Para cuentas con artículos publicados:** Muestra el panel de métricas de rendimiento (artículos publicados hoy, en el mes, límites y gráfico de actividad), el menú superior completo y cuatro accesos directos numerados (01-04) a **${MENU_NAMES.propios}**, **${MENU_NAMES.ia}**, **${MENU_NAMES.redes}** y el resto de accesos disponibles en el menú.
 - Desde el menú superior tienes acceso a: Cómo funciona esta aplicación, Publicaciones y Configuración. Historial está dentro de Publicaciones y Actualizaciones dentro de Configuración.
 
 ## Cada módulo se explica solo
@@ -40,19 +42,21 @@ Dentro de esas explicaciones, el nombre de cualquier módulo aparece en MAYÚSCU
 
 ## El menú
 
-El menú superior tiene, en este orden: **Inicio**, **Cómo funciona esta aplicación**, **Publicaciones** y **Configuración**. Dentro de **Publicaciones** están tus títulos, el contenido inteligente, la difusión en blogs externos y redes sociales, el progreso y el historial. Dentro de **Configuración** están la configuración general y las actualizaciones. Los administradores ven además **Administración**, que también se despliega y contiene **Usuarios** (/dashboard/usuarios) y **Composio** (/dashboard/composio).
+El menú superior tiene, en este orden: **Inicio**, **Cómo funciona esta aplicación**, **Publicaciones** y **Configuración**. Dentro de **Publicaciones** están **${MENU_NAMES.propios}**, **${MENU_NAMES.ia}**, **${MENU_NAMES.redes}**, el progreso y el historial. Dentro de **Configuración** están la configuración general y las actualizaciones. Los administradores ven además **Administración**, que también se despliega y contiene **Usuarios** (/dashboard/usuarios) y **Composio** (/dashboard/composio).
 
 **Publicaciones** no es una pantalla: es un grupo que se despliega. Dentro están cinco accesos relacionados con publicar y revisar tus resultados:
 
-- **Publica tus propios títulos** (/dashboard/publicar): escribe tus títulos y publícalos directamente en tu página web. Es la opción recomendada si estás comenzando y todavía no tienes registros de indexación en Google, o si quieres publicar contenido propio.
-- **Publica contenido con ayuda de la IA avanzada** (/dashboard/oportunidades): SEO TOTAL analiza Google, Bing, Analytics y otras herramientas para encontrar temas con posibilidades reales y ayudarte a crear artículos para tu página web.
-- **Difunde tu contenido en blogs externos y redes sociales** (/dashboard/oportunidades-redes): lleva tus artículos ya publicados a microblogs, blogs externos y redes sociales en lote, y crea tu avatar de autoridad en internet.
+- **${MENU_NAMES.propios}** (/dashboard/publicar): escribe tus títulos y publícalos directamente en tu página web. Es la opción recomendada si estás comenzando y todavía no tienes registros de indexación en Google, o si quieres publicar contenido propio.
+- **${MENU_NAMES.ia}** (/dashboard/oportunidades): SEO TOTAL analiza Google, Bing, Analytics y otras herramientas para encontrar temas con posibilidades reales y ayudarte a crear artículos para tu página web.
+- **${MENU_NAMES.redes}** (/dashboard/oportunidades-redes): lleva tus artículos ya publicados a microblogs, blogs externos y redes sociales en lote, y crea tu avatar de autoridad en internet.
 - **Progreso de las publicaciones** (/dashboard/publicaciones-en-curso): consulta qué artículos se están generando, publicando o esperando. Este acceso permanece en el menú.
 - **Historial** (/dashboard/historial): revisa las publicaciones anteriores, sus resultados, errores e intentos.
 
 En computadora, Publicaciones se abre al pulsarlo y se cierra al elegir una opción, al pulsar fuera o con la tecla Escape. En teléfono y tableta no se despliega: las cinco opciones aparecen listadas debajo del título Publicaciones.
 
-En el menú, los tres primeros accesos aparecen numerados como «1) Publica tus propios títulos», «2) Publica contenido con ayuda de la IA avanzada» y «3) Difunde tu contenido en blogs externos y redes sociales», para reflejar el orden recomendado del flujo de trabajo.
+En el menú, los tres primeros accesos aparecen numerados como «1) ${MENU_NAMES.propios}», «2) ${MENU_NAMES.ia}» y «3) ${MENU_NAMES.redes}», para reflejar el orden recomendado del flujo de trabajo.
+
+Nombres anteriores: si una novedad antigua o una explicación vieja usa otro nombre, se refiere a la misma opción. **${MENU_NAMES.propios}** se llamó antes «${ANTES.propios[0]}» o «${ANTES.propios[1]}»; **${MENU_NAMES.ia}** se llamó «${ANTES.ia[0]}» u «${ANTES.ia[1]}»; y **${MENU_NAMES.redes}** se llamó «${ANTES.redes[0]}» u «${ANTES.redes[1]}». Al responder, usa siempre el nombre actual.
 
 Si el administrador te oculta algún módulo, simplemente no aparece en el menú. Si te oculta los cuatro, el grupo Publicaciones desaparece entero.
 
@@ -141,11 +145,11 @@ Puedes elegir tu idioma habitual de redacción, agregar una firma al final de lo
 
 Consejo: escribe instrucciones de imagen sencillas y concretas; por ejemplo, el estilo visual, colores o tipo de público. Si las dejas vacías, se usa el estilo predeterminado.
 
-## Publicar artículos
+## ${MENU_NAMES.propios}
 
 Ruta: /dashboard/publicar
 
-Usa Publicar para convertir tus títulos en artículos. Los títulos los puedes poner de dos maneras, y las dos llegan al mismo lugar: la caja **Títulos**.
+Usa **${MENU_NAMES.propios}** para convertir tus títulos en artículos. Los títulos los puedes poner de dos maneras, y las dos llegan al mismo lugar: la caja **Títulos**.
 
 1. Elige una categoría. Es la sección de tu sitio donde se publicarán los artículos.
 2. Elige el idioma del lote. Solo afecta ese lote; no modifica tu configuración general.
@@ -170,9 +174,9 @@ Solo puede haber una ejecución activa a la vez. Si ya hay una, abre Progreso de
 
 Ruta: /dashboard/publicaciones-en-curso
 
-Esta pantalla muestra el avance de la ejecución actual. Úsala para saber si los artículos continúan procesándose. Si no hay una ejecución activa, puedes volver a Publicar para iniciar una nueva.
+Esta pantalla muestra el avance de la ejecución actual. Úsala para saber si los artículos continúan procesándose. Si no hay una ejecución activa, puedes volver a **${MENU_NAMES.propios}** para iniciar una nueva.
 
-## Publica contenido con ayuda de la IA avanzada
+## ${MENU_NAMES.ia}
 
 Ruta: /dashboard/oportunidades
 
@@ -192,7 +196,7 @@ Nada se publica sin que tú lo mandes. Las sugerencias ayudan a decidir, pero la
 
 **Publicar en lote mixto de varias categorías a la vez:** cada título tiene una casilla de selección. Puedes marcar títulos de distintas categorías al mismo tiempo; en cuanto marcas alguno aparece el botón verde "Publicar selección" con un contador, que agrupa automáticamente por categoría y publica solo lo que elegiste, respetando los mismos cupos de siempre. Los títulos que no marques quedan sin tocar en el contenido inteligente.
 
-## Difunde tu contenido en blogs externos y redes sociales
+## ${MENU_NAMES.redes}
 
 **Este módulo está en prueba.** Todavía no está disponible para todas las cuentas: se está activando poco a poco. Si no aparece en tu menú, no es que te falte algo por configurar.
 
@@ -227,8 +231,8 @@ También explica por qué las redes sociales cuentan para el posicionamiento: qu
 Lo explica en tres pasos:
 
 1. **Configura tu cuenta.** Es lo primero y lo único que no se puede saltar. Si no estás seguro de haberlo dejado todo listo, entra en Configuración y revísalo. Si algo no queda claro, la burbuja de ayuda está en la esquina de todas las pantallas.
-2. **Publica tus artículos.** Hay dos caminos y puedes usar los dos: publicar tus propios títulos dentro del cupo dinámico de tu cuenta, o dejar que el sistema decida por ti desde **Publica contenido con ayuda de la IA avanzada**, donde consulta Google Search Console y Bing. Cuando la inteligencia artificial haya decidido, publicas de uno en uno o por lotes según el saldo diario, mensual y por lote disponible.
-3. **Lleva lo publicado a las redes.** Desde Difunde tu contenido en blogs externos y redes sociales, los artículos más relevantes pasan a tus redes de forma repartida y equilibrada, sin parecer spam.
+2. **Publica tus artículos.** Hay dos caminos y puedes usar los dos: publicar tus propios títulos dentro del cupo dinámico de tu cuenta, o dejar que el sistema decida por ti desde **${MENU_NAMES.ia}**, donde consulta Google Search Console y Bing. Cuando la inteligencia artificial haya decidido, publicas de uno en uno o por lotes según el saldo diario, mensual y por lote disponible.
+3. **Lleva lo publicado a las redes.** Desde ${MENU_NAMES.redes}, los artículos más relevantes pasan a tus redes de forma repartida y equilibrada, sin parecer spam.
 
 Cierra explicando para qué sirve todo esto: posicionarte con autoridad en internet. Aparecer en los resultados de la inteligencia artificial, de Google y de Bing es lo más importante que le puede pasar a tu negocio en internet.
 
@@ -265,7 +269,7 @@ Ruta: /dashboard/configuracion/indexacion
 3. El sitemap se detecta automáticamente cuando es posible. Si no se encuentra, escribe su URL y guarda la configuración.
 4. Puedes pulsar **Enviar sitemap ahora** para un envío inmediato. Después, SEO TOTAL lo envía automáticamente cada noche.
 
-Google Search Console permite usar Publica contenido con ayuda de la IA avanzada, consultar el estado de indexación y enviar el sitemap. Si no ves tu sitio en la lista, revisa que la misma cuenta de Google sea propietaria o usuaria autorizada de esa propiedad.
+Google Search Console permite usar ${MENU_NAMES.ia}, consultar el estado de indexación y enviar el sitemap. Si no ves tu sitio en la lista, revisa que la misma cuenta de Google sea propietaria o usuaria autorizada de esa propiedad.
 
 ### Bing Webmaster Tools
 
@@ -300,7 +304,7 @@ Paso a paso para usarlo:
 2. En "¿En dónde están tus clientes?" escribe las ciudades o países de tus clientes reales, separados por comas.
 3. En "¿En dónde está tu negocio?" escribe las ciudades donde operas o vendes, separadas por comas.
 4. Presiona "Guardar ubicaciones".
-5. Ve a Publica contenido con ayuda de la IA avanzada. Si ya tenés propuestas pendientes de antes, publícalas o elimínalas primero (el sistema no deja analizar de nuevo con pendientes sin resolver).
+5. Ve a ${MENU_NAMES.ia}. Si ya tenés propuestas pendientes de antes, publícalas o elimínalas primero (el sistema no deja analizar de nuevo con pendientes sin resolver).
 6. Presiona "Analizar contenido" (o "Actualizar análisis" si ya corriste uno antes).
 7. Revisa los resultados: los títulos geolocalizados aparecen mezclados con el resto de las propuestas, organizados por categoría, combinando explícitamente una ubicación de cliente con una de negocio (ej. "si vivo en Colombia").
 
@@ -326,7 +330,7 @@ Ruta: /dashboard/historial
 
 Historial agrupa las ejecuciones por categoría y conserva los resultados de publicación, errores, reintentos, indexación y redes cuando están disponibles. Puedes borrar el historial terminado si ya no lo necesitas; esa acción no se puede deshacer y no cancela un lote que esté en curso.
 
-## Difunde tu contenido en blogs externos y redes sociales
+## ${MENU_NAMES.redes}
 
 Ruta: /dashboard/oportunidades-redes
 
@@ -343,7 +347,7 @@ La plataforma cuenta con un diseño minimalista y limpio en blanco impecable, si
 
 ## Pre-Validación Inteligente antes de Publicar
 
-Tanto en **Publica tus propios títulos** (/dashboard/publicar) como en **Publica contenido con ayuda de la IA avanzada** (/dashboard/oportunidades), el sistema cuenta con un panel de protección preventiva (**PreValidationGuard**):
+Tanto en **${MENU_NAMES.propios}** (/dashboard/publicar) como en **${MENU_NAMES.ia}** (/dashboard/oportunidades), el sistema cuenta con un panel de protección preventiva (**PreValidationGuard**):
 - Si falta algún requisito previo (credenciales de la plataforma, categorías sincronizadas, idioma de redacción o Search Console), la plataforma te muestra una tarjeta clara con un checklist interactivo indicando exactamente qué falta y un botón directo para resolverlo.
 - **Créditos de imagen:** Si ya recibiste créditos, pulsa **Ya recibí mis créditos** para intentar publicar de inmediato. Esa confirmación es solo para el intento actual: si refrescas la pantalla o vuelves más tarde, el aviso puede reaparecer hasta que una publicación real confirme que ya hay créditos disponibles. El estado real de tu cuenta solo cambia automáticamente cuando una creación de artículo comprueba, tras agotar los reintentos, que 10minutesWebsite realmente se quedó sin créditos — nunca por errores pasajeros o visitas a la pantalla.
 
@@ -356,7 +360,7 @@ Solo los administradores tienen acceso a este módulo:
 - **Filtros por Tipo de Cuenta:** Permite filtrar instantáneamente entre *Todos los tipos*, *Usuarios comunes*, *Administradores* y usuarios en periodo de *Free Trial (Prueba Gratuita)*, combinándose con la barra de búsqueda en tiempo real.
 - **Visibilidad de Módulos:** Permite ocultar o activar módulos específicos de forma individual por usuario o de manera global para mantenimiento.
 - **Prompts:** además de los estilos de redacción de artículos, incluye el prompt del generador de imágenes con IA para redes sociales — es global (aplica a todas las cuentas), se edita ahí mismo y no necesita ningún cambio de código para actualizarse.
-- **PROMPT PUBLICACIONES PROPIAS:** en la misma pestaña Prompts está el prompt maestro con el que la IA crea títulos cuando un usuario elige "Crear con la IA del sistema" en Publicar. Solo el administrador lo ve y lo edita; los usuarios no. Mientras esté vacío, esa opción aparece desactivada. Debajo de la caja se listan las variables que se pueden usar (por ejemplo, la del cliente tipo, el tema o las ubicaciones) y, al guardar, se avisa si escribiste alguna que no existe.
+- **PROMPT PUBLICACIONES PROPIAS:** en la misma pestaña Prompts está el prompt maestro con el que la IA crea títulos cuando un usuario elige "Crear con la IA del sistema" en **${MENU_NAMES.propios}**. Solo el administrador lo ve y lo edita; los usuarios no. Mientras esté vacío, esa opción aparece desactivada. Debajo de la caja se listan las variables que se pueden usar (por ejemplo, la del cliente tipo, el tema o las ubicaciones) y, al guardar, se avisa si escribiste alguna que no existe.
 - **Tarjetas de resumen clicables:** en la pestaña "Accesos", las 5 tarjetas de arriba (Usuarios totales, En prueba, Activos, Conectados ahora, Publicaciones totales) no son solo informativas: al hacer clic en cualquiera, la lista de abajo se filtra automáticamente por ese criterio.
 - **Composio (/dashboard/composio):** conecta la plataforma con Composio, un servicio que más adelante permitirá a los clientes conectar sus cuentas de Google y Meta sin las restricciones de una app en prueba. Por ahora el módulo solo prepara la conexión: se pega la clave de API de proyecto de Composio (se comprueba con Composio antes de guardarse, se guarda cifrada y nunca se vuelve a mostrar completa), se registra el "auth config" de cada app (Search Console, Analytics, Facebook e Instagram, cada uno se comprueba antes de guardarse) y se pueden consultar las cuentas conectadas en el proyecto. Todavía no cambia la forma en que se conectan los clientes: sus conexiones actuales siguen funcionando igual. Al eliminar la clave también se eliminan los auth configs. También muestra **Vía de conexión por app**: una tabla con Search Console, Analytics, Facebook e Instagram, el interruptor Propia / Composio de cada una y cuántos clientes están conectados por cada vía. Por ahora el interruptor está bloqueado en «Propia» y no cambia nada para los clientes; el cambio de vía se activará en una fase posterior. La pantalla **Conexiones** (Configuración → Conexiones, /dashboard/configuracion/conexiones) reúne en un solo lugar todas las conexiones, con dos botones: **ANALÍTICAS** (Search Console, Analytics y Bing) y **DIFUSIÓN** (Business Profile, Facebook, Instagram, Threads, LinkedIn, Pinterest, Bluesky, Tumblr, Blogger y Dev.to). Es opt-in: aparece solo para los administradores y para las personas a las que se les ponga «Habilitado» en Administración → Usuarios → módulos («Conexión por Composio»); las demás siguen con «Indexación y SEO» y «Redes Sociales» sin cambios. Dentro de cada red conectable por Composio (Search Console, Analytics, Facebook e Instagram) se puede conectar, elegir y aprobar el sitio, la propiedad, la Página o la cuenta, probar la conexión y desconectarla; sus conexiones actuales no cambian. Composio no publica Stories de Facebook; las de Instagram están en prueba.
 
@@ -374,9 +378,9 @@ Si aparece el aviso de créditos de imagen, significa que la pantalla todavía n
 
 Si un título falla y el mensaje explica que la categoría ya no existe en tu sitio (por ejemplo, porque se borró o se renombró desde la última vez que sincronizaste), entra a Configuración → Cuenta y pulsa "Sincronizar categorías ahora" para refrescar la lista, y luego vuelve a intentar ese título.
 
-### No veo Publica contenido con ayuda de la IA avanzada
+### No veo ${MENU_NAMES.ia}
 
-En Configuración conecta Google Search Console, selecciona una propiedad, sincroniza categorías y guarda un idioma de redacción. Luego vuelve a **Publica contenido con ayuda de la IA avanzada** para analizar.
+En Configuración conecta Google Search Console, selecciona una propiedad, sincroniza categorías y guarda un idioma de redacción. Luego vuelve a **${MENU_NAMES.ia}** para analizar.
 
 ### No se publica en una red social
 

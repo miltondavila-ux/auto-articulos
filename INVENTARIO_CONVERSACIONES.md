@@ -1499,3 +1499,20 @@ reservas liberadas. Estado final: ARCHIVADA.
   `/login` HTTP 200.
 - Sin schema, migración ni cambios de datos. Reservas: ninguna.
 - Estado final: CERRADA, DOCUMENTADA, ARCHIVADA Y EN PRODUCCIÓN.
+
+## Claude — NOMBRES EN EL MENU — 2026-09-20
+
+- **Nombre exacto de la conversación:** `NOMBRES EN EL MENU`. Agente: Claude (Sonnet 5).
+- Alcance (pedido de Milton): cambiar tres nombres del menú «Publicaciones» y propagarlos de
+  forma dinámica a pantallas, botones, manual de usuario, asistente e instrucciones:
+  «Publica tus propios títulos» → **Artículos propios**; «Publica contenido con ayuda de la IA
+  avanzada» → **Artículos creados con IA**; «Difunde tu contenido en blogs externos y redes
+  sociales» → **Redes sociales: publicaciones con IA**. La numeración 1) 2) 3) del menú se conserva.
+- Rama/worktree: `claude/nombres-en-el-menu` / `.worktrees/nombres-en-el-menu`. Base `origin/main` `934e121`.
+- Reservas (17 archivos + 2 nuevos, todas de `apps/web/src`): `lib/menu-names.ts` (nuevo, fuente
+  única), `lib/menu-names.test.ts` (nuevo), `lib/modules.ts`, `content/manual-usuario.ts`,
+  `components/{DashboardNav,ModuleIntro,ComienzaAqui,FloatingAssistant,BusinessProfileSection,OnboardingWizard}.tsx`,
+  `app/dashboard/{page,como-funciona,historial,oportunidades,oportunidades-redes,publicar,publicaciones-en-curso,usuarios}/page.tsx`
+  y `app/dashboard/configuracion/inicial/page.tsx`. Sin schema, sin migraciones, sin cambios de datos.
+- Producción: autorizada por Milton en el chat el 2026-09-20 («ESPERO QUE LO COLOQUES EN PRODUCCION»).
+- Estado: ACTIVO — verificación local completa; siguen PR, Preview, Producción y verificación posterior.

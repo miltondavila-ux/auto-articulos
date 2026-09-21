@@ -1,5 +1,6 @@
 "use client";
 
+import { MENU_NAMES } from "@/lib/menu-names";
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 
 const STORAGE_KEY = "auto-articulos:floating-assistant:v1";
@@ -7,7 +8,7 @@ const MAX_STORED_MESSAGES = 30;
 const quickQuestions = [
   "¿Cómo publico un artículo?",
   "¿Cómo conecto Google?",
-  "¿Dónde publico contenido con ayuda de la IA avanzada?",
+  `¿Dónde uso «${MENU_NAMES.ia}»?`,
 ];
 
 type ConversationMessage = {

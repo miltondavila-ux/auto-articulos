@@ -1,5 +1,6 @@
 "use client";
 
+import { MENU_NAMES } from "@/lib/menu-names";
 import { useEffect, useState, useCallback, useRef, type FormEvent } from "react";
 import Link from "next/link";
 import {
@@ -1800,7 +1801,7 @@ export default function OnboardingWizard({
                       }}
                     >
                       <span style={{ fontSize: 12, letterSpacing: "0.08em", opacity: 0.7 }}>01</span>
-                      <span>Publicar con IA avanzada →</span>
+                      <span>{MENU_NAMES.ia} →</span>
                       <span style={{ fontSize: 12, fontWeight: 500, opacity: 0.88 }}>Descubre temas que tu audiencia busca</span>
                     </Link>
                     <Link
@@ -1820,7 +1821,7 @@ export default function OnboardingWizard({
                       }}
                     >
                       <span style={{ fontSize: 12, letterSpacing: "0.08em", color: "#6e6e73" }}>02</span>
-                      <span>Publicar mis títulos</span>
+                      <span>{MENU_NAMES.propios}</span>
                       <span style={{ fontSize: 12, fontWeight: 500, color: "#6e6e73" }}>Escribe los títulos que ya tienes</span>
                     </Link>
                   </div>
