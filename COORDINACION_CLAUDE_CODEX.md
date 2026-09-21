@@ -8565,3 +8565,11 @@ Responsable: Claude (tarea programada diaria de propagación).
 - La primera versión desplegada no ocultó las Stories existentes en la sesión de Lorena, aunque la tarjeta de Conexiones mostraba Instagram y Facebook conectados con selección aprobada.
 - Se endureció la regla: cualquier registro Composio de Instagram/Facebook que no esté en estado `FAILED` bloquea esas Stories, y el filtrado se realiza también en `api/social-opportunities` del servidor. No se borran oportunidades ni se afecta el post normal.
 - Verificación local: TypeScript web y `git diff --check` correctos. Queda pendiente el último Preview y despliegue; después se libera la reserva de estos archivos.
+
+### CIERRE 2026-09-21 — validación Composio y liberación de reservas
+
+- PR #192 (`bab1405`) desplegado en Producción con Preview correcto y rutas de salud verificadas: `/login` 200, `/privacidad` 200 y `/api/me` 401.
+- Validación final con Lorena: el post normal de Instagram se publicó correctamente por Composio en `@segurosdesaludyvidausa`; el historial conserva el enlace de Instagram y la imagen generada.
+- Validación final de seguridad de formatos: con Instagram y Facebook conectados por Composio, el listado de oportunidades muestra posts normales, pero no `INSTAGRAM-STORY` ni `FACEBOOK-STORY`. Las oportunidades antiguas no se borran; se filtran del listado y no se generan nuevas.
+- Bluesky, DEV.to, Threads, LinkedIn, Pinterest, Tumblr y Blogger mantienen sus conexiones propias; X continúa fuera.
+- Reservas liberadas: no quedan archivos reservados ni activaciones pendientes para esta tarea. No se cambiaron cuentas, contraseñas, schema, migraciones ni flags globales.
