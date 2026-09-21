@@ -8398,3 +8398,152 @@ MIGRACIONES: ninguna
 TRABAJO PENDIENTE: ninguno para este alcance
 FECHA: 2026-09-21 ~00:20 EDT
 ```
+
+## RECUPERACIÓN DE CONTENIDO PERDIDO EN MERGE — 2026-09-21 (tarea programada diaria de propagación)
+
+Al revisar qué se agregó a este documento desde la corrida anterior, se detectó que el merge
+`f020fa6` (PR #173, `codex/composio-2b2-search-console` → `main`, 2026-09-20 18:53 EDT) resolvió el
+conflicto en `COORDINACION_CLAUDE_CODEX.md` quedándose **por completo** con la versión de la rama
+(`git diff` contra ese lado: 0 líneas) y descartando en silencio, sin conflicto visible para quien
+fusionó, todo lo que `main` tenía y la rama no: las entradas "Codex — RECOLECCIÓN GSC PARA CUENTAS
+NUEVAS / FLOR MENDEZ #94 — 2026-09-20", "Codex — BOTÓN DE FORZAR MÁS PUBLICACIONES / FLOR MENDEZ
+#94 — 2026-09-20" y el cierre completo de la corrida diaria de propagación del día anterior, "Claude
+(tarea programada diaria de propagación) — 2026-09-20" (66 líneas, commit original `5820917`).
+Detalle técnico completo de cómo se detectó (comparación `git diff <merge> <cada padre>` para
+aislar qué lado ganó) en `REPARADOR_DEL_ARBOL_PRINCIPAL.md`, sección "Merge de PR #173 descartó por
+completo el lado de `main` en `COORDINACION_CLAUDE_CODEX.md` — 2026-09-21".
+
+Las dos primeras entradas perdidas ya fueron re-escritas por commits posteriores independientes
+(`3b8438b` y otro commit directo) y hoy siguen presentes en este documento — no hacía falta
+restituirlas. La tercera, el cierre de la propagación del 2026-09-20, nadie más tenía motivo para
+volver a escribirla, así que se restituye a continuación **tal cual el commit original la escribió,
+sin resumir ni editar una palabra**. Esto es una recuperación, no contenido nuevo de esta tarea de
+propagación.
+
+### Recuperado de `5820917` (2026-09-20 09:08 UTC) — "Claude (tarea programada diaria de propagación) — 2026-09-20"
+
+Punto de partida: la última entrada firmada por esta misma tarea era
+"Claude (tarea programada diaria de propagación) — 2026-09-19" (commit
+`18941fd`). Se revisó el diff de `COORDINACION_CLAUDE_CODEX.md` entre ese
+commit y `origin/main` actual (`381ea34`): 16 commits nuevos tocaron este
+documento, correspondientes a la entrada "Codex — NUMERACIÓN DEL MENÚ DE
+PUBLICACIONES — 2026-09-19" (con su cierre de producción), al cierre de
+"CREACION DE PUBLICACIONES PROPIAS — 2026-09-18", y a todo el bloque
+"CONEXION COMPOSIO — TRASPASO A CODEX" con sus "Avance …" (2b-1, UX-1
+etapa 1, piloto habilitado, resolvedor, aviso "no desconectes", adaptador
+de Search Console) hasta el bloque consolidado "ESTADO VIGENTE 2026-09-19
+20:59 UTC".
+
+Verificación por documento:
+
+- `INVENTARIO_CONVERSACIONES.md`: Parte B ya contenía, palabra por palabra,
+  el registro completo de CONEXION COMPOSIO hasta la actualización de las
+  20:59 UTC (probablemente escrito en el mismo lote que los commits
+  `docs(coordinacion)` de este rango); no hacía falta agregar nada ahí. Sí
+  faltaba el nombre exacto de la conversación nueva "Codex — NUMERACIÓN
+  DEL MENÚ DE PUBLICACIONES — 2026-09-19" (formato `[AGENTE] - [NOMBRE DEL
+  PROBLEMA]`): se agregó una entrada nueva en Parte B con su alcance,
+  commit `deaa263` y estado CERRADA Y ARCHIVADA. Parte A: verificado con
+  `git worktree list` (worktree único, este propio) y no hay ninguna rama
+  de este rango sin fusionar contra `origin/main` (`claude/composio-*`
+  todas fusionadas; `deaa263` es un commit directo, sin rama propia); no
+  correspondía agregar ninguna fila de reserva activa.
+- `CONTROLADOR_DE_VERSIONES.md`: tenía las "Versión preparada" de
+  resolvedor, aviso y adaptador de Search Console, pero le faltaban sus
+  confirmaciones de despliegue (PR #160 `4501637`, PR #161 `91ecb91`, PR
+  #162 `51f5789`) y el registro del commit directo `deaa263` (numeración
+  del menú, deployment `dpl_HXvhGDn4WeYem7RUBPWz3VN4okqF` READY). Se
+  agregaron las cuatro entradas "Versión desplegada" correspondientes, más
+  un párrafo de estado consolidado del proyecto CONEXION COMPOSIO al
+  2026-09-19 20:59 UTC, sin tocar ninguna entrada existente.
+- `apps/web/src/content/manual-usuario.ts`: la pantalla "Conexiones"
+  (UX-1) ya estaba descrita en detalle (el commit del PR #157 dice
+  explícitamente "manual actualizado" y así es). Se detectó un cambio
+  visible NO reflejado: el menú "Publicaciones" ahora numera sus tres
+  primeras opciones como "1) Publica tus propios títulos", "2) Publica
+  contenido con ayuda de la IA avanzada" y "3) Difunde tu contenido en
+  blogs externos y redes sociales" (confirmado leyendo
+  `apps/web/src/components/DashboardNav.tsx` actual), mientras el manual
+  las describía sin el número. Se agregó una oración nueva aclarando la
+  numeración, sin tocar el texto existente.
+- `TO-DO.md`: se agregó un ítem nuevo en "Pendientes" (con fecha
+  20/9/2026 y origen citado) para la tarea suelta "actualizar la política
+  de privacidad" que el bloque "TRASPASO A CODEX · ESTADO VIGENTE" marca
+  como "tarea aparte pendiente" en su sección de verificaciones abiertas;
+  no estaba registrada en ningún otro documento.
+- `REPARADOR_DEL_ARBOL_PRINCIPAL.md`: ninguna entrada del rango describe
+  un árbol de git enredado, ramas pisadas o commits mezclados (los merges
+  del rango son fusiones normales de PRs y una sincronización de
+  `origin/main` dentro de una rama de trabajo); no hacía falta agregar
+  nada.
+
+No hubo ninguna acción destructiva, migración ni deploy en esta corrida.
+No quedó ninguna duda nueva para Milton (la única duda del rango, la
+política de privacidad, ya estaba marcada como pendiente por el propio
+proyecto y se reflejó en `TO-DO.md`).
+
+Responsable: Claude (tarea programada diaria de propagación).
+
+## Claude (tarea programada diaria de propagación) — 2026-09-21
+
+Punto de partida: la última entrada firmada por esta misma tarea, visible en este documento, era la
+del 2026-09-19 (commit `18941fd`) — la del 2026-09-20 existió (commit `5820917`) pero fue borrada por
+el merge de PR #173 antes de esta corrida; ver recuperación arriba. Se revisó el diff completo de
+`COORDINACION_CLAUDE_CODEX.md` entre `5820917` y `origin/main` actual (`1910112`): 294 líneas
+agregadas y 58 borradas (la mayor parte de las borradas es exactamente el destrozo de PR #173, ya
+tratado arriba). El contenido nuevo real corresponde a: "Cierre de auditoría editorial y enlaces —
+Codex — 2026-09-20" (PR #187), "Auditoría LINK ACTIVO EN BLOGGING — Codex — 2026-09-20" (fix
+`71a042a`), "Cierre Codex — WIZARD CULMINA EN BING — 2026-09-20" (PR #170), "Incidente 2026-09-20 —
+LinkedIn rechazaba la versión 202505" (fix `5bd9e09`), el trabajo y cierre de "HISTORICOS REDES
+LORENA" (PR #178 y #181) más el encabezado suelto "BOTÓN BORRAR SIN CONFIRMAR" (mismo alcance, ya
+cubierto por el cierre), la serie de "Avance …" de CONEXION COMPOSIO 2b-2 (sitemap, rutas web,
+prevalidación, estados de configuración, piloto aislado por usuario, ajuste de lenguaje de conexión —
+todo con `COMPOSIO_CONSUMER_READY.google_search_console` en `false`, sin producción), y "Cierre —
+AUDITORÍA PUBLICACIÓN DEV.TO — 2026-09-20/21" (commit `6388899`).
+
+Verificación por documento:
+
+- `CONTROLADOR_DE_VERSIONES.md`: le faltaban las confirmaciones de despliegue de PR #187
+  (`dpl_Cns4zW7VtYAbt3ypg4Yjgd4JB1cq`, READY), PR #170 (`02c96f5`, `6iUEaDHLmhEhZLqfyiZPKvgH3vMA`),
+  PR #178 (`3633d817`, verificado en producción) y PR #181 (`899d7a06`, Preview aprobado), y el
+  commit `6388899` de AUDITORÍA PUBLICACIÓN DEV.TO (`dpl_3fQRMJA1efco6nw6igGVpq4mJJS3`, READY). Se
+  agregaron las cinco entradas correspondientes. También se agregó una entrada para los commits
+  directos `71a042a` (enlace de Facebook Page) y `5bd9e09` (versión de LinkedIn): ambos están
+  verificados en `origin/main` por git, pero ninguna entrada de este documento registra su
+  confirmación de despliegue en Vercel — se dejó anotado como pendiente de verificar, sin inventar un
+  estado de producción que no está confirmado por escrito en ningún lado.
+- `INVENTARIO_CONVERSACIONES.md`: Parte B ya tenía "WIZARD CULMINA EN BING", "RECOLECCIÓN GSC PARA
+  CUENTAS NUEVAS / FLOR MENDEZ #94" y "NOMBRES EN EL MENU" (agregadas por sus propios commits); le
+  faltaban los nombres exactos de "AUDITORÍA EDITORIAL Y ENLACES", "LINK ACTIVO EN BLOGGING",
+  "HISTORICOS REDES LORENA" y "AUDITORÍA PUBLICACIÓN DEV.TO". Se agregaron las cuatro. Parte A: sin
+  cambios — verificado con `git branch -a` y `git worktree list` que ninguna de las ramas de este
+  rango (`codex/composio-2b2-search-console`, `codex/historicos-redes-lorena`,
+  `codex/boton-borrar-sin-confirmar`, `codex/auditoria-editorial-redes-20260920`,
+  `codex/link-activo-blogging`, `codex/forzar-analisis-flor-94`) sigue viva sin fusionar; todas ya
+  son ancestro de `origin/main` y no hay worktree local abierto sobre ninguna.
+- `apps/web/src/content/manual-usuario.ts`: el retiro de Bing del wizard y los nombres nuevos del
+  menú ya estaban reflejados (verificado leyendo el archivo actual). Se detectó un cambio visible NO
+  reflejado: `/dashboard/historial` ahora tiene, además de "Borrar el historial terminado", un botón
+  separado para borrar solo las publicaciones sociales descartadas y otro opcional para borrar las
+  publicaciones sociales sin confirmar (PR #178 y #181, confirmado leyendo
+  `apps/web/src/app/dashboard/historial/page.tsx` actual). Se agregó una oración nueva en la sección
+  de Historial describiendo estos dos botones, sin tocar el texto existente.
+- `TO-DO.md`: no se agregó nada. No se encontró ninguna idea suelta nueva sin ejecutar en el rango
+  (la política de privacidad ya estaba en `TO-DO.md` desde la corrida anterior; el resto del rango
+  son avances o cierres de proyectos activos, no ideas para más adelante).
+- `REPARADOR_DEL_ARBOL_PRINCIPAL.md`: se agregó la entrada sobre el merge `f020fa6` (PR #173) que
+  descartó el lado de `main` en este documento — ver recuperación arriba y detalle en ese archivo.
+
+**Duda para Milton (sin resolver, solo señalada):** la rama `codex/unify-connection-interface` se
+fusionó al menos 7 veces contra `main` en este rango (PR #174, #175, #176, #179, #186, #188 y #189,
+la última el 2026-09-20 20:40 EDT) tocando componentes de conexión (`ComposioConnect.tsx`,
+`ThreadsSection.tsx` y otros de la pantalla Conexiones), pero ninguna de esas fusiones tiene una sola
+línea de registro en este documento — a diferencia de cualquier otro proyecto de este rango. Son
+cambios de interfaz dentro de un módulo ya gateado (opt-in, solo administradores o usuarios con el
+módulo habilitado), así que no se tocó nada del manual por esto, pero queda señalado porque rompe el
+patrón de documentación que este mismo protocolo exige.
+
+No hubo ninguna acción destructiva, migración ni deploy ejecutados por esta tarea. La única duda
+nueva para Milton es la señalada arriba sobre `codex/unify-connection-interface`.
+
+Responsable: Claude (tarea programada diaria de propagación).
