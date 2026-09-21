@@ -442,15 +442,10 @@ export default function OportunidadesRedesPage() {
                 ] as const).map(([key, platform, label]) => {
                 if (!activeNetworks[key]) return null;
                 const connected = connectedNetworks[key];
-                // Pedido explícito de Milton (30/8/2026): si la red no está
-                // configurada (conectada), no debe aparecer acá — antes se
-                // mostraba igual como botón gris "· Configurar", lo cual
-                // confundía con el problema real de Tumblr (se desconecta
-                // sola con el tiempo y volvía a aparecer como "Configurar").
-                if (!connected) return null;
                 const busy = Boolean(generatingNetwork);
-                return <button key={key} type="button" onClick={() => handleGenerate(platform)} disabled={busy} className="secondary" style={disabledStyle({ ...secondaryButtonStyle, ...uniformButtonSize, width: "100%", border: "1px solid #d2d2d7", background: "#ffffff", color: "#1d1d1f", justifyContent: "center" }, busy)}>
-                  {generatingNetwork === platform ? "Analizando..." : "✓ " + label + " · Crear oportunidad"}
+                const unavailable = !connected;
+                return <button key={key} type="button" onClick={() => handleGenerate(platform)} disabled={busy || unavailable} className="secondary" style={disabledStyle({ ...secondaryButtonStyle, ...uniformButtonSize, width: "100%", border: "1px solid #d2d2d7", background: unavailable ? "#f5f5f7" : "#ffffff", color: unavailable ? "#86868b" : "#1d1d1f", justifyContent: "center" }, busy || unavailable)}>
+                  {generatingNetwork === platform ? "Analizando..." : unavailable ? "· Configurar " + label : "✓ " + label + " · Crear oportunidad"}
                 </button>;
                 })}
                 </div>

@@ -251,7 +251,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
         )}
       </section>
       )}
-      {embedded && message && (
+      {(embedded || inline) && message && (
         <p role="status" style={{ fontSize: 14, margin: "8px 0 0", color: message.ok ? "#1a7f37" : "#c62828" }}>
           {message.text}
         </p>
@@ -289,7 +289,15 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
 
               {connection.status === "ACTIVE" && connection.selection && !choice && (
                 <p style={{ fontSize: 14, margin: "8px 0" }}>
-                  <strong>{inline ? "Propiedad seleccionada:" : "Usando:"}</strong> {connection.selection}
+                  <strong>
+                    {inline
+                      ? connection.app === "facebook"
+                        ? "Página de Facebook seleccionada:"
+                        : connection.app === "instagram"
+                          ? "Cuenta de Instagram seleccionada:"
+                          : "Propiedad seleccionada:"
+                      : "Usando:"}
+                  </strong>{" "}{connection.selection}
                 </p>
               )}
 
