@@ -1544,3 +1544,14 @@ reservas liberadas. Estado final: ARCHIVADA.
 - Motivo: auditoría local completada; lote PostPeer/GBP listo para PR; no se aplicaron migraciones ni se hizo deploy.
 - Estado final: **LISTO PARA REVISIÓN DEL REPARADOR**.
 - No se ejecutaron migraciones, push, merge ni deploy.
+
+### Revisión coordinada posterior a la liberación — 2026-09-21
+
+- Rama/worktree revisados: `codex/conexion-postpeer-gbp` en
+  `/Users/miltondavila/.codex/worktrees/b0d4/Creador de articulos`; limpio.
+- Commits: `835cdc3`, `5457851`, `930843a`, `73cd37e`, `5a980f0`, `bf2bc8a`.
+- Resultado: sin conflictos técnicos detectados; el lote contiene exclusivamente PostPeer/GBP
+  y documentación asociada. `POSTPEER_GBP_CONSUMER_READY=false`.
+- Bloqueos: revisión/aprobación del PR, migraciones controladas, variables de producción y prueba
+  real autorizada. No hubo migraciones, push, merge ni deploy.
+- Siguiente acción: confirmación formal del Reparador de que el lote está liberado para PR.

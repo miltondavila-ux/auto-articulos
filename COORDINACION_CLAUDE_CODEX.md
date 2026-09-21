@@ -8504,3 +8504,21 @@ migraciones, fusionado cambios ni tocado producción.
 - La capitanía fue liberada mediante `bash scripts/migration-coordinator.sh release`.
 - Motivo registrado: `Auditoría local completada; lote PostPeer/GBP listo para PR. No se aplicaron migraciones ni se hizo deploy.`
 - El lote queda **LISTO PARA REVISIÓN DEL REPARADOR**. No se ejecutaron migraciones, push, merge ni deploy.
+
+### Revisión coordinada posterior a la liberación — 2026-09-21
+
+- **Estado de rama/worktree:** `codex/conexion-postpeer-gbp` en
+  `/Users/miltondavila/.codex/worktrees/b0d4/Creador de articulos`; worktree limpio.
+- **Commits revisados:** `835cdc3`, `5457851`, `930843a`, `73cd37e`, `5a980f0` y `bf2bc8a`.
+- **Archivos revisados:** schema Prisma y sus dos migraciones PostPeer/GBP, cliente y rutas
+  PostPeer, permiso y UI de GBP, lane `BusinessProfilePost` del worker, `.env.example` y los
+  documentos de coordinación.
+- **Resultado:** no se identifican conflictos técnicos ni archivos ajenos al lote. El flujo
+  GBP usa `BusinessProfilePost`/`processNextBusinessProfilePost`; `POSTPEER_GBP_CONSUMER_READY`
+  permanece en `false`.
+- **Bloqueos exactos:** faltan revisión/aprobación del PR, aplicación controlada de las dos
+  migraciones, variable/clave de producción y prueba real autorizada. No se ejecutaron
+  migraciones, push, merge ni deploy.
+- **Siguiente acción:** Reparador debe revisar el diff y confirmar formalmente: **LOTE POSTPEER
+  LIBERADO PARA PR**.
+- **Firmado:** Codex — CONEXION CON POSTPEER.
