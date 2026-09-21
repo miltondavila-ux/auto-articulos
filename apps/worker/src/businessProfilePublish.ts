@@ -3,6 +3,7 @@ import {
   decryptSecret,
   getGoogleAccessToken,
   createLocalPost,
+  createPostPeerPost,
 } from "@auto-articulos/shared";
 import { put } from "@vercel/blob";
 import { buildImagePrompt } from "./imagePrompt";
@@ -16,6 +17,7 @@ const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
 // (corregido en la misma conversación: no son 100 caracteres, son más de
 // 1000; 1500 es el límite práctico que usa Google en su propia interfaz).
 const MAX_GBP_SUMMARY_LEN = 1500;
+const POSTPEER_GBP_READY = process.env.POSTPEER_GBP_CONSUMER_READY === "true";
 
 /**
  * Pide a la IA una versión corta y adaptada del resumen del artículo,
@@ -120,7 +122,10 @@ export async function processNextBusinessProfilePost(filterUserId?: string): Pro
       run: {
         ...(filterUserId ? { userId: filterUserId } : {}),
         user: {
-          businessProfileIntegration: { locationName: { not: null } },
+          OR: [
+            { businessProfileIntegration: { locationName: { not: null } } },
+            ...(POSTPEER_GBP_READY ? [{ postPeerConnection: { status: "ACTIVE" as const } }] : []),
+          ],
         },
       },
     },
@@ -137,7 +142,7 @@ export async function processNextBusinessProfilePost(filterUserId?: string): Pro
   if (!candidate) return false;
 
   const integration = candidate.run.user.businessProfileIntegration;
-  if (!integration?.locationName) return false;
+  if (!integration?.locationName && !POSTPEER_GBP_READY) return false;
 
   let post;
   try {
@@ -162,16 +167,36 @@ export async function processNextBusinessProfilePost(filterUserId?: string): Pro
       () => null,
     );
 
-    const accessToken = await getGoogleAccessToken(
-      decryptSecret(integration.encryptedRefreshToken),
-    );
-    const result = await createLocalPost(accessToken, integration.locationName, {
-      summary: gbpSummary,
-      ctaUrl: candidate.articleUrl ?? "",
-      imageUrl: imageUrl ?? undefined,
-    });
+    const postPeerConnection = POSTPEER_GBP_READY
+      ? await prisma.postPeerConnection.findUnique({ where: { userId: candidate.run.userId } })
+      : null;
+    let result: unknown;
+    if (POSTPEER_GBP_READY) {
+      if (postPeerConnection?.status !== "ACTIVE") {
+        throw new Error("La conexión de PostPeer con Google Business Profile requiere reconexión.");
+      }
+      const setting = await prisma.systemSetting.findUnique({ where: { key: "postpeer_api_key" } });
+      if (!setting) throw new Error("PostPeer no está configurado.");
+      const postPeerApiKey = decryptSecret(setting.encryptedValue);
+      result = await createPostPeerPost(postPeerApiKey, {
+        accountId: postPeerConnection.accountId,
+        content: `${gbpSummary}\n\n${candidate.articleUrl ?? ""}`,
+        imageUrl: imageUrl ?? undefined,
+        idempotencyKey: `business-profile-${candidate.id}`,
+      });
+    } else {
+      if (!integration?.locationName) throw new Error("Google Business Profile no está conectado.");
+      const accessToken = await getGoogleAccessToken(
+        decryptSecret(integration.encryptedRefreshToken),
+      );
+      result = await createLocalPost(accessToken, integration.locationName, {
+        summary: gbpSummary,
+        ctaUrl: candidate.articleUrl ?? "",
+        imageUrl: imageUrl ?? undefined,
+      });
+    }
 
-    const rejected = result.state === "REJECTED";
+    const rejected = (result as { state?: string; status?: string }).state === "REJECTED" || (result as { status?: string }).status === "failed";
     await prisma.businessProfilePost.update({
       where: { id: post.id },
       data: {
