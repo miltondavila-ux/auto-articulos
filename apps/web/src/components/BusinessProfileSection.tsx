@@ -27,8 +27,16 @@ type BusinessProfileData = {
   error?: string;
 };
 
+type PostPeerStatus = {
+  status: "PENDING" | "ACTIVE" | "DISCONNECTED" | "ERROR";
+  accountId?: string | null;
+  accountName?: string | null;
+  lastError?: string | null;
+};
+
 export default function BusinessProfileSection() {
   const [data, setData] = useState<BusinessProfileData | null>(null);
+  const [postPeer, setPostPeer] = useState<PostPeerStatus | null>(null);
   const [selected, setSelected] = useState("");
   const [saving, setSaving] = useState(false);
   const [loadingLocations, setLoadingLocations] = useState(false);
@@ -39,11 +47,14 @@ export default function BusinessProfileSection() {
     if (loadingLocations) return;
     setLoadingLocations(true);
     try {
-      const res = await fetch(
-        searchLocations ? "/api/business-profile?locations=1" : "/api/business-profile",
-      );
+      const [res, postPeerRes] = await Promise.all([
+        fetch(searchLocations ? "/api/business-profile?locations=1" : "/api/business-profile"),
+        fetch("/api/postpeer/status"),
+      ]);
       const value = await res.json();
+      const postPeerValue = await postPeerRes.json().catch(() => null);
       setData(value);
+      setPostPeer(postPeerRes.ok && postPeerValue?.status ? postPeerValue : null);
       setRetrySeconds(typeof value.retryAfterSeconds === "number" ? value.retryAfterSeconds : null);
     } finally {
       setLoadingLocations(false);
@@ -93,6 +104,15 @@ export default function BusinessProfileSection() {
     void load();
   }
 
+  async function disconnectPostPeer() {
+    await fetch("/api/postpeer/disconnect", { method: "POST" });
+    setMessage("Conexión de Google Business Profile desconectada.");
+    void load();
+  }
+
+  const postPeerConnected = postPeer?.status === "ACTIVE";
+  const connected = Boolean(data?.connected || postPeerConnected);
+
   return (
     <section style={sectionStyle}>
       <div
@@ -105,7 +125,7 @@ export default function BusinessProfileSection() {
         }}
       >
         <h2 style={{ ...h2Style, margin: 0 }}>Google Business Profile</h2>
-        {!data?.connected && (
+        {!connected && (
           <span
             style={{
               color: "#6e6e73",
@@ -121,20 +141,20 @@ export default function BusinessProfileSection() {
       <p className="lead-copy" style={{ margin: "0 0 14px 0" }}>
         Cuando el sistema detecte una oportunidad para Google Business Profile en {MENU_NAMES.redes}, preparará una publicación con el formato permitido por Google, imagen y enlace al artículo. No se publicará cada artículo automáticamente.
       </p>
-      {!data?.connected ? (
+      {!connected ? (
         <div>
-          <button type="button" onClick={() => { window.location.href = "/api/business-profile/connect"; }} className="secondary" style={secondaryButtonStyle}>
+          <button type="button" onClick={() => { window.location.href = "/api/postpeer/connect"; }} className="secondary" style={secondaryButtonStyle}>
             Conectar Google Business Profile
           </button>
           <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>
-            Conecta la cuenta de Google que administra tu Perfil de Negocio.
+            Conecta la cuenta de Google que administra tu Perfil de Negocio. La conexión la gestiona PostPeer.
           </p>
           <PasosAntesDeConectar
             red="Google Business Profile"
             extra={<li style={{ marginBottom: 8 }}><strong>Comprueba que tu ficha está verificada por Google.</strong>{" "}Una ficha sin verificar no puede recibir publicaciones.</li>}
           />
         </div>
-      ) : data.needsLocation ? (
+      ) : data?.connected && data.needsLocation ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {data.locationsLoaded && data.locations && data.locations.length > 0 ? (
             <>
@@ -166,8 +186,19 @@ export default function BusinessProfileSection() {
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <p style={{ fontSize: 13, color: "#1d1d1f", margin: 0 }}>✓ Conectado a {data.locationTitle ?? data.locationName}</p>
-          <div><button onClick={disconnect} className="secondary" style={secondaryButtonStyle}>Desconectar</button></div>
+          <p style={{ fontSize: 13, color: "#1d1d1f", margin: 0 }}>
+            ✓ Conectado a {postPeerConnected ? (postPeer?.accountName ?? "Google Business Profile mediante PostPeer") : (data?.locationTitle ?? data?.locationName)}
+          </p>
+          {postPeerConnected && postPeer?.accountId && (
+            <p style={{ fontSize: 12, color: "#6e6e73", margin: 0 }}>
+              Identificador de Google Business Profile: {postPeer.accountId}
+            </p>
+          )}
+          <div>
+            <button onClick={postPeerConnected ? disconnectPostPeer : disconnect} className="secondary" style={secondaryButtonStyle}>
+              Desconectar
+            </button>
+          </div>
         </div>
       )}
       {message && <p style={{ fontSize: 13, color: "#1d1d1f", marginTop: 10 }}>{message}</p>}

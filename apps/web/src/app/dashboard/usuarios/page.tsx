@@ -54,6 +54,7 @@ interface UserRow {
   allowBlueskyPublishing: boolean;
   allowDevToPublishing: boolean;
   allowBloggerPublishing: boolean;
+  allowGoogleBusinessPublishing: boolean;
   aiImageGenerationEnabled: boolean;
   numeroCuenta?: number;
   moduleOverrides?: Record<string, "inherit" | "enabled" | "disabled">;
@@ -2046,6 +2047,7 @@ function UserCard({
   const [permBluesky, setPermBluesky] = useState(Boolean(user.allowBlueskyPublishing));
   const [permDevTo, setPermDevTo] = useState(Boolean(user.allowDevToPublishing));
   const [permBlogger, setPermBlogger] = useState(Boolean(user.allowBloggerPublishing));
+  const [permGoogleBusiness, setPermGoogleBusiness] = useState(Boolean(user.allowGoogleBusinessPublishing));
   const [permAiImageGeneration, setPermAiImageGeneration] = useState(
     Boolean(user.aiImageGenerationEnabled),
   );
@@ -2088,6 +2090,7 @@ function UserCard({
     setPermBluesky(Boolean(user.allowBlueskyPublishing));
     setPermDevTo(Boolean(user.allowDevToPublishing));
     setPermBlogger(Boolean(user.allowBloggerPublishing));
+    setPermGoogleBusiness(Boolean(user.allowGoogleBusinessPublishing));
     setPermAiImageGeneration(Boolean(user.aiImageGenerationEnabled));
     setPermIsTrialSignup(Boolean(user.isTrialSignup));
     setPermTrialUnlocked(Boolean(user.trialUnlocked));
@@ -2105,6 +2108,7 @@ function UserCard({
     permBluesky !== Boolean(user.allowBlueskyPublishing) ||
     permDevTo !== Boolean(user.allowDevToPublishing) ||
     permBlogger !== Boolean(user.allowBloggerPublishing) ||
+    permGoogleBusiness !== Boolean(user.allowGoogleBusinessPublishing) ||
     permAiImageGeneration !== Boolean(user.aiImageGenerationEnabled) ||
     permIsTrialSignup !== Boolean(user.isTrialSignup) ||
     permTrialUnlocked !== Boolean(user.trialUnlocked) ||
@@ -2301,6 +2305,7 @@ function UserCard({
           allowBlueskyPublishing: permBluesky,
           allowDevToPublishing: permDevTo,
           allowBloggerPublishing: permBlogger,
+          allowGoogleBusinessPublishing: permGoogleBusiness,
           aiImageGenerationEnabled: permAiImageGeneration,
           isTrialSignup: permIsTrialSignup,
           trialUnlocked: permTrialUnlocked,
@@ -2761,6 +2766,10 @@ function UserCard({
               <label style={permissionLabelStyle}>
                 <input type="checkbox" checked={permBlogger} onChange={(e) => setPermBlogger(e.target.checked)} disabled={savingPermissions} style={{ accentColor: "#1d1d1f", width: 16, height: 16 }} />
                 Conectar y publicar artículos en Blogger
+              </label>
+              <label style={permissionLabelStyle}>
+                <input type="checkbox" checked={permGoogleBusiness} onChange={(e) => setPermGoogleBusiness(e.target.checked)} disabled={savingPermissions} style={{ accentColor: "#4285f4", width: 16, height: 16 }} />
+                Conectar y publicar en Google Business Profile
               </label>
               <label style={permissionLabelStyle}>
                 <input
