@@ -68,6 +68,7 @@ const ADMIN_GROUP: TabGroup = {
   items: [
     { href: "/dashboard/usuarios", label: "Usuarios" },
     { href: "/dashboard/composio", label: "Composio" },
+    { href: "/dashboard/postpeer", label: "PostPeer" },
   ],
 };
 
