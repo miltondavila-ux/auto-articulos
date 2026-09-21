@@ -13,6 +13,7 @@ export default function GoogleAnalyticsSection() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const composioOnly = true;
+  const [showLegacy, setShowLegacy] = useState(false);
 
   async function load() {
     const response = await fetch("/api/google-analytics");
@@ -46,6 +47,17 @@ export default function GoogleAnalyticsSection() {
     {composioOnly ? <>
       <p className="lead-copy" style={{ margin: "0 0 16px" }}>Conexión administrada desde esta tarjeta. Elige aquí la propiedad que usará SEO TOTAL.</p>
       <ComposioConnect inline apps={["google_analytics"]} />
+      <div style={{ marginTop: 16, borderTop: "1px solid #e5e5ea", paddingTop: 12 }}>
+        <button type="button" onClick={() => setShowLegacy((value) => !value)} className="link-button" style={{ border: 0, background: "transparent", padding: 0, color: "#6e6e73", fontSize: 12 }}>
+          {showLegacy ? "Ocultar conexión anterior" : "Mostrar conexión anterior"}
+        </button>
+        {showLegacy && (
+          <div style={{ marginTop: 10, padding: 12, borderRadius: 10, background: "#fff4e5", color: "#8a4b08", fontSize: 13 }}>
+            <strong>{data?.connected ? "Conexión anterior conectada" : "No hay conexión anterior"}</strong>
+            {data?.connected && <button type="button" onClick={disconnect} className="secondary" style={{ display: "block", marginTop: 8, color: "#c62828" }}>Desconectar conexión anterior</button>}
+          </div>
+        )}
+      </div>
     </> : <>
     <p className="lead-copy" style={{ margin: "0 0 16px" }}>Conecta GA4 para que SEO TOTAL use el rendimiento real de tu contenido al crear artículos inteligentes y publicaciones para redes sociales. Solo leeremos tus datos y nunca modificaremos tu cuenta.</p>
     <div style={{ background: "#f5f5f7", border: "1px solid #e5e5ea", borderRadius: 8, padding: "12px 14px", marginBottom: 14, fontSize: 13, lineHeight: 1.5 }}>

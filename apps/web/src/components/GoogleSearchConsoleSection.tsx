@@ -28,6 +28,7 @@ export default function GoogleSearchConsoleSection() {
   const [sendingSitemap, setSendingSitemap] = useState(false);
   const [editingSitemap, setEditingSitemap] = useState(false);
   const composioOnly = true;
+  const [showLegacy, setShowLegacy] = useState(false);
 
   async function load() {
     const res = await fetch("/api/search-integrations/google");
@@ -89,6 +90,17 @@ export default function GoogleSearchConsoleSection() {
             Conexión administrada desde esta tarjeta. Elige aquí la propiedad que usará SEO TOTAL.
           </p>
           <ComposioConnect inline apps={["google_search_console"]} />
+          <div style={{ marginTop: 16, borderTop: "1px solid #e5e5ea", paddingTop: 12 }}>
+            <button type="button" onClick={() => setShowLegacy((value) => !value)} className="link-button" style={{ border: 0, background: "transparent", padding: 0, color: "#6e6e73", fontSize: 12 }}>
+              {showLegacy ? "Ocultar conexión anterior" : "Mostrar conexión anterior"}
+            </button>
+            {showLegacy && (
+              <div style={{ marginTop: 10, padding: 12, borderRadius: 10, background: "#fff4e5", color: "#8a4b08", fontSize: 13 }}>
+                <strong>{data?.connected ? "Conexión anterior conectada" : "No hay conexión anterior"}</strong>
+                {data?.connected && <button type="button" onClick={disconnect} className="secondary" style={{ display: "block", marginTop: 8, color: "#c62828" }}>Desconectar conexión anterior</button>}
+              </div>
+            )}
+          </div>
         </>
       ) : (
       <>
