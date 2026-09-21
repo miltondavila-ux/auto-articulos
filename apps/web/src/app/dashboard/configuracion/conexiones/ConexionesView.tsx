@@ -15,6 +15,8 @@ import BlueskySection from "@/components/BlueskySection";
 import DevToSection from "@/components/DevToSection";
 import BloggerSection from "@/components/BloggerSection";
 import PasosAntesDeConectar from "@/components/PasosAntesDeConectar";
+import ComposioConnect from "@/components/ComposioConnect";
+import { h2Style, sectionStyle } from "@/components/dashboard-ui";
 
 type Vista = "analiticas" | "difusion";
 
@@ -147,7 +149,11 @@ export default function ConexionesView() {
         <div style={columna}>
           <BusinessProfileSection />
           {(permisos.threads || permisos.instagram || permisos.facebook || isAdmin || tieneModuloRedes) && (
-            <ThreadsSection allowThreads={puede("threads")} allowInstagram={puede("instagram")} allowFacebook={puede("facebook")} isAdmin={isAdmin} />
+            <>
+            <ThreadsSection allowThreads={puede("threads")} allowInstagram={false} allowFacebook={false} isAdmin={isAdmin} showComposioSocial={false} />
+            {puede("instagram") && <section style={sectionStyle}><h2 style={h2Style}>Instagram</h2><p className="lead-copy">Publica imágenes, carruseles y Reels en tu cuenta profesional mediante Composio.</p><ComposioConnect inline apps={["instagram"]} /></section>}
+            {puede("facebook") && <section style={sectionStyle}><h2 style={h2Style}>Facebook</h2><p className="lead-copy">Publica contenido en la Página de Facebook seleccionada mediante Composio.</p><ComposioConnect inline apps={["facebook"]} /></section>}
+            </>
           )}
           {puede("linkedin") && <LinkedInSection allowed={puede("linkedin")} />}
           {puede("pinterest") && <PinterestSection allowed={puede("pinterest")} />}

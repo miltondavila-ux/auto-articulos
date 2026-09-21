@@ -45,9 +45,10 @@ interface ThreadsSectionProps {
   allowInstagram?: boolean;
   allowFacebook?: boolean;
   isAdmin?: boolean;
+  showComposioSocial?: boolean;
 }
 
-export default function ThreadsSection({ allowThreads = true, allowInstagram = true, allowFacebook = false, isAdmin = false }: ThreadsSectionProps) {
+export default function ThreadsSection({ allowThreads = true, allowInstagram = true, allowFacebook = false, isAdmin = false, showComposioSocial = true }: ThreadsSectionProps) {
   const [metaSettings, setMetaSettings] = useState<ApiSettings | null>(null);
   const [threadsSettings, setThreadsSettings] = useState<ApiSettings | null>(null);
   const [threadsConnection, setThreadsConnection] = useState<ThreadsConnection | null>(null);
@@ -250,7 +251,7 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
 
   return (
     <section style={sectionStyle}>
-      <h2 style={{ ...h2Style, margin: 0 }}>Instagram, Facebook y Threads</h2>
+      <h2 style={{ ...h2Style, margin: 0 }}>Threads</h2>
       <p className="lead-copy" style={{ fontSize: 13, margin: "4px 0 0" }}>
         Conecta aquí tus cuentas para que el sistema pueda publicar en ellas.
       </p>
@@ -323,7 +324,7 @@ export default function ThreadsSection({ allowThreads = true, allowInstagram = t
       )}
 
       {message && <p style={{ color: "#1d1d1f", fontSize: 13, marginTop: 10 }}>{message}</p>}
-      <ComposioConnect inline showInactiveActions apps={["facebook", "instagram"]} />
+      {showComposioSocial && <ComposioConnect inline showInactiveActions apps={["facebook", "instagram"]} />}
     </section>
   );
 }
