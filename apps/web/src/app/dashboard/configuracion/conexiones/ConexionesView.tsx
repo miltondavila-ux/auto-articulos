@@ -49,7 +49,7 @@ const columna: CSSProperties = { display: "flex", flexDirection: "column", gap: 
  * las conexiones alternativas se resuelven por debajo, sin duplicar tarjetas en la interfaz.
  */
 export default function ConexionesView() {
-  const [vista, setVista] = useState<Vista>("analiticas");
+  const [vista, setVista] = useState<Vista | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [modulosDeshabilitados, setModulosDeshabilitados] = useState<string[]>([]);
   const [permisos, setPermisos] = useState<Record<string, boolean>>({});
@@ -88,6 +88,25 @@ export default function ConexionesView() {
   // Misma regla que Redes Sociales: el módulo de redes abierto para esta cuenta da acceso.
   const tieneModuloRedes = !modulosDeshabilitados.includes("oportunidades-redes");
   const puede = (red: string) => isAdmin || tieneModuloRedes || Boolean(permisos[red]);
+
+  if (vista === null) {
+    const tarjetas = [
+      { n: "01", title: "Google Search Console", text: "Conecta tu sitio para enviar el sitemap y revisar la indexación.", view: "analiticas" as Vista },
+      { n: "02", title: "Google Analytics", text: "Consulta las visitas y el rendimiento real de tus contenidos.", view: "analiticas" as Vista },
+      { n: "03", title: "Bing Webmaster Tools", text: "Ayuda a que tus artículos aparezcan también en Bing.", view: "analiticas" as Vista },
+      { n: "04", title: "Instagram", text: "Publica imágenes, carruseles y Reels mediante Composio.", view: "difusion" as Vista },
+      { n: "05", title: "Facebook", text: "Publica en la Página de Facebook seleccionada mediante Composio.", view: "difusion" as Vista },
+      { n: "06", title: "Threads", text: "Conecta Threads con su integración propia.", view: "difusion" as Vista },
+      { n: "07", title: "Otras redes", text: "LinkedIn, Pinterest, Tumblr, Bluesky, DEV.to y Blogger.", view: "difusion" as Vista },
+    ];
+    return <div>
+      <ModuleIntro titulo="Conexiones"><IntroP>Elige qué conexión quieres configurar. Cada tarjeta abre un espacio dedicado, con instrucciones y acciones solo de ese segmento.</IntroP></ModuleIntro>
+      <ConfiguracionSubNav />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, marginTop: 20 }}>
+        {tarjetas.map((card) => <button key={card.n} type="button" onClick={() => elegir(card.view)} style={{ textAlign: "left", minHeight: 170, padding: 24, background: "#fff", border: "1px solid #e5e5ea", borderRadius: 12, color: "#1d1d1f", cursor: "pointer" }}><span style={{ color: "#6e6e73", fontSize: 13 }}>{card.n}</span><h2 style={{ fontSize: 18, margin: "22px 0 10px" }}>{card.title}</h2><p style={{ color: "#6e6e73", fontSize: 13, lineHeight: 1.5, margin: 0 }}>{card.text}</p></button>)}
+      </div>
+    </div>;
+  }
 
   return (
     <div>
