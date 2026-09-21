@@ -54,6 +54,10 @@ export async function POST(request: NextRequest) {
     }
 
     const opp = existing;
+    // Algunas oportunidades antiguas fueron persistidas con el valor visible
+    // normalizado en mayúsculas. La comparación canónica evita enviarlas al
+    // worker social genérico: GBP siempre debe entrar por BusinessProfilePost.
+    const platform = opp.platform.trim().toLowerCase();
 
     if (!opp.articleUrl) {
       return NextResponse.json(
@@ -64,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     // Google Business Profile usa el lane específico de BusinessProfilePost
     // (incluido PostPeer), no el worker genérico de redes sociales.
-    if (opp.platform === "google-business") {
+    if (platform === "google-business") {
       if (!opp.titleId) {
         return NextResponse.json({ error: "La propuesta no está vinculada a un artículo publicable." }, { status: 400 });
       }
@@ -100,14 +104,14 @@ export async function POST(request: NextRequest) {
       "instagram-infografia",
       "instagram-post",
     ];
-    if (!supported.includes(opp.platform)) {
+    if (!supported.includes(platform)) {
       return NextResponse.json(
         { error: `Plataforma ${opp.platform} no soportada todavía.` },
         { status: 400 }
       );
     }
 
-    if (opp.platform.startsWith("instagram")) {
+    if (platform.startsWith("instagram")) {
       const user = await prisma.user.findUnique({
         where: { id: userId },
         select: { allowInstagramPublishing: true },
@@ -120,7 +124,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (opp.platform === "threads") {
+    if (platform === "threads") {
       const user = await prisma.user.findUnique({
         where: { id: userId },
         select: { role: true, allowThreadsPublishing: true },
@@ -133,7 +137,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (opp.platform === "blogger") {
+    if (platform === "blogger") {
       const user = await prisma.user.findUnique({
         where: { id: userId },
         select: { role: true, allowBloggerPublishing: true },
@@ -146,16 +150,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (opp.platform.startsWith("facebook-")) {
+    if (platform.startsWith("facebook-")) {
       const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true, allowFacebookPublishing: true } });
       if (user?.role !== "admin" && !user?.allowFacebookPublishing) {
         return NextResponse.json({ error: "No tienes permiso para publicar en Facebook. Contacta al administrador." }, { status: 403 });
       }
     }
 
-    if (opp.platform === "pinterest" || opp.platform === "tumblr" || opp.platform === "bluesky" || opp.platform === "devto") {
+    if (platform === "pinterest" || platform === "tumblr" || platform === "bluesky" || platform === "devto") {
       const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true, allowPinterestPublishing: true, allowTumblrPublishing: true, allowBlueskyPublishing: true, allowDevToPublishing: true } });
-      const allowed = opp.platform === "pinterest" ? user?.role === "admin" || user?.allowPinterestPublishing : opp.platform === "tumblr" ? user?.role === "admin" || user?.allowTumblrPublishing : opp.platform === "bluesky" ? user?.role === "admin" || user?.allowBlueskyPublishing : user?.role === "admin" || user?.allowDevToPublishing;
+      const allowed = platform === "pinterest" ? user?.role === "admin" || user?.allowPinterestPublishing : platform === "tumblr" ? user?.role === "admin" || user?.allowTumblrPublishing : platform === "bluesky" ? user?.role === "admin" || user?.allowBlueskyPublishing : user?.role === "admin" || user?.allowDevToPublishing;
       if (!allowed) return NextResponse.json({ error: `No tienes permiso para publicar en ${opp.platform}. Contacta al administrador.` }, { status: 403 });
     }
 
@@ -182,27 +186,27 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: opp.platform.startsWith("instagram")
+      message: platform.startsWith("instagram")
         ? "Publicación encolada. El sistema generará las imágenes y publicará en Instagram en segundo plano."
-        : opp.platform === "x"
+        : platform === "x"
         ? "Publicación encolada. El sistema generará la imagen y publicará en X (Twitter) en segundo plano."
-        : opp.platform === "linkedin"
+        : platform === "linkedin"
         ? "Publicación encolada. El sistema publicará en LinkedIn en segundo plano."
-        : opp.platform === "facebook-page"
+        : platform === "facebook-page"
         ? "Publicación encolada. El sistema publicará en Facebook Pages en segundo plano."
-        : opp.platform === "facebook-story"
+        : platform === "facebook-story"
         ? "Publicación encolada. El sistema generará la imagen y publicará la Historia en Facebook en segundo plano."
-        : opp.platform === "pinterest"
+        : platform === "pinterest"
         ? "Publicación encolada. El sistema publicará el Pin en Pinterest en segundo plano."
-        : opp.platform === "tumblr"
+        : platform === "tumblr"
         ? "Publicación encolada. El sistema publicará el post en Tumblr en segundo plano."
-        : opp.platform === "bluesky"
+        : platform === "bluesky"
         ? "Publicación encolada. El sistema publicará en Bluesky en segundo plano."
-        : opp.platform === "devto"
+        : platform === "devto"
         ? "Publicación encolada. El sistema adaptará y publicará el artículo en DEV.to en segundo plano."
-        : opp.platform === "blogger"
+        : platform === "blogger"
         ? "Publicación encolada. El sistema publicará el artículo en Blogger en segundo plano."
-        : opp.platform === "google-business"
+        : platform === "google-business"
         ? "Publicación encolada. El sistema publicará el artículo en Google Business Profile mediante PostPeer en segundo plano."
         : "Publicación encolada. El sistema generará la imagen y publicará en Threads en segundo plano.",
     });
