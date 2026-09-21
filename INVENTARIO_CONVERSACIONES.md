@@ -1537,3 +1537,10 @@ reservas liberadas. Estado final: ARCHIVADA.
 - Riesgo/bloqueo: capitán de migración activo y coordinación exige revisión antes de tocar producción.
 - Siguiente acción exacta: liberar coordinación, revisar diff contra `20696f2`, abrir PR, aplicar
   migraciones controladas, configurar variable, ejecutar prueba real autorizada y verificar respuesta.
+
+### Liberación formal de capitanía — 2026-09-21
+
+- Capitanía liberada con `migration-coordinator.sh release`.
+- Motivo: auditoría local completada; lote PostPeer/GBP listo para PR; no se aplicaron migraciones ni se hizo deploy.
+- Estado final: **LISTO PARA REVISIÓN DEL REPARADOR**.
+- No se ejecutaron migraciones, push, merge ni deploy.

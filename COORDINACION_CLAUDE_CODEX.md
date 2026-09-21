@@ -8498,3 +8498,9 @@ migraciones, fusionado cambios ni tocado producción.
 - Auditoría funcional/regresión: Prisma Client generado; TypeScript web/worker/shared correcto; worker 20/20; build worker correcto; build web correcto con 85/85 rutas; `git diff --check` correcto.
 - Auditoría integración/migración: pendiente por diseño. No se ejecutó `prisma migrate deploy`, `prisma db push`, push, merge ni deploy. `POSTPEER_GBP_CONSUMER_READY=false`; faltan autorización para aplicar migraciones, clave `postpeer_api_key`, configuración de producción y prueba real del piloto antes de activar.
 - Decisión: conservar el lote local aislado, no publicar ni crear commit mientras el capitán siga activo y mientras no se complete la validación de integración/migración. El worktree queda preparado para la siguiente revisión.
+
+### Liberación formal de capitanía — 2026-09-21
+
+- La capitanía fue liberada mediante `bash scripts/migration-coordinator.sh release`.
+- Motivo registrado: `Auditoría local completada; lote PostPeer/GBP listo para PR. No se aplicaron migraciones ni se hizo deploy.`
+- El lote queda **LISTO PARA REVISIÓN DEL REPARADOR**. No se ejecutaron migraciones, push, merge ni deploy.
