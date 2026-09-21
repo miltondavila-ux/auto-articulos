@@ -52,6 +52,7 @@ export default function ConexionesView() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [modulosDeshabilitados, setModulosDeshabilitados] = useState<string[]>([]);
   const [permisos, setPermisos] = useState<Record<string, boolean>>({});
+  const [configuradas, setConfiguradas] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const pedida = new URLSearchParams(window.location.search).get("vista");
@@ -75,6 +76,32 @@ export default function ConexionesView() {
         });
       })
       .catch(() => {});
+    Promise.all([
+      fetch("/api/configuration-status", { cache: "no-store" }),
+      fetch("/api/composio/status", { cache: "no-store" }),
+    ])
+      .then(async ([configurationResponse, composioResponse]) => {
+        const next: Record<string, boolean> = {};
+        if (configurationResponse.ok) {
+          const body = (await configurationResponse.json()) as { checks?: Array<{ id: string; configured: boolean }> };
+          for (const check of body.checks ?? []) next[check.id] = check.configured;
+        }
+        if (composioResponse.ok) {
+          const body = (await composioResponse.json()) as { connections?: Array<{ app: string; status: string }> };
+          const composioIds: Record<string, string> = {
+            google_search_console: "google-search-console",
+            google_analytics: "google-analytics",
+            instagram: "instagram",
+            facebook: "facebook",
+          };
+          for (const connection of body.connections ?? []) {
+            const id = composioIds[connection.app];
+            if (id) next[id] = connection.status === "ACTIVE";
+          }
+        }
+        setConfiguradas(next);
+      })
+      .catch(() => {});
   }, []);
 
   function elegir(siguiente: Vista) {
@@ -90,18 +117,18 @@ export default function ConexionesView() {
 
   if (vista === null) {
     const tarjetas = [
-      { n: "01", title: "Google Search Console", text: "Conecta tu sitio para enviar el sitemap y revisar la indexación.", view: "analiticas" as Vista },
-      { n: "02", title: "Google Analytics", text: "Consulta las visitas y el rendimiento real de tus contenidos.", view: "analiticas" as Vista },
-      { n: "03", title: "Bing Webmaster Tools", text: "Ayuda a que tus artículos aparezcan también en Bing.", view: "analiticas" as Vista },
-      { n: "04", title: "Instagram", text: "Publica imágenes, carruseles y Reels mediante Composio.", view: "difusion" as Vista },
-      { n: "05", title: "Facebook", text: "Publica en la Página de Facebook seleccionada mediante Composio.", view: "difusion" as Vista },
-      { n: "06", title: "Threads", text: "Conecta Threads con su integración propia.", view: "difusion" as Vista },
-      { n: "07", title: "LinkedIn", text: "Publica artículos en tu perfil o página de LinkedIn.", view: "difusion" as Vista },
-      { n: "08", title: "Pinterest", text: "Publica contenido visual en tus tableros de Pinterest.", view: "difusion" as Vista },
-      { n: "09", title: "Tumblr", text: "Publica artículos y contenido en tu blog de Tumblr.", view: "difusion" as Vista },
-      { n: "10", title: "Bluesky", text: "Comparte tus publicaciones en Bluesky.", view: "difusion" as Vista },
-      { n: "11", title: "DEV.to", text: "Publica artículos técnicos en tu cuenta de DEV.to.", view: "difusion" as Vista },
-      { n: "12", title: "Blogger", text: "Publica artículos en tu blog de Blogger.", view: "difusion" as Vista },
+      { id: "google-search-console", n: "01", title: "Google Search Console", text: "Conecta tu sitio para enviar el sitemap y revisar la indexación.", view: "analiticas" as Vista },
+      { id: "google-analytics", n: "02", title: "Google Analytics", text: "Consulta las visitas y el rendimiento real de tus contenidos.", view: "analiticas" as Vista },
+      { id: "bing-webmaster", n: "03", title: "Bing Webmaster Tools", text: "Ayuda a que tus artículos aparezcan también en Bing.", view: "analiticas" as Vista },
+      { id: "instagram", n: "04", title: "Instagram", text: "Publica imágenes, carruseles y Reels mediante Composio.", view: "difusion" as Vista },
+      { id: "facebook", n: "05", title: "Facebook", text: "Publica en la Página de Facebook seleccionada mediante Composio.", view: "difusion" as Vista },
+      { id: "threads", n: "06", title: "Threads", text: "Conecta Threads con su integración propia.", view: "difusion" as Vista },
+      { id: "linkedin", n: "07", title: "LinkedIn", text: "Publica artículos en tu perfil o página de LinkedIn.", view: "difusion" as Vista },
+      { id: "pinterest", n: "08", title: "Pinterest", text: "Publica contenido visual en tus tableros de Pinterest.", view: "difusion" as Vista },
+      { id: "tumblr", n: "09", title: "Tumblr", text: "Publica artículos y contenido en tu blog de Tumblr.", view: "difusion" as Vista },
+      { id: "bluesky", n: "10", title: "Bluesky", text: "Comparte tus publicaciones en Bluesky.", view: "difusion" as Vista },
+      { id: "devto", n: "11", title: "DEV.to", text: "Publica artículos técnicos en tu cuenta de DEV.to.", view: "difusion" as Vista },
+      { id: "blogger", n: "12", title: "Blogger", text: "Publica artículos en tu blog de Blogger.", view: "difusion" as Vista },
     ];
     const grupos: { vista: Vista; titulo: string; descripcion: string }[] = [
       { vista: "analiticas", titulo: "Analíticas", descripcion: "Conexiones que leen datos y ayudan a posicionar tu sitio." },
@@ -141,7 +168,10 @@ export default function ConexionesView() {
               <strong style={{ display: "block", fontSize: 17, fontWeight: 600, lineHeight: 1.3 }}>{card.title}</strong>
               <span style={{ display: "block", marginTop: 5, color: "#6e6e73", fontSize: 13, lineHeight: 1.45 }}>{card.text}</span>
             </span>
-            <span aria-hidden="true" style={{ color: "#6e6e73", fontSize: 22, lineHeight: 1 }}>→</span>
+                <span style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                  {configuradas[card.id] && <span aria-label="Configurada" title="Configurada" style={{ color: "#1a7f37", fontSize: 19, fontWeight: 700 }}>✓</span>}
+                  <span aria-hidden="true" style={{ color: "#6e6e73", fontSize: 22, lineHeight: 1 }}>→</span>
+                </span>
           </button>
           ))}
         </section>)}
