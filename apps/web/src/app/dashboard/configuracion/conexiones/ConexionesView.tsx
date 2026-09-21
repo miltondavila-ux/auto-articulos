@@ -103,10 +103,19 @@ export default function ConexionesView() {
       { n: "11", title: "DEV.to", text: "Publica artículos técnicos en tu cuenta de DEV.to.", view: "difusion" as Vista },
       { n: "12", title: "Blogger", text: "Publica artículos en tu blog de Blogger.", view: "difusion" as Vista },
     ];
+    const grupos: { vista: Vista; titulo: string; descripcion: string }[] = [
+      { vista: "analiticas", titulo: "Analíticas", descripcion: "Conexiones que leen datos y ayudan a posicionar tu sitio." },
+      { vista: "difusion", titulo: "Difusión", descripcion: "Conexiones que publican tu contenido en redes, microblogs y blogs." },
+    ];
     return <div>
       <ModuleIntro titulo="Conexiones"><IntroP>Elige qué quieres configurar. Cada opción abre su espacio dedicado, con instrucciones y acciones solo de ese segmento.</IntroP></ModuleIntro>
-      <div style={{ marginTop: 24, borderTop: "1px solid #d2d2d7" }}>
-        {tarjetas.map((card) => (
+      <div style={{ marginTop: 24 }}>
+        {grupos.map((grupo) => <section key={grupo.vista} style={{ marginBottom: 36 }} aria-labelledby={`grupo-${grupo.vista}`}>
+          <div style={{ padding: "0 4px 12px", borderBottom: "1px solid #d2d2d7" }}>
+            <h2 id={`grupo-${grupo.vista}`} style={{ margin: 0, fontSize: 20, fontWeight: 600, color: "#1d1d1f" }}>{grupo.titulo}</h2>
+            <p style={{ margin: "5px 0 0", color: "#6e6e73", fontSize: 13, lineHeight: 1.45 }}>{grupo.descripcion}</p>
+          </div>
+          {tarjetas.filter((card) => card.view === grupo.vista).map((card) => (
           <button
             key={card.n}
             type="button"
@@ -134,7 +143,8 @@ export default function ConexionesView() {
             </span>
             <span aria-hidden="true" style={{ color: "#6e6e73", fontSize: 22, lineHeight: 1 }}>→</span>
           </button>
-        ))}
+          ))}
+        </section>)}
       </div>
     </div>;
   }
