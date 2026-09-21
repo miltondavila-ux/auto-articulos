@@ -17,17 +17,18 @@ export default function BrowserTabsConnectionNotice() {
       </strong>
       <ol style={{ margin: "10px 0 0", paddingLeft: 20 }}>
         <li>
-          Cierra todas las pestañas del navegador excepto la pestaña donde está
-          abierto SEO TOTAL.
-        </li>
-        <li>
           Abre la red social que vas a configurar en una pestaña nueva del mismo
-          navegador e inicia sesión en la cuenta correcta.
+          navegador e inicia sesión en la cuenta correcta. Así puedes comprobar
+          visualmente que no estás usando otra cuenta.
         </li>
         <li>
           Regresa a la pestaña de SEO TOTAL y completa la conexión. Si se
           abre otra pestaña para autorizar, no cierres la pestaña del sistema y
           vuelve a ella al terminar.
+        </li>
+        <li>
+          No cambies de usuario durante el proceso. Si la cuenta mostrada no es
+          la correcta, cancela y avisa antes de autorizar.
         </li>
       </ol>
     </section>

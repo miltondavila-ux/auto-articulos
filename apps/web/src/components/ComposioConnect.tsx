@@ -80,6 +80,35 @@ const CHOOSE_NOTE: Record<string, string> = {
     "Tu cuenta de SEO TOTAL trabaja con un solo dominio. Si tu cuenta de Google tiene varios sitios, elige el de esta cuenta; los demás no se usarán.",
 };
 
+const CONNECTION_STEPS: Record<string, string[]> = {
+  google_search_console: [
+    "Abre Google en otra pestaña del mismo navegador.",
+    "Confirma que estás dentro de la cuenta de Google que administra tu Search Console.",
+    "Pulsa Nueva conexión y autoriza el acceso solicitado.",
+    "Elige la propiedad correcta y pulsa Aprobar y guardar.",
+    "Pulsa Probar conexión y comprueba el mensaje verde.",
+  ],
+  google_analytics: [
+    "Abre Google Analytics en otra pestaña y confirma la cuenta correcta.",
+    "Pulsa Nueva conexión y autoriza el acceso de lectura.",
+    "Elige la propiedad GA4 que corresponde a tu sitio.",
+    "Pulsa Aprobar y guardar.",
+    "Pulsa Probar conexión y comprueba el mensaje verde.",
+  ],
+  facebook: [
+    "Abre Facebook en otra pestaña y confirma que es tu cuenta personal administradora.",
+    "Pulsa Nueva conexión y autoriza el acceso.",
+    "Elige la Página de Facebook correcta, no tu perfil personal.",
+    "Pulsa Aprobar y guardar y después Probar conexión.",
+  ],
+  instagram: [
+    "Abre Instagram en otra pestaña y confirma la cuenta Business o Creator correcta.",
+    "Pulsa Nueva conexión y autoriza el acceso desde Facebook si se solicita.",
+    "Elige la cuenta de Instagram correcta.",
+    "Pulsa Aprobar y guardar y después Probar conexión.",
+  ],
+};
+
 const STATUS_LABEL: Record<Connection["status"], { text: string; color: string }> = {
   NOT_CONNECTED: { text: "No conectada", color: "#6e6e73" },
   INITIATED: { text: "Autorización sin terminar", color: "#9a6700" },
@@ -280,6 +309,17 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
                 <span style={{ fontSize: 13, fontWeight: 600, color: status.color }}>{status.text}</span>
               </div>
               {!inline && <p style={mutedStyle}>{APP_NOTES[connection.app]}</p>}
+              {CONNECTION_STEPS[connection.app] && (
+                <div
+                  role="note"
+                  style={{ marginTop: 10, padding: "10px 12px", borderRadius: 10, background: "#f5f5f7", color: "#1d1d1f", fontSize: 13, lineHeight: 1.5 }}
+                >
+                  <strong>Cómo hacerlo paso a paso</strong>
+                  <ol style={{ margin: "6px 0 0", paddingLeft: 20 }}>
+                    {CONNECTION_STEPS[connection.app].map((step) => <li key={step}>{step}</li>)}
+                  </ol>
+                </div>
+              )}
               {embedded && !inline && (
                 <p role="note" style={{ margin: "8px 0", padding: "8px 12px", borderRadius: 10, background: "#fff4e5", color: "#8a4b08", fontSize: 13, lineHeight: 1.45 }}>
                   <strong>Es una conexión adicional, en prueba.</strong> No reemplaza a la conexión de arriba: el sistema sigue usando esa,
