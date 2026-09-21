@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { MENU_NAMES } from "@/lib/menu-names";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { EnPrueba, Modulo } from "@/components/ModuleIntro";
@@ -152,7 +153,7 @@ const PASOS = [
         guardados en <Modulo id="historial" /> con su enlace.
       </>,
     ],
-    accion: { texto: "Publica contenido con ayuda de la IA avanzada", href: "/dashboard/oportunidades" },
+    accion: { texto: MENU_NAMES.ia, href: "/dashboard/oportunidades" },
   },
   {
     numero: 3,
@@ -179,7 +180,7 @@ const PASOS = [
       </>,
     ],
     accion: {
-      texto: "Difunde tu contenido en blogs externos y redes sociales",
+      texto: MENU_NAMES.redes,
       href: "/dashboard/oportunidades-redes",
     },
   },

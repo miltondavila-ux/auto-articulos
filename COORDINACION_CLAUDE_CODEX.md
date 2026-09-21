@@ -8255,3 +8255,34 @@ Responsable: Codex. Se añade un botón separado para borrar publicaciones
 sociales sin confirmar, sin ejecutar el borrado automáticamente. Archivos:
 `apps/web/src/app/api/social-opportunities/route.ts` y
 `apps/web/src/app/dashboard/historial/page.tsx`. Sin cambios de esquema.
+
+## Claude — NOMBRES EN EL MENU — 2026-09-20
+
+**Pedido de Milton:** renombrar tres opciones del menú «Publicaciones» y propagarlas de forma
+dinámica. Se creó `apps/web/src/lib/menu-names.ts` como **fuente única** (`MENU_NAMES`,
+`MENU_LABELS_NUMBERED`); el menú, las tarjetas de Inicio y «Comienza aquí», los botones del
+asistente de configuración, los títulos de pantalla, el panel de módulos de Administración, el manual
+de usuario (`BASE_USER_MANUAL`, que alimenta al asistente) y las preguntas rápidas leen de ahí.
+Un cambio futuro de nombre se hace **solo** en ese archivo.
+
+| Antes | Ahora |
+|---|---|
+| Publica tus propios títulos | **Artículos propios** |
+| Publica contenido con ayuda de la IA avanzada | **Artículos creados con IA** |
+| Difunde tu contenido en blogs externos y redes sociales | **Redes sociales: publicaciones con IA** |
+
+«Progreso de las publicaciones», «Historial», «Configuración» y «Cómo funciona esta aplicación» no cambian.
+El manual añade un párrafo «Nombres anteriores» (desde `MENU_NAMES_ANTERIORES`) para que el asistente
+entienda novedades antiguas de `ProductUpdate` que aún usan los nombres viejos. **No se reescribió**
+el histórico: `ARCHIVO_COORDINACION_HISTORICO.md`, los registros previos de estos documentos, los
+comentarios de código, `scripts/backfill-product-updates-20260823.ts` y los textos ya guardados en base
+de datos conservan el nombre original (§10). Sin schema ni migraciones. Rama
+`claude/nombres-en-el-menu`, base `934e121`. Responsable: Claude. Estado: ACTIVO.
+
+**Auditoría 1 — Integridad:** OK. `git diff --check` limpio; 17 archivos modificados y 2 nuevos, todos
+de la lista de reservas; sin secretos; sin schema/migración; `origin/main` sin cambios desde la base y sin
+reservas ajenas sobre esos archivos. **Auditoría 2 — Funcional:** OK. `tsc --noEmit` limpio;
+`next build` de `apps/web` completo; 10/10 pruebas (`menu-names.test.ts` nueva + `modules.test.ts`);
+en el bundle compilado los nombres nuevos están y los viejos solo aparecen dentro de
+`MENU_NAMES_ANTERIORES` (0 en el cliente). **Auditoría 3 — Regresión/entrega:** pendiente (Preview,
+Producción y verificación posterior).

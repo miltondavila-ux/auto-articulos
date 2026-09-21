@@ -1,5 +1,6 @@
 "use client";
 
+import { MENU_NAMES } from "@/lib/menu-names";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -540,7 +541,7 @@ export default function OportunidadesPage() {
             Leer antes de ejecutar
           </p>
           <h2 id="oportunidades-instrucciones" style={h2Style}>
-            Publica contenido con ayuda de la IA avanzada
+            {MENU_NAMES.ia}
           </h2>
           <p style={{ color: "#1d1d1f", fontSize: 14, lineHeight: 1.55 }}>
             El objetivo de este módulo es ayudarte a encontrar temas que tus

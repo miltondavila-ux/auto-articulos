@@ -1,5 +1,6 @@
 "use client";
 
+import { MENU_LABELS_NUMBERED } from "@/lib/menu-names";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -34,12 +35,12 @@ const BASE_ENTRIES: NavEntry[] = [
     group: "publicaciones",
     label: "Publicaciones",
     items: [
-      { id: "publicar", href: "/dashboard/publicar", label: "1) Publica tus propios títulos" },
-      { id: "oportunidades", href: "/dashboard/oportunidades", label: "2) Publica contenido con ayuda de la IA avanzada" },
+      { id: "publicar", href: "/dashboard/publicar", label: MENU_LABELS_NUMBERED.propios },
+      { id: "oportunidades", href: "/dashboard/oportunidades", label: MENU_LABELS_NUMBERED.ia },
       {
         id: "oportunidades-redes",
         href: "/dashboard/oportunidades-redes",
-        label: "3) Difunde tu contenido en blogs externos y redes sociales",
+        label: MENU_LABELS_NUMBERED.redes,
       },
       {
         id: "publicaciones-en-curso",

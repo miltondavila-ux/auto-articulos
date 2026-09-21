@@ -1,5 +1,6 @@
 "use client";
 
+import { MENU_NAMES } from "@/lib/menu-names";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import ModuleIntro, { IntroP, Modulo } from "@/components/ModuleIntro";
 import { useRouter } from "next/navigation";
@@ -1120,7 +1121,7 @@ function HistorialRedes() {
         </summary>
         <div style={{ marginTop: 14 }}>
           <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
-            Descartadas a propósito con el botón "Descartar" en Publica contenido con ayuda de la IA avanzada.
+            Descartadas a propósito con el botón "Descartar" en {MENU_NAMES.ia}.
             Si cambias de opinión, puedes reintentarlas desde aquí.
           </p>
           {batchMessage && (

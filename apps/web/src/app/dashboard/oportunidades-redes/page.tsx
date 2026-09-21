@@ -1,5 +1,6 @@
 "use client";
 
+import { MENU_NAMES } from "@/lib/menu-names";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { EnPrueba, Modulo } from "@/components/ModuleIntro";
@@ -395,7 +396,7 @@ export default function OportunidadesRedesPage() {
                 letterSpacing: "-0.03em",
               }}
             >
-              Difunde tu contenido en blogs externos y redes sociales
+              {MENU_NAMES.redes}
             </h1>
             <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
               <strong style={{ fontWeight: 600 }}>Este módulo está en prueba</strong>

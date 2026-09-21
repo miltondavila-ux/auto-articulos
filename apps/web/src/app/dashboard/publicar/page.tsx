@@ -1,5 +1,6 @@
 "use client";
 
+import { MENU_NAMES } from "@/lib/menu-names";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -290,7 +291,7 @@ export default function PublicarPage() {
             Leer antes de ejecutar
           </p>
           <h1 id="publicar-instrucciones" style={{ ...h2Style, marginTop: 8, marginBottom: 10 }}>
-            Publicar artículos
+            {MENU_NAMES.propios}
           </h1>
           <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: "#1d1d1f" }}>
             El objetivo de este módulo es convertir tus ideas o títulos en artículos completos para atraer visitas, responder las preguntas de tus clientes y fortalecer el posicionamiento de tu web en Google. Puedes colocar títulos creados por otra inteligencia artificial o escritos por ti: SEO TOTAL desarrollará cada título, redactará el contenido, añadirá una imagen y publicará el artículo directamente en tu página web.

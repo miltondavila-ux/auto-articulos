@@ -1,5 +1,6 @@
 "use client";
 
+import { MENU_NAMES } from "@/lib/menu-names";
 import { useEffect, useState } from "react";
 import PasosAntesDeConectar from "@/components/PasosAntesDeConectar";
 import {
@@ -118,7 +119,7 @@ export default function BusinessProfileSection() {
         )}
       </div>
       <p className="lead-copy" style={{ margin: "0 0 14px 0" }}>
-        Cuando el sistema detecte una oportunidad para Google Business Profile en Difunde tu contenido en blogs externos y redes sociales, preparará una publicación con el formato permitido por Google, imagen y enlace al artículo. No se publicará cada artículo automáticamente.
+        Cuando el sistema detecte una oportunidad para Google Business Profile en {MENU_NAMES.redes}, preparará una publicación con el formato permitido por Google, imagen y enlace al artículo. No se publicará cada artículo automáticamente.
       </p>
       {!data?.connected ? (
         <div>

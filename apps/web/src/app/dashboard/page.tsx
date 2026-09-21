@@ -1,5 +1,6 @@
 "use client";
 
+import { MENU_NAMES } from "@/lib/menu-names";
 import { useEffect, useState, useCallback, useRef } from "react";
 import ModuleIntro, { IntroP, Modulo } from "@/components/ModuleIntro";
 import Link from "next/link";
@@ -30,17 +31,17 @@ const QUICK_LINKS = [
   },
   {
     href: "/dashboard/publicar",
-    label: "Publica tus propios títulos",
+    label: MENU_NAMES.propios,
     description: "Escribe tus títulos y publícalos directamente en tu página web. Es ideal si estás comenzando y todavía no tienes registros de indexación en Google, o si simplemente quieres publicar contenido propio.",
   },
   {
     href: "/dashboard/oportunidades",
-    label: "Publica contenido con ayuda de la IA avanzada",
+    label: MENU_NAMES.ia,
     description: "SEO TOTAL analiza Google, Bing, Analytics y otros datos para encontrar temas con posibilidades reales y ayudarte a crear artículos para tu página web.",
   },
   {
     href: "/dashboard/oportunidades-redes",
-    label: "Difunde tu contenido en blogs externos y redes sociales",
+    label: MENU_NAMES.redes,
     description: "Lleva tus artículos ya publicados a microblogs, blogs externos y redes sociales en lote, y crea tu avatar de autoridad en internet.",
   },
 ];

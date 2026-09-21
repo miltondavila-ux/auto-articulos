@@ -1,4 +1,5 @@
 import { prisma } from "@auto-articulos/db";
+import { MENU_NAMES } from "./menu-names";
 import { decryptSecret, encryptSecret } from "@auto-articulos/shared";
 
 export interface SystemModule {
@@ -28,19 +29,19 @@ export const SYSTEM_MODULES: SystemModule[] = [
   },
   {
     id: "publicar",
-    label: "Publicar",
+    label: MENU_NAMES.propios,
     href: "/dashboard/publicar",
     description: "Generación y publicación de artículos individuales y en lote.",
   },
   {
     id: "oportunidades",
-    label: "Publica contenido con ayuda de la IA avanzada",
+    label: MENU_NAMES.ia,
     href: "/dashboard/oportunidades",
     description: "Creación de artículos con datos de Google, Bing, Analytics y otras herramientas de internet.",
   },
   {
     id: "oportunidades-redes",
-    label: "Difunde tu contenido en blogs externos y redes sociales",
+    label: MENU_NAMES.redes,
     href: "/dashboard/oportunidades-redes",
     description: "Distribución de contenido e ideas para redes sociales.",
   },
