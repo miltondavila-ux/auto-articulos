@@ -8547,3 +8547,9 @@ No hubo ninguna acción destructiva, migración ni deploy ejecutados por esta ta
 nueva para Milton es la señalada arriba sobre `codex/unify-connection-interface`.
 
 Responsable: Claude (tarea programada diaria de propagación).
+### Registro 2026-09-21 — incidencia de oportunidades de redes detectada y corrección local preparada
+
+- Milton informó que en Producción faltaban redes/blogs que había probado la noche anterior. Se confirmó que `apps/web/src/app/dashboard/oportunidades-redes/page.tsx` ocultaba toda red sin el indicador de conexión propio, aunque estuviera habilitada; X continúa excluida explícitamente por decisión del proyecto.
+- También se reprodujo que generar una oportunidad de Instagram devolvía «la red seleccionada (instagram) no está conectada». La causa era que `apps/web/src/app/api/social-opportunities/generate/route.ts` solo contaba `instagramIntegration` propia y no una conexión Composio activa.
+- Corrección local preparada: mostrar las redes habilitadas como `Configurar` desactivado cuando el estado no se puede confirmar, y contar una conexión Composio activa de Instagram para el descubrimiento/generación. No se modificaron cuentas, publicaciones, schema, migraciones ni flags globales.
+- Auditoría local: `npx tsc --noEmit -p apps/web/tsconfig.json` correcto. La corrección está sin commit y sin despliegue; Producción permanece sin cambios. No se autoriza fusionar ni activar nada desde esta entrada.
