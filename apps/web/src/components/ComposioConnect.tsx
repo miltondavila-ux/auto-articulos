@@ -321,7 +321,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
                 </div>
               )}
               {embedded && !inline && (
-                <p role="note" style={{ margin: "8px 0", padding: "8px 12px", borderRadius: 10, background: "#fff4e5", color: "#8a4b08", fontSize: 13, lineHeight: 1.45 }}>
+                <p role="note" style={{ margin: "8px 0", padding: "8px 0", color: "#6e6e73", fontSize: 13, lineHeight: 1.45 }}>
                   <strong>Es una conexión adicional, en prueba.</strong> No reemplaza a la conexión de arriba: el sistema sigue usando esa,
                   así que <strong>no la desconectes</strong>.
                 </p>
