@@ -25,6 +25,9 @@ import {
   getDevToArticleUrl,
   buildSafeCaption,
   truncatePlainCaption,
+  composioFacebookPost,
+  composioInstagramPost,
+  methodFor,
 } from "@auto-articulos/shared";
 import { put } from "@vercel/blob";
 import sharp from "sharp";
@@ -33,6 +36,18 @@ import { formatBloggerSummary } from "./bloggerContent";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
+
+async function getComposioSocialAccount(userId: string, app: "facebook" | "instagram") {
+  const [user, connection, setting] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { email: true, role: true, disabledModules: true } }),
+    prisma.composioConnection.findFirst({ where: { userId, app, status: "ACTIVE" }, orderBy: { updatedAt: "desc" }, select: { connectedAccountId: true, pageId: true, igAccountId: true, pageName: true, username: true } }),
+    prisma.systemSetting.findUnique({ where: { key: "composio_api_key" }, select: { encryptedValue: true } }),
+  ]);
+  const moduleEnabled = user?.role === "admin" || (() => { try { return JSON.parse(user?.disabledModules ?? "{}")?.["conexion-composio"] === "enabled"; } catch { return false; } })();
+  const method = methodFor({ app, userId, userEmail: user?.email, moduleEnabled, routeIsComposio: false });
+  if (method !== "COMPOSIO" || !connection || !setting) return null;
+  return { apiKey: decryptSecret(setting.encryptedValue), userId, connectedAccountId: connection.connectedAccountId, pageId: connection.pageId, igAccountId: connection.igAccountId, pageName: connection.pageName, username: connection.username };
+}
 
 async function updateSocialProgress(
   id: string,
@@ -936,6 +951,18 @@ async function processBloggerJob(job: { id: string; userId: string; titleId: str
 async function processFacebookPageJob(job: {
   id: string; userId: string; titleId: string | null; articleUrl: string; articleTitle: string; suggestedText: string;
 }): Promise<boolean> {
+  const composio = await getComposioSocialAccount(job.userId, "facebook");
+  if (composio?.pageId) {
+    await validateArticleUrl(job.articleUrl);
+    const finalPost = job.suggestedText.includes("[ENLACE]") ? job.suggestedText.replace("[ENLACE]", job.articleUrl) : `${job.suggestedText}\n\n${job.articleUrl}`;
+    const articleImage = await getArticleOpenGraphImage(job.articleUrl);
+    const imageUrl = articleImage ? await normalizeSocialImage(articleImage, 4 / 3) : undefined;
+    const result = await composioFacebookPost(composio, composio.pageId, finalPost, imageUrl);
+    const postId = String(result.id ?? result.post_id ?? result.postId ?? "");
+    await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId, publishedAt: new Date(), errorLog: null } });
+    if (job.titleId) await prisma.titleEvent.create({ data: { titleId: job.titleId, message: `Publicado en Facebook Page mediante la conexión alternativa${composio.pageName ? ` (${composio.pageName})` : ""}${postId ? ` - ID: ${postId}` : ""}` } });
+    return true;
+  }
   const integration = await prisma.facebookPageIntegration.findUnique({ where: { userId: job.userId } });
   if (!integration) throw new Error("Facebook Pages no está configurado en tu cuenta.");
   if (integration.expiresAt <= new Date()) throw new Error("La autorización de Facebook Pages expiró. Vuelve a conectar Meta en Configuración.");
@@ -1103,6 +1130,19 @@ async function processInstagramJob(job: {
   suggestedText: string;
   platform: string;
 }): Promise<boolean> {
+  const composio = await getComposioSocialAccount(job.userId, "instagram");
+  if (composio?.igAccountId && job.platform === "instagram-post") {
+    await validateArticleUrl(job.articleUrl);
+    const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
+    const imageUrl = sourceImage ? await normalizeSocialImage(sourceImage, 4 / 5) : null;
+    if (!imageUrl) throw new Error("No se pudo adaptar la imagen del artículo para Instagram.");
+    const caption = job.suggestedText.includes("[ENLACE]") ? job.suggestedText.replace("[ENLACE]", job.articleUrl) : job.suggestedText;
+    const result = await composioInstagramPost(composio, composio.igAccountId, imageUrl, caption);
+    const postId = String(result.id ?? result.post_id ?? result.postId ?? "");
+    await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId, publishedAt: new Date(), errorLog: null, imageUrl } });
+    if (job.titleId) await prisma.titleEvent.create({ data: { titleId: job.titleId, message: `Publicado en Instagram mediante la conexión alternativa${composio.username ? ` (@${composio.username})` : ""}${postId ? ` - ID: ${postId}` : ""}` } });
+    return true;
+  }
   const integration = await prisma.instagramIntegration.findUnique({
     where: { userId: job.userId },
   });
