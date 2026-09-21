@@ -113,6 +113,21 @@ export default function ConexionesView() {
 
       {vista === "analiticas" && (
         <div style={columna}>
+          <section style={{ padding: 16, borderRadius: 14, background: "#f5f5f7", border: "1px solid #d2d2d7" }} aria-label="Migración guiada">
+            <strong style={{ fontSize: 15, color: "#1d1d1f" }}>Actualiza tu conexión de Google</strong>
+            <p style={{ margin: "6px 0 10px", fontSize: 13, lineHeight: 1.5, color: "#1d1d1f" }}>
+              Vamos a pasar tu Search Console y Analytics a la nueva conexión de forma segura. No desconectaremos la anterior hasta comprobar que todo funciona.
+            </p>
+            <ol style={{ margin: "0 0 12px", paddingLeft: 20, fontSize: 13, lineHeight: 1.55 }}>
+              <li>Conecta tu cuenta de Google.</li>
+              <li>Elige tu sitio o propiedad.</li>
+              <li>Prueba la conexión.</li>
+              <li>Finaliza la migración cuando veas el resultado correcto.</li>
+            </ol>
+            <a href="#google" style={{ display: "inline-block", padding: "8px 14px", borderRadius: 9, background: "#1d1d1f", color: "#fff", textDecoration: "none", fontSize: 13, fontWeight: 600 }}>
+              Comenzar configuración
+            </a>
+          </section>
           <div id="google" style={columna}>
             <div>
               <span style={{ display: "inline-block", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: "#fff4e5", color: "#8a4b08", border: "1px solid rgba(255, 149, 0, 0.25)", marginBottom: 6 }}>
