@@ -13,7 +13,6 @@ import {
   publishInstagramImage,
   publishInstagramStory,
   publishFacebookPagePost,
-  publishFacebookPageStory,
   createPinterestPin,
   createTumblrPhotoPost,
   refreshTumblrToken,
@@ -941,9 +940,10 @@ async function processFacebookPageJob(job: {
   if (integration.expiresAt <= new Date()) throw new Error("La autorización de Facebook Pages expiró. Vuelve a conectar Meta en Configuración.");
 
   await validateArticleUrl(job.articleUrl);
-  const finalPost = job.suggestedText.includes("[ENLACE]")
-    ? job.suggestedText.replace("[ENLACE]", job.articleUrl)
-    : `${job.suggestedText}\n\n${job.articleUrl}`;
+  // Keep the complete URL in the Page post. Facebook auto-links a bare URL
+  // in the post body; the safe builder prevents an overlong AI caption from
+  // cutting that URL in half.
+  const finalPost = buildSafeCaption(job.suggestedText, job.articleUrl, { maxChars: 63206 });
   const articleImage = await getArticleOpenGraphImage(job.articleUrl);
   const imageUrl = articleImage ? await normalizeSocialImage(articleImage, 4 / 3) : undefined;
   const result = await publishFacebookPagePost(
@@ -972,43 +972,15 @@ async function processFacebookStoryJob(job: {
 
   await validateArticleUrl(job.articleUrl);
 
-  const [title, user] = await Promise.all([
-    job.titleId ? prisma.title.findUnique({ where: { id: job.titleId } }) : Promise.resolve(null),
-    prisma.user.findUnique({
-      where: { id: job.userId },
-      select: { aiImageGenerationEnabled: true, businessLogoUrl: true, profilePhotoUrl: true },
-    }),
-  ]);
-  const summary = title?.summary || job.articleTitle || "";
-
-  const sourceImage = await getArticleOpenGraphImage(job.articleUrl);
-  let imageUrl: string | null = null;
-  let aiPrompt: string | null = null;
-  if (sourceImage && user?.aiImageGenerationEnabled) {
-    const generated = await generateAiSocialImage({
-      articleTitle: job.articleTitle,
-      articleSummary: summary,
-      ogImageUrl: sourceImage,
-      format: "facebook-story",
-      businessLogoUrl: user.businessLogoUrl,
-      profilePhotoUrl: user.profilePhotoUrl,
-      pathPrefix: `facebook/ai/story/${job.titleId || job.id}`,
-    });
-    imageUrl = generated?.imageUrl ?? null;
-    aiPrompt = generated?.prompt ?? null;
-    if (!imageUrl) throw new Error("No se pudo generar la imagen con IA para la Historia de Facebook.");
-  } else {
-    imageUrl = sourceImage ? await normalizeSocialImage(sourceImage, 9 / 16) : null;
-    if (!imageUrl) throw new Error("No se pudo adaptar la imagen del artículo para la Historia de Facebook.");
-  }
-
-  const result = await publishFacebookPageStory(
-    decryptSecret(integration.accessTokenEncrypted), integration.facebookPageId, imageUrl,
+  // Page Stories API accepts only a photo_id. It has no caption, link
+  // sticker, or destination URL field. Publishing here would therefore
+  // violate the product contract for non-Instagram channels: the article
+  // link would not be clickable. Stop explicitly instead of reporting a
+  // successful publication without a link.
+  throw new Error(
+    "Facebook Story no admite enlaces clicables mediante la API de Páginas. Usa una publicación normal de Facebook Page para compartir el artículo con su enlace."
   );
 
-  await prisma.socialOpportunity.update({ where: { id: job.id }, data: { status: "published", postId: result.permalink || result.postId, publishedAt: new Date(), errorLog: null, imageUrl, aiImagePrompt: aiPrompt } });
-  if (job.titleId) await prisma.titleEvent.create({ data: { titleId: job.titleId, message: `Historia publicada en Facebook Page (${integration.facebookPageName || integration.facebookPageId}) - ID: ${result.postId}` } });
-  return true;
 }
 
 // ─── INSTAGRAM ────────────────────────────────────────────────────────────

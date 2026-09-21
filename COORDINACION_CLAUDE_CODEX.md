@@ -1,5 +1,22 @@
 # INCIDENTE CRÍTICO Y PROTOCOLO OBLIGATORIO — 2026-09-08
 
+## Auditoría LINK ACTIVO EN BLOGGING — Codex — 2026-09-20
+
+- Se auditó `apps/worker/src/socialPublish.ts` y los adaptadores de Threads,
+  X, LinkedIn, Facebook Page, Pinterest, Tumblr, Bluesky, DEV.to y Blogger.
+  Los canales conservan el enlace completo por caption o por campo nativo;
+  Blogger lo emite como `<a href>`.
+- Corrección: Facebook Page usa `buildSafeCaption` para impedir que un copy
+  largo corte el enlace. Facebook Page Story queda bloqueado explícitamente:
+  la Page Stories API solo acepta `photo_id` y no admite caption, URL ni
+  sticker; ya no se reportará como publicación válida sin enlace. Se debe
+  usar una publicación normal de Facebook Page para ese requisito.
+- Se agregó `apps/worker/src/socialLinkContract.test.ts` con 2 pruebas de
+  contrato. Build del worker: OK tras `prisma generate`; suite worker:
+  20/20 OK y contrato nuevo: 2/2 OK; `git diff --check`: OK.
+- Sin cambios de schema ni migraciones. Pendiente: commit/push y despliegue
+  productivo desde un checkout con permisos de Git/Vercel disponibles.
+
 ## Qué pasó: Producción rota por schema sin migración
 
 **Resumen:** PR #76 (Claude) agregó `User.publishMethod` y `McpConnection` al schema Prisma sin crear la migración correspondiente. Resultado: login en Producción devolvía HTTP 500 ("column `User.publishMethod` does not exist"). Tardó 4 horas en arreglarse.
