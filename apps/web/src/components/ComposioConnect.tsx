@@ -312,7 +312,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
               {CONNECTION_STEPS[connection.app] && (
                 <div
                   role="note"
-                  style={{ marginTop: 10, padding: "10px 12px", borderRadius: 10, background: "#f5f5f7", color: "#1d1d1f", fontSize: 13, lineHeight: 1.5 }}
+                  style={{ marginTop: 10, padding: "10px 0", borderTop: "1px solid #e5e5ea", color: "#1d1d1f", fontSize: 13, lineHeight: 1.5 }}
                 >
                   <strong>Cómo hacerlo paso a paso</strong>
                   <ol style={{ margin: "6px 0 0", paddingLeft: 20 }}>
@@ -342,7 +342,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
               )}
 
               {choice && (
-                <div style={{ marginTop: 12, padding: 14, borderRadius: 12, background: "#f5f5f7" }}>
+                <div style={{ marginTop: 12, padding: "10px 0", borderTop: "1px solid #e5e5ea" }}>
                   <p style={{ fontSize: 14, fontWeight: 600, margin: "0 0 4px" }}>{CHOOSE_TITLE[connection.app]}</p>
                   {CHOOSE_NOTE[connection.app] && <p style={{ ...mutedStyle, margin: "0 0 10px" }}>{CHOOSE_NOTE[connection.app]}</p>}
                   {choice.loading && <p style={mutedStyle}>Leyendo tu cuenta…</p>}

@@ -2,10 +2,9 @@ export default function BrowserTabsConnectionNotice() {
   return (
     <section
       style={{
-        padding: 16,
-        border: "1px solid #d2d2d7",
-        borderRadius: 14,
-        background: "#f5f5f7",
+        padding: "12px 0",
+        borderBottom: "1px solid #e5e5ea",
+        background: "transparent",
         color: "#1d1d1f",
         fontSize: 13,
         lineHeight: 1.55,

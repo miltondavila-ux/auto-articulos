@@ -41,12 +41,11 @@ export default function PasosAntesDeConectar({
   return (
     <div
       style={{
-        padding: 16,
-        margin: "14px 0",
+        padding: "10px 0",
+        margin: "12px 0",
         fontSize: 13,
-        border: "1px solid #d2d2d7",
-        borderRadius: 14,
-        background: "#ffffff",
+        borderTop: "1px solid #e5e5ea",
+        background: "transparent",
       }}
     >
       <strong style={{ color: "#1d1d1f", fontSize: 14 }}>
