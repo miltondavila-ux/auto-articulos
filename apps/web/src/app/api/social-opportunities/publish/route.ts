@@ -62,6 +62,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Google Business Profile usa el lane específico de BusinessProfilePost
+    // (incluido PostPeer), no el worker genérico de redes sociales.
+    if (opp.platform === "google-business") {
+      if (!opp.titleId) {
+        return NextResponse.json({ error: "La propuesta no está vinculada a un artículo publicable." }, { status: 400 });
+      }
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true, allowGoogleBusinessPublishing: true } });
+      if (user?.role !== "admin" && !user?.allowGoogleBusinessPublishing) {
+        return NextResponse.json({ error: "No tienes permiso para publicar en Google Business Profile. Contacta al administrador." }, { status: 403 });
+      }
+      await prisma.businessProfilePost.upsert({
+        where: { titleId: opp.titleId },
+        create: { titleId: opp.titleId, summary: "", ctaUrl: opp.articleUrl, status: "pending" },
+        update: { status: "pending", googleResponse: null, sentAt: null },
+      });
+      await prisma.socialOpportunity.update({ where: { id }, data: { status: "queued", progressPercent: 1, progressStage: "En cola, esperando al worker de Google Business Profile", errorLog: null, startedAt: new Date(), finishedAt: null } });
+      await triggerSocialWorkerNow();
+      return NextResponse.json({ success: true, message: "Publicación encolada para Google Business Profile mediante PostPeer." });
+    }
+
     const supported = [
       "threads",
       "x",
@@ -73,6 +93,7 @@ export async function POST(request: NextRequest) {
       "bluesky",
       "devto",
       "blogger",
+      "google-business",
       "instagram-carousel",
       "instagram-reel-image",
       "instagram-story",
@@ -181,6 +202,8 @@ export async function POST(request: NextRequest) {
         ? "Publicación encolada. El sistema adaptará y publicará el artículo en DEV.to en segundo plano."
         : opp.platform === "blogger"
         ? "Publicación encolada. El sistema publicará el artículo en Blogger en segundo plano."
+        : opp.platform === "google-business"
+        ? "Publicación encolada. El sistema publicará el artículo en Google Business Profile mediante PostPeer en segundo plano."
         : "Publicación encolada. El sistema generará la imagen y publicará en Threads en segundo plano.",
     });
   } catch {
