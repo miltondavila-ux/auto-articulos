@@ -32,16 +32,10 @@ const SECCIONES = [
       "Cómo se escriben tus artículos, el texto que firma cada uno, tu teléfono de contacto y las fotos que se usan en redes sociales.",
   },
   {
-    href: "/dashboard/configuracion/indexacion",
-    titulo: "Indexación y SEO",
+    href: "/dashboard/configuracion/conexiones",
+    titulo: "Conexiones",
     descripcion:
-      "Conecta Google Search Console, Google Analytics y Bing para que tus artículos aparezcan en las búsquedas.",
-  },
-  {
-    href: "/dashboard/configuracion/redes-sociales",
-    titulo: "Redes Sociales",
-    descripcion:
-      "Conecta tus redes sociales para que el sistema pueda publicar ahí también, automáticamente.",
+      "Configura Search Console, Analytics y tus redes desde un solo lugar.",
   },
   {
     href: "/dashboard/configuracion/movil",
