@@ -367,7 +367,7 @@ async function getFreshTumblrExpiry(
 }
 
 async function getConnectedNetworks(userId: string) {
-  const [threads, twitter, linkedin, instagram, facebookPage, pinterest, tumblr, bluesky, devto, blogger, composioInstagram, user] = await Promise.all([
+  const [threads, twitter, linkedin, instagram, facebookPage, pinterest, tumblr, bluesky, devto, blogger, composioInstagram, composioFacebook, user] = await Promise.all([
     prisma.threadsIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.twitterIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.linkedInIntegration.findUnique({ where: { userId }, select: { id: true } }),
@@ -379,6 +379,7 @@ async function getConnectedNetworks(userId: string) {
     prisma.devToIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.bloggerIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.composioConnection.findFirst({ where: { userId, app: "instagram", status: "ACTIVE" }, select: { connectedAccountId: true, igAccountId: true, username: true } }),
+    prisma.composioConnection.findFirst({ where: { userId, app: "facebook", status: "ACTIVE" }, select: { connectedAccountId: true, pageId: true, pageName: true } }),
     prisma.user.findUnique({ where: { id: userId }, select: { role: true, email: true, name: true, firstName: true, lastName: true, businessLocations: true, contentLanguage: true, allowInstagramPublishing: true, allowLinkedInPublishing: true, allowThreadsPublishing: true, allowFacebookPublishing: true, allowPinterestPublishing: true, allowTumblrPublishing: true, allowBlueskyPublishing: true, allowDevToPublishing: true, allowBloggerPublishing: true } }),
   ]);
   const tumblrExpiresAt = await getFreshTumblrExpiry(tumblr, userId);
@@ -390,7 +391,7 @@ async function getConnectedNetworks(userId: string) {
   // reactivarla fácil más adelante — solo se fuerza a `false` acá, el único
   // punto de donde sale si se muestra o no en Oportunidades en Redes.
   const activeNetworks = { threads: Boolean(isAdmin || socialOverride || user?.allowThreadsPublishing), x: false, linkedin: Boolean(isAdmin || socialOverride || user?.allowLinkedInPublishing), instagram: Boolean(isAdmin || socialOverride || user?.allowInstagramPublishing), facebookPage: Boolean(isAdmin || socialOverride || user?.allowFacebookPublishing), pinterest: Boolean(isAdmin || socialOverride || user?.allowPinterestPublishing), tumblr: Boolean(isAdmin || socialOverride || user?.allowTumblrPublishing), bluesky: Boolean(isAdmin || user?.allowBlueskyPublishing), devto: Boolean(isAdmin || socialOverride || user?.allowDevToPublishing), blogger: Boolean(isAdmin || socialOverride || user?.allowBloggerPublishing) };
-  return { activeNetworks, threads: activeNetworks.threads && Boolean(threads), x: activeNetworks.x && Boolean(twitter), linkedin: activeNetworks.linkedin && Boolean(linkedin), instagram: activeNetworks.instagram && Boolean(instagram || composioInstagram), facebookPage: activeNetworks.facebookPage && Boolean(facebookPage), pinterest: activeNetworks.pinterest && Boolean(pinterest && pinterest.boardId && (!pinterest.expiresAt || pinterest.expiresAt > new Date())), tumblr: activeNetworks.tumblr && Boolean(tumblr && (!tumblrExpiresAt || tumblrExpiresAt > new Date())), bluesky: activeNetworks.bluesky && Boolean(bluesky), devto: activeNetworks.devto && Boolean(devto), blogger: activeNetworks.blogger && Boolean(blogger) };
+  return { activeNetworks, hideInstagramStories: Boolean(composioInstagram), hideFacebookStories: Boolean(composioFacebook), threads: activeNetworks.threads && Boolean(threads), x: activeNetworks.x && Boolean(twitter), linkedin: activeNetworks.linkedin && Boolean(linkedin), instagram: activeNetworks.instagram && Boolean(instagram || composioInstagram), facebookPage: activeNetworks.facebookPage && Boolean(facebookPage), pinterest: activeNetworks.pinterest && Boolean(pinterest && pinterest.boardId && (!pinterest.expiresAt || pinterest.expiresAt > new Date())), tumblr: activeNetworks.tumblr && Boolean(tumblr && (!tumblrExpiresAt || tumblrExpiresAt > new Date())), bluesky: activeNetworks.bluesky && Boolean(bluesky), devto: activeNetworks.devto && Boolean(devto), blogger: activeNetworks.blogger && Boolean(blogger) };
 }
 
 export async function GET() {
@@ -451,7 +452,8 @@ export async function POST(request: Request) {
         select: { allowInstagramPublishing: true },
       });
       if (user?.allowInstagramPublishing) {
-        integrations.push("instagram-story");
+        const hasComposioInstagram = Boolean((connected as { hideInstagramStories?: boolean }).hideInstagramStories);
+        if (!hasComposioInstagram) integrations.push("instagram-story");
         integrations.push("instagram-post");
       }
     }
