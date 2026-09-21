@@ -22,6 +22,7 @@ export * from "./mcp-client";
 export * from "./composio";
 export * from "./composio-resolver";
 export * from "./composio-search-console";
+export * from "./composio-social";
 export * from "./composio-connection-state";
 
 export const MAX_ATTEMPTS = 3;
