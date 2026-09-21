@@ -26,6 +26,12 @@ type ArticleCandidate = {
   searchQueries?: string[];
 };
 
+type EditorialProfile = {
+  name: string | null;
+  businessLocations: string | null;
+  contentLanguage: string;
+};
+
 const formulas = [
   `Fórmula: Historia personal / Anécdota cercana.
    Pautas: Empieza contando una pequeña anécdota en primera persona como si le hablaras a un amigo (Ej: "Ayer conversaba con una cliente...", "Estaba revisando unos casos de..."). Relata la lección y dile que escribiste un post rápido en tu blog para ayudarlos en esa situación.`,
@@ -45,6 +51,7 @@ async function generateGPTCopy(
   summary: string,
   searchQueries: string[] = [],
   googleAnalyticsContext?: string,
+  profile?: EditorialProfile,
 ): Promise<string> {
   // "instagram-story" NO tiene caption visible en Instagram (publishInstagramStory
   // no manda texto, solo la imagen) — este texto queda solo de registro interno,
@@ -96,6 +103,11 @@ async function generateGPTCopy(
   const analyticsContext = googleAnalyticsContext
     ? `- Señales agregadas de Google Analytics 4 (solo como contexto): ${googleAnalyticsContext}\n`
     : "";
+  const authorContext = profile?.name
+    ? `La publicación representa a ${profile.name}. Usa esa identidad solo si encaja naturalmente y nunca inventes profesión, certificaciones, clientes, resultados o experiencias personales.\n` +
+      (profile.businessLocations ? `Ubicaciones declaradas del negocio: ${profile.businessLocations}. No agregues otras.\n` : "")
+    : "No hay identidad profesional verificada disponible. No inventes nombre, profesión, ubicación, clientes ni anécdotas personales; escribe desde la utilidad del contenido y usa primera persona solo de forma editorial, sin afirmaciones biográficas.\n";
+  const language = profile?.contentLanguage === "en" ? "inglés" : "español";
   try {
     const response = await fetch(OPENAI_CHAT_URL, {
       method: "POST",
@@ -109,8 +121,7 @@ async function generateGPTCopy(
           {
             role: "user",
             content:
-              `Eres Lorena Alvarez, una asesora de seguros en Florida súper cercana, alegre, empática y de gran confianza. ` +
-              `Escribe una publicación optimizada para la red social ${platform}. Debe sonar 100% natural, en primera persona del singular ("yo", "mi", "me"). ${styleNote}\n\n` +
+              `Escribe en ${language} una publicación optimizada para la red social ${platform}. Debe sonar 100% natural, cercana, alegre, empática y confiable. ${authorContext}${styleNote}\n\n` +
               `INSTRUCCIONES DE ESTILO ESPECÍFICAS:\n` +
               `${selectedFormula}\n\n` +
               `REGLAS CRÍTICAS:\n` +
@@ -121,6 +132,7 @@ async function generateGPTCopy(
               `- Usa un ángulo editorial propio para esta red: desarrolla una pregunta, problema, consejo, comparación, error, caso o tendencia relacionada con el tema central del artículo. No repitas simplemente el título ni copies el mismo enfoque de otra red.\n` +
               `- La relación temática debe ampliar el universo del artículo: puedes conectar con subtemas complementarios y necesidades derivadas del lector, pero no inventes hechos ni te alejes del tema respaldado por el título, resumen o consultas reales.\n` +
               `- No uses frases vacías, tono frío, lenguaje corporativo ni expresiones que parezcan generadas automáticamente.\n` +
+              `- No inventes datos biográficos, ubicaciones, testimonios, resultados, leyes, precios ni promesas. Si un dato no está en los datos entregados, omítelo.\n` +
               (isInstagramFeedCaption
                 ? `- Instagram no muestra enlaces clicables en el caption — NUNCA escribas una URL ni la palabra "[ENLACE]". En vez de eso, termina con al menos 5 hashtags reales, en español, sacados de palabras clave del tema y contenido del artículo (no genéricos como #instagram) — sin espacios dentro de cada hashtag, separados entre sí por un espacio, en su propia línea al final.\n\n`
                 : `- No uses hashtags (#) ni formato markdown.\n` +
@@ -366,7 +378,7 @@ async function getConnectedNetworks(userId: string) {
     prisma.blueskyIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.devToIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.bloggerIntegration.findUnique({ where: { userId }, select: { id: true } }),
-    prisma.user.findUnique({ where: { id: userId }, select: { role: true, email: true, allowInstagramPublishing: true, allowLinkedInPublishing: true, allowThreadsPublishing: true, allowFacebookPublishing: true, allowPinterestPublishing: true, allowTumblrPublishing: true, allowBlueskyPublishing: true, allowDevToPublishing: true, allowBloggerPublishing: true } }),
+    prisma.user.findUnique({ where: { id: userId }, select: { role: true, email: true, name: true, firstName: true, lastName: true, businessLocations: true, contentLanguage: true, allowInstagramPublishing: true, allowLinkedInPublishing: true, allowThreadsPublishing: true, allowFacebookPublishing: true, allowPinterestPublishing: true, allowTumblrPublishing: true, allowBlueskyPublishing: true, allowDevToPublishing: true, allowBloggerPublishing: true } }),
   ]);
   const tumblrExpiresAt = await getFreshTumblrExpiry(tumblr, userId);
   const isAdmin = user?.role === "admin";
@@ -396,6 +408,10 @@ export async function POST(request: Request) {
     if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Módulo reservado a administradores y Lorena." }, { status: 403 });
     const body = await request.json().catch(() => ({})) as { networks?: string[] };
     const connected = await getConnectedNetworks(userId);
+    const editorialUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, firstName: true, lastName: true, businessLocations: true, contentLanguage: true },
+    });
     const requestedNetworks = Array.isArray(body.networks)
       ? body.networks.filter((network) => network === "threads" || network === "x" || network === "linkedin" || network === "instagram" || network === "facebook-page" || network === "pinterest" || network === "tumblr" || network === "bluesky" || network === "devto" || network === "blogger")
       : ["threads", "x", "linkedin", "instagram", "facebook-page", "pinterest", "tumblr", "bluesky", "devto", "blogger"];
@@ -412,7 +428,6 @@ export async function POST(request: Request) {
     }
     if (requestedNetworks.includes("facebook-page") && connected.facebookPage) {
       integrations.push("facebook-page");
-      integrations.push("facebook-story");
     }
     if (requestedNetworks.includes("pinterest") && connected.pinterest) {
       integrations.push("pinterest");
@@ -564,13 +579,19 @@ export async function POST(request: Request) {
         const opportunityKey = `${article.id}:${normalizePlatform(platform)}`;
         if (activeKeys.has(opportunityKey)) continue;
 
-        const copyText = await generateGPTCopy(
-          platform,
-          article.finalTitle || article.text,
-          article.summary || "",
-          article.searchQueries,
-          googleAnalyticsContext,
-        );
+      const profile = editorialUser ? {
+        name: [editorialUser.firstName, editorialUser.lastName].filter(Boolean).join(" ") || editorialUser.name || null,
+        businessLocations: editorialUser.businessLocations,
+        contentLanguage: editorialUser.contentLanguage,
+      } : undefined;
+      const copyText = await generateGPTCopy(
+        platform,
+        article.finalTitle || article.text,
+        article.summary || "",
+        article.searchQueries,
+        googleAnalyticsContext,
+        profile,
+      );
 
         const opp = await prisma.socialOpportunity.create({
           data: {
