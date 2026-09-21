@@ -71,6 +71,7 @@ export default function OportunidadesRedesPage() {
   const [generatingAll, setGeneratingAll] = useState(false);
   const [connectedNetworks, setConnectedNetworks] = useState({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false, bluesky: false, devto: false, blogger: false });
   const [activeNetworks, setActiveNetworks] = useState({ threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false, bluesky: false, devto: false, blogger: false });
+  const [storiesUnavailable, setStoriesUnavailable] = useState({ instagram: false, facebook: false });
   const [generateSeconds, setGenerateSeconds] = useState(0);
   const [usedGsc, setUsedGsc] = useState(false);
   const [publishingId, setPublishingId] = useState<string | null>(null);
@@ -129,11 +130,13 @@ export default function OportunidadesRedesPage() {
         const effectiveConnections = { threads: Boolean(data.threads), x: Boolean(data.x), linkedin: Boolean(data.linkedin), instagram: Boolean(data.instagram), facebookPage: Boolean(data.facebookPage), pinterest: Boolean(data.pinterest), tumblr: Boolean(data.tumblr), bluesky: Boolean(data.bluesky), devto: Boolean(data.devto), blogger: Boolean(data.blogger) };
         setConnectedNetworks(effectiveConnections);
         setActiveNetworks(data.activeNetworks ?? effectiveConnections);
+        setStoriesUnavailable({ instagram: Boolean(data.hideInstagramStories), facebook: Boolean(data.hideFacebookStories) });
       }
     } catch {
     const none = { threads: false, x: false, linkedin: false, instagram: false, facebookPage: false, pinterest: false, tumblr: false, bluesky: false, devto: false, blogger: false };
       setConnectedNetworks(none);
       setActiveNetworks(none);
+      setStoriesUnavailable({ instagram: false, facebook: false });
     } finally {
       setConnectionsLoading(false);
     }
@@ -360,7 +363,7 @@ export default function OportunidadesRedesPage() {
     }
   }
 
-  const pendingList = opportunities.filter((o) => o.status === "pending");
+  const pendingList = opportunities.filter((o) => o.status === "pending" && !(storiesUnavailable.instagram && o.platform === "instagram-story") && !(storiesUnavailable.facebook && o.platform === "facebook-story"));
 
   if (loading || connectionsLoading) return null;
 

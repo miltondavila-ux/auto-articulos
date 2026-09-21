@@ -8553,3 +8553,9 @@ Responsable: Claude (tarea programada diaria de propagación).
 - También se reprodujo que generar una oportunidad de Instagram devolvía «la red seleccionada (instagram) no está conectada». La causa era que `apps/web/src/app/api/social-opportunities/generate/route.ts` solo contaba `instagramIntegration` propia y no una conexión Composio activa.
 - Corrección local preparada: mostrar las redes habilitadas como `Configurar` desactivado cuando el estado no se puede confirmar, y contar una conexión Composio activa de Instagram para el descubrimiento/generación. No se modificaron cuentas, publicaciones, schema, migraciones ni flags globales.
 - Auditoría local: `npx tsc --noEmit -p apps/web/tsconfig.json` correcto. La corrección está sin commit y sin despliegue; Producción permanece sin cambios. No se autoriza fusionar ni activar nada desde esta entrada.
+
+### Registro 2026-09-21 — Stories ocultas cuando la vía activa es Composio
+
+- A petición de Milton, se añadió una validación para que una conexión Composio activa de Instagram o Facebook no genere ni muestre oportunidades `instagram-story` o `facebook-story`.
+- Las oportunidades ya guardadas no se borran: se filtran del listado mientras esa vía esté activa. Los posts normales continúan disponibles.
+- Sin schema, migraciones, cuentas ni publicaciones modificadas. Verificación local: TypeScript web y `git diff --check` correctos. Pendiente commit, Preview y despliegue según el protocolo.
