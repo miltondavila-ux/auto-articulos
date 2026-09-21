@@ -2,6 +2,17 @@
 
 Última actualización: 2026-09-08, por Claude.
 
+## Auditoría LINK ACTIVO EN BLOGGING (20/9/2026, Codex)
+
+Se revisaron los adaptadores de publicación social no-Instagram. Facebook
+Page ahora conserva la URL completa con `buildSafeCaption`; Blogger mantiene
+un enlace HTML clicable; los demás canales usan caption o campos nativos de
+enlace/canonical. Facebook Page Story quedó detenido con un error explícito
+porque la API no permite caption, URL ni sticker: no se debe contar como
+publicado con enlace. Verificación: build worker OK, suite 20/20 y 2/2
+pruebas nuevas de contrato. Sin schema/migraciones. Commit y producción
+pendientes por permisos del checkout actual.
+
 **Nota de mantenimiento (2026-09-08):** este archivo dejó de actualizarse
 tras el 14/8/2026 en la práctica — desde entonces la fuente de verdad viva
 del proyecto es `COORDINACION_CLAUDE_CODEX.md` (diario cronológico
