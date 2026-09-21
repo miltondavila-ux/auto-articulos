@@ -8286,3 +8286,34 @@ reservas ajenas sobre esos archivos. **Auditoría 2 — Funcional:** OK. `tsc --
 en el bundle compilado los nombres nuevos están y los viejos solo aparecen dentro de
 `MENU_NAMES_ANTERIORES` (0 en el cliente). **Auditoría 3 — Regresión/entrega:** pendiente (Preview,
 Producción y verificación posterior).
+
+### Cierre — NOMBRES EN EL MENU — 2026-09-20
+
+**Auditoría 3 — Regresión/entrega:** OK. PR #183 (https://github.com/miltondavila-ux/auto-articulos/pull/183)
+con Vercel Preview `success` y mergeable CLEAN; fusionado a `main` con merge commit `dc200d6`;
+deployment Vercel Production `success`; `https://seototal.lasolucionweb.com/login` HTTP 200 y
+`/dashboard` sin sesión redirige a `/login` (comportamiento intacto). No se pudo inspeccionar el menú
+autenticado desde esta sesión (no se ingresan credenciales); **queda pendiente la confirmación visual de
+Milton** con su sesión: el desplegable Publicaciones debe mostrar «1) Artículos propios»,
+«2) Artículos creados con IA», «3) Redes sociales: publicaciones con IA».
+
+```text
+IDENTIDAD: Claude - Sonnet 5 - NOMBRES EN EL MENU
+PROYECTO: Creador de artículos (auto-articulos / SEO TOTAL)
+ESTADO FINAL: CULMINADA — en Producción
+RAMA: claude/nombres-en-el-menu (fusionada); registro en claude/nombres-en-el-menu-registro
+WORKTREE: .worktrees/nombres-en-el-menu (retirado tras el registro)
+COMMIT BASE: 934e121
+ÚLTIMO COMMIT: c1be7f7 (merge dc200d6)
+ARCHIVOS MODIFICADOS: 17 en apps/web/src + 3 documentos de registro; nuevos: lib/menu-names.ts y lib/menu-names.test.ts
+ARCHIVOS RESERVADOS: ninguno activo
+ARCHIVOS LIBERADOS: los 19 de apps/web/src y los 3 documentos, 2026-09-20 ~20:25 EDT
+MIGRACIONES: ninguna (sin schema)
+PRUEBAS EJECUTADAS: diff --check, tsc --noEmit, next build, 10/10 pruebas node:test, revisión del bundle
+PRODUCCIÓN/PREVIEW: Preview success; Production success; /login 200
+ERRORES O BLOQUEOS: el hook posterior al commit no pudo registrar la novedad en ProductUpdate (falta DATABASE_URL en el entorno local); no se reintentó contra ninguna base
+TRABAJO PENDIENTE: (1) confirmación visual de Milton; (2) decidir si se registra una novedad en Actualizaciones con el generador
+SIGUIENTE ACCIÓN EXACTA: Milton abre el menú Publicaciones con su sesión y confirma los tres nombres
+RESPONSABLE SIGUIENTE: Milton
+FECHA Y HORA DE LIBERACIÓN: 2026-09-20 ~20:25 EDT
+```

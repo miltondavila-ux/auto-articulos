@@ -1515,4 +1515,7 @@ reservas liberadas. Estado final: ARCHIVADA.
   `app/dashboard/{page,como-funciona,historial,oportunidades,oportunidades-redes,publicar,publicaciones-en-curso,usuarios}/page.tsx`
   y `app/dashboard/configuracion/inicial/page.tsx`. Sin schema, sin migraciones, sin cambios de datos.
 - Producción: autorizada por Milton en el chat el 2026-09-20 («ESPERO QUE LO COLOQUES EN PRODUCCION»).
-- Estado: ACTIVO — verificación local completa; siguen PR, Preview, Producción y verificación posterior.
+- PR #183 fusionado a `main` (merge commit `dc200d6`, commit propio `c1be7f7`). Vercel Preview y
+  Production: success; `/login` HTTP 200. Reservas liberadas el 2026-09-20 ~20:25 EDT.
+- Estado final: CULMINADA — EN PRODUCCIÓN (pendiente solo la confirmación visual de Milton del menú
+  autenticado, que Claude no puede ver sin iniciar sesión). Detalle en `COORDINACION_CLAUDE_CODEX.md`.
