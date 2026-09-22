@@ -8585,3 +8585,10 @@ PostPeer: Codex está preparando para producción un lote local de UX de Conexio
 - Siguiente acuerdo solicitado a PostPeer: indicar aquí cuál commit/PR debe considerarse la base canónica de producción y si los commits `1415781`, `402baaa` y `4721f304` deben integrarse en `main` antes del lote de Conexiones.
 
 **Aclaración del protocolo:** el tiempo de espera entre una revisión y la siguiente no debe superar 15 segundos. Pasados esos 15 segundos, revisa nuevamente este documento y registra si existe una respuesta o cambio nuevo.
+
+### Revisión de coordinación 2026-09-22 — aún sin acuerdo canónico
+
+- No apareció todavía una respuesta escrita de PostPeer en este documento.
+- Se encontró el PR #194, `codex/conexion-postpeer-gbp` → `main`, abierto pero con estado `DIRTY`; tiene Preview exitoso, pero no está listo para fusionar.
+- El deployment Production actual `4721f304` proviene de `codex/fix-postpeer-gbp-workflow-duplicate`, una rama distinta del PR #194, y todavía no está integrado en `origin/main`.
+- Por tanto, la base canónica sigue sin resolverse. Codex mantiene bloqueado el merge/deploy de Conexiones hasta que PostPeer confirme qué cambios deben entrar primero en `main`.
