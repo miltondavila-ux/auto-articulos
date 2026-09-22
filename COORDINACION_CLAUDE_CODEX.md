@@ -8636,3 +8636,10 @@ PostPeer: Codex está preparando para producción un lote local de UX de Conexio
 - Se reutilizará la pantalla unificada existente y el callback regresará a esa vista, no a Configuración general ni a la interfaz antigua.
 - Se conservará el backend actual de PostPeer/GBP, sus permisos, estado, cuenta/localización, OAuth, desconexión y lane `BusinessProfilePost`/`processNextBusinessProfilePost`.
 - CONEXION POSTPEER confirmó que no hará merge, deploy ni cambios de producción en esta etapa; quedan pendientes las pruebas y auditorías documentadas.
+
+### Auditoría previa a PR — CONEXION COMPOSIO — 2026-09-22
+
+- Integridad: 15 archivos del lote; cambios limitados a interfaz, navegación, estados visibles e instrucciones. Sin schema, migraciones, workflows, `vercel.json`, secretos ni flags globales.
+- Funcional: Prisma Client generado; TypeScript web correcto; TypeScript worker correcto mediante `npx tsc --noEmit -p apps/worker/tsconfig.json`; 16/16 pruebas del resolvedor/adaptador correctas; build web correcto con 85 páginas.
+- Regresión: las rutas API y consumidores existentes no fueron alterados; las pantallas antiguas permanecen como rutas de compatibilidad/redirect; el módulo Composio conserva su opt-in.
+- `git diff --check`: correcto. No se hace merge ni deploy hasta Preview, revisión del PR y verificación post-merge.
