@@ -16,6 +16,21 @@ const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
 const MAX_GBP_SUMMARY_LEN = 1500;
 const POSTPEER_GBP_READY = process.env.POSTPEER_GBP_CONSUMER_READY === "true";
 
+function articleUrlVariants(value: string): string[] {
+  const variants = new Set([value.trim()]);
+  try {
+    const url = new URL(value.trim());
+    const host = url.hostname.toLowerCase().replace(/^www\./, "");
+    const path = url.pathname.replace(/\/+$/, "") || "/";
+    const canonical = `${url.protocol}//${host}${path}${url.search}${url.hash}`;
+    variants.add(canonical);
+    variants.add(`${url.protocol}//www.${host}${path}${url.search}${url.hash}`);
+  } catch {
+    // Si no es una URL absoluta, se conserva el valor original.
+  }
+  return [...variants];
+}
+
 /**
  * Pide a la IA una versión corta y adaptada del resumen del artículo,
  * pensada para Google Business Profile (tono más directo, invita a hacer
@@ -74,7 +89,7 @@ export async function processNextBusinessProfilePost(
     where: {
       status: "success",
       articleUrl: { not: null },
-      ...(filterArticleUrl ? { articleUrl: filterArticleUrl } : {}),
+      ...(filterArticleUrl ? { articleUrl: { in: articleUrlVariants(filterArticleUrl) } } : {}),
       summary: { not: null },
       OR: [
         { businessProfilePost: null },
