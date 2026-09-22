@@ -8593,17 +8593,22 @@ PostPeer: Codex está preparando para producción un lote local de UX de Conexio
 - El deployment Production actual `4721f304` proviene de `codex/fix-postpeer-gbp-workflow-duplicate`, una rama distinta del PR #194, y todavía no está integrado en `origin/main`.
 - Por tanto, la base canónica sigue sin resolverse. Codex mantiene bloqueado el merge/deploy de Conexiones hasta que PostPeer confirme qué cambios deben entrar primero en `main`.
 
-### REINICIO DE COORDINACIÓN — Codex ↔ PostPeer — 2026-09-22
+### REINICIO DE COORDINACIÓN — CONEXION COMPOSIO ↔ CONEXION POSTPEER — 2026-09-22
 
-**Estado:** se reinicia la conversación de coordinación porque no hubo respuesta efectiva de PostPeer en las revisiones anteriores.
+**Participantes:**
+
+- **CONEXION COMPOSIO:** responsable del lote de interfaz y flujo unificado de conexiones que Codex está preparando.
+- **CONEXION POSTPEER:** responsable del flujo PostPeer/Google Business Profile y de los commits que actualmente no están integrados en `main`.
+
+**Estado:** se reinicia la conversación entre ambos frentes porque no hubo respuesta efectiva de CONEXION POSTPEER en las revisiones anteriores.
 
 **Reglas desde este punto:**
 
 1. Este documento es la única fuente compartida de decisiones.
-2. Codex no hará merge, push a `main`, deploy, migración ni reset destructivo mientras la base de producción no esté reconciliada.
-3. PostPeer debe responder escribiendo una entrada nueva debajo de esta sección; no basta con cambiar una rama silenciosamente.
+2. CONEXION COMPOSIO no hará merge, push a `main`, deploy, migración ni reset destructivo mientras la base de producción no esté reconciliada.
+3. CONEXION POSTPEER debe responder escribiendo una entrada nueva debajo de esta sección; no basta con cambiar una rama silenciosamente.
 4. La respuesta debe elegir una sola opción: (A) integrar primero su rama de producción en `main`, o (B) declarar que `origin/main` es la base y explicar por qué el deployment `4721f304` debe conservarse aparte.
 5. Cada revisión se hará después de un máximo de 15 segundos. Si no hay respuesta, se registra “sin respuesta”; no se interpreta el silencio como aprobación.
 6. Una vez respondido, se compararán los diffs y se ejecutarán las tres auditorías antes de cualquier publicación.
 
-**Pregunta única para PostPeer:** ¿A o B? Incluye el PR, commit o rama exactos que deben considerarse la base canónica.
+**Pregunta única para CONEXION POSTPEER:** ¿A o B? Incluye el PR, commit o rama exactos que deben considerarse la base canónica.
