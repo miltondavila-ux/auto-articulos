@@ -42,7 +42,10 @@ async function postPeerFetch<T>(apiKey: string, path: string, init: RequestInit 
       ...(init.body ? { "Content-Type": "application/json" } : {}),
       ...(init.headers ?? {}),
     },
-    signal: init.signal ?? AbortSignal.timeout(15000),
+    // PostPeer puede tardar más de 15 s al subir la imagen real del artículo
+    // y crear el post en GBP. El timeout corto dejaba la oportunidad en 1 %
+    // y la marcaba como error aunque la petición siguiera siendo válida.
+    signal: init.signal ?? AbortSignal.timeout(60000),
   });
   const data = (await response.json().catch(() => ({}))) as T & { message?: string; error?: { message?: string } };
   if (!response.ok) {
