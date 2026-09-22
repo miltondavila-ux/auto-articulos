@@ -3278,3 +3278,30 @@ ninguno de los dos. **No hay en ningún documento una confirmación explícita d
 correspondiente ya corrió en producción con estos cambios** — se deja así, sin inventar un estado de
 despliegue no confirmado por escrito. Responsable: Codex (preparación) / Milton (commit directo).
 Estado: EN `origin/main`, DESPLIEGUE NO CONFIRMADO POR ESCRITO.
+
+## Versión desplegada — 2026-09-21 — CONEXION POSTPEER, reutilización de imagen guardada para Google Business Profile
+
+PR #207 (`codex/conexion-postpeer-gbp-image-fix`, commit `ed2cb1c`) fusionado a `main` mediante squash
+`d3a760f` ("fix(gbp): reuse saved opportunity image (#207)"). Cambia
+`apps/worker/src/businessProfilePublish.ts`: el lane `BusinessProfilePost`/
+`processNextBusinessProfilePost` reutiliza primero `SocialOpportunity.imageUrl` de la oportunidad
+`google-business` y solo genera/sube una imagen de respaldo si esa URL no existe; GBP no pasa por el
+worker social genérico. Auditoría registrada en Coordinación: Prisma generate OK, TypeScript
+web/shared/worker OK, worker 20/20, tests PostPeer shared 3/3, web 44 pass (1 integración omitida por
+falta de `TITLE_GENERATION_TEST_DATABASE_URL`), build worker y web OK (85/85 rutas), `git diff --check`
+OK. Sin cambios de schema ni migraciones. **No hay en Coordinación una confirmación explícita de que
+el deployment de Vercel Production ya corrió con este cambio** — se deja así, sin inventar un estado
+de despliegue no confirmado por escrito. Responsable: Codex. Estado: EN `origin/main`, DESPLIEGUE NO
+CONFIRMADO POR ESCRITO.
+
+## Nota de reconciliación de base canónica — 2026-09-22 — CONEXION COMPOSIO ↔ CONEXION POSTPEER
+
+Se detectó una discrepancia entre `origin/main` (`d138788`) y el deployment Vercel Production más
+reciente (`4721f304`), proveniente de la rama `codex/fix-postpeer-gbp-workflow-duplicate`, no
+integrada en `main`. Tras coordinación registrada en `COORDINACION_CLAUDE_CODEX.md`, CONEXION POSTPEER
+eligió la opción **B**: `origin/main@d138788` queda como base canónica de producción; el deployment
+`4721f304` se considera cubierto por su equivalente squash `d138788` y esa rama no se fusionará una
+segunda vez. Deployment válido informado por CONEXION POSTPEER: `dpl_HKDYsh3jkFDs2HNQWAA9iNEL8NCx`. No
+hubo merge, deploy, migración ni reset adicional por esta reconciliación. Ver hallazgo técnico
+relacionado en `REPARADOR_DEL_ARBOL_PRINCIPAL.md`. Responsable: Codex (CONEXION POSTPEER). Estado:
+RECONCILIADO, SIN ACCIÓN DE DESPLIEGUE ADICIONAL.
