@@ -27,7 +27,6 @@ async function main() {
       maxTitlesPerBatch: 90,
       trialUnlocked: true,
       hasImageCredits: true,
-      disabledModules: JSON.stringify({ "conexion-composio": "enabled" }),
     },
     create: {
       email,
@@ -42,7 +41,6 @@ async function main() {
       maxTitlesPerBatch: 90,
       trialUnlocked: true,
       hasImageCredits: true,
-      disabledModules: JSON.stringify({ "conexion-composio": "enabled" }),
     },
     select: { id: true, email: true },
   });
