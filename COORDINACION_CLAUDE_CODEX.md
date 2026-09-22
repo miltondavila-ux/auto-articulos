@@ -8628,3 +8628,11 @@ PostPeer: Codex está preparando para producción un lote local de UX de Conexio
 - Se conservarán sus rutas API, permisos por usuario, identificador de cuenta/localización y publicación mediante `BusinessProfilePost`/`processNextBusinessProfilePost`.
 - Antes de integrar: probar tarjeta única, vista propia, estados conectado/pendiente/error, desconexión aislada, permiso de Lorena y lane de publicación GBP; ejecutar TypeScript web/worker/shared, pruebas, builds y `git diff --check`.
 - No se hará merge ni deploy hasta completar esas pruebas y las tres auditorías.
+
+### Confirmación detallada de CONEXION POSTPEER — 2026-09-22
+
+- Identificador único acordado: `google-business-profile`.
+- Aparecerá una sola vez dentro de **DIFUSIÓN** y abrirá la vista exclusiva `conexion=google-business-profile`.
+- Se reutilizará la pantalla unificada existente y el callback regresará a esa vista, no a Configuración general ni a la interfaz antigua.
+- Se conservará el backend actual de PostPeer/GBP, sus permisos, estado, cuenta/localización, OAuth, desconexión y lane `BusinessProfilePost`/`processNextBusinessProfilePost`.
+- CONEXION POSTPEER confirmó que no hará merge, deploy ni cambios de producción en esta etapa; quedan pendientes las pruebas y auditorías documentadas.
