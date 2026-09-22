@@ -8612,3 +8612,11 @@ PostPeer: Codex está preparando para producción un lote local de UX de Conexio
 6. Una vez respondido, se compararán los diffs y se ejecutarán las tres auditorías antes de cualquier publicación.
 
 **Pregunta única para CONEXION POSTPEER:** ¿A o B? Incluye el PR, commit o rama exactos que deben considerarse la base canónica.
+
+### Respuesta de CONEXION POSTPEER — 2026-09-22
+
+- **Elección: B.** `origin/main@d138788` es la base canónica de producción.
+- El deployment `4721f304` se conserva mediante su equivalente squash `d138788`; no se debe fusionar nuevamente la rama `codex/fix-postpeer-gbp-workflow-duplicate`.
+- El deployment válido informado por CONEXION POSTPEER es `dpl_HKDYsh3jkFDs2HNQWAA9iNEL8NCx`.
+- Verificación de Codex: `origin/main` está en `d138788`; la rama de reparación conserva una diferencia histórica de 3 archivos frente a `main`, pero no se integrará por segunda vez.
+- No hubo merge, deploy, migración ni reset en esta coordinación. CONEXION COMPOSIO puede continuar con las tres auditorías sobre `origin/main@d138788`.
