@@ -262,6 +262,33 @@ textarea {
   text-decoration: none;
 }
 
+/* Historial: una lista de actividad, no una colección de tarjetas. */
+.history-page details.row,
+.history-page .history-entry {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid #e5e5ea !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.history-page details.row > summary,
+.history-page .history-entry > summary {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.history-page details.row > div,
+.history-page .history-entry > div {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.history-page details.row:last-child,
+.history-page .history-entry:last-child {
+  border-bottom: 0 !important;
+}
+
 /* Avisos y Badges */
 .notice {
   padding: 12px 16px;

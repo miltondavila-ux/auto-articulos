@@ -24,7 +24,7 @@ import GoogleIndexingStatus from "@/components/GoogleIndexingStatus";
 
 export default function HistorialPage() {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <div className="history-page" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <ModuleIntro titulo="Historial">
         <IntroP>
           Todo lo que la plataforma ha publicado por ti queda registrado aquí: artículos y publicaciones en redes, con su fecha, su estado y el enlace a lo que se publicó.
@@ -1568,6 +1568,7 @@ function HistoryEntry({
 
   return (
     <details
+      className="history-entry"
       open={false}
       style={{
         marginBottom: 8,
