@@ -5,6 +5,7 @@ import {
   createLocalPost,
   createPostPeerPost,
 } from "@auto-articulos/shared";
+import { getArticleOpenGraphImage } from "./socialPublish";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
@@ -147,9 +148,14 @@ export async function processNextBusinessProfilePost(
     const finalTitle = candidate.finalTitle ?? candidate.text;
     const summary = candidate.summary ?? "";
     const gbpSummary = await buildBusinessProfileSummary(finalTitle, summary);
-    // GBP debe usar estrictamente la imagen ya guardada del artículo.
-    // PostPeer recibe esta URL sin recorte ni adaptación de formato.
-    const imageUrl = candidate.socialOpportunities[0]?.imageUrl ?? null;
+    // GBP debe usar estrictamente la imagen real del artículo: primero la
+    // imagen guardada en la oportunidad y, si falta, la og:image del artículo.
+    // No se genera, recorta ni adapta ninguna imagen.
+    const imageUrl = candidate.socialOpportunities[0]?.imageUrl
+      ?? await getArticleOpenGraphImage(candidate.articleUrl ?? "");
+    if (!imageUrl) {
+      throw new Error("El artículo no tiene una og:image pública para Google Business Profile.");
+    }
 
     const postPeerConnection = POSTPEER_GBP_READY
       ? await prisma.postPeerConnection.findUnique({ where: { userId: candidate.run.userId } })
