@@ -1576,3 +1576,58 @@ reservas liberadas. Estado final: ARCHIVADA.
   `auto-articulos-web.vercel.app`, ambos HTTP 200. Sin schema ni migraciones. Reservas: ninguna.
 - Estado final: CULMINADA — EN PRODUCCIÓN. Detalle en `COORDINACION_CLAUDE_CODEX.md` y
   `CONTROLADOR_DE_VERSIONES.md`.
+
+## Codex — CONEXION POSTPEER — 2026-09-21/22
+
+- **Nombre exacto de la conversación:** `CONEXION POSTPEER`. Agente: Codex (nombre inferido por el
+  estilo y contenido de las entradas; Coordinación no declara explícitamente el agente para este
+  frente, a diferencia de otras conversaciones).
+- Alcance: reparación técnica y coordinación de despliegue del flujo PostPeer/Google Business Profile
+  (GBP), y su futura integración como conexión individual dentro de **DIFUSIÓN**.
+- Corrección técnica ("CONEXION POSTPEER 2 — auditoría técnica y corrección de imagen — 2026-09-21"):
+  en `apps/worker/src/businessProfilePublish.ts`, el lane `BusinessProfilePost`/
+  `processNextBusinessProfilePost` reutiliza primero `SocialOpportunity.imageUrl` de la oportunidad
+  `google-business` y solo genera/sube una imagen de respaldo si esa URL no existe. Auditoría: Prisma
+  generate OK; TypeScript web/shared/worker OK; worker 20/20; tests PostPeer shared 3/3; web 44 pass
+  (1 integración omitida por falta de `TITLE_GENERATION_TEST_DATABASE_URL`); build worker y web OK
+  (85/85 rutas); `git diff --check` OK.
+- Commit `ed2cb1c` ("fix(gbp): reuse saved opportunity image"), rama
+  `codex/conexion-postpeer-gbp-image-fix`, PR #207 abierto contra `main`. Verificado en esta corrida:
+  PR #207 ya está fusionado a `main` como squash `d3a760f` (ver `CONTROLADOR_DE_VERSIONES.md`).
+  Confirmación explícita de despliegue en Vercel Production no registrada en Coordinación.
+- Coordinación de base canónica con CONEXION COMPOSIO (2026-09-22): discrepancia detectada entre
+  `origin/main` (`d138788`) y el deployment Production más reciente (`4721f304`, de la rama
+  `codex/fix-postpeer-gbp-workflow-duplicate`, no integrada en `main`). CONEXION POSTPEER eligió la
+  opción **B**: `origin/main@d138788` queda como base canónica; el deployment `4721f304` se considera
+  cubierto por su equivalente squash `d138788` y esa rama no se fusionará de nuevo. Deployment válido
+  informado: `dpl_HKDYsh3jkFDs2HNQWAA9iNEL8NCx`. Ver hallazgo relacionado en
+  `REPARADOR_DEL_ARBOL_PRINCIPAL.md`.
+- Acuerdo de interfaz con CONEXION COMPOSIO: PostPeer/GBP se integrará como conexión individual dentro
+  de **DIFUSIÓN**, identificador único `google-business-profile`, con pantalla propia (conexión,
+  instrucciones, OAuth/callback, desconexión, permisos) reutilizando la pantalla unificada existente;
+  se conserva el backend actual (permisos, estado, cuenta/localización, OAuth, desconexión, lane
+  `BusinessProfilePost`/`processNextBusinessProfilePost`). Sin merge ni deploy todavía — pendientes
+  pruebas y las tres auditorías acordadas.
+- Reservas: sin rama propia declarada todavía para el acuerdo de interfaz (no pusheada a esta fecha);
+  el PR #194 (`codex/conexion-postpeer-gbp` → `main`) figura abierto con estado `DIRTY` (no listo para
+  fusionar) según Coordinación — verificado en vivo: esa rama no es ancestro de `origin/main`.
+- Estado: EN CURSO — coordinación de base resuelta (opción B), corrección de imagen ya fusionada
+  (PR #207), integración de interfaz en DIFUSIÓN pendiente de PR, Preview y despliegue. Detalle
+  completo en `COORDINACION_CLAUDE_CODEX.md`.
+
+## Codex — CONEXION COMPOSIO — 2026-09-22
+
+- Continuación del programa `CONEXION COMPOSIO` (traspasado a Codex el 2026-09-19, ver entradas
+  arriba). Nueva pieza: unificación de interfaz/flujo de conexiones y coordinación de base canónica de
+  producción con CONEXION POSTPEER (ver entrada arriba y `REPARADOR_DEL_ARBOL_PRINCIPAL.md`).
+- Acuerdo con CONEXION POSTPEER (2026-09-22): PostPeer/Google Business Profile se integra como
+  conexión individual dentro de **DIFUSIÓN** (`google-business-profile`), reutilizando la pantalla
+  unificada existente; el callback regresa a esa vista, no a Configuración general.
+- Auditoría previa a PR (2026-09-22): 15 archivos del lote, cambios limitados a interfaz, navegación,
+  estados visibles e instrucciones — sin schema, migraciones, workflows, `vercel.json`, secretos ni
+  flags globales. Prisma generate OK; TypeScript web OK; TypeScript worker OK; 16/16 pruebas del
+  resolvedor/adaptador; build web OK (85 páginas). Rutas API y pantallas antiguas de
+  compatibilidad/redirect sin alterar; el módulo Composio conserva su opt-in. `git diff --check` OK.
+- Reservas: el lote sigue local a esta fecha, sin rama ni PR abiertos según Coordinación — no
+  verificable contra git desde este entorno remoto.
+- Estado: EN CURSO — auditoría completa, pendiente de PR, Preview, revisión y despliegue.
