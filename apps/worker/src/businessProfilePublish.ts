@@ -1,4 +1,5 @@
 import { prisma } from "@auto-articulos/db";
+import { createHash } from "node:crypto";
 import {
   decryptSecret,
   getGoogleAccessToken,
@@ -196,7 +197,11 @@ export async function processNextBusinessProfilePost(
         accountId: postPeerConnection.accountId,
         content: `${gbpSummary}\n\n${candidate.articleUrl ?? ""}`,
         imageUrl: imageUrl ?? undefined,
-        idempotencyKey: `business-profile-${candidate.id}`,
+        // Si un intento anterior falló en PostPeer, no reutilizar su respuesta
+        // fallida: la imagen/formato actual forma parte de la identidad del
+        // intento. Así un reintento corregido no queda atrapado por la clave
+        // idempotente del intento anterior.
+        idempotencyKey: `business-profile-${candidate.id}-${createHash("sha256").update(imageUrl).digest("hex").slice(0, 16)}`,
       });
     } else {
       if (!integration?.locationName) throw new Error("Google Business Profile no está conectado.");
