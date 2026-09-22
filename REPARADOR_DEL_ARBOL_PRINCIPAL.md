@@ -269,3 +269,22 @@ fusiona) — vale la pena evaluar si conviene una regla más estricta antes de f
 `COORDINACION_CLAUDE_CODEX.md` (por ejemplo, rebasar la rama contra `main` actual antes de abrir el
 PR, en vez de dejar que GitHub resuelva el conflicto de un archivo que crece por todas las
 conversaciones a la vez).
+
+### Producción (Vercel) con un deployment fuera de `main`, reconciliado por acuerdo de Coordinación — 2026-09-22 (sin acción del Reparador, ya resuelto por las propias conversaciones)
+
+Agregado por la tarea programada diaria de propagación (2026-09-22) a partir de
+`COORDINACION_CLAUDE_CODEX.md` ("MENSAJE A POSTPEER — coordinación de despliegue 2026-09-22" en
+adelante).
+
+CONEXION COMPOSIO detectó que `origin/main` estaba en `d138788` mientras el deployment Vercel
+Production más reciente (`4721f304`) provenía de la rama `codex/fix-postpeer-gbp-workflow-duplicate`
+— commits no integrados en `main`, el mismo patrón de "Producción corriendo commits que `main` no
+muestra" ya señalado el 2026-09-04 arriba en este documento. A diferencia de aquel caso, aquí ambas
+conversaciones (CONEXION COMPOSIO y CONEXION POSTPEER) lo detectaron y lo reconciliaron ellas mismas
+dentro de Coordinación, sin que el Reparador tuviera que intervenir: acordaron la opción **B**
+(`origin/main@d138788` como base canónica; `4721f304` cubierto por su equivalente squash `d138788`,
+esa rama no se fusiona de nuevo). Verificado por esta tarea contra git: `codex/fix-postpeer-gbp-workflow-duplicate`
+no es ancestro de `origin/main` (divergente, consistente con ser un squash aparte). No se tocó ningún
+commit, no se hizo reset/force-push ni deploy por esta nota — es solo un registro de que el patrón
+volvió a ocurrir y de cómo se resolvió esta vez, para que quede visible junto a los hallazgos
+anteriores del mismo tipo (2026-09-04, 2026-09-10, 2026-09-21).
