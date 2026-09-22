@@ -88,11 +88,14 @@ export default function AiTitleGenerator({
   }, [loadStatus]);
 
   const complete = FIELDS.every(({ key }) => values[key].trim().length > 0);
+  const overLimit = FIELDS.find(({ key }) => values[key].length > INPUT_LIMITS[key]);
   const noRequestsLeft = status !== null && status.remaining <= 0;
   const blocker = !categoryId
     ? "Elige primero una categoría más arriba."
     : noRequestsLeft
       ? `Ya hiciste tus ${status?.max ?? 3} solicitudes de hoy. Vuelve mañana.`
+      : overLimit
+        ? `El campo "${INPUT_LABELS[overLimit.key]}" supera el límite de ${INPUT_LIMITS[overLimit.key]} caracteres. Reduce el texto para continuar.`
       : !complete
         ? "Completa los cinco campos para crear los títulos."
         : null;
@@ -202,11 +205,15 @@ export default function AiTitleGenerator({
               type="text"
               value={values[key]}
               onChange={(event) => setValues((current) => ({ ...current, [key]: event.target.value }))}
-              maxLength={INPUT_LIMITS[key]}
               placeholder={placeholder}
               disabled={disabled || loading}
               style={{ ...inputStyle, width: "100%", fontWeight: 400 }}
             />
+            {values[key].length > INPUT_LIMITS[key] && (
+              <span role="alert" style={{ color: "#b42318", fontSize: 12, fontWeight: 400, lineHeight: 1.4 }}>
+                Has superado el límite de {INPUT_LIMITS[key]} caracteres ({values[key].length}). Puedes pegar el texto completo, pero reduce el campo antes de crear títulos.
+              </span>
+            )}
           </label>
         ))}
       </div>

@@ -2,61 +2,29 @@
 
 import { MENU_NAMES } from "@/lib/menu-names";
 import { useEffect, useState, useCallback, useRef } from "react";
-import ModuleIntro, { IntroP, Modulo } from "@/components/ModuleIntro";
+import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
 import Link from "next/link";
-import { Card, Grid } from "@tremor/react";
-import type { RunRow } from "@/types/dashboard";
-import PerformanceDashboard from "@/components/PerformanceDashboard";
 import OnboardingWizard from "@/components/OnboardingWizard";
-import { trialDaysRemaining } from "@/lib/trial";
-
-interface PublishedNotification {
-  id: string;
-  text: string;
-  url: string | null;
-}
-
-interface ConfigurationAlert {
-  id: string;
-  label: string;
-  actionUrl: string;
-  actionLabel: string;
-}
 
 const QUICK_LINKS = [
   {
-    href: "/dashboard/como-funciona",
-    label: "Cómo funciona esta aplicación",
-    description: "Conoce cómo SEO TOTAL te ayuda a crear, publicar y distribuir contenido.",
-  },
-  {
     href: "/dashboard/publicar",
     label: MENU_NAMES.propios,
-    description: "Escribe tus títulos y publícalos directamente en tu página web. Es ideal si estás comenzando y todavía no tienes registros de indexación en Google, o si simplemente quieres publicar contenido propio.",
+    description: "Crea artículos y publícalos en tu página web. Copia y pega títulos o utiliza nuestro motor de creación de títulos propios.",
   },
   {
     href: "/dashboard/oportunidades",
     label: MENU_NAMES.ia,
-    description: "SEO TOTAL analiza Google, Bing, Analytics y otros datos para encontrar temas con posibilidades reales y ayudarte a crear artículos para tu página web.",
+    description: "Deja que la IA cree contenido para tu blog y aumenta tus oportunidades de aparecer en las búsquedas.",
   },
   {
     href: "/dashboard/oportunidades-redes",
     label: MENU_NAMES.redes,
-    description: "Lleva tus artículos ya publicados a microblogs, blogs externos y redes sociales en lote, y crea tu avatar de autoridad en internet.",
+    description: "Crea con ayuda de la IA publicaciones automáticas para internet y difunde tu mensaje.",
   },
 ];
 
 export default function InicioPage() {
-  const [runs, setRuns] = useState<RunRow[]>([]);
-  const [notifications, setNotifications] = useState<PublishedNotification[]>(
-    [],
-  );
-  // Banner de días restantes de prueba gratuita: se calcula del lado del
-  // servidor (trialStartedAt) y se muestra durante todo el período, no solo
-  // al crear la cuenta. Desaparece solo cuando el trial termina de verdad,
-  // no con un botón de cerrar (pedido explícito de Milton, 16/9/2026).
-  const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
-  const [configurationAlerts, setConfigurationAlerts] = useState<ConfigurationAlert[]>([]);
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
@@ -71,67 +39,6 @@ export default function InicioPage() {
     }
   }, []);
 
-  const knownTitleStatusRef = useRef<Map<string, string>>(new Map());
-  const initializedRef = useRef(false);
-
-  const activeRun = runs.find(
-    (r) => r.status === "pending" || r.status === "running",
-  );
-
-  const loadRuns = useCallback(async () => {
-    const res = await fetch("/api/runs");
-    if (res.ok) {
-      const data = await res.json();
-      const newRuns: RunRow[] = data.runs;
-
-      if (initializedRef.current) {
-        const newlyPublished: PublishedNotification[] = [];
-        for (const run of newRuns) {
-          for (const title of run.titles) {
-            const prevStatus = knownTitleStatusRef.current.get(title.id);
-            if (title.status === "success" && prevStatus !== "success") {
-              newlyPublished.push({
-                id: title.id,
-                text: title.text,
-                url: title.articleUrl,
-              });
-            }
-          }
-        }
-        if (newlyPublished.length > 0) {
-          setNotifications((prev) => [...newlyPublished, ...prev].slice(0, 10));
-        }
-      } else {
-        initializedRef.current = true;
-      }
-
-      for (const run of newRuns) {
-        for (const title of run.titles) {
-          knownTitleStatusRef.current.set(title.id, title.status);
-        }
-      }
-
-      setRuns(newRuns);
-    }
-  }, []);
-
-  function dismissNotification(id: string) {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-  }
-
-  useEffect(() => {
-    loadRuns();
-  }, [loadRuns]);
-
-  useEffect(() => {
-    if (!activeRun) return;
-    // 4s en vez de 2s: reduce a la mitad el volumen de polling (ver también
-    // el recorte de eventos en /api/runs) para no agotar la cuota gratuita
-    // de transferencia de datos de Neon.
-    const interval = setInterval(loadRuns, 4000);
-    return () => clearInterval(interval);
-  }, [activeRun, loadRuns]);
-
   // La cuenta que arrancó incompleta se queda viendo el wizard aunque termine
   // el Paso 4 en esta misma visita, para que le dé tiempo a ver la pantalla
   // de "¡Felicitaciones!" (Paso 5) del propio wizard, en vez de que la
@@ -143,50 +50,30 @@ export default function InicioPage() {
 
   const checkWizardStatus = useCallback(async () => {
     try {
-      const [credRes, catRes, meRes, googleRes, configurationRes] = await Promise.all([
+      const [credRes, catRes, meRes, googleRes] = await Promise.all([
         fetch("/api/credentials", { cache: "no-store" }),
         fetch("/api/categories", { cache: "no-store" }),
         fetch("/api/me", { cache: "no-store" }),
         fetch("/api/search-integrations/google", { cache: "no-store" }),
-        fetch("/api/configuration-status", { cache: "no-store" }),
       ]);
 
       const credData = credRes.ok ? await credRes.json() : {};
       const catData = catRes.ok ? await catRes.json() : {};
       const meData = meRes.ok ? await meRes.json() : {};
       const googleData = googleRes.ok ? await googleRes.json() : {};
-      const configurationData = configurationRes.ok ? await configurationRes.json() : null;
 
       const step1 = Boolean(credData.configured);
       const step2 = Array.isArray(catData.categories) && catData.categories.length > 0;
       const step3 = typeof meData.contentLanguage === "string" && meData.contentLanguage.trim().length > 0;
       const step4 = Boolean(googleData.connected && googleData.siteUrl);
-      const complete = step1 && step2 && step3 && step4;
-
-      const alertIds = new Set([
-        "google-analytics",
-        "bing-webmaster",
-        "google-search-console-reconnect",
-        "geolocation",
-        "signature",
-        "excluded-topics",
-      ]);
-      const pendingAlerts = Array.isArray(configurationData?.checks)
-        ? configurationData.checks.filter(
-            (check: ConfigurationAlert & { configured: boolean }) =>
-              alertIds.has(check.id) && !check.configured,
-          )
-        : [];
-      setConfigurationAlerts(pendingAlerts);
+      // Solo para el localhost de desarrollo: permite revisar la interfaz
+      // posterior al wizard sin fingir una conexión OAuth real de Google.
+      const complete = process.env.NEXT_PUBLIC_LOCAL_DEMO === "true"
+        ? true
+        : step1 && step2 && step3 && step4;
 
       if (!complete) everIncompleteRef.current = true;
       setShowWizard(everIncompleteRef.current ? true : !complete);
-
-      if (meData.isTrialSignup && !meData.trialUnlocked && meData.trialStartedAt) {
-        setTrialDaysLeft(trialDaysRemaining(new Date(meData.trialStartedAt)));
-      } else {
-        setTrialDaysLeft(null);
-      }
     } catch {
       everIncompleteRef.current = true;
       setShowWizard(true);
@@ -199,39 +86,8 @@ export default function InicioPage() {
 
   return (
     <div>
-      {trialDaysLeft !== null && trialDaysLeft > 0 && (
-        <div
-          style={{
-            background: "linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 75, 153, 0.9) 100%)",
-            backdropFilter: "blur(20px) saturate(180%)",
-            WebkitBackdropFilter: "blur(20px) saturate(180%)",
-            color: "#fff",
-            borderRadius: 16,
-            padding: "clamp(14px, 4vw, 20px) clamp(16px, 5vw, 24px)",
-            marginTop: 4,
-            marginBottom: 16,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 16,
-            flexWrap: "wrap",
-            boxShadow: "none",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-          }}
-        >
-          <div>
-            <p style={{ margin: 0, fontSize: 17, fontWeight: 700, letterSpacing: "-0.01em" }}>
-              {trialDaysLeft === 1
-                ? "¡Bienvenido! Te queda 1 día de prueba gratuita."
-                : `¡Bienvenido! Te quedan ${trialDaysLeft} días de prueba gratuita.`}
-            </p>
-            <p style={{ margin: "6px 0 0", fontSize: 13, opacity: 0.9 }}>
-              Explora todo el sistema sin restricciones durante este período.
-            </p>
-          </div>
-        </div>
-      )}
-      <ModuleIntro titulo="Inicio">
+      <style>{`@media (max-width: 700px) { .inicio-actions-grid { grid-template-columns: 1fr !important; } .dashboard-main:has(.inicio-actions-grid) .floating-assistant { display: none !important; } }`}</style>
+      <ModuleIntro titulo="Inicio" showEyebrow={showWizard !== false} compact={showWizard === false}>
         {showWizard === true ? (
           <>
             <IntroP>
@@ -257,155 +113,43 @@ export default function InicioPage() {
           </>
         ) : (
           <>
-            <IntroP>
-              Esta es tu pantalla de control. Aquí ves de un vistazo cómo va tu cuenta: cuántos artículos se han publicado hoy y este mes, cuánto te queda de tu límite y el ritmo que llevas.
-            </IntroP>
-            <IntroP>
-              Si no sabes por dónde empezar, <Modulo id="como-funciona" /> lo explica entero en tres pasos.
-            </IntroP>
-            <IntroP>
-          Justo abajo tienes 4 botones: elige el que corresponda a lo que quieres hacer ahora.
-            </IntroP>
+            <IntroP>Elige una acción para comenzar.</IntroP>
           </>
-        )}
-        {configurationAlerts.length > 0 && (
-          <p style={{ margin: "14px 0 0", fontSize: 14, lineHeight: 1.55, color: "#1d1d1f" }}>
-            <strong>ALERTAS:</strong>{" "}
-            Para aprovechar mejor SEO TOTAL, todavía puedes completar estos ajustes:{" "}
-            {configurationAlerts.map((alert, index) => (
-              <span key={alert.id}>
-                {index > 0 && (index === configurationAlerts.length - 1 ? " y " : ", ")}
-                <Link href={alert.actionUrl} style={{ color: "#0066cc", fontWeight: 600 }}>
-                  {alert.label}
-                </Link>
-              </span>
-            ))}
-            .
-          </p>
         )}
       </ModuleIntro>
       {showWizard === false && (
-        <Grid numItemsSm={2} numItemsLg={4} className="gap-4 items-stretch" style={{ marginTop: 20, marginBottom: 20 }}>
+        <div style={{ marginTop: 20, marginBottom: 20 }}>
+          <h2 style={{ margin: "0 0 14px", fontSize: 22 }}>Acciones posibles</h2>
+          <div className="inicio-actions-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 16 }}>
           {QUICK_LINKS.map((l, i) => (
             (() => {
-              const darkCard = i === 1;
-              const coloredCard = i > 1;
-              const primaryText = coloredCard ? "#ffffff" : "#111111";
-              const secondaryText = coloredCard ? "#ffffff" : "#111111";
-
               return (
-                <Link key={l.href} href={l.href} style={{ display: "flex", height: "100%", textDecoration: "none" }}>
-              <Card
+                <Link key={l.href} className="inicio-action-card" href={l.href} style={{ display: "flex", minHeight: 176, padding: 22, flexDirection: "column", justifyContent: "space-between", textDecoration: "none", color: "#1d1d1f", background: "#ffffff", border: "1px solid #d2d2d7", borderRadius: 6 }}>
+              <div
                 style={{
-                  flex: 1,
-                  boxSizing: "border-box",
-                  background: darkCard ? "#c6c6c6" : i === 2 ? "#919191" : i === 3 ? "#5e5e5e" : "#ffffff",
-                  borderColor: i === 0 ? "rgba(0, 0, 0, 0.08)" : "transparent",
+                  display: "flex", flexDirection: "column", height: "100%",
                 }}
               >
-                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, lineHeight: 1.2, color: primaryText, letterSpacing: "0.02em" }}>
+                <p style={{ margin: 0, fontSize: 12, fontWeight: 700, lineHeight: 1.2, color: "#6e6e73", letterSpacing: "0.02em" }}>
                   {String(i + 1).padStart(2, "0")}
                 </p>
-                <p style={{ marginTop: 12, fontSize: 16, fontWeight: 700, color: primaryText, lineHeight: 1.35 }}>
+                <p style={{ marginTop: 20, fontSize: 18, fontWeight: 700, color: "#1d1d1f", lineHeight: 1.3, textTransform: "uppercase" }}>
                   {l.label}
                 </p>
-                <p style={{ margin: "10px 0 0", fontSize: 13, fontWeight: 500, lineHeight: 1.5, color: secondaryText }}>
+                <p style={{ margin: "10px 0 0", fontSize: 13, lineHeight: 1.5, color: "#6e6e73" }}>
                   {l.description}
                 </p>
-              </Card>
+              </div>
                 </Link>
               );
             })()
           ))}
-        </Grid>
-      )}
-      {notifications.length > 0 && (
-        <div
-          style={{
-            marginTop: 20,
-            display: "flex",
-            flexDirection: "column",
-            gap: "clamp(6px, 1.5vw, 8px)",
-          }}
-        >
-          {notifications.map((n) => (
-            <div
-              key={n.id}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: 12,
-                padding: "12px 16px",
-                borderRadius: 12,
-                background: "#f2faf4",
-                border: "1px solid rgba(52, 199, 89, 0.3)",
-                fontSize: 13,
-                boxShadow: "none",
-              }}
-            >
-              <span style={{ color: "#16803c" }}>
-                ✓ Artículo publicado: <strong style={{ color: "#1d1d1f" }}>{n.text}</strong>
-                {n.url && (
-                  <>
-                    {" — "}
-                    <a
-                      href={n.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{ color: "#0066cc", textDecoration: "underline" }}
-                    >
-                      Ver artículo
-                    </a>
-                  </>
-                )}
-              </span>
-              <button
-                onClick={() => dismissNotification(n.id)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "#86868b",
-                  cursor: "pointer",
-                  fontSize: 14,
-                }}
-              >
-                ✕
-              </button>
-            </div>
-          ))}
+          </div>
         </div>
       )}
-
       {showWizard === true ? (
         <OnboardingWizard onUpdated={checkWizardStatus} />
-      ) : showWizard === false ? (
-        <PerformanceDashboard />
       ) : null}
-
-      {activeRun && (
-        <div
-          style={{
-            marginTop: 20,
-            padding: "14px 18px",
-            borderRadius: 12,
-            background: "#f2faf4",
-            border: "1px solid rgba(52, 199, 89, 0.3)",
-            color: "#16803c",
-            fontSize: 13,
-            boxShadow: "none",
-          }}
-        >
-          Hay una publicación en curso.{" "}
-          <Link
-            href="/dashboard/publicaciones-en-curso"
-            style={{ color: "#0066cc", fontWeight: 600, textDecoration: "underline" }}
-          >
-            Ver progreso de las publicaciones
-          </Link>
-          .
-        </div>
-      )}
     </div>
   );
 }

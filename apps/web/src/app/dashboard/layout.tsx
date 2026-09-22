@@ -32,12 +32,20 @@ export default async function DashboardLayout({
       style={{
         maxWidth: 1120,
         margin: "0 auto",
-        padding: "28px 22px 64px",
+        padding: "28px 24px 64px",
         boxSizing: "border-box",
+        position: "relative",
       }}
     >
       <style>{`
         @media (max-width: 639px) {
+          .topbar { display: flex !important; margin-bottom: 12px !important; align-items: center !important; }
+          .topbar-title { flex: 1; }
+          .topbar-title .eyebrow { display: block; font-size: 9px !important; margin-top: 2px !important; letter-spacing: 0.06em !important; }
+          .topbar-title h1 { font-size: 21px !important; }
+          .session-actions { display: none !important; }
+          .dashboard-nav { position: absolute !important; top: 18px; right: 16px; margin: 0 !important; z-index: 20; }
+          .dashboard-main > nav { margin-top: 0 !important; margin-bottom: 22px !important; }
           .dashboard-main {
             padding: 20px 16px 44px !important;
           }
@@ -65,6 +73,9 @@ export default async function DashboardLayout({
         }
         @media (min-width: 1024px) {
           .mobile-notice { display: none; }
+        }
+        @media (min-width: 1180px) {
+          .dashboard-nav { position: relative !important; top: auto; right: auto; }
         }
         /*
          * Tablas anchas: vista apilada en tarjetas estilo Apple en pantallas pequeñas
@@ -129,7 +140,7 @@ export default async function DashboardLayout({
               color: "#1d1d1f",
             }}
           >
-            LA Solución AI
+            LA SOLUCIÓN IA
           </h1>
           <p className="eyebrow" style={{ margin: "4px 0 0" }}>
             Generación de contenido para posicionamiento inteligente

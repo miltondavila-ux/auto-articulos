@@ -12,14 +12,14 @@ Este manual explica cómo usar la plataforma desde la perspectiva de una persona
 
 ## Antes de empezar (Asistente de Configuración Inicial)
 
-Cuando ingresas a tu cuenta por primera vez o aún no tienes artículos publicados, Inicio te muestra únicamente el **Asistente de Configuración Inicial Paso a Paso**: el banner de bienvenida con los días de prueba que te quedan, una explicación de los 4 pasos en orden y la guía paso a paso. Mientras esto no esté completo, el menú superior y los cuatro accesos directos (01-04) permanecen ocultos a propósito, para que no te distraigas con secciones que todavía están bloqueadas.
+Cuando ingresas a tu cuenta por primera vez y la configuración aún no está completa, Inicio te muestra únicamente el **Asistente de Configuración Inicial Paso a Paso**: el banner de bienvenida, los 4 pasos en orden y la guía paso a paso. Mientras esto no esté completo, el menú y las acciones principales permanecen ocultos para que no te distraigas con secciones que todavía están bloqueadas.
 
 1. **Paso 1 (Cuenta de la plataforma):** Guarda tu usuario y contraseña de la plataforma. Puedes mostrar u ocultar la contraseña que escribes con el ícono de ojo dentro del campo. Si no recuerdas esa clave, puedes restablecerla o crear una nueva en segundos desde el enlace directo de recuperación de la plataforma incluido en el asistente. Al guardar, el paso queda en **"Pendiente de verificar"**: tus datos se guardan cifrados, pero todavía no se ha comprobado que sirvan para entrar. Se pone verde en cuanto un login real funciona — ya sea porque la detección de tu sitio lo confirma, o porque la sincronización del Paso 2 logra entrar de verdad a tu cuenta. Si el login falla en cualquiera de los dos casos, el sistema nunca te deja con un error sin explicación: siempre te dice que debes resetear tu contraseña de la plataforma y te da el enlace exacto para hacerlo.
 2. **Confirmar el sitio:** Si tu cuenta de la plataforma da acceso a más de un sitio, se detecta en vivo cuál eliges — esta cuenta trabajará únicamente con ese sitio para siempre; para el otro, se crea otra cuenta. La detección puede tardar varios minutos: no cierres la pantalla mientras se completa.
 3. **Paso 2 (Sincronizar categorías):** Descarga en vivo las categorías reales de tu web para clasificar tus artículos. Mientras corre verás una **barra de progreso con las etapas** (En cola → Entrando a tu plataforma → Guardando categorías), un cronómetro y un **Detalle del proceso** desplegable que registra con hora exacta qué fue pasando: cuándo se envió la solicitud, cuándo un procesador la tomó y cómo terminó. Si algo falla, ahí aparece el motivo real. Puede tardar varios minutos según la cola de trabajo; la pantalla se actualiza sola y no hace falta recargar ni volver a pulsar. Verás lo mismo si sincronizas desde Configuración.
 4. **Paso 3 (Idioma de redacción):** Confirma el idioma principal en el que la Inteligencia Artificial redactará tus contenidos.
 5. **Paso 4 (Google Search Console):** Google Search Console le dice a la plataforma qué está buscando de verdad la gente que llega a tu sitio en Google, para que la Inteligencia Artificial elija y escriba sobre esos temas reales en vez de adivinar — es obligatorio, sin esta conexión no se pueden posicionar tus artículos. Abre Search Console en una pestaña contigua de tu navegador para comprobar que esté activo con la cuenta de Google dueña de tu web, y luego conéctalo mediante Google OAuth seleccionando tu sitio.
-6. **Meta final:** Al completar los 4 pasos ves una pantalla de "¡Felicitaciones!" con acceso directo a **${MENU_NAMES.ia}** o a **${MENU_NAMES.propios}**. Esa pantalla se queda visible durante toda esa visita — no desaparece de golpe apenas terminas el último paso. En tu siguiente visita a Inicio, ya con todo listo, entras directo al panel de métricas de rendimiento.
+6. **Meta final:** Al completar los 4 pasos ves una pantalla de "¡Felicitaciones!" con acceso directo a **${MENU_NAMES.ia}** o a **${MENU_NAMES.propios}**. Esa pantalla se queda visible durante toda esa visita — no desaparece de golpe apenas terminas el último paso. En la siguiente visita a Inicio, ya con todo listo, entras directamente a las tres acciones principales.
 
 Después del Paso 4, el Asistente te confirma que ya estás listo para publicar y muestra dos opciones: **${MENU_NAMES.propios}** o **${MENU_NAMES.ia}**. Bing Webmaster Tools es opcional y se conecta, si lo deseas, desde Configuración → Indexación; no forma parte del Asistente.
 
@@ -31,7 +31,8 @@ Ruta: /dashboard
 
 Inicio es tu centro de operaciones:
 - **Para cuentas nuevas (sin artículos aún):** Muestra de forma exclusiva el Asistente de Configuración Inicial, sin menú ni accesos directos, para que completes tu puesta a punto sin distracciones.
-- **Para cuentas con artículos publicados:** Muestra el panel de métricas de rendimiento (artículos publicados hoy, en el mes, límites y gráfico de actividad), el menú superior completo y cuatro accesos directos numerados (01-04) a **${MENU_NAMES.propios}**, **${MENU_NAMES.ia}**, **${MENU_NAMES.redes}** y el resto de accesos disponibles en el menú.
+- **Para cuentas ya configuradas:** Muestra únicamente el título **Acciones posibles** y tres tarjetas: **${MENU_NAMES.propios}**, **${MENU_NAMES.ia}** y **${MENU_NAMES.redes}**. En móvil se muestran en una sola columna para que cada acción sea fácil de pulsar.
+- Las estadísticas no ocupan espacio en Inicio: se consultan desde **Publicaciones → Estadísticas**, junto al historial.
 - Desde el menú superior tienes acceso a: Cómo funciona esta aplicación, Publicaciones y Configuración. Historial está dentro de Publicaciones y Actualizaciones dentro de Configuración.
 
 ## Cada módulo se explica solo
@@ -52,7 +53,7 @@ El menú superior tiene, en este orden: **Inicio**, **Cómo funciona esta aplica
 - **Progreso de las publicaciones** (/dashboard/publicaciones-en-curso): consulta qué artículos se están generando, publicando o esperando. Este acceso permanece en el menú.
 - **Historial** (/dashboard/historial): revisa las publicaciones anteriores, sus resultados, errores e intentos.
 
-En computadora, Publicaciones se abre al pulsarlo y se cierra al elegir una opción, al pulsar fuera o con la tecla Escape. En teléfono y tableta no se despliega: las cinco opciones aparecen listadas debajo del título Publicaciones.
+En computadora, Publicaciones se abre al pulsarlo y se cierra al elegir una opción, al pulsar fuera o con la tecla Escape. En teléfono y tableta se abre desde el menú de hamburguesa situado arriba a la derecha; ahí aparecen las opciones de publicación, progreso, historial y estadísticas. El menú también contiene Configuración y Cerrar sesión.
 
 En el menú, los tres primeros accesos aparecen numerados como «1) ${MENU_NAMES.propios}», «2) ${MENU_NAMES.ia}» y «3) ${MENU_NAMES.redes}», para reflejar el orden recomendado del flujo de trabajo.
 
@@ -64,9 +65,10 @@ Si el administrador te oculta algún módulo, simplemente no aparece en el menú
 
 Ruta: /dashboard/configuracion
 
-Configuración ya no es una sola pantalla con pestañas: es un índice con 6
-tarjetas, cada una con su propia página. Elige la que corresponda a lo que
-quieres cambiar.
+Configuración es un índice con tarjetas, cada una con su propia página. Elige
+la que corresponda a lo que quieres cambiar. **Cómo funciona esta aplicación**
+se encuentra dentro de Configuración y no debe aparecer como una barra de
+pestañas dentro de las páginas de configuración.
 
 ### Configuración Inicial (Asistente Paso a Paso)
 
@@ -220,7 +222,7 @@ Si un artículo muestra un error, lee el mensaje antes de repetir la acción. Si
 
 Ruta: /dashboard/como-funciona
 
-Explica en texto, sin gráficas, para qué sirve la plataforma y en qué orden ocurre todo.
+Explica en texto, sin gráficas, para qué sirve la plataforma y en qué orden ocurre todo. Sus instrucciones son informativas y no sustituyen las tres acciones principales de Inicio.
 
 El objetivo es que te encuentren: en Google, en Bing y dentro de la inteligencia artificial, en tiempo récord.
 
@@ -230,9 +232,9 @@ También explica por qué las redes sociales cuentan para el posicionamiento: qu
 
 Lo explica en tres pasos:
 
-1. **Configura tu cuenta.** Es lo primero y lo único que no se puede saltar. Si no estás seguro de haberlo dejado todo listo, entra en Configuración y revísalo. Si algo no queda claro, la burbuja de ayuda está en la esquina de todas las pantallas.
-2. **Publica tus artículos.** Hay dos caminos y puedes usar los dos: publicar tus propios títulos dentro del cupo dinámico de tu cuenta, o dejar que el sistema decida por ti desde **${MENU_NAMES.ia}**, donde consulta Google Search Console y Bing. Cuando la inteligencia artificial haya decidido, publicas de uno en uno o por lotes según el saldo diario, mensual y por lote disponible.
-3. **Lleva lo publicado a las redes.** Desde ${MENU_NAMES.redes}, los artículos más relevantes pasan a tus redes de forma repartida y equilibrada, sin parecer spam.
+1. **Configura tu cuenta.** Es lo primero y lo único que no se puede saltar. Si no estás seguro de haberlo dejado todo listo, entra en Configuración y revísalo. Si algo no queda claro, la burbuja de ayuda está en la esquina de las pantallas.
+2. **Usa una de las tres acciones de Inicio.** Desde **${MENU_NAMES.propios}** publicas tus propios títulos; desde **${MENU_NAMES.ia}** dejas que la IA proponga contenido basado en oportunidades de búsqueda; y desde **${MENU_NAMES.redes}** preparas publicaciones para redes sociales y blogs públicos.
+3. **Revisa el resultado.** El progreso se consulta en Publicaciones → Progreso de las publicaciones, los artículos terminados en Historial y las métricas en Estadísticas.
 
 Cierra explicando para qué sirve todo esto: posicionarte con autoridad en internet. Aparecer en los resultados de la inteligencia artificial, de Google y de Bing es lo más importante que le puede pasar a tu negocio en internet.
 

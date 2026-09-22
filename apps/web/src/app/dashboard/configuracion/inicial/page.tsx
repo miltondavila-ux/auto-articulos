@@ -4,7 +4,6 @@ import { MENU_NAMES } from "@/lib/menu-names";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
-import ConfiguracionSubNav from "@/components/ConfiguracionSubNav";
 import OnboardingWizard from "@/components/OnboardingWizard";
 
 /**
@@ -75,7 +74,6 @@ export default function ConfiguracionInicialPage() {
           </>
         )}
       </ModuleIntro>
-      <ConfiguracionSubNav />
       {wizardComplete === true ? (
         <div
           style={{

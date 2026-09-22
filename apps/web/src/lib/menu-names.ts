@@ -9,11 +9,11 @@
  */
 export const MENU_NAMES = {
   /** /dashboard/publicar — la persona escribe sus propios títulos. */
-  propios: "Artículos propios",
+  propios: "CONTENIDO PROPIO",
   /** /dashboard/oportunidades — artículos creados con la IA avanzada. */
-  ia: "Artículos creados con IA",
+  ia: "CONTENIDO GENERADO POR IA",
   /** /dashboard/oportunidades-redes — difusión en redes con IA. */
-  redes: "Redes sociales: publicaciones con IA",
+  redes: "PUBLICA EN REDES SOCIALES Y EN BLOGS PÚBLICOS",
 } as const;
 
 /** Cómo se ven en el desplegable del menú, con su número de orden. */

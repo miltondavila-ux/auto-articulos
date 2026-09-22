@@ -1,3 +1,5 @@
+import MobileInstructions from "@/components/MobileInstructions";
+
 export default function BrowserTabsConnectionNotice() {
   return (
     <section
@@ -11,10 +13,9 @@ export default function BrowserTabsConnectionNotice() {
       }}
       aria-label="Instrucciones para conectar redes sociales"
     >
-      <strong style={{ fontSize: 14 }}>
-        Proceso estándar de conexión
-      </strong>
-      <ol style={{ margin: "10px 0 0", paddingLeft: 20 }}>
+      <MobileInstructions>
+        <strong style={{ fontSize: 14 }}>Proceso estándar de conexión</strong>
+        <ol style={{ margin: "10px 0 0", paddingLeft: 20 }}>
         <li>
           <strong>Prepara la cuenta:</strong> abre la aplicación en otra pestaña del mismo navegador e inicia sesión.
         </li>
@@ -24,7 +25,8 @@ export default function BrowserTabsConnectionNotice() {
         <li>
           <strong>Autoriza y prueba:</strong> vuelve a SEO TOTAL, acepta los permisos, elige el recurso y pulsa Probar conexión.
         </li>
-      </ol>
+        </ol>
+      </MobileInstructions>
     </section>
   );
 }

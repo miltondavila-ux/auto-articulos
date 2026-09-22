@@ -38,16 +38,8 @@ export default function PasosAntesDeConectar({
           : isMeta
             ? "https://www.facebook.com/login/identify/"
             : null;
-  return (
-    <div
-      style={{
-        padding: "10px 0",
-        margin: "12px 0",
-        fontSize: 13,
-        borderTop: "1px solid #e5e5ea",
-        background: "transparent",
-      }}
-    >
+  const contenido = (
+    <>
       <strong style={{ color: "#1d1d1f", fontSize: 14 }}>
         Proceso estándar de conexión
       </strong>
@@ -75,6 +67,29 @@ export default function PasosAntesDeConectar({
           <strong>Autoriza y confirma.</strong> Vuelve a esta pestaña, pulsa el botón, acepta los permisos de {red} y regresa para comprobar el resultado.
         </li>
       </ol>
-    </div>
+    </>
+  );
+
+  return (
+    <>
+      <div className="connection-steps-desktop" style={{ padding: "10px 0", margin: "12px 0", fontSize: 13, borderTop: "1px solid #e5e5ea", background: "transparent" }}>
+        {contenido}
+      </div>
+      <details className="connection-steps-mobile">
+        <summary>Ver proceso de conexión</summary>
+        <div style={{ marginTop: 12 }}>{contenido}</div>
+      </details>
+      <style>{`
+        .connection-steps-mobile { display: none; }
+        @media (max-width: 700px) {
+          .connection-steps-desktop { display: none; }
+          .connection-steps-mobile { display: block; padding: 12px 14px; margin: 12px 0; border: 1px solid #e5e5ea; border-radius: 12px; background: #fff; font-size: 13px; }
+          .connection-steps-mobile summary { cursor: pointer; list-style: none; color: #1d1d1f; font-size: 12px; font-weight: 600; }
+          .connection-steps-mobile summary::-webkit-details-marker { display: none; }
+          .connection-steps-mobile summary::after { content: "＋"; float: right; font-size: 16px; }
+          .connection-steps-mobile[open] summary::after { content: "−"; }
+        }
+      `}</style>
+    </>
   );
 }

@@ -14,6 +14,7 @@ import {
 } from "@/components/dashboard-ui";
 import ImageCreditsModal from "@/components/ImageCreditsModal";
 import PreValidationGuard from "@/components/PreValidationGuard";
+import MobileInstructions from "@/components/MobileInstructions";
 import {
   platformProductNameOrNeutral,
 } from "@auto-articulos/shared";
@@ -525,6 +526,7 @@ export default function OportunidadesPage() {
           });
         }}
       >
+        <MobileInstructions>
         <section
           style={{ ...sectionStyle, background: "#ffffff" }}
           aria-labelledby="oportunidades-instrucciones"
@@ -569,6 +571,7 @@ export default function OportunidadesPage() {
             <li>Si no aparecen ideas nuevas, usa “Forzar análisis” para volver a buscar ahora. Ese botón no publica artículos por sí solo.</li>
           </ul>
         </section>
+        </MobileInstructions>
         <section style={sectionStyle}>
         <p style={{ color: "#1d1d1f", fontSize: 14, lineHeight: 1.55 }}>
           Analiza impresiones, tendencias, posiciones, consultas y páginas de tu
@@ -756,7 +759,7 @@ export default function OportunidadesPage() {
                 {(!setupStatus.googleConnected || !setupStatus.hasSiteUrl) && (
                   <li>
                     <Link
-                      href="/dashboard/configuracion?tab=integrations#google"
+                      href="/dashboard/configuracion/conexiones?conexion=google-search-console"
                       style={{ color: "#2563eb", fontWeight: 600 }}
                     >
                       {!setupStatus.googleConnected
@@ -768,7 +771,7 @@ export default function OportunidadesPage() {
                 {!setupStatus.hasCategories && (
                   <li>
                     <Link
-                      href="/dashboard/configuracion?tab=platform#categories"
+                      href="/dashboard/configuracion/cuenta#categories"
                       style={{ color: "#2563eb", fontWeight: 600 }}
                     >
                       Sincronizar tus categorías
@@ -778,7 +781,7 @@ export default function OportunidadesPage() {
                 {!contentLanguage && (
                   <li>
                     <Link
-                      href="/dashboard/configuracion?tab=platform#language"
+                      href="/dashboard/configuracion/cuenta#language"
                       style={{ color: "#2563eb", fontWeight: 600 }}
                     >
                       Configurar tu idioma de redacción

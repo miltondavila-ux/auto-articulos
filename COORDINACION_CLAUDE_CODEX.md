@@ -8765,3 +8765,128 @@ duda nueva sin resolver más allá de las que ya señalaron CONEXION COMPOSIO y 
 propias entradas (integración de interfaz en DIFUSIÓN todavía sin PR).
 
 Responsable: Claude (tarea programada diaria de propagación).
+# OPERACIÓN LOCALHOST — CONFIGURACIÓN PERSISTENTE (2026-09-22 — Codex)
+
+- Para trabajar en localhost, este worktree necesita `.env.local` en la raíz y
+  también en `apps/web/.env.local`; Next.js lee las variables desde la carpeta
+  de la aplicación web.
+- La configuración de desarrollo autorizada se reutilizó desde el worktree
+  local existente. No copiar secretos a este documento ni versionar `.env.local`.
+- Después de preparar un worktree nuevo: ejecutar `npm install`,
+  `npx prisma generate --schema=packages/db/prisma/schema.prisma` y reiniciar
+  `npm run dev:web` (puerto 3000) o `npm run dev --workspace=apps/web --
+  --hostname 127.0.0.1 --port 3001`.
+- Si el cliente Prisma falla, regenerarlo antes de probar login. Si aparece
+  `DATABASE_URL` ausente, verificar primero `apps/web/.env.local`; no inventar
+  credenciales ni crear un bypass de autenticación.
+- Cuenta local de prueba creada el 2026-09-22: `LORENALVARES30@GMAIL.COM`.
+  La contraseña temporal se comunicó únicamente en la conversación y no se
+  guarda aquí.
+- Estado verificado: sesión iniciada en `/dashboard`, wizard de configuración
+  inicial visible, localhost operativo.
+- Para revisar la interfaz posterior al wizard sin OAuth externo, el localhost
+  usa `NEXT_PUBLIC_LOCAL_DEMO=true` en `apps/web/.env.local`. Es una bandera
+  exclusivamente local: no activarla en Preview ni Producción y no usarla
+  para simular conexiones reales en pruebas de integración.
+
+## Despliegue de interfaz móvil — 2026-09-22 — Codex
+
+- Build web productivo: OK, 85 rutas generadas y TypeScript OK.
+- Sin cambios en `packages/db/prisma/schema.prisma` ni migraciones.
+- Deployment Vercel: `dpl_5L4rSNUBbu2sj1XizLAW4bWSY6hx`, estado READY.
+- Alias productivo verificado: `https://seototal.lasolucionweb.com`.
+- Verificación final: `/login` responde HTTP 200.
+
+## Responsive móvil — instrucciones plegables — 2026-09-22 — Codex
+
+- El patrón de Inicio móvil se extendió a las pantallas del dashboard: las
+  instrucciones siguen completas en escritorio y se pliegan por defecto en
+  móvil mediante `ModuleIntro` y `MobileInstructions`.
+- Las pantallas operativas de artículos propios y títulos con IA dejan visibles
+  los controles de ejecución y esconden solo el texto explicativo hasta que la
+  persona pulse “Ver instrucciones”.
+- Se añadieron reglas móviles globales para paneles, formularios, imágenes,
+  tablas y filas de botones: no desbordan el viewport y mantienen objetivos
+  táctiles de al menos 44px. No se alteró la lógica de publicación ni el
+  comportamiento de escritorio.
+- El build web pasó con 85 rutas antes de desplegar.
+
+## Responsive móvil — segunda revisión completa — 2026-09-22 — Codex
+
+- Se hicieron plegables en móvil las explicaciones largas de Actualizaciones y
+  Difusión Social, manteniéndolas completas en escritorio y sin eliminar texto.
+- Se revisaron las rutas operativas del dashboard: publicar, oportunidades,
+  oportunidades-redes, historial, publicaciones en curso, configuración,
+  actualizaciones y navegación móvil.
+- Build local y build de Vercel OK: 85 rutas generadas y TypeScript OK.
+- Sin cambios en `packages/db/prisma/schema.prisma` ni migraciones.
+- Deployment Vercel: `dpl_HTZyWZZUmMe6c9mAfH1ThogW2Dcd`, estado READY.
+- Alias productivo verificado: `https://seototal.lasolucionweb.com/login` responde HTTP 200.
+
+## Márgenes y paddings estandarizados — 2026-09-22 — Codex
+
+- Se unificó `sectionStyle` para usar el mismo espaciado vertical y eliminar
+  márgenes superiores inconsistentes entre secciones.
+- Se ajustó el contenedor principal del dashboard a un margen lateral común y
+  se eliminaron paddings especiales de Publicar y Difusión Social.
+- Build OK con 85 rutas y alias productivo verificado con HTTP 200.
+- Deployment: `dpl_F86AZPRzMnuWgHwyRfrtFcF7Zuye`, estado READY.
+
+## Radio uniforme de esquinas — 2026-09-22 — Codex
+
+- Se estandarizó a `6px` el radio de botones, tarjetas, paneles, filas,
+  menús, campos y superficies agrupadoras.
+- Se añadió una regla global con prioridad para corregir estilos inline antiguos
+  que imponían radios distintos.
+- Build OK con 85 rutas; producción verificada con HTTP 200.
+- Deployment: `dpl_CPZPSqQVnv1snkAWdQn4Zj3aFLFW`, estado READY.
+
+## Textos de tarjetas de Inicio — 2026-09-22 — Codex
+
+- Primera tarjeta: `PUBLICA ARTÍCULOS PROPIOS`, con descripción para crear y
+  publicar artículos en la web.
+- Segunda tarjeta: `PUBLICA CONTENIDO EN TU BLOG CON AYUDA DE LA IA`, con una
+  descripción breve orientada a aparecer en búsquedas.
+- Tercera tarjeta: `CREA PUBLICACIONES PARA TUS REDES SOCIALES Y BLOGS PÚBLICOS`,
+  con descripción sobre publicaciones automáticas y difusión.
+- Build OK con 85 rutas; deployment `dpl_ABN5tEMRrgSBMbMR1AhdRiwD2iHi` READY.
+- La ruta protegida `/dashboard` redirige correctamente a autenticación cuando
+  no hay sesión (HTTP 307).
+
+## Nombres dinámicos de módulos — 2026-09-22 — Codex
+
+- Fuente única actualizada para que todo el sistema use: `CONTENIDO PROPIO`,
+  `CONTENIDO GENERADO POR IA` y `PUBLICA EN REDES SOCIALES Y EN BLOGS PÚBLICOS`.
+- La actualización alcanza menú numerado, tarjetas de Inicio, manual,
+  instrucciones, asistente, enlaces internos y títulos de los módulos.
+- Se eliminó la última referencia directa al nombre anterior en el manual.
+- Build OK con 85 rutas; deployment `dpl_FwSf6f97R8JanPmFLKsBSjxwv51X` READY.
+- Alias productivo verificado: `/login` responde HTTP 200.
+
+## Preferencia de trabajo vigente — 2026-09-22 — Codex
+
+- A partir de esta instrucción, los cambios de interfaz se trabajan y revisan
+  únicamente en localhost.
+- No ejecutar `vercel`, deploy ni push de producción salvo autorización expresa
+  posterior del usuario.
+
+## Auditoría triple responsive — 2026-09-22 — Codex
+
+- Auditoría 1: se corrigió el origen de paneles cuadrados en el estilo
+  compartido (`sectionStyle` pasó a esquinas redondeadas).
+- Auditoría 2: se plegaron en móvil los procesos estándar de conexión y se
+  mantuvieron completos en escritorio.
+- Auditoría 3: se verificó que no quedan `borderRadius: 0` en la interfaz,
+  que el código compila y que se generan las 85 rutas.
+- Deployment final: `dpl_7G65JoYiwtBsWPAtrNBZ9J3WaCzj`, estado READY.
+- Alias productivo verificado: `https://seototal.lasolucionweb.com/login` responde HTTP 200.
+- No se tocaron el esquema Prisma ni migraciones.
+
+## Menú de configuración — 2026-09-22 — Codex
+
+- `Cómo funciona esta aplicación` dejó de ser una entrada independiente y
+  ahora vive dentro de `Configuración`, tanto en escritorio como en el menú
+  hamburguesa móvil.
+- Se verificó que no queda duplicado y que la compilación genera 85 rutas.
+- Deployment: `dpl_6CE59HWgdmvdu45QJJvJWQT3yC7m`, estado READY.
+- Alias productivo verificado: `https://seototal.lasolucionweb.com/login` responde HTTP 200.

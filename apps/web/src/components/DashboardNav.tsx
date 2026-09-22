@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { CSSProperties } from "react";
+import LogoutButton from "@/components/LogoutButton";
 
 interface TabItem {
   id?: string;
@@ -30,7 +31,6 @@ function isGroup(entry: NavEntry): entry is TabGroup {
 // principal quede corta. Actualizaciones vive dentro de CONFIGURACIÓN.
 const BASE_ENTRIES: NavEntry[] = [
   { href: "/dashboard", label: "Inicio" },
-  { id: "como-funciona", href: "/dashboard/como-funciona", label: "Cómo funciona esta aplicación" },
   {
     group: "publicaciones",
     label: "Publicaciones",
@@ -48,6 +48,7 @@ const BASE_ENTRIES: NavEntry[] = [
         label: "Progreso de las publicaciones",
       },
       { id: "historial", href: "/dashboard/historial", label: "Historial" },
+      { id: "estadisticas", href: "/dashboard/historial#estadisticas", label: "Estadísticas" },
     ],
   },
   {
@@ -55,6 +56,7 @@ const BASE_ENTRIES: NavEntry[] = [
     label: "Configuración",
     items: [
       { id: "configuracion", href: "/dashboard/configuracion", label: "Configuración general" },
+      { id: "como-funciona", href: "/dashboard/como-funciona", label: "Cómo funciona esta aplicación" },
       { id: "actualizaciones", href: "/dashboard/actualizaciones", label: "Actualizaciones" },
     ],
   },
@@ -112,7 +114,8 @@ export default function DashboardNav() {
           // Los administradores necesitan conservar el menú para supervisar y
           // configurar el sistema aunque su propia cuenta esté incompleta.
           setIsAdmin(meData?.role === "admin" || Boolean(meData?.isActingAdmin));
-          setHideForSetup(!(step1 && step2 && step3 && step4));
+          const localDemo = process.env.NEXT_PUBLIC_LOCAL_DEMO === "true";
+          setHideForSetup(!localDemo && !(step1 && step2 && step3 && step4));
         }
       })
       .catch(() => {
@@ -196,10 +199,6 @@ export default function DashboardNav() {
     .filter((entry): entry is NavEntry => entry !== null)
     .filter((entry) => (isGroup(entry) ? true : isVisible(entry)));
 
-  const flatTabs: TabItem[] = entries.flatMap((entry) =>
-    isGroup(entry) ? entry.items : [entry],
-  );
-  const activeTab = flatTabs.find((tab) => tab.href === pathname);
   const activeGroup = entries.find(
     (entry) => isGroup(entry) && entry.items.some((item) => item.href === pathname),
   );
@@ -246,7 +245,7 @@ export default function DashboardNav() {
   if (hideForSetup && !isAdmin) return null;
 
   return (
-    <nav style={{ position: "relative", marginTop: 18, marginBottom: 28 }}>
+    <nav className="dashboard-nav" style={{ position: "relative", marginTop: 18, marginBottom: 28 }}>
       <style>{`
         @media (min-width: 1180px) {
           .nav-mobile-toggle { display: none !important; }
@@ -257,6 +256,10 @@ export default function DashboardNav() {
           .nav-mobile-toggle { padding: 11px 12px !important; }
           .nav-mobile-menu { border-radius: 12px !important; }
         }
+        @media (max-width: 1179px) {
+          .nav-mobile-toggle { width: 48px !important; margin-left: auto; }
+          .nav-mobile-menu { left: auto !important; right: 0 !important; width: min(320px, calc(100vw - 32px)); }
+        }
       `}</style>
 
       <button
@@ -264,6 +267,7 @@ export default function DashboardNav() {
         className="nav-mobile-toggle"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
+        aria-label={open ? "Cerrar menú" : "Abrir menú"}
         style={{
           display: "flex",
           width: "100%",
@@ -282,14 +286,8 @@ export default function DashboardNav() {
           fontFamily: "inherit",
         }}
       >
-        <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#1d1d1f" }} />
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {activeTab?.label ?? "Menú de Módulos"}
-          </span>
-        </span>
         <span
-          style={{ fontSize: 18, lineHeight: 1, opacity: 0.75, flexShrink: 0 }}
+          style={{ fontSize: 22, lineHeight: 1, opacity: 0.75, flexShrink: 0 }}
           aria-hidden="true"
         >
           {open ? "×" : "☰"}
@@ -344,6 +342,7 @@ export default function DashboardNav() {
                       hidden={hiddenGlobally(tab)}
                       onNavigate={() => setOpen(false)}
                       indented
+                      separatorAfter={tab.id === "oportunidades-redes"}
                     />
                   ))}
                 </div>
@@ -359,6 +358,9 @@ export default function DashboardNav() {
               />
             );
           })}
+          <div className="mobile-menu-logout" style={{ marginTop: 8, padding: "8px 10px", borderTop: "1px solid rgba(0, 0, 0, 0.08)" }}>
+            <LogoutButton />
+          </div>
         </div>
       )}
 
@@ -459,6 +461,8 @@ export default function DashboardNav() {
                             background: active ? "rgba(0, 0, 0, 0.05)" : "transparent",
                             borderRadius: 10,
                             whiteSpace: "nowrap",
+                            borderBottom: tab.id === "oportunidades-redes" ? "1px solid #d2d2d7" : undefined,
+                            marginBottom: tab.id === "oportunidades-redes" ? 6 : undefined,
                           }}
                         >
                           <span>{tab.label}</span>
@@ -505,12 +509,14 @@ function MobileLink({
   hidden,
   onNavigate,
   indented = false,
+  separatorAfter = false,
 }: {
   tab: TabItem;
   active: boolean;
   hidden: boolean;
   onNavigate: () => void;
   indented?: boolean;
+  separatorAfter?: boolean;
 }) {
   return (
     <Link
@@ -529,6 +535,8 @@ function MobileLink({
         background: active ? "rgba(0, 0, 0, 0.05)" : "transparent",
         borderRadius: 10,
         transition: "all 0.15s ease",
+        borderBottom: separatorAfter ? "1px solid #d2d2d7" : undefined,
+        marginBottom: separatorAfter ? 6 : undefined,
       }}
     >
       <span>{tab.label}</span>

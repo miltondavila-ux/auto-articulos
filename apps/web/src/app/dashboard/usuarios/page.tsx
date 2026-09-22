@@ -835,7 +835,7 @@ export default function UsuariosPage() {
         className="panel"
         style={{
           ...sectionStyle,
-          padding: "24px 28px",
+          padding: "20px 0 24px",
           marginTop: 0,
           marginBottom: 16,
         }}

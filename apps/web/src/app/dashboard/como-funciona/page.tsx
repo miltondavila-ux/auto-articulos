@@ -100,7 +100,7 @@ const PASOS = [
   },
   {
     numero: 2,
-    titulo: "Publica tus artículos",
+    titulo: MENU_NAMES.propios,
     cuerpo: [
       <>
         Aquí tienes dos caminos, y puedes usar los dos. Cambian en una sola
@@ -328,6 +328,15 @@ export default function ComoFuncionaPage() {
         <p style={PARRAFO}>
           Son tres pasos, en este orden. El primero se hace una sola vez; los
           otros dos se repiten tantas veces como quieras.
+        </p>
+        <p style={PARRAFO}>
+          Cuando terminas la configuración inicial, Inicio queda reducido a
+          tres acciones sencillas: <strong>{MENU_NAMES.propios}</strong>,{" "}
+          <strong>{MENU_NAMES.ia}</strong> y{" "}
+          <strong>{MENU_NAMES.redes}</strong>. En móvil las encuentras desde
+          el menú de hamburguesa de la esquina superior derecha; el progreso,
+          el historial y las estadísticas también están dentro de
+          Publicaciones.
         </p>
       </section>
 

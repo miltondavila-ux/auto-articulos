@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
-import ConfiguracionSubNav from "@/components/ConfiguracionSubNav";
 import PhotoLogoUploader, { type UploadType } from "@/components/PhotoLogoUploader";
 import {
   sectionStyle,
@@ -13,6 +12,17 @@ import {
 } from "@/components/dashboard-ui";
 
 const MAX_SIGNATURE_LEN = 700;
+const MAX_LOCATIONS_LEN = 500;
+const MAX_EXCLUDED_TOPICS_LEN = 500;
+
+function TextLimitNotice({ value, limit }: { value: string; limit: number }) {
+  if (value.length <= limit) return null;
+  return (
+    <p role="alert" style={{ margin: "8px 0 0", color: "#b42318", fontSize: 13, lineHeight: 1.45 }}>
+      Has superado el límite de {limit} caracteres ({value.length}). Puedes seguir escribiendo o pegar el texto completo, pero no podrás guardarlo hasta reducirlo.
+    </p>
+  );
+}
 
 /**
  * Página "Contenido", parte del rediseño "RENEW CONFIGURACION" (7/9/2026).
@@ -277,7 +287,6 @@ export default function ConfiguracionContenidoPage() {
           redacción, eso vive en Cuenta.
         </IntroP>
       </ModuleIntro>
-      <ConfiguracionSubNav />
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {/* Estilo de Redacción por Defecto */}
@@ -343,10 +352,7 @@ export default function ConfiguracionContenidoPage() {
 
           <textarea
             value={articleSignature}
-            onChange={(e) =>
-              e.target.value.length <= MAX_SIGNATURE_LEN &&
-              setArticleSignature(e.target.value)
-            }
+            onChange={(e) => setArticleSignature(e.target.value)}
             placeholder='Ej: "**Nota importante:** Soy [Tu nombre], [Tu profesión] licenciado en [Tu estado/país]. El contenido de este artículo tiene fines informativos y educativos. No constituye asesoría legal, fiscal, contable, de seguros o de inversiones. Consulta siempre con un profesional debidamente licenciado."'
             rows={5}
             style={{
@@ -357,6 +363,7 @@ export default function ConfiguracionContenidoPage() {
               lineHeight: 1.5,
             }}
           />
+          <TextLimitNotice value={articleSignature} limit={MAX_SIGNATURE_LEN} />
 
           <div
             style={{
@@ -412,6 +419,7 @@ export default function ConfiguracionContenidoPage() {
             placeholder="Ej: Colombia, Bogotá, Ecuador, Caracas"
             style={{ ...inputStyle, width: "100%", marginBottom: 14 }}
           />
+          <TextLimitNotice value={clientLocations} limit={MAX_LOCATIONS_LEN} />
 
           <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1d1d1f", marginBottom: 6 }}>
             ¿En dónde está tu negocio?
@@ -423,6 +431,7 @@ export default function ConfiguracionContenidoPage() {
             placeholder="Ej: Miami, Orlando, Homestead"
             style={{ ...inputStyle, width: "100%" }}
           />
+          <TextLimitNotice value={businessLocations} limit={MAX_LOCATIONS_LEN} />
 
           <div style={{ marginTop: 12 }}>
             <button
@@ -456,6 +465,7 @@ export default function ConfiguracionContenidoPage() {
             placeholder="Ej: seguros de vida, criptomonedas, política"
             style={{ ...inputStyle, width: "100%" }}
           />
+          <TextLimitNotice value={excludedTopics} limit={MAX_EXCLUDED_TOPICS_LEN} />
 
           <div style={{ marginTop: 12 }}>
             <button

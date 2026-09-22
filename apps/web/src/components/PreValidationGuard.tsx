@@ -53,12 +53,14 @@ export default function PreValidationGuard({
   }
 
   const isReady =
-    type === "publicar"
-      ? credentialsConfigured && hasCategories && hasLanguage
-      : credentialsConfigured &&
-        hasCategories &&
-        hasLanguage &&
-        isGoogleReady;
+    process.env.NEXT_PUBLIC_LOCAL_DEMO === "true"
+      ? true
+      : type === "publicar"
+        ? credentialsConfigured && hasCategories && hasLanguage
+        : credentialsConfigured &&
+          hasCategories &&
+          hasLanguage &&
+          isGoogleReady;
 
   if (isReady) {
     return <>{children}</>;

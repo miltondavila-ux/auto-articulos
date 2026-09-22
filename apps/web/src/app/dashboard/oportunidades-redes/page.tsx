@@ -4,6 +4,7 @@ import { MENU_NAMES } from "@/lib/menu-names";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { EnPrueba, Modulo } from "@/components/ModuleIntro";
+import MobileInstructions from "@/components/MobileInstructions";
 import { useRouter } from "next/navigation";
 import {
   buttonStyle,
@@ -368,13 +369,13 @@ export default function OportunidadesRedesPage() {
   if (loading || connectionsLoading) return null;
 
   return (
-    <div style={{ maxWidth: 1120, margin: "0 auto" }}>
+    <div className="oportunidades-redes-page" style={{ maxWidth: 1120, margin: "0 auto" }}>
       {/* Panel Superior */}
       <div
         className="panel"
         style={{
           ...sectionStyle,
-          padding: "24px 28px",
+          padding: "20px 0 24px",
           marginBottom: 20,
           marginTop: 0,
         }}
@@ -401,21 +402,21 @@ export default function OportunidadesRedesPage() {
             >
               {MENU_NAMES.redes}
             </h1>
-            <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
-              <strong style={{ fontWeight: 600 }}>Este módulo está en prueba</strong>
-          <EnPrueba />. Todavía no está disponible para todas las cuentas y se
-          está activando poco a poco. Puede que algo cambie de sitio o de
-          comportamiento mientras se termina de ajustar.
-            </p>
-            <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
-              Un artículo publicado en tu web solo lo encuentra quien lo busca. En redes sociales lo ve gente que todavía no te estaba buscando, y cada visita que llega desde ahí es una señal más para Google de que tu contenido interesa.
-            </p>
-            <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
-              Aquí el sistema toma artículos que ya publicaste desde <Modulo id="publicar" /> u <Modulo id="oportunidades" />, y prepara la publicación adaptada a cada red: el texto, la imagen y el formato que esa red necesita.
-            </p>
-            <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
-              Tú revisas cada propuesta y decides cuál sale y a qué red. No se publica todo ni todo el tiempo: el sistema reparte las publicaciones a lo largo de los días para que tu presencia crezca sin parecer spam y sin que las redes te penalicen.
-            </p>
+            <MobileInstructions>
+              <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
+                <strong style={{ fontWeight: 600 }}>Este módulo está en prueba</strong>
+                <EnPrueba />. Todavía no está disponible para todas las cuentas y se está activando poco a poco. Puede que algo cambie de sitio o de comportamiento mientras se termina de ajustar.
+              </p>
+              <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
+                Un artículo publicado en tu web solo lo encuentra quien lo busca. En redes sociales lo ve gente que todavía no te estaba buscando, y cada visita que llega desde ahí es una señal más para Google de que tu contenido interesa.
+              </p>
+              <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
+                Aquí el sistema toma artículos que ya publicaste desde <Modulo id="publicar" /> u <Modulo id="oportunidades" />, y prepara la publicación adaptada a cada red: el texto, la imagen y el formato que esa red necesita.
+              </p>
+              <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
+                Tú revisas cada propuesta y decides cuál sale y a qué red. No se publica todo ni todo el tiempo: el sistema reparte las publicaciones a lo largo de los días para que tu presencia crezca sin parecer spam y sin que las redes te penalicen.
+              </p>
+            </MobileInstructions>
           </div>
 
           <div

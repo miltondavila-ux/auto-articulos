@@ -13,27 +13,52 @@ import { sectionStyle } from "./dashboard-ui";
 export default function ModuleIntro({
   titulo,
   children,
+  showEyebrow = true,
+  compact = false,
 }: {
   titulo: string;
   children: ReactNode;
+  showEyebrow?: boolean;
+  compact?: boolean;
 }) {
+  if (compact) return null;
   return (
-    <section style={{ ...sectionStyle, marginTop: 0, padding: "clamp(18px, 3vw, 28px)" }}>
-      <p
-        style={{
-          margin: 0,
-          fontSize: 11,
-          fontWeight: 600,
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
-          color: "#86868b",
-        }}
-      >
-        Antes de avanzar, lee esto
-      </p>
+    <section style={{ ...sectionStyle, marginTop: 0, padding: "20px 0 24px" }}>
+      <style>{`
+        .module-intro-mobile { display: none; }
+        @media (max-width: 700px) {
+          .module-intro-desktop { display: none; }
+          .module-intro-mobile { display: block; margin-top: 12px; }
+          .module-intro-mobile summary {
+            cursor: pointer;
+            color: #1d1d1f;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: .02em;
+            list-style: none;
+          }
+          .module-intro-mobile summary::-webkit-details-marker { display: none; }
+          .module-intro-mobile summary::after { content: "＋"; float: right; font-size: 16px; }
+          .module-intro-mobile[open] summary::after { content: "−"; }
+        }
+      `}</style>
+      {showEyebrow && (
+        <p
+          style={{
+            margin: 0,
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            color: "#86868b",
+          }}
+        >
+          Antes de avanzar, lee esto
+        </p>
+      )}
       <h1
         style={{
-          margin: "8px 0 0",
+          margin: showEyebrow ? "8px 0 0" : 0,
           fontSize: "clamp(22px, 3vw, 28px)",
           fontWeight: 600,
           letterSpacing: "-0.02em",
@@ -42,7 +67,11 @@ export default function ModuleIntro({
       >
         {titulo}
       </h1>
-      <div style={{ marginTop: 10 }}>{children}</div>
+      <div className="module-intro-desktop" style={{ marginTop: 10 }}>{children}</div>
+      <details className="module-intro-mobile">
+        <summary>Ver instrucciones</summary>
+        <div style={{ marginTop: 10 }}>{children}</div>
+      </details>
     </section>
   );
 }

@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
-import ConfiguracionSubNav from "@/components/ConfiguracionSubNav";
 import AdminFixPatriciaPanel from "@/components/AdminFixPatriciaPanel";
 import CategorySyncProgress, {
   type CategorySyncStatus,
@@ -246,7 +245,6 @@ export default function ConfiguracionCuentaPage() {
           fotos para redes sociales, eso vive en Contenido.
         </IntroP>
       </ModuleIntro>
-      <ConfiguracionSubNav />
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {/* Credenciales Card */}

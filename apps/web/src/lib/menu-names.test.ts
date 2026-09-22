@@ -5,12 +5,12 @@ import { SYSTEM_MODULES } from "./modules";
 import { BASE_USER_MANUAL } from "../content/manual-usuario";
 
 test("los tres nombres del menú son los pedidos por Milton", () => {
-  assert.equal(MENU_NAMES.propios, "Artículos propios");
-  assert.equal(MENU_NAMES.ia, "Artículos creados con IA");
-  assert.equal(MENU_NAMES.redes, "Redes sociales: publicaciones con IA");
-  assert.equal(MENU_LABELS_NUMBERED.propios, "1) Artículos propios");
-  assert.equal(MENU_LABELS_NUMBERED.ia, "2) Artículos creados con IA");
-  assert.equal(MENU_LABELS_NUMBERED.redes, "3) Redes sociales: publicaciones con IA");
+  assert.equal(MENU_NAMES.propios, "CONTENIDO PROPIO");
+  assert.equal(MENU_NAMES.ia, "CONTENIDO GENERADO POR IA");
+  assert.equal(MENU_NAMES.redes, "PUBLICA EN REDES SOCIALES Y EN BLOGS PÚBLICOS");
+  assert.equal(MENU_LABELS_NUMBERED.propios, "1) CONTENIDO PROPIO");
+  assert.equal(MENU_LABELS_NUMBERED.ia, "2) CONTENIDO GENERADO POR IA");
+  assert.equal(MENU_LABELS_NUMBERED.redes, "3) PUBLICA EN REDES SOCIALES Y EN BLOGS PÚBLICOS");
 });
 
 test("el panel de módulos usa los mismos nombres que el menú", () => {

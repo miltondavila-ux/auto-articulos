@@ -1,5 +1,4 @@
 import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
-import ConfiguracionSubNav from "@/components/ConfiguracionSubNav";
 import { sectionStyle, h2Style } from "@/components/dashboard-ui";
 
 /**
@@ -16,11 +15,10 @@ export default function ConfiguracionMovilPage() {
           instalada, sin pasar por ninguna tienda de aplicaciones.
         </IntroP>
       </ModuleIntro>
-      <ConfiguracionSubNav />
       <section
         style={{
           ...sectionStyle,
-          padding: 30,
+          padding: "20px 0 24px",
         }}
       >
         <div

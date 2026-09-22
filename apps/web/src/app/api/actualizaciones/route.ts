@@ -22,7 +22,9 @@ export async function GET() {
 }
 
 /**
- * Punto de entrada administrativo para el futuro automatismo de commits.
+ * Punto de entrada administrativo para registrar cambios visibles.
+ * La página de Actualizaciones y el manual vivo del asistente leen el mismo
+ * registro, por lo que una entrada creada aquí se refleja en ambos lugares.
  * Los usuarios finales solo pueden consultar este registro.
  */
 export async function POST(request: NextRequest) {

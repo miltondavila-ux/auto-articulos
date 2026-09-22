@@ -21,6 +21,7 @@ import type {
   TitleRow,
 } from "@/types/dashboard";
 import GoogleIndexingStatus from "@/components/GoogleIndexingStatus";
+import PerformanceDashboard from "@/components/PerformanceDashboard";
 
 export default function HistorialPage() {
   return (
@@ -38,6 +39,14 @@ export default function HistorialPage() {
       </ModuleIntro>
       <HistorialEjecuciones />
       <HistorialRedes />
+      <section id="estadisticas" className="panel" style={{ marginTop: 4 }}>
+        <p className="eyebrow">Rendimiento</p>
+        <h2 style={{ marginBottom: 4 }}>Estadísticas</h2>
+        <p className="muted" style={{ marginTop: 0 }}>
+          Consulta aquí el rendimiento de tus publicaciones y tu ritmo de trabajo.
+        </p>
+        <PerformanceDashboard />
+      </section>
     </div>
   );
 }

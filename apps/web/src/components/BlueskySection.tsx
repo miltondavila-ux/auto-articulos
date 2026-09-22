@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { disabledStyle, h2Style, inputStyle, secondaryButtonStyle, sectionStyle } from "./dashboard-ui";
+import MobileInstructions from "@/components/MobileInstructions";
 
 type Connection = { connected: boolean; handle?: string };
 
@@ -49,7 +50,8 @@ export default function BlueskySection({ allowed = true }: { allowed?: boolean }
   return <section style={sectionStyle}>
     <h2 style={{ ...h2Style, margin: 0 }}>Bluesky</h2>
     <p className="lead-copy" style={{ fontSize: 13, margin: "4px 0 0" }}>Publica un microresumen del artículo con su imagen y enlace.</p>
-    <div style={{ marginTop: 14, padding: 16, border: "1px solid #d2d2d7", borderRadius: 14, background: "#fff", color: "#1d1d1f", fontSize: 13, lineHeight: 1.55 }}>
+    <MobileInstructions>
+      <div style={{ marginTop: 14, padding: 16, border: "1px solid #d2d2d7", borderRadius: 14, background: "#fff", color: "#1d1d1f", fontSize: 13, lineHeight: 1.55 }}>
       <strong style={{ fontSize: 14 }}>Cómo conectar Bluesky, paso a paso</strong>
       <ol style={{ margin: "10px 0 0", paddingLeft: 20 }}>
         <li>Entra en Bluesky y abre <strong>Configuración → Privacidad y seguridad → Contraseñas de aplicación</strong>.</li>
@@ -59,7 +61,8 @@ export default function BlueskySection({ allowed = true }: { allowed?: boolean }
         <li>Pega la App Password y pulsa <strong>Conectar Bluesky</strong>.</li>
       </ol>
       <p style={{ margin: "10px 0 0" }}><strong>Si falla:</strong> revisa que no hayas copiado espacios, que el usuario incluya el dominio y que sea una App Password.</p>
-    </div>
+      </div>
+    </MobileInstructions>
     {loading ? <p className="muted" style={{ fontSize: 13, marginTop: 12 }}>Cargando...</p> : <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 14, paddingTop: 14 }}>
       {!connection?.connected || editing ? <div style={{ display: "grid", gap: 10 }}>
         <label style={{ color: "#1d1d1f", fontSize: 12 }}>Usuario o handle<input value={handle} onChange={(e) => setHandle(e.target.value)} placeholder="usuario.bsky.social" style={inputStyle} /></label>

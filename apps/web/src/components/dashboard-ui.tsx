@@ -9,9 +9,9 @@ export const sectionStyle: CSSProperties = {
   background: "#ffffff",
   color: "#1d1d1f",
   borderBottom: "1px solid #e5e5ea",
-  borderRadius: 0,
-  padding: "4px 0 22px",
-  marginTop: 12,
+  borderRadius: 6,
+  padding: "20px 0 24px",
+  marginTop: 0,
   boxShadow: "none",
   boxSizing: "border-box",
   width: "100%",
@@ -28,7 +28,7 @@ export const h2Style: CSSProperties = {
 
 export const inputStyle: CSSProperties = {
   padding: "11px 12px",
-  borderRadius: 11,
+  borderRadius: 6,
   border: "1px solid #d2d2d7",
   background: "#ffffff",
   color: "#1d1d1f",
@@ -41,7 +41,7 @@ export const inputStyle: CSSProperties = {
 export const buttonStyle: CSSProperties = {
   marginTop: 12,
   padding: "11px 16px",
-  borderRadius: 10,
+  borderRadius: 6,
   border: "none",
   background: "#1d1d1f",
   color: "#ffffff",
@@ -57,7 +57,7 @@ export const buttonStyle: CSSProperties = {
 
 export const secondaryButtonStyle: CSSProperties = {
   padding: "11px 16px",
-  borderRadius: 10,
+  borderRadius: 6,
   border: "1px solid #d2d2d7",
   background: "#ffffff",
   color: "#1d1d1f",
