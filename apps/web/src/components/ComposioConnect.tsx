@@ -63,9 +63,9 @@ const APP_NOTES: Record<string, string> = {
   google_search_console: "Permite enviar tu sitemap, revisar la indexación y consultar tus métricas de búsqueda.",
   google_analytics: "Permite leer las métricas de tu propiedad de Analytics (solo lectura).",
   facebook:
-    "Permite publicar en tu Página. Composio no publica Stories de Facebook: esas se siguen publicando por tu conexión actual.",
+    "Permite publicar en tu Página de Facebook desde SEO TOTAL. Las Stories no se ofrecen cuando esta conexión está activa.",
   instagram:
-    "Permite publicar imágenes, carruseles y Reels en tu cuenta Business o Creator. Las Stories de Instagram están en prueba.",
+    "Permite publicar imágenes, carruseles y Reels en tu cuenta Business o Creator. Las Stories no se ofrecen cuando esta conexión está activa.",
 };
 
 const CHOOSE_TITLE: Record<string, string> = {
@@ -78,6 +78,35 @@ const CHOOSE_TITLE: Record<string, string> = {
 const CHOOSE_NOTE: Record<string, string> = {
   google_search_console:
     "Tu cuenta de SEO TOTAL trabaja con un solo dominio. Si tu cuenta de Google tiene varios sitios, elige el de esta cuenta; los demás no se usarán.",
+};
+
+const CONNECTION_STEPS: Record<string, string[]> = {
+  google_search_console: [
+    "Abre Google en otra pestaña del mismo navegador.",
+    "Confirma que estás dentro de la cuenta de Google que administra tu Search Console.",
+    "Pulsa Nueva conexión y autoriza el acceso solicitado.",
+    "Elige la propiedad correcta y pulsa Aprobar y guardar.",
+    "Pulsa Probar conexión y comprueba el mensaje verde.",
+  ],
+  google_analytics: [
+    "Abre Google Analytics en otra pestaña y confirma la cuenta correcta.",
+    "Pulsa Nueva conexión y autoriza el acceso de lectura.",
+    "Elige la propiedad GA4 que corresponde a tu sitio.",
+    "Pulsa Aprobar y guardar.",
+    "Pulsa Probar conexión y comprueba el mensaje verde.",
+  ],
+  facebook: [
+    "Abre Facebook en otra pestaña y confirma que es tu cuenta personal administradora.",
+    "Pulsa Nueva conexión y autoriza el acceso.",
+    "Elige la Página de Facebook correcta, no tu perfil personal.",
+    "Pulsa Aprobar y guardar y después Probar conexión.",
+  ],
+  instagram: [
+    "Abre Instagram en otra pestaña y confirma la cuenta Business o Creator correcta.",
+    "Pulsa Nueva conexión y autoriza el acceso desde Facebook si se solicita.",
+    "Elige la cuenta de Instagram correcta.",
+    "Pulsa Aprobar y guardar y después Probar conexión.",
+  ],
 };
 
 const STATUS_LABEL: Record<Connection["status"], { text: string; color: string }> = {
@@ -279,9 +308,20 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
                 {!inline && <h2 style={{ ...h2Style, marginBottom: 6 }}>{embedded ? `${connection.label} · nueva conexión` : connection.label}</h2>}
                 <span style={{ fontSize: 13, fontWeight: 600, color: status.color }}>{status.text}</span>
               </div>
-              {!inline && <p style={mutedStyle}>{APP_NOTES[connection.app]}</p>}
+              <p style={{ ...mutedStyle, margin: "4px 0 0" }}>{APP_NOTES[connection.app]}</p>
+              {CONNECTION_STEPS[connection.app] && (
+                <div
+                  role="note"
+                  style={{ marginTop: 10, padding: "10px 0", borderTop: "1px solid #e5e5ea", color: "#1d1d1f", fontSize: 13, lineHeight: 1.5 }}
+                >
+                  <strong>Cómo hacerlo paso a paso</strong>
+                  <ol style={{ margin: "6px 0 0", paddingLeft: 20 }}>
+                    {CONNECTION_STEPS[connection.app].map((step) => <li key={step}>{step}</li>)}
+                  </ol>
+                </div>
+              )}
               {embedded && !inline && (
-                <p role="note" style={{ margin: "8px 0", padding: "8px 12px", borderRadius: 10, background: "#fff4e5", color: "#8a4b08", fontSize: 13, lineHeight: 1.45 }}>
+                <p role="note" style={{ margin: "8px 0", padding: "8px 0", color: "#6e6e73", fontSize: 13, lineHeight: 1.45 }}>
                   <strong>Es una conexión adicional, en prueba.</strong> No reemplaza a la conexión de arriba: el sistema sigue usando esa,
                   así que <strong>no la desconectes</strong>.
                 </p>
@@ -302,7 +342,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
               )}
 
               {choice && (
-                <div style={{ marginTop: 12, padding: 14, borderRadius: 12, background: "#f5f5f7" }}>
+                <div style={{ marginTop: 12, padding: "10px 0", borderTop: "1px solid #e5e5ea" }}>
                   <p style={{ fontSize: 14, fontWeight: 600, margin: "0 0 4px" }}>{CHOOSE_TITLE[connection.app]}</p>
                   {CHOOSE_NOTE[connection.app] && <p style={{ ...mutedStyle, margin: "0 0 10px" }}>{CHOOSE_NOTE[connection.app]}</p>}
                   {choice.loading && <p style={mutedStyle}>Leyendo tu cuenta…</p>}

@@ -2,10 +2,9 @@ export default function BrowserTabsConnectionNotice() {
   return (
     <section
       style={{
-        padding: 16,
-        border: "1px solid #d2d2d7",
-        borderRadius: 14,
-        background: "#f5f5f7",
+        padding: "12px 0",
+        borderBottom: "1px solid #e5e5ea",
+        background: "transparent",
         color: "#1d1d1f",
         fontSize: 13,
         lineHeight: 1.55,
@@ -13,21 +12,17 @@ export default function BrowserTabsConnectionNotice() {
       aria-label="Instrucciones para conectar redes sociales"
     >
       <strong style={{ fontSize: 14 }}>
-        Antes de configurar cualquier red social
+        Proceso estándar de conexión
       </strong>
       <ol style={{ margin: "10px 0 0", paddingLeft: 20 }}>
         <li>
-          Cierra todas las pestañas del navegador excepto la pestaña donde está
-          abierto SEO TOTAL.
+          <strong>Prepara la cuenta:</strong> abre la aplicación en otra pestaña del mismo navegador e inicia sesión.
         </li>
         <li>
-          Abre la red social que vas a configurar en una pestaña nueva del mismo
-          navegador e inicia sesión en la cuenta correcta.
+          <strong>Confirma la identidad:</strong> verifica que es la cuenta, página o propiedad correcta.
         </li>
         <li>
-          Regresa a la pestaña de SEO TOTAL y completa la conexión. Si se
-          abre otra pestaña para autorizar, no cierres la pestaña del sistema y
-          vuelve a ella al terminar.
+          <strong>Autoriza y prueba:</strong> vuelve a SEO TOTAL, acepta los permisos, elige el recurso y pulsa Probar conexión.
         </li>
       </ol>
     </section>

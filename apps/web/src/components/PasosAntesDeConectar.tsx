@@ -41,16 +41,15 @@ export default function PasosAntesDeConectar({
   return (
     <div
       style={{
-        padding: 16,
-        margin: "14px 0",
+        padding: "10px 0",
+        margin: "12px 0",
         fontSize: 13,
-        border: "1px solid #d2d2d7",
-        borderRadius: 14,
-        background: "#ffffff",
+        borderTop: "1px solid #e5e5ea",
+        background: "transparent",
       }}
     >
       <strong style={{ color: "#1d1d1f", fontSize: 14 }}>
-        Antes de pulsar el botón, haz esto
+        Proceso estándar de conexión
       </strong>
       <ol
         style={{
@@ -61,26 +60,19 @@ export default function PasosAntesDeConectar({
         }}
       >
         <li style={{ marginBottom: 8 }}>
-          <strong>Cierra todas las pestañas del navegador excepto esta del sistema.</strong>{" "}
-          Después abre {red} en una pestaña nueva de este mismo navegador y deja
-          allí iniciada la sesión. No cierres esta pestaña del sistema: la
-          necesitarás para volver y completar la conexión.
+          <strong>Prepara la cuenta.</strong> Abre {red} en una pestaña nueva del mismo navegador y deja iniciada la sesión. Mantén abierta esta pestaña del sistema.
         </li>
         <li style={{ marginBottom: 8 }}>
-          <strong>Si todavía no tienes cuenta, créala primero.</strong>{" "}
+          <strong>Comprueba el acceso.</strong> Si todavía no tienes cuenta, créala primero. {" "}
           {accountUrl ? <a href={accountUrl} target="_blank" rel="noreferrer">Pulsa aquí para abrir la página oficial de registro</a> : "Busca el botón Crear cuenta dentro de la red."}
           {recoveryUrl && <>. Si olvidaste la contraseña, <a href={recoveryUrl} target="_blank" rel="noreferrer">abre aquí la recuperación oficial</a>.</>}
         </li>
         <li style={{ marginBottom: 8 }}>
-          <strong>Comprueba que es la cuenta correcta.</strong> Si manejas
-          varias, cierra las demás o usa una ventana privada: se conectará la
-          que esté abierta en ese momento.
+          <strong>Confirma la identidad.</strong> Comprueba que es la cuenta correcta; si manejas varias, no cambies de usuario durante el proceso.
         </li>
         {extra}
         <li>
-          <strong>Vuelve a esta pestaña del sistema y pulsa el botón.</strong>{" "}
-          Se abrirá una pestaña nueva para que autorices {red}. Acepta y vuelve
-          a la pestaña del sistema para comprobar el resultado.
+          <strong>Autoriza y confirma.</strong> Vuelve a esta pestaña, pulsa el botón, acepta los permisos de {red} y regresa para comprobar el resultado.
         </li>
       </ol>
     </div>

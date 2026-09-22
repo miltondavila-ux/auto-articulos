@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Card, Grid, Text } from "@tremor/react";
 import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
 
 /**
@@ -32,16 +31,10 @@ const SECCIONES = [
       "Cómo se escriben tus artículos, el texto que firma cada uno, tu teléfono de contacto y las fotos que se usan en redes sociales.",
   },
   {
-    href: "/dashboard/configuracion/indexacion",
-    titulo: "Indexación y SEO",
+    href: "/dashboard/configuracion/conexiones",
+    titulo: "Conexiones",
     descripcion:
-      "Conecta Google Search Console, Google Analytics y Bing para que tus artículos aparezcan en las búsquedas.",
-  },
-  {
-    href: "/dashboard/configuracion/redes-sociales",
-    titulo: "Redes Sociales",
-    descripcion:
-      "Conecta tus redes sociales para que el sistema pueda publicar ahí también, automáticamente.",
+      "Configura Search Console, Analytics y tus redes desde un solo lugar.",
   },
   {
     href: "/dashboard/configuracion/movil",
@@ -66,41 +59,39 @@ export default function ConfiguracionPage() {
           explica primero para qué sirve antes de pedirte nada.
         </IntroP>
       </ModuleIntro>
-      <Grid
-        numItemsSm={2}
-        numItemsLg={3}
-        className="gap-4"
-        style={{ marginTop: 20 }}
-      >
+      <div style={{ marginTop: 24, borderTop: "1px solid #d2d2d7" }}>
         {SECCIONES.map((s, i) => (
-          <Link key={s.href} href={s.href} style={{ textDecoration: "none" }}>
-            <Card>
-              <Text>{String(i + 1).padStart(2, "0")}</Text>
-              <p
-                style={{
-                  marginTop: 8,
-                  fontSize: 16,
-                  fontWeight: 600,
-                  color: "#1d1d1f",
-                  lineHeight: 1.4,
-                }}
-              >
+          <Link
+            key={s.href}
+            href={s.href}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "42px minmax(0, 1fr) auto",
+              alignItems: "center",
+              gap: 16,
+              padding: "20px 4px",
+              textDecoration: "none",
+              borderBottom: "1px solid #e5e5ea",
+              color: "#1d1d1f",
+            }}
+          >
+            <span style={{ color: "#8e8e93", fontSize: 12, letterSpacing: "0.06em" }}>
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <span>
+              <strong style={{ display: "block", fontSize: 17, fontWeight: 600, lineHeight: 1.3 }}>
                 {s.titulo}
-              </p>
-              <p
-                style={{
-                  marginTop: 6,
-                  fontSize: 13,
-                  color: "#6e6e73",
-                  lineHeight: 1.5,
-                }}
-              >
+              </strong>
+              <span style={{ display: "block", marginTop: 5, color: "#6e6e73", fontSize: 13, lineHeight: 1.45 }}>
                 {s.descripcion}
-              </p>
-            </Card>
+              </span>
+            </span>
+            <span aria-hidden="true" style={{ color: "#6e6e73", fontSize: 22, lineHeight: 1 }}>
+              →
+            </span>
           </Link>
         ))}
-      </Grid>
+      </div>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
   secondaryButtonStyle,
   buttonStyle,
 } from "./dashboard-ui";
+import PasosAntesDeConectar from "./PasosAntesDeConectar";
 
 type Site = { Url: string; IsVerified: boolean };
 
@@ -204,7 +205,8 @@ export default function BingWebmasterSection() {
   return (
     <section style={sectionStyle}>
       <h2 style={h2Style}>Bing Webmaster Tools</h2>
-      <div className="row" style={{ padding: "12px 16px", marginBottom: 16 }}>
+      <PasosAntesDeConectar red="Bing Webmaster Tools" />
+      <div className="row" style={{ padding: "12px 16px", marginBottom: 16, display: "none" }}>
         <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 600, color: "#1d1d1f" }}>
           Paso a paso para conectar:
         </p>

@@ -10,7 +10,6 @@ const SECCIONES = [
   { href: "/dashboard/configuracion/inicial", label: "Configuración Inicial" },
   { href: "/dashboard/configuracion/cuenta", label: "Cuenta" },
   { href: "/dashboard/configuracion/contenido", label: "Contenido" },
-  { href: "/dashboard/configuracion/indexacion", label: "Indexación y SEO" },
   { href: "/dashboard/configuracion/redes-sociales", label: "Redes Sociales" },
   { href: "/dashboard/configuracion/movil", label: "App Móvil" },
 ] as const;

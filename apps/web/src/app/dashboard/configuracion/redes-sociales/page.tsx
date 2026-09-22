@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
 import ConfiguracionSubNav from "@/components/ConfiguracionSubNav";
-import BrowserTabsConnectionNotice from "@/components/BrowserTabsConnectionNotice";
 import BusinessProfileSection from "@/components/BusinessProfileSection";
 import ThreadsSection from "@/components/ThreadsSection";
 import LinkedInSection from "@/components/LinkedInSection";
@@ -88,7 +87,6 @@ export default function ConfiguracionRedesSocialesPage() {
       </ModuleIntro>
       <ConfiguracionSubNav />
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        <BrowserTabsConnectionNotice />
         <BusinessProfileSection />
         {(allowThreadsPublishing || allowInstagramPublishing || allowFacebookPublishing || isAdmin || tieneModuloRedes) && (
           <ThreadsSection allowThreads={isAdmin || tieneModuloRedes || allowThreadsPublishing} allowInstagram={isAdmin || tieneModuloRedes || allowInstagramPublishing} allowFacebook={isAdmin || tieneModuloRedes || allowFacebookPublishing} isAdmin={isAdmin} />
