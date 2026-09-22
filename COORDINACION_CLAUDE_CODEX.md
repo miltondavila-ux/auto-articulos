@@ -4657,6 +4657,40 @@ el texto existente.
 
 Responsable: Claude (tarea programada diaria de propagación).
 
+### Continuación CONEXION POSTPEER 2 — 2026-09-22
+
+- Se confirmó el resultado de la prueba aislada de Lorena: el artículo exacto
+  `https://segurosdesaludyvida.com/news/comparativa-de-seguros-medicos-economicos-en-florida`
+  apareció como `GOOGLE-BUSINESS ✓ Publicado` en Historial, pero la publicación
+  visible no mostró imagen. No se volvió a publicar.
+- Causa identificada: `SocialOpportunity.imageUrl` estaba vacío para esa
+  oportunidad y el worker no tenía respaldo de lectura de la imagen real del
+  artículo. La generación de imagen IA no se reintroduce.
+- Cambio pendiente en PR: `apps/worker/src/businessProfilePublish.ts` ahora
+  usa primero `SocialOpportunity.imageUrl` y, si falta, obtiene la `og:image`
+  pública del artículo exacto mediante `getArticleOpenGraphImage`. Si tampoco
+  existe, falla antes de enviar la publicación; así GBP nunca publica sin foto.
+  No hay recorte, adaptación ni generación de imagen.
+- Commit: `ee9df8e` (`fix(gbp): use article og image fallback`).
+- PR: #211, https://github.com/miltondavila-ux/auto-articulos/pull/211
+  contra `main`. Checks observados: Vercel pasó como `Skipped - Not affected` y
+  Vercel Preview Comments pasó. No hubo merge, deployment ni nueva publicación.
+- Validaciones realizadas: TypeScript del worker (`npx tsc --noEmit -p
+  apps/worker/tsconfig.json`) OK; `git diff --check` OK. El hook de commit
+  informó que no pudo ejecutar el generador de actualización por falta de
+  `DATABASE_URL`, pero el commit sí quedó creado; no se ejecutó migración.
+- Archivos tocados: `apps/worker/src/businessProfilePublish.ts` y este
+  documento. No se añadieron conexiones ni se modificó Configuración →
+  Conexiones.
+- Deployment: ninguno. Prueba posterior: pendiente de merge/deploy y de una
+  única autorización explícita; no ejecutar otra publicación hasta que exista
+  autorización. La prueba deberá activar `POSTPEER_GBP_CONSUMER_READY` solo para
+  Lorena, usar el URL exacto de la oportunidad y confirmar imagen + artículo
+  exacto como `Publicado` en Historial.
+- Bloqueos restantes: revisión/merge del PR, autorización explícita de
+  deployment y después una única prueba productiva controlada. Si desaparece de
+  la cola sin Historial confirmado, revisar logs y no repetir publicación.
+
 ## Cierre Codex — WIZARD CULMINA EN BING — 2026-09-20
 
 Solicitud: retirar Bing Webmaster Tools del wizard inicial y, al completar
