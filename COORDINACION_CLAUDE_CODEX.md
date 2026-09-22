@@ -8672,3 +8672,13 @@ PostPeer: Codex está preparando para producción un lote local de UX de Conexio
 - Bloqueos restantes: acceso a GitHub/PR y autorización explícita de Milton
   para desplegar; después, prueba aislada productiva y revisión de logs si la
   oportunidad desaparece sin aparecer en Historial.
+
+### Actualización de ejecución proactiva — 2026-09-21
+
+- Commit creado: `ed2cb1c` (`fix(gbp): reuse saved opportunity image`).
+- Rama publicada: `codex/conexion-postpeer-gbp-image-fix`.
+- PR abierto: #207, contra `main`:
+  https://github.com/miltondavila-ux/auto-articulos/pull/207
+- Estado de checks: `Vercel Preview Comments` pasó; `Vercel` continúa
+  pendiente mientras despliega el Preview. No hubo merge ni deployment
+  productivo.
