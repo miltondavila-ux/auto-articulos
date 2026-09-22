@@ -42,6 +42,7 @@ interface UserRow {
   role: "admin" | "user";
   monthlyArticleLimit: number | null;
   dailyArticleLimit: number | null;
+  socialDailyLimits: Record<string, number>;
   maxTitlesPerBatch: number;
   platformDomain: string;
   contentLanguage: string;
@@ -2000,6 +2001,8 @@ function UserCard({
   const [dailyValue, setDailyValue] = useState(
     user.dailyArticleLimit === null ? "" : String(user.dailyArticleLimit),
   );
+  const [socialLimitsText, setSocialLimitsText] = useState(JSON.stringify(user.socialDailyLimits ?? {}, null, 2));
+  const [socialLimitsError, setSocialLimitsError] = useState<string | null>(null);
   const [savingDaily, setSavingDaily] = useState(false);
   const [batchValue, setBatchValue] = useState(String(user.maxTitlesPerBatch));
   const [savingBatch, setSavingBatch] = useState(false);
@@ -2185,6 +2188,17 @@ function UserCard({
     } finally {
       setSavingDaily(false);
     }
+  }
+
+  async function handleSaveSocialLimits() {
+    setSocialLimitsError(null);
+    try {
+      const parsed = JSON.parse(socialLimitsText);
+      const response = await fetch("/api/admin/users", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: user.id, socialDailyLimits: parsed }) });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) { setSocialLimitsError(result.error ?? "No se pudo guardar"); return; }
+      onUpdated();
+    } catch { setSocialLimitsError("Escribe un JSON válido, por ejemplo {\"instagram\":1,\"linkedin\":1}."); }
   }
 
   async function handleSaveBatchLimit() {
@@ -3091,6 +3105,16 @@ function UserCard({
               >
                 {savingDaily ? "..." : "Guardar"}
               </button>
+            </div>
+          </Field>
+
+          <Field label="Límites diarios por red/blog (JSON)">
+            <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
+              <div>
+                <textarea value={socialLimitsText} onChange={(e) => setSocialLimitsText(e.target.value)} rows={5} style={{ ...inputStyle, width: 230, fontFamily: "monospace", fontSize: 12 }} />
+                {socialLimitsError && <div style={{ color: "#b91c1c", fontSize: 12, maxWidth: 230 }}>{socialLimitsError}</div>}
+              </div>
+              <button onClick={handleSaveSocialLimits} style={{ ...buttonStyle, padding: "4px 10px", fontSize: 12 }}>Guardar</button>
             </div>
           </Field>
 

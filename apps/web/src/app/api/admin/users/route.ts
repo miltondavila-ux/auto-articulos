@@ -74,6 +74,7 @@ export async function GET() {
         role: true,
         monthlyArticleLimit: true,
         dailyArticleLimit: true,
+        socialDailyLimits: true,
         maxTitlesPerBatch: true,
         platformDomain: true,
         contentLanguage: true,
@@ -186,6 +187,7 @@ export async function PATCH(request: NextRequest) {
     userId,
     monthlyArticleLimit,
     dailyArticleLimit,
+    socialDailyLimits,
     maxTitlesPerBatch,
     platformDomain,
     email,
@@ -220,6 +222,7 @@ export async function PATCH(request: NextRequest) {
   const data: {
     monthlyArticleLimit?: number | null;
     dailyArticleLimit?: number | null;
+    socialDailyLimits?: Record<string, number>;
     maxTitlesPerBatch?: number;
     platformDomain?: string;
     email?: string;
@@ -318,6 +321,19 @@ export async function PATCH(request: NextRequest) {
       );
     }
     data.dailyArticleLimit = dailyArticleLimit;
+  }
+
+  if ("socialDailyLimits" in body) {
+    if (!socialDailyLimits || typeof socialDailyLimits !== "object" || Array.isArray(socialDailyLimits)) {
+      return NextResponse.json({ error: "socialDailyLimits debe ser un objeto" }, { status: 400 });
+    }
+    const clean = Object.fromEntries(Object.entries(socialDailyLimits).map(([platform, limit]) => {
+      if (!/^[a-z0-9-]+$/.test(platform) || typeof limit !== "number" || !Number.isInteger(limit) || limit < 0 || limit > MAX_POSTGRES_INT) {
+        throw new Error("Cada límite social debe ser un entero mayor o igual a 0");
+      }
+      return [platform, limit];
+    }));
+    data.socialDailyLimits = clean;
   }
 
   if ("maxTitlesPerBatch" in body) {
