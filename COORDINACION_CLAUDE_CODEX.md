@@ -1,5 +1,19 @@
 # INCIDENTE CRÍTICO Y PROTOCOLO OBLIGATORIO — 2026-09-08
 
+## Cierre — pantalla Historial minimalista — Codex — 2026-09-22
+
+- Se simplificó visualmente `apps/web/src/app/dashboard/historial/page.tsx` y
+  `apps/web/src/app/globals.css`: menos recuadros, sin tarjetas anidadas y con
+  divisores planos, manteniendo toda la funcionalidad existente.
+- Se agregó `vercel.json` en la raíz para que Vercel compile correctamente los
+  workspaces del monorepo (`npm run build --workspace=apps/web`).
+- Commit visual: `cff6318`; commit de despliegue: `d78dc4a`.
+- Deployment productivo: `dpl_npXSqk1tUqHqN3YGtknHvPWtSusU`, `READY`.
+- Producción verificada en:
+  `https://seototal.lasolucionweb.com/dashboard/historial`.
+- No hubo cambios de schema Prisma, migraciones ni acciones destructivas.
+- Estado: CERRADO Y ARCHIVADO.
+
 ## Cierre de auditoría editorial y enlaces — Codex — 2026-09-20
 
 - PR #187 fusionado a `main`: mejora de identidad editorial por cuenta,

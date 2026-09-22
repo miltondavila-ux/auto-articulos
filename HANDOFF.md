@@ -2,6 +2,20 @@
 
 Última actualización: 2026-09-08, por Claude.
 
+## Historial minimalista en producción (22/9/2026, Codex)
+
+Se redujo la apariencia de tarjetas anidadas en `/dashboard/historial`:
+los registros diarios y las ejecuciones usan ahora una lista plana con
+divisores sutiles, sin fondos, bordes ni radios repetidos. Se conservaron los
+desplegables, estados, enlaces, reintentos y acciones de borrado.
+
+- Commit visual: `cff6318` (`style(web): simplify history layout`).
+- Configuración raíz para despliegue del monorepo: `d78dc4a`
+  (`build(vercel): configure monorepo deployment`).
+- Deployment Vercel: `dpl_npXSqk1tUqHqN3YGtknHvPWtSusU`, estado `READY`.
+- Dominio verificado: `https://seototal.lasolucionweb.com/dashboard/historial`.
+- Sin cambios de schema, migraciones ni lógica de publicación.
+
 ## Cierre final — auditoría editorial y enlaces (20/9/2026, Codex)
 
 Trabajo documentado y archivado. PR #187 quedó fusionado a `main` y la
