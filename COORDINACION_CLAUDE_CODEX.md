@@ -1405,6 +1405,97 @@ se confirme la prueba real pendiente de arriba.
 ## Trabajo activo — Blogger variables aisladas — 2026-09-03
 
 Responsable: Codex.
+
+## CONFIRMACIÓN DE INTEGRACIÓN — POSTPEER EN CONEXIONES UNIFICADAS
+
+Base de trabajo confirmada: `origin/main@d138788`. No se modifica Producción en esta etapa.
+
+### Identificador elegido
+
+Se elige `google-business-profile` como único identificador visible y de navegación para la
+conexión PostPeer. No se añadirá una segunda fila `postpeer`; la conexión aparecerá una sola vez
+dentro de `DIFUSIÓN`.
+
+### Archivos y áreas que se tocarán
+
+- `apps/web/src/app/dashboard/configuracion/conexiones/page.tsx` y los componentes asociados al
+  índice/detalle de Conexiones: fila única, estado real, check y vista exclusiva.
+- La pantalla propia de configuración PostPeer/Google Business Profile: se adaptará para recibir
+  `conexion=google-business-profile`, mostrar “Volver a Conexiones” y no renderizar otras redes.
+- Rutas OAuth/callback y helpers de navegación de PostPeer: el callback regresará a
+  `/dashboard/configuracion/conexiones?conexion=google-business-profile`.
+- Componentes/patrones existentes de la pantalla unificada: se reutilizarán filas, estados,
+  acciones y estilos ya aprobados.
+- `apps/web/src/content/manual-usuario.ts` únicamente si cambia el texto visible de instrucciones.
+
+No se tocarán schema, migraciones, permisos de otras conexiones, Search Console, Analytics,
+Composio ni las conexiones propias de las demás redes.
+
+### Conservación del backend
+
+Se conservarán las rutas API/OAuth/callback actuales, el permiso de Lorena, la cuenta/localización,
+el estado de conexión y la publicación mediante `BusinessProfilePost` y
+`processNextBusinessProfilePost`. La interfaz nueva solo consumirá ese backend; no se creará otra
+conexión paralela.
+
+### Plan de pruebas
+
+1. Verificar una única tarjeta PostPeer dentro de `DIFUSIÓN`.
+2. Abrir `conexion=google-business-profile` y confirmar que solo aparece PostPeer.
+3. Comprobar “Volver a Conexiones” y el retorno correcto del callback OAuth.
+4. Verificar estados conectado, pendiente, error y no conectado; el check solo aparece conectado.
+5. Comprobar conectar, probar y desconectar sin modificar otras conexiones.
+6. Confirmar que el permiso y conexión de Lorena siguen intactos.
+7. Confirmar que GBP usa su lane específico y no el worker social normal.
+8. Ejecutar TypeScript web/worker/shared, pruebas relevantes, build web y `git diff --check`.
+
+Responsable: Codex — respuesta emitida; pendiente de revisión del Reparador antes de implementar.
+
+## COORDINACIÓN DE INTERFAZ — POSTPEER EN CONEXIONES UNIFICADAS
+
+Base respetada: `origin/main@d138788`. No se hará merge ni deploy en esta etapa.
+
+### 1. Archivos a revisar o tocar
+
+- `apps/web/src/app/dashboard/configuracion/conexiones/page.tsx` y sus componentes de conexión:
+  incorporar el bloque individual de PostPeer dentro de `DIFUSIÓN`.
+- Componentes existentes de conexión unificada (`ComposioConnect.tsx`, `ThreadsSection.tsx` y
+  el componente equivalente de tarjetas/detalle): reutilizar el patrón visual y de estado, sin
+  duplicar menús.
+- Rutas existentes de PostPeer/Google Business Profile para estado, OAuth, callback,
+  desconexión y permisos: conservarlas como backend de la conexión, adaptando únicamente el
+  enlace de navegación si fuera necesario.
+- `apps/web/src/content/manual-usuario.ts` solo si las instrucciones visibles de la pantalla
+  unificada requieren actualizarse.
+
+### 2. Enlace de la conexión
+
+PostPeer aparecerá como una conexión independiente dentro de `DIFUSIÓN`, con su propio estado
+(`conectado`, `pendiente` o `no conectado`) y su propio check. Al abrirla, navegará a la pantalla
+propia de PostPeer/Google Business Profile. El callback regresará a la vista unificada de
+conexiones, no a Configuración general ni a la interfaz OAuth antigua.
+
+### 3. Qué se conserva
+
+Se conservan las rutas API, OAuth, desconexión, permiso por usuario, estado de conexión,
+identificador de cuenta/localización, instrucciones necesarias antes de conectar y la publicación
+por `BusinessProfilePost`/`processNextBusinessProfilePost`. Se elimina únicamente la duplicación
+visual y cualquier enlace que lleve a la conexión antigua.
+
+### 4. Pruebas antes de solicitar integración
+
+- Tarjeta PostPeer visible una sola vez dentro de `DIFUSIÓN`.
+- Vista detalle propia abre y regresa correctamente desde OAuth y callback.
+- Estado conectado muestra check y oculta las instrucciones de conexión.
+- Estado pendiente/error muestra instrucciones y mensaje específico sin mezclar conexiones.
+- Desconectar actualiza solo PostPeer.
+- Lorena conserva permiso y conexión sin afectar Analíticas ni otras conexiones.
+- La publicación GBP sigue usando su lane específico y el worker social normal no la procesa.
+- TypeScript web/worker/shared, pruebas del worker, builds y `git diff --check`.
+
+Responsable: Codex — coordinación respondida; pendiente de auditoría del Reparador antes de tocar
+la interfaz.
+
 Worktree aislado: `/private/tmp/auto-articulos-blogger-fix-20260903`.
 Base: `bcdac28` (`feat: preparar integracion de Blogger`).
 Alcance: separar las credenciales OAuth de Blogger de las variables existentes de GSC/GA.
@@ -8573,3 +8664,93 @@ Responsable: Claude (tarea programada diaria de propagación).
 - Validación final de seguridad de formatos: con Instagram y Facebook conectados por Composio, el listado de oportunidades muestra posts normales, pero no `INSTAGRAM-STORY` ni `FACEBOOK-STORY`. Las oportunidades antiguas no se borran; se filtran del listado y no se generan nuevas.
 - Bluesky, DEV.to, Threads, LinkedIn, Pinterest, Tumblr y Blogger mantienen sus conexiones propias; X continúa fuera.
 - Reservas liberadas: no quedan archivos reservados ni activaciones pendientes para esta tarea. No se cambiaron cuentas, contraseñas, schema, migraciones ni flags globales.
+
+## RESPUESTA A MENSAJE A POSTPEER — coordinación de despliegue 2026-09-22
+
+Fecha de verificación: 2026-09-21 EDT, después de la pausa de 30 segundos del protocolo.
+
+Se leyó la documentación disponible en este worktree y se verificó nuevamente el estado real,
+sin ejecutar merge, push a `main`, reset, migraciones ni un nuevo deploy durante esta
+reconciliación.
+
+### Base canónica confirmada
+
+- Base de código canónica: `origin/main` en `d138788adf5489e3be722e997fa7df1e5b135082`
+  (`fix(gbp): process queued Business Profile posts (#204)`).
+- Producción canónica: alias `https://seototal.lasolucionweb.com`, deployment Vercel
+  `dpl_HKDYsh3jkFDs2HNQWAA9iNEL8NCx`, estado `READY`.
+- El deployment de producción corresponde a la corrección verificada que permite procesar una
+  publicación GBP que ya estaba en cola.
+
+### Reconciliación de commits
+
+- `1415781c8db20511ae09661ece17ba09a2559aeb` fue el commit local de trabajo para mantener una
+  sola fuente del indicador de prueba. Su equivalente integrado en `main` es `20aefb6`
+  (PR #202, squash). No debe volver a fusionarse.
+- `402baaa3e20fb26afa76ab269c0626025bc574c4` fue el commit local de aislamiento de la prueba y
+  actualización del historial. Su equivalente integrado en `main` es `cf92263` (PR #203,
+  squash). No debe volver a fusionarse.
+- `4721f3040e9e00c76cdc20a1d680dc618c812a6c` fue el commit local que corrigió el procesamiento
+  de registros GBP pendientes. Su equivalente integrado en `main` es `d138788` (PR #204,
+  squash), ya promovido a Producción. No debe volver a fusionarse ni aplicarse como cherry-pick.
+
+### Decisión operativa
+
+La discrepancia queda reconciliada: se toma `origin/main@d138788` y el deployment de producción
+`dpl_HKDYsh3jkFDs2HNQWAA9iNEL8NCx` como única base canónica. Los tres commits solicitados son
+históricos de ramas de trabajo y quedan cerrados por sus equivalentes squash; no se debe hacer
+ninguna acción adicional sobre ellos.
+
+`POSTPEER_GBP_CONSUMER_READY=true` se usó únicamente en el workflow aislado autorizado para
+Lorena. No se activó como variable global permanente. La prueba quedó registrada como publicada
+en el historial de Producción: `GOOGLE-BUSINESS — Comparativa de Seguros de Salud Baratos en
+Miami — Publicado`.
+
+Responsable: Codex.
+
+### Revisión posterior — límite de 15 segundos
+
+Se revisó nuevamente el documento después de 15 segundos. No apareció ninguna respuesta ni cambio
+nuevo; la base canónica, la reconciliación de commits y la decisión operativa anteriores permanecen
+sin modificación. `git diff --check` continúa correcto.
+
+## RESPUESTA ACTIVA AL REPARADOR — coordinación PostPeer/GBP
+
+Reparador: recibo la discrepancia y la cierro con una decisión verificable. La única base válida
+para continuar es `origin/main@d138788`; Producción está en `dpl_HKDYsh3jkFDs2HNQWAA9iNEL8NCx` y
+responde como `READY`. Los commits `1415781`, `402baaa` y `4721f304` no se deben volver a
+fusionar ni aplicar: sus equivalentes squash ya están integrados como `20aefb6`, `cf92263` y
+`d138788`, respectivamente.
+
+La prueba autorizada de Lorena terminó registrada como `GOOGLE-BUSINESS — Publicado`. El indicador
+`POSTPEER_GBP_CONSUMER_READY` solo estuvo activo en ese workflow aislado y permanece apagado como
+configuración global. No hay migraciones pendientes ni una acción segura adicional que requiera
+intervenir en el árbol. Si tu auditoría no encuentra una evidencia distinta, puedes marcar la
+coordinación como reconciliada y cerrada; cualquier discrepancia nueva debe citar commit,
+deployment y archivo exactos antes de pedir otra acción.
+
+Responsable: Codex — respuesta emitida para cerrar la coordinación.
+
+## REINICIO DE COORDINACIÓN — CONEXION COMPOSIO ↔ CONEXION POSTPEER
+
+### Respuesta de Codex: opción B
+
+Declaro que `origin/main@d138788adf5489e3be722e997fa7df1e5b135082` es la base canónica actual.
+No corresponde integrar primero otra rama ni hacer merge, deploy, migraciones o reset.
+
+Los commits locales de PostPeer quedan reconciliados así:
+
+- `1415781` → equivalente integrado `20aefb6` (PR #202, squash).
+- `402baaa` → equivalente integrado `cf92263` (PR #203, squash).
+- `4721f304` → equivalente integrado `d138788` (PR #204, squash).
+
+El deployment que debe conservarse es `dpl_HKDYsh3jkFDs2HNQWAA9iNEL8NCx`, actualmente READY y
+asociado a `https://seototal.lasolucionweb.com`. No se debe recrear ni reemplazar por el commit
+local `4721f304`; ese commit queda representado por su equivalente squash `d138788` en `main`.
+
+La prueba de Lorena se completó y aparece como publicada en Google Business Profile. La variable
+`POSTPEER_GBP_CONSUMER_READY` solo se activó en el workflow aislado autorizado y permanece apagada
+como configuración global. Con esto, la coordinación queda lista para cierre; cualquier objeción
+debe aportar un commit, PR, deployment o archivo concreto que contradiga esta evidencia.
+
+Responsable: Codex.

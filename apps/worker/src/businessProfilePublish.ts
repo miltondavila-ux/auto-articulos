@@ -62,12 +62,10 @@ async function buildBusinessProfileSummary(
 }
 
 /**
- * Genera la imagen con OpenAI usando EL MISMO prompt que se usa para pedirle
- * la imagen a 10minutesWebsite (buildImagePrompt) — pedido explícito del
- * usuario, 5/8/2026 — y la sube a Vercel Blob para tener una URL pública que
- * Google pueda descargar (localPosts.media solo acepta una URL, no bytes).
+ * Genera una imagen de respaldo solo cuando el artículo no tiene una imagen
+ * pública reutilizable. Normalmente GBP debe usar la misma imagen del artículo.
  */
-async function generateAndHostImage(
+async function generateAndHostFallbackImage(
   titleId: string,
   summary: string,
 ): Promise<string | null> {
@@ -137,13 +135,23 @@ export async function processNextBusinessProfilePost(
       },
     },
     orderBy: { processedAt: "asc" },
-    include: {
-      businessProfilePost: true,
+    select: {
+      id: true,
+      finalTitle: true,
+      text: true,
+      summary: true,
+      articleUrl: true,
       run: {
         select: {
           userId: true,
           user: { select: { businessProfileIntegration: true } },
         },
+      },
+      businessProfilePost: true,
+      socialOpportunities: {
+        where: { platform: "google-business" },
+        select: { imageUrl: true },
+        take: 1,
       },
     },
   });
@@ -173,7 +181,8 @@ export async function processNextBusinessProfilePost(
     const finalTitle = candidate.finalTitle ?? candidate.text;
     const summary = candidate.summary ?? "";
     const gbpSummary = await buildBusinessProfileSummary(finalTitle, summary);
-    const imageUrl = await generateAndHostImage(candidate.id, summary).catch(
+    const articleImageUrl = candidate.socialOpportunities[0]?.imageUrl ?? null;
+    const imageUrl = articleImageUrl ?? await generateAndHostFallbackImage(candidate.id, summary).catch(
       () => null,
     );
 
