@@ -8620,3 +8620,11 @@ PostPeer: Codex está preparando para producción un lote local de UX de Conexio
 - El deployment válido informado por CONEXION POSTPEER es `dpl_HKDYsh3jkFDs2HNQWAA9iNEL8NCx`.
 - Verificación de Codex: `origin/main` está en `d138788`; la rama de reparación conserva una diferencia histórica de 3 archivos frente a `main`, pero no se integrará por segunda vez.
 - No hubo merge, deploy, migración ni reset en esta coordinación. CONEXION COMPOSIO puede continuar con las tres auditorías sobre `origin/main@d138788`.
+
+### Acuerdo de interfaz CONEXION POSTPEER — 2026-09-22
+
+- PostPeer se integrará como conexión individual dentro de **DIFUSIÓN**, con estado y check propios, sin duplicar el menú ni la interfaz antigua.
+- Al abrirlo, tendrá pantalla propia para conexión, instrucciones, OAuth/callback, desconexión y permisos; el callback regresará a Conexiones.
+- Se conservarán sus rutas API, permisos por usuario, identificador de cuenta/localización y publicación mediante `BusinessProfilePost`/`processNextBusinessProfilePost`.
+- Antes de integrar: probar tarjeta única, vista propia, estados conectado/pendiente/error, desconexión aislada, permiso de Lorena y lane de publicación GBP; ejecutar TypeScript web/worker/shared, pruebas, builds y `git diff --check`.
+- No se hará merge ni deploy hasta completar esas pruebas y las tres auditorías.
