@@ -8682,3 +8682,19 @@ PostPeer: Codex está preparando para producción un lote local de UX de Conexio
 - Estado de checks: `Vercel Preview Comments` pasó; `Vercel` continúa
   pendiente mientras despliega el Preview. No hubo merge ni deployment
   productivo.
+
+### Resultado de prueba aislada Lorena — no confirmado — 2026-09-22
+
+- PR #207 fue fusionado a `main` con commit `d3a760f01c530b8d1941a1405f40f603e93ecc8f`.
+- Se ejecutó el workflow aislado `worker-test.yml`, run
+  `35675166226`, con `enable_postpeer_gbp=true`, usuario
+  `lorenalvarez30@gmail.com` y URL exacto:
+  `https://www.segurosdesaludyvida.com/news/como-acceder-a-seguros-de-salud-asequibles-en-miami`.
+- El workflow terminó `success` y la oportunidad desapareció de la cola.
+- Verificación en Historial: **no confirmado**. El artículo exacto no aparece;
+  aparece otro GBP como `Comparativa de Seguros de Salud Baratos en Miami`.
+- No se pulsó Publicar nuevamente. El flag solo estuvo activo dentro del run
+  aislado y no se cambió ninguna variable global.
+- Bloqueo restante: investigar por qué el worker consume/desaparece la
+  oportunidad exacta pero Historial registra otro título. Revisar registros y
+  relación `titleId`/`articleUrl` antes de otra prueba.
