@@ -32,6 +32,7 @@ test("PostPeer publication sends idempotency and Google Business target", async 
     const body = JSON.parse(String(init?.body));
     assert.equal(body.platforms[0].platform, "googlebusiness");
     assert.equal(body.platforms[0].accountId, "g1");
+    assert.deepEqual(body.mediaItems, [{ type: "image", url: "https://img" }]);
     assert.equal(body.idempotencyKey, "title-1");
     return new Response(JSON.stringify({ success: true, status: "published" }), { status: 202 });
   };
