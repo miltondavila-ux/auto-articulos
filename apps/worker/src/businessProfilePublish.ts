@@ -5,12 +5,9 @@ import {
   createLocalPost,
   createPostPeerPost,
 } from "@auto-articulos/shared";
-import { put } from "@vercel/blob";
-import { buildImagePrompt } from "./imagePrompt";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
-const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
 
 // Límite real y documentado de Google para el campo "summary" de una
 // publicación de Business Profile — pedido explícito del usuario, 5/8/2026
@@ -59,49 +56,6 @@ async function buildBusinessProfileSummary(
   } catch {
     return summary.slice(0, MAX_GBP_SUMMARY_LEN);
   }
-}
-
-/**
- * Genera la imagen con OpenAI usando EL MISMO prompt que se usa para pedirle
- * la imagen a 10minutesWebsite (buildImagePrompt) — pedido explícito del
- * usuario, 5/8/2026 — y la sube a Vercel Blob para tener una URL pública que
- * Google pueda descargar (localPosts.media solo acepta una URL, no bytes).
- */
-async function generateAndHostImage(
-  titleId: string,
-  summary: string,
-): Promise<string | null> {
-  if (!OPENAI_API_KEY) return null;
-  const prompt = buildImagePrompt(summary);
-  const response = await fetch(OPENAI_IMAGE_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-image-1",
-      prompt,
-      size: "1024x1024",
-      n: 1,
-    }),
-  });
-  const data = (await response.json()) as {
-    data?: { b64_json?: string }[];
-    error?: { message?: string };
-  };
-  const b64 = data.data?.[0]?.b64_json;
-  if (!response.ok || !b64) {
-    throw new Error(
-      data.error?.message ?? "OpenAI no pudo generar la imagen para Google Business Profile.",
-    );
-  }
-  const buffer = Buffer.from(b64, "base64");
-  const blob = await put(`business-profile/${titleId}.png`, buffer, {
-    access: "public",
-    contentType: "image/png",
-  });
-  return blob.url;
 }
 
 /**
@@ -178,10 +132,9 @@ export async function processNextBusinessProfilePost(
     const finalTitle = candidate.finalTitle ?? candidate.text;
     const summary = candidate.summary ?? "";
     const gbpSummary = await buildBusinessProfileSummary(finalTitle, summary);
-    const savedOpportunityImage = candidate.socialOpportunities[0]?.imageUrl;
-    const imageUrl = savedOpportunityImage ?? await generateAndHostImage(candidate.id, summary).catch(
-      () => null,
-    );
+    // GBP debe usar estrictamente la imagen ya guardada del artículo.
+    // PostPeer recibe esta URL sin recorte ni adaptación de formato.
+    const imageUrl = candidate.socialOpportunities[0]?.imageUrl ?? null;
 
     const postPeerConnection = POSTPEER_GBP_READY
       ? await prisma.postPeerConnection.findUnique({ where: { userId: candidate.run.userId } })
