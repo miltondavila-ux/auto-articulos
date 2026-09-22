@@ -8682,3 +8682,52 @@ PostPeer: Codex está preparando para producción un lote local de UX de Conexio
 - Estado de checks: `Vercel Preview Comments` pasó; `Vercel` continúa
   pendiente mientras despliega el Preview. No hubo merge ni deployment
   productivo.
+
+## Claude (tarea programada diaria de propagación) — 2026-09-22
+
+Punto de partida: la última entrada firmada por esta misma tarea era la del 2026-09-21 (commit
+`904dca2`, cuyo `origin/main` de referencia era `1910112`). Se revisó el diff completo de
+`COORDINACION_CLAUDE_CODEX.md` entre `904dca2` y `origin/main` actual (`623c819`): 135 líneas
+agregadas, 0 borradas (13 commits, todos de documentación, entre `00cdd45` y `7faad53`; los dos
+commits de código más recientes en `origin/main`, `1800b7f` y `623c819`, no tocan este documento). El
+contenido nuevo real corresponde a: el cierre de la validación Composio/Stories y liberación de
+reservas del 2026-09-21, la coordinación de despliegue con PostPeer (discrepancia `d138788` vs.
+`4721f304`), el reinicio del protocolo entre CONEXION COMPOSIO y CONEXION POSTPEER, la respuesta de
+CONEXION POSTPEER (opción B: `origin/main@d138788` como base canónica), el acuerdo de interfaz para
+integrar PostPeer/GBP dentro de DIFUSIÓN (`google-business-profile`), la auditoría previa a PR de
+CONEXION COMPOSIO, y la auditoría técnica + corrección de imagen de CONEXION POSTPEER 2 (commit
+`ed2cb1c`, PR #207).
+
+Verificación por documento:
+
+- `CONTROLADOR_DE_VERSIONES.md`: se agregó la entrada de versión desplegada para PR #207
+  (`ed2cb1c` / squash `d3a760f`, reutilización de `SocialOpportunity.imageUrl` en
+  `businessProfilePublish.ts`), verificado en vivo que ya está fusionado en `origin/main` aunque
+  Coordinación solo registraba el PR como abierto — sin confirmación de despliegue en Producción, se
+  dejó anotado como tal, sin inventar un estado no confirmado por escrito. También se agregó una nota
+  de reconciliación de base canónica (`d138788` vs. `4721f304`) resumiendo la decisión B.
+- `INVENTARIO_CONVERSACIONES.md`: Parte B no tenía el nombre exacto `CONEXION POSTPEER` (nueva
+  conversación); se agregó una entrada completa. También se agregó una entrada de continuación para
+  `CONEXION COMPOSIO` — 2026-09-22 con la auditoría previa a PR y el acuerdo de interfaz. Parte A: sin
+  cambios — verificado con `git branch -r` tras `git fetch --prune` que el lote de interfaz de
+  CONEXION COMPOSIO (15 archivos) sigue sin rama/PR propios a esta fecha (no verificable contra git),
+  y que `codex/conexion-postpeer-gbp` (PR #194) y `codex/conexion-postpeer-gbp-image-fix` (PR #207,
+  ya fusionado por squash) no son ancestros de `origin/main` con su propio commit — consistente con
+  ser ramas ya fusionadas/cerradas o pendientes de un merge nuevo, no con una reserva activa sin
+  resolver.
+- `REPARADOR_DEL_ARBOL_PRINCIPAL.md`: se agregó el hallazgo sobre el deployment `4721f304` fuera de
+  `main`, señalando que en este caso las propias conversaciones (CONEXION COMPOSIO y CONEXION
+  POSTPEER) lo detectaron y reconciliaron sin intervención del Reparador — mismo patrón que el
+  hallazgo del 2026-09-04, ahora resuelto de otra forma.
+- `apps/web/src/content/manual-usuario.ts`: sin cambios. La corrección de imagen de GBP (PR #207) es
+  interna (no cambia ninguna pantalla ni flujo visible), y la integración de PostPeer dentro de
+  DIFUSIÓN todavía no tiene merge ni deploy — no hay nada visible para el usuario final que documentar
+  todavía.
+- `TO-DO.md`: no se agregó nada. Todo el contenido nuevo de este rango es trabajo activo o
+  coordinación en curso, no una idea suelta para más adelante.
+
+No hubo ninguna acción destructiva, migración ni deploy ejecutados por esta tarea. No quedó ninguna
+duda nueva sin resolver más allá de las que ya señalaron CONEXION COMPOSIO y CONEXION POSTPEER en sus
+propias entradas (integración de interfaz en DIFUSIÓN todavía sin PR).
+
+Responsable: Claude (tarea programada diaria de propagación).
