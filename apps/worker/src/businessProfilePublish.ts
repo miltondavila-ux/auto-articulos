@@ -5,6 +5,8 @@ import {
   createLocalPost,
   createPostPeerPost,
 } from "@auto-articulos/shared";
+import { put } from "@vercel/blob";
+import sharp from "sharp";
 import { getArticleOpenGraphImage } from "./socialPublish";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -16,6 +18,27 @@ const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
 // 1000; 1500 es el límite práctico que usa Google en su propia interfaz).
 const MAX_GBP_SUMMARY_LEN = 1500;
 const POSTPEER_GBP_READY = process.env.POSTPEER_GBP_CONSUMER_READY === "true";
+
+async function getGoogleBusinessImageUrl(titleId: string, imageUrl: string): Promise<string> {
+  const response = await fetch(imageUrl, { signal: AbortSignal.timeout(15000) });
+  if (!response.ok) throw new Error(`La imagen del artículo no se pudo descargar (HTTP ${response.status}).`);
+  const contentType = response.headers.get("content-type")?.split(";")[0].trim().toLowerCase();
+  if (contentType !== "image/webp") return imageUrl;
+
+  // Es la misma imagen del artículo, con las mismas dimensiones y sin recorte;
+  // solo se cambia WEBP a JPEG porque Google documenta PHOTO/JPG/PNG para GBP.
+  const jpeg = await sharp(Buffer.from(await response.arrayBuffer()))
+    .jpeg({ quality: 95, mozjpeg: true })
+    .toBuffer();
+  const blob = await put(`google-business/${titleId}-article.jpg`, jpeg, {
+    access: "public",
+    contentType: "image/jpeg",
+    allowOverwrite: true,
+  });
+  const check = await fetch(blob.url, { method: "HEAD", signal: AbortSignal.timeout(10000) });
+  if (!check.ok) throw new Error("La copia JPEG pública de la imagen del artículo no está disponible.");
+  return blob.url;
+}
 
 function articleUrlVariants(value: string): string[] {
   const variants = new Set([value.trim()]);
@@ -151,11 +174,12 @@ export async function processNextBusinessProfilePost(
     // GBP debe usar estrictamente la imagen real del artículo: primero la
     // imagen guardada en la oportunidad y, si falta, la og:image del artículo.
     // No se genera, recorta ni adapta ninguna imagen.
-    const imageUrl = candidate.socialOpportunities[0]?.imageUrl
+    const articleImageUrl = candidate.socialOpportunities[0]?.imageUrl
       ?? await getArticleOpenGraphImage(candidate.articleUrl ?? "");
-    if (!imageUrl) {
+    if (!articleImageUrl) {
       throw new Error("El artículo no tiene una og:image pública para Google Business Profile.");
     }
+    const imageUrl = await getGoogleBusinessImageUrl(candidate.id, articleImageUrl);
 
     const postPeerConnection = POSTPEER_GBP_READY
       ? await prisma.postPeerConnection.findUnique({ where: { userId: candidate.run.userId } })
