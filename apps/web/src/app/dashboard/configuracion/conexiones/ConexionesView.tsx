@@ -18,6 +18,7 @@ import ComposioConnect from "@/components/ComposioConnect";
 import { h2Style, sectionStyle } from "@/components/dashboard-ui";
 
 type Vista = "analiticas" | "difusion";
+type ConexionId = "google-search-console" | "google-analytics" | "bing-webmaster" | "instagram" | "facebook" | "threads" | "linkedin" | "pinterest" | "tumblr" | "bluesky" | "devto" | "blogger";
 
 const VISTAS: { id: Vista; label: string; ayuda: string }[] = [
   { id: "analiticas", label: "ANALÍTICAS", ayuda: "Leen datos y ayudan a que aparezcas en los buscadores." },
@@ -49,6 +50,7 @@ const columna: CSSProperties = { display: "flex", flexDirection: "column", gap: 
  */
 export default function ConexionesView() {
   const [vista, setVista] = useState<Vista | null>(null);
+  const [conexion, setConexion] = useState<ConexionId | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [modulosDeshabilitados, setModulosDeshabilitados] = useState<string[]>([]);
   const [permisos, setPermisos] = useState<Record<string, boolean>>({});
@@ -56,7 +58,12 @@ export default function ConexionesView() {
 
   useEffect(() => {
     const pedida = new URLSearchParams(window.location.search).get("vista");
+    const conexionPedida = new URLSearchParams(window.location.search).get("conexion") as ConexionId | null;
     if (pedida === "difusion" || pedida === "analiticas") setVista(pedida);
+    if (conexionPedida) {
+      setConexion(conexionPedida);
+      setVista(["google-search-console", "google-analytics", "bing-webmaster"].includes(conexionPedida) ? "analiticas" : "difusion");
+    }
     fetch("/api/me", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -111,6 +118,20 @@ export default function ConexionesView() {
     window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
   }
 
+  function elegirConexion(id: ConexionId, siguiente: Vista) {
+    setConexion(id);
+    setVista(siguiente);
+    const params = new URLSearchParams();
+    params.set("conexion", id);
+    window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
+  }
+
+  function volverAConexiones() {
+    setConexion(null);
+    setVista(null);
+    window.history.replaceState(null, "", window.location.pathname);
+  }
+
   // Misma regla que Redes Sociales: el módulo de redes abierto para esta cuenta da acceso.
   const tieneModuloRedes = !modulosDeshabilitados.includes("oportunidades-redes");
   const puede = (red: string) => isAdmin || tieneModuloRedes || Boolean(permisos[red]);
@@ -146,7 +167,7 @@ export default function ConexionesView() {
           <button
             key={card.n}
             type="button"
-            onClick={() => elegir(card.view)}
+            onClick={() => elegirConexion(card.id as ConexionId, card.view)}
             style={{
               width: "100%",
               display: "grid",
@@ -179,9 +200,15 @@ export default function ConexionesView() {
     </div>;
   }
 
+  const nombres: Record<ConexionId, string> = {
+    "google-search-console": "Google Search Console", "google-analytics": "Google Analytics", "bing-webmaster": "Bing Webmaster Tools",
+    instagram: "Instagram", facebook: "Facebook", threads: "Threads", linkedin: "LinkedIn", pinterest: "Pinterest", tumblr: "Tumblr", bluesky: "Bluesky", devto: "DEV.to", blogger: "Blogger",
+  };
+  const solo = (id: ConexionId) => conexion === null || conexion === id;
+
   return (
     <div>
-      <ModuleIntro titulo="Conexiones">
+      <ModuleIntro titulo={conexion ? nombres[conexion] : "Conexiones"}>
         <IntroP>
           Aquí conectas todo lo que usa SEO TOTAL, en un solo lugar. <strong>ANALÍTICAS</strong> reúne lo que lee datos
           de tu sitio y ayuda a que aparezcas en Google y Bing. <strong>DIFUSIÓN</strong> reúne lo que publica tu contenido
@@ -192,18 +219,17 @@ export default function ConexionesView() {
           administrador que te dé acceso.
         </IntroP>
       </ModuleIntro>
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", margin: "4px 0 6px" }} role="tablist" aria-label="Tipo de conexión">
+      {conexion && <button type="button" onClick={volverAConexiones} style={{ margin: "0 0 16px", padding: 0, border: 0, background: "transparent", color: "#1d1d1f", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>← Volver a Conexiones</button>}
+      {!conexion && <div style={{ display: "flex", gap: 10, flexWrap: "wrap", margin: "4px 0 6px" }} role="tablist" aria-label="Tipo de conexión">
         {VISTAS.map((v) => (
-          <button key={v.id} type="button" role="tab" aria-selected={vista === v.id} onClick={() => elegir(v.id)} style={botonVista(vista === v.id)}>
-            {v.label}
-          </button>
+          <button key={v.id} type="button" role="tab" aria-selected={vista === v.id} onClick={() => elegir(v.id)} style={botonVista(vista === v.id)}>{v.label}</button>
         ))}
-      </div>
+      </div>}
       <p style={{ margin: "0 0 16px", fontSize: 13, color: "#6e6e73" }}>{VISTAS.find((v) => v.id === vista)?.ayuda}</p>
 
       {vista === "analiticas" && (
         <div style={columna}>
-          <section style={{ padding: 16, borderRadius: 14, background: "#f5f5f7", border: "1px solid #d2d2d7" }} aria-label="Migración guiada">
+          {conexion === null && <section style={{ padding: 16, borderRadius: 14, background: "#f5f5f7", border: "1px solid #d2d2d7" }} aria-label="Migración guiada">
             <strong style={{ fontSize: 15, color: "#1d1d1f" }}>Actualiza tu conexión de Google</strong>
             <p style={{ margin: "6px 0 10px", fontSize: 13, lineHeight: 1.5, color: "#1d1d1f" }}>
               Vamos a pasar tu Search Console y Analytics a la nueva conexión de forma segura. No desconectaremos la anterior hasta comprobar que todo funciona.
@@ -217,43 +243,41 @@ export default function ConexionesView() {
             <a href="#google" style={{ display: "inline-block", padding: "8px 14px", borderRadius: 9, background: "#1d1d1f", color: "#fff", textDecoration: "none", fontSize: 13, fontWeight: 600 }}>
               Comenzar configuración
             </a>
-          </section>
+          </section>}
           <div id="google" style={columna}>
-            <div>
+            {solo("google-search-console") && <div>
               <span style={{ display: "inline-block", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: "#fff4e5", color: "#8a4b08", border: "1px solid rgba(255, 149, 0, 0.25)", marginBottom: 6 }}>
                 Esencial
               </span>
               <GoogleSearchConsoleSection />
-            </div>
-            <GoogleAnalyticsSection />
+            </div>}
+            {solo("google-analytics") && <GoogleAnalyticsSection />}
           </div>
-          <div id="bing">
-            <BingWebmasterSection />
-          </div>
+          {solo("bing-webmaster") && <div id="bing"><BingWebmasterSection /></div>}
         </div>
       )}
 
       {vista === "difusion" && (
         <div style={columna}>
-          <BusinessProfileSection />
+          {conexion === null && <BusinessProfileSection />}
           {(permisos.threads || permisos.instagram || permisos.facebook || isAdmin || tieneModuloRedes) && (
             <>
-            <ThreadsSection allowThreads={puede("threads")} allowInstagram={false} allowFacebook={false} isAdmin={isAdmin} showComposioSocial={false} />
-            {puede("instagram") && <section style={sectionStyle}><h2 style={h2Style}>Instagram</h2><p className="lead-copy">Publica imágenes, carruseles y Reels en tu cuenta profesional mediante Composio.</p><ComposioConnect inline apps={["instagram"]} /></section>}
-            {puede("facebook") && <section style={sectionStyle}><h2 style={h2Style}>Facebook</h2><p className="lead-copy">Publica contenido en la Página de Facebook seleccionada mediante Composio.</p><ComposioConnect inline apps={["facebook"]} /></section>}
+            {solo("threads") && <ThreadsSection allowThreads={puede("threads")} allowInstagram={false} allowFacebook={false} isAdmin={isAdmin} showComposioSocial={false} />}
+            {solo("instagram") && puede("instagram") && <section style={sectionStyle}><h2 style={h2Style}>Instagram</h2><p className="lead-copy">Publica imágenes, carruseles y Reels en tu cuenta profesional mediante Composio.</p><ComposioConnect inline apps={["instagram"]} /></section>}
+            {solo("facebook") && puede("facebook") && <section style={sectionStyle}><h2 style={h2Style}>Facebook</h2><p className="lead-copy">Publica contenido en la Página de Facebook seleccionada mediante Composio.</p><ComposioConnect inline apps={["facebook"]} /></section>}
             </>
           )}
-          {puede("linkedin") && <LinkedInSection allowed={puede("linkedin")} />}
-          {puede("pinterest") && <PinterestSection allowed={puede("pinterest")} />}
-          {puede("bluesky") && <BlueskySection allowed={puede("bluesky")} />}
-          {puede("tumblr") && <TumblrSection allowed={puede("tumblr")} />}
-          {puede("blogger") && (
+          {solo("linkedin") && puede("linkedin") && <LinkedInSection allowed={puede("linkedin")} />}
+          {solo("pinterest") && puede("pinterest") && <PinterestSection allowed={puede("pinterest")} />}
+          {solo("bluesky") && puede("bluesky") && <BlueskySection allowed={puede("bluesky")} />}
+          {solo("tumblr") && puede("tumblr") && <TumblrSection allowed={puede("tumblr")} />}
+          {solo("blogger") && puede("blogger") && (
             <>
               <PasosAntesDeConectar red="Blogger" />
               <BloggerSection allowed={puede("blogger")} />
             </>
           )}
-          {puede("devto") && <DevToSection allowed={puede("devto")} />}
+          {solo("devto") && puede("devto") && <DevToSection allowed={puede("devto")} />}
         </div>
       )}
     </div>
