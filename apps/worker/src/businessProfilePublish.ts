@@ -122,7 +122,10 @@ export async function processNextBusinessProfilePost(
       articleUrl: { not: null },
       ...(filterArticleUrl ? { articleUrl: filterArticleUrl } : {}),
       summary: { not: null },
-      businessProfilePost: null,
+      OR: [
+        { businessProfilePost: null },
+        { businessProfilePost: { status: "pending" } },
+      ],
       run: {
         ...(filterUserId ? { userId: filterUserId } : {}),
         user: {
@@ -135,6 +138,7 @@ export async function processNextBusinessProfilePost(
     },
     orderBy: { processedAt: "asc" },
     include: {
+      businessProfilePost: true,
       run: {
         select: {
           userId: true,
@@ -148,19 +152,21 @@ export async function processNextBusinessProfilePost(
   const integration = candidate.run.user.businessProfileIntegration;
   if (!integration?.locationName && !POSTPEER_GBP_READY) return false;
 
-  let post;
-  try {
-    post = await prisma.businessProfilePost.create({
-      data: {
-        titleId: candidate.id,
-        summary: "",
-        ctaUrl: candidate.articleUrl ?? "",
-        status: "pending",
-      },
-    });
-  } catch {
-    // Otro proceso ya lo tomó (violación de unicidad en titleId).
-    return true;
+  let post = candidate.businessProfilePost;
+  if (!post) {
+    try {
+      post = await prisma.businessProfilePost.create({
+        data: {
+          titleId: candidate.id,
+          summary: "",
+          ctaUrl: candidate.articleUrl ?? "",
+          status: "pending",
+        },
+      });
+    } catch {
+      // Otro proceso ya lo tomó (violación de unicidad en titleId).
+      return true;
+    }
   }
 
   try {
