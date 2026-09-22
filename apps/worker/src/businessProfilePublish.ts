@@ -139,6 +139,11 @@ export async function processNextBusinessProfilePost(
     orderBy: { processedAt: "asc" },
     include: {
       businessProfilePost: true,
+      socialOpportunities: {
+        where: { platform: "google-business" },
+        select: { imageUrl: true },
+        take: 1,
+      },
       run: {
         select: {
           userId: true,
@@ -173,7 +178,8 @@ export async function processNextBusinessProfilePost(
     const finalTitle = candidate.finalTitle ?? candidate.text;
     const summary = candidate.summary ?? "";
     const gbpSummary = await buildBusinessProfileSummary(finalTitle, summary);
-    const imageUrl = await generateAndHostImage(candidate.id, summary).catch(
+    const savedOpportunityImage = candidate.socialOpportunities[0]?.imageUrl;
+    const imageUrl = savedOpportunityImage ?? await generateAndHostImage(candidate.id, summary).catch(
       () => null,
     );
 

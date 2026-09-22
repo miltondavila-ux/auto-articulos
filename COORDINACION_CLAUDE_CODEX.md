@@ -8643,3 +8643,32 @@ PostPeer: Codex está preparando para producción un lote local de UX de Conexio
 - Funcional: Prisma Client generado; TypeScript web correcto; TypeScript worker correcto mediante `npx tsc --noEmit -p apps/worker/tsconfig.json`; 16/16 pruebas del resolvedor/adaptador correctas; build web correcto con 85 páginas.
 - Regresión: las rutas API y consumidores existentes no fueron alterados; las pantallas antiguas permanecen como rutas de compatibilidad/redirect; el módulo Composio conserva su opt-in.
 - `git diff --check`: correcto. No se hace merge ni deploy hasta Preview, revisión del PR y verificación post-merge.
+
+### CONEXION POSTPEER 2 — auditoría técnica y corrección de imagen — 2026-09-21
+
+- Se leyó completa esta coordinación. La base canónica continúa siendo
+  `origin/main@d138788`; no se hizo reset destructivo, migración ni deploy.
+- Se revisaron estado, ramas, diff completo y marcadores de conflicto: no hay
+  conflictos ni cambios locales previos al ajuste.
+- Corrección aplicada en `apps/worker/src/businessProfilePublish.ts`: el lane
+  `BusinessProfilePost/processNextBusinessProfilePost` reutiliza primero
+  `SocialOpportunity.imageUrl` de la oportunidad `google-business` y solo
+  genera/sube una imagen como respaldo si esa URL no existe. GBP no pasa por
+  el worker social genérico.
+- Prisma generate: OK. TypeScript web/shared/worker: OK. Worker: 20/20; tests
+  PostPeer shared: 3/3; web: 44 pass y 1 integración omitida por no existir
+  `TITLE_GENERATION_TEST_DATABASE_URL`. Build worker: OK. Build web: OK,
+  85/85 rutas. `git diff --check`: OK.
+- Archivos tocados por esta continuación: `apps/worker/src/businessProfilePublish.ts`
+  y este documento de coordinación. No se añadieron conexiones ni se tocó
+  Configuración → Conexiones.
+- Commit/PR/deployment: pendientes. `gh` no pudo consultar GitHub por falta
+  de conexión, por lo que no se abrió/actualizó PR ni se revisaron checks
+  remotos. No se solicita despliegue todavía.
+- Prueba productiva Lorena: pendiente; aún no hay URL exacto probado ni
+  imagen confirmada. Debe usarse el mismo URL exacto de la oportunidad,
+  activar `POSTPEER_GBP_CONSUMER_READY` solo durante esa prueba y confirmar
+  el artículo exacto como `Publicado` en Historial.
+- Bloqueos restantes: acceso a GitHub/PR y autorización explícita de Milton
+  para desplegar; después, prueba aislada productiva y revisión de logs si la
+  oportunidad desaparece sin aparecer en Historial.
