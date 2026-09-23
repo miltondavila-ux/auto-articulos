@@ -24,6 +24,12 @@ const QUICK_LINKS = [
   },
 ];
 
+interface ConfigurationAlert {
+  id: string;
+  label: string;
+  actionUrl: string;
+}
+
 export default function InicioPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -48,20 +54,23 @@ export default function InicioPage() {
   const everIncompleteRef = useRef(false);
   const [showWizard, setShowWizard] = useState<boolean | null>(null);
   const [socialPublishingApproved, setSocialPublishingApproved] = useState(false);
+  const [configurationAlerts, setConfigurationAlerts] = useState<ConfigurationAlert[]>([]);
 
   const checkWizardStatus = useCallback(async () => {
     try {
-      const [credRes, catRes, meRes, googleRes] = await Promise.all([
+      const [credRes, catRes, meRes, googleRes, configurationRes] = await Promise.all([
         fetch("/api/credentials", { cache: "no-store" }),
         fetch("/api/categories", { cache: "no-store" }),
         fetch("/api/me", { cache: "no-store" }),
         fetch("/api/search-integrations/google", { cache: "no-store" }),
+        fetch("/api/configuration-status", { cache: "no-store" }),
       ]);
 
       const credData = credRes.ok ? await credRes.json() : {};
       const catData = catRes.ok ? await catRes.json() : {};
       const meData = meRes.ok ? await meRes.json() : {};
       const googleData = googleRes.ok ? await googleRes.json() : {};
+      const configurationData = configurationRes.ok ? await configurationRes.json() : null;
 
       const step1 = Boolean(credData.configured);
       const step2 = Array.isArray(catData.categories) && catData.categories.length > 0;
@@ -76,9 +85,17 @@ export default function InicioPage() {
 
       if (!complete) everIncompleteRef.current = true;
       setShowWizard(everIncompleteRef.current ? true : !complete);
+      const pendingAlerts = Array.isArray(configurationData?.checks)
+        ? configurationData.checks.filter(
+            (check: ConfigurationAlert & { configured: boolean }) =>
+              check.id === "google-search-console-reconnect" && !check.configured,
+          )
+        : [];
+      setConfigurationAlerts(pendingAlerts);
     } catch {
       everIncompleteRef.current = true;
       setShowWizard(true);
+      setConfigurationAlerts([]);
     }
   }, []);
 
@@ -119,6 +136,29 @@ export default function InicioPage() {
           </>
         )}
       </ModuleIntro>
+      {configurationAlerts.map((alert) => (
+        <Link
+          key={alert.id}
+          href={alert.actionUrl}
+          role="alert"
+          style={{
+            display: "block",
+            margin: "18px 0 20px",
+            padding: "16px 18px",
+            border: "2px solid #d70015",
+            borderRadius: 8,
+            background: "#fff1f1",
+            color: "#b00020",
+            fontSize: 15,
+            fontWeight: 800,
+            lineHeight: 1.45,
+            textDecoration: "none",
+            overflowWrap: "anywhere",
+          }}
+        >
+          SOLICITUD DE ACTUALIZACIÓN: Debes reconectar Google Search Console mediante Conexiones.
+        </Link>
+      ))}
       {showWizard === false && (
         <div style={{ marginTop: 20, marginBottom: 20 }}>
           <h2 style={{ margin: "0 0 14px", fontSize: 22 }}>Acciones posibles</h2>
