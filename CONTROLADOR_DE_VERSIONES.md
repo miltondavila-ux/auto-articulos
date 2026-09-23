@@ -3305,3 +3305,45 @@ segunda vez. Deployment válido informado por CONEXION POSTPEER: `dpl_HKDYsh3jkF
 hubo merge, deploy, migración ni reset adicional por esta reconciliación. Ver hallazgo técnico
 relacionado en `REPARADOR_DEL_ARBOL_PRINCIPAL.md`. Responsable: Codex (CONEXION POSTPEER). Estado:
 RECONCILIADO, SIN ACCIÓN DE DESPLIEGUE ADICIONAL.
+
+## Versión desplegada — 2026-09-22 — CONEXION POSTPEER 2, corrección de imagen de GBP vía og:image (PR #211)
+
+PR #211 fusionado a `main` mediante el commit `9afbdd3` ("fix(gbp): use article og image fallback
+(#211)"). Registra el resultado de la entrada "Continuación CONEXION POSTPEER 2 — 2026-09-22" de
+Coordinación (que no se reescribe): `apps/worker/src/businessProfilePublish.ts` ahora usa primero
+`SocialOpportunity.imageUrl` y, si falta, obtiene la `og:image` pública del artículo exacto mediante
+`getArticleOpenGraphImage`; si tampoco existe, falla antes de publicar, así GBP nunca publica sin
+foto. Auditoría registrada en Coordinación: TypeScript del worker OK, `git diff --check` OK. Verificado
+en vivo contra `origin/main` (esta corrida, 2026-09-23): el commit ya está fusionado, aunque
+Coordinación todavía lo describía como "sin merge" al momento de escribirse. **No hay en Coordinación
+ninguna confirmación explícita de que el deployment de Vercel Production ya corrió con este cambio, ni
+de que se haya ejecutado la prueba productiva autorizada de Lorena** — se deja así, sin inventar un
+estado no confirmado por escrito. Responsable: Codex. Estado: EN `origin/main`, DESPLIEGUE NO
+CONFIRMADO POR ESCRITO.
+
+## Versión desplegada — 2026-09-22 — Ajustes responsive, tarjetas de Inicio y menú de Configuración (Codex)
+
+Conjunto de cambios de interfaz de Codex documentados en Coordinación bajo las entradas "OPERACIÓN
+LOCALHOST", "Despliegue de interfaz móvil", "Responsive móvil — instrucciones plegables", "Responsive
+móvil — segunda revisión completa", "Márgenes y paddings estandarizados", "Radio uniforme de
+esquinas", "Textos de tarjetas de Inicio", "Nombres dinámicos de módulos", "Preferencia de trabajo
+vigente", "Auditoría triple responsive" y "Menú de configuración" (todas 2026-09-22). Incluye:
+instrucciones plegables en móvil manteniendo los controles de ejecución visibles, unificación de
+`sectionStyle` (espaciado y esquinas a 6px), nuevas tarjetas y textos de Inicio usando los nombres
+dinámicos de `MENU_NAMES` (`CONTENIDO PROPIO`, `CONTENIDO GENERADO POR IA`, `PUBLICA EN REDES SOCIALES
+Y EN BLOGS PÚBLICOS`), y el traslado de "Cómo funciona esta aplicación" al menú de Configuración
+(escritorio y hamburguesa móvil). Coordinación registra, para cada paso, build OK con 85 rutas y
+deployments Vercel Production en estado **READY** con alias `https://seototal.lasolucionweb.com`
+verificado en HTTP 200: `dpl_5L4rSNUBbu2sj1XizLAW4bWSY6hx`, `dpl_HTZyWZZUmMe6c9mAfH1ThogW2Dcd`,
+`dpl_F86AZPRzMnuWgHwyRfrtFcF7Zuye`, `dpl_CPZPSqQVnv1snkAWdQn4Zj3aFLFW`,
+`dpl_ABN5tEMRrgSBMbMR1AhdRiwD2iHi`, `dpl_FwSf6f97R8JanPmFLKsBSjxwv51X`,
+`dpl_7G65JoYiwtBsWPAtrNBZ9J3WaCzj` y `dpl_6CE59HWgdmvdu45QJJvJWQT3yC7m`. Sin cambios de schema ni
+migraciones en ninguno de estos pasos, según Coordinación. Verificado en vivo (esta corrida,
+2026-09-23): todo este trabajo quedó consolidado en un único commit directo a `origin/main`,
+`92d5737` ("fix: avisar limites de texto antes de guardar"), que además incluye cambios de lógica no
+descritos en estas entradas (por ejemplo, avisos de límite de texto antes de guardar) — fuera del
+alcance de esta propagación porque Coordinación no tiene una entrada propia que los describa. **No hay
+en Coordinación confirmación explícita de que el commit final `92d5737` en `origin/main` haya sido
+redesplegado a Production con ese SHA exacto** (los `dpl_` listados corresponden a pasos intermedios
+anteriores al commit final) — se deja anotado así, sin inventar un estado no confirmado por escrito.
+Responsable: Codex. Estado: EN `origin/main`, DESPLIEGUE DEL COMMIT FINAL NO CONFIRMADO POR ESCRITO.
