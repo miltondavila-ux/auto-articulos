@@ -7,11 +7,19 @@ export const NO_STORE = { "Cache-Control": "no-store, no-cache, must-revalidate,
 const MIGRATION_APPS = new Set(["google_search_console", "google_analytics"]);
 
 /**
- * Persona con sesión activa y acceso a Conexiones. En la migración GSC esta
- * pantalla ya no es opt-in: todas las cuentas activas necesitan poder ver el
- * estado de sus conexiones. Facebook/Instagram siguen filtradas por permisos.
+ * Persona con acceso pleno al módulo Composio. Se conserva para acciones que
+ * no forman parte de la migración GSC, incluyendo desconexiones y redes Meta.
  */
 export async function getComposioUser(): Promise<ConnectingUser | null> {
+  const user = await getCurrentUser();
+  return canUseComposioModule(user) ? user : null;
+}
+
+/**
+ * Estado de Conexiones: todas las cuentas activas pueden verlo para completar
+ * la migración de Google Search Console.
+ */
+export async function getComposioStatusUser(): Promise<ConnectingUser | null> {
   return getCurrentUser();
 }
 
