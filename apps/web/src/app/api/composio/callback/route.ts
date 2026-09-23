@@ -13,11 +13,12 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
   const back = new URL("/dashboard/configuracion/conexiones", request.nextUrl.origin);
-  if (!canUseComposioModule(user)) {
+  const app = request.nextUrl.searchParams.get("app");
+  const isMigrationApp = app === "google_search_console" || app === "google_analytics";
+  if (!isMigrationApp && !canUseComposioModule(user)) {
     return NextResponse.redirect(new URL("/dashboard", request.nextUrl.origin));
   }
 
-  const app = request.nextUrl.searchParams.get("app");
   const outcome = await completeConnection(user, app, request.nextUrl.searchParams.get("connected_account_id"));
   auditLog("composio.connect_completed", user.id, { app, outcome });
   back.searchParams.set("resultado", outcome);
