@@ -9,6 +9,7 @@ import {
   parseUserDisabledModules,
   parseUserModuleOverrides,
 } from "@/lib/modules";
+import { hasSocialPublishingApproval } from "@/lib/social-access";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -68,6 +69,22 @@ export async function GET() {
       allowBlueskyPublishing: user.allowBlueskyPublishing,
       allowDevToPublishing: user.allowDevToPublishing,
       allowBloggerPublishing: user.allowBloggerPublishing,
+      allowPinterestPublishing: user.allowPinterestPublishing,
+      allowTumblrPublishing: user.allowTumblrPublishing,
+      allowGoogleBusinessPublishing: user.allowGoogleBusinessPublishing,
+      socialPublishingApproved: Boolean(actingAdmin) || hasSocialPublishingApproval({
+        role: user.role,
+        allowInstagramPublishing: user.allowInstagramPublishing,
+        allowFacebookPublishing: user.allowFacebookPublishing,
+        allowLinkedInPublishing: user.allowLinkedInPublishing,
+        allowThreadsPublishing: user.allowThreadsPublishing,
+        allowPinterestPublishing: user.allowPinterestPublishing,
+        allowTumblrPublishing: user.allowTumblrPublishing,
+        allowBlueskyPublishing: user.allowBlueskyPublishing,
+        allowDevToPublishing: user.allowDevToPublishing,
+        allowBloggerPublishing: user.allowBloggerPublishing,
+        allowGoogleBusinessPublishing: user.allowGoogleBusinessPublishing,
+      }),
       hasImageCredits: user.hasImageCredits,
       isTrialSignup: user.isTrialSignup,
       trialStartedAt: user.trialStartedAt,

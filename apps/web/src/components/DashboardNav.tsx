@@ -135,22 +135,7 @@ export default function DashboardNav() {
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         setIsAdmin(data?.role === "admin" || Boolean(data?.isActingAdmin));
-        const socialPermissionKeys = [
-          "allowInstagramPublishing",
-          "allowFacebookPublishing",
-          "allowLinkedInPublishing",
-          "allowThreadsPublishing",
-          "allowPinterestPublishing",
-          "allowTumblrPublishing",
-          "allowBlueskyPublishing",
-          "allowDevToPublishing",
-          "allowBloggerPublishing",
-        ];
-        setSocialPublishingApproved(
-          data?.role === "admin" ||
-            Boolean(data?.isActingAdmin) ||
-            socialPermissionKeys.some((key) => Boolean(data?.[key])),
-        );
+        setSocialPublishingApproved(Boolean(data?.socialPublishingApproved));
         if (Array.isArray(data?.disabledModules)) {
           setDisabledModules(data.disabledModules);
         }

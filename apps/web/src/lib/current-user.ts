@@ -56,6 +56,7 @@ export async function getCurrentUser() {
       allowBlueskyPublishing: true,
       allowDevToPublishing: true,
       allowBloggerPublishing: true,
+      allowGoogleBusinessPublishing: true,
     },
   });
 }

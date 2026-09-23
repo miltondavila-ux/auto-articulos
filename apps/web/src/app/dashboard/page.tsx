@@ -67,22 +67,7 @@ export default function InicioPage() {
       const step2 = Array.isArray(catData.categories) && catData.categories.length > 0;
       const step3 = typeof meData.contentLanguage === "string" && meData.contentLanguage.trim().length > 0;
       const step4 = Boolean(googleData.connected && googleData.siteUrl);
-      const socialPermissionKeys = [
-        "allowInstagramPublishing",
-        "allowFacebookPublishing",
-        "allowLinkedInPublishing",
-        "allowThreadsPublishing",
-        "allowPinterestPublishing",
-        "allowTumblrPublishing",
-        "allowBlueskyPublishing",
-        "allowDevToPublishing",
-        "allowBloggerPublishing",
-      ] as const;
-      setSocialPublishingApproved(
-        meData?.role === "admin" ||
-          Boolean(meData?.isActingAdmin) ||
-          socialPermissionKeys.some((key) => Boolean(meData?.[key])),
-      );
+      setSocialPublishingApproved(Boolean(meData?.socialPublishingApproved));
       // Solo para el localhost de desarrollo: permite revisar la interfaz
       // posterior al wizard sin fingir una conexión OAuth real de Google.
       const complete = process.env.NEXT_PUBLIC_LOCAL_DEMO === "true"

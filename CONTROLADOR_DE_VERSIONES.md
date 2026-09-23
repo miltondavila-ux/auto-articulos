@@ -1130,6 +1130,34 @@ de que Tumblr rechazó también la renovación silenciosa y hace falta
 reconectar por OAuth.
 Estado: VERIFICADA
 
+## Versión preparada — 2026-09-23 16:10 EDT — permiso condicional de difusión social/blog
+
+Se corrigió el caso reportado en producción donde la tarjeta `03 PUBLICA EN REDES
+SOCIALES Y EN BLOGS PÚBLICOS` podía aparecer sin una aprobación explícita de
+Administración. La regla queda centralizada en servidor: administradores (o un
+administrador actuando como otra cuenta) conservan acceso; las cuentas normales
+solo lo reciben cuando al menos una red o blog está marcado en `Permisos y estado
+de cuenta`. La misma regla se usa para la tarjeta de Inicio, el menú, el bloque
+`Comienza Aquí`, el guard de ruta y las API de difusión. Se eliminó la excepción
+por correo fijo y se añadieron a `/api/me` todas las aprobaciones necesarias,
+incluidas Blogger, Google Business, Pinterest y Tumblr.
+
+Archivos modificados: `apps/web/src/app/api/me/route.ts`,
+`apps/web/src/app/dashboard/page.tsx`, `apps/web/src/components/ComienzaAqui.tsx`,
+`apps/web/src/components/DashboardNav.tsx`, `apps/web/src/components/ModuleGuard.tsx`,
+`apps/web/src/lib/current-user.ts`, `apps/web/src/lib/social-access.ts` y su prueba.
+Archivos eliminados: ninguno.
+Migraciones creadas: ninguna.
+Migraciones aplicadas: ninguna.
+Auditoría 1: APROBADA — `git diff --check`, sin schema, migraciones, workflows,
+secretos ni archivos eliminados.
+Auditoría 2: APROBADA — typecheck web y 47 pruebas (la integración opcional de
+generación de títulos permanece omitida por no tener `TITLE_GENERATION_TEST_DATABASE_URL`).
+Auditoría 3: APROBADA — build web completo con 85 rutas.
+Deployment/Vercel: pendiente de PR, merge y verificación de Production.
+Responsable: Codex - GPT-5.
+Estado: PREPARADA.
+
 ## Versión preparada — 2026-09-04 — instrucciones de Oportunidades / migración a Claude
 
 Fecha y hora: 2026-09-04
