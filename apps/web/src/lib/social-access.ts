@@ -1,33 +1,63 @@
 import { prisma } from "@auto-articulos/db";
-import { getEffectiveDisabledModules, getGlobalDisabledModules } from "@/lib/modules";
 
 /**
  * ¿Puede esta cuenta usar el módulo de redes sociales?
  *
- * Antes esto era `role === "admin" || email === "<un correo concreto>"`. Por
- * eso el administrador no podía dárselo a nadie más: podía marcarlo en
- * Administración y no servía de nada, porque tanto la interfaz como la API
- * seguían mirando ese correo.
- *
- * Ahora sale del permiso real de la cuenta, el mismo que se edita en
- * Administración → Acceso a módulos: si `oportunidades-redes` no está entre sus
- * módulos deshabilitados, tiene acceso. Los administradores siempre lo tienen,
- * para poder dar soporte.
+ * Antes la interfaz y la API consultaban reglas distintas, incluida una
+ * excepción fija para un correo. Ahora sale de las aprobaciones reales de
+ * Administración: al menos una red o blog debe estar marcado para la cuenta.
+ * Los administradores siempre lo tienen, para poder dar soporte.
  */
 export async function canUseSocialModule(userId: string): Promise<boolean> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { role: true, disabledModules: true },
+    select: {
+      role: true,
+      allowInstagramPublishing: true,
+      allowFacebookPublishing: true,
+      allowLinkedInPublishing: true,
+      allowThreadsPublishing: true,
+      allowPinterestPublishing: true,
+      allowTumblrPublishing: true,
+      allowBlueskyPublishing: true,
+      allowDevToPublishing: true,
+      allowBloggerPublishing: true,
+      allowGoogleBusinessPublishing: true,
+    },
   });
   if (!user) return false;
-  if (user.role === "admin") return true;
-
-  const globalDisabled = await getGlobalDisabledModules();
-  const deshabilitados = getEffectiveDisabledModules(user, globalDisabled);
-  return !deshabilitados.includes("oportunidades-redes");
+  return hasSocialPublishingApproval(user);
 }
 
 export type SocialPublishNetwork = "instagram" | "linkedin" | "threads" | "facebook" | "pinterest" | "tumblr" | "bluesky" | "devto" | "blogger";
+
+/** Campos que Administración controla para autorizar difusión social/blog. */
+export const SOCIAL_PUBLISHING_PERMISSION_KEYS = [
+  "allowInstagramPublishing",
+  "allowFacebookPublishing",
+  "allowLinkedInPublishing",
+  "allowThreadsPublishing",
+  "allowPinterestPublishing",
+  "allowTumblrPublishing",
+  "allowBlueskyPublishing",
+  "allowDevToPublishing",
+  "allowBloggerPublishing",
+  "allowGoogleBusinessPublishing",
+] as const;
+
+export type SocialPublishingPermissionUser = {
+  role?: string | null;
+} & Partial<Record<(typeof SOCIAL_PUBLISHING_PERMISSION_KEYS)[number], boolean | null>>;
+
+/**
+ * Regla única para mostrar y usar el módulo de difusión.
+ * Un usuario regular necesita al menos una aprobación explícita del panel de
+ * Administración. La conexión OAuth por sí sola nunca concede acceso.
+ */
+export function hasSocialPublishingApproval(user: SocialPublishingPermissionUser): boolean {
+  if (user.role === "admin") return true;
+  return SOCIAL_PUBLISHING_PERMISSION_KEYS.some((key) => user[key] === true);
+}
 
 /** Permiso individual de la red; los administradores siempre tienen acceso. */
 export async function canPublishToNetwork(

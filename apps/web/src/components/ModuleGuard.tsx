@@ -9,6 +9,7 @@ export default function ModuleGuard({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [disabledModules, setDisabledModules] = useState<string[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [socialPublishingApproved, setSocialPublishingApproved] = useState(false);
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
@@ -19,6 +20,7 @@ export default function ModuleGuard({ children }: { children: ReactNode }) {
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         setIsAdmin(data?.role === "admin" || Boolean(data?.isActingAdmin));
+        setSocialPublishingApproved(Boolean(data?.socialPublishingApproved));
         if (Array.isArray(data?.disabledModules)) {
           setDisabledModules(data.disabledModules);
         }
@@ -86,6 +88,46 @@ export default function ModuleGuard({ children }: { children: ReactNode }) {
             background: "#1d1d1f",
             color: "#ffffff",
             borderRadius: 10,
+            fontSize: 14,
+            fontWeight: 600,
+            textDecoration: "none",
+          }}
+        >
+          Volver a Inicio
+        </Link>
+      </div>
+    );
+  }
+
+  if (matchingModule?.id === "oportunidades-redes" && !socialPublishingApproved) {
+    return (
+      <div
+        style={{
+          marginTop: 24,
+          padding: "36px 24px",
+          background: "#ffffff",
+          borderRadius: 6,
+          border: "1px solid #d2d2d7",
+          textAlign: "center",
+          maxWidth: 600,
+          marginLeft: "auto",
+          marginRight: "auto",
+        }}
+      >
+        <h2 style={{ fontSize: 22, color: "#1d1d1f", margin: "0 0 10px" }}>
+          Publicación en redes no habilitada
+        </h2>
+        <p style={{ fontSize: 14, color: "#6e6e73", lineHeight: 1.5, margin: "0 0 20px" }}>
+          Esta sección aparece cuando Administración aprueba al menos una red social o blog para tu cuenta.
+        </p>
+        <Link
+          href="/dashboard"
+          style={{
+            display: "inline-block",
+            padding: "10px 20px",
+            background: "#1d1d1f",
+            color: "#ffffff",
+            borderRadius: 6,
             fontSize: 14,
             fontWeight: 600,
             textDecoration: "none",

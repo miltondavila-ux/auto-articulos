@@ -17,10 +17,10 @@ export default function ComienzaAqui() {
     fetch(`/api/me?_t=${Date.now()}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        const admin = data?.role === "admin" || Boolean(data?.isActingAdmin);
-        const email = typeof data?.email === "string" ? data.email.toLowerCase() : "";
         const disabled = Array.isArray(data?.disabledModules) ? data.disabledModules : [];
-        setModules(MODULES.filter((m) => m.id === "oportunidades-redes" ? admin || email === "lorenalvarez30@gmail.com" : !disabled.includes(m.id)));
+        setModules(MODULES.filter((m) => m.id === "oportunidades-redes"
+          ? Boolean(data?.socialPublishingApproved)
+          : !disabled.includes(m.id)));
       })
       .catch(() => {});
   }, []);

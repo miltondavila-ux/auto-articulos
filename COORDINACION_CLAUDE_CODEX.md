@@ -8975,3 +8975,25 @@ Responsable: Claude (tarea programada diaria de propagación).
   tokens o históricos entre entornos.
 
 Estado: DESPLEGADA / VERIFICADA.
+
+## Permiso de difusión social/blog — 2026-09-23 — Codex
+
+- Hallazgo: la tercera tarjeta de Inicio podía aparecer para una cuenta sin una
+  aprobación visible de Administración porque la interfaz, el menú y las API no
+  compartían una única regla.
+- Corrección: se centralizó `hasSocialPublishingApproval` en servidor. Una cuenta
+  normal solo tiene difusión cuando al menos una red social o blog está marcada
+  en Administración; administradores y administradores actuando como otra cuenta
+  mantienen acceso de soporte.
+- La autorización se propagó a `/api/me`, Inicio, navegación, `Comienza Aquí`,
+  `ModuleGuard` y las API de oportunidades sociales. Se retiró la excepción por
+  correo fijo y se incorporaron Blogger, Google Business, Pinterest y Tumblr al
+  cálculo común.
+- Validaciones: typecheck OK; 47 pruebas OK; build web OK con 85 rutas; `git diff
+  --check` OK.
+- No se modificó `packages/db/prisma/schema.prisma`, no se creó ni aplicó ninguna
+  migración, y no se tocaron secretos ni flujos de CI.
+- Estado: cambio preparado en localhost; pendiente PR, merge y verificación de
+  Vercel Production.
+
+Responsable: Codex (GPT-5).
