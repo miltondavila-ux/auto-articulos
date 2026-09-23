@@ -1,5 +1,21 @@
 # INCIDENTE CRÍTICO Y PROTOCOLO OBLIGATORIO — 2026-09-08
 
+## Despliegue verificado — 2026-09-23 — PR #220
+
+- Se fusionó la PR #220 (`8d2cd706`) a `main` para publicar los cambios
+  responsive, la separación de Historial/Estadísticas, el control de acceso
+  social y la guía modular de uso.
+- Auditorías locales aprobadas: 47 pruebas web, typecheck, build web completo
+  con 85 rutas y `git diff --check` limpio. La prueba opcional de generación de
+  títulos quedó omitida por no existir `TITLE_GENERATION_TEST_DATABASE_URL`.
+- No hubo cambios de schema ni migraciones.
+- Vercel: deployment `dpl_J5LbK5K2eM4qppiTMDtJwqAaaRBv`, estado READY, alias
+  `https://seototal.lasolucionweb.com`.
+- Rutas productivas comprobadas: `/login` responde 200; las rutas protegidas
+  `/dashboard/como-funciona` y `/dashboard/actualizaciones` redirigen a login
+  sin sesión, comportamiento esperado.
+- Estado: CERRADO Y VERIFICADO. No se modificaron las pestañas abiertas.
+
 ## Cierre de auditoría editorial y enlaces — Codex — 2026-09-20
 
 - PR #187 fusionado a `main`: mejora de identidad editorial por cuenta,
