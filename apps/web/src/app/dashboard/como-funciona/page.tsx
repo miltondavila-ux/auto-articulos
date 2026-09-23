@@ -199,6 +199,10 @@ export default function ComoFuncionaPage() {
       }}
     >
       <header style={{ padding: "clamp(32px, 5vw, 48px) 0 clamp(24px, 3vw, 32px)" }}>
+        <p className="eyebrow" style={{ margin: "0 0 6px" }}>GUÍA RÁPIDA</p>
+        <h1 style={{ margin: 0, fontSize: "clamp(28px, 4vw, 42px)", lineHeight: 1.1, fontWeight: 600, letterSpacing: "-0.03em", color: "#1d1d1f" }}>
+          De la idea a la publicación
+        </h1>
         <p style={{ margin: "0 0 18px", fontSize: 19, lineHeight: "28px", color: "#1d1d1f" }}>
           Tú decides cuánto quieres hacer: puedes escribir tus propios artículos,
           pedir títulos a partir de tus variables o dejar que la IA encuentre
@@ -357,8 +361,9 @@ export default function ComoFuncionaPage() {
         </p>
       </section>
 
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12, marginTop: 20 }}>
       {PASOS.map((paso) => (
-        <details key={paso.numero} style={{ padding: "clamp(24px, 3vw, 32px) 0", borderBottom: "1px solid #d2d2d7" }}>
+        <details key={paso.numero} style={{ padding: 18, border: "1px solid #d2d2d7", borderRadius: 6, background: "#ffffff", boxSizing: "border-box" }}>
           <summary
             style={{
               cursor: "pointer",
@@ -396,6 +401,7 @@ export default function ComoFuncionaPage() {
           </div>
         </details>
       ))}
+      </div>
 
       <hr style={SEPARADOR} />
 
