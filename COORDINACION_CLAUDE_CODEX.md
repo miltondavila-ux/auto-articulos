@@ -8958,3 +8958,20 @@ con el lote de interfaz — no se propagó a ningún documento porque no hay tex
 describa, pero queda anotado aquí por si alguien quiere documentarlo por separado.
 
 Responsable: Claude (tarea programada diaria de propagación).
+
+## CIERRE — SINCRONIZACIÓN LOCALHOST → PRODUCCIÓN — 2026-09-23
+
+- PR #216 (`codex/sincronizacion-produccion-20260923`) fue rebasado sobre el
+  `main` vigente, verificado de nuevo y fusionado.
+- Merge commit de producción: `e5b9efeb746f873d32b33497187d8cc37b700355`.
+- Vercel Production: deployment `5yzerDfhob5fAANmXyCBGJxzCDcg`, estado
+  `success` / completado.
+- Verificación pública posterior: `/login` HTTP 200, `/privacidad` HTTP 200,
+  `/api/me` HTTP 401 sin sesión y `/dashboard` HTTP 307 hacia autenticación.
+- La pestaña de producción se recargó y muestra la pantalla actualizada de
+  Progreso de las publicaciones. No se cerraron las pestañas de localhost,
+  producción ni GitHub.
+- No hubo cambios de schema, migraciones ni copia de datos, credenciales,
+  tokens o históricos entre entornos.
+
+Estado: DESPLEGADA / VERIFICADA.
