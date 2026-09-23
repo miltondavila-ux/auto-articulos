@@ -1130,6 +1130,23 @@ de que Tumblr rechazó también la renovación silenciosa y hace falta
 reconectar por OAuth.
 Estado: VERIFICADA
 
+## Versión desplegada y verificada — 2026-09-23 — PR #220
+
+Fecha y hora: 2026-09-23 17:16 EDT
+Versión/commit: `8d2cd7062ae4bb755356bd0d41acd6b308585559` (merge de PR #220)
+Rama: `main`
+Cambios incluidos: interfaz responsive, separación de Historial y Estadísticas,
+mejoras de Progreso y Actualizaciones, y guía de uso simplificada y modular.
+Migraciones creadas: ninguna.
+Migraciones aplicadas: ninguna.
+Auditorías: 47 pruebas web, typecheck, build web con 85 rutas y
+`git diff --check`, todo correcto.
+Deployment/Vercel: `dpl_J5LbK5K2eM4qppiTMDtJwqAaaRBv`, estado READY.
+Dominio: `https://seototal.lasolucionweb.com`.
+Producción verificada: `/login` 200; rutas protegidas redirigen a login sin
+sesión, como corresponde.
+Estado: VERIFICADA.
+
 ## Versión preparada — 2026-09-23 16:10 EDT — permiso condicional de difusión social/blog
 
 Se corrigió el caso reportado en producción donde la tarjeta `03 PUBLICA EN REDES
