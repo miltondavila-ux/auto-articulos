@@ -1154,9 +1154,16 @@ secretos ni archivos eliminados.
 Auditoría 2: APROBADA — typecheck web y 47 pruebas (la integración opcional de
 generación de títulos permanece omitida por no tener `TITLE_GENERATION_TEST_DATABASE_URL`).
 Auditoría 3: APROBADA — build web completo con 85 rutas.
-Deployment/Vercel: pendiente de PR, merge y verificación de Production.
+Deployment/Vercel: `dpl_5t33hR8ELrWDkXxutUzGim8tZEfC`, estado `READY` / completado;
+alias `https://seototal.lasolucionweb.com` activo.
+Producción verificada: sí — `/login` 200, `/privacidad` 200, `/api/me` 401 sin
+sesión y `/dashboard` 307 hacia autenticación. La pestaña productiva abierta se
+recargó; para Rafael Zuzolo la tarjeta sigue visible porque su cuenta aún tiene
+al menos una aprobación social/blog persistida, que es el comportamiento correcto
+de la regla nueva.
+Commit de producción: `3ed548bcf66700dd782c225ee4e623778f85084e` (merge de PR #218).
 Responsable: Codex - GPT-5.
-Estado: PREPARADA.
+Estado: DESPLEGADA / VERIFICADA.
 
 ## Versión preparada — 2026-09-04 — instrucciones de Oportunidades / migración a Claude
 
