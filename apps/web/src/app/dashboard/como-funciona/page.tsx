@@ -60,7 +60,8 @@ const ENLACE: CSSProperties = {
 const PASOS = [
   {
     numero: 1,
-    titulo: "Configura tu cuenta",
+    titulo: "Conecta tu cuenta",
+    resumen: "Conecta tu web y las fuentes que ayudarán a elegir mejores temas.",
     cuerpo: [
       <>
         <strong>Es lo primero, y lo único que no puede saltarse.</strong> La
@@ -100,7 +101,8 @@ const PASOS = [
   },
   {
     numero: 2,
-    titulo: MENU_NAMES.propios,
+    titulo: `${MENU_NAMES.propios} o usa la IA`,
+    resumen: "Escribe tus propios temas o deja que la IA te proponga títulos.",
     cuerpo: [
       <>
         Aquí tienes dos caminos, y puedes usar los dos. Cambian en una sola
@@ -158,6 +160,7 @@ const PASOS = [
   {
     numero: 3,
     titulo: MENU_NAMES.redes,
+    resumen: "Revisa el contenido y decide dónde quieres publicarlo.",
     enPrueba: true,
     cuerpo: [
       <>
@@ -377,12 +380,14 @@ export default function ComoFuncionaPage() {
           >
             <span>
               <span style={{ display: "block", fontSize: 14, lineHeight: "20px", fontWeight: 600 }}>
-                Paso {paso.numero}
               </span>
-              <span style={{ display: "block", marginTop: 6, fontSize: 24, lineHeight: "28px", fontWeight: 600, letterSpacing: "-0.003em" }}>
+              <span style={{ display: "block", marginTop: 6, fontSize: 22, lineHeight: "27px", fontWeight: 600, letterSpacing: "-0.02em" }}>
                 {paso.titulo}
-                {paso.enPrueba && <EnPrueba />}
               </span>
+              <span style={{ display: "block", marginTop: 8, fontSize: 14, lineHeight: "20px", color: "#6e6e73" }}>
+                {paso.resumen}
+              </span>
+              {paso.enPrueba && <span style={{ display: "inline-block", marginTop: 10 }}><EnPrueba /></span>}
             </span>
             <span aria-hidden="true" className="muted" style={{ fontSize: 20 }}>＋</span>
           </summary>
