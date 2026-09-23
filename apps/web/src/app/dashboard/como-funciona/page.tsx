@@ -157,7 +157,7 @@ const PASOS = [
   },
   {
     numero: 3,
-    titulo: "Lleva lo publicado a las redes",
+    titulo: MENU_NAMES.redes,
     enPrueba: true,
     cuerpo: [
       <>
@@ -355,43 +355,43 @@ export default function ComoFuncionaPage() {
       </section>
 
       {PASOS.map((paso) => (
-        <section key={paso.numero} style={{ padding: "clamp(24px, 3vw, 32px) 0" }}>
-          <p
+        <details key={paso.numero} style={{ padding: "clamp(24px, 3vw, 32px) 0", borderBottom: "1px solid #d2d2d7" }}>
+          <summary
             style={{
-              margin: 0,
-              fontSize: 14,
-              lineHeight: "20px",
-              fontWeight: 600,
+              cursor: "pointer",
+              listStyle: "none",
+              display: "flex",
+              alignItems: "baseline",
+              justifyContent: "space-between",
+              gap: 16,
               color: "#1d1d1f",
             }}
           >
-            Paso {paso.numero}
-          </p>
-          <h3
-            style={{
-              margin: "6px 0 0",
-              fontSize: 24,
-              lineHeight: "28px",
-              fontWeight: 600,
-              letterSpacing: "-0.003em",
-              color: "#1d1d1f",
-            }}
-          >
-            {paso.titulo}
-            {paso.enPrueba && <EnPrueba />}
-          </h3>
-          {paso.cuerpo.map((parrafo, i) => (
-            <p key={i} style={PARRAFO}>
-              {parrafo}
+            <span>
+              <span style={{ display: "block", fontSize: 14, lineHeight: "20px", fontWeight: 600 }}>
+                Paso {paso.numero}
+              </span>
+              <span style={{ display: "block", marginTop: 6, fontSize: 24, lineHeight: "28px", fontWeight: 600, letterSpacing: "-0.003em" }}>
+                {paso.titulo}
+                {paso.enPrueba && <EnPrueba />}
+              </span>
+            </span>
+            <span aria-hidden="true" className="muted" style={{ fontSize: 20 }}>＋</span>
+          </summary>
+          <div style={{ paddingTop: 14 }}>
+            {paso.cuerpo.map((parrafo, i) => (
+              <p key={i} style={PARRAFO}>
+                {parrafo}
+              </p>
+            ))}
+            <p style={{ margin: "14px 0 0" }}>
+              <Link href={paso.accion.href} style={ENLACE}>
+                {paso.accion.texto}
+                <span aria-hidden="true">›</span>
+              </Link>
             </p>
-          ))}
-          <p style={{ margin: "14px 0 0" }}>
-            <Link href={paso.accion.href} style={ENLACE}>
-              {paso.accion.texto}
-              <span aria-hidden="true">›</span>
-            </Link>
-          </p>
-        </section>
+          </div>
+        </details>
       ))}
 
       <hr style={SEPARADOR} />
