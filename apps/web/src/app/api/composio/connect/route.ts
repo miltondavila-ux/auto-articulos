@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auditLog } from "@/lib/audit";
 import { startConnection } from "@/lib/composio-connections";
-import { NO_STORE, errorResponse, forbidden, getComposioUser, readJson } from "../_access";
+import { NO_STORE, errorResponse, forbidden, getComposioUserForApp, readJson } from "../_access";
 
 export const dynamic = "force-dynamic";
 
 /** Crea el enlace de autorización de Composio y devuelve su URL. */
 export async function POST(request: NextRequest) {
-  const user = await getComposioUser();
-  if (!user) return forbidden();
   const body = await readJson(request);
   if (!body) return NextResponse.json({ error: "Solicitud inválida" }, { status: 400 });
+  const user = await getComposioUserForApp(body.app);
+  if (!user) return forbidden();
 
   try {
     const { redirectUrl } = await startConnection(user, body.app, request.nextUrl.origin);
