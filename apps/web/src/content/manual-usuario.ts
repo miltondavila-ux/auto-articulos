@@ -41,6 +41,8 @@ Al principio de cada pantalla hay un recuadro que empieza con "Antes de avanzar,
 
 Dentro de esas explicaciones, el nombre de cualquier módulo aparece en MAYÚSCULAS y en negrita, y además es un enlace: al pulsarlo vas directo a esa pantalla. Así, si un texto te manda a otro módulo, no tienes que buscarlo en el menú.
 
+En el teléfono, ese recuadro de explicación aparece plegado por defecto en las pantallas operativas (por ejemplo Actualizaciones, Difusión Social y los módulos de publicar): primero ves los controles para trabajar, y pulsando "Ver instrucciones" despliegas el texto completo cuando lo necesites. En computadora, la explicación se ve siempre completa, sin necesidad de pulsar nada.
+
 ## El menú
 
 El menú superior tiene, en este orden: **Inicio**, **Cómo funciona esta aplicación**, **Publicaciones** y **Configuración**. Dentro de **Publicaciones** están **${MENU_NAMES.propios}**, **${MENU_NAMES.ia}**, **${MENU_NAMES.redes}**, el progreso y el historial. Dentro de **Configuración** están la configuración general y las actualizaciones. Los administradores ven además **Administración**, que también se despliega y contiene **Usuarios** (/dashboard/usuarios) y **Composio** (/dashboard/composio).
