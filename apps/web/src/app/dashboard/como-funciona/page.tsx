@@ -53,7 +53,7 @@ const ENLACE: CSSProperties = {
   gap: 4,
   fontSize: 17,
   lineHeight: "25px",
-  color: "#0066cc",
+  color: "#1d1d1f",
   textDecoration: "none",
 };
 
@@ -192,13 +192,25 @@ export default function ComoFuncionaPage() {
     <div
       style={{
         background: "#ffffff",
-        borderRadius: 18,
+        borderRadius: 6,
         padding: "0 clamp(20px, 4vw, 40px) clamp(36px, 5vw, 56px)",
         boxSizing: "border-box",
         width: "100%",
       }}
     >
       <header style={{ padding: "clamp(32px, 5vw, 48px) 0 clamp(24px, 3vw, 32px)" }}>
+        <details style={{ marginTop: 18 }}>
+          <summary
+            style={{
+              cursor: "pointer",
+              color: "#1d1d1f",
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            Ver explicación completa
+          </summary>
+          <div>
         <p
           style={{
             margin: "0 0 24px",
@@ -319,6 +331,8 @@ export default function ComoFuncionaPage() {
           escribe y publica los artículos por ti, sobre lo que tu público de
           verdad busca.
         </p>
+          </div>
+        </details>
       </header>
 
       <hr style={SEPARADOR} />
@@ -366,11 +380,25 @@ export default function ComoFuncionaPage() {
             {paso.titulo}
             {paso.enPrueba && <EnPrueba />}
           </h3>
-          {paso.cuerpo.map((parrafo, i) => (
-            <p key={i} style={PARRAFO}>
-              {parrafo}
-            </p>
-          ))}
+          <details style={{ marginTop: 14 }}>
+            <summary
+              style={{
+                cursor: "pointer",
+                color: "#1d1d1f",
+                fontSize: 14,
+                fontWeight: 600,
+              }}
+            >
+              Ver instrucciones de este paso
+            </summary>
+            <div>
+              {paso.cuerpo.map((parrafo, i) => (
+                <p key={i} style={PARRAFO}>
+                  {parrafo}
+                </p>
+              ))}
+            </div>
+          </details>
           <p style={{ margin: "14px 0 0" }}>
             <Link href={paso.accion.href} style={ENLACE}>
               {paso.accion.texto}
