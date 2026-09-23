@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  Card,
-  Grid,
   Metric,
   Text,
   Title,
@@ -26,6 +24,14 @@ interface DashboardStats {
   chart: { date: string; label: string; "Artículos publicados": number }[];
   pendingOpportunityTitles: number;
 }
+
+const statsBlockStyle = {
+  background: "#ffffff",
+  border: "1px solid #d2d2d7",
+  borderRadius: 6,
+  padding: "16px 18px",
+  boxSizing: "border-box" as const,
+};
 
 export default function PerformanceDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -53,8 +59,8 @@ export default function PerformanceDashboard() {
     : null;
   return (
     <div style={{ marginTop: 20 }}>
-      <Grid numItemsSm={2} numItemsLg={4} className="mt-4 gap-4">
-        <Card>
+      <div style={{ ...statsBlockStyle, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))", columnGap: 24, rowGap: 0 }}>
+        <div style={{ padding: "14px 0", borderTop: "1px solid #e5e5ea" }}>
           <Text>Publicados este mes</Text>
           <Metric>{stats.publishedThisMonth}</Metric>
           {stats.monthlyArticleLimit ? (
@@ -66,15 +72,15 @@ export default function PerformanceDashboard() {
               <ProgressBar
                 value={monthlyPercent ?? 0}
                 className="mt-1"
-                color={monthlyPercent && monthlyPercent >= 90 ? "red" : "blue"}
+                color="neutral"
               />
             </>
           ) : (
             <Text className="mt-3 text-xs">Sin límite mensual</Text>
           )}
-        </Card>
+        </div>
 
-        <Card>
+        <div style={{ padding: "14px 0", borderTop: "1px solid #e5e5ea" }}>
           <Text>Publicados hoy</Text>
           <Metric>{stats.publishedToday}</Metric>
           {stats.dailyArticleLimit ? (
@@ -86,15 +92,15 @@ export default function PerformanceDashboard() {
               <ProgressBar
                 value={dailyPercent ?? 0}
                 className="mt-1"
-                color={dailyPercent && dailyPercent >= 90 ? "red" : "blue"}
+                color="neutral"
               />
             </>
           ) : (
             <Text className="mt-3 text-xs">Sin límite diario</Text>
           )}
-        </Card>
+        </div>
 
-        <Card>
+        <div style={{ padding: "14px 0", borderTop: "1px solid #e5e5ea" }}>
           <Text>Total publicado</Text>
           <Metric>{stats.totalPublished}</Metric>
           <Text className="mt-3 text-xs">
@@ -102,22 +108,22 @@ export default function PerformanceDashboard() {
               ? `${stats.successRate}% de éxito sobre ${stats.totalAttempted} intentos`
               : "Sin intentos todavía"}
           </Text>
-        </Card>
+        </div>
 
-        <Card>
+        <div style={{ padding: "14px 0", borderTop: "1px solid #e5e5ea" }}>
           <Text>Contenido listo para publicar</Text>
           <Metric>{stats.pendingOpportunityTitles}</Metric>
           <Link
             href="/dashboard/oportunidades"
-            className="mt-3 inline-block text-xs font-semibold text-blue-400 no-underline"
+            className="mt-3 inline-block text-xs font-semibold no-underline"
+            style={{ color: "#1d1d1f" }}
           >
             Ver contenido inteligente →
           </Link>
-        </Card>
-      </Grid>
+        </div>
+      </div>
 
-      <Grid numItemsLg={1} className="mt-4 gap-4">
-        <Card>
+      <div style={{ ...statsBlockStyle, marginTop: 16 }}>
             <Title>Tu ritmo — últimos 14 días</Title>
             {(() => {
               /*
@@ -184,8 +190,7 @@ export default function PerformanceDashboard() {
                 </>
               );
             })()}
-        </Card>
-      </Grid>
+      </div>
     </div>
   );
 }

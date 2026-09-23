@@ -212,6 +212,7 @@ function LoginContent() {
             </p>
             <input
               type="email"
+              name="email"
               placeholder="Correo electrónico"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -220,6 +221,7 @@ function LoginContent() {
             />
             <input
               type="password"
+              name="password"
               placeholder="Contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

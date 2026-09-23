@@ -17,7 +17,7 @@ async function main() {
     where: { email },
     update: {
       passwordHash,
-      name: "Lorena Alvarez (pruebas locales)",
+      name: "Lorena Alvarez",
       firstName: "Lorena",
       lastName: "Alvarez",
       role: "user",
@@ -31,7 +31,7 @@ async function main() {
     create: {
       email,
       passwordHash,
-      name: "Lorena Alvarez (pruebas locales)",
+      name: "Lorena Alvarez",
       firstName: "Lorena",
       lastName: "Alvarez",
       role: "user",

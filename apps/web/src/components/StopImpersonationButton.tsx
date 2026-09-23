@@ -11,7 +11,7 @@ export default function StopImpersonationButton() {
       onClick={handleStop}
       style={{
         padding: "6px 12px",
-        borderRadius: 8,
+        borderRadius: 6,
         border: "1px solid rgba(255, 159, 10, 0.35)",
         background: "rgba(255, 159, 10, 0.15)",
         color: "#ff9500",

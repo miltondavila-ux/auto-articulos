@@ -2,10 +2,10 @@
 
 import { MENU_NAMES } from "@/lib/menu-names";
 import { useEffect, useState, useCallback, useMemo } from "react";
-import ModuleIntro, { IntroP, Modulo } from "@/components/ModuleIntro";
+import type { CSSProperties } from "react";
+import { IntroP, Modulo } from "@/components/ModuleIntro";
 import { useRouter } from "next/navigation";
 import {
-  sectionStyle,
   h2Style,
   thStyle,
   tdStyle,
@@ -23,27 +23,104 @@ import type {
 import GoogleIndexingStatus from "@/components/GoogleIndexingStatus";
 import PerformanceDashboard from "@/components/PerformanceDashboard";
 
+const flatSectionStyle: CSSProperties = {
+  background: "transparent",
+  color: "#1d1d1f",
+  border: "none",
+  borderTop: "1px solid #d2d2d7",
+  borderRadius: 0,
+  padding: "16px 0 18px",
+  marginTop: 0,
+  boxShadow: "none",
+  boxSizing: "border-box",
+  width: "100%",
+};
+
+const cardSectionStyle: CSSProperties = {
+  background: "#ffffff",
+  color: "#1d1d1f",
+  border: "1px solid #d2d2d7",
+  borderRadius: 6,
+  padding: "18px",
+  marginTop: 12,
+  boxShadow: "none",
+  boxSizing: "border-box",
+  width: "100%",
+};
+
+const flatRowStyle: CSSProperties = {
+  marginBottom: 0,
+  background: "transparent",
+  border: "none",
+  borderTop: "1px solid #e5e5ea",
+  borderRadius: 0,
+  overflow: "visible",
+};
+
+const flatNestedRowStyle: CSSProperties = {
+  background: "transparent",
+  border: "none",
+  borderTop: "1px solid #e5e5ea",
+  borderRadius: 0,
+  padding: "12px 0",
+};
+
+function countText(count: number, singular: string, plural: string) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
 export default function HistorialPage() {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <ModuleIntro titulo="Historial">
-        <IntroP>
-          Todo lo que la plataforma ha publicado por ti queda registrado aquí: artículos y publicaciones en redes, con su fecha, su estado y el enlace a lo que se publicó.
-        </IntroP>
-        <IntroP>
-          Sirve para dos cosas muy concretas: comprobar que algo salió bien de verdad, y encontrar rápido un artículo cuando lo necesitas para compartirlo o revisarlo.
-        </IntroP>
-        <IntroP>
-          Si un trabajo todavía no aparece aquí, es que sigue en marcha: míralo en <Modulo id="publicaciones-en-curso" />.
-        </IntroP>
-      </ModuleIntro>
+    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+      <section style={{ ...flatSectionStyle, borderTop: "none", paddingTop: 0 }}>
+        <h1 style={{ margin: 0, fontSize: "clamp(22px, 3vw, 28px)", fontWeight: 600, letterSpacing: "-0.02em" }}>
+          Historial
+        </h1>
+        <details style={{ marginTop: 12 }}>
+        <summary
+          style={{
+            cursor: "pointer",
+            listStyle: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            userSelect: "none",
+          }}
+        >
+          <span className="muted" style={{ fontSize: 13 }}>Cómo funciona Historial</span>
+          <span className="muted" aria-hidden="true">⌄</span>
+        </summary>
+        <div style={{ marginTop: 10 }}>
+          <p className="eyebrow" style={{ margin: "0 0 2px" }}>
+            Antes de avanzar, lee esto
+          </p>
+          <IntroP>
+            Todo lo que la plataforma ha publicado por ti queda registrado aquí: artículos y publicaciones en redes, con su fecha, su estado y el enlace a lo que se publicó.
+          </IntroP>
+          <IntroP>
+            Sirve para dos cosas muy concretas: comprobar que algo salió bien de verdad, y encontrar rápido un artículo cuando lo necesitas para compartirlo o revisarlo.
+          </IntroP>
+          <IntroP>
+            Si un trabajo todavía no aparece aquí, es que sigue en marcha: míralo en <Modulo id="publicaciones-en-curso" />.
+          </IntroP>
+        </div>
+        </details>
+      </section>
       <HistorialEjecuciones />
       <HistorialRedes />
-      <section id="estadisticas" className="panel" style={{ marginTop: 4 }}>
-        <p className="eyebrow">Rendimiento</p>
-        <h2 style={{ marginBottom: 4 }}>Estadísticas</h2>
-        <p className="muted" style={{ marginTop: 0 }}>
-          Consulta aquí el rendimiento de tus publicaciones y tu ritmo de trabajo.
+      <section
+        id="estadisticas"
+        style={{
+          marginTop: 12,
+          paddingTop: 16,
+          borderTop: "1px solid #d2d2d7",
+        }}
+      >
+        <p className="eyebrow" style={{ margin: "0 0 2px" }}>Rendimiento</p>
+        <h2 style={{ ...h2Style, margin: 0 }}>Estadísticas</h2>
+        <p className="muted" style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5 }}>
+          Consulta el rendimiento de tus publicaciones y tu ritmo de trabajo.
         </p>
         <PerformanceDashboard />
       </section>
@@ -135,7 +212,7 @@ function HistorialEjecuciones() {
       {duplicateTitles.length > 0 && (
         <DuplicateTitlesSection items={duplicateTitles} />
       )}
-      <details className="panel" style={sectionStyle}>
+      <details open style={cardSectionStyle}>
       <summary
         style={{
           cursor: "pointer",
@@ -153,7 +230,7 @@ function HistorialEjecuciones() {
           <h2 style={{ ...h2Style, margin: 0 }}>Artículos publicados</h2>
         </div>
         <span className="muted" style={{ fontSize: 13 }}>
-          {publishedRunsCount} ejecución{publishedRunsCount !== 1 ? "es" : ""}
+          {countText(publishedRunsCount, "ejecución", "ejecuciones")}
         </span>
       </summary>
       <div style={{ marginTop: 14 }}>
@@ -169,7 +246,7 @@ function HistorialEjecuciones() {
           {hasDeletableRuns &&
             (confirmingDelete ? (
               <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 12, color: "#8a4b08" }}>
+                <span style={{ fontSize: 12, color: "#4a4a4a" }}>
                   ¿Borrar historial? No se puede deshacer.
                 </span>
                 <button
@@ -178,7 +255,7 @@ function HistorialEjecuciones() {
                   className="secondary"
                   style={{
                     ...secondaryButtonStyle,
-                    color: "#ff3b30",
+                    color: "#4a4a4a",
                     padding: "4px 10px",
                     fontSize: 12,
                   }}
@@ -204,7 +281,7 @@ function HistorialEjecuciones() {
                 className="secondary"
                 style={{
                   ...secondaryButtonStyle,
-                  color: "#ff3b30",
+                  color: "#4a4a4a",
                   padding: "4px 10px",
                   fontSize: 12,
                 }}
@@ -235,7 +312,7 @@ function HistorialEjecuciones() {
       </div>
       </details>
       {unconfirmedRuns.length > 0 && (
-        <details className="panel" style={{ ...sectionStyle, borderColor: "#ffd8a8" }}>
+        <details style={cardSectionStyle}>
           <summary
             style={{
               cursor: "pointer",
@@ -257,8 +334,7 @@ function HistorialEjecuciones() {
               </h2>
             </div>
             <span className="muted" style={{ fontSize: 13 }}>
-              {unconfirmedRuns.length} ejecución
-              {unconfirmedRuns.length !== 1 ? "es" : ""}
+              {countText(unconfirmedRuns.length, "ejecución", "ejecuciones")}
             </span>
           </summary>
           <div style={{ marginTop: 14 }}>
@@ -307,7 +383,7 @@ function DuplicateTitlesSection({ items }: { items: TitleRow[] }) {
   }, [items]);
 
   return (
-    <details className="panel" style={{ ...sectionStyle, borderColor: "#ffd8a8" }}>
+    <details style={cardSectionStyle}>
       <summary
         style={{
           cursor: "pointer",
@@ -356,11 +432,10 @@ function DuplicateTitlesSection({ items }: { items: TitleRow[] }) {
               <div
                 key={title.id}
                 style={{
-                  padding: 12,
-                  marginBottom: 8,
-                  border: "1px solid #ffd8a8",
-                  borderRadius: 10,
-                  background: "#fff8ef",
+                  padding: "12px 0",
+                  marginBottom: 0,
+                  borderTop: "1px solid #e5e5ea",
+                  background: "transparent",
                 }}
               >
                 <div
@@ -433,16 +508,7 @@ function PublicationDayGroup({
   });
 
   return (
-    <details
-      className="row"
-      style={{
-        marginBottom: 10,
-        background: "#ffffff",
-        border: "1px solid #e5e5ea",
-        borderRadius: 12,
-        overflow: "hidden",
-      }}
-    >
+    <details open={dayKey !== "no-confirmada"} className="row" style={flatRowStyle}>
       <summary
         style={{
           cursor: "pointer",
@@ -454,16 +520,16 @@ function PublicationDayGroup({
           alignItems: "center",
           gap: 10,
           flexWrap: "wrap",
-          padding: "12px 16px",
+          padding: "12px 0",
           userSelect: "none",
         }}
       >
         <span>{publicationDayLabel(dayKey)}</span>
         <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
-          — {runs.length} ejecución{runs.length !== 1 ? "es" : ""} ({totalSuccess}/{totalTitles} publicados)
+          — {countText(runs.length, "ejecución", "ejecuciones")} ({totalSuccess}/{totalTitles} publicados)
         </span>
       </summary>
-      <div style={{ padding: "0 16px 16px 16px" }}>
+      <div style={{ padding: "0 0 8px" }}>
         {orderedRuns.map((run) => (
           <HistoryEntry key={run.id} run={run} onRetried={onRetried} />
         ))}
@@ -726,7 +792,7 @@ function HistorialRedes() {
 
   return (
     <>
-    <details open={false} className="panel" style={sectionStyle}>
+    <details open={false} style={cardSectionStyle}>
       <summary
         style={{
           cursor: "pointer",
@@ -745,7 +811,7 @@ function HistorialRedes() {
         </div>
         {!loading && (
           <span className="muted" style={{ fontSize: 13 }}>
-            {publishedOpportunities.length} publicación{publishedOpportunities.length !== 1 ? "es" : ""}
+            {countText(publishedOpportunities.length, "publicación", "publicaciones")}
           </span>
         )}
       </summary>
@@ -818,17 +884,7 @@ function HistorialRedes() {
               </p>
             ) : (
               opportunitiesByDay.map(([dayKey, dayOpps]) => (
-                <details
-                  key={dayKey}
-                  className="row"
-                  style={{
-                    marginBottom: 10,
-                    background: "#ffffff",
-                    border: "1px solid #e5e5ea",
-                    borderRadius: 12,
-                    overflow: "hidden",
-                  }}
-                >
+                <details key={dayKey} className="row" style={flatRowStyle}>
                   <summary
                     style={{
                       cursor: "pointer",
@@ -840,27 +896,22 @@ function HistorialRedes() {
                       alignItems: "center",
                       gap: 10,
                       flexWrap: "wrap",
-                      padding: "12px 16px",
+                      padding: "12px 0",
                       userSelect: "none",
                     }}
                   >
                     <span>{publicationDayLabel(dayKey)}</span>
                     <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
-                      — {dayOpps.length} publicación{dayOpps.length !== 1 ? "es" : ""}
+                      — {countText(dayOpps.length, "publicación", "publicaciones")}
                     </span>
                   </summary>
-                  <div style={{ padding: "0 16px 16px 16px", display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
+                  <div style={{ padding: "0", display: "grid", gridTemplateColumns: "1fr" }}>
                 {dayOpps.map((opp) => (
                   <details
                     key={opp.id}
                     open={false}
                     className="row"
-                    style={{
-                      background: "#ffffff",
-                      border: "1px solid #e5e5ea",
-                      borderRadius: 12,
-                      padding: "12px 16px",
-                    }}
+                    style={flatNestedRowStyle}
                   >
                     <summary
                       style={{
@@ -894,13 +945,13 @@ function HistorialRedes() {
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                         {opp.status === "published" ? (
-                          <span style={{ color: "#16803c", fontWeight: 600, fontSize: 12 }}>✓ Publicado</span>
+                          <span style={{ color: "#1d1d1f", fontWeight: 600, fontSize: 12 }}>✓ Publicado</span>
                         ) : opp.status === "processing" ? (
                           <span style={{ color: "#1d1d1f", fontWeight: 600, fontSize: 12 }}>
                             Procesando...{opp.progressPercent ? ` (${opp.progressPercent}%)` : ""}
                           </span>
                         ) : opp.status === "queued" ? (
-                          <span style={{ color: "#8a4b08", fontWeight: 600, fontSize: 12 }}>En cola</span>
+                          <span style={{ color: "#4a4a4a", fontWeight: 600, fontSize: 12 }}>En cola</span>
                         ) : (
                           <>
                             <span style={{ color: opp.status === "skipped" ? "#6e6e73" : "#ff3b30", fontWeight: 600, fontSize: 12 }}>
@@ -1075,7 +1126,7 @@ function HistorialRedes() {
       </div>
     </details>
     {skippedOpportunities.length > 0 && (
-      <details className="panel" style={{ ...sectionStyle, borderColor: "#d5d5db" }}>
+      <details style={cardSectionStyle}>
         <summary
           style={{
             cursor: "pointer",
@@ -1098,7 +1149,7 @@ function HistorialRedes() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             <span className="muted" style={{ fontSize: 13 }}>
-              {skippedOpportunities.length} publicación{skippedOpportunities.length !== 1 ? "es" : ""}
+              {countText(skippedOpportunities.length, "publicación", "publicaciones")}
             </span>
             {confirmingDeleteSkipped ? (
               <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
@@ -1122,7 +1173,7 @@ function HistorialRedes() {
                 handleRetryBatch("skipped-all", skippedOpportunities.map((o) => o.id));
               }}
               disabled={batchRetryingKey === "skipped-all"}
-              style={{ ...buttonStyle, marginTop: 0, minHeight: 40, padding: "9px 18px", borderRadius: 20, fontSize: 13, whiteSpace: "nowrap" }}
+              style={{ ...buttonStyle, marginTop: 0, minHeight: 40, padding: "9px 18px", borderRadius: 6, fontSize: 13, whiteSpace: "nowrap" }}
             >
               {batchRetryingKey === "skipped-all" ? "Publicando..." : "Publicar todo el lote"}
             </button>
@@ -1137,17 +1188,7 @@ function HistorialRedes() {
             <p style={{ fontSize: 12, color: "#8a4b08", marginBottom: 12 }}>{batchMessage}</p>
           )}
           {skippedByDay.map(([dayKey, dayOpps]) => (
-            <details
-              key={dayKey}
-              className="row"
-              style={{
-                marginBottom: 10,
-                background: "#ffffff",
-                border: "1px solid #e5e5ea",
-                borderRadius: 12,
-                overflow: "hidden",
-              }}
-            >
+            <details key={dayKey} className="row" style={flatRowStyle}>
               <summary
                 style={{
                   cursor: "pointer",
@@ -1159,13 +1200,13 @@ function HistorialRedes() {
                   alignItems: "center",
                   gap: 10,
                   flexWrap: "wrap",
-                  padding: "12px 16px",
+                  padding: "12px 0",
                   userSelect: "none",
                 }}
               >
                 <span>{publicationDayLabel(dayKey)}</span>
                 <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
-                  — {dayOpps.length} publicación{dayOpps.length !== 1 ? "es" : ""}
+                  — {countText(dayOpps.length, "publicación", "publicaciones")}
                 </span>
                 <button
                   onClick={(e) => {
@@ -1179,18 +1220,13 @@ function HistorialRedes() {
                   {batchRetryingKey === `skipped-${dayKey}` ? "Publicando..." : "Publicar este día"}
                 </button>
               </summary>
-              <div style={{ padding: "0 16px 16px 16px", display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
+              <div style={{ padding: "0", display: "grid", gridTemplateColumns: "1fr" }}>
             {dayOpps.map((opp) => (
               <details
                 key={opp.id}
                 open={false}
                 className="row"
-                style={{
-                  background: "#ffffff",
-                  border: "1px solid #e5e5ea",
-                  borderRadius: 12,
-                  padding: "12px 16px",
-                }}
+                style={flatNestedRowStyle}
               >
                 <summary
                   style={{
@@ -1273,7 +1309,7 @@ function HistorialRedes() {
       </details>
     )}
     {unconfirmedOpportunities.length > 0 && (
-      <details className="panel" style={{ ...sectionStyle, borderColor: "#ffd8a8" }}>
+      <details style={cardSectionStyle}>
         <summary
           style={{
             cursor: "pointer",
@@ -1296,7 +1332,7 @@ function HistorialRedes() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             <span className="muted" style={{ fontSize: 13 }}>
-              {unconfirmedOpportunities.length} publicación{unconfirmedOpportunities.length !== 1 ? "es" : ""}
+              {countText(unconfirmedOpportunities.length, "publicación", "publicaciones")}
             </span>
             {confirmingDeleteUnconfirmed ? (
               <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
@@ -1320,7 +1356,7 @@ function HistorialRedes() {
                 handleRetryBatch("unconfirmed-all", unconfirmedOpportunities.map((o) => o.id));
               }}
               disabled={batchRetryingKey === "unconfirmed-all"}
-              style={{ ...buttonStyle, marginTop: 0, minHeight: 40, padding: "9px 18px", borderRadius: 20, fontSize: 13, whiteSpace: "nowrap" }}
+              style={{ ...buttonStyle, marginTop: 0, minHeight: 40, padding: "9px 18px", borderRadius: 6, fontSize: 13, whiteSpace: "nowrap" }}
             >
               {batchRetryingKey === "unconfirmed-all" ? "Publicando..." : "Publicar todo el lote"}
             </button>
@@ -1335,17 +1371,7 @@ function HistorialRedes() {
             <p style={{ fontSize: 12, color: "#8a4b08", marginBottom: 12 }}>{batchMessage}</p>
           )}
           {unconfirmedByDay.map(([dayKey, dayOpps]) => (
-            <details
-              key={dayKey}
-              className="row"
-              style={{
-                marginBottom: 10,
-                background: "#ffffff",
-                border: "1px solid #e5e5ea",
-                borderRadius: 12,
-                overflow: "hidden",
-              }}
-            >
+            <details key={dayKey} className="row" style={flatRowStyle}>
               <summary
                 style={{
                   cursor: "pointer",
@@ -1357,13 +1383,13 @@ function HistorialRedes() {
                   alignItems: "center",
                   gap: 10,
                   flexWrap: "wrap",
-                  padding: "12px 16px",
+                  padding: "12px 0",
                   userSelect: "none",
                 }}
               >
                 <span>{publicationDayLabel(dayKey)}</span>
                 <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
-                  — {dayOpps.length} publicación{dayOpps.length !== 1 ? "es" : ""}
+                  — {countText(dayOpps.length, "publicación", "publicaciones")}
                 </span>
                 <button
                   onClick={(e) => {
@@ -1377,18 +1403,13 @@ function HistorialRedes() {
                   {batchRetryingKey === `unconfirmed-${dayKey}` ? "Publicando..." : "Publicar este día"}
                 </button>
               </summary>
-              <div style={{ padding: "0 16px 16px 16px", display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
+              <div style={{ padding: "0", display: "grid", gridTemplateColumns: "1fr" }}>
             {dayOpps.map((opp) => (
               <details
                 key={opp.id}
                 open={false}
                 className="row"
-                style={{
-                  background: "#ffffff",
-                  border: "1px solid #e5e5ea",
-                  borderRadius: 12,
-                  padding: "12px 16px",
-                }}
+                style={flatNestedRowStyle}
               >
                 <summary
                   style={{
@@ -1579,11 +1600,9 @@ function HistoryEntry({
     <details
       open={false}
       style={{
-        marginBottom: 8,
-        background: "#ffffff",
-        border: "1px solid #e5e5ea",
-        borderRadius: 8,
-        overflow: "hidden",
+        ...flatNestedRowStyle,
+        marginBottom: 0,
+        overflow: "visible",
       }}
     >
       <summary
@@ -1595,7 +1614,7 @@ function HistoryEntry({
           gap: 8,
           alignItems: "center",
           flexWrap: "wrap",
-          padding: "10px 14px",
+          padding: "12px 0",
           userSelect: "none",
         }}
       >
@@ -1669,9 +1688,9 @@ function RunStatusBadge({ status }: { status: RunStatus }) {
         fontSize: 11,
         fontWeight: 500,
         padding: "2px 8px",
-        borderRadius: 999,
-        color: isOk ? "#16803c" : isErr ? "#ff3b30" : "#6e6e73",
-        background: isOk ? "rgba(52, 199, 89, 0.1)" : isErr ? "#fff2f1" : "#f5f5f7",
+        borderRadius: 6,
+        color: isOk || isErr ? "#1d1d1f" : "#6e6e73",
+        background: "#f5f5f7",
       }}
     >
       {runStatusLabel(status)}

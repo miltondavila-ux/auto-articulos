@@ -3347,3 +3347,41 @@ en Coordinación confirmación explícita de que el commit final `92d5737` en `o
 redesplegado a Production con ese SHA exacto** (los `dpl_` listados corresponden a pasos intermedios
 anteriores al commit final) — se deja anotado así, sin inventar un estado no confirmado por escrito.
 Responsable: Codex. Estado: EN `origin/main`, DESPLIEGUE DEL COMMIT FINAL NO CONFIRMADO POR ESCRITO.
+
+## Versión preparada — 2026-09-23 15:39 EDT — sincronización visual localhost → producción
+
+Fecha y hora: 2026-09-23 15:39 EDT
+Versión/commit: `99507a7d` (rebase pendiente de nuevo hash)
+Rama: `codex/sincronizacion-produccion-20260923`
+Worktree: `/Users/miltondavila/.codex/worktrees/1140/Creador de articulos`
+Conversación/proyecto: actualización autorizada de producción desde localhost
+Cambios incluidos: sincronización responsive y monocromática, márgenes,
+paddings y esquinas de 6px, Inicio, menú móvil, Configuración, Conexiones,
+Historial, Estadísticas y Progreso; permiso condicional de la tercera acción;
+manual del asistente y coordinación.
+Archivos modificados: 35 en el commit original; la rama se rebasó sobre el
+`main` actual para conservar sus cambios posteriores.
+Archivos eliminados: ninguno.
+Migraciones creadas: ninguna.
+Migraciones aplicadas: ninguna.
+Auditoría 1: APROBADA — diff sin schema, migraciones, workflows, configuración
+de Vercel, secretos ni archivos eliminados.
+Auditoría 2: APROBADA — typecheck web, build del worker y 44 pruebas web.
+Auditoría 3: APROBADA para entrega — build web completo con 85 rutas y
+`git diff --check`.
+Diff revisado: sí; el PR #216 tiene Preview y checks Vercel en verde, pero
+GitHub reportó conflicto por avance de `main` y se está resolviendo mediante
+rebase conservador.
+Deployment/Vercel: Preview `4Be1DddBAoNmWrF82961Hdamidxi` correcto; producción
+pendiente de fusión.
+Estado de Vercel: Preview READY; Producción pendiente.
+Dominio verificado: pendiente.
+Logs verificados: pendiente.
+Producción verificada: pendiente.
+Problemas conocidos: la integración de generación de títulos requiere
+`TITLE_GENERATION_TEST_DATABASE_URL`; no bloquea el build ni las pruebas
+unitarias pasadas.
+Responsable: Codex - GPT-5.
+Siguiente acción: terminar el rebase, actualizar PR #216, esperar checks,
+fusionar a `main` y verificar Vercel, dominio y rutas críticas.
+Estado: PREPARADA

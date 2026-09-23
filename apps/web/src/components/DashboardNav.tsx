@@ -79,6 +79,7 @@ export default function DashboardNav() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [disabledModules, setDisabledModules] = useState<string[]>([]);
   const [globalDisabledModules, setGlobalDisabledModules] = useState<string[]>([]);
+  const [socialPublishingApproved, setSocialPublishingApproved] = useState(false);
   const [open, setOpen] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const groupRef = useRef<HTMLDivElement | null>(null);
@@ -134,6 +135,22 @@ export default function DashboardNav() {
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         setIsAdmin(data?.role === "admin" || Boolean(data?.isActingAdmin));
+        const socialPermissionKeys = [
+          "allowInstagramPublishing",
+          "allowFacebookPublishing",
+          "allowLinkedInPublishing",
+          "allowThreadsPublishing",
+          "allowPinterestPublishing",
+          "allowTumblrPublishing",
+          "allowBlueskyPublishing",
+          "allowDevToPublishing",
+          "allowBloggerPublishing",
+        ];
+        setSocialPublishingApproved(
+          data?.role === "admin" ||
+            Boolean(data?.isActingAdmin) ||
+            socialPermissionKeys.some((key) => Boolean(data?.[key])),
+        );
         if (Array.isArray(data?.disabledModules)) {
           setDisabledModules(data.disabledModules);
         }
@@ -183,6 +200,7 @@ export default function DashboardNav() {
   // que no había forma de dárselo a otra persona desde Administración.
   function isVisible(tab: TabItem): boolean {
     if (isAdmin) return true;
+    if (tab.id === "oportunidades-redes" && !socialPublishingApproved) return false;
     return !tab.id || !disabledModules.includes(tab.id);
   }
 

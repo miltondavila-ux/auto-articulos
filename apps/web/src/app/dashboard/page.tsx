@@ -47,6 +47,7 @@ export default function InicioPage() {
   // siguiente visita, ya completada, entra directo al panel de métricas.
   const everIncompleteRef = useRef(false);
   const [showWizard, setShowWizard] = useState<boolean | null>(null);
+  const [socialPublishingApproved, setSocialPublishingApproved] = useState(false);
 
   const checkWizardStatus = useCallback(async () => {
     try {
@@ -66,6 +67,22 @@ export default function InicioPage() {
       const step2 = Array.isArray(catData.categories) && catData.categories.length > 0;
       const step3 = typeof meData.contentLanguage === "string" && meData.contentLanguage.trim().length > 0;
       const step4 = Boolean(googleData.connected && googleData.siteUrl);
+      const socialPermissionKeys = [
+        "allowInstagramPublishing",
+        "allowFacebookPublishing",
+        "allowLinkedInPublishing",
+        "allowThreadsPublishing",
+        "allowPinterestPublishing",
+        "allowTumblrPublishing",
+        "allowBlueskyPublishing",
+        "allowDevToPublishing",
+        "allowBloggerPublishing",
+      ] as const;
+      setSocialPublishingApproved(
+        meData?.role === "admin" ||
+          Boolean(meData?.isActingAdmin) ||
+          socialPermissionKeys.some((key) => Boolean(meData?.[key])),
+      );
       // Solo para el localhost de desarrollo: permite revisar la interfaz
       // posterior al wizard sin fingir una conexión OAuth real de Google.
       const complete = process.env.NEXT_PUBLIC_LOCAL_DEMO === "true"
@@ -121,7 +138,7 @@ export default function InicioPage() {
         <div style={{ marginTop: 20, marginBottom: 20 }}>
           <h2 style={{ margin: "0 0 14px", fontSize: 22 }}>Acciones posibles</h2>
           <div className="inicio-actions-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 16 }}>
-          {QUICK_LINKS.map((l, i) => (
+          {QUICK_LINKS.filter((link) => socialPublishingApproved || link.href !== "/dashboard/oportunidades-redes").map((l, i) => (
             (() => {
               return (
                 <Link key={l.href} className="inicio-action-card" href={l.href} style={{ display: "flex", minHeight: 176, padding: 22, flexDirection: "column", justifyContent: "space-between", textDecoration: "none", color: "#1d1d1f", background: "#ffffff", border: "1px solid #d2d2d7", borderRadius: 6 }}>

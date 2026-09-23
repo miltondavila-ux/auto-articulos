@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { sectionStyle, h2Style, secondaryButtonStyle } from "@/components/dashboard-ui";
+import { h2Style, secondaryButtonStyle } from "@/components/dashboard-ui";
 import type { RunRow, TitleEventRow, TitleRow } from "@/types/dashboard";
 import GoogleIndexingStatus from "@/components/GoogleIndexingStatus";
 import { platformHelpUrl, platformProductName } from "@auto-articulos/shared";
@@ -115,13 +115,13 @@ function TitleProgressRow({
 
   return (
     <div
-      className="row"
       style={{
-        background: "#ffffff",
+        background: "transparent",
         color: "#1d1d1f",
-        border: "1px solid #e5e5ea",
-        borderRadius: 12,
-        padding: "12px 16px",
+        borderTop: index === 0 ? "none" : "1px solid #e5e5ea",
+        borderRadius: 0,
+        padding: "14px 0 0",
+        marginTop: index === 0 ? 0 : 14,
       }}
     >
       <div
@@ -243,7 +243,7 @@ function TitleProgressRow({
               style={{
                 background: "#fff4e5",
                 border: "1px solid rgba(255, 149, 0, 0.3)",
-                borderRadius: 12,
+                borderRadius: 6,
                 padding: "12px 14px",
                 marginBottom: 8,
               }}
@@ -362,7 +362,7 @@ function TitleProgressRow({
                           style={{
                             maxWidth: "100%",
                             marginTop: 4,
-                            borderRadius: 8,
+                            borderRadius: 6,
                             border: "1px solid #e5e5ea",
                           }}
                         />
@@ -433,7 +433,13 @@ export default function LiveProgress({
   }
 
   return (
-    <section className="panel" style={sectionStyle}>
+    <section
+      style={{
+        borderTop: "1px solid #d2d2d7",
+        borderBottom: "1px solid #d2d2d7",
+        padding: "18px 0 20px",
+      }}
+    >
       <style>{`
         @keyframes auto-articulos-spin {
           to { transform: rotate(360deg); }
