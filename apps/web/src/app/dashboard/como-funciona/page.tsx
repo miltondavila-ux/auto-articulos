@@ -202,15 +202,12 @@ export default function ComoFuncionaPage() {
       }}
     >
       <header style={{ padding: "clamp(32px, 5vw, 48px) 0 clamp(24px, 3vw, 32px)" }}>
-        <p className="eyebrow" style={{ margin: "0 0 6px" }}>GUÍA RÁPIDA</p>
-        <h1 style={{ margin: 0, fontSize: "clamp(28px, 4vw, 42px)", lineHeight: 1.1, fontWeight: 600, letterSpacing: "-0.03em", color: "#1d1d1f" }}>
-          De la idea a la publicación
+        <p className="eyebrow" style={{ margin: "0 0 6px" }}>CÓMO FUNCIONA</p>
+        <h1 style={{ margin: 0, fontSize: "clamp(26px, 4vw, 36px)", lineHeight: 1.1, fontWeight: 600, letterSpacing: "-0.03em", color: "#1d1d1f" }}>
+          Publica contenido en tres pasos
         </h1>
         <p style={{ margin: "0 0 18px", fontSize: 19, lineHeight: "28px", color: "#1d1d1f" }}>
-          Tú decides cuánto quieres hacer: puedes escribir tus propios artículos,
-          pedir títulos a partir de tus variables o dejar que la IA encuentre
-          oportunidades usando los datos de Google Search Console, Google Analytics
-          y Bing.
+          Configura tus fuentes, elige cómo crear el contenido y revisa antes de publicar.
         </p>
         <details style={{ marginTop: 18 }}>
           <summary
@@ -221,7 +218,7 @@ export default function ComoFuncionaPage() {
               fontWeight: 600,
             }}
           >
-            Conocer el objetivo de la plataforma
+            Por qué funciona
           </summary>
           <div>
         <p
@@ -351,7 +348,7 @@ export default function ComoFuncionaPage() {
       <hr style={SEPARADOR} />
 
       <section style={{ padding: "clamp(28px, 4vw, 40px) 0 4px" }}>
-        <h2 style={TITULO_SECCION}>Cómo sucede</h2>
+        <h2 style={TITULO_SECCION}>Tu recorrido</h2>
         <p style={PARRAFO}>
           Este es el recorrido normal: configuras tus fuentes, eliges cómo crear
           el contenido y después revisas lo que se va a publicar.
