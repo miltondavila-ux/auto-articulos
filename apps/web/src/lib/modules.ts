@@ -74,8 +74,7 @@ export const SYSTEM_MODULES: SystemModule[] = [
     label: "Conexión por Composio",
     href: "/dashboard/configuracion/conexiones",
     description:
-      "Pantalla única «Conexiones» (ANALÍTICAS y DIFUSIÓN) con la conexión por Composio integrada. Es opt-in: solo la ve quien tenga «Habilitado».",
-    optIn: true,
+      "Pantalla única «Conexiones» (ANALÍTICAS y DIFUSIÓN) para reconectar Google Search Console y administrar las integraciones disponibles.",
   },
 ];
 
