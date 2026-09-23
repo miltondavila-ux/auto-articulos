@@ -8890,3 +8890,51 @@ Responsable: Claude (tarea programada diaria de propagación).
 - Se verificó que no queda duplicado y que la compilación genera 85 rutas.
 - Deployment: `dpl_6CE59HWgdmvdu45QJJvJWQT3yC7m`, estado READY.
 - Alias productivo verificado: `https://seototal.lasolucionweb.com/login` responde HTTP 200.
+
+## Claude (tarea programada diaria de propagación) — 2026-09-23
+
+Punto de partida: la última entrada firmada por esta misma tarea era la del 2026-09-22 (commit
+`12f723c`). Se revisó el diff completo de `COORDINACION_CLAUDE_CODEX.md` entre `12f723c` y
+`origin/main` actual (`92d5737`): 159 líneas agregadas, 0 borradas, en solo 2 de los 6 commits nuevos
+que tocan el repositorio (`9afbdd3` y `92d5737`; los otros cuatro — `#213`, `#214`, `#215`, `#196` — no
+tocan este documento y quedan fuera del alcance de esta propagación). El contenido nuevo real
+corresponde a: la continuación de CONEXION POSTPEER 2 (corrección de imagen de GBP vía `og:image`,
+commit `ee9df8e`/PR #211) y un lote grande de trabajo de interfaz de Codex del 2026-09-22 (config de
+localhost, varios despliegues responsive/menú/tarjetas de Inicio, nombres dinámicos de módulos y el
+traslado de "Cómo funciona esta aplicación" a Configuración), todo consolidado luego en el commit
+directo `92d5737` ("fix: avisar limites de texto antes de guardar").
+
+Verificación por documento:
+
+- `CONTROLADOR_DE_VERSIONES.md`: se agregaron dos entradas. La primera registra que el PR #211 (commit
+  `9afbdd3`) ya está fusionado en `origin/main` —verificado en vivo con `git log`—, aunque su propia
+  entrada de Coordinación todavía lo describía como sin fusionar al momento de escribirse; se anotó
+  sin confirmación de deployment de Production ni de la prueba productiva de Lorena, sin inventar
+  ningún estado. La segunda consolida el lote de interfaz de Codex, listando los 8 `dpl_` intermedios
+  que Coordinación registra como READY y aclarando que no hay confirmación explícita de que el commit
+  final `92d5737` en `origin/main` haya sido redesplegado a Production con ese SHA exacto.
+- `apps/web/src/content/manual-usuario.ts`: se agregó una frase en la sección "Cada módulo se explica
+  solo" documentando que, en móvil, el recuadro de explicación de cada pantalla operativa aparece
+  plegado por defecto detrás de "Ver instrucciones" (comportamiento descrito en las entradas
+  "Responsive móvil — instrucciones plegables" y "segunda revisión completa"). El resto de los cambios
+  visibles de este lote (tarjetas de Inicio, nombres dinámicos de módulos, menú de Configuración) ya
+  estaban propagados al manual en el mismo commit `92d5737` que los introdujo —verificado leyendo el
+  diff de ese commit sobre este archivo—, así que no se duplicó nada. Los cambios puramente estéticos
+  (radio de esquinas, márgenes/paddings) no se consideraron "visibles" en el sentido de pantalla/flujo/
+  mensaje/permiso/módulo y no se agregaron al manual.
+- `INVENTARIO_CONVERSACIONES.md`: sin cambios. Ninguna entrada nueva usa el formato exacto
+  "[AGENTE] - [NOMBRE DEL PROBLEMA]" de una conversación nueva, y no hay reservas de archivo/rama que
+  verificar (el lote de interfaz de Codex se resolvió en un commit directo a `main`, sin rama propia
+  pendiente).
+- `TO-DO.md`: sin cambios. Todo el contenido nuevo de este rango es trabajo ya ejecutado o en curso,
+  no una idea suelta para más adelante.
+- `REPARADOR_DEL_ARBOL_PRINCIPAL.md`: sin cambios. No hay ramas pisadas, commits mezclados ni árbol
+  enredado en este rango; el propio lote de Codex se resolvió con un commit directo lineal.
+
+No hubo ninguna acción destructiva, migración ni deploy ejecutados por esta tarea. Duda dejada sin
+resolver para que Milton decida: el commit `92d5737` incluye, sin una entrada propia de Coordinación
+que lo describa, un cambio de lógica de negocio ("avisar límites de texto antes de guardar") mezclado
+con el lote de interfaz — no se propagó a ningún documento porque no hay texto en Coordinación que lo
+describa, pero queda anotado aquí por si alguien quiere documentarlo por separado.
+
+Responsable: Claude (tarea programada diaria de propagación).
