@@ -338,7 +338,7 @@ export default function PublicarPage() {
                   padding: "7px 14px",
                   minWidth: 170,
                   height: 36,
-                  borderRadius: 18,
+                  borderRadius: 6,
                   fontSize: 12,
                   fontWeight: 600,
                   lineHeight: "20px",
@@ -358,7 +358,7 @@ export default function PublicarPage() {
                   padding: "7px 14px",
                   minWidth: 170,
                   height: 36,
-                  borderRadius: 18,
+                  borderRadius: 6,
                   fontSize: 12,
                   fontWeight: 600,
                   lineHeight: "20px",
@@ -504,7 +504,7 @@ export default function PublicarPage() {
                 onClick={() => setTitlesMode(mode)}
                 style={{
                   padding: "8px 16px",
-                  borderRadius: 18,
+                  borderRadius: 6,
                   fontSize: 13,
                   fontWeight: 600,
                   cursor: "pointer",

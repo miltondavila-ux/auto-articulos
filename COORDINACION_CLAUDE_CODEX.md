@@ -4657,6 +4657,26 @@ el texto existente.
 
 Responsable: Claude (tarea programada diaria de propagación).
 
+## Codex — CONTINUACIÓN LOCAL Y DESPLIEGUE AUTORIZADO — 2026-09-23
+
+Se conservaron en la rama de entrega las correcciones locales posteriores a
+`origin/main`: Historial con menos encuadres anidados, Progreso de las
+publicaciones con instrucciones plegables y filas planas, y la visibilidad
+condicional de la tercera acción de Inicio y del menú según aprobaciones reales
+de redes sociales. También se mantuvieron la fuente única de nombres y el
+manual que alimenta al asistente.
+
+- Integridad: sin archivos eliminados, schema, migraciones, workflows,
+  configuración de Vercel o secretos.
+- Verificación local: typecheck web OK, build del worker OK, suite web 44/44
+  OK (integración opcional sin base de pruebas), build web OK con 85 rutas y
+  `git diff --check` OK.
+- La rama `codex/sincronizacion-produccion-20260923` se rebasó sobre el
+  `main` actual para resolver el avance de producción sin sobrescribirlo.
+- PR #216: Preview y checks de Vercel en verde; fusión y deployment de
+  Producción quedan pendientes de la resolución final del rebase y se
+  registrarán con sus identificadores exactos.
+
 ### Continuación CONEXION POSTPEER 2 — 2026-09-22
 
 - Se confirmó el resultado de la prueba aislada de Lorena: el artículo exacto

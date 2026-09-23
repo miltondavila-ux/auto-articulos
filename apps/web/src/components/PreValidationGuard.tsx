@@ -230,7 +230,7 @@ export default function PreValidationGuard({
                           type="button"
                           onClick={onConfirmImageCredits}
                           className="secondary"
-                          style={{ padding: "6px 12px", fontSize: 12, borderRadius: 8 }}
+                          style={{ padding: "6px 12px", fontSize: 12, borderRadius: 6 }}
                         >
                           Ya recibí mis créditos
                         </button>
@@ -239,7 +239,7 @@ export default function PreValidationGuard({
                         type="button"
                         onClick={onOpenImageCreditsModal}
                         className="secondary"
-                        style={{ padding: "6px 12px", fontSize: 12, borderRadius: 8 }}
+                        style={{ padding: "6px 12px", fontSize: 12, borderRadius: 6 }}
                       >
                         {step.actionLabel}
                       </button>

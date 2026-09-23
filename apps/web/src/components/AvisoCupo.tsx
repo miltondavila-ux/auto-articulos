@@ -23,7 +23,7 @@ export function CirculoAyuda({ pregunta }: { pregunta: string }) {
         height: 24,
         minHeight: 24,
         padding: 0,
-        borderRadius: 980,
+        borderRadius: 6,
         border: "1px solid #d2d2d7",
         background: "#ffffff",
         color: "#6e6e73",

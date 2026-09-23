@@ -15,11 +15,13 @@ export default function ModuleIntro({
   children,
   showEyebrow = true,
   compact = false,
+  instruccionesColapsadas = false,
 }: {
   titulo: string;
   children: ReactNode;
   showEyebrow?: boolean;
   compact?: boolean;
+  instruccionesColapsadas?: boolean;
 }) {
   if (compact) return null;
   return (
@@ -67,11 +69,29 @@ export default function ModuleIntro({
       >
         {titulo}
       </h1>
-      <div className="module-intro-desktop" style={{ marginTop: 10 }}>{children}</div>
-      <details className="module-intro-mobile">
-        <summary>Ver instrucciones</summary>
-        <div style={{ marginTop: 10 }}>{children}</div>
-      </details>
+      {instruccionesColapsadas ? (
+        <details style={{ marginTop: 10 }}>
+          <summary
+            style={{
+              cursor: "pointer",
+              color: "#6e6e73",
+              fontSize: 13,
+              fontWeight: 600,
+            }}
+          >
+            Ver instrucciones de esta pantalla
+          </summary>
+          <div style={{ marginTop: 10 }}>{children}</div>
+        </details>
+      ) : (
+        <>
+          <div className="module-intro-desktop" style={{ marginTop: 10 }}>{children}</div>
+          <details className="module-intro-mobile">
+            <summary>Ver instrucciones</summary>
+            <div style={{ marginTop: 10 }}>{children}</div>
+          </details>
+        </>
+      )}
     </section>
   );
 }
