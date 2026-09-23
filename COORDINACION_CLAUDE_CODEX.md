@@ -8993,7 +8993,14 @@ Estado: DESPLEGADA / VERIFICADA.
   --check` OK.
 - No se modificó `packages/db/prisma/schema.prisma`, no se creó ni aplicó ninguna
   migración, y no se tocaron secretos ni flujos de CI.
-- Estado: cambio preparado en localhost; pendiente PR, merge y verificación de
-  Vercel Production.
+- PR #218 fusionado a `main` con commit `3ed548bcf66700dd782c225ee4e623778f85084e`.
+- Vercel Production `dpl_5t33hR8ELrWDkXxutUzGim8tZEfC` quedó `READY` y el alias
+  `https://seototal.lasolucionweb.com` se verificó con `/login` 200,
+  `/privacidad` 200, `/api/me` 401 sin sesión y `/dashboard` 307.
+- En la sesión productiva abierta de Rafael Zuzolo la tarjeta continúa visible
+  porque la respuesta de permisos indica que la cuenta conserva al menos una
+  aprobación social/blog; no se modificaron datos de usuario sin una orden
+  específica para revocar ese permiso.
+- Estado: DESPLEGADA / VERIFICADA.
 
 Responsable: Codex (GPT-5).
