@@ -70,6 +70,31 @@ function countText(count: number, singular: string, plural: string) {
 }
 
 export default function HistorialPage() {
+  useEffect(() => {
+    if (window.location.hash !== "#estadisticas") return;
+
+    const scrollToStatistics = () => {
+      document.getElementById("estadisticas")?.scrollIntoView({
+        block: "start",
+        behavior: "auto",
+      });
+    };
+
+    // HistorialEjecuciones e HistorialRedes cargan sus datos después del
+    // primer render y pueden cambiar la posición del ancla. Repetimos el
+    // salto durante esa ventana para que el enlace termine siempre en la
+    // sección visible, incluso cuando se abre directamente con el hash.
+    const frame = window.requestAnimationFrame(scrollToStatistics);
+    const timers = [120, 350, 800, 1400].map((delay) =>
+      window.setTimeout(scrollToStatistics, delay),
+    );
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      timers.forEach((timer) => window.clearTimeout(timer));
+    };
+  }, []);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
       <section style={{ ...flatSectionStyle, borderTop: "none", paddingTop: 0 }}>
@@ -115,6 +140,7 @@ export default function HistorialPage() {
           marginTop: 12,
           paddingTop: 16,
           borderTop: "1px solid #d2d2d7",
+          scrollMarginTop: 16,
         }}
       >
         <p className="eyebrow" style={{ margin: "0 0 2px" }}>Rendimiento</p>
