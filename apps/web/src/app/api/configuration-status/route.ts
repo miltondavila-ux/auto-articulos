@@ -327,14 +327,19 @@ export async function GET() {
     },
   ];
 
-  if (resolvedSearchConsole.needsReconnect) {
+  const hasActiveComposioSearchConsole = Boolean(
+    resolvedSearchConsole.state.composio?.status === "ACTIVE" &&
+      resolvedSearchConsole.state.composio.hasSelection,
+  );
+
+  if (!hasActiveComposioSearchConsole) {
     checks.push({
       id: "google-search-console-reconnect",
       label: "Reconectar Google Search Console por Composio",
       configured: false,
       required: false,
       section: "seo",
-      description: "Tu conexión principal de Google Search Console está conservada, pero debes reconectar la conexión adicional por Composio.",
+      description: "Debes conectar Google Search Console mediante Conexiones para completar la actualización.",
       actionUrl: "/dashboard/configuracion/conexiones?vista=analiticas",
       actionLabel: "Reconectar Search Console",
     });
