@@ -48,7 +48,7 @@ const BASE_ENTRIES: NavEntry[] = [
         label: "Progreso de las publicaciones",
       },
       { id: "historial", href: "/dashboard/historial", label: "Historial" },
-      { id: "estadisticas", href: "/dashboard/historial#estadisticas", label: "Estadísticas" },
+      { id: "estadisticas", href: "/dashboard/estadisticas", label: "Estadísticas" },
     ],
   },
   {
