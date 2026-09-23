@@ -199,7 +199,13 @@ export default function ComoFuncionaPage() {
       }}
     >
       <header style={{ padding: "clamp(32px, 5vw, 48px) 0 clamp(24px, 3vw, 32px)" }}>
-        <details open style={{ marginTop: 18 }}>
+        <p style={{ margin: "0 0 18px", fontSize: 19, lineHeight: "28px", color: "#1d1d1f" }}>
+          Tú decides cuánto quieres hacer: puedes escribir tus propios artículos,
+          pedir títulos a partir de tus variables o dejar que la IA encuentre
+          oportunidades usando los datos de Google Search Console, Google Analytics
+          y Bing.
+        </p>
+        <details style={{ marginTop: 18 }}>
           <summary
             style={{
               cursor: "pointer",
@@ -208,7 +214,7 @@ export default function ComoFuncionaPage() {
               fontWeight: 600,
             }}
           >
-            Ocultar explicación introductoria
+            Conocer el objetivo de la plataforma
           </summary>
           <div>
         <p
@@ -340,17 +346,14 @@ export default function ComoFuncionaPage() {
       <section style={{ padding: "clamp(28px, 4vw, 40px) 0 4px" }}>
         <h2 style={TITULO_SECCION}>Cómo sucede</h2>
         <p style={PARRAFO}>
-          Son tres pasos, en este orden. El primero se hace una sola vez; los
-          otros dos se repiten tantas veces como quieras.
+          Este es el recorrido normal: configuras tus fuentes, eliges cómo crear
+          el contenido y después revisas lo que se va a publicar.
         </p>
         <p style={PARRAFO}>
-          Cuando terminas la configuración inicial, Inicio queda reducido a
-          tres acciones sencillas: <strong>{MENU_NAMES.propios}</strong>,{" "}
-          <strong>{MENU_NAMES.ia}</strong> y{" "}
-          <strong>{MENU_NAMES.redes}</strong>. En móvil las encuentras desde
-          el menú de hamburguesa de la esquina superior derecha; el progreso,
-          el historial y las estadísticas también están dentro de
-          Publicaciones.
+          En Inicio verás tres acciones: <strong>{MENU_NAMES.propios}</strong>,{" "}
+          <strong>{MENU_NAMES.ia}</strong> y <strong>{MENU_NAMES.redes}</strong>.
+          En móvil están dentro del menú de hamburguesa; el progreso, el historial
+          y las estadísticas viven dentro de Publicaciones.
         </p>
       </section>
 
