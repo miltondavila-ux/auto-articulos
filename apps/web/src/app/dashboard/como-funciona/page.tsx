@@ -1,398 +1,98 @@
 import type { Metadata } from "next";
-import { MENU_NAMES } from "@/lib/menu-names";
 import Link from "next/link";
-import type { CSSProperties } from "react";
-import { EnPrueba, Modulo } from "@/components/ModuleIntro";
+import { MENU_NAMES } from "@/lib/menu-names";
 
 export const metadata: Metadata = {
   title: "Cómo funciona esta aplicación — SEO TOTAL",
-  description:
-    "Qué hace SEO TOTAL, en qué orden ocurre y qué debes hacer tú en cada paso.",
+  description: "Elige cómo crear y publicar tu contenido.",
 };
 
-/*
- * Estilo tomado de las páginas de soporte de Apple (communities.apple.com),
- * que Milton dio como referencia el 18/8/2026. Valores medidos sobre esa
- * página, no inventados:
- *
- *   fondo         #ffffff, inmaculado, sin tarjetas flotantes ni sombras
- *   título        48px / 52px, peso 600, interletraje -0.003em, #1d1d1f
- *   texto         17px / 25px, #1d1d1f
- *   separadores   línea de 1px en #d2d2d7
- *   enlaces       #0066cc
- *
- * La estructura se sostiene con líneas finas y espacio en blanco. Sin
- * gráficas y sin emoticones, como pidió.
- */
-
-const SEPARADOR: CSSProperties = {
-  border: "none",
-  borderTop: "1px solid #d2d2d7",
-  margin: 0,
+const cardStyle = {
+  border: "1px solid #d2d2d7",
+  borderRadius: 6,
+  padding: 18,
+  background: "#ffffff",
+  minWidth: 0,
 };
 
-const PARRAFO: CSSProperties = {
-  margin: "12px 0 0",
-  fontSize: 17,
-  lineHeight: "25px",
-  color: "#1d1d1f",
-};
-
-const TITULO_SECCION: CSSProperties = {
-  margin: 0,
-  fontSize: 28,
-  lineHeight: "32px",
-  fontWeight: 600,
-  letterSpacing: "-0.003em",
-  color: "#1d1d1f",
-};
-
-const ENLACE: CSSProperties = {
+const linkStyle = {
   display: "inline-flex",
-  alignItems: "center",
-  gap: 4,
-  fontSize: 17,
-  lineHeight: "25px",
-  color: "#0066cc",
-  textDecoration: "none",
+  marginTop: 16,
+  color: "#1d1d1f",
+  fontSize: 13,
+  fontWeight: 600,
+  textDecoration: "underline",
+  textUnderlineOffset: 3,
 };
-
-const PASOS = [
-  {
-    numero: 1,
-    titulo: "Configura tu cuenta",
-    cuerpo: [
-      <>
-        <strong>Es lo primero, y lo único que no puede saltarse.</strong> La
-        plataforma publica artículos <em>dentro de tu página web</em>, así que
-        necesita cuatro cosas antes de poder trabajar: la clave de tu web para
-        poder entrar, la lista de secciones donde colocar cada artículo, el
-        idioma en el que quieres que se escriba, y el permiso de Google para
-        leer tus datos.
-      </>,
-      <>
-        Sobre esa última parte, en simple: <em>Google</em> es el buscador que
-        usa la mayoría de la gente para encontrar cosas en internet — cuando
-        alguien escribe una pregunta ahí, le muestra una lista de páginas con
-        la respuesta. <em>Bing</em> es lo mismo, pero de Microsoft: lo usa
-        menos gente que Google, pero igual trae visitas reales. Y{" "}
-        <em>Google Search Console</em> es una herramienta gratuita de Google,
-        pensada para dueños de páginas web: ahí Google te muestra, de tu
-        propio sitio, <strong>qué buscó exactamente la gente antes de llegar
-        a ti</strong>, y si ya leyó tus artículos nuevos.
-      </>,
-      <>
-        Por qué importa tanto conectarla: <strong>es la única forma que
-        tiene el sistema de saber qué está buscando tu público de
-        verdad</strong>, en vez de adivinar temas al azar. Sin ese permiso,{" "}
-        <Modulo id="oportunidades" /> no tendría de dónde sacar los títulos
-        que sabemos que la gente busca — se quedaría sin materia prima.
-      </>,
-      <>
-        Todo eso se guarda una sola vez en <Modulo id="configuracion" />. Si es
-        tu primera vez, ahí mismo hay un asistente que te lo pide paso a paso,
-        sin que tengas que saber dónde está cada cosa. Si algo no te queda
-        claro, abre la burbuja de ayuda de la esquina y pregunta: está en todas
-        las pantallas y responde con tus propios datos.
-      </>,
-    ],
-    accion: { texto: "Ir a Configuración", href: "/dashboard/configuracion" },
-  },
-  {
-    numero: 2,
-    titulo: MENU_NAMES.propios,
-    cuerpo: [
-      <>
-        Aquí tienes dos caminos, y puedes usar los dos. Cambian en una sola
-        cosa: quién elige el tema.
-      </>,
-      <>
-        En <Modulo id="publicar" /> eliges tú. Escribes títulos dentro del cupo
-        dinámico de tu cuenta, dices en qué sección va cada uno, y el sistema los
-        redacta y los publica en tu web.{" "}
-        <strong>Es lo que quieres cuando ya sabes de qué necesitas
-        hablar.</strong>
-      </>,
-      <>
-        En <Modulo id="oportunidades" /> elige el sistema. Vas a ver esas
-        siglas seguido, así que de una vez: <em>SEO</em> es que te encuentren
-        en buscadores como Google o Bing, y <em>AEO</em> es lo mismo pero
-        dentro de una inteligencia artificial — las mismas dos cosas de las
-        que veníamos hablando, solo que así se llaman en la jerga del rubro.
-      </>,
-      <>
-        Google guarda un registro de lo que escribió la gente en el buscador
-        antes de llegar a tu página; ese registro se llama Search Console y es
-        el que se conectó en el paso anterior. El sistema lo lee, junto con
-        Bing, y <strong>descubre qué está buscando de verdad tu
-        público</strong>. Con eso te propone títulos que sabemos que la gente
-        busca, en vez de temas inventados.
-      </>,
-      <>
-        Esos títulos son de <em>cola larga</em>. Traducido: en vez de pelear
-        por una palabra corta y muy disputada como &ldquo;seguros&rdquo;, donde
-        compites contra empresas enormes y no apareces nunca, se apunta a la
-        búsqueda larga y concreta de alguien con una duda real, del estilo
-        &ldquo;cuánto cuesta un seguro dental para mayores de 60 en
-        Miami&rdquo;.
-      </>,
-      <>
-        Esas búsquedas las hace menos gente, pero casi nadie escribe sobre
-        ellas, así que <strong>es mucho más fácil salir de primero</strong>. Y
-        quien busca así llega más decidido, porque ya sabe lo que quiere.
-        Muchas búsquedas pequeñas juntas suman más que una grande a la que no
-        ibas a llegar.
-      </>,
-      <>
-        Tú revisas la lista, borras lo que no te convenza y publicas lo que
-        quieras, de uno en uno o todo junto.
-      </>,
-      <>
-        Mientras se escriben, el avance se ve en{" "}
-        <Modulo id="publicaciones-en-curso" />, y cuando terminan quedan
-        guardados en <Modulo id="historial" /> con su enlace.
-      </>,
-    ],
-    accion: { texto: MENU_NAMES.ia, href: "/dashboard/oportunidades" },
-  },
-  {
-    numero: 3,
-    titulo: "Lleva lo publicado a las redes",
-    enPrueba: true,
-    cuerpo: [
-      <>
-        Un artículo en tu web solo lo encuentra quien lo busca.{" "}
-        <strong>En redes sociales lo ve gente que todavía no te estaba
-        buscando</strong>, y cada visita que llega desde ahí es una señal más
-        de que tu contenido interesa.
-      </>,
-      <>
-        En <Modulo id="oportunidades-redes" /> el sistema toma
-        artículos que ya publicaste y prepara la publicación para cada red. Tú
-        revisas y decides cuál sale y dónde. No se publica todo ni todo el
-        tiempo: se reparte, para que tu presencia crezca sin parecer spam.
-      </>,
-      <>
-        Este paso todavía está en prueba y no está disponible para todas las
-        cuentas. Se está activando poco a poco, y si en tu menú no aparece
-        todavía, es por eso: <strong>no te falta nada por
-        configurar</strong>.
-      </>,
-    ],
-    accion: {
-      texto: MENU_NAMES.redes,
-      href: "/dashboard/oportunidades-redes",
-    },
-  },
-];
-
 
 export default function ComoFuncionaPage() {
   return (
-    <div
-      style={{
-        background: "#ffffff",
-        borderRadius: 18,
-        padding: "0 clamp(20px, 4vw, 40px) clamp(36px, 5vw, 56px)",
-        boxSizing: "border-box",
-        width: "100%",
-      }}
-    >
-      <header style={{ padding: "clamp(32px, 5vw, 48px) 0 clamp(24px, 3vw, 32px)" }}>
-        <p
-          style={{
-            margin: "0 0 24px",
-            fontSize: 19,
-            lineHeight: "28px",
-            color: "#1d1d1f",
-          }}
-        >
-          Imagínate esto: un día alguien busca en Google, o le pregunta
-          directamente a una inteligencia artificial, algo relacionado con lo
-          que tu negocio ofrece. Aparecen páginas, respuestas armadas con
-          información que esa inteligencia artificial ya leyó por ahí.{" "}
-          <strong>¿Te gustaría que tu negocio apareciera en esos resultados,
-          antes que el de los demás?</strong> Ven, te contamos el secreto.
-        </p>
-        <p
-          style={{
-            margin: "0 0 8px",
-            fontSize: 14,
-            lineHeight: "20px",
-            fontWeight: 600,
-            letterSpacing: "0.02em",
-            textTransform: "uppercase",
-            color: "#1d1d1f",
-          }}
-        >
-          El objetivo
-        </p>
-        <h1
-          style={{
-            margin: 0,
-            fontSize: "clamp(30px, 5vw, 46px)",
-            lineHeight: 1.08,
-            fontWeight: 600,
-            letterSpacing: "-0.003em",
-            color: "#1d1d1f",
-          }}
-        >
-          Que te encuentren. En Google, en Bing y dentro de la
-          inteligencia artificial.
+    <main style={{ width: "100%", maxWidth: 1120, margin: "0 auto" }}>
+      <header style={{ borderBottom: "1px solid #d2d2d7", padding: "0 0 24px" }}>
+        <p className="eyebrow" style={{ margin: "0 0 6px" }}>CÓMO FUNCIONA</p>
+        <h1 style={{ margin: 0, fontSize: "clamp(26px, 4vw, 38px)", lineHeight: 1.1, fontWeight: 600, letterSpacing: "-0.03em" }}>
+          Elige qué quieres hacer
         </h1>
-        <p
-          style={{
-            margin: "18px 0 0",
-            fontSize: 19,
-            lineHeight: "27px",
-            color: "#1d1d1f",
-          }}
-        >
-          Dos palabras que vas a ver seguido aquí, explicadas simple: que
-          Google &ldquo;te indexe&rdquo; significa que{" "}
-          <strong>ya leyó tu página y la guardó en su lista</strong>; que
-          &ldquo;te posiciones&rdquo; significa que{" "}
-          <strong>apareces arriba en esa lista</strong>, no enterrado varias
-          páginas más abajo. Con este sistema, las dos cosas empiezan a pasar
-          desde la primera semana de trabajo constante — no dentro de un año.
-        </p>
-        <p
-          style={{
-            margin: "16px 0 0",
-            fontSize: 17,
-            lineHeight: "25px",
-            color: "#1d1d1f",
-          }}
-        >
-          Esto ya no va solo de salir en Google. Hoy mucha gente pregunta
-          directamente a una inteligencia artificial y se queda con la
-          respuesta que le da, sin llegar a mirar una lista de resultados. Esa
-          respuesta se construye con lo que la IA encontró indexado. Si tu
-          sitio no está ahí,{" "}
-          <strong>no apareces en la conversación: no es que salgas abajo, es
-          que no existes.</strong>
-        </p>
-        <p
-          style={{
-            margin: "16px 0 0",
-            fontSize: 17,
-            lineHeight: "25px",
-            color: "#1d1d1f",
-          }}
-        >
-          Y hay algo que se suele pasar por alto:{" "}
-          <strong>la persona que busca en Google es exactamente la misma que
-          después abre Instagram, LinkedIn o Facebook. No son dos públicos
-          distintos.</strong> Por eso esto no termina en tu web: el sistema
-          lleva a tus redes los temas que esa gente ya está buscando, y cada
-          visita que vuelve desde ahí le confirma a Google que tu sitio
-          merece estar arriba. Buscadores, inteligencia artificial y redes
-          empujan en la misma dirección.
-        </p>
-        <p
-          style={{
-            margin: "16px 0 0",
-            fontSize: 17,
-            lineHeight: "25px",
-            color: "#1d1d1f",
-          }}
-        >
-          Hay que ser honesto con los tiempos: Google tarda en leer y valorar
-          cada artículo nuevo, así que esto no es instantáneo. Pero{" "}
-          <strong>se va acumulando</strong> — cada artículo que se posiciona
-          atrae visitas, esas visitas le confirman a Google que tu sitio
-          responde bien, y eso le facilita el camino al siguiente.{" "}
-          <strong>Empieza pequeño y crece solo, mientras no se
-          detenga.</strong>
-        </p>
-        <p
-          style={{
-            margin: "16px 0 0",
-            fontSize: 17,
-            lineHeight: "25px",
-            color: "#1d1d1f",
-            fontWeight: 500,
-          }}
-        >
-          <strong>Tu parte es simple: dejas la cuenta configurada una vez, y
-          publicas de forma constante.</strong> El sistema hace el resto —
-          escribe y publica los artículos por ti, sobre lo que tu público de
-          verdad busca.
+        <p style={{ margin: "10px 0 0", maxWidth: 700, fontSize: 17, lineHeight: 1.5 }}>
+          Puedes escribir tus propios artículos, pedir ayuda a la IA o publicar tu contenido en otros canales.
         </p>
       </header>
 
-      <hr style={SEPARADOR} />
-
-      <section style={{ padding: "clamp(28px, 4vw, 40px) 0 4px" }}>
-        <h2 style={TITULO_SECCION}>Cómo sucede</h2>
-        <p style={PARRAFO}>
-          Son tres pasos, en este orden. El primero se hace una sola vez; los
-          otros dos se repiten tantas veces como quieras.
+      <section style={{ padding: "24px 0 0" }}>
+        <h2 style={{ margin: 0, fontSize: 24, lineHeight: 1.2, fontWeight: 600 }}>Tus tres opciones</h2>
+        <p className="muted" style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5 }}>
+          Elige una opción desde Inicio. Puedes usar las tres cuando las necesites.
         </p>
-        <p style={PARRAFO}>
-          Cuando terminas la configuración inicial, Inicio queda reducido a
-          tres acciones sencillas: <strong>{MENU_NAMES.propios}</strong>,{" "}
-          <strong>{MENU_NAMES.ia}</strong> y{" "}
-          <strong>{MENU_NAMES.redes}</strong>. En móvil las encuentras desde
-          el menú de hamburguesa de la esquina superior derecha; el progreso,
-          el historial y las estadísticas también están dentro de
-          Publicaciones.
-        </p>
-      </section>
 
-      {PASOS.map((paso) => (
-        <section key={paso.numero} style={{ padding: "clamp(24px, 3vw, 32px) 0" }}>
-          <p
-            style={{
-              margin: 0,
-              fontSize: 14,
-              lineHeight: "20px",
-              fontWeight: 600,
-              color: "#1d1d1f",
-            }}
-          >
-            Paso {paso.numero}
-          </p>
-          <h3
-            style={{
-              margin: "6px 0 0",
-              fontSize: 24,
-              lineHeight: "28px",
-              fontWeight: 600,
-              letterSpacing: "-0.003em",
-              color: "#1d1d1f",
-            }}
-          >
-            {paso.titulo}
-            {paso.enPrueba && <EnPrueba />}
-          </h3>
-          {paso.cuerpo.map((parrafo, i) => (
-            <p key={i} style={PARRAFO}>
-              {parrafo}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 250px), 1fr))", gap: 12, marginTop: 16 }}>
+          <article style={cardStyle}>
+            <p className="eyebrow" style={{ margin: "0 0 8px" }}>OPCIÓN 1</p>
+            <h3 style={{ margin: 0, fontSize: 20, lineHeight: 1.2 }}>Escribe tus propios artículos</h3>
+            <p className="muted" style={{ margin: "10px 0 0", fontSize: 14, lineHeight: 1.5 }}>
+              Tú eliges el título, las variables y la categoría. La plataforma redacta y publica el artículo en tu web.
             </p>
-          ))}
-          <p style={{ margin: "14px 0 0" }}>
-            <Link href={paso.accion.href} style={ENLACE}>
-              {paso.accion.texto}
-              <span aria-hidden="true">›</span>
-            </Link>
-          </p>
-        </section>
-      ))}
+            <Link href="/dashboard/publicar" aria-label={`Abrir ${MENU_NAMES.propios}`} style={linkStyle}>Abrir módulo →</Link>
+          </article>
 
-      <hr style={SEPARADOR} />
+          <article style={cardStyle}>
+            <p className="eyebrow" style={{ margin: "0 0 8px" }}>OPCIÓN 2</p>
+            <h3 style={{ margin: 0, fontSize: 20, lineHeight: 1.2 }}>Pide títulos y contenido con IA</h3>
+            <p className="muted" style={{ margin: "10px 0 0", fontSize: 14, lineHeight: 1.5 }}>
+              Puedes indicar tus propias variables o dejar que la IA encuentre temas que tu público está buscando.
+            </p>
+            <Link href="/dashboard/oportunidades" aria-label={`Abrir ${MENU_NAMES.ia}`} style={linkStyle}>Abrir módulo →</Link>
+          </article>
 
-      <section style={{ padding: "clamp(28px, 4vw, 40px) 0 0" }}>
-        <h2 style={TITULO_SECCION}>En resumen</h2>
-        <p style={PARRAFO}>
-          Configura tu cuenta una sola vez, y después publica de forma
-          constante desde <Modulo id="publicar" /> o{" "}
-          <Modulo id="oportunidades" />.{" "}
-          <strong>Eso es lo único que depende de ti</strong> — el sistema
-          escribe, publica y va acumulando resultados por ti, semana tras
-          semana.
-        </p>
+          <article style={cardStyle}>
+            <p className="eyebrow" style={{ margin: "0 0 8px" }}>OPCIÓN 3</p>
+            <h3 style={{ margin: 0, fontSize: 20, lineHeight: 1.2 }}>Publica en redes y blogs</h3>
+            <p className="muted" style={{ margin: "10px 0 0", fontSize: 14, lineHeight: 1.5 }}>
+              Revisa el contenido creado y decide en qué redes sociales o blogs públicos quieres difundirlo.
+            </p>
+            <Link href="/dashboard/oportunidades-redes" aria-label={`Abrir ${MENU_NAMES.redes}`} style={linkStyle}>Abrir módulo →</Link>
+          </article>
+        </div>
       </section>
-    </div>
+
+      <section style={{ borderTop: "1px solid #d2d2d7", marginTop: 28, padding: "22px 0 0" }}>
+        <h2 style={{ margin: 0, fontSize: 22, lineHeight: 1.2, fontWeight: 600 }}>Cómo ayuda la IA</h2>
+        <p style={{ margin: "10px 0 0", maxWidth: 760, fontSize: 15, lineHeight: 1.5 }}>
+          Si conectas tus fuentes de datos, la IA puede usarlas para proponer temas más útiles:
+        </p>
+        <ul style={{ margin: "10px 0 0", paddingLeft: 20, maxWidth: 760, fontSize: 15, lineHeight: 1.6 }}>
+          <li><strong>Google Search Console:</strong> qué búsquedas llevan personas a tu web.</li>
+          <li><strong>Google Analytics:</strong> qué contenido recibe visitas.</li>
+          <li><strong>Bing:</strong> qué oportunidades aparecen en ese buscador.</li>
+        </ul>
+        <Link href="/dashboard/configuracion" style={linkStyle}>Revisar configuración →</Link>
+      </section>
+
+      <details style={{ borderTop: "1px solid #d2d2d7", marginTop: 24, padding: "18px 0 0" }}>
+        <summary style={{ cursor: "pointer", fontSize: 14, fontWeight: 600 }}>Qué ocurre después de publicar</summary>
+        <p className="muted" style={{ margin: "10px 0 0", maxWidth: 760, fontSize: 14, lineHeight: 1.5 }}>
+          Puedes seguir el avance en Progreso de las publicaciones. Cuando termina, el resultado queda guardado en Historial y puedes consultar su rendimiento en Estadísticas.
+        </p>
+      </details>
+    </main>
   );
 }

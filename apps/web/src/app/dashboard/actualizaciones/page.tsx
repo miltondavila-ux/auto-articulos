@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@auto-articulos/db";
-import { sectionStyle, h2Style } from "@/components/dashboard-ui";
-import MobileInstructions from "@/components/MobileInstructions";
+import { h2Style } from "@/components/dashboard-ui";
 
 type Categoria = "nuevas-herramientas" | "arreglos";
 
@@ -13,7 +12,7 @@ const CATEGORY_LABELS: Record<Categoria, string> = {
 function filterButtonStyle(active: boolean) {
   return {
     padding: "6px 14px",
-    borderRadius: 20,
+    borderRadius: 6,
     fontSize: 13,
     fontWeight: 500,
     border: active ? "1px solid #1d1d1f" : "1px solid #d2d2d7",
@@ -45,35 +44,32 @@ export default async function ActualizacionesPage({
   const total = totalNuevas + totalArreglos;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 1120, margin: "0 auto" }}>
-      <div className="panel" style={sectionStyle}>
+    <div style={{ display: "flex", flexDirection: "column", maxWidth: 1120, margin: "0 auto" }}>
+      <header style={{ borderBottom: "1px solid #d2d2d7", padding: "0 0 20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
           <div>
             <p className="eyebrow" style={{ margin: "0 0 4px" }}>Novedades del Sistema</p>
             <h1 style={{ ...h2Style, fontSize: 26, marginBottom: 6 }}>Registro de Actualizaciones</h1>
-            <MobileInstructions>
-              <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
-                Aquí se anota cada mejora y cada arreglo que se hace en la plataforma, con su fecha y una explicación de qué cambió y para qué sirve.
-              </p>
-              <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
-                Míralo cuando notes algo distinto en una pantalla, o cuando aparezca una función que antes no estaba. En vez de tener que preguntar, aquí está escrito qué pasó.
-              </p>
-            </MobileInstructions>
-            <p className="lead-copy" style={{ margin: 0, maxWidth: 680 }}>
-              Entérate de las nuevas herramientas incorporadas y los arreglos realizados en la plataforma, explicados de forma clara y sencilla.
-            </p>
+            <p className="lead-copy" style={{ margin: 0, maxWidth: 680 }}>Aquí se registran las mejoras y nuevas herramientas de la plataforma.</p>
           </div>
         </div>
+        <details style={{ marginTop: 14 }}>
+          <summary style={{ cursor: "pointer", color: "#1d1d1f", fontSize: 13, fontWeight: 600 }}>Cómo leer este registro</summary>
+          <div style={{ marginTop: 10, maxWidth: 760 }}>
+            <p className="muted" style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>Cada entrada indica qué cambió, para qué sirve y, cuando corresponde, a qué módulo te lleva.</p>
+            <p className="muted" style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5 }}>Usa los filtros para ver nuevas herramientas o mejoras y arreglos.</p>
+          </div>
+        </details>
         <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
           <Link href="/dashboard/actualizaciones" style={filterButtonStyle(filtroCategoria === "todas")}>Todas ({total})</Link>
           <Link href="/dashboard/actualizaciones?categoria=nuevas-herramientas" style={filterButtonStyle(filtroCategoria === "nuevas-herramientas")}>Nuevas herramientas ({totalNuevas})</Link>
           <Link href="/dashboard/actualizaciones?categoria=arreglos" style={filterButtonStyle(filtroCategoria === "arreglos")}>Mejoras ({totalArreglos})</Link>
         </div>
-      </div>
+      </header>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "flex", flexDirection: "column" }}>
         {actualizaciones.length === 0 ? (
-          <div className="panel" style={sectionStyle}><p className="muted" style={{ margin: 0 }}>No hay actualizaciones en esta categoría.</p></div>
+          <p className="muted" style={{ margin: "24px 0 0", fontSize: 14 }}>No hay actualizaciones en esta categoría.</p>
         ) : actualizaciones.map((item) => <TarjetaActualizacion key={item.id} item={item} />)}
       </div>
     </div>
@@ -85,17 +81,18 @@ function TarjetaActualizacion({ item }: { item: { date: Date; title: string; cat
   const badgeTexto = esNueva ? CATEGORY_LABELS["nuevas-herramientas"] : CATEGORY_LABELS.arreglos;
 
   return (
-    <div className="panel" style={{ ...sectionStyle, marginTop: 0 }}>
+    <article style={{ borderBottom: "1px solid #d2d2d7", padding: "22px 0 24px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <span
             style={{
               padding: "3px 10px",
-              borderRadius: 999,
+              borderRadius: 6,
               fontSize: 11,
               fontWeight: 500,
-              color: esNueva ? "#16803c" : "#1d1d1f",
-              background: esNueva ? "rgba(52, 199, 89, 0.1)" : "#f5f5f7",
+              color: "#1d1d1f",
+              background: "#f5f5f7",
+              border: "1px solid #d2d2d7",
             }}
           >
             {badgeTexto}
@@ -113,19 +110,15 @@ function TarjetaActualizacion({ item }: { item: { date: Date; title: string; cat
       </p>
       {item.modulePath && (
         <div style={{ marginBottom: 10 }}>
-          <Link href={item.modulePath} className="link-button" style={{ fontSize: 13, fontWeight: 500 }}>
+          <Link href={item.modulePath} className="link-button" style={{ fontSize: 13, fontWeight: 500, color: "#1d1d1f" }}>
             Ir al módulo &rarr;
           </Link>
         </div>
       )}
-      <div className="row" style={{ padding: "10px 14px", marginTop: 8 }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: "#1d1d1f", marginBottom: 3 }}>
-          Ejemplo de uso:
-        </div>
-        <p style={{ margin: 0, fontSize: 13, color: "#6e6e73", lineHeight: 1.45 }}>
-          {item.example}
-        </p>
-      </div>
-    </div>
+      <details style={{ marginTop: 10 }}>
+        <summary style={{ cursor: "pointer", color: "#1d1d1f", fontSize: 12, fontWeight: 600 }}>Ver ejemplo de uso</summary>
+        <p className="muted" style={{ margin: "8px 0 0", fontSize: 13, lineHeight: 1.45 }}>{item.example}</p>
+      </details>
+    </article>
   );
 }

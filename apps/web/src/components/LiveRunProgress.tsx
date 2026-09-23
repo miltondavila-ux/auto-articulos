@@ -154,7 +154,7 @@ function TitleProgressRow({
               title.status === "success"
                 ? "#16803c"
                 : title.status === "error"
-                  ? "#ff3b30"
+                  ? "#1d1d1f"
                   : title.status === "processing"
                     ? "#1d1d1f"
                     : "#6e6e73",
@@ -186,7 +186,7 @@ function TitleProgressRow({
             style={{
               height: 4,
               background: "rgba(0, 0, 0, 0.05)",
-              borderRadius: 999,
+              borderRadius: 6,
               overflow: "hidden",
             }}
           >
@@ -241,8 +241,8 @@ function TitleProgressRow({
           {/créditos.*imagen|imagen.*créditos/i.test(title.errorMessage) ? (
             <div
               style={{
-                background: "#fff4e5",
-                border: "1px solid rgba(255, 149, 0, 0.3)",
+                background: "#f5f5f7",
+                border: "1px solid #d2d2d7",
                 borderRadius: 6,
                 padding: "12px 14px",
                 marginBottom: 8,
@@ -252,13 +252,13 @@ function TitleProgressRow({
                 style={{
                   fontSize: 13,
                   fontWeight: 600,
-                  color: "#8a4b08",
+                  color: "#1d1d1f",
                   margin: 0,
                 }}
               >
                 Se agotaron los créditos de generación de imágenes en tu cuenta de {productName}
               </p>
-              <p style={{ fontSize: 12, color: "#8a4b08", margin: "4px 0 0" }}>
+              <p style={{ fontSize: 12, color: "#6e6e73", margin: "4px 0 0" }}>
                 Solicita más créditos directamente con ellos y luego reintenta este artículo.
               </p>
               {helpUrl && (
@@ -279,7 +279,7 @@ function TitleProgressRow({
               )}
             </div>
           ) : (
-            <p style={{ fontSize: 13, color: "#ff3b30", margin: 0 }}>
+            <p style={{ fontSize: 13, color: "#1d1d1f", margin: 0 }}>
               {title.errorMessage}
             </p>
           )}
@@ -292,7 +292,7 @@ function TitleProgressRow({
               marginTop: 6,
               padding: "4px 10px",
               fontSize: 12,
-              color: "#ff3b30",
+              color: "#1d1d1f",
             }}
           >
             {retrying ? "Reintentando..." : "Reintentar"}
@@ -320,7 +320,7 @@ function TitleProgressRow({
             </p>
           )}
           {!loadingEvents && eventsError && (
-            <p style={{ fontSize: 12, marginTop: 4, color: "#ff3b30" }}>
+            <p style={{ fontSize: 12, marginTop: 4, color: "#1d1d1f" }}>
               {eventsError}
             </p>
           )}
@@ -472,7 +472,7 @@ export default function LiveProgress({
           </span>
           {confirmingCancel ? (
             <>
-              <span style={{ fontSize: 12, color: "#8a4b08" }}>
+                <span style={{ fontSize: 12, color: "#6e6e73" }}>
                 ¿Cancelar lote?
               </span>
               <button
@@ -481,7 +481,7 @@ export default function LiveProgress({
                 className="secondary"
                 style={{
                   ...secondaryButtonStyle,
-                  color: "#ff3b30",
+                  color: "#1d1d1f",
                   padding: "4px 10px",
                   fontSize: 12,
                 }}
@@ -507,7 +507,7 @@ export default function LiveProgress({
               className="secondary"
               style={{
                 ...secondaryButtonStyle,
-                color: "#ff3b30",
+                color: "#1d1d1f",
                 padding: "4px 10px",
                 fontSize: 12,
               }}
@@ -518,7 +518,7 @@ export default function LiveProgress({
         </div>
       </div>
       {cancelError && (
-        <p style={{ fontSize: 12, color: "#ff3b30", margin: "6px 0 0" }}>
+        <p style={{ fontSize: 12, color: "#1d1d1f", margin: "6px 0 0" }}>
           {cancelError}
         </p>
       )}
@@ -555,7 +555,7 @@ export default function LiveProgress({
         style={{
           height: 6,
           background: "rgba(0, 0, 0, 0.05)",
-          borderRadius: 999,
+          borderRadius: 6,
           overflow: "hidden",
           margin: "14px 0 18px",
         }}

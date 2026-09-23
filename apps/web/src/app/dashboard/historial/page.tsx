@@ -21,7 +21,6 @@ import type {
   TitleRow,
 } from "@/types/dashboard";
 import GoogleIndexingStatus from "@/components/GoogleIndexingStatus";
-import PerformanceDashboard from "@/components/PerformanceDashboard";
 
 const flatSectionStyle: CSSProperties = {
   background: "transparent",
@@ -109,21 +108,6 @@ export default function HistorialPage() {
       </section>
       <HistorialEjecuciones />
       <HistorialRedes />
-      <section
-        id="estadisticas"
-        style={{
-          marginTop: 12,
-          paddingTop: 16,
-          borderTop: "1px solid #d2d2d7",
-        }}
-      >
-        <p className="eyebrow" style={{ margin: "0 0 2px" }}>Rendimiento</p>
-        <h2 style={{ ...h2Style, margin: 0 }}>Estadísticas</h2>
-        <p className="muted" style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5 }}>
-          Consulta el rendimiento de tus publicaciones y tu ritmo de trabajo.
-        </p>
-        <PerformanceDashboard />
-      </section>
     </div>
   );
 }
