@@ -199,7 +199,7 @@ export default function ComoFuncionaPage() {
       }}
     >
       <header style={{ padding: "clamp(32px, 5vw, 48px) 0 clamp(24px, 3vw, 32px)" }}>
-        <details style={{ marginTop: 18 }}>
+        <details open style={{ marginTop: 18 }}>
           <summary
             style={{
               cursor: "pointer",
@@ -208,7 +208,7 @@ export default function ComoFuncionaPage() {
               fontWeight: 600,
             }}
           >
-            Ver explicación completa
+            Ocultar explicación introductoria
           </summary>
           <div>
         <p
@@ -380,25 +380,11 @@ export default function ComoFuncionaPage() {
             {paso.titulo}
             {paso.enPrueba && <EnPrueba />}
           </h3>
-          <details style={{ marginTop: 14 }}>
-            <summary
-              style={{
-                cursor: "pointer",
-                color: "#1d1d1f",
-                fontSize: 14,
-                fontWeight: 600,
-              }}
-            >
-              Ver instrucciones de este paso
-            </summary>
-            <div>
-              {paso.cuerpo.map((parrafo, i) => (
-                <p key={i} style={PARRAFO}>
-                  {parrafo}
-                </p>
-              ))}
-            </div>
-          </details>
+          {paso.cuerpo.map((parrafo, i) => (
+            <p key={i} style={PARRAFO}>
+              {parrafo}
+            </p>
+          ))}
           <p style={{ margin: "14px 0 0" }}>
             <Link href={paso.accion.href} style={ENLACE}>
               {paso.accion.texto}
