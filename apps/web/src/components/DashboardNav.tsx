@@ -372,10 +372,10 @@ export default function DashboardNav() {
         style={{
           display: "none",
           gap: 4,
-          background: "#ffffff",
-          border: "1px solid rgba(0, 0, 0, 0.06)",
-          borderRadius: 14,
-          padding: 4,
+          background: "transparent",
+          border: "none",
+          borderRadius: 0,
+          padding: 0,
           flexWrap: "wrap",
           alignItems: "center",
           // Sin `overflow` aquí: por regla de CSS, poner overflow-x en hidden

@@ -4705,6 +4705,13 @@ manual que alimenta al asistente.
   Producción quedan pendientes de la resolución final del rebase y se
   registrarán con sus identificadores exactos.
 
+## Codex — ajuste visual en Oportunidades Redes — 2026-09-24
+
+- Cambio preparado para subir en el próximo commit: se eliminó el rectángulo exterior de la barra de navegación horizontal de `/dashboard/oportunidades-redes`.
+- Archivo modificado: `apps/web/src/components/DashboardNav.tsx`.
+- El cambio solo retira fondo, borde, radio y relleno del contenedor de navegación de escritorio; los enlaces, menús y navegación móvil se mantienen sin cambios.
+- No está desplegado en producción. El archivo de código quedó preparado en staging; la verificación de tipos no pudo ejecutarse porque `tsc` no está instalado en el entorno.
+
 ### Continuación CONEXION POSTPEER 2 — 2026-09-22
 
 - Se confirmó el resultado de la prueba aislada de Lorena: el artículo exacto
