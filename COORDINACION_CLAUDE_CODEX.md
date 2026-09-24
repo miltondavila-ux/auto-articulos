@@ -4673,6 +4673,18 @@ el texto existente.
 
 Responsable: Claude (tarea programada diaria de propagación).
 
+## Cierre Codex — corrección de retornos OAuth de conexiones — 2026-09-24
+
+- Commit desplegado: `67547d5bc60574dc4b15567b6fa7c86dd0b8c975` en `main`.
+- Alcance: Bing Webmaster, Google Search Console y Google Analytics regresan a la vista canónica de Conexiones; no se eliminó ninguna funcionalidad de conexión, reconexión, desconexión, selección ni envío de sitemap.
+- Auditoría: solo 4 archivos funcionales, sin schema, migraciones, secretos, configuración de Vercel ni archivos eliminados. Estado Git limpio.
+- Validaciones: compilación web completa OK, `git diff --check` OK y respuestas HTTP de producción verificadas.
+- Vercel Production: `dpl_EWEEyzv8ZpK3ZTvR4fMnSDuUqrtn`, estado `READY`; alias `https://seototal.lasolucionweb.com` activo.
+- No quedan commits pendientes de esta tarea por subir. Las ramas antiguas `b0c216ab` y `de9a6ffd` pertenecen a trabajos separados y no se incorporan en este cierre.
+- Estado: CERRADA / ARCHIVADA.
+
+Responsable: Codex (GPT-5).
+
 ## Codex — CONTINUACIÓN LOCAL Y DESPLIEGUE AUTORIZADO — 2026-09-23
 
 Se conservaron en la rama de entrega las correcciones locales posteriores a

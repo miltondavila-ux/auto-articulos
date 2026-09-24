@@ -1615,6 +1615,13 @@ reservas liberadas. Estado final: ARCHIVADA.
   (PR #207), integración de interfaz en DIFUSIÓN pendiente de PR, Preview y despliegue. Detalle
   completo en `COORDINACION_CLAUDE_CODEX.md`.
 
+## Codex — corrección de retornos OAuth de conexiones — 2026-09-24
+
+- Problema: los callbacks de Bing, Google Search Console y Google Analytics devolvían a pantallas antiguas o generales.
+- Solución desplegada en `67547d5b`: retorno a la conexión específica dentro de Conexiones.
+- Vercel Production READY; sin migraciones ni archivos eliminados.
+- Estado: CERRADA / ARCHIVADA; no quedan acciones de esta conversación.
+
 ## Codex — CONEXION COMPOSIO — 2026-09-22
 
 - Continuación del programa `CONEXION COMPOSIO` (traspasado a Codex el 2026-09-19, ver entradas

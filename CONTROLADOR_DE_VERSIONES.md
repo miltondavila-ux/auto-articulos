@@ -1130,6 +1130,20 @@ de que Tumblr rechazó también la renovación silenciosa y hace falta
 reconectar por OAuth.
 Estado: VERIFICADA
 
+## Versión desplegada y verificada — 2026-09-24 — corrección de retornos OAuth
+
+Fecha y hora: 2026-09-24
+Versión/commit: `67547d5bc60574dc4b15567b6fa7c86dd0b8c975`
+Rama: `main`
+Cambios: retornos canónicos de Bing Webmaster, Google Search Console y Google Analytics hacia Conexiones.
+Auditoría: 4 archivos modificados; sin archivos eliminados, schema, migraciones, secretos ni configuración de Vercel.
+Build: aprobado; `git diff --check`: aprobado.
+Deployment/Vercel: `dpl_EWEEyzv8ZpK3ZTvR4fMnSDuUqrtn`, producción READY.
+Dominio: `https://seototal.lasolucionweb.com`.
+Estado: VERIFICADA / CERRADA.
+Siguiente acción: ninguna pendiente para esta entrega.
+Responsable: Codex - GPT-5.
+
 ## Versión desplegada y verificada — 2026-09-23 — PR #220
 
 Fecha y hora: 2026-09-23 17:16 EDT
