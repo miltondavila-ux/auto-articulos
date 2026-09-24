@@ -77,7 +77,7 @@ export default function BingWebmasterSection() {
       const t = setTimeout(() => {
         load().finally(() => setReconectando(false));
       }, 2500);
-      router.replace("/dashboard/configuracion/indexacion");
+      router.replace("/dashboard/configuracion/conexiones?conexion=bing-webmaster");
       return () => clearTimeout(t);
     }
     load();
@@ -94,7 +94,7 @@ export default function BingWebmasterSection() {
         type: "error",
       });
       setConnecting(false);
-      router.replace("/dashboard/configuracion/indexacion");
+      router.replace("/dashboard/configuracion/conexiones?conexion=bing-webmaster");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -129,7 +129,7 @@ export default function BingWebmasterSection() {
     setMessage({
       text: "Bing Webmaster Tools desconectado.",
       type: "info",
-      link: { label: "Volver a conectar", href: "/dashboard/configuracion/indexacion" },
+      link: { label: "Volver a conectar", href: "/dashboard/configuracion/conexiones?conexion=bing-webmaster" },
     });
     load();
   }
@@ -168,7 +168,7 @@ export default function BingWebmasterSection() {
         setMessage({
           text: value.error ?? "No se pudo ejecutar la indexación masiva.",
           type: "error",
-          link: { label: "Revisar configuración de Bing", href: "/dashboard/configuracion/indexacion" },
+          link: { label: "Revisar configuración de Bing", href: "/dashboard/configuracion/conexiones?conexion=bing-webmaster" },
         });
       }
       await load();
@@ -193,7 +193,7 @@ export default function BingWebmasterSection() {
         setMessage({
           text: value.error ?? "No se pudo enviar el sitemap.",
           type: "error",
-          link: { label: "Revisar configuración", href: "/dashboard/configuracion/indexacion" },
+          link: { label: "Revisar configuración", href: "/dashboard/configuracion/conexiones?conexion=bing-webmaster" },
         });
       }
       await load();

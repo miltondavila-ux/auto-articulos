@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   // (`motivo=token`, típicamente credenciales de la app mal configuradas).
   if (!state || state !== cookieStore.get(BING_STATE_COOKIE)?.value || !code) {
     return NextResponse.redirect(
-      new URL("/dashboard/configuracion/indexacion?bing=error&motivo=estado", request.url),
+      new URL("/dashboard/configuracion/conexiones?conexion=bing-webmaster&bing=error&motivo=estado", request.url),
     );
   }
   // El error real de Bing solo iba a `console.error`, y los logs de Vercel
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
     if (existing) await prisma.searchIntegration.update({ where: { id: existing.id }, data: { encryptedRefreshToken: encryptSecret(payload) } });
     else await prisma.searchIntegration.create({ data: { userId, provider: "bing", siteDomain, encryptedRefreshToken: encryptSecret(payload) } });
     const response = NextResponse.redirect(
-      new URL("/dashboard/configuracion/indexacion?bing=connected", request.url),
+      new URL("/dashboard/configuracion/conexiones?conexion=bing-webmaster&bing=connected", request.url),
     );
     response.cookies.delete(BING_STATE_COOKIE);
     return response;
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
       // es completamente distinta.
       detalle = `fallo interno: ${error instanceof Error ? error.message : String(error)}`;
     }
-    const destino = new URL("/dashboard/configuracion/indexacion", request.url);
+    const destino = new URL("/dashboard/configuracion/conexiones?conexion=bing-webmaster", request.url);
     destino.searchParams.set("bing", "error");
     destino.searchParams.set("motivo", "token");
     destino.searchParams.set("detalle", detalle.slice(0, 200));

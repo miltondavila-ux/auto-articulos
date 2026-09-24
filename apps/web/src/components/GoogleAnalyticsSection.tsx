@@ -63,7 +63,7 @@ export default function GoogleAnalyticsSection() {
     <div style={{ background: "#f5f5f7", border: "1px solid #e5e5ea", borderRadius: 8, padding: "12px 14px", marginBottom: 14, fontSize: 13, lineHeight: 1.5 }}>
       <strong>Cómo funciona:</strong> conecta tu cuenta, autoriza el acceso de lectura y elige una propiedad GA4. Puedes cambiarla o desconectarla cuando quieras.
     </div>
-    {!data?.connected ? <a href="/api/google-analytics/connect?returnTo=/dashboard/configuracion" style={{ ...secondaryButtonStyle, display: "inline-block", textDecoration: "none" }}>Conectar Google Analytics 4</a> : <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+    {!data?.connected ? <a href="/api/google-analytics/connect?returnTo=/dashboard/configuracion/conexiones%3Fconexion%3Dgoogle-analytics" style={{ ...secondaryButtonStyle, display: "inline-block", textDecoration: "none" }}>Conectar Google Analytics 4</a> : <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       {data.error && <div style={{ color: "#6e6e73", fontSize: 13 }}>⚠️ {data.error} Puedes reconectar tu cuenta.</div>}
       <select value={selected} onChange={(event) => setSelected(event.target.value)} style={inputStyle}>
         <option value="">Selecciona tu propiedad GA4</option>
@@ -90,7 +90,7 @@ export default function GoogleAnalyticsSection() {
       )}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <button onClick={save} disabled={busy || !selected} style={secondaryButtonStyle}>{busy ? "Guardando..." : "Guardar propiedad"}</button>
-        <a href="/api/google-analytics/connect?returnTo=/dashboard/configuracion" style={{ ...secondaryButtonStyle, textDecoration: "none" }}>Reconectar Google Analytics</a>
+        <a href="/api/google-analytics/connect?returnTo=/dashboard/configuracion/conexiones%3Fconexion%3Dgoogle-analytics" style={{ ...secondaryButtonStyle, textDecoration: "none" }}>Reconectar Google Analytics</a>
         <button onClick={disconnect} style={secondaryButtonStyle}>Desconectar Google Analytics</button>
       </div>
     </div>}

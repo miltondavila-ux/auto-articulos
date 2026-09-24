@@ -150,7 +150,7 @@ export default function GoogleSearchConsoleSection() {
 
       {!data?.connected ? (
         <a
-          href="/api/search-integrations/google/connect"
+          href="/api/search-integrations/google/connect?returnTo=/dashboard/configuracion/conexiones%3Fconexion%3Dgoogle-search-console"
           className="link-button"
           style={{
             ...secondaryButtonStyle,
