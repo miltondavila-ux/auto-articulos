@@ -9020,3 +9020,43 @@ Estado: DESPLEGADA / VERIFICADA.
 - Estado: DESPLEGADA / VERIFICADA.
 
 Responsable: Codex (GPT-5).
+
+## Claude (tarea programada diaria de propagación) — 2026-09-24
+
+Punto de partida: la última entrada firmada por esta misma tarea era la del 2026-09-23 (commit
+`60ea5c3`). Se revisó el diff completo de `COORDINACION_CLAUDE_CODEX.md` entre `60ea5c3` y
+`origin/main` actual (`aae8017`): 82 líneas agregadas, 0 borradas, repartidas en 4 entradas nuevas de
+2026-09-23 (commits `d282337`, `831e0ed`/`ab56a94` y `773a9d4`/`164005b`): cierre de PR #220
+(interfaz responsive, separación Historial/Estadísticas, guía modular), la continuación local de
+Codex con el rebase de `codex/sincronizacion-produccion-20260923`, el cierre de esa sincronización
+(PR #216 fusionado) y el permiso condicional de difusión social/blog (PR #218).
+
+Verificación por documento:
+
+- `CONTROLADOR_DE_VERSIONES.md`: sin cambios de esta tarea. Las 4 entradas nuevas de Coordinación ya
+  estaban propagadas ahí directamente por los mismos commits (`d282337`, `831e0ed`, `164005b`) con su
+  propia plantilla de versión/commit/deployment — verificado leyendo el diff de
+  `CONTROLADOR_DE_VERSIONES.md` en el mismo rango, no se encontró nada pendiente de agregar.
+- `apps/web/src/content/manual-usuario.ts`: se agregó una frase en la sección "Inicio" documentando
+  que la tarjeta "PUBLICA EN REDES SOCIALES Y EN BLOGS PÚBLICOS" (y su acceso de menú y de "Comienza
+  Aquí") solo aparece cuando la cuenta tiene al menos una aprobación real de red social o blog
+  marcada en Administración
+  — el cambio de permisos descrito en "Permiso de difusión social/blog — 2026-09-23 — Codex" (PR
+  #218) no tenía ninguna propagación previa a este archivo (`git log` confirma que ningún commit del
+  rango tocó `manual-usuario.ts`). Los demás cambios visibles del lote ("Historial con menos encuadres
+  anidados", "filas planas" de Progreso) se consideraron puramente estéticos/de layout, en línea con
+  el criterio ya usado en la corrida anterior, y no se agregaron.
+- `INVENTARIO_CONVERSACIONES.md`: sin cambios. Ninguna entrada nueva usa el formato exacto
+  "[AGENTE] - [NOMBRE DEL PROBLEMA]" de una conversación nueva; la rama
+  `codex/sincronizacion-produccion-20260923` mencionada ya fue fusionada (PR #216, commit `e5b9efe`),
+  así que no queda ninguna reserva activa que registrar en la Parte A.
+- `TO-DO.md`: sin cambios. Todo el contenido nuevo de este rango es trabajo ya ejecutado y verificado
+  en producción, no una idea suelta para más adelante.
+- `REPARADOR_DEL_ARBOL_PRINCIPAL.md`: sin cambios. El único conflicto mencionado (rebase de
+  `codex/sincronizacion-produccion-20260923` sobre `main`) se resolvió de forma conservadora y
+  quedó fusionado sin dejar rastro de árbol enredado.
+
+No hubo ninguna acción destructiva, migración ni deploy ejecutados por esta tarea. Sin dudas nuevas
+que dejar anotadas para Milton.
+
+Responsable: Claude (tarea programada diaria de propagación).
