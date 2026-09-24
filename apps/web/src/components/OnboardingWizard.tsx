@@ -1021,7 +1021,7 @@ export default function OnboardingWizard({
                   Confirma el sitio con el que trabajará esta cuenta
                 </div>
                 <div style={{ fontSize: 12, color: "#6e6e73", marginBottom: 10 }}>
-                  Si esta cuenta de {productName} da acceso a más de un sitio, elige uno solo: esta cuenta de SEO TOTAL trabajará únicamente con él. Para el otro, crea otra cuenta. La verificación puede tardar varios minutos: no cierres esta pantalla mientras se completa.
+                  Si esta cuenta de {productName} da acceso a más de un sitio, elige uno solo: esta cuenta de SEO TOTAL trabajará únicamente con él. Para el otro, crea otra cuenta. Primero comprobaremos el acceso a tu cuenta; si no entra en 5 segundos, deberás cambiar la contraseña.
                 </div>
 
                 {!detectJob || detectJob.status === "error" ? (
@@ -1099,7 +1099,7 @@ export default function OnboardingWizard({
                       <div style={{ width: "38%", height: "100%", borderRadius: 999, background: "#1d1d1f", animation: "wizard-detection-progress 1.4s ease-in-out infinite" }} />
                     </div>
                     <div style={{ marginTop: 8, color: "#6e6e73", fontSize: 12 }}>
-                      Estamos comprobando tu cuenta. Puede tardar unos minutos; no cierres esta pantalla.
+                      Estamos comprobando tu cuenta. La respuesta de acceso debe llegar en 5 segundos.
                     </div>
                   </div>
                 ) : detectJob.detectedPanels.length <= 1 ? (
@@ -1539,14 +1539,15 @@ export default function OnboardingWizard({
                         flexWrap: "wrap",
                         gap: 12,
                         padding: "10px 14px",
-                        background: "#f5f5f7",
+                        background: "#ecfdf3",
                         borderRadius: 8,
-                        border: "1px solid #f5f5f7",
+                        border: "1px solid #b7ebc6",
                         marginBottom: 10,
                       }}
                     >
-                      <div style={{ fontSize: 13, color: "#1d1d1f" }}>
-                        Google Search Console conectado y activo en: <strong>{googleData?.siteUrl}</strong>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "#166534" }}>
+                        <span aria-hidden="true" style={{ width: 24, height: 24, borderRadius: 999, background: "#16a34a", color: "#fff", display: "grid", placeItems: "center", fontWeight: 800 }}>✓</span>
+                        <span><strong>Google Search Console está conectado y activo.</strong><br />Sitio confirmado: <strong>{googleData?.siteUrl}</strong></span>
                       </div>
                       <button
                         type="button"
@@ -1758,7 +1759,7 @@ export default function OnboardingWizard({
             }
           >
             <div style={{ marginTop: 10 }}>
-              {!allCoreDone ? (
+                      {!allCoreDone ? (
                 <p style={{ fontSize: 13, color: "#6e6e73", margin: 0 }}>
                   Completa los 4 pasos anteriores para comenzar a generar contenido inteligente para posicionarte.
                 </p>
@@ -1771,7 +1772,7 @@ export default function OnboardingWizard({
                     padding: "24px",
                     boxShadow: "0 12px 32px rgba(0, 0, 0, 0.06)",
                   }}
-                >
+                  >
                   <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 20 }}>
                     <div style={{ width: 40, height: 40, borderRadius: 14, background: "#f2f2f2", color: "#1d1d1f", display: "grid", placeItems: "center", fontSize: 20, flexShrink: 0 }}>✓</div>
                     <div>
@@ -1779,13 +1780,16 @@ export default function OnboardingWizard({
                         Todo está listo para publicar
                       </p>
                       <p style={{ margin: 0, fontSize: 14, color: "#6e6e73", lineHeight: 1.5 }}>
-                        Elige cómo quieres comenzar tu próxima publicación.
+                        Ya puedes comenzar a publicar. Te muestro tres opciones; te sugiero revisar primero <strong>Cómo funciona</strong> para conocer el proceso.
                       </p>
                     </div>
                   </div>
+                  <div style={{ marginBottom: 14, padding: "11px 13px", borderRadius: 10, background: "#f5f5f7", color: "#515154", fontSize: 13, lineHeight: 1.5 }}>
+                    Te muestro tres botones. Puedes comenzar a publicar de una vez, pero te sugiero ver el <strong>Paso 1: Cómo funciona</strong> antes de empezar.
+                  </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 12 }}>
                     <Link
-                      href="/dashboard/oportunidades"
+                      href="/dashboard/como-funciona"
                       style={{
                         background: "#1d1d1f",
                         color: "#fff",
@@ -1801,8 +1805,28 @@ export default function OnboardingWizard({
                       }}
                     >
                       <span style={{ fontSize: 12, letterSpacing: "0.08em", opacity: 0.7 }}>01</span>
+                      <span>Cómo funciona →</span>
+                      <span style={{ fontSize: 12, fontWeight: 500, opacity: 0.88 }}>Aprende el proceso paso a paso</span>
+                    </Link>
+                    <Link
+                      href="/dashboard/oportunidades"
+                      style={{
+                        background: "#f5f5f7",
+                        color: "#6e6e73",
+                        border: "1px solid rgba(60, 60, 67, 0.12)",
+                        textDecoration: "none",
+                        padding: "16px 18px",
+                        borderRadius: 14,
+                        fontSize: 14,
+                        fontWeight: 700,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 6,
+                      }}
+                    >
+                      <span style={{ fontSize: 12, letterSpacing: "0.08em", color: "#8e8e93" }}>02</span>
                       <span>{MENU_NAMES.ia} →</span>
-                      <span style={{ fontSize: 12, fontWeight: 500, opacity: 0.88 }}>Descubre temas que tu audiencia busca</span>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: "#8e8e93" }}>Descubre temas que tu audiencia busca</span>
                     </Link>
                     <Link
                       href="/dashboard/publicar"
@@ -1820,7 +1844,7 @@ export default function OnboardingWizard({
                         gap: 6,
                       }}
                     >
-                      <span style={{ fontSize: 12, letterSpacing: "0.08em", color: "#6e6e73" }}>02</span>
+                      <span style={{ fontSize: 12, letterSpacing: "0.08em", color: "#8e8e93" }}>03</span>
                       <span>{MENU_NAMES.propios}</span>
                       <span style={{ fontSize: 12, fontWeight: 500, color: "#6e6e73" }}>Escribe los títulos que ya tienes</span>
                     </Link>

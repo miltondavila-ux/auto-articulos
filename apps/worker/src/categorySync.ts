@@ -28,15 +28,25 @@ async function withServerDetection<T>(
     ...PLATFORM_DOMAIN_VALUES.filter((d) => d !== configured),
   ];
 
-  let firstError: unknown = null;
-  for (const platformDomain of candidates) {
-    try {
-      const result = await attempt(platformDomain);
-      return { result, platformDomain };
-    } catch (err) {
-      if (firstError === null) firstError = err;
-    }
-  }
+  // Los servidores son independientes. Probarlos en serie hacía que una
+  // contraseña inválida tardara 5s por dominio (y el wizard parecía colgado)
+  // en vez de resolver el acceso en los primeros 5s.
+  const attempts = await Promise.all(
+    candidates.map(async (platformDomain) => {
+      try {
+        return { platformDomain, result: await attempt(platformDomain) } as const;
+      } catch (error) {
+        return { platformDomain, error } as const;
+      }
+    }),
+  );
+  const successful = attempts.find(
+    (attemptResult): attemptResult is Extract<(typeof attempts)[number], { result: T }> =>
+      "result" in attemptResult,
+  );
+  if (successful) return successful;
+
+  const firstError = attempts[0] && "error" in attempts[0] ? attempts[0].error : null;
 
   const intentados = candidates.map((d) => PLATFORM_SERVERS[d].label).join(", ");
   const detalle =
