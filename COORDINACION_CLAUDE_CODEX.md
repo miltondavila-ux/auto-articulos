@@ -9100,3 +9100,17 @@ Responsable: Claude (tarea programada diaria de propagación).
 - Estado: preparado para push/PR; todavía no se hizo push, merge ni deploy.
 - Versión local de paquetes: `0.1.0` (sin cambio de versión semántica; no existe
   una política de bump establecida en el repositorio).
+
+## Cierre MANAGER DE COMMITS — lote fusionado y verificado — 2026-09-24
+
+- PR #222 fusionado con squash a `main` como `0556a384`:
+  `feat: consolidar mejoras de onboarding y oportunidades`.
+- Deployment Vercel de Producción: `C33s7P7sRW2kDYnwDhpJnAzomBPT`, estado
+  `success`.
+- Producción verificada en `https://seototal.lasolucionweb.com`: `/login` 200,
+  `/privacidad` 200, `/api/me` 401 sin sesión y `/dashboard` 307 hacia login.
+- El lote incluye SEO TOTAL en cabecera, borrado total de oportunidades,
+  mejoras del onboarding, ajuste visual de DashboardNav y documentación.
+- Sin schema ni migraciones. No se revirtieron cambios existentes ni se
+  modificaron funcionalidades fuera del lote auditado.
+- Estado: CERRADO Y VERIFICADO EN PRODUCCIÓN.

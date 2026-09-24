@@ -3521,3 +3521,36 @@ Responsable: MANAGER DE COMMITS
 Siguiente acción: push de la rama, abrir/actualizar PR, esperar checks de
 Preview y verificar Producción antes de declarar el lote estable.
 Estado: PREPARADA
+
+## Versión desplegada y verificada — 2026-09-24 — lote MANAGER DE COMMITS
+
+Fecha y hora: 2026-09-24
+Versión/commit: `0556a384` (squash del PR #222)
+Rama: `main`
+Worktree: `/Users/miltondavila/.codex/worktrees/30cf/Creador de articulos`
+Conversación/proyecto: MANAGER DE COMMITS — limpieza y preparación de lote
+Cambios incluidos: SEO TOTAL en cabecera; borrado total de oportunidades con
+alcance visible; mejoras del asistente de conexión y cierre de onboarding;
+ajuste visual de `DashboardNav`; manual, coordinación y controlador actualizados.
+Archivos eliminados: ninguno
+Migraciones creadas: ninguna
+Migraciones aplicadas: ninguna
+Auditoría 1: APROBADA — PR #222 revisado; sin schema, migraciones, secretos,
+workflows ni archivos eliminados.
+Auditoría 2: APROBADA — Prisma generate correcto; build web de 85 rutas; suite
+worker 20/20; typecheck web y build worker correctos; `git diff --check` limpio.
+Auditoría 3: APROBADA — Preview Vercel y Production success; rutas críticas
+verificadas.
+Diff revisado: sí
+Deployment/Vercel: `C33s7P7sRW2kDYnwDhpJnAzomBPT`, success
+Estado de Vercel: READY/success
+Dominio verificado: sí — `https://seototal.lasolucionweb.com`
+Logs verificados: deployment success; no se solicitó acceso adicional a logs
+de runtime.
+Producción verificada: sí — `/login` 200, `/privacidad` 200, `/api/me` 401 y
+`/dashboard` 307 hacia login.
+Problemas conocidos: `DATABASE_URL` no está configurada en este worktree, por
+lo que el hook local no pudo registrar ProductUpdate; no afecta el deployment.
+Responsable: MANAGER DE COMMITS
+Siguiente acción: ninguna pendiente de este lote.
+Estado: VERIFICADA
