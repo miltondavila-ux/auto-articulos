@@ -3491,14 +3491,14 @@ Estado: VERIFICADA
 ## Versión preparada — 2026-09-24 — lote MANAGER DE COMMITS
 
 Fecha y hora: 2026-09-24
-Versión/commit: rama `codex/manager-commits-20260924`, basada en `origin/main@290fc0ab`; commits cherry-pickados `057f4449`, `1b342fa6`, `d6b61dd4`.
+Versión/commit: rama `codex/manager-commits-20260924`, basada en `origin/main@290fc0ab`; commits `057f4449`, `1b342fa6`, `d6b61dd4`, `0c938371`.
 Rama: `codex/manager-commits-20260924`
 Worktree: `/Users/miltondavila/.codex/worktrees/30cf/Creador de articulos`
 Conversación/proyecto: MANAGER DE COMMITS — limpieza y preparación de lote
 Cambios incluidos: marca SEO TOTAL en cabecera; borrado total de oportunidades
 con el mismo alcance que la lista visible; comprobación de login del wizard en
 5 segundos, detección paralela de servidores y cierre de onboarding con tres
-acciones; actualización del manual de usuario.
+acciones; ajuste visual de `DashboardNav`; actualización del manual de usuario.
 Archivos eliminados: ninguno
 Migraciones creadas: ninguna
 Migraciones aplicadas: ninguna

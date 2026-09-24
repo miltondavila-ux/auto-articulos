@@ -9086,8 +9086,9 @@ Responsable: Claude (tarea programada diaria de propagación).
   `codex/manager-commits-20260924`.
 - Cambios incluidos: marca `SEO TOTAL` en la cabecera (`42c80d84`), corrección
   del borrado total de oportunidades para que use el mismo alcance visible que
-  la consulta (`adf32796`) y mejora del asistente de conexión/cierre del
-  onboarding (`b8bcc0ee`).
+  la consulta (`adf32796`), mejora del asistente de conexión/cierre del
+  onboarding (`b8bcc0ee`) y eliminación del rectángulo exterior de la
+  navegación de escritorio (`0c938371`, cherry-pick de `af4ae761`).
 - El manual de usuario se actualizó para reflejar la comprobación de acceso de
   5 segundos y los tres caminos finales del asistente.
 - No hay schema ni migraciones en este lote; no se eliminaron archivos.
