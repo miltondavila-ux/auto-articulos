@@ -143,7 +143,7 @@ export default async function DashboardLayout({
             LA SOLUCIÓN IA
           </h1>
           <p className="eyebrow" style={{ margin: "4px 0 0" }}>
-            Generación de contenido para posicionamiento inteligente
+            SEO TOTAL
           </p>
         </div>
         <div

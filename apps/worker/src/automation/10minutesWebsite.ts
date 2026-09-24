@@ -300,6 +300,10 @@ function resolveBaseUrl(platformDomain?: string | null): string {
 
 const ARTICLE_TYPE_NOTICIAS = "2";
 const NAV_TIMEOUT_MS = 30_000;
+// La conexión del wizard debe resolver si las credenciales sirven casi de
+// inmediato. Una espera larga deja al usuario mirando un progreso ambiguo y
+// retrasa innecesariamente el mensaje accionable para cambiar la contraseña.
+const LOGIN_VERIFY_TIMEOUT_MS = 5_000;
 // Evita que una sesión externa o una validación bloqueada deje un lane ocupado indefinidamente.
 const ARTICLE_HARD_TIMEOUT_MS = 6 * 60 * 1000;
 const CONTENT_GENERATION_TIMEOUT_MS = 90_000;
@@ -707,7 +711,7 @@ async function login(
 
   try {
     await page.waitForSelector('a[href="user_buyer_seller_articles.php"]', {
-      timeout: NAV_TIMEOUT_MS,
+      timeout: LOGIN_VERIFY_TIMEOUT_MS,
     });
   } catch {
     // Mensaje más claro que el timeout crudo de Playwright: esto casi
@@ -733,7 +737,7 @@ async function login(
     // vive en otro dominio y no a credenciales mal escritas, y sin este dato
     // los dos casos se veían idénticos en el mensaje.
     throw new Error(
-      `No se pudo iniciar sesión en ${baseUrl}. Verifica que el usuario y la contraseña guardados en Configuración sean correctos, y que esa cuenta realmente exista en ${baseUrl} (si vive en otro servidor, un administrador debe corregirlo en Administración → Usuarios)${alertText ? `. Mensaje visible en el sitio: "${alertText}"` : "."}`,
+      `No se pudo iniciar sesión con las credenciales guardadas en ${baseUrl} dentro de ${LOGIN_VERIFY_TIMEOUT_MS / 1000} segundos. Cambia o restablece la contraseña de tu cuenta en la plataforma y vuelve a guardarla en SEO TOTAL.${alertText ? ` Mensaje visible en el sitio: "${alertText}"` : ""}`,
     );
   }
   await onStep("Sesión iniciada correctamente.");

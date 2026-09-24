@@ -4705,6 +4705,13 @@ manual que alimenta al asistente.
   Producción quedan pendientes de la resolución final del rebase y se
   registrarán con sus identificadores exactos.
 
+## Codex — ajuste visual en Oportunidades Redes — 2026-09-24
+
+- Cambio preparado para subir en el próximo commit: se eliminó el rectángulo exterior de la barra de navegación horizontal de `/dashboard/oportunidades-redes`.
+- Archivo modificado: `apps/web/src/components/DashboardNav.tsx`.
+- El cambio solo retira fondo, borde, radio y relleno del contenedor de navegación de escritorio; los enlaces, menús y navegación móvil se mantienen sin cambios.
+- No está desplegado en producción. El archivo de código quedó preparado en staging; la verificación de tipos no pudo ejecutarse porque `tsc` no está instalado en el entorno.
+
 ### Continuación CONEXION POSTPEER 2 — 2026-09-22
 
 - Se confirmó el resultado de la prueba aislada de Lorena: el artículo exacto
@@ -9072,3 +9079,24 @@ No hubo ninguna acción destructiva, migración ni deploy ejecutados por esta ta
 que dejar anotadas para Milton.
 
 Responsable: Claude (tarea programada diaria de propagación).
+
+## MANAGER DE COMMITS — lote preparado para subir — 2026-09-24
+
+- Se consolidó una rama de entrega sobre `origin/main@290fc0ab`:
+  `codex/manager-commits-20260924`.
+- Cambios incluidos: marca `SEO TOTAL` en la cabecera (`42c80d84`), corrección
+  del borrado total de oportunidades para que use el mismo alcance visible que
+  la consulta (`adf32796`), mejora del asistente de conexión/cierre del
+  onboarding (`b8bcc0ee`) y eliminación del rectángulo exterior de la
+  navegación de escritorio (`0c938371`, cherry-pick de `af4ae761`).
+- El manual de usuario se actualizó para reflejar la comprobación de acceso de
+  5 segundos y los tres caminos finales del asistente.
+- No hay schema ni migraciones en este lote; no se eliminaron archivos.
+- `git diff --check`: correcto. Prisma Client generado correctamente. Build web
+  completado con 85 rutas y suite worker 20/20. Typecheck web y build worker
+  ejecutados tras regenerar Prisma sin error visible.
+- `npm ci` dejó 4 vulnerabilidades altas preexistentes; no se ejecutó
+  `npm audit fix` para no alterar versiones fuera del alcance.
+- Estado: preparado para push/PR; todavía no se hizo push, merge ni deploy.
+- Versión local de paquetes: `0.1.0` (sin cambio de versión semántica; no existe
+  una política de bump establecida en el repositorio).
