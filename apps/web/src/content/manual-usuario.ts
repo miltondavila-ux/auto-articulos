@@ -32,6 +32,7 @@ Ruta: /dashboard
 Inicio es tu centro de operaciones:
 - **Para cuentas nuevas (sin artículos aún):** Muestra de forma exclusiva el Asistente de Configuración Inicial, sin menú ni accesos directos, para que completes tu puesta a punto sin distracciones.
 - **Para cuentas ya configuradas:** Muestra únicamente el título **Acciones posibles** y tres tarjetas: **${MENU_NAMES.propios}**, **${MENU_NAMES.ia}** y **${MENU_NAMES.redes}**. En móvil se muestran en una sola columna para que cada acción sea fácil de pulsar.
+- La tarjeta de **${MENU_NAMES.redes}** solo aparece, tanto en Inicio como en el menú y en **Comienza Aquí**, si tu cuenta tiene marcada en Administración al menos una aprobación de red social o blog; sin ninguna aprobación, esa tercera acción no se muestra. Los administradores, y los administradores que están usando una cuenta ajena para dar soporte, siempre la ven.
 - Las estadísticas no ocupan espacio en Inicio: se consultan desde **Publicaciones → Estadísticas**, junto al historial.
 - Desde el menú superior tienes acceso a: Cómo funciona esta aplicación, Publicaciones y Configuración. Historial está dentro de Publicaciones y Actualizaciones dentro de Configuración.
 
