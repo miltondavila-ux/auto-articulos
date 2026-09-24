@@ -30,6 +30,8 @@ interface ConfigurationAlert {
   actionUrl: string;
 }
 
+const showReconnectAlert = false;
+
 export default function InicioPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -88,6 +90,7 @@ export default function InicioPage() {
       const pendingAlerts = Array.isArray(configurationData?.checks)
         ? configurationData.checks.filter(
             (check: ConfigurationAlert & { configured: boolean }) =>
+              showReconnectAlert &&
               check.id === "google-search-console-reconnect" && !check.configured,
           )
         : [];
