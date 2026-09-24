@@ -3487,3 +3487,37 @@ Responsable: Codex - GPT-5.
 Siguiente acción: ninguna pendiente para esta entrega; mantener localhost y
 producción abiertas para la siguiente revisión.
 Estado: VERIFICADA
+
+## Versión preparada — 2026-09-24 — lote MANAGER DE COMMITS
+
+Fecha y hora: 2026-09-24
+Versión/commit: rama `codex/manager-commits-20260924`, basada en `origin/main@290fc0ab`; commits cherry-pickados `057f4449`, `1b342fa6`, `d6b61dd4`.
+Rama: `codex/manager-commits-20260924`
+Worktree: `/Users/miltondavila/.codex/worktrees/30cf/Creador de articulos`
+Conversación/proyecto: MANAGER DE COMMITS — limpieza y preparación de lote
+Cambios incluidos: marca SEO TOTAL en cabecera; borrado total de oportunidades
+con el mismo alcance que la lista visible; comprobación de login del wizard en
+5 segundos, detección paralela de servidores y cierre de onboarding con tres
+acciones; actualización del manual de usuario.
+Archivos eliminados: ninguno
+Migraciones creadas: ninguna
+Migraciones aplicadas: ninguna
+Auditoría 1: APROBADA — diff revisado; sin schema, migraciones, secretos,
+workflows ni archivos eliminados.
+Auditoría 2: APROBADA — Prisma generate correcto; build web de 85 rutas; suite
+worker 20/20; typecheck web y build worker ejecutados correctamente tras
+regenerar Prisma; `git diff --check` limpio.
+Auditoría 3: PENDIENTE — falta push, Preview, merge, deployment y verificación
+de Producción.
+Diff revisado: sí
+Deployment/Vercel: pendiente
+Estado de Vercel: pendiente
+Dominio verificado: pendiente
+Logs verificados: pendiente
+Producción verificada: pendiente
+Problemas conocidos: `npm ci` reportó 4 vulnerabilidades altas preexistentes;
+no se ejecutó `npm audit fix`. El entorno no tenía dependencias al inicio.
+Responsable: MANAGER DE COMMITS
+Siguiente acción: push de la rama, abrir/actualizar PR, esperar checks de
+Preview y verificar Producción antes de declarar el lote estable.
+Estado: PREPARADA
