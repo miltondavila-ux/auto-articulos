@@ -80,23 +80,21 @@ export async function GET() {
   });
 }
 
-// Borra TODAS las oportunidades pendientes del panel/dominio actual del
-// usuario de una sola vez — pedido explícito de Milton (7/9/2026, anotado en
-// TO-DO.md): antes solo existía borrado uno por uno o por categoría. Mismo
-// alcance por panel/siteDomain que ya usa el análisis (POST) para no tocar
-// oportunidades de otro panel (ej. una cuenta con English/Español).
+// Borra TODAS las oportunidades que la pantalla muestra de una sola vez.
+// La lista GET está acotada por usuario y dominio, pero no por panel; mantener
+// aquí ese mismo alcance evita que el botón parezca no funcionar cuando la
+// cuenta tiene paneles y selectedSitePanel no coincide con los grupos visibles.
 export async function DELETE() {
   const userId = await getCurrentUserId();
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { selectedSiteDomain: true, selectedSitePanel: true },
+    select: { selectedSiteDomain: true },
   });
   const selectedSiteDomain = user.selectedSiteDomain;
-  const selectedPanel = user.selectedSitePanel || "";
   await prisma.opportunityGroup.deleteMany({
     where: {
       userId,
-      category: { panel: selectedPanel, ...(selectedSiteDomain ? { siteDomain: selectedSiteDomain } : {}) },
+      category: selectedSiteDomain ? { siteDomain: selectedSiteDomain } : undefined,
     },
   });
   return NextResponse.json({ ok: true });
