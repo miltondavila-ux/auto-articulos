@@ -28,9 +28,10 @@ interface ConfigurationAlert {
   id: string;
   label: string;
   actionUrl: string;
+  description?: string;
 }
 
-const showReconnectAlert = false;
+const showReconnectAlert = true;
 
 export default function InicioPage() {
   useEffect(() => {
@@ -60,12 +61,13 @@ export default function InicioPage() {
 
   const checkWizardStatus = useCallback(async () => {
     try {
-      const [credRes, catRes, meRes, googleRes, configurationRes] = await Promise.all([
+      const [credRes, catRes, meRes, googleRes, configurationRes, composioRes] = await Promise.all([
         fetch("/api/credentials", { cache: "no-store" }),
         fetch("/api/categories", { cache: "no-store" }),
         fetch("/api/me", { cache: "no-store" }),
         fetch("/api/search-integrations/google", { cache: "no-store" }),
         fetch("/api/configuration-status", { cache: "no-store" }),
+        fetch("/api/composio/status", { cache: "no-store" }),
       ]);
 
       const credData = credRes.ok ? await credRes.json() : {};
@@ -73,11 +75,18 @@ export default function InicioPage() {
       const meData = meRes.ok ? await meRes.json() : {};
       const googleData = googleRes.ok ? await googleRes.json() : {};
       const configurationData = configurationRes.ok ? await configurationRes.json() : null;
+      const composioData = composioRes.ok ? await composioRes.json() : null;
+      const searchConsoleConnection = Array.isArray(composioData?.connections)
+        ? composioData.connections.find((connection: { app: string }) => connection.app === "google_search_console")
+        : null;
 
       const step1 = Boolean(credData.configured);
       const step2 = Array.isArray(catData.categories) && catData.categories.length > 0;
       const step3 = typeof meData.contentLanguage === "string" && meData.contentLanguage.trim().length > 0;
-      const step4 = Boolean(googleData.connected && googleData.siteUrl);
+      const step4 = Boolean(
+        (googleData.connected && googleData.siteUrl) ||
+          (searchConsoleConnection?.status === "ACTIVE" && searchConsoleConnection.selection),
+      );
       setSocialPublishingApproved(Boolean(meData?.socialPublishingApproved));
       // Solo para el localhost de desarrollo: permite revisar la interfaz
       // posterior al wizard sin fingir una conexión OAuth real de Google.
@@ -91,7 +100,7 @@ export default function InicioPage() {
         ? configurationData.checks.filter(
             (check: ConfigurationAlert & { configured: boolean }) =>
               showReconnectAlert &&
-              check.id === "google-search-console-reconnect" && !check.configured,
+              ["google-search-console-reconnect", "google-analytics-reconnect"].includes(check.id) && !check.configured,
           )
         : [];
       setConfigurationAlerts(pendingAlerts);
@@ -139,11 +148,11 @@ export default function InicioPage() {
           </>
         )}
       </ModuleIntro>
+      <div aria-live="polite">
       {configurationAlerts.map((alert) => (
         <Link
           key={alert.id}
           href={alert.actionUrl}
-          role="alert"
           style={{
             display: "block",
             margin: "18px 0 20px",
@@ -159,9 +168,10 @@ export default function InicioPage() {
             overflowWrap: "anywhere",
           }}
         >
-          SOLICITUD DE ACTUALIZACIÓN: Debes reconectar Google Search Console mediante Conexiones.
+          SOLICITUD DE ACTUALIZACIÓN: {(alert.description ?? alert.label).trim()}
         </Link>
       ))}
+      </div>
       {showWizard === false && (
         <div style={{ marginTop: 20, marginBottom: 20 }}>
           <h2 style={{ margin: "0 0 14px", fontSize: 22 }}>Acciones posibles</h2>

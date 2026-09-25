@@ -6,6 +6,7 @@ import {
   h2Style,
   buttonStyle,
   secondaryButtonStyle,
+  ConnectionSuccess,
 } from "@/components/dashboard-ui";
 
 interface Connection {
@@ -32,14 +33,6 @@ interface ComposioConnectProps {
   /** Muestra solo el botón de alta para apps aún no conectadas, dentro de la tarjeta anfitriona. */
   showInactiveActions?: boolean;
 }
-
-/**
- * Parámetros de la URL leídos UNA vez al cargar el módulo: la pantalla puede tener
- * varias instancias de este componente y cada una debe ver el resultado del retorno
- * de Composio aunque otra ya haya limpiado la dirección.
- */
-const INITIAL_PARAMS: URLSearchParams | null =
-  typeof window === "undefined" ? null : new URLSearchParams(window.location.search);
 
 interface Option {
   id: string;
@@ -118,9 +111,23 @@ const STATUS_LABEL: Record<Connection["status"], { text: string; color: string }
 };
 
 const RESULT_MESSAGE: Record<string, { ok: boolean; text: string }> = {
-  connected: { ok: true, text: "Conexión completada y verificada. Ahora elige y aprueba lo que usarás." },
+  connected: { ok: true, text: "Autorización completada. Ahora elige y aprueba la propiedad que usará SEO TOTAL." },
   failed: { ok: false, text: "No se pudo completar la conexión. Inténtalo de nuevo." },
   invalid: { ok: false, text: "No se encontró esa conexión. Inicia la conexión desde aquí." },
+};
+
+const SUCCESS_TITLE: Record<string, string> = {
+  google_search_console: "Google Search Console quedó conectado correctamente",
+  google_analytics: "Google Analytics quedó conectado correctamente",
+  facebook: "Facebook quedó conectado correctamente",
+  instagram: "Instagram quedó conectado correctamente",
+};
+
+const SUCCESS_SELECTION_LABEL: Record<string, string> = {
+  google_search_console: "Propiedad conectada",
+  google_analytics: "Propiedad conectada",
+  facebook: "Página conectada",
+  instagram: "Cuenta conectada",
 };
 
 export default function ComposioConnect({ apps, embedded = false, inline = false, activeOnly = false, showInactiveActions = false }: ComposioConnectProps = {}) {
@@ -130,6 +137,8 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
   const [probe, setProbe] = useState<Record<string, string>>({});
   const [found, setFound] = useState<Record<string, Array<{ label: string; detail: string | null }>>>({});
   const [choices, setChoices] = useState<Record<string, Choices>>({});
+  const [justSaved, setJustSaved] = useState<Record<string, boolean>>({});
+  const [justCompleted, setJustCompleted] = useState<Record<string, boolean>>({});
 
   const load = useCallback(async () => {
     const response = await fetch("/api/composio/status", { cache: "no-store" });
@@ -167,10 +176,14 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
       // Una app conectada sin elección todavía pide elegir de inmediato.
       list?.filter((c) => c.status === "ACTIVE" && !c.selection && c.available).forEach((c) => void openChoices(c.app));
     });
-    const resultado = INITIAL_PARAMS?.get("resultado") ?? null;
-    const appDeVuelta = INITIAL_PARAMS?.get("app") ?? null;
+    const paramsFromCurrentUrl = new URLSearchParams(window.location.search);
+    const resultado = paramsFromCurrentUrl.get("resultado") ?? null;
+    const appDeVuelta = paramsFromCurrentUrl.get("app") ?? null;
     if (resultado && RESULT_MESSAGE[resultado] && (!apps || !appDeVuelta || apps.includes(appDeVuelta))) {
       setMessage(RESULT_MESSAGE[resultado]);
+      if (resultado === "connected" && appDeVuelta) {
+        setJustCompleted((current) => ({ ...current, [appDeVuelta]: true }));
+      }
       // Se limpia solo lo del retorno; la pestaña elegida (vista) se conserva.
       const params = new URLSearchParams(window.location.search);
       params.delete("resultado");
@@ -237,6 +250,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
         const { [app]: _closed, ...rest } = current;
         return rest;
       });
+      setJustSaved((current) => ({ ...current, [app]: true }));
       setMessage({ ok: true, text: "Elección aprobada y guardada." });
       await load();
     } finally {
@@ -273,14 +287,14 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
           normal. Después de conectar, eliges y apruebas qué sitio, propiedad, Página o cuenta usarás.
           Tus conexiones actuales siguen funcionando igual mientras pruebas esta.
         </p>
-        {message && (
+        {message && !(message.ok && connections?.some((connection) => connection.status === "ACTIVE" && connection.selection)) && (
           <p role="status" style={{ fontSize: 14, marginTop: 12, color: message.ok ? "#1a7f37" : "#c62828" }}>
             {message.text}
           </p>
         )}
       </section>
       )}
-      {(embedded || inline) && message && (
+      {(embedded || inline) && message && !(message.ok && connections?.some((connection) => connection.status === "ACTIVE" && connection.selection)) && (
         <p role="status" style={{ fontSize: 14, margin: "8px 0 0", color: message.ok ? "#1a7f37" : "#c62828" }}>
           {message.text}
         </p>
@@ -300,6 +314,26 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
               <button key={connection.app} type="button" onClick={() => connect(connection.app)} disabled={busy !== null} style={{ ...secondaryButtonStyle, marginTop: 12 }}>
                 {isBusy ? "Abriendo…" : `Nueva conexión de ${connection.app === "facebook" ? "Facebook" : "Instagram"}`}
               </button>
+            );
+          }
+          const isSuccessful = connection.status === "ACTIVE" && Boolean(connection.selection) && !choice;
+          const successJustCompleted =
+            justSaved[connection.app] === true ||
+            justCompleted[connection.app] === true;
+          if (isSuccessful && successJustCompleted) {
+            return (
+              <section key={connection.app} style={inline ? { marginTop: 16, paddingTop: 14, borderTop: "1px solid #e5e5ea" } : sectionStyle}>
+                <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                  {!inline && <h2 style={{ ...h2Style, marginBottom: 6 }}>{embedded ? `${connection.label} · nueva conexión` : connection.label}</h2>}
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#1a7f37" }}>Conexión exitosa</span>
+                </div>
+                <ConnectionSuccess
+                  title={SUCCESS_TITLE[connection.app] ?? "La conexión quedó lista"}
+                  label={SUCCESS_SELECTION_LABEL[connection.app] ?? "Conectado con"}
+                  value={connection.selection}
+                  description="La configuración terminó correctamente. SEO TOTAL usará esta conexión desde ahora."
+                />
+              </section>
             );
           }
           return (
@@ -328,17 +362,20 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
               )}
 
               {connection.status === "ACTIVE" && connection.selection && !choice && (
-                <p style={{ fontSize: 14, margin: "8px 0" }}>
-                  <strong>
-                    {inline
-                      ? connection.app === "facebook"
-                        ? "Página de Facebook seleccionada:"
-                        : connection.app === "instagram"
-                          ? "Cuenta de Instagram seleccionada:"
-                          : "Propiedad seleccionada:"
-                      : "Usando:"}
-                  </strong>{" "}{connection.selection}
-                </p>
+                <div style={{ marginTop: 10, padding: 14, borderRadius: 12, border: "1px solid rgba(26, 127, 55, 0.25)", background: "#f7fff9" }}>
+                  <strong style={{ display: "block", color: "#1a7f37", fontSize: 15 }}>✓ Conexión activa</strong>
+                  <p style={{ fontSize: 14, margin: "6px 0 0" }}>
+                    <strong>
+                      {inline
+                        ? connection.app === "facebook"
+                          ? "Página de Facebook conectada:"
+                          : connection.app === "instagram"
+                            ? "Cuenta de Instagram conectada:"
+                            : "Propiedad conectada:"
+                        : "Conectado con:"}
+                    </strong>{" "}{connection.selection}
+                  </p>
+                </div>
               )}
 
               {choice && (

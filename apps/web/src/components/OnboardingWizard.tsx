@@ -116,7 +116,7 @@ export default function OnboardingWizard({
   // mensaje que lo decía nunca llegaba a verse.
   const loadAll = useCallback(async (surfaceLastSyncError = false) => {
     try {
-    const [credRes, catRes, langRes, meRes, googleRes, runsRes, siteRes, detectRes] =
+    const [credRes, catRes, langRes, meRes, googleRes, runsRes, siteRes, detectRes, composioRes] =
         await Promise.all([
           fetch("/api/credentials", { cache: "no-store" }),
           fetch("/api/categories", { cache: "no-store" }),
@@ -126,6 +126,7 @@ export default function OnboardingWizard({
           fetch("/api/runs", { cache: "no-store" }),
           fetch("/api/site-selection", { cache: "no-store" }),
           fetch("/api/site-selection/detect", { cache: "no-store" }),
+          fetch("/api/composio/status", { cache: "no-store" }),
         ]);
 
       if (credRes.ok) {
@@ -178,6 +179,22 @@ export default function OnboardingWizard({
           setSelectedGoogleSite(data.siteUrl);
         } else if (data.sites && data.sites.length > 0) {
           setSelectedGoogleSite(data.sites[0].siteUrl);
+        }
+      }
+      if (composioRes.ok) {
+        const data = (await composioRes.json()) as {
+          connections?: Array<{ app: string; status: string; selection: string | null }>;
+        };
+        const searchConsole = data.connections?.find((connection) => connection.app === "google_search_console");
+        if (searchConsole?.status === "ACTIVE" && searchConsole.selection) {
+          setGoogleData((current) => ({
+            ...(current ?? {}),
+            connected: true,
+            siteUrl: searchConsole.selection,
+            sitemapUrl: current?.sitemapUrl ?? null,
+            sites: current?.sites ?? [],
+          }));
+          setSelectedGoogleSite(searchConsole.selection);
         }
       }
       if (runsRes.ok) {
@@ -1580,7 +1597,7 @@ export default function OnboardingWizard({
                   {!googleData?.connected ? (
                     <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                       <a
-                        href="/api/search-integrations/google/connect?returnTo=/dashboard"
+                        href="/dashboard/configuracion/conexiones?conexion=google-search-console"
                         style={{
                           background: "#1d1d1f",
                           color: "#fff",
@@ -1595,7 +1612,7 @@ export default function OnboardingWizard({
                           boxShadow: "none",
                         }}
                       >
-                        Conectar Google Search Console con Google OAuth →
+                        Conectar Google Search Console →
                       </a>
                     </div>
                   ) : (
@@ -1654,10 +1671,10 @@ export default function OnboardingWizard({
                               ✏¿No ves tu sitio? Ingresar URL manualmente
                             </button>
                             <a
-                              href="/api/search-integrations/google/connect?returnTo=/dashboard&prompt=select_account"
+                              href="/dashboard/configuracion/conexiones?conexion=google-search-console"
                               style={{ ...secondaryButtonStyle, textDecoration: "none", fontSize: 12, padding: "6px 12px" }}
                             >
-                              Cambiar cuenta de Google
+                              Cambiar conexión de Google
                             </a>
                           </div>
                         </div>
@@ -1726,10 +1743,10 @@ export default function OnboardingWizard({
                               </button>
                             )}
                             <a
-                              href="/api/search-integrations/google/connect?returnTo=/dashboard&prompt=select_account"
+                              href="/dashboard/configuracion/conexiones?conexion=google-search-console"
                               style={{ ...secondaryButtonStyle, textDecoration: "none", fontSize: 12, padding: "6px 12px" }}
                             >
-                              Cambiar cuenta de Google
+                              Cambiar conexión de Google
                             </a>
                           </div>
                         </div>

@@ -4,6 +4,7 @@ import { getCurrentUserId } from "@/lib/current-user";
 import { canUseSocialModule } from "@/lib/social-access";
 import { triggerSocialWorkerNow } from "@/lib/trigger-worker";
 import {
+  composioQuerySearchAnalytics,
   decryptSecret,
   encryptSecret,
   getGoogleAccessToken,
@@ -13,6 +14,7 @@ import {
 import { getGoogleAnalyticsSignals, summarizeGoogleAnalyticsSignals } from "@/lib/google-analytics-signals";
 import { getBingSignals } from "@/lib/bing-signals";
 import { getStoredTumblrAppCredentials } from "@/lib/tumblr-app-config";
+import { resolveSearchConsoleForUser } from "@/lib/composio-search-console-consumer";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
@@ -188,6 +190,7 @@ function pathnameOf(url: string): string {
 async function selectTrendingArticles(userId: string): Promise<ArticleCandidate[]> {
   const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
   const gsc = await prisma.searchIntegration.findFirst({ where: { userId, provider: "google", ...(user.selectedSiteDomain ? { siteDomain: user.selectedSiteDomain } : {}) } });
+  const resolvedGsc = await resolveSearchConsoleForUser(userId, user.selectedSiteDomain ?? "");
 
   // Una sola clave por página en todo este cálculo: el PATHNAME normalizado
   // (ej. "/noticias/algo"), nunca la URL completa ni el pagePath de GA4 por
@@ -205,9 +208,8 @@ async function selectTrendingArticles(userId: string): Promise<ArticleCandidate[
   // vs 27 previos), agregado por página, con las consultas reales que la
   // alimentan (esto también activa `searchQueries`, que existía en el tipo
   // pero nunca se llenaba — el copy nunca mencionaba la consulta real).
-  if (gsc?.siteUrl && gsc.encryptedRefreshToken) {
+  if ((gsc?.siteUrl && gsc.encryptedRefreshToken) || resolvedGsc.source === "COMPOSIO") {
     try {
-      const accessToken = await getGoogleAccessToken(decryptSecret(gsc.encryptedRefreshToken));
       const end = new Date();
       end.setUTCDate(end.getUTCDate() - 3);
       const currentStart = new Date(end);
@@ -217,10 +219,27 @@ async function selectTrendingArticles(userId: string): Promise<ArticleCandidate[
       const previousStart = new Date(previousEnd);
       previousStart.setUTCDate(previousStart.getUTCDate() - 27);
       const fmt = (d: Date) => d.toISOString().slice(0, 10);
+      const query = async (start: string, finish: string, dimensions: string[]) => {
+        if (resolvedGsc.source === "COMPOSIO") {
+          if (!resolvedGsc.apiKey || !resolvedGsc.state.composio?.connectedAccountId || !resolvedGsc.state.composio.siteUrl) {
+            throw new Error("Search Console requiere reconectar la cuenta por Composio y seleccionar un sitio.");
+          }
+          return composioQuerySearchAnalytics(
+            { apiKey: resolvedGsc.apiKey, userId, connectedAccountId: resolvedGsc.state.composio.connectedAccountId },
+            resolvedGsc.state.composio.siteUrl,
+            start,
+            finish,
+            dimensions,
+          );
+        }
+        if (!gsc?.encryptedRefreshToken || !gsc.siteUrl) throw new Error("Google Search Console no está conectado.");
+        const accessToken = await getGoogleAccessToken(decryptSecret(gsc.encryptedRefreshToken));
+        return queryGoogleSearchAnalytics(accessToken, gsc.siteUrl, start, finish, dimensions);
+      };
 
       const [currentRows, previousRows] = await Promise.all([
-        queryGoogleSearchAnalytics(accessToken, gsc.siteUrl, fmt(currentStart), fmt(end), ["page", "query"]),
-        queryGoogleSearchAnalytics(accessToken, gsc.siteUrl, fmt(previousStart), fmt(previousEnd), ["page"]),
+        query(fmt(currentStart), fmt(end), ["page", "query"]),
+        query(fmt(previousStart), fmt(previousEnd), ["page"]),
       ]);
 
       const previousImpressionsByPath = new Map<string, number>();
@@ -378,8 +397,14 @@ async function getConnectedNetworks(userId: string) {
     prisma.blueskyIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.devToIntegration.findUnique({ where: { userId }, select: { id: true } }),
     prisma.bloggerIntegration.findUnique({ where: { userId }, select: { id: true } }),
-    prisma.composioConnection.findFirst({ where: { userId, app: "instagram", status: { not: "FAILED" } }, select: { connectedAccountId: true, igAccountId: true, username: true } }),
-    prisma.composioConnection.findFirst({ where: { userId, app: "facebook", status: { not: "FAILED" } }, select: { connectedAccountId: true, pageId: true, pageName: true } }),
+    prisma.composioConnection.findFirst({
+      where: { userId, app: "instagram", status: "ACTIVE", igAccountId: { not: null } },
+      select: { connectedAccountId: true, igAccountId: true, username: true },
+    }),
+    prisma.composioConnection.findFirst({
+      where: { userId, app: "facebook", status: "ACTIVE", pageId: { not: null } },
+      select: { connectedAccountId: true, pageId: true, pageName: true },
+    }),
     prisma.postPeerConnection.findUnique({ where: { userId }, select: { id: true, status: true } }),
     prisma.user.findUnique({ where: { id: userId }, select: { role: true, email: true, name: true, firstName: true, lastName: true, businessLocations: true, contentLanguage: true, allowInstagramPublishing: true, allowLinkedInPublishing: true, allowThreadsPublishing: true, allowFacebookPublishing: true, allowPinterestPublishing: true, allowTumblrPublishing: true, allowBlueskyPublishing: true, allowDevToPublishing: true, allowBloggerPublishing: true, allowGoogleBusinessPublishing: true } }),
   ]);
@@ -392,7 +417,7 @@ async function getConnectedNetworks(userId: string) {
   // reactivarla fácil más adelante — solo se fuerza a `false` acá, el único
   // punto de donde sale si se muestra o no en Oportunidades en Redes.
   const activeNetworks = { threads: Boolean(isAdmin || socialOverride || user?.allowThreadsPublishing), x: false, linkedin: Boolean(isAdmin || socialOverride || user?.allowLinkedInPublishing), instagram: Boolean(isAdmin || socialOverride || user?.allowInstagramPublishing), facebookPage: Boolean(isAdmin || socialOverride || user?.allowFacebookPublishing), pinterest: Boolean(isAdmin || socialOverride || user?.allowPinterestPublishing), tumblr: Boolean(isAdmin || socialOverride || user?.allowTumblrPublishing), bluesky: Boolean(isAdmin || user?.allowBlueskyPublishing), devto: Boolean(isAdmin || socialOverride || user?.allowDevToPublishing), blogger: Boolean(isAdmin || socialOverride || user?.allowBloggerPublishing), googleBusiness: Boolean(isAdmin || socialOverride || user?.allowGoogleBusinessPublishing) };
-  return { activeNetworks, hideInstagramStories: Boolean(composioInstagram), hideFacebookStories: Boolean(composioFacebook), threads: activeNetworks.threads && Boolean(threads), x: activeNetworks.x && Boolean(twitter), linkedin: activeNetworks.linkedin && Boolean(linkedin), instagram: activeNetworks.instagram && Boolean(instagram || composioInstagram), facebookPage: activeNetworks.facebookPage && Boolean(facebookPage), pinterest: activeNetworks.pinterest && Boolean(pinterest && pinterest.boardId && (!pinterest.expiresAt || pinterest.expiresAt > new Date())), tumblr: activeNetworks.tumblr && Boolean(tumblr && (!tumblrExpiresAt || tumblrExpiresAt > new Date())), bluesky: activeNetworks.bluesky && Boolean(bluesky), devto: activeNetworks.devto && Boolean(devto), blogger: activeNetworks.blogger && Boolean(blogger), googleBusiness: activeNetworks.googleBusiness && googleBusiness?.status === "ACTIVE" };
+  return { activeNetworks, hideInstagramStories: Boolean(composioInstagram?.igAccountId), hideFacebookStories: Boolean(composioFacebook?.pageId), threads: activeNetworks.threads && Boolean(threads), x: activeNetworks.x && Boolean(twitter), linkedin: activeNetworks.linkedin && Boolean(linkedin), instagram: activeNetworks.instagram && Boolean(instagram || composioInstagram?.igAccountId), facebookPage: activeNetworks.facebookPage && Boolean(facebookPage || composioFacebook?.pageId), pinterest: activeNetworks.pinterest && Boolean(pinterest && pinterest.boardId && (!pinterest.expiresAt || pinterest.expiresAt > new Date())), tumblr: activeNetworks.tumblr && Boolean(tumblr && (!tumblrExpiresAt || tumblrExpiresAt > new Date())), bluesky: activeNetworks.bluesky && Boolean(bluesky), devto: activeNetworks.devto && Boolean(devto), blogger: activeNetworks.blogger && Boolean(blogger), googleBusiness: activeNetworks.googleBusiness && googleBusiness?.status === "ACTIVE" };
 }
 
 export async function GET() {
@@ -623,6 +648,8 @@ export async function POST(request: Request) {
 
     const account = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { selectedSiteDomain: true } });
     const source = await prisma.searchIntegration.findFirst({ where: { userId, provider: "google", ...(account.selectedSiteDomain ? { siteDomain: account.selectedSiteDomain } : {}) } });
+    const resolvedSource = await resolveSearchConsoleForUser(userId, account.selectedSiteDomain ?? "");
+    const usesSearchConsole = Boolean(source?.siteUrl) || resolvedSource.source === "COMPOSIO";
 
     if (createdOpportunities.length === 0) {
       return NextResponse.json(
@@ -641,7 +668,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({
-      message: `Se generaron ${createdOpportunities.length} nuevas propuestas usando ${source?.siteUrl ? "Google Search Console y artículos recientes" : "artículos publicados recientes"}.`,
+      message: `Se generaron ${createdOpportunities.length} nuevas propuestas usando ${usesSearchConsole ? "Google Search Console y artículos recientes" : "artículos publicados recientes"}.`,
       count: createdOpportunities.length,
     });
   } catch (unexpected) {

@@ -9114,3 +9114,455 @@ Responsable: Claude (tarea programada diaria de propagación).
 - Sin schema ni migraciones. No se revirtieron cambios existentes ni se
   modificaron funcionalidades fuera del lote auditado.
 - Estado: CERRADO Y VERIFICADO EN PRODUCCIÓN.
+
+## CONEXION COMPOSIO — validación local de transición GSC/GA — 2026-09-25 — Codex
+
+Contexto: Milton pidió cerrar el flujo de migración progresiva antes de liberar
+el aviso rojo para usuarios existentes. Se trabajó en el worktree local de
+validación `produccion-validacion-composio/Creador de articulos` y el localhost
+oficial de este proyecto sigue siendo `http://localhost:3001` / `http://localhost:3001/login`.
+
+Decisiones funcionales confirmadas:
+
+- La transición será de a una conexión por vez. Primero se pide Google Search
+  Console. Solo después de tener GSC activo por Composio, si el usuario tenía
+  Google Analytics antiguo, aparece un segundo aviso para Google Analytics.
+- Si el usuario nunca tuvo Google Analytics antiguo, no se le muestra aviso de
+  GA.
+- Mientras no complete la conexión nueva, la conexión antigua queda como
+  respaldo. No se borra inmediatamente.
+- Al volver exitosamente de cualquier conexión, la persona debe ver una pantalla
+  clara de éxito con un único botón: `Volver al Inicio`.
+- Si la persona entra más tarde a la conexión ya configurada, debe ver un estado
+  simple de conexión activa, el recurso conectado y botones para cambiar,
+  probar o desconectar/revocar según aplique.
+
+Cambios locales relevantes:
+
+- `packages/shared/src/composio-connection-state.ts`: `hasSelection` de Search
+  Console por Composio ahora depende de que exista `siteUrl`. `siteDomain` es el
+  alcance interno de almacenamiento de la fila global de Composio y puede quedar
+  vacío; usarlo para decidir si el usuario eligió propiedad hacía que Inicio y
+  Conexiones se contradijeran.
+- `apps/web/src/app/api/configuration-status/route.ts`: el aviso rojo queda en
+  secuencia GSC -> GA. GA solo aparece si hay integración antigua de
+  `google-analytics` y no hay Composio GA activo.
+- `apps/web/src/app/dashboard/page.tsx`: el aviso rojo usa el texto
+  `SOLICITUD DE ACTUALIZACIÓN: ...` y enlaza directamente a la conexión
+  correspondiente.
+- `apps/web/src/components/ComposioConnect.tsx` y `dashboard-ui.tsx`: se agregó
+  pantalla global de éxito para conexiones, separada del estado posterior de
+  “conexión activa”.
+
+Validación ejecutada en localhost:
+
+- TypeScript web: `npx tsc --noEmit --incremental false -p apps/web/tsconfig.json` correcto.
+- GSC Composio activo en Lorena local muestra, al simular retorno exitoso,
+  pantalla de `Conexión exitosa` con botón `Volver al Inicio`.
+- Al volver a Inicio con GSC ya activo, no se repite el aviso de GSC.
+- Se insertó una fila temporal local de Google Analytics antiguo solo para
+  probar el segundo paso; Inicio mostró exactamente:
+  `SOLICITUD DE ACTUALIZACIÓN: Debes reconectar Google Analytics mediante Conexiones.`
+  y el enlace llevó a
+  `/dashboard/configuracion/conexiones?conexion=google-analytics`.
+- La fila temporal de GA fue borrada al terminar la prueba.
+
+Estado:
+
+- Validación local positiva para el flujo GSC -> GA uno-a-uno.
+- Producción mantiene el aviso de actualización desactivado hasta aprobación
+  explícita de Milton para el deployment final.
+- No hacer deploy automático ni reactivar el aviso rojo en producción sin
+  aprobación expresa.
+
+### Auditoría adicional del camino de usuario — 2026-09-25 — Codex
+
+Se hizo una segunda/triple auditoría del flujo completo antes de liberar:
+
+- Usuario existente sin GSC Composio: Inicio debe mostrar aviso rojo de GSC y
+  llevar directamente a
+  `/dashboard/configuracion/conexiones?conexion=google-search-console`.
+- Usuario existente con GSC Composio activo y sin GA antiguo: Inicio no muestra
+  aviso pendiente.
+- Usuario existente con GSC Composio activo y GA antiguo: Inicio muestra solo
+  el aviso rojo de Google Analytics y lleva a
+  `/dashboard/configuracion/conexiones?conexion=google-analytics`.
+- Entrada posterior a GSC: muestra `Conexión activa`, la propiedad conectada y
+  acciones `Cambiar`, `Probar conexión`, `Desconectar`.
+- Retorno exitoso de GSC: muestra pantalla de éxito con botón único
+  `Volver al Inicio`.
+
+Hallazgo corregido durante la auditoría:
+
+- El wizard de usuario nuevo todavía iniciaba el OAuth antiguo de Google Search
+  Console (`/api/search-integrations/google/connect`). Esto se corrigió para que
+  el Paso 4 mande a la pantalla única de Conexiones por Composio:
+  `/dashboard/configuracion/conexiones?conexion=google-search-console`.
+- El wizard ahora también consulta `/api/composio/status` y considera completado
+  el Paso 4 si existe `google_search_console` activo con selección. Así los
+  usuarios nuevos quedan encaminados a Composio y no al flujo viejo.
+
+Validaciones posteriores:
+
+- `npx tsc --noEmit --incremental false -p apps/web/tsconfig.json` correcto.
+- Búsqueda de restos en `OnboardingWizard.tsx` para
+  `search-integrations/google/connect`, `Conectar Google Search Console con Google OAuth`
+  y `Cambiar cuenta de Google`: sin resultados.
+- Prueba local visual con Lorena: GSC posterior, éxito inmediato y aviso GA
+  temporal se comportaron como se esperaba. La fila temporal de GA usada para
+  auditar fue eliminada.
+
+### Aclaratoria de UI — wizard vs Conexiones — 2026-09-25 — Codex
+
+Milton confirmó dos reglas de producto:
+
+- En el wizard no debe aparecer la pantalla global de éxito de Conexiones. El
+  wizard debe seguir siendo wizard: al completar GSC por Composio, el Paso 4 se
+  marca como conectado y el usuario continúa dentro del flujo normal del
+  asistente.
+- No deben quedar pantallas antiguas debajo de pantallas nuevas, ni botones de
+  reenvío a OAuth viejo, ni toggles de “Mostrar conexión anterior” en la UI
+  pública de Conexiones.
+
+Acción ejecutada:
+
+- `GoogleSearchConsoleSection.tsx` y `GoogleAnalyticsSection.tsx` quedaron como
+  tarjetas limpias de Composio únicamente. Se retiraron de esas pantallas los
+  bloques visibles/ocultables de conexión anterior y las ramas muertas de OAuth
+  viejo.
+- Búsqueda verificada sin resultados en esas pantallas/wizard para:
+  `Mostrar conexión anterior`, `Ocultar conexión anterior`, `Conexión anterior`,
+  `search-integrations/google/connect`, `google-analytics/connect`,
+  `Conectar Google Search Console con Google OAuth` y `Cambiar cuenta de Google`.
+- Typecheck web correcto tras la limpieza.
+
+### Triple auditoría final de localhost activo — 2026-09-25 — Codex
+
+Contexto operativo:
+
+- El localhost válido para este proyecto está sirviendo desde:
+  `/Users/miltondavila/.codex/worktrees/produccion-validacion-composio/Creador de articulos`.
+- El puerto validado es `http://localhost:3001`.
+- No usar `127.0.0.1` ni otro checkout para pruebas visuales de este proyecto.
+
+Hallazgos corregidos durante esta auditoría:
+
+- Se detectó que una validación inicial se estaba haciendo en otro worktree
+  (`5c93/Creador de articulos`) que no era el servidor activo. La corrección se
+  aplicó también en el checkout que realmente sirve `localhost:3001`.
+- `ConexionesView` dependía de leer la URL solo al montar el componente. Eso
+  podía dejar al usuario en el índice si cambiaban los parámetros dentro de la
+  misma pantalla. Se ajustó para leer `useSearchParams` y actualizar vista /
+  conexión cuando cambia la URL.
+- Se eliminó el uso de `window` en el estado inicial de `ConexionesView` para
+  evitar mismatch de hidratación entre servidor y cliente.
+- `InicioPage` ahora considera `/api/composio/status` para dar por completado
+  GSC en el dashboard/wizard de inicio; no depende solo del endpoint viejo.
+
+Validación ejecutada:
+
+- TypeScript web correcto:
+  `npx tsc --noEmit --incremental false -p apps/web/tsconfig.json`.
+- Búsqueda de restos antiguos sin resultados en `apps/web/src` y
+  `packages/shared/src` para:
+  `search-integrations/google/connect`, `google-analytics/connect`,
+  `Mostrar conexión anterior`, `Ocultar conexión anterior`,
+  `Conexión anterior`, `tab=integrations#google`,
+  `tab=integrations#analytics`, `Google Search Console y Google Analytics`.
+- Simulación local reversible “usuario viejo con GSC antiguo y sin Composio”:
+  se retiró temporalmente la fila local Composio de Lorena, apareció el aviso
+  rojo:
+  `SOLICITUD DE ACTUALIZACIÓN: Debes reconectar Google Search Console mediante Conexiones.`
+  y el click llevó a
+  `/dashboard/configuracion/conexiones?conexion=google-search-console`.
+- Simulación local reversible “GSC Composio activo + GA antiguo pendiente”:
+  se restauró GSC Composio, se creó una fila temporal local de GA antiguo,
+  apareció únicamente el aviso rojo de Google Analytics y el click llevó a
+  `/dashboard/configuracion/conexiones?conexion=google-analytics`.
+- Reentrada normal a GSC con Composio activo muestra:
+  `✓ Conexión activa`, propiedad conectada, y botones `Cambiar`,
+  `Probar conexión`, `Desconectar`.
+- Retorno exitoso con `resultado=connected&app=google_search_console` muestra
+  pantalla estática de `Conexión exitosa` con botón `Volver al Inicio`.
+
+Limpieza posterior:
+
+- Se restauró la fila local Composio GSC de Lorena.
+- Se eliminó la fila temporal local de GA antiguo.
+- No quedaron tablas temporales `_codex_backup_lorena_composio_gsc_audit`.
+- Lorena local queda en estado normal: GSC Composio activo y sin GA viejo
+  temporal.
+
+Conclusión de esta auditoría:
+
+- El flujo GSC -> GA uno-a-uno queda validado en localhost activo.
+- No activar ni desplegar en producción sin aprobación explícita de Milton.
+
+### Auditoría redes sociales bajo Composio — 2026-09-25 — Codex
+
+Alcance revisado:
+
+- Composio debe controlar únicamente Instagram y Facebook dentro de Difusión.
+- Threads, LinkedIn, Pinterest, Tumblr, Bluesky, DEV.to, Blogger y Google
+  Business Profile/PostPeer conservan sus conexiones propias.
+- X/Twitter sigue apagado en Oportunidades de Redes.
+- Instagram/Facebook por Composio no deben ofrecer Stories para evitar errores.
+
+Hallazgos corregidos:
+
+- `apps/web/src/app/api/social-opportunities/generate/route.ts` consideraba
+  Facebook conectado solo si existía la integración vieja
+  `FacebookPageIntegration`. Se corrigió para que una conexión Composio
+  `ACTIVE` con `pageId` también cuente como Facebook Page conectado.
+- El mismo endpoint consideraba Instagram/Facebook Composio aunque la conexión
+  no estuviera completa (`status != FAILED`). Se corrigió para requerir:
+  `status = ACTIVE` y selección real (`igAccountId` o `pageId`).
+- `apps/web/src/app/api/social-opportunities/route.ts` ocultaba Stories si
+  existía cualquier fila Composio no fallida. Se corrigió para ocultarlas solo
+  cuando la conexión Composio está realmente activa y seleccionada.
+
+Validaciones:
+
+- TypeScript web correcto:
+  `npx tsc --noEmit --incremental false -p apps/web/tsconfig.json`.
+- TypeScript worker correcto:
+  `npx tsc --noEmit --incremental false -p apps/worker/tsconfig.json`.
+- UI local revisada en `http://localhost:3001/dashboard/configuracion/conexiones`:
+  - pantalla general muestra dos pisos: Analíticas y Difusión;
+  - Instagram abre como tarjeta individual por Composio;
+  - Facebook abre como tarjeta individual por Composio;
+  - Threads aparece separado y con integración propia;
+  - las tarjetas de Instagram/Facebook indican que Stories no se ofrecen cuando
+    la conexión Composio está activa.
+
+Estado importante antes de abrir a todos:
+
+- El worker ya sabe publicar Facebook Page por Composio y luego cae a la vía
+  vieja si no hay Composio.
+- El worker ya sabe publicar Instagram Post por Composio y luego cae a la vía
+  vieja si no hay Composio.
+- Pero `packages/shared/src/composio-resolver.ts` mantiene
+  `COMPOSIO_CONSUMER_READY.facebook = false` e
+  `COMPOSIO_CONSUMER_READY.instagram = false`. Mientras eso siga así, la vía
+  Composio efectiva depende de piloto/entorno y no queda abierta globalmente.
+- No cambiar esas banderas ni activar globalmente Facebook/Instagram por
+  Composio sin aprobación expresa de Milton y prueba controlada.
+
+### TRASPASO A CLAUDE · CONEXIÓN COMPOSIO · ESTADO VIGENTE — 2026-09-25 — Codex
+
+Claude: este bloque es el traspaso operativo más reciente del proyecto
+`CONEXION COMPOSIO`. Trátalo como estado vigente, no como una propuesta.
+Milton pidió que tomes el control desde aquí.
+
+#### Entorno correcto
+
+- Repositorio / worktree operativo:
+  `/Users/miltondavila/.codex/worktrees/produccion-validacion-composio/Creador de articulos`
+- Localhost de pruebas acordado:
+  `http://localhost:3001`
+- No usar `127.0.0.1` para este proyecto.
+- No usar el worktree antiguo `5c93/Creador de articulos` para pruebas visuales
+  de esta fase; fue detectado como una fuente de confusión.
+- Usuario local de prueba que se ha estado usando:
+  `lorenalvarez30@gmail.com`
+- Si el servidor local se reinicia, cargar `.env.local` antes de levantarlo:
+  `set -a; source .env.local; set +a; PORT=3001 npm run dev --workspace=apps/web`
+- No imprimir secretos ni contraseñas en respuestas.
+
+#### Regla de coordinación
+
+- Antes de tocar producción, leer este documento completo o al menos este
+  bloque más los bloques inmediatamente anteriores de auditoría.
+- Si hay otra conversación/agente trabajando en el mismo repo, coordinar por
+  este documento.
+- Espera máxima recomendada para revisar cambios de coordinación: 15 segundos.
+- No hacer deploy, push ni activar avisos globales sin aprobación explícita de
+  Milton.
+
+#### Objetivo funcional vigente
+
+Migración progresiva a Composio:
+
+1. Usuario existente sin GSC Composio ve aviso rojo en Inicio:
+   `SOLICITUD DE ACTUALIZACIÓN: Debes reconectar Google Search Console mediante Conexiones.`
+2. El aviso lleva directamente a:
+   `/dashboard/configuracion/conexiones?conexion=google-search-console`
+3. Mientras no reconecta, la conexión vieja queda guardada como respaldo.
+4. Cuando GSC queda activo por Composio, desaparece el aviso de GSC.
+5. Si ese usuario tenía Google Analytics antiguo, después debe aparecer solo el
+   aviso de GA:
+   `SOLICITUD DE ACTUALIZACIÓN: Debes reconectar Google Analytics mediante Conexiones.`
+6. Si el usuario no tenía GA viejo, no debe ver aviso de GA.
+7. El flujo debe ser uno a la vez: primero GSC; luego GA solo si aplica.
+8. Usuario nuevo va por el wizard, pero el Paso 4 de GSC debe apuntar a
+   Conexiones/Composio. El wizard NO usa la pantalla global de éxito.
+
+#### UI vigente
+
+- La pantalla `/dashboard/configuracion/conexiones` funciona como índice con
+  dos pisos: `Analíticas` y `Difusión`.
+- Cada conexión debe abrir su propia pantalla dedicada mediante
+  `?conexion=...`; no deben verse otras conexiones debajo.
+- `ConexionesView` fue corregido para leer cambios con `useSearchParams`.
+- Se eliminó el uso de `window` en estado inicial de `ConexionesView` para
+  evitar errores de hidratación.
+- En reentrada normal a GSC/GA, debe verse `Conexión activa` con propiedad /
+  cuenta y botones `Cambiar`, `Probar conexión`, `Desconectar`.
+- Tras retorno exitoso de conexión, debe verse pantalla estática de
+  `Conexión exitosa` con botón único `Volver al Inicio`.
+- En el wizard no debe aparecer esa pantalla global de éxito; el wizard sigue
+  su propio flujo.
+- No deben existir pantallas viejas debajo de pantallas nuevas, ni toggles de
+  `Mostrar conexión anterior` en UI pública.
+
+#### Archivos relevantes tocados por Codex en esta fase
+
+- `apps/web/src/app/dashboard/page.tsx`
+  - Inicio reconoce GSC por Composio vía `/api/composio/status`.
+  - Muestra avisos rojos secuenciales GSC -> GA.
+- `apps/web/src/app/dashboard/configuracion/conexiones/ConexionesView.tsx`
+  - Índice de Conexiones y pantallas individuales por `?conexion=...`.
+  - Corrección de hidratación y cambios de parámetros.
+- `apps/web/src/components/GoogleSearchConsoleSection.tsx`
+  - Tarjeta limpia Composio-only.
+- `apps/web/src/components/GoogleAnalyticsSection.tsx`
+  - Tarjeta limpia Composio-only.
+- `apps/web/src/components/OnboardingWizard.tsx`
+  - Paso 4 usa Composio y reconoce conexión activa por `/api/composio/status`.
+- `apps/web/src/app/api/configuration-status/route.ts`
+  - Lógica de avisos rojos GSC -> GA.
+- `apps/web/src/app/api/pre-validation/route.ts`
+  - Acción de GSC apunta a Conexiones.
+- `apps/web/src/app/api/social-opportunities/generate/route.ts`
+  - Facebook por Composio cuenta como conexión efectiva si está `ACTIVE` y
+    tiene `pageId`.
+  - Instagram por Composio cuenta como conexión efectiva si está `ACTIVE` y
+    tiene `igAccountId`.
+  - Stories se ocultan solo si la conexión Composio real está activa y
+    seleccionada.
+- `apps/web/src/app/api/social-opportunities/route.ts`
+  - Oculta oportunidades de Stories solo con Composio activo y seleccionado.
+- `apps/worker/src/socialPublish.ts`
+  - Ya contiene publicación por Composio para Facebook Page e Instagram Post,
+    con fallback a integración propia.
+- `packages/shared/src/composio-social.ts`
+  - Adaptadores de publicación Composio para Facebook/Instagram.
+- `COORDINACION_CLAUDE_CODEX.md`
+  - Documento de coordinación actualizado.
+
+#### Validaciones ya hechas por Codex
+
+- `npx tsc --noEmit --incremental false -p apps/web/tsconfig.json` correcto.
+- `npx tsc --noEmit --incremental false -p apps/worker/tsconfig.json` correcto.
+- Búsqueda de rastros viejos sin resultados críticos:
+  `search-integrations/google/connect`, `google-analytics/connect`,
+  `Mostrar conexión anterior`, `Ocultar conexión anterior`,
+  `Conexión anterior`, `tab=integrations#google`,
+  `tab=integrations#analytics`.
+- Simulación local reversible:
+  - quitando temporalmente Composio GSC de Lorena, Inicio mostró aviso GSC y
+    el click abrió GSC;
+  - restaurando GSC y agregando GA viejo temporal, Inicio mostró solo aviso GA
+    y el click abrió GA;
+  - se limpió la fila temporal de GA y no quedaron tablas backup.
+- Estado final local confirmado:
+  - Lorena tiene GSC Composio activo;
+  - no queda GA temporal;
+  - no quedan tablas temporales de auditoría.
+- UI local revisada:
+  - Inicio sin aviso para Lorena migrada;
+  - Conexiones general con Analíticas y Difusión;
+  - GSC reentrada normal muestra conexión activa;
+  - retorno exitoso muestra pantalla de éxito;
+  - Instagram y Facebook abren como tarjetas separadas;
+  - Threads aparece separado y no depende de Composio.
+
+#### Redes sociales / Difusión
+
+Estado de producto acordado:
+
+- Composio controla únicamente Instagram y Facebook.
+- Threads conserva integración propia.
+- LinkedIn, Pinterest, Tumblr, Bluesky, DEV.to y Blogger conservan conexiones
+  propias.
+- Google Business Profile sigue por PostPeer.
+- X/Twitter sigue apagado.
+- Composio no debe mostrar ni generar Stories de Instagram/Facebook.
+
+Estado técnico:
+
+- Generación/listado ya ocultan Stories cuando existe conexión Composio real
+  activa y seleccionada.
+- Publicación en worker:
+  - `facebook-page` usa Composio si hay `pageId`, si no cae a integración vieja.
+  - `instagram-post` usa Composio si hay `igAccountId`, si no cae a integración
+    vieja.
+  - Otros formatos de Instagram siguen por integración propia; por eso, al
+    usar Composio, solo debe generarse `instagram-post`, no Stories ni otros
+    formatos no soportados por el adaptador actual.
+
+#### Candados importantes
+
+- `packages/shared/src/composio-resolver.ts` todavía mantiene:
+  - `COMPOSIO_CONSUMER_READY.google_search_console = false`
+  - `COMPOSIO_CONSUMER_READY.google_analytics = false`
+  - `COMPOSIO_CONSUMER_READY.facebook = false`
+  - `COMPOSIO_CONSUMER_READY.instagram = false`
+- Esto es un candado de seguridad heredado. No cambiar a `true` sin:
+  1. prueba local;
+  2. prueba visual con Milton;
+  3. rollback claro;
+  4. aprobación explícita de Milton.
+- `apps/web/src/lib/composio-route.ts` mantiene `COMPOSIO_ROUTING_ENABLED = false`.
+  No activar sin aprobación.
+
+#### Riesgos / cosas a revisar antes de producción
+
+- Confirmar con Milton si quiere activar primero solo GSC/GA o también
+  Facebook/Instagram para usuarios habilitados.
+- Confirmar si las banderas `COMPOSIO_CONSUMER_READY.*` deben cambiarse o si se
+  seguirá usando piloto/env.
+- Verificar en producción que no exista de nuevo el bloqueo de “Módulo en
+  mantenimiento” en `/dashboard/configuracion/conexiones`.
+- Verificar que el aviso rojo esté desactivado hasta el deployment final; Milton
+  pidió que lo último sea activar el aviso.
+- Revisar el manual de usuario más adelante: todavía puede tener texto antiguo
+  indicando que Composio está en preparación y que Instagram Stories están en
+  prueba. No cambiar manual si no es parte de la tarea inmediata.
+
+#### Estado de producción
+
+- No se hizo deploy desde esta auditoría.
+- No se hizo push desde esta auditoría.
+- Producción no debe tocarse sin autorización expresa de Milton.
+
+#### Próximo paso sugerido para Claude
+
+1. Hacer `git status` y revisar solo archivos relacionados.
+2. Correr:
+   - `npx tsc --noEmit --incremental false -p apps/web/tsconfig.json`
+   - `npx tsc --noEmit --incremental false -p apps/worker/tsconfig.json`
+3. Validar visualmente en `http://localhost:3001`:
+   - Inicio con aviso GSC simulado;
+   - GSC éxito;
+   - aviso GA simulado;
+   - Conexiones -> Difusión -> Instagram/Facebook/Threads;
+   - Oportunidades Redes no muestra Stories cuando Composio está activo.
+4. Presentar a Milton un resumen de “listo/no listo” antes de cualquier deploy.
+
+#### CLAUDE · CONEXIÓN COMPOSIO · REVISIÓN INICIAL — 2026-09-25
+
+- Claude tomó el control. Worktree: `produccion-validacion-composio`; localhost `:3001` responde (307, redirige a login).
+- `tsc` web OK, `tsc` worker OK.
+- Candados intactos: `COMPOSIO_CONSUMER_READY.*` = false, `COMPOSIO_ROUTING_ENABLED` = false.
+- Sin deploy, sin push, sin tocar producción. 21 archivos modificados sin commitear en este worktree.
+- Pendiente: validación visual con Milton (simulaciones GSC/GA) y decisión de alcance de activación.
+
+#### CLAUDE · PRUEBAS VISUALES LOCALES (localhost:3001, BD local 127.0.0.1) — 2026-09-25
+
+- OK: Inicio sin aviso (Lorena migrada); Conexiones índice Analíticas/Difusión; pantallas dedicadas GSC/GA/Instagram/Facebook/Threads aisladas.
+- OK: simulación GSC (INITIATED) → aviso rojo correcto, enlace a `?conexion=google-search-console`. GSC restaurada a ACTIVE.
+- Observación menor: con `?conexion=` directo el índice se ve ~2 s antes de la pantalla dedicada; el párrafo introductorio se repite en cada pantalla.
+- BLOQUEADO: aviso GA (requiere insertar GA legacy con token; el clasificador bloqueó explorar columnas de tokens) y Oportunidades Redes sin Stories (Lorena local no tiene ninguna red aprobada por Administración → 403 / "Publicación en redes no habilitada").
+
+- **Capitán de migración:** Claude — CONEXION COMPOSIO: subir lote web (avisos GSC/GA, pantallas dedicadas, éxito). Sin migración. `COMPOSIO_CONSUMER_READY.*` y `COMPOSIO_ROUTING_ENABLED` siguen en false. Autorizado por Milton ("subamos"). Nadie más ejecuta Prisma hasta la liberación.

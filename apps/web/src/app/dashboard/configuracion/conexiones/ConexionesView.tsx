@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type CSSProperties } from "react";
+import { useSearchParams } from "next/navigation";
 import ModuleIntro, { IntroP } from "@/components/ModuleIntro";
 import GoogleSearchConsoleSection from "@/components/GoogleSearchConsoleSection";
 import GoogleAnalyticsSection from "@/components/GoogleAnalyticsSection";
@@ -49,6 +50,7 @@ const columna: CSSProperties = { display: "flex", flexDirection: "column", gap: 
  * las conexiones alternativas se resuelven por debajo, sin duplicar tarjetas en la interfaz.
  */
 export default function ConexionesView() {
+  const searchParams = useSearchParams();
   const [vista, setVista] = useState<Vista | null>(null);
   const [conexion, setConexion] = useState<ConexionId | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -57,12 +59,17 @@ export default function ConexionesView() {
   const [configuradas, setConfiguradas] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    const pedida = new URLSearchParams(window.location.search).get("vista");
-    const conexionPedida = new URLSearchParams(window.location.search).get("conexion") as ConexionId | null;
-    if (pedida === "difusion" || pedida === "analiticas") setVista(pedida);
+    const pedida = searchParams.get("vista");
+    const conexionPedida = searchParams.get("conexion") as ConexionId | null;
     if (conexionPedida) {
       setConexion(conexionPedida);
       setVista(["google-search-console", "google-analytics", "bing-webmaster"].includes(conexionPedida) ? "analiticas" : "difusion");
+    } else if (pedida === "difusion" || pedida === "analiticas") {
+      setConexion(null);
+      setVista(pedida);
+    } else {
+      setConexion(null);
+      setVista(null);
     }
     fetch("/api/me", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
@@ -109,7 +116,7 @@ export default function ConexionesView() {
         setConfiguradas(next);
       })
       .catch(() => {});
-  }, []);
+  }, [searchParams]);
 
   function elegir(siguiente: Vista) {
     setVista(siguiente);

@@ -113,7 +113,7 @@ export async function GET() {
       id: "google-search-console",
       label: "Google Search Console no conectado",
       description: "Conecta tu propiedad de Google Search Console para crear contenido inteligente con tráfico real.",
-      actionUrl: "/dashboard/configuracion?tab=integrations#google",
+      actionUrl: "/dashboard/configuracion/conexiones?conexion=google-search-console",
       actionLabel: "Conectar Google Search Console",
     };
     missingForOpportunities.push(gscItem);
