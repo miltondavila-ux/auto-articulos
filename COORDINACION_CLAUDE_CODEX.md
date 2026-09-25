@@ -9642,3 +9642,9 @@ Responsable: Claude (tarea programada diaria de propagación).
 8. **Botón «Volver al menú de Conexiones»** visible en todas las pantallas dedicadas (Analíticas y Difusión, cualquier estado). Hoy solo hay un enlace pequeño arriba (`ConexionesView.tsx`).
 
 **Aún sin probar en producción:** Facebook, Instagram (permisos por usuario + módulo «Conexión por Composio» + Oportunidades Redes sin Stories) y publicación real desde el worker. Manual de usuario pendiente de actualizar. Pendiente también: al cerrar, decidir con Milton si `COMPOSIO_RECONNECT_NOTICE` queda en `all`.
+
+**Avance 2026-09-25 (Claude, nueva conversación):** mejoras 1, 2 y 5 codificadas en la rama `claude/composio-traspaso-8-mejoras`, sin subir aún (falta prueba local y reclamar capitanía). Aviso de Inicio ahora con botón «Reconectar ahora» y etiqueta PASO 1 DE 2 (GSC, rojo) / PASO 2 DE 2 (GA, ámbar); URL de reconexión añade `&reconectar=1`; `ComposioConnect` muestra «Debes reconectar ahora» y pulso suave en «Nueva conexión» solo con ese parámetro. `tsc` limpio. Siguen pendientes 3, 4, 6, 7, 8.
+
+- **PENDIENTE #9 (Claude, 2026-09-25):** con «Conexión activa» la pantalla dedicada sigue mostrando «Cómo hacerlo paso a paso» (5 pasos de conectar). Ocultar esos pasos cuando ya está conectada. Aplica a GSC y GA.
+
+- **Capitán de migración:** Claude (Composio 8 mejoras) — lote mejoras 1,2,5 (solo UI, sin migración). Nadie más ejecuta Prisma hasta su liberación.

@@ -149,28 +149,56 @@ export default function InicioPage() {
         )}
       </ModuleIntro>
       <div aria-live="polite">
-      {configurationAlerts.map((alert) => (
-        <Link
-          key={alert.id}
-          href={alert.actionUrl}
-          style={{
-            display: "block",
-            margin: "18px 0 20px",
-            padding: "16px 18px",
-            border: "2px solid #d70015",
-            borderRadius: 8,
-            background: "#fff1f1",
-            color: "#b00020",
-            fontSize: 15,
-            fontWeight: 800,
-            lineHeight: 1.45,
-            textDecoration: "none",
-            overflowWrap: "anywhere",
-          }}
-        >
-          SOLICITUD DE ACTUALIZACIÓN: {(alert.description ?? alert.label).trim()}
-        </Link>
-      ))}
+      {configurationAlerts.map((alert) => {
+        const isAnalytics = alert.id === "google-analytics-reconnect";
+        const tone = isAnalytics
+          ? { border: "#b45309", background: "#fff7ed", color: "#92400e", button: "#b45309" }
+          : { border: "#d70015", background: "#fff1f1", color: "#b00020", button: "#d70015" };
+        return (
+          <div
+            key={alert.id}
+            role="alert"
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 14,
+              margin: "18px 0 20px",
+              padding: "16px 18px",
+              border: `2px solid ${tone.border}`,
+              borderRadius: 8,
+              background: tone.background,
+              color: tone.color,
+            }}
+          >
+            <div style={{ flex: "1 1 260px", minWidth: 0 }}>
+              <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 800, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                {isAnalytics ? "PASO 2 DE 2 · Google Analytics" : "PASO 1 DE 2 · Google Search Console"}
+              </p>
+              <p style={{ margin: 0, fontSize: 15, fontWeight: 800, lineHeight: 1.45, overflowWrap: "anywhere" }}>
+                SOLICITUD DE ACTUALIZACIÓN: {(alert.description ?? alert.label).trim()}
+              </p>
+            </div>
+            <Link
+              href={alert.actionUrl}
+              style={{
+                display: "inline-block",
+                padding: "11px 20px",
+                borderRadius: 8,
+                background: tone.button,
+                color: "#ffffff",
+                fontSize: 15,
+                fontWeight: 700,
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Reconectar ahora
+            </Link>
+          </div>
+        );
+      })}
       </div>
       {showWizard === false && (
         <div style={{ marginTop: 20, marginBottom: 20 }}>

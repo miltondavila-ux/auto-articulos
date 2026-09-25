@@ -139,6 +139,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
   const [choices, setChoices] = useState<Record<string, Choices>>({});
   const [justSaved, setJustSaved] = useState<Record<string, boolean>>({});
   const [justCompleted, setJustCompleted] = useState<Record<string, boolean>>({});
+  const [fromNotice, setFromNotice] = useState(false);
 
   const load = useCallback(async () => {
     const response = await fetch("/api/composio/status", { cache: "no-store" });
@@ -177,6 +178,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
       list?.filter((c) => c.status === "ACTIVE" && !c.selection && c.available).forEach((c) => void openChoices(c.app));
     });
     const paramsFromCurrentUrl = new URLSearchParams(window.location.search);
+    if (paramsFromCurrentUrl.get("reconectar") === "1") setFromNotice(true);
     const resultado = paramsFromCurrentUrl.get("resultado") ?? null;
     const appDeVuelta = paramsFromCurrentUrl.get("app") ?? null;
     if (resultado && RESULT_MESSAGE[resultado] && (!apps || !appDeVuelta || apps.includes(appDeVuelta))) {
@@ -278,6 +280,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
 
   return (
     <div>
+      <style>{`@keyframes composio-pulse{0%,100%{box-shadow:0 0 0 0 rgba(215,0,21,.45)}50%{box-shadow:0 0 0 10px rgba(215,0,21,0)}}.composio-pulse{animation:composio-pulse 1.8s ease-in-out infinite}@media (prefers-reduced-motion:reduce){.composio-pulse{animation:none}}`}</style>
       {!embedded && !inline && (
       <section style={sectionStyle}>
         <h2 style={h2Style}>Conexión por Composio</h2>
@@ -343,6 +346,14 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
                 <span style={{ fontSize: 13, fontWeight: 600, color: status.color }}>{status.text}</span>
               </div>
               <p style={{ ...mutedStyle, margin: "4px 0 0" }}>{APP_NOTES[connection.app]}</p>
+              {fromNotice && connection.status !== "ACTIVE" && connection.available && (
+                <p
+                  role="alert"
+                  style={{ margin: "12px 0 0", padding: "12px 14px", borderRadius: 8, background: "#fff1f1", border: "2px solid #d70015", color: "#b00020", fontSize: 15, fontWeight: 800 }}
+                >
+                  Debes reconectar ahora. Pulsa «Nueva conexión» y autoriza el acceso.
+                </p>
+              )}
               {CONNECTION_STEPS[connection.app] && (
                 <div
                   role="note"
@@ -457,6 +468,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
                       type="button"
                       onClick={() => connect(connection.app)}
                       disabled={busy !== null}
+                      className={fromNotice ? "composio-pulse" : undefined}
                       style={{ ...buttonStyle, marginTop: 0, opacity: busy !== null ? 0.5 : 1 }}
                     >
                       {isBusy ? "Abriendo…" : connection.status === "NOT_CONNECTED" ? "Nueva conexión" : "Reintentar conexión"}
