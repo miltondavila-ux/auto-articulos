@@ -15,7 +15,10 @@ export interface ConnectionState {
 
 /**
  * Convierte las filas de Prisma en el estado estable que consume el resolvedor.
- * La selección de Search Console queda aprobada solo cuando existe dominio y URL.
+ * La selección de Search Console queda aprobada cuando existe URL elegida.
+ * `siteDomain` es el alcance interno de almacenamiento y puede quedar vacío en
+ * las conexiones globales de Composio; no debe usarse para decidir si la persona
+ * ya seleccionó una propiedad real.
  */
 export function buildConnectionState(input: {
   own: { id: string } | null;
@@ -31,7 +34,7 @@ export function buildConnectionState(input: {
     composio: input.composio
       ? {
           status: input.composio.status,
-          hasSelection: Boolean(input.composio.siteDomain && input.composio.siteUrl),
+          hasSelection: Boolean(input.composio.siteUrl),
           connectedAccountId: input.composio.connectedAccountId,
           siteUrl: input.composio.siteUrl,
         }

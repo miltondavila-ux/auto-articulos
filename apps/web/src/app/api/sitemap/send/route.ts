@@ -9,6 +9,15 @@ import {
 import { getCurrentUserId } from "@/lib/current-user";
 import { resolveSearchConsoleForUser } from "@/lib/composio-search-console-consumer";
 
+function defaultSitemapUrl(siteUrl: string): string {
+  try {
+    const url = new URL(siteUrl.startsWith("sc-domain:") ? `https://${siteUrl.replace(/^sc-domain:/, "")}` : siteUrl);
+    return `${url.origin.replace(/\/$/, "")}/sitemap.xml`;
+  } catch {
+    return `${siteUrl.replace(/\/$/, "")}/sitemap.xml`;
+  }
+}
+
 /**
  * Envío manual del sitemap, para cuando el usuario ve que el envío diario
  * automático falló y no quiere esperar a la próxima corrida (pedido
@@ -22,7 +31,10 @@ export async function POST() {
   const integration = await prisma.searchIntegration.findFirst({
     where: { userId, provider: "google", ...(user.selectedSiteDomain ? { siteDomain: user.selectedSiteDomain } : {}) },
   });
-  if (!integration?.siteUrl || !integration.sitemapUrl) {
+  const resolved = await resolveSearchConsoleForUser(userId, user.selectedSiteDomain ?? "");
+  const composioSiteUrl = resolved.source === "COMPOSIO" ? resolved.state.composio?.siteUrl ?? null : null;
+  const sitemapUrl = integration?.sitemapUrl ?? (composioSiteUrl ? defaultSitemapUrl(composioSiteUrl) : null);
+  if ((!integration?.siteUrl && !composioSiteUrl) || !sitemapUrl) {
     return NextResponse.json(
       { error: "Conecta Google Search Console y configura el sitemap primero." },
       { status: 400 },
@@ -30,7 +42,6 @@ export async function POST() {
   }
 
   try {
-    const resolved = await resolveSearchConsoleForUser(userId, integration.siteDomain);
     if (resolved.source === "COMPOSIO") {
       if (!resolved.apiKey || !resolved.state.composio?.connectedAccountId || !resolved.state.composio.siteUrl) {
         throw new Error("Search Console requiere reconectar la cuenta por Composio y seleccionar un sitio.");
@@ -38,11 +49,14 @@ export async function POST() {
       await composioSubmitSitemap(
         { apiKey: resolved.apiKey, userId, connectedAccountId: resolved.state.composio.connectedAccountId },
         resolved.state.composio.siteUrl,
-        integration.sitemapUrl,
+        sitemapUrl,
       );
     } else {
+      if (!integration?.encryptedRefreshToken || !integration.siteUrl) {
+        throw new Error("Conecta Google Search Console y selecciona un sitio primero.");
+      }
       const accessToken = await getGoogleAccessToken(decryptSecret(integration.encryptedRefreshToken));
-      await submitGoogleSitemap(accessToken, integration.siteUrl, integration.sitemapUrl);
+      await submitGoogleSitemap(accessToken, integration.siteUrl, sitemapUrl);
     }
 
     const sentAt = new Date();
@@ -51,14 +65,18 @@ export async function POST() {
       select: { id: true },
     });
     await prisma.$transaction([
-      prisma.searchIntegration.update({
-        where: { id: integration.id },
-        data: {
-          lastSitemapSyncAt: sentAt,
-          lastSitemapSyncStatus: "success",
-          lastSitemapSyncError: null,
-        },
-      }),
+      ...(integration
+        ? [
+            prisma.searchIntegration.update({
+              where: { id: integration.id },
+              data: {
+                lastSitemapSyncAt: sentAt,
+                lastSitemapSyncStatus: "success",
+                lastSitemapSyncError: null,
+              },
+            }),
+          ]
+        : []),
       ...(publishedTitles.length > 0
         ? [
             prisma.title.updateMany({
@@ -83,14 +101,16 @@ export async function POST() {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    await prisma.searchIntegration.update({
-      where: { id: integration.id },
-      data: {
-        lastSitemapSyncAt: new Date(),
-        lastSitemapSyncStatus: "error",
-        lastSitemapSyncError: message,
-      },
-    });
+    if (integration) {
+      await prisma.searchIntegration.update({
+        where: { id: integration.id },
+        data: {
+          lastSitemapSyncAt: new Date(),
+          lastSitemapSyncStatus: "error",
+          lastSitemapSyncError: message,
+        },
+      });
+    }
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }

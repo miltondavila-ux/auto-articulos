@@ -23,7 +23,7 @@ export async function loadConnectionState(
   const composioWhere = {
     userId,
     app,
-    ...(siteDomain ? { siteDomain } : {}),
+    ...(siteDomain ? { OR: [{ siteDomain }, { siteDomain: "" }] } : {}),
   };
   const [own, composio] = await Promise.all([
     prisma.searchIntegration.findFirst({ where: ownWhere, select: { id: true } }),

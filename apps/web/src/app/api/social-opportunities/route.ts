@@ -13,7 +13,17 @@ export async function GET() {
         orderBy: { createdAt: "desc" },
       }),
       prisma.tumblrIntegration.findUnique({ where: { userId }, select: { blogIdentifier: true } }),
-      prisma.composioConnection.findMany({ where: { userId, app: { in: ["instagram", "facebook"] }, status: { not: "FAILED" } }, select: { app: true } }),
+      prisma.composioConnection.findMany({
+        where: {
+          userId,
+          status: "ACTIVE",
+          OR: [
+            { app: "instagram", igAccountId: { not: null } },
+            { app: "facebook", pageId: { not: null } },
+          ],
+        },
+        select: { app: true },
+      }),
     ]);
     const composioApps = new Set(composioConnections.map((connection) => connection.app));
     const history = opportunities.filter((opportunity) => {

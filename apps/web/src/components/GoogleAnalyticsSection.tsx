@@ -1,101 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { inputStyle, secondaryButtonStyle, sectionStyle, h2Style } from "./dashboard-ui";
+import { sectionStyle, h2Style } from "./dashboard-ui";
 import ComposioConnect from "./ComposioConnect";
 
-type Property = { propertyId: string; displayName: string; accountName?: string };
-type Summary = { totalSessions: number; totalActiveUsers: number; pagesWithData: number };
-
 export default function GoogleAnalyticsSection() {
-  const [data, setData] = useState<{ connected: boolean; propertyId?: string | null; properties: Property[]; summary?: Summary; error?: string } | null>(null);
-  const [selected, setSelected] = useState("");
-  const [message, setMessage] = useState("");
-  const [busy, setBusy] = useState(false);
-  const composioOnly = true;
-  const [showLegacy, setShowLegacy] = useState(false);
-
-  async function load() {
-    const response = await fetch("/api/google-analytics");
-    const value = await response.json();
-    setData(value);
-    setSelected(value.propertyId ?? "");
-  }
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  async function save() {
-    setBusy(true);
-    const response = await fetch("/api/google-analytics", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ propertyId: selected }) });
-    const value = await response.json().catch(() => ({}));
-    setMessage(response.ok ? "Propiedad de Google Analytics guardada. Se usará automáticamente al crear contenido inteligente." : (value.error ?? "No se pudo guardar la propiedad."));
-    if (response.ok) await load();
-    setBusy(false);
-  }
-
-  async function disconnect() {
-    await fetch("/api/google-analytics", { method: "DELETE" });
-    setMessage("Google Analytics desconectado.");
-    await load();
-  }
-
   return <section style={sectionStyle}>
     <h2 style={h2Style}>Google Analytics 4</h2>
-    {/* La interfaz pública usa únicamente Composio; la conexión histórica no se muestra. */}
-    {composioOnly ? <>
-      <p className="lead-copy" style={{ margin: "0 0 16px" }}>Conexión administrada desde esta tarjeta. Elige aquí la propiedad que usará SEO TOTAL.</p>
-      <ComposioConnect inline apps={["google_analytics"]} />
-      <div style={{ marginTop: 16, borderTop: "1px solid #e5e5ea", paddingTop: 12 }}>
-        <button type="button" onClick={() => setShowLegacy((value) => !value)} className="link-button" style={{ border: 0, background: "transparent", padding: 0, color: "#6e6e73", fontSize: 12 }}>
-          {showLegacy ? "Ocultar conexión anterior" : "Mostrar conexión anterior"}
-        </button>
-        {showLegacy && (
-          <div style={{ marginTop: 10, padding: 12, borderRadius: 10, background: "#fff4e5", color: "#8a4b08", fontSize: 13 }}>
-            <strong>{data?.connected ? "Conexión anterior conectada" : "No hay conexión anterior"}</strong>
-            {data?.connected && <button type="button" onClick={disconnect} className="secondary" style={{ display: "block", marginTop: 8, color: "#c62828" }}>Desconectar conexión anterior</button>}
-          </div>
-        )}
-      </div>
-    </> : <>
-    <p className="lead-copy" style={{ margin: "0 0 16px" }}>Conecta GA4 para que SEO TOTAL use el rendimiento real de tu contenido al crear artículos inteligentes y publicaciones para redes sociales. Solo leeremos tus datos y nunca modificaremos tu cuenta.</p>
-    <div style={{ background: "#f5f5f7", border: "1px solid #e5e5ea", borderRadius: 8, padding: "12px 14px", marginBottom: 14, fontSize: 13, lineHeight: 1.5 }}>
-      <strong>Cómo funciona:</strong> conecta tu cuenta, autoriza el acceso de lectura y elige una propiedad GA4. Puedes cambiarla o desconectarla cuando quieras.
-    </div>
-    {!data?.connected ? <a href="/api/google-analytics/connect?returnTo=/dashboard/configuracion/conexiones%3Fconexion%3Dgoogle-analytics" style={{ ...secondaryButtonStyle, display: "inline-block", textDecoration: "none" }}>Conectar Google Analytics 4</a> : <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {data.error && <div style={{ color: "#6e6e73", fontSize: 13 }}>⚠️ {data.error} Puedes reconectar tu cuenta.</div>}
-      <select value={selected} onChange={(event) => setSelected(event.target.value)} style={inputStyle}>
-        <option value="">Selecciona tu propiedad GA4</option>
-        {data.properties.map((property) => <option key={property.propertyId} value={property.propertyId}>{property.displayName} ({property.propertyId})</option>)}
-      </select>
-      {data.propertyId && (() => {
-        const property = data.properties.find((item) => item.propertyId === data.propertyId);
-        return (
-          <p style={{ fontSize: 13, color: "#1d1d1f", margin: 0 }}>
-            ✓ Propiedad conectada: {property ? `${property.displayName} (${property.propertyId})` : data.propertyId}
-          </p>
-        );
-      })()}
-      {data.propertyId && data.summary && (
-        data.summary.totalSessions > 0 ? (
-          <p style={{ fontSize: 12, color: "#1d1d1f", margin: 0 }}>
-            ✓ Recibiendo datos reales: {data.summary.totalSessions.toLocaleString("es-US")} sesiones y {data.summary.totalActiveUsers.toLocaleString("es-US")} usuarios activos en los últimos 12 meses, en {data.summary.pagesWithData} páginas.
-          </p>
-        ) : (
-          <p className="muted" style={{ fontSize: 12, margin: 0 }}>
-            Conectado, pero todavía no hay datos registrados en esta propiedad en los últimos 12 meses.
-          </p>
-        )
-      )}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <button onClick={save} disabled={busy || !selected} style={secondaryButtonStyle}>{busy ? "Guardando..." : "Guardar propiedad"}</button>
-        <a href="/api/google-analytics/connect?returnTo=/dashboard/configuracion/conexiones%3Fconexion%3Dgoogle-analytics" style={{ ...secondaryButtonStyle, textDecoration: "none" }}>Reconectar Google Analytics</a>
-        <button onClick={disconnect} style={secondaryButtonStyle}>Desconectar Google Analytics</button>
-      </div>
-    </div>}
-    {message && <p style={{ fontSize: 13, margin: "10px 0 0", color: message.includes("no se") || message.includes("No se") ? "#c00" : "#1d1d1f" }}>{message}</p>}
+    <p className="lead-copy" style={{ margin: "0 0 16px" }}>
+      Conexión administrada desde esta tarjeta. Elige aquí la propiedad que usará SEO TOTAL.
+    </p>
     <ComposioConnect inline apps={["google_analytics"]} />
-    </>}
   </section>;
 }

@@ -122,10 +122,24 @@ export async function GET() {
     }),
   ]);
 
-  const resolvedSearchConsole = await resolveSearchConsoleForUser(userId, account.selectedSiteDomain ?? "");
+  const [resolvedSearchConsole, analyticsComposioConnection] = await Promise.all([
+    resolveSearchConsoleForUser(userId, account.selectedSiteDomain ?? ""),
+    prisma.composioConnection.findFirst({
+      where: {
+        userId,
+        app: "google_analytics",
+        status: "ACTIVE",
+        ...(account.selectedSiteDomain ? { OR: [{ siteDomain: account.selectedSiteDomain }, { siteDomain: "" }] } : {}),
+      },
+      orderBy: { updatedAt: "desc" },
+      select: { propertyId: true, siteUrl: true },
+    }),
+  ]);
   const searchConsoleConfigured = Boolean(googleIntegration?.siteUrl) || (
     resolvedSearchConsole.source === "COMPOSIO" && Boolean(resolvedSearchConsole.state.composio?.siteUrl)
   );
+  const hasLegacyGoogleAnalytics = Boolean(googleAnalyticsIntegration?.siteUrl && googleAnalyticsIntegration.encryptedRefreshToken);
+  const hasActiveComposioAnalytics = Boolean(analyticsComposioConnection?.propertyId || analyticsComposioConnection?.siteUrl);
 
   const checks: ConfigurationCheck[] = [
     // ━━━ MÍNIMO PARA PUBLICAR ━━━
@@ -178,17 +192,17 @@ export async function GET() {
       required: false,
       section: "seo",
       description: "Conecta tu sitio a Google Search Console para indexar artículos y enviar sitemaps automáticamente.",
-      actionUrl: "/dashboard/configuracion?tab=integrations#google",
-      actionLabel: "Conectar Google",
+      actionUrl: "/dashboard/configuracion/conexiones?conexion=google-search-console",
+      actionLabel: "Conectar Search Console",
     },
     {
       id: "google-analytics",
       label: "Google Analytics",
-      configured: Boolean(googleAnalyticsIntegration?.siteUrl && googleAnalyticsIntegration.encryptedRefreshToken),
+      configured: Boolean((googleAnalyticsIntegration?.siteUrl && googleAnalyticsIntegration.encryptedRefreshToken) || hasActiveComposioAnalytics),
       required: false,
       section: "seo",
       description: "Conecta Google Analytics para que SEO TOTAL use datos reales de visitas al proponer contenidos.",
-      actionUrl: "/dashboard/configuracion?tab=integrations#analytics",
+      actionUrl: "/dashboard/configuracion/conexiones?conexion=google-analytics",
       actionLabel: "Configurar Google Analytics",
     },
     {
@@ -332,16 +346,36 @@ export async function GET() {
       resolvedSearchConsole.state.composio.hasSelection,
   );
 
-  if (!hasActiveComposioSearchConsole) {
+  // Interruptor del aviso rojo de reconexión: apagado por defecto. "all" lo muestra a todos;
+  // una lista de IDs separada por comas lo limita a un piloto. Se apaga quitando la variable.
+  const reconnectNotice = (process.env.COMPOSIO_RECONNECT_NOTICE ?? "").trim();
+  const showReconnectNotice =
+    reconnectNotice === "all" ||
+    reconnectNotice.split(",").map((id) => id.trim()).filter(Boolean).includes(userId);
+
+  if (!showReconnectNotice) {
+    // Aviso apagado: no se agrega ninguna solicitud de reconexión.
+  } else if (!hasActiveComposioSearchConsole) {
     checks.push({
       id: "google-search-console-reconnect",
       label: "Reconectar Google Search Console por Composio",
       configured: false,
       required: false,
       section: "seo",
-      description: "Debes conectar Google Search Console mediante Conexiones para completar la actualización.",
-      actionUrl: "/dashboard/configuracion/conexiones?vista=analiticas",
+      description: "Debes reconectar Google Search Console mediante Conexiones.",
+      actionUrl: "/dashboard/configuracion/conexiones?conexion=google-search-console",
       actionLabel: "Reconectar Search Console",
+    });
+  } else if (hasLegacyGoogleAnalytics && !hasActiveComposioAnalytics) {
+    checks.push({
+      id: "google-analytics-reconnect",
+      label: "Reconectar Google Analytics por Composio",
+      configured: false,
+      required: false,
+      section: "seo",
+      description: "Debes reconectar Google Analytics mediante Conexiones.",
+      actionUrl: "/dashboard/configuracion/conexiones?conexion=google-analytics",
+      actionLabel: "Reconectar Analytics",
     });
   }
 

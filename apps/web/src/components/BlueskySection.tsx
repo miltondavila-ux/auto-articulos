@@ -46,7 +46,8 @@ export default function BlueskySection({ allowed = true }: { allowed?: boolean }
     finally { setSaving(false); }
   }
 
-  if (!allowed) return null;
+  void disconnect;
+    if (!allowed) return null;
   return <section style={sectionStyle}>
     <h2 style={{ ...h2Style, margin: 0 }}>Bluesky</h2>
     <p className="lead-copy" style={{ fontSize: 13, margin: "4px 0 0" }}>Publica un microresumen del artículo con su imagen y enlace.</p>
@@ -68,7 +69,7 @@ export default function BlueskySection({ allowed = true }: { allowed?: boolean }
         <label style={{ color: "#1d1d1f", fontSize: 12 }}>Usuario o handle<input value={handle} onChange={(e) => setHandle(e.target.value)} placeholder="usuario.bsky.social" style={inputStyle} /></label>
         <label style={{ color: "#1d1d1f", fontSize: 12 }}>App Password<input type="password" value={appPassword} onChange={(e) => setAppPassword(e.target.value)} placeholder="No uses tu contraseña principal" style={inputStyle} /></label>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><button onClick={save} disabled={saving} style={disabledStyle({ ...secondaryButtonStyle, background: "#1d1d1f", color: "#fff", border: "none" }, saving)}>{saving ? "Verificando..." : "Conectar Bluesky"}</button>{connection?.connected && <button onClick={() => setEditing(false)} className="secondary" style={secondaryButtonStyle}>Cancelar</button>}</div>
-      </div> : <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}><strong style={{ color: "#1d1d1f", fontSize: 13 }}>✓ Conectado como @{connection.handle}</strong><button onClick={() => setEditing(true)} className="secondary" style={secondaryButtonStyle}>Cambiar cuenta</button><button onClick={disconnect} disabled={saving} className="secondary" style={secondaryButtonStyle}>Desconectar</button></div>}
+      </div> : <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}><strong style={{ color: "#1d1d1f", fontSize: 13 }}>✓ Conexión activa — @{connection.handle}</strong><button onClick={() => setEditing(true)} className="secondary" style={secondaryButtonStyle}>Cambiar cuenta</button><button onClick={disconnect} disabled={saving} className="secondary" style={secondaryButtonStyle}>Revocar conexión</button></div>}
       {message && <p className="notice" style={{ margin: "12px 0 0" }}>{message}</p>}
     </div>}
   </section>;

@@ -18,7 +18,7 @@ async function contextFor(userId: string, titleId: string) {
   const integration = await prisma.searchIntegration.findFirst({
     where: { userId, provider: "google", ...(user.selectedSiteDomain ? { siteDomain: user.selectedSiteDomain } : {}) },
   });
-  return { title, integration };
+  return { title, integration, selectedSiteDomain: user.selectedSiteDomain ?? "" };
 }
 
 function searchConsoleUrl(siteUrl: string, articleUrl: string) {
@@ -34,14 +34,16 @@ export async function GET(
 ) {
   const userId = await getCurrentUserId();
   const { id } = await params;
-  const { title, integration } = await contextFor(userId, id);
-  if (!title?.articleUrl || !integration?.siteUrl) {
+  const { title, integration, selectedSiteDomain } = await contextFor(userId, id);
+  const resolved = await resolveSearchConsoleForUser(userId, integration?.siteDomain ?? selectedSiteDomain);
+  const siteUrl = integration?.siteUrl ?? (resolved.source === "COMPOSIO" ? resolved.state.composio?.siteUrl ?? null : null);
+  if (!title?.articleUrl || !siteUrl) {
     return NextResponse.redirect(
       new URL("https://search.google.com/search-console"),
     );
   }
   return NextResponse.redirect(
-    searchConsoleUrl(integration.siteUrl, title.articleUrl),
+    searchConsoleUrl(siteUrl, title.articleUrl),
   );
 }
 
@@ -51,21 +53,22 @@ export async function POST(
 ) {
   const userId = await getCurrentUserId();
   const { id } = await params;
-  const { title, integration } = await contextFor(userId, id);
+  const { title, integration, selectedSiteDomain } = await contextFor(userId, id);
   if (!title?.articleUrl) {
     return NextResponse.json(
       { error: "El artículo no tiene URL." },
       { status: 400 },
     );
   }
-  if (!integration?.siteUrl) {
+  const resolved = await resolveSearchConsoleForUser(userId, integration?.siteDomain ?? selectedSiteDomain);
+  const siteUrl = integration?.siteUrl ?? (resolved.source === "COMPOSIO" ? resolved.state.composio?.siteUrl ?? null : null);
+  if (!siteUrl) {
     return NextResponse.json(
       { error: "Selecciona primero una propiedad de Google Search Console." },
       { status: 400 },
     );
   }
   try {
-    const resolved = await resolveSearchConsoleForUser(userId, integration.siteDomain);
     const inspection = resolved.source === "COMPOSIO"
       ? resolved.apiKey && resolved.state.composio?.connectedAccountId && resolved.state.composio.siteUrl
         ? await composioInspectUrl(
@@ -75,8 +78,8 @@ export async function POST(
           )
         : (() => { throw new Error("Search Console requiere reconectar la cuenta por Composio y seleccionar un sitio."); })()
       : await inspectGoogleUrl(
-          await getGoogleAccessToken(decryptSecret(integration.encryptedRefreshToken)),
-          integration.siteUrl,
+          await getGoogleAccessToken(decryptSecret(integration!.encryptedRefreshToken)),
+          siteUrl,
           title.articleUrl,
         );
     const indexed = inspection.verdict === "PASS";

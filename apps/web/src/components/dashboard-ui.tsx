@@ -145,3 +145,53 @@ export function runStatusLabel(status: RunStatus) {
       return "Cancelado";
   }
 }
+
+
+export function ConnectionSuccess({
+  title,
+  label,
+  value,
+  description = "Todo funcionó correctamente. SEO TOTAL usará esta conexión para este servicio.",
+}: {
+  title: string;
+  label: string;
+  value?: string | null;
+  description?: string;
+}) {
+  return (
+    <div
+      role="status"
+      style={{
+        marginTop: 12,
+        padding: 18,
+        borderRadius: 14,
+        border: "1px solid rgba(26, 127, 55, 0.28)",
+        background: "#f0fff4",
+        color: "#1d1d1f",
+      }}
+    >
+      <strong style={{ display: "block", fontSize: 18, color: "#1a7f37", marginBottom: 8 }}>
+        ✓ {title}
+      </strong>
+      {value && (
+        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>
+          {label}: <strong>{value}</strong>.
+        </p>
+      )}
+      <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5, color: "#1d1d1f" }}>
+        {description}
+      </p>
+      <a
+        href="/dashboard"
+        style={{
+          ...buttonStyle,
+          display: "inline-block",
+          marginTop: 16,
+          textDecoration: "none",
+        }}
+      >
+        Volver al Inicio
+      </a>
+    </div>
+  );
+}

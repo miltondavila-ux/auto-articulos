@@ -186,10 +186,10 @@ export async function POST(request: Request) {
     let countryRows = cachedGsc?.countryRows ?? [];
     // Nunca congelar una respuesta vacía de Search Console durante el TTL.
     const hasCachedGscRows = currentRows.length > 0 || previousRows.length > 0;
-    const resolved = integration ? await resolveSearchConsoleForUser(userId, integration.siteDomain) : null;
-    const hasSearchConsole = Boolean(integration?.siteUrl) || resolved?.source === "COMPOSIO";
+    const resolved = await resolveSearchConsoleForUser(userId, selectedSiteDomain ?? "");
+    const hasSearchConsole = Boolean(integration?.siteUrl) || resolved.source === "COMPOSIO";
     if ((!cachedGsc || !hasCachedGscRows) && hasSearchConsole) {
-      if (resolved?.source === "COMPOSIO") {
+      if (resolved.source === "COMPOSIO") {
         if (!resolved.apiKey || !resolved.state.composio?.connectedAccountId || !resolved.state.composio.siteUrl) {
           throw new Error("Search Console requiere reconectar la cuenta por Composio y seleccionar un sitio.");
         }
@@ -203,9 +203,12 @@ export async function POST(request: Request) {
           query(isoDate(currentStart), isoDate(end), ["country"]),
         ]);
       } else {
+        if (!integration?.encryptedRefreshToken || !integration.siteUrl) {
+          throw new Error("Conecta Google Search Console y selecciona un sitio primero.");
+        }
         const collected = await collectDeepGoogleEvidence(
-          await getGoogleAccessToken(decryptSecret(integration!.encryptedRefreshToken)),
-          integration!.siteUrl!, isoDate(currentStart), isoDate(end), isoDate(previousStart), isoDate(previousEnd),
+          await getGoogleAccessToken(decryptSecret(integration.encryptedRefreshToken)),
+          integration.siteUrl, isoDate(currentStart), isoDate(end), isoDate(previousStart), isoDate(previousEnd),
         );
         currentRows = collected.currentRows;
         previousRows = collected.previousRows;
