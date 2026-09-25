@@ -9606,3 +9606,45 @@ que dejar anotadas para Milton.
 Responsable: Claude (tarea programada diaria de propagación).
 
 - **CLAUDE · Interruptor del aviso rojo:** `COMPOSIO_RECONNECT_NOTICE` (env de Vercel, apagado por defecto). `all` = todos; lista de userId separada por comas = piloto. Cubre GSC y GA (ambos salen de `configuration-status`). Se apaga quitando la variable. Probado en local: apagado no muestra aviso.
+
+- **CLAUDE · LIBERACIÓN — 2026-09-25:** PR #224 fusionado en `main` (abb687dd); Vercel Production `success`; rutas responden sin 5xx. Sin migración. Aviso rojo apagado por defecto (`COMPOSIO_RECONNECT_NOTICE` sin definir). Banderas Composio en `false`. Pendiente: piloto del aviso con el userId de Lorena, login real Google/Meta, publicación real del worker, manual.
+
+- **PENDIENTE (pedido de Milton, 2026-09-25):** el aviso rojo de Inicio necesita un **BOTÓN visible** ("Reconectar ahora") para que el usuario sepa que debe pulsar ahí. Hoy es solo texto rojo clicable. Archivo: `apps/web/src/app/dashboard/page.tsx` (~línea 171).
+
+- **PENDIENTE #2 (Milton, 2026-09-25):** en la pantalla de reconexión (GSC/GA) no queda claro que el usuario DEBE pulsar «Nueva conexión». Añadir mensaje explícito («Debes reconectar ahora») y destacar el botón con un pulso suave. Solo cuando venga del aviso de reconexión.
+
+- **PENDIENTE #3 (Milton, 2026-09-25):** la elección de propiedad (GSC/GA) se muestra como lista larga y desordenada. Debe ser un **dropdown ordenado (con búsqueda), de selección única**. Archivo: `apps/web/src/components/ComposioConnect.tsx` (bloque de opciones, ~línea 400-431).
+
+- **PENDIENTE #4 (Milton, 2026-09-25):** tras «Aprobar y guardar» en GSC no hay mensaje sobre el sitemap. Debe enviar el sitemap (o avisar «tu sitemap ya está en Google y se enviará…») y mostrarlo en la pantalla de éxito. Ver `lastSitemapSyncAt/Status` en `ComposioConnection` y `app/api/sitemap/send/route.ts`.
+
+- **PENDIENTE #5 (Milton, 2026-09-25):** el aviso de GA se ve igual que el de GSC (mismo rojo y formato). Debe verse **distinto** (otro color/etiqueta, p. ej. «PASO 2 DE 2 · Google Analytics») para que el usuario entienda que es otra reconexión. Con botón (ver #1). Confirmado: flujo GSC→éxito→Inicio→aviso GA funciona en producción con Rafael Zuzolo.
+
+- **PENDIENTE #6 (Milton, 2026-09-25):** la pantalla de éxito de GA debe mostrar **nombre de la propiedad y su código (ID)**, igual que la de GSC. Ver `SUCCESS_SELECTION_LABEL` y `ConnectionSuccess` en `ComposioConnect.tsx`. (En local salía «Propiedad properties/123…», sin nombre.)
+
+- **PENDIENTE #7 (Milton, 2026-09-25):** «Probar conexión» lista TODAS las propiedades de la cuenta de Google (incl. sitios de otros clientes; cuentas compartidas por muchos usuarios). Debe probar SOLO la propiedad elegida y mostrar un mensaje corto («✓ Conexión correcta con <propiedad>»). Milton dijo que no le gusta cómo está el botón; confirmar con él si además debe quedar el botón o solo el mensaje.
+
+- **PENDIENTE #8 (Milton, 2026-09-25):** en toda pantalla dedicada de Conexiones (Analíticas y Difusión, cualquier módulo/estado) debe haber un **botón visible «Volver al menú de Conexiones»**. Hoy solo existe un enlace pequeño «← Volver a Conexiones» arriba (`ConexionesView.tsx`). Aplicar a todos los módulos, también en estado «Conexión activa».
+
+### TRASPASO A NUEVA CONVERSACIÓN · CONEXIÓN COMPOSIO · 8 MEJORAS UX — 2026-09-25 — Claude
+
+**Estado:** PR #224 (`abb687dd`) ya está en `main` y en producción (`seototal.lasolucionweb.com`). Prueba real de Milton con el usuario **Rafael Zuzolo**: aviso GSC → reconexión → éxito → aviso GA → reconexión → éxito → Inicio limpio. **Prueba muy exitosa.** Variable `COMPOSIO_RECONNECT_NOTICE=all` ya definida en Vercel (Production, proyecto `auto-articulos-web`) y redesplegado.
+
+**Reglas:** worktree `/Users/miltondavila/.codex/worktrees/produccion-validacion-composio/Creador de articulos`; localhost `http://localhost:3001`; reclamar capitanía (`scripts/migration-coordinator.sh`) antes de cualquier push; PR normal, no push directo a `main`; respuestas CORTAS a Milton; no tocar `COMPOSIO_CONSUMER_READY.*` ni `COMPOSIO_ROUTING_ENABLED` sin su autorización. El clasificador bloquea a Claude cambiar env de Vercel y fusionar PRs sin revisión: Milton debe autorizarlo explícitamente en el chat.
+
+**LAS 8 MEJORAS (todas pedidas por Milton tras la prueba real):**
+1. **Botón visible en el aviso rojo de Inicio** («Reconectar ahora»). Hoy es solo texto clicable. `apps/web/src/app/dashboard/page.tsx` (~línea 171).
+2. **Pantalla de reconexión (GSC/GA):** mensaje claro «Debes reconectar ahora» y botón «Nueva conexión» destacado (pulso suave). Solo cuando se llega desde el aviso.
+3. **Elección de propiedad:** hoy es una lista larga y desordenada. Debe ser un **dropdown ordenado, con búsqueda, selección única** (GSC y GA). `ComposioConnect.tsx`.
+4. **Sitemap tras guardar GSC:** no hay mensaje. Debe enviarse el sitemap o avisar que ya está en Google, y mostrarlo en la pantalla de éxito. `app/api/sitemap/send/route.ts`, campos `lastSitemapSync*` de `ComposioConnection`.
+5. **Aviso de GA distinto al de GSC:** otro color/etiqueta (p. ej. «PASO 2 DE 2 · Google Analytics»), con botón (ver 1).
+6. **Éxito de GA:** mostrar nombre **y código** de la propiedad, como GSC (`SUCCESS_SELECTION_LABEL` / `ConnectionSuccess`).
+7. **«Probar conexión»:** hoy lista TODAS las propiedades de la cuenta de Google (incluye sitios de otros clientes; privacidad). Debe probar solo la propiedad elegida con mensaje corto («✓ Conexión correcta con <propiedad>»). Pregunta abierta para Milton: ¿queda el botón o se quita? Aplica a GSC y GA.
+8. **Botón «Volver al menú de Conexiones»** visible en todas las pantallas dedicadas (Analíticas y Difusión, cualquier estado). Hoy solo hay un enlace pequeño arriba (`ConexionesView.tsx`).
+
+**Aún sin probar en producción:** Facebook, Instagram (permisos por usuario + módulo «Conexión por Composio» + Oportunidades Redes sin Stories) y publicación real desde el worker. Manual de usuario pendiente de actualizar. Pendiente también: al cerrar, decidir con Milton si `COMPOSIO_RECONNECT_NOTICE` queda en `all`.
+
+**Avance 2026-09-25 (Claude, nueva conversación):** mejoras 1, 2 y 5 codificadas en la rama `claude/composio-traspaso-8-mejoras`, sin subir aún (falta prueba local y reclamar capitanía). Aviso de Inicio ahora con botón «Reconectar ahora» y etiqueta PASO 1 DE 2 (GSC, rojo) / PASO 2 DE 2 (GA, ámbar); URL de reconexión añade `&reconectar=1`; `ComposioConnect` muestra «Debes reconectar ahora» y pulso suave en «Nueva conexión» solo con ese parámetro. `tsc` limpio. Siguen pendientes 3, 4, 6, 7, 8.
+
+- **PENDIENTE #9 (Claude, 2026-09-25):** con «Conexión activa» la pantalla dedicada sigue mostrando «Cómo hacerlo paso a paso» (5 pasos de conectar). Ocultar esos pasos cuando ya está conectada. Aplica a GSC y GA.
+
+- **Capitán de migración:** Claude (Composio 8 mejoras) — lote mejoras 1,2,5 (solo UI, sin migración). Nadie más ejecuta Prisma hasta su liberación.

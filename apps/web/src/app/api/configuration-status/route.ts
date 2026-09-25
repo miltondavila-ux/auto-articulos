@@ -363,7 +363,7 @@ export async function GET() {
       required: false,
       section: "seo",
       description: "Debes reconectar Google Search Console mediante Conexiones.",
-      actionUrl: "/dashboard/configuracion/conexiones?conexion=google-search-console",
+      actionUrl: "/dashboard/configuracion/conexiones?conexion=google-search-console&reconectar=1",
       actionLabel: "Reconectar Search Console",
     });
   } else if (hasLegacyGoogleAnalytics && !hasActiveComposioAnalytics) {
@@ -374,7 +374,7 @@ export async function GET() {
       required: false,
       section: "seo",
       description: "Debes reconectar Google Analytics mediante Conexiones.",
-      actionUrl: "/dashboard/configuracion/conexiones?conexion=google-analytics",
+      actionUrl: "/dashboard/configuracion/conexiones?conexion=google-analytics&reconectar=1",
       actionLabel: "Reconectar Analytics",
     });
   }
