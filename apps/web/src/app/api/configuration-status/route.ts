@@ -346,7 +346,16 @@ export async function GET() {
       resolvedSearchConsole.state.composio.hasSelection,
   );
 
-  if (!hasActiveComposioSearchConsole) {
+  // Interruptor del aviso rojo de reconexión: apagado por defecto. "all" lo muestra a todos;
+  // una lista de IDs separada por comas lo limita a un piloto. Se apaga quitando la variable.
+  const reconnectNotice = (process.env.COMPOSIO_RECONNECT_NOTICE ?? "").trim();
+  const showReconnectNotice =
+    reconnectNotice === "all" ||
+    reconnectNotice.split(",").map((id) => id.trim()).filter(Boolean).includes(userId);
+
+  if (!showReconnectNotice) {
+    // Aviso apagado: no se agrega ninguna solicitud de reconexión.
+  } else if (!hasActiveComposioSearchConsole) {
     checks.push({
       id: "google-search-console-reconnect",
       label: "Reconectar Google Search Console por Composio",

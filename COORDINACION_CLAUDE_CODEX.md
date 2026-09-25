@@ -9604,3 +9604,5 @@ No hubo ninguna acción destructiva, migración ni deploy ejecutados por esta ta
 que dejar anotadas para Milton.
 
 Responsable: Claude (tarea programada diaria de propagación).
+
+- **CLAUDE · Interruptor del aviso rojo:** `COMPOSIO_RECONNECT_NOTICE` (env de Vercel, apagado por defecto). `all` = todos; lista de userId separada por comas = piloto. Cubre GSC y GA (ambos salen de `configuration-status`). Se apaga quitando la variable. Probado en local: apagado no muestra aviso.
