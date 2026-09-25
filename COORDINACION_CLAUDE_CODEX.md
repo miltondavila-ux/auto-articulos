@@ -9566,3 +9566,41 @@ Estado técnico:
 - BLOQUEADO: aviso GA (requiere insertar GA legacy con token; el clasificador bloqueó explorar columnas de tokens) y Oportunidades Redes sin Stories (Lorena local no tiene ninguna red aprobada por Administración → 403 / "Publicación en redes no habilitada").
 
 - **Capitán de migración:** Claude — CONEXION COMPOSIO: subir lote web (avisos GSC/GA, pantallas dedicadas, éxito). Sin migración. `COMPOSIO_CONSUMER_READY.*` y `COMPOSIO_ROUTING_ENABLED` siguen en false. Autorizado por Milton ("subamos"). Nadie más ejecuta Prisma hasta la liberación.
+## Claude (tarea programada diaria de propagación) — 2026-09-25
+
+Punto de partida: la última entrada firmada por esta misma tarea era la del 2026-09-24 (commit
+`3bffb55`). Se revisó el diff completo de `COORDINACION_CLAUDE_CODEX.md` entre `3bffb55` y
+`origin/main` actual (`f3486f5`): 4 entradas nuevas de 2026-09-24 — cierre de Codex sobre la
+corrección de retornos OAuth de Conexiones (commit `67547d5`), una nota preparatoria de Codex sobre
+un ajuste visual en Oportunidades Redes (eliminar el rectángulo exterior de `DashboardNav`, aún no
+desplegado al momento de esa nota), y el lote de MANAGER DE COMMITS (preparación y cierre fusionado
+como PR #222 / commit `0556a384`, que ya incluyó el ajuste visual anterior como cherry-pick
+`0c938371`).
+
+Verificación por documento:
+
+- `CONTROLADOR_DE_VERSIONES.md`: sin cambios de esta tarea. Las dos entradas con commit de esta
+  tarea (`67547d5` y `0556a384`) ya estaban propagadas ahí con su propia plantilla de
+  versión/commit/deployment/producción verificada — verificado leyendo las secciones existentes
+  (líneas ~1133-1145 y ~3525-3556), coinciden en commit, deployment de Vercel y verificación de
+  producción con lo descrito en Coordinación. No se encontró nada pendiente de agregar.
+- `apps/web/src/content/manual-usuario.ts`: sin cambios de esta tarea. El propio lote de MANAGER DE
+  COMMITS ya declara que "el manual de usuario se actualizó" en el mismo commit, y se confirmó que la
+  comprobación de acceso de 5 segundos, los tres caminos finales del asistente y el botón "Borrar
+  todas las oportunidades" ya están documentados. La corrección de retornos OAuth es un bugfix que
+  restaura el comportamiento canónico ya documentado (no agrega ni cambia flujo visible). El ajuste
+  de `DashboardNav` (quitar el rectángulo exterior de la navegación de escritorio) es puramente
+  estético/de layout, igual que en corridas anteriores, y no se agregó.
+- `INVENTARIO_CONVERSACIONES.md`: sin cambios. Ninguna entrada nueva usa el formato exacto
+  "[AGENTE] - [NOMBRE DEL PROBLEMA]" de una conversación nueva. La rama `codex/manager-commits-20260924`
+  mencionada ya fue fusionada (PR #222) y no aparece en `git branch -r`, así que no queda ninguna
+  reserva activa que registrar en la Parte A.
+- `TO-DO.md`: sin cambios. Todo el contenido nuevo de este rango es trabajo ya ejecutado y verificado
+  en producción, no una idea suelta para más adelante.
+- `REPARADOR_DEL_ARBOL_PRINCIPAL.md`: sin cambios. Ninguna de las 4 entradas nuevas describe un
+  árbol de git enredado, ramas pisadas o commits mezclados.
+
+No hubo ninguna acción destructiva, migración ni deploy ejecutados por esta tarea. Sin dudas nuevas
+que dejar anotadas para Milton.
+
+Responsable: Claude (tarea programada diaria de propagación).
