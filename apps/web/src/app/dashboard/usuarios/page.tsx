@@ -1031,7 +1031,7 @@ export default function UsuariosPage() {
             style={{ display: "block" }}
           >
           <Section title="Datos de la persona">
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 16, marginTop: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 16, marginTop: 14, alignItems: "start" }}>
             <label style={createFieldStyle}>
               Nombre
               <input
@@ -1075,7 +1075,7 @@ export default function UsuariosPage() {
             </div>
           </Section>
           <Section title="Acceso a la plataforma">
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 16, marginTop: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 16, marginTop: 14, alignItems: "start" }}>
             <label style={createFieldStyle}>
               Contraseña temporal
               <input
@@ -1123,7 +1123,7 @@ export default function UsuariosPage() {
             </div>
           </Section>
           <Section title="Límites de uso para la creación de artículos">
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 16, marginTop: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 16, marginTop: 14, alignItems: "start" }}>
             <label style={createFieldStyle}>
               Límite mensual de artículos
               <input

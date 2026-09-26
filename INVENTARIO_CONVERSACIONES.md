@@ -1688,3 +1688,20 @@ reservas liberadas. Estado final: ARCHIVADA.
   `apps/web/src/app/api/admin/users/route.ts`,
   `apps/web/src/content/manual-usuario.ts` (solo si el manual lo menciona).
 - **Migraciones:** ninguna prevista (la columna `socialDailyLimits` ya existe).
+
+- **Actualización 2026-09-26 (REPARACION DE ADMIN):** estado **PAUSADA — a la espera de
+  aprobación de Milton en localhost**. Rediseño estilo Apple de las 5 pestañas y de la
+  ficha de usuario (secciones Cuenta, Acceso, Redes sociales y blogs, Imágenes con IA,
+  Límites de uso para la creación de artículos, Acciones, Historial); guardado único
+  «Guardar cambios/Descartar»; límites diarios de difusión por red y formato con
+  «hoy N» (API `socialPublishedToday`, validación 400). Manual actualizado.
+  Commits: `c2c92b42`, `2bd290e5` (+ ajuste de alineación). Sin migraciones.
+- **Pruebas:** `npm test` 61/61; `tsc` limpio; `next build` OK; en localhost
+  (127.0.0.1:3001, base local) se verificó guardar límites de difusión, aprobaciones,
+  valor inválido, Descartar, límites de artículos/lote, Editar/Eliminar hasta la
+  confirmación. NO probado: «Acceder como», «Copiar credenciales» (clipboard), guardar
+  Editar. Producción: sin push ni PR; sin capitanía reclamada.
+- **Nota del localhost compartido:** por decisión de Milton se aplicó `admin.patch`
+  (solo `usuarios/page.tsx` y `api/admin/users/route.ts`) como cambio sin commit en el
+  worktree `.codex/worktrees/produccion-validacion-composio`; se revierte con
+  `git apply -R admin.patch`. Reservas mantenidas en esos dos archivos.
