@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { friendlyConnectionError } from "@/lib/composio-error-message";
 import {
   sectionStyle,
   h2Style,
@@ -160,7 +161,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
     if (!response.ok) {
       setChoices((current) => ({
         ...current,
-        [app]: { loading: false, error: body.error ?? "No se pudieron leer las opciones.", options: [], picked: null },
+        [app]: { loading: false, error: friendlyConnectionError(body.error, "No se pudieron leer las opciones. Inténtalo de nuevo."), options: [], picked: null },
       }));
       return;
     }
@@ -210,7 +211,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
     try {
       const { ok, body } = await post("/api/composio/connect", { app });
       if (!ok || !body.redirectUrl) {
-        setMessage({ ok: false, text: body.error ?? "No se pudo iniciar la conexión." });
+        setMessage({ ok: false, text: friendlyConnectionError(body.error, "No se pudo iniciar la conexión. Inténtalo de nuevo.") });
         return;
       }
       window.location.href = body.redirectUrl as string;
@@ -230,7 +231,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
         ? body.items !== null && body.items !== undefined
           ? `La conexión respondió correctamente (${body.items} elemento${body.items === 1 ? "" : "s"}).`
           : "La conexión respondió correctamente."
-        : (body.error ?? "La prueba falló.");
+        : friendlyConnectionError(body.error, "La prueba no funcionó. Inténtalo de nuevo.");
       setProbe((current) => ({ ...current, [app]: `${ok ? "✓" : "✗"} ${text}` }));
     } finally {
       setBusy(null);
@@ -245,7 +246,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
     try {
       const { ok, body } = await post("/api/composio/select", { app, optionId: picked });
       if (!ok) {
-        setMessage({ ok: false, text: body.error ?? "No se pudo guardar tu elección." });
+        setMessage({ ok: false, text: friendlyConnectionError(body.error, "No se pudo guardar tu elección. Inténtalo de nuevo.") });
         return;
       }
       setChoices((current) => {
@@ -266,7 +267,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
     setMessage(null);
     try {
       const { ok, body } = await post("/api/composio/disconnect", { app });
-      if (!ok) setMessage({ ok: false, text: body.error ?? "No se pudo desconectar." });
+      if (!ok) setMessage({ ok: false, text: friendlyConnectionError(body.error, "No se pudo desconectar. Inténtalo de nuevo.") });
       setProbe((current) => ({ ...current, [app]: "" }));
       setChoices((current) => {
         const { [app]: _closed, ...rest } = current;
