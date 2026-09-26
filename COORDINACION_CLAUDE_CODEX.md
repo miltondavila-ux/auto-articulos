@@ -9719,3 +9719,15 @@ Responsable: Claude (tarea programada diaria de propagación).
 **Falta (Facebook/Instagram por Composio):** ver «AUDITORÍA FACEBOOK/INSTAGRAM» en la rama `claude/composio-traspaso-8-mejoras`. Tras fusionar #227: definir variables de repo `COMPOSIO_PILOT_USERS_FACEBOOK` y `COMPOSIO_PILOT_USERS_INSTAGRAM` con el correo de Lorena (solo Milton), habilitar el módulo «Conexión por Composio» a Lorena, y probar con `gh workflow run worker-test.yml`. Sin tocar `COMPOSIO_CONSUMER_READY.*` ni `COMPOSIO_ROUTING_ENABLED` sin autorización de Milton. Desajuste conocido: la web oculta Stories con solo ver la conexión Composio ACTIVE, el worker decide por el resolver.
 
 **Nota:** el clasificador de Claude Code bloquea a Claude fusionar PRs y cambiar variables de Vercel; Milton debe fusionar o autorizar expresamente.
+
+### PLAN FACEBOOK/INSTAGRAM POR COMPOSIO — PILOTO LORENA — 2026-09-26 — Claude
+Estado: GSC/GA en producción y validados. PRs #226-#229 fusionados (`main` d8c2adfd).
+1. Milton: `gh variable set COMPOSIO_PILOT_USERS_FACEBOOK --body "lorenalvarez30@gmail.com" --repo miltondavila-ux/auto-articulos`
+2. Milton: igual con `COMPOSIO_PILOT_USERS_INSTAGRAM`.
+3. Milton: administrador → habilitar a Lorena el módulo «Conexión por Composio».
+4. Lorena: Conexiones → Facebook → Nueva conexión → elegir Página → éxito.
+5. Lorena: Conexiones → Instagram → Nueva conexión → elegir cuenta → éxito.
+6. Claude: `gh workflow run worker-test.yml` para Lorena y publicar un post de prueba.
+7. Claude: confirmar que el post salió por Composio (evento «mediante la conexión alternativa»).
+8. Milton decide si se amplía; cambiar `COMPOSIO_CONSUMER_READY.facebook/instagram` solo con su autorización.
+Riesgo: desajuste conocido — la web oculta Stories con solo ver la conexión Composio ACTIVE; el worker decide por el resolver.
