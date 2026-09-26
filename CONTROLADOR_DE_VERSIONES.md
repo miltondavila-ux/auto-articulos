@@ -3554,3 +3554,57 @@ lo que el hook local no pudo registrar ProductUpdate; no afecta el deployment.
 Responsable: MANAGER DE COMMITS
 Siguiente acción: ninguna pendiente de este lote.
 Estado: VERIFICADA
+
+## Versión desplegada y verificada — 2026-09-25 — CONEXION COMPOSIO (avisos de reconexión GSC/GA)
+
+Fecha y hora: 2026-09-25
+Versión/commit: `abb687dd` (squash del PR #224)
+Rama: `main`
+Worktree: `/Users/miltondavila/.codex/worktrees/produccion-validacion-composio/Creador de articulos`
+Conversación/proyecto: CONEXION COMPOSIO — avisos GSC→GA, pantallas dedicadas y éxito estático
+Cambios incluidos: aviso rojo secuencial en Inicio para reconectar Google
+Search Console y, solo si aplica, Google Analytics vía Composio (uno a la
+vez); pantallas dedicadas de Conexiones con estado "Conexión activa" y
+pantalla estática de "Conexión exitosa" con botón único "Volver al Inicio";
+Facebook/Instagram por Composio sin ofrecer Stories; interruptor de entorno
+`COMPOSIO_RECONNECT_NOTICE` (apagado por defecto) para controlar el aviso.
+Archivos eliminados: ninguno, según lo descrito en Coordinación
+Migraciones creadas: ninguna
+Migraciones aplicadas: ninguna
+Auditoría 1/2/3: Coordinación no usa ese formato exacto para este lote; en su
+lugar registra varias auditorías propias (validación local de la transición
+GSC/GA, auditoría del camino de usuario, aclaratoria de UI wizard vs.
+Conexiones, triple auditoría final de localhost activo, auditoría de redes
+sociales bajo Composio) — ver `COORDINACION_CLAUDE_CODEX.md`, bloque
+"TRASPASO A CLAUDE · CONEXIÓN COMPOSIO · ESTADO VIGENTE — 2026-09-25" y las
+secciones inmediatamente anteriores.
+Diff revisado: sí, según Coordinación
+Deployment/Vercel: éxito, según Coordinación ("Vercel Production `success`;
+rutas responden sin 5xx")
+Estado de Vercel: READY/success
+Dominio verificado: sí — `https://seototal.lasolucionweb.com`
+Logs verificados: Coordinación no detalla acceso a logs de runtime para este
+lote
+Producción verificada: sí — prueba real en producción con el usuario Rafael
+Zuzolo: flujo completo aviso GSC → reconexión → éxito → aviso GA →
+reconexión → éxito → Inicio limpio, calificada por Milton como "Prueba muy
+exitosa".
+Problemas conocidos: banderas `COMPOSIO_CONSUMER_READY.*` y
+`COMPOSIO_ROUTING_ENABLED` siguen en `false`; variable
+`COMPOSIO_RECONNECT_NOTICE=all` definida en Vercel Production (piloto
+abierto a todos los usuarios) y redesplegado.
+Responsable: Codex (implementación y auditorías) / Claude (revisión,
+liberación y prueba con Milton).
+Siguiente acción: 8 mejoras de UX pedidas por Milton tras la prueba real (ver
+`COORDINACION_CLAUDE_CODEX.md`, bloque "TRASPASO A NUEVA CONVERSACIÓN ·
+CONEXIÓN COMPOSIO · 8 MEJORAS UX — 2026-09-25"). Las mejoras 1, 2 y 5 ya
+están fusionadas en `main` (commit `36ecd08`, PR #225: botón "Reconectar
+ahora" en el aviso, etiquetas "PASO 1 DE 2"/"PASO 2 DE 2" y mensaje "Debes
+reconectar ahora" en la pantalla de reconexión), pero Coordinación no
+registra para ese commit una confirmación explícita de deployment/Producción
+con el mismo detalle que el PR #224 — queda para una próxima corrida
+verificar y completar esa confirmación si aparece. Las mejoras 3, 4, 6, 7, 8
+y 9 siguen pendientes de codificar.
+Estado: VERIFICADA (PR #224, `abb687dd`). PR #225 (`36ecd08`, mejoras 1, 2 y
+5): FUSIONADA A `main`, DEPLOYMENT/PRODUCCIÓN SIN CONFIRMACIÓN EXPLÍCITA EN
+COORDINACIÓN A LA FECHA DE ESTA ENTRADA.
