@@ -3608,3 +3608,12 @@ y 9 siguen pendientes de codificar.
 Estado: VERIFICADA (PR #224, `abb687dd`). PR #225 (`36ecd08`, mejoras 1, 2 y
 5): FUSIONADA A `main`, DEPLOYMENT/PRODUCCIÓN SIN CONFIRMACIÓN EXPLÍCITA EN
 COORDINACIÓN A LA FECHA DE ESTA ENTRADA.
+
+## Claude — CONEXION DE GSC NO SE DESCONECTA — 2026-09-26
+
+- **Commit:** `5ff6bc47` (PR #240, squash a `main`). Fix: `POST /api/composio/disconnect` usa `getComposioUserForApp`, igual que conectar/elegir/probar; GSC y GA abiertos a toda cuenta activa, Facebook/Instagram conservan opt-in. Regresión introducida por `479ca92f` (2026-09-23). Sin migraciones ni cambios de schema.
+- **Auditorías:** integridad (diff de 6 archivos revisado línea por línea), funcional (`npm test` 70/70, `tsc` limpio, `next build` OK), regresión (Preview de Vercel OK; solo cambia la ruta de desconexión).
+- **Producción:** Vercel status `success` para `5ff6bc47`; `/login` HTTP 200; `POST /api/composio/disconnect` sin sesión → 401. **NO verificado aún** el flujo real desconectar/reconectar con una cuenta no admin (rosalia@diagonal3.com o de prueba): requiere sesión de esa cuenta.
+- **Reservas liberadas:** `api/composio/_access.ts`, `api/composio/disconnect/route.ts`, `lib/composio-access*.ts`, `content/manual-usuario.ts` (2026-09-26). Capitanía de migración: no se reclamó.
+- **Pendiente:** `scripts/generate-product-update.ts` no corrió al hacer el commit (sin `DATABASE_URL` en el worktree).
+- **Estado:** DESPLEGADA — VERIFICACIÓN FUNCIONAL EN VIVO PENDIENTE.
