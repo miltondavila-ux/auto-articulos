@@ -9648,3 +9648,10 @@ Responsable: Claude (tarea programada diaria de propagación).
 - **PENDIENTE #9 (Claude, 2026-09-25):** con «Conexión activa» la pantalla dedicada sigue mostrando «Cómo hacerlo paso a paso» (5 pasos de conectar). Ocultar esos pasos cuando ya está conectada. Aplica a GSC y GA.
 
 - **Capitán de migración:** Claude (Composio 8 mejoras) — lote mejoras 1,2,5 (solo UI, sin migración). Nadie más ejecuta Prisma hasta su liberación.
+
+### AUDITORÍA FACEBOOK/INSTAGRAM POR COMPOSIO — 2026-09-25 — Claude
+- El worker (GitHub Actions: `worker.yml`, `social-worker.yml`, `worker-test.yml`) decide la vía con `methodFor` (`socialPublish.ts` líneas ~40-48). Con `COMPOSIO_CONSUMER_READY.facebook/instagram=false` devuelve SIEMPRE `OWN`, salvo piloto por `COMPOSIO_PILOT_USERS_FACEBOOK/INSTAGRAM` (userId o email).
+- Esas variables de piloto NO se pasan a los workflows (solo existe `COMPOSIO_PILOT_USERS_GOOGLE_SEARCH_CONSOLE` en Vercel/web). Hoy el worker nunca publica por Composio, aunque haya conexión activa.
+- Desajuste: la web (`social-opportunities/generate|route.ts`) oculta Stories si la conexión Composio está ACTIVE, sin pasar por el resolver; el worker sí lo usa. Si el worker cae a OWN tras desconectar la conexión vieja, publicaría sin credenciales.
+- Requisitos de piloto: módulo «conexion-composio» habilitado para el usuario, permisos `allowFacebook/InstagramPublishing`, `composio_api_key` en `SystemSetting`, y pasar `COMPOSIO_PILOT_USERS_*` a los 3 workflows (variables del repo en GitHub).
+- Plan propuesto: piloto solo con Lorena por variable (sin tocar `COMPOSIO_CONSUMER_READY`); probar con `gh workflow run worker-test.yml`.
