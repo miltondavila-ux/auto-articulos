@@ -12,9 +12,9 @@ export async function POST(request: NextRequest) {
   const user = await getComposioUserForApp(body.app);
   if (!user) return forbidden();
   try {
-    await saveSelection(user, body.app, body.optionId);
+    const { sitemap } = await saveSelection(user, body.app, body.optionId);
     auditLog("composio.selection_saved", user.id, { app: body.app });
-    return NextResponse.json({ ok: true }, { headers: NO_STORE });
+    return NextResponse.json({ ok: true, sitemap }, { headers: NO_STORE });
   } catch (error) {
     return errorResponse(error);
   }

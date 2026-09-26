@@ -1,5 +1,7 @@
 import { prisma } from "@auto-articulos/db";
 import {
+  composioListSitemaps,
+  composioSubmitSitemap,
   COMPOSIO_TEST_TOOL,
   ComposioApiError,
   createConnectLink,
@@ -15,6 +17,7 @@ import {
   type ComposioAppId,
 } from "./composio";
 import { hasOptInModuleAccess } from "./modules";
+import { defaultSitemapUrl, isSitemapListed, type SitemapOutcome } from "./composio-sitemap";
 import { applyAnalyticsTraffic, applySearchConsoleStats, buildOptions, markCurrentSelection, summarizeAnalyticsReport, summarizeSearchConsoleQuery, type AnalyticsTraffic, type SearchConsoleStats, type SelectionOption } from "./composio-options";
 import { normalizeDomain, validateAndRegisterTrialDomain } from "./domain-validation";
 
@@ -382,7 +385,7 @@ export async function getSelectionOptions(
  * Guarda lo que la persona aprobó. La elección se vuelve a validar contra la
  * lectura en vivo de Google/Meta: solo vale una opción real y elegible.
  */
-export async function saveSelection(user: ConnectingUser, appId: unknown, optionId: unknown): Promise<void> {
+export async function saveSelection(user: ConnectingUser, appId: unknown, optionId: unknown): Promise<{ sitemap: SitemapOutcome | null }> {
   const app = requireApp(appId, user);
   if (typeof optionId !== "string" || optionId === "") throw new ConnectionError("Elige una opción.", 400);
   const { options } = await getSelectionOptions(user, app);
@@ -411,4 +414,42 @@ export async function saveSelection(user: ConnectingUser, appId: unknown, option
       break;
   }
   await prisma.composioConnection.update({ where: { id: row.id }, data });
+  if (app !== "google_search_console") return { sitemap: null };
+  return { sitemap: await syncSitemapAfterSelection(user, row.id, row.connectedAccountId, chosen.id) };
+}
+
+/**
+ * Tras elegir la propiedad de Search Console: si Google ya tiene el sitemap no se reenvía; si no,
+ * se envía. Nunca rompe el guardado: si falla, queda registrado y el envío diario lo reintenta.
+ */
+async function syncSitemapAfterSelection(
+  user: ConnectingUser,
+  rowId: string,
+  connectedAccountId: string,
+  siteUrl: string,
+): Promise<SitemapOutcome> {
+  const sitemapUrl = defaultSitemapUrl(siteUrl);
+  try {
+    const { apiKey } = await requireSetup("google_search_console");
+    const account = { apiKey, userId: user.id, connectedAccountId };
+    const listed = await composioListSitemaps(account, siteUrl).catch(() => [] as string[]);
+    let status: SitemapOutcome["status"] = "ALREADY";
+    if (!isSitemapListed(listed, sitemapUrl)) {
+      await composioSubmitSitemap(account, siteUrl, sitemapUrl);
+      status = "SENT";
+    }
+    await prisma.composioConnection.update({
+      where: { id: rowId },
+      data: { sitemapUrl, lastSitemapSyncAt: new Date(), lastSitemapSyncStatus: "success", lastSitemapSyncError: null },
+    });
+    return { status, url: sitemapUrl };
+  } catch (error) {
+    await prisma.composioConnection
+      .update({
+        where: { id: rowId },
+        data: { sitemapUrl, lastSitemapSyncAt: new Date(), lastSitemapSyncStatus: "error", lastSitemapSyncError: error instanceof Error ? error.message.slice(0, 500) : "error" },
+      })
+      .catch(() => undefined);
+    return { status: "FAILED", url: sitemapUrl };
+  }
 }
