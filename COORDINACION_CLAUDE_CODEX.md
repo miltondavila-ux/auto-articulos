@@ -9736,3 +9736,11 @@ Riesgo: desajuste conocido — la web oculta Stories con solo ver la conexión C
 - **PENDIENTE #11 (Claude, 2026-09-26):** el aviso rojo «PASO 1 DE 2» sale a usuarios nuevos en el arranque inicial (0 de 4 pasos). Debe salir solo a quien ya tenía Search Console/Analytics conectado por la vía anterior.
 
 - **PENDIENTE #13 (Milton, 2026-09-26):** en Historial, «Ver en la red social →» de una publicación de Facebook lleva a `/dashboard/historial#` en vez de a la publicación. Causa: `apps/web/src/app/dashboard/historial/page.tsx` (~línea 985) solo arma URL para threads/x/linkedin; el resto cae a `"#"`. Arreglo: Facebook → `https://www.facebook.com/{postId}`; Instagram → pedir el permalink al publicar (worker) y guardarlo como URL en `postId`; cualquier red sin URL conocida → NO mostrar el enlace (nunca `#`).
+
+### RESULTADO PILOTO FACEBOOK/INSTAGRAM POR COMPOSIO — 2026-09-26 — Claude
+Piloto Lorena (`lorenalvarez30@gmail.com`, userId `cms8cv2f40000x3xauyqqeenc`), variables de repo `COMPOSIO_PILOT_USERS_FACEBOOK/INSTAGRAM`, módulo «Conexión por Composio» habilitado. **VALIDADO EN PRODUCCIÓN** con los logs de Composio (proyecto `10minuteswebsite_workspace_first_project`, Logs):
+- Facebook Page: `FACEBOOK_CREATE_PHOTO_POST` Success, 08:40:23 (hora local Milton). El post apareció en la Página.
+- Instagram: `INSTAGRAM_POST_IG_USER_MEDIA` 08:47:43 y `INSTAGRAM_POST_IG_USER_MEDIA_PUBLISH` 08:47:47, ambos Success.
+- Generación: solo `facebook-page` e `instagram-post`, sin Stories.
+- El worker normal (cada 5 min) tomó las publicaciones antes que `worker-test.yml`; para confirmar la vía se usan los Logs de Composio.
+Pendientes: #11 (aviso a usuarios nuevos), #12 (no mostrar «Composio» al cliente), #13 (enlace del Historial), mensaje en historial que indique la vía usada. Ampliar a más usuarios o cambiar `COMPOSIO_CONSUMER_READY.facebook/instagram` solo con autorización de Milton.
