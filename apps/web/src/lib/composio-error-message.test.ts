@@ -32,3 +32,9 @@ test("mensajes ya claros en español se conservan; vacío usa respaldo", () => {
   assert.equal(friendlyConnectionError("Elige una opción primero.", FALLBACK), "Elige una opción primero.");
   assert.equal(friendlyConnectionError(undefined, FALLBACK), FALLBACK);
 });
+
+test("errores técnicos en inglés nunca se muestran", () => {
+  const raw = 'Could not find connected account(s) abc belonging to user "u1". Check that the IDs are correct and belong to the same user as this session.';
+  assert.match(friendlyConnectionError(raw, FALLBACK), /ya no existe/);
+  assert.equal(friendlyConnectionError("Something went wrong on the server", FALLBACK), FALLBACK);
+});
