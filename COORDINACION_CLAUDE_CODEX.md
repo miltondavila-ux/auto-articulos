@@ -9720,6 +9720,38 @@ Responsable: Claude (tarea programada diaria de propagación).
 
 **Nota:** el clasificador de Claude Code bloquea a Claude fusionar PRs y cambiar variables de Vercel; Milton debe fusionar o autorizar expresamente.
 
+### PLAN FACEBOOK/INSTAGRAM POR COMPOSIO — PILOTO LORENA — 2026-09-26 — Claude
+Estado: GSC/GA en producción y validados. PRs #226-#229 fusionados (`main` d8c2adfd).
+1. Milton: `gh variable set COMPOSIO_PILOT_USERS_FACEBOOK --body "lorenalvarez30@gmail.com" --repo miltondavila-ux/auto-articulos`
+2. Milton: igual con `COMPOSIO_PILOT_USERS_INSTAGRAM`.
+3. Milton: administrador → habilitar a Lorena el módulo «Conexión por Composio».
+4. Lorena: Conexiones → Facebook → Nueva conexión → elegir Página → éxito.
+5. Lorena: Conexiones → Instagram → Nueva conexión → elegir cuenta → éxito.
+6. Claude: `gh workflow run worker-test.yml` para Lorena y publicar un post de prueba.
+7. Claude: confirmar que el post salió por Composio (evento «mediante la conexión alternativa»).
+8. Milton decide si se amplía; cambiar `COMPOSIO_CONSUMER_READY.facebook/instagram` solo con su autorización.
+Riesgo: desajuste conocido — la web oculta Stories con solo ver la conexión Composio ACTIVE; el worker decide por el resolver.
+
+- **REGLA / PENDIENTE #12 (Milton, 2026-09-26): TRANSPARENCIA PARA EL CLIENTE.** El cliente NO debe ver el nombre «Composio» en ningún texto de la interfaz ni del manual de usuario (el menú «Composio» de Administración es solo para administradores y puede quedar). Textos visibles hoy que lo dicen: `ConexionesView.tsx` líneas ~151-152 y ~273-274 («…mediante Composio»); `ComposioConnect.tsx` línea ~270 (confirm «Se elimina la conexión en Composio») y ~292-295 (bloque «Conexión por Composio… verás el nombre Composio en la pantalla de Google o de Meta»); y menciones en `manual-usuario.ts` (4). Cambiar por lenguaje neutro («conexión segura», «nueva conexión»). La pantalla de permisos de Google/Meta la muestra el proveedor y no la controlamos: si el usuario pregunta, el manual debe explicar de forma neutra que es normal ver un nombre de proveedor de conexión.
+- **PENDIENTE #11 (Claude, 2026-09-26):** el aviso rojo «PASO 1 DE 2» sale a usuarios nuevos en el arranque inicial (0 de 4 pasos). Debe salir solo a quien ya tenía Search Console/Analytics conectado por la vía anterior.
+
+- **PENDIENTE #13 (Milton, 2026-09-26):** en Historial, «Ver en la red social →» de una publicación de Facebook lleva a `/dashboard/historial#` en vez de a la publicación. Causa: `apps/web/src/app/dashboard/historial/page.tsx` (~línea 985) solo arma URL para threads/x/linkedin; el resto cae a `"#"`. Arreglo: Facebook → `https://www.facebook.com/{postId}`; Instagram → pedir el permalink al publicar (worker) y guardarlo como URL en `postId`; cualquier red sin URL conocida → NO mostrar el enlace (nunca `#`).
+
+### RESULTADO PILOTO FACEBOOK/INSTAGRAM POR COMPOSIO — 2026-09-26 — Claude
+Piloto Lorena (`lorenalvarez30@gmail.com`, userId `cms8cv2f40000x3xauyqqeenc`), variables de repo `COMPOSIO_PILOT_USERS_FACEBOOK/INSTAGRAM`, módulo «Conexión por Composio» habilitado. **VALIDADO EN PRODUCCIÓN** con los logs de Composio (proyecto `10minuteswebsite_workspace_first_project`, Logs):
+- Facebook Page: `FACEBOOK_CREATE_PHOTO_POST` Success, 08:40:23 (hora local Milton). El post apareció en la Página.
+- Instagram: `INSTAGRAM_POST_IG_USER_MEDIA` 08:47:43 y `INSTAGRAM_POST_IG_USER_MEDIA_PUBLISH` 08:47:47, ambos Success.
+- Generación: solo `facebook-page` e `instagram-post`, sin Stories.
+- El worker normal (cada 5 min) tomó las publicaciones antes que `worker-test.yml`; para confirmar la vía se usan los Logs de Composio.
+Pendientes: #11 (aviso a usuarios nuevos), #12 (no mostrar «Composio» al cliente), #13 (enlace del Historial), mensaje en historial que indique la vía usada. Ampliar a más usuarios o cambiar `COMPOSIO_CONSUMER_READY.facebook/instagram` solo con autorización de Milton.
+
+### LOTE PENDIENTES 11/12/13 + PARIDAD FACEBOOK/INSTAGRAM — 2026-09-26 — Claude
+PR #230 fusionado en `main` (`0445e0b2`), Vercel Production `success`, verificado en pantalla real de Lorena.
+- #11 aviso rojo solo para quien tenía Search Console por la vía anterior.
+- #12 el cliente ya no ve «Composio» (UI, errores, manual); permanecen el menú y el módulo de Administración.
+- #13 Historial: enlace real de Facebook; sin enlace conocido no se muestra el botón (Instagram queda sin enlace: el permalink exige una operación nueva de Composio fuera de la lista permitida).
+- Facebook e Instagram con el mismo patrón y UX que GSC/GA (tarjeta propia, 5 pasos, notas al elegir, mensajes de retorno, dropdown, éxito con nombre y código, probar conexión, volver al menú). Manual actualizado.
+Pendiente: permalink de Instagram; mensaje en historial de la vía usada; lanzamiento a todos los usuarios (decisión de Milton). Para el lanzamiento a todos considerar aviso de reconexión para quienes tengan Facebook/Instagram por la vía anterior.
 ### REDES · ESTANDARIZACIÓN COMPLETA — 2026-09-26 — Claude
 Auditoría triple (INFORME_AUDITORIA_REDES_SOCIALES.md) ejecutada en 4 PRs apilados: #231 (retorno OAuth + errores), #232 (componentes + Bluesky/DEV.to), #233 (Threads/LinkedIn/Pinterest/Tumblr/Blogger), #234 (GBP + Bing). Fusionar en ese orden. Sin migración ni banderas. Falta prueba real con cuentas reales y decisión de Milton sobre fusionar.
 ## Claude - REPARACION DE ADMIN — 2026-09-26
@@ -9730,3 +9762,10 @@ funciones + culminar límites diarios de difusión (redes/blogs). Rama
 `usuarios/page.tsx`, `api/admin/users/route.ts`. Sin migraciones. Se aprueba en
 localhost (`127.0.0.1:3001`) antes de cualquier push; capitanía se reclama solo
 al publicar.
+
+
+### CIERRE · REDES ESTANDARIZADAS Y EN PRODUCCIÓN — 2026-09-26 — Claude
+PRs #231 (retorno de autorizaciones y errores claros) y #234 (componentes estándar + Threads/LinkedIn/Pinterest/Tumblr/Blogger/Bluesky/DEV.to/GBP/Bing con el patrón de GSC/GA; incluye #232 y #233, cerrados) fusionados en `main` (`a23f532d`). Vercel Production `success`. Sin migración ni cambio de banderas.
+Verificado en producción con las conexiones reales de Lorena Álvarez: las 10 tarjetas de Difusión en el patrón estándar; «Probar conexión» real OK en Tumblr, Blogger, Bluesky, DEV.to, LinkedIn y Google Business Profile. Threads responde 403 en la prueba porque a esa cuenta no se le activó «Publicar en Threads» en Administración (dato, no error; su tarjeta se muestra por la regla general del módulo).
+Auditoría visual medida (estilos y distancias) contra GSC/GA: tres auditorías consecutivas sin diferencias en estado conectado y sin conectar.
+Pendiente menor: DEV.to muestra «@» delante de un usuario que ya es un correo; permalink de Instagram en Historial; retirar la página antigua «Redes Sociales».
