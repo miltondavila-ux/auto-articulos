@@ -9728,3 +9728,13 @@ funciones + culminar límites diarios de difusión (redes/blogs). Rama
 `usuarios/page.tsx`, `api/admin/users/route.ts`. Sin migraciones. Se aprueba en
 localhost (`127.0.0.1:3001`) antes de cualquier push; capitanía se reclama solo
 al publicar.
+
+### Capitanía — Claude - REPARACION DE ADMIN — 2026-09-26
+
+- **Capitán de migración:** Claude - REPARACION DE ADMIN — revisó y aplicó el lote
+  completo. Motivos: publicar el rediseño de Administración y los límites de difusión
+  (PR #235) y separar los controles de Artículos y de Difusión (PR #237). Sin
+  migraciones de schema.
+- **Capitán de migración liberó el lote:** Claude - REPARACION DE ADMIN. Resultado: PR
+  #235 (`49860952`) y PR #237 (`6dff79e2`) fusionados, Producción verificada. Estado:
+  CULMINADA. Reservas de `usuarios/page.tsx` y `api/admin/users/route.ts` liberadas.
