@@ -3640,3 +3640,12 @@ COORDINACIÓN A LA FECHA DE ESTA ENTRADA.
   Nota: en Producción Lorena tenía `socialDailyLimits = {}` (sin backfill); el worker lo
   interpreta como 1 por día, igual que la interfaz.
 - **Capitanía de migración:** liberada 2026-09-26.
+
+### Relleno de límites de difusión en Producción — 2026-09-26
+
+- La migración `20260921140000` solo se había aplicado en su parte de columna: las 99
+  cuentas tenían `socialDailyLimits = {}`. Milton ejecutó a mano en Supabase el `UPDATE`
+  de relleno (16 claves en 1, incluida `instagram-infografia`), acotado a filas en `{}`.
+- Verificado por Claude con `GET /api/admin/users` en Producción: 99 cuentas, 16 claves
+  cada una, ninguna con valor distinto de 1, ninguna vacía. Sin cambio de comportamiento
+  (el worker ya trataba «sin valor» como 1).
