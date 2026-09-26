@@ -3649,3 +3649,13 @@ COORDINACIÓN A LA FECHA DE ESTA ENTRADA.
 - Verificado por Claude con `GET /api/admin/users` en Producción: 99 cuentas, 16 claves
   cada una, ninguna con valor distinto de 1, ninguna vacía. Sin cambio de comportamiento
   (el worker ya trataba «sin valor» como 1).
+
+### Renombrado de controles — 2026-09-26 — REPARACION DE ADMIN
+
+- **Commit:** `6dff79e2` (PR #237). Deployment de Producción `success`. Solo textos.
+- La ficha separa dos controles de cantidad: **«Límites de artículos»** (mes/día/lote de
+  creación) y **«Difusión: redes sociales y blogs»** (aprobaciones + publicaciones por
+  día). Renombrado también en el formulario de crear usuario y en el manual.
+- Verificado en Producción (sesión admin, cuenta de pruebas Lorena): secciones Cuenta,
+  Acceso, Difusión, Imágenes con IA, Límites de artículos, Acciones e Historial; 16
+  formatos de difusión; sin títulos antiguos. Sin migraciones. Capitanía liberada.
