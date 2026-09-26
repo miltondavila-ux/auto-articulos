@@ -1672,3 +1672,36 @@ reservas liberadas. Estado final: ARCHIVADA.
 - Estado: EN CURSO — PR #224 verificado en producción con usuario real; PR #225 fusionado a `main` sin
   confirmación explícita de deployment/Producción en Coordinación a esta fecha; mejoras 3, 4, 6, 7, 8 y
   9 sin capitán ni rama asignada todavía.
+
+### Claude - REPARACION DE ADMIN — 2026-09-26
+
+- **Nombre exacto (dado por Milton):** `REPARACION DE ADMIN`. Estado: **ACTIVO**.
+- **Problema:** la página de Administración (`/dashboard/usuarios`) creció sin orden
+  y no funciona bien; además el segmento de límites diarios de difusión (redes y
+  blogs) quedó sin culminar (hoy se edita como JSON crudo).
+- **Orden de Milton:** (1) rediseño estilo Apple, muy organizado, **sin perder
+  ninguna funcionalidad**; (2) culminar límites diarios de difusión; (3) aprobar
+  primero en localhost; nada a Producción sin su autorización.
+- **Rama / worktree:** `claude/reparacion-admin` / `.worktrees/reparacion-admin`,
+  base `origin/main` `0445e0b2`.
+- **Reservas:** `apps/web/src/app/dashboard/usuarios/page.tsx`,
+  `apps/web/src/app/api/admin/users/route.ts`,
+  `apps/web/src/content/manual-usuario.ts` (solo si el manual lo menciona).
+- **Migraciones:** ninguna prevista (la columna `socialDailyLimits` ya existe).
+
+- **Actualización 2026-09-26 (REPARACION DE ADMIN):** estado **PAUSADA — a la espera de
+  aprobación de Milton en localhost**. Rediseño estilo Apple de las 5 pestañas y de la
+  ficha de usuario (secciones Cuenta, Acceso, Redes sociales y blogs, Imágenes con IA,
+  Límites de uso para la creación de artículos, Acciones, Historial); guardado único
+  «Guardar cambios/Descartar»; límites diarios de difusión por red y formato con
+  «hoy N» (API `socialPublishedToday`, validación 400). Manual actualizado.
+  Commits: `c2c92b42`, `2bd290e5` (+ ajuste de alineación). Sin migraciones.
+- **Pruebas:** `npm test` 61/61; `tsc` limpio; `next build` OK; en localhost
+  (127.0.0.1:3001, base local) se verificó guardar límites de difusión, aprobaciones,
+  valor inválido, Descartar, límites de artículos/lote, Editar/Eliminar hasta la
+  confirmación. NO probado: «Acceder como», «Copiar credenciales» (clipboard), guardar
+  Editar. Producción: sin push ni PR; sin capitanía reclamada.
+- **Nota del localhost compartido:** por decisión de Milton se aplicó `admin.patch`
+  (solo `usuarios/page.tsx` y `api/admin/users/route.ts`) como cambio sin commit en el
+  worktree `.codex/worktrees/produccion-validacion-composio`; se revierte con
+  `git apply -R admin.patch`. Reservas mantenidas en esos dos archivos.

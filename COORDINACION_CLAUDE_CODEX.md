@@ -9722,3 +9722,11 @@ Responsable: Claude (tarea programada diaria de propagación).
 
 ### REDES · ESTANDARIZACIÓN COMPLETA — 2026-09-26 — Claude
 Auditoría triple (INFORME_AUDITORIA_REDES_SOCIALES.md) ejecutada en 4 PRs apilados: #231 (retorno OAuth + errores), #232 (componentes + Bluesky/DEV.to), #233 (Threads/LinkedIn/Pinterest/Tumblr/Blogger), #234 (GBP + Bing). Fusionar en ese orden. Sin migración ni banderas. Falta prueba real con cuentas reales y decisión de Milton sobre fusionar.
+## Claude - REPARACION DE ADMIN — 2026-09-26
+
+Tarea ACTIVA. Rediseño de `/dashboard/usuarios` estilo Apple sin perder
+funciones + culminar límites diarios de difusión (redes/blogs). Rama
+`claude/reparacion-admin`, worktree `.worktrees/reparacion-admin`. Reservados:
+`usuarios/page.tsx`, `api/admin/users/route.ts`. Sin migraciones. Se aprueba en
+localhost (`127.0.0.1:3001`) antes de cualquier push; capitanía se reclama solo
+al publicar.
