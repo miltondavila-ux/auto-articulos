@@ -1,5 +1,6 @@
 "use client";
 
+import { socialPostUrl } from "@/lib/social-post-url";
 import { MENU_NAMES } from "@/lib/menu-names";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import type { CSSProperties } from "react";
@@ -982,9 +983,9 @@ function HistorialRedes() {
                         >
                           Ver artículo original &rarr;
                         </a>
-                        {opp.status === "published" && opp.postId && (
+                        {opp.status === "published" && socialPostUrl(opp.platform, opp.postId) && (
                           <a
-                            href={opp.postId.startsWith("http") ? opp.postId : (opp.platform === "threads" ? `https://www.threads.net/t/${opp.postId}` : opp.platform === "x" ? `https://x.com/i/status/${opp.postId}` : opp.platform === "linkedin" ? `https://www.linkedin.com/feed/update/${opp.postId}` : "#")}
+                            href={socialPostUrl(opp.platform, opp.postId) ?? undefined}
                             target="_blank"
                             rel="noreferrer"
                             className="link-button"

@@ -372,7 +372,7 @@ Solo los administradores tienen acceso a este módulo:
 - **Composio (/dashboard/composio):** conecta la plataforma con Composio, un servicio que más adelante permitirá a los clientes conectar sus cuentas de Google y Meta sin las restricciones de una app en prueba. Por ahora el módulo solo prepara la conexión: se pega la clave de API de proyecto de Composio (se comprueba con Composio antes de guardarse, se guarda cifrada y nunca se vuelve a mostrar completa), se registra el "auth config" de cada app (Search Console, Analytics, Facebook e Instagram, cada uno se comprueba antes de guardarse) y se pueden consultar las cuentas conectadas en el proyecto. Todavía no cambia la forma en que se conectan los clientes: sus conexiones actuales siguen funcionando igual. Al eliminar la clave también se eliminan los auth configs. También muestra **Vía de conexión por app**: una tabla con Search Console, Analytics, Facebook e Instagram, el interruptor Propia / Composio de cada una y cuántos clientes están conectados por cada vía. Por ahora el interruptor está bloqueado en «Propia» y no cambia nada para los clientes; el cambio de vía se activará en una fase posterior. La pantalla **Conexiones** (Configuración → Conexiones, /dashboard/configuracion/conexiones) reúne en un solo lugar todas las conexiones, con dos botones: **ANALÍTICAS** (Search Console, Analytics y Bing) y **DIFUSIÓN** (Business Profile, Facebook, Instagram, Threads, LinkedIn, Pinterest, Bluesky, Tumblr, Blogger y Dev.to). Es opt-in: aparece solo para los administradores y para las personas a las que se les ponga «Habilitado» en Administración → Usuarios → módulos («Conexión por Composio»); las demás siguen con «Indexación y SEO» y «Redes Sociales» sin cambios. Dentro de cada red conectable por Composio (Search Console, Analytics, Facebook e Instagram) se puede conectar, elegir y aprobar el sitio, la propiedad, la Página o la cuenta, probar la conexión y desconectarla; sus conexiones actuales no cambian. Composio no publica Stories de Facebook; las de Instagram están en prueba.
 
 Actualización (2026-09-25): si una cuenta ya tenía conectados Google Search
-Console o Google Analytics por la vía anterior (no por Composio), en Inicio
+Console o Google Analytics por la vía anterior (no por la nueva conexión), en Inicio
 puede aparecer un aviso rojo pidiendo reconectar: primero «PASO 1 DE 2 ·
 Google Search Console» («SOLICITUD DE ACTUALIZACIÓN: Debes reconectar Google
 Search Console mediante Conexiones») y, solo si esa cuenta también tenía
@@ -384,7 +384,7 @@ conexión» y autoriza el acceso.». Mientras no se complete la reconexión, la
 conexión anterior sigue funcionando como respaldo. Al terminar la
 reconexión aparece una pantalla estática de **Conexión exitosa** con un
 único botón **Volver al Inicio**; una vez reconectada esa red, su aviso
-desaparece de Inicio. Además, ni Facebook ni Instagram por Composio generan
+desaparece de Inicio. Además, ni Facebook ni Instagram con la nueva conexión generan
 o muestran Stories (ya no es solo Instagram "en prueba": ninguna de las dos
 las ofrece por esta vía, para evitar errores de publicación).
 
@@ -403,6 +403,18 @@ Todas las pantallas de una conexión tienen el botón **Volver al menú de
 Conexiones**. Si algo falla, los mensajes se muestran en español y explican qué
 hacer; por ejemplo, si al conectar Google desmarcaste un permiso, se te pide
 volver a conectar y dejar marcadas todas las casillas.
+
+Actualización (2026-09-26, 2): las pantallas de Facebook e Instagram dentro de
+Conexiones funcionan igual que las de Search Console y Analytics: una tarjeta
+con los pasos para conectar, la elección de la Página o de la cuenta en una
+lista desplegable, la pantalla de **Conexión exitosa** con el nombre y el
+código de lo que elegiste, **Probar conexión** y **Volver al menú de
+Conexiones**. Instagram publica imágenes con texto y Facebook publica en la
+Página que elijas; ninguna de las dos publica Stories. En **Historial**, el
+enlace **Ver en la red social** solo aparece cuando la publicación tiene un
+enlace público; si no lo tiene, no se muestra. El aviso rojo de reconexión
+solo aparece para cuentas que ya tenían Search Console o Analytics conectados
+por la vía anterior; una cuenta nueva conecta desde el asistente inicial.
 
 ## Problemas frecuentes
 

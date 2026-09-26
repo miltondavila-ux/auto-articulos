@@ -222,7 +222,7 @@ async function selectTrendingArticles(userId: string): Promise<ArticleCandidate[
       const query = async (start: string, finish: string, dimensions: string[]) => {
         if (resolvedGsc.source === "COMPOSIO") {
           if (!resolvedGsc.apiKey || !resolvedGsc.state.composio?.connectedAccountId || !resolvedGsc.state.composio.siteUrl) {
-            throw new Error("Search Console requiere reconectar la cuenta por Composio y seleccionar un sitio.");
+            throw new Error("Search Console requiere reconectar la cuenta y seleccionar un sitio.");
           }
           return composioQuerySearchAnalytics(
             { apiKey: resolvedGsc.apiKey, userId, connectedAccountId: resolvedGsc.state.composio.connectedAccountId },

@@ -72,7 +72,7 @@ async function requireSetup(app: ComposioAppId): Promise<{ apiKey: string; authC
   const [apiKey, authConfigs] = await Promise.all([getStoredComposioApiKey(), getStoredAuthConfigIds()]);
   const authConfigId = authConfigs[app];
   if (!apiKey || !authConfigId) {
-    throw new ConnectionError("La conexión por Composio aún no está configurada. Avisa al administrador.", 409);
+    throw new ConnectionError("Esta conexión aún no está configurada. Avisa al administrador.", 409);
   }
   return { apiKey, authConfigId };
 }
@@ -81,7 +81,7 @@ function toConnectionError(error: unknown): never {
   if (error instanceof ConnectionError) throw error;
   if (error instanceof ComposioApiError) {
     if (error.status === 403 || error.status === 401) {
-      throw new ConnectionError("Composio rechazó la operación: la clave del sistema no tiene los permisos necesarios.", 502);
+      throw new ConnectionError("El proveedor de conexiones rechazó la operación. Avisa al administrador.", 502);
     }
     throw new ConnectionError(error.message, error.status === 429 ? 429 : 502);
   }
