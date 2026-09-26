@@ -3625,8 +3625,18 @@ COORDINACIÓN A LA FECHA DE ESTA ENTRADA.
   2. Regresión: `/login` 200; sin sesión `/api/admin/users` 401; con sesión de usuario
      normal (Lorena) `/dashboard` 200 y `/api/admin/users` 403 (control de acceso
      intacto).
-  3. Funcional: el JavaScript servido contiene «Límites de uso para la creación de
-     artículos» y no el texto antiguo «(JSON)». **NO verificado en Producción:** la
-     interfaz de Administración con sesión de administrador (guardar límites,
-     Descartar, pestañas) — sin sesión admin disponible; sí verificada en localhost.
+  3. Funcional (con sesión de administrador, cuenta de pruebas Lorena Álvarez, 99
+     usuarios): las 5 pestañas cargan sin errores; la ficha muestra las 7 secciones,
+     16 formatos con límite y «hoy N»; `GET /api/admin/users` devuelve
+     `socialPublishedToday`; valor inválido → error claro sin llegar al servidor;
+     «Descartar» restaura; Editar/Eliminar llegan a su confirmación y se cancelan;
+     guardado real de `threads=2` → «Cambios guardados.» y confirmado en el servidor;
+     restaurado a `{}` (HTTP 200). El JavaScript servido contiene el texto nuevo y no
+     el antiguo «(JSON)». Regresión con sesión admin: `/dashboard`, `/publicar`,
+     `/oportunidades`, `/oportunidades-redes`, `/historial`, `/configuracion`,
+     `/publicaciones-en-curso`, `/como-funciona`, `/login` → 200.
+     **No probado:** «Acceder como», «Copiar credenciales» y guardar en «Editar»
+     (efectos sobre sesión/portapapeles/datos de una cuenta).
+  Nota: en Producción Lorena tenía `socialDailyLimits = {}` (sin backfill); el worker lo
+  interpreta como 1 por día, igual que la interfaz.
 - **Capitanía de migración:** liberada 2026-09-26.
