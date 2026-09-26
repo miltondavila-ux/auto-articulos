@@ -1,3 +1,4 @@
+import { friendlyConnectionError } from "@/lib/composio-error-message";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
 import { decryptSecret } from "@auto-articulos/shared";
@@ -22,7 +23,8 @@ export async function GET() {
       const result = await listPinterestBoards(decryptSecret(integration.accessTokenEncrypted));
       boards = result.items || [];
     } catch (error) {
-      boardsError = error instanceof Error ? error.message : String(error);
+      console.error("Pinterest: no se pudieron listar los tableros:", error);
+      boardsError = friendlyConnectionError(error instanceof Error ? error.message : String(error), "Pinterest no respondió. Inténtalo de nuevo en unos minutos.");
     }
   }
   return NextResponse.json({

@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   try {
     const userId = await getCurrentUserId();
     if (!(await canUseSocialModule(userId))) {
-      return NextResponse.json({ error: "Módulo reservado a administradores y Lorena." }, { status: 403 });
+      return NextResponse.json({ error: "Esta sección no está habilitada para tu cuenta. Pídele acceso al administrador." }, { status: 403 });
     }
 
     // Generar 1 oportunidad por cada red conectada

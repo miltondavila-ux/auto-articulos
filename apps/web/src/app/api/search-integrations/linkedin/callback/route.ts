@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { connectionReturnPath } from "@/lib/connection-return";
 import { prisma } from "@auto-articulos/db";
 import { encryptSecret, exchangeCodeForLinkedInTokens } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
 
   if (!state || state !== cookieStore.get(LINKEDIN_STATE_COOKIE)?.value || !code) {
     return NextResponse.redirect(
-      new URL("/dashboard/configuracion?linkedin=error", request.url)
+      new URL(connectionReturnPath("linkedin", "error"), request.url)
     );
   }
 
@@ -43,14 +44,14 @@ export async function GET(request: NextRequest) {
     });
 
     const response = NextResponse.redirect(
-      new URL("/dashboard/configuracion?linkedin=connected", request.url)
+      new URL(connectionReturnPath("linkedin", "connected"), request.url)
     );
     response.cookies.delete(LINKEDIN_STATE_COOKIE);
     return response;
   } catch (error) {
     console.error("Error en LinkedIn OAuth callback:", error);
     return NextResponse.redirect(
-      new URL("/dashboard/configuracion?linkedin=error", request.url)
+      new URL(connectionReturnPath("linkedin", "error"), request.url)
     );
   }
 }

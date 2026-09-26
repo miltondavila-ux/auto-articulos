@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { connectionReturnPath } from "@/lib/connection-return";
 import { prisma } from "@auto-articulos/db";
 import { encryptSecret, exchangeCodeForInstagramTokens } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
 
   if (!state || state !== cookieStore.get(INSTAGRAM_STATE_COOKIE)?.value || !code) {
     return NextResponse.redirect(
-      new URL("/dashboard/configuracion?instagram=error", request.url)
+      new URL(connectionReturnPath("instagram", "error"), request.url)
     );
   }
 
@@ -61,15 +62,14 @@ export async function GET(request: NextRequest) {
     });
 
     const response = NextResponse.redirect(
-      new URL("/dashboard/configuracion?instagram=connected", request.url)
+      new URL(connectionReturnPath("instagram", "connected"), request.url)
     );
     response.cookies.delete(INSTAGRAM_STATE_COOKIE);
     return response;
   } catch (error: any) {
     console.error("Error en Instagram OAuth callback:", error);
-    const errorMsg = encodeURIComponent(error?.message || "Error desconocido");
     return NextResponse.redirect(
-      new URL(`/dashboard/configuracion?instagram=error&msg=${errorMsg}`, request.url)
+      new URL(connectionReturnPath("instagram", "error"), request.url)
     );
   }
 }

@@ -126,7 +126,7 @@ export default function LinkedInSection({ allowed = true }: LinkedInSectionProps
       if (data.ok) {
         setMessage(`Base de datos sincronizada correctamente (${data.total} pasos).`);
       } else {
-        setMessage(`Sincronización con errores: ${JSON.stringify(data.results.filter((r: any) => !r.ok))}`);
+        setMessage(`La sincronización terminó con ${data.results.filter((r: any) => !r.ok).length} paso(s) con error. Revisa los registros del servidor.`);
       }
     } catch {
       setMessage("Error al sincronizar la base de datos.");

@@ -1,6 +1,7 @@
 "use client";
 
 import { socialPostUrl } from "@/lib/social-post-url";
+import { friendlyPublishError } from "@auto-articulos/shared/src/friendly-error";
 import { MENU_NAMES } from "@/lib/menu-names";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import type { CSSProperties } from "react";
@@ -1049,7 +1050,7 @@ function HistorialRedes() {
                             border: "1px solid rgba(255, 59, 48, 0.2)",
                           }}
                         >
-                          <strong>Error:</strong> {opp.errorLog}
+                          <strong>Error:</strong> {friendlyPublishError(opp.errorLog, opp.platform)}
                         </div>
                       )}
                       {opp.titleId && (
@@ -1490,7 +1491,7 @@ function HistorialRedes() {
                         border: "1px solid rgba(255, 59, 48, 0.2)",
                       }}
                     >
-                      <strong>Error:</strong> {opp.errorLog}
+                      <strong>Error:</strong> {friendlyPublishError(opp.errorLog, opp.platform)}
                     </div>
                   )}
                   {opp.titleId && (

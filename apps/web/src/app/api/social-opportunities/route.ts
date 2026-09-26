@@ -6,7 +6,7 @@ import { canUseSocialModule } from "@/lib/social-access";
 export async function GET() {
   try {
     const userId = await getCurrentUserId();
-    if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Módulo reservado a administradores y Lorena." }, { status: 403 });
+    if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Esta sección no está habilitada para tu cuenta. Pídele acceso al administrador." }, { status: 403 });
     const [opportunities, tumblrIntegration, composioConnections] = await Promise.all([
       prisma.socialOpportunity.findMany({
         where: { userId },
@@ -58,7 +58,7 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     const userId = await getCurrentUserId();
-    if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Módulo reservado a administradores y Lorena." }, { status: 403 });
+    if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Esta sección no está habilitada para tu cuenta. Pídele acceso al administrador." }, { status: 403 });
     const body = await request.json();
     const { id } = body;
 
@@ -114,7 +114,7 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const userId = await getCurrentUserId();
-    if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Módulo reservado a administradores y Lorena." }, { status: 403 });
+    if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Esta sección no está habilitada para tu cuenta. Pídele acceso al administrador." }, { status: 403 });
 
     // scope=pending: usado por el botón "Borrar todas" de Oportunidades en
     // Redes Sociales, para borrar las propuestas pendientes. Sin ese

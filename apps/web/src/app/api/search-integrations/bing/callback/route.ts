@@ -90,7 +90,6 @@ export async function GET(request: NextRequest) {
     const destino = new URL("/dashboard/configuracion/conexiones?conexion=bing-webmaster", request.url);
     destino.searchParams.set("bing", "error");
     destino.searchParams.set("motivo", "token");
-    destino.searchParams.set("detalle", detalle.slice(0, 200));
     return NextResponse.redirect(destino);
   }
 }
