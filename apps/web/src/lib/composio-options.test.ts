@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { applyAnalyticsTraffic, applySearchConsoleStats, buildOptions, markCurrentSelection, summarizeSearchConsoleQuery, optionsForSearchConsole, summarizeAnalyticsReport } from "./composio-options";
+import { lockableDomain, applyAnalyticsTraffic, applySearchConsoleStats, buildOptions, markCurrentSelection, summarizeSearchConsoleQuery, optionsForSearchConsole, summarizeAnalyticsReport } from "./composio-options";
 
 // Forma REAL de GOOGLE_SEARCH_CONSOLE_LIST_SITES verificada el 2026-09-19.
 const gsc = {
@@ -134,4 +134,18 @@ test("Search Console: actividad de 28 días por sitio (solo en los elegibles)", 
   assert.match(r[2].detail!, /no se pudo leer su actividad/);
   assert.equal(r[0].detail, base[0].detail, "un sitio bloqueado no se consulta");
   assert.match(applySearchConsoleStats(base, { "https://www.mi-sitio.com/": { clicks: 0, impressions: 0 } })[1].detail!, /sin actividad/);
+});
+
+test("un nombre de panel («Español») no bloquea propiedades; un dominio real sí", () => {
+  assert.equal(lockableDomain("Español"), null);
+  assert.equal(lockableDomain(""), null);
+  assert.equal(lockableDomain(null), null);
+  assert.equal(lockableDomain("Panel principal"), null);
+  assert.equal(lockableDomain("https://www.Mi-Sitio.com/"), "mi-sitio.com");
+  const data = { sites: [{ siteUrl: "sc-domain:mi-sitio.com", permissionLevel: "siteOwner" }, { siteUrl: "https://otro.com/", permissionLevel: "siteOwner" }, { siteUrl: "https://ajeno.com/", permissionLevel: "siteUnverifiedUser" }] };
+  const sinBloqueo = optionsForSearchConsole(data, lockableDomain("Español"));
+  assert.deepEqual(sinBloqueo.map((o) => o.selectable), [true, true, false]);
+  const conBloqueo = optionsForSearchConsole(data, lockableDomain("mi-sitio.com"));
+  assert.deepEqual(conBloqueo.map((o) => o.selectable), [true, false, false]);
+  assert.equal(conBloqueo[0].recommended, true);
 });

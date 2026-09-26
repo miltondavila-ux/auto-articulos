@@ -18,8 +18,8 @@ import {
 } from "./composio";
 import { hasOptInModuleAccess } from "./modules";
 import { defaultSitemapUrl, isSitemapListed, type SitemapOutcome } from "./composio-sitemap";
-import { applyAnalyticsTraffic, applySearchConsoleStats, buildOptions, markCurrentSelection, summarizeAnalyticsReport, summarizeSearchConsoleQuery, type AnalyticsTraffic, type SearchConsoleStats, type SelectionOption } from "./composio-options";
-import { normalizeDomain, validateAndRegisterTrialDomain } from "./domain-validation";
+import { lockableDomain, applyAnalyticsTraffic, applySearchConsoleStats, buildOptions, markCurrentSelection, summarizeAnalyticsReport, summarizeSearchConsoleQuery, type AnalyticsTraffic, type SearchConsoleStats, type SelectionOption } from "./composio-options";
+import { validateAndRegisterTrialDomain } from "./domain-validation";
 
 /**
  * Conexión de un cliente a una app por Composio (CONEXION COMPOSIO, Fase 2b-1).
@@ -294,8 +294,7 @@ async function activeRowFor(user: ConnectingUser, app: ComposioAppId) {
 
 async function confirmedDomainOf(userId: string): Promise<string | null> {
   const found = await prisma.user.findUnique({ where: { id: userId }, select: { selectedSiteDomain: true } });
-  const domain = found?.selectedSiteDomain ? normalizeDomain(found.selectedSiteDomain) : "";
-  return domain || null;
+  return lockableDomain(found?.selectedSiteDomain);
 }
 
 /** Opciones REALES de la cuenta conectada (lectura en vivo). Nunca devuelve tokens. */
