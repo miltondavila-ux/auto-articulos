@@ -1714,4 +1714,4 @@ reservas liberadas. Estado final: ARCHIVADA.
 - **Rama / worktree:** `claude/gsc-no-se-desconecta` / `.worktrees/gsc-no-se-desconecta`, base `origin/main` `c07425e3`.
 - **Reservas:** `api/composio/_access.ts`, `api/composio/disconnect/route.ts`, `lib/composio-access*.ts`, `content/manual-usuario.ts` (se liberan al fusionar el PR).
 - **Pruebas:** `npm test` 70/70, `tsc` limpio, `next build` OK. Producción: sin desplegar; falta autorización de Milton y verificación posterior.
-- **Estado:** ACTIVO (PR abierto, pendiente de autorización).
+- **Estado:** PAUSADA — fusionada (`5ff6bc47`) y desplegada; falta verificar en vivo con una cuenta no admin. Reservas liberadas 2026-09-26.
