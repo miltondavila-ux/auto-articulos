@@ -15,9 +15,13 @@ export async function GET(request: NextRequest) {
   // problema real era que Bing rechazó el intercambio del código
   // (`motivo=token`, típicamente credenciales de la app mal configuradas).
   if (!state || state !== cookieStore.get(BING_STATE_COOKIE)?.value || !code) {
-    return NextResponse.redirect(
-      new URL("/dashboard/configuracion/conexiones?conexion=bing-webmaster&bing=error&motivo=estado", request.url),
-    );
+    const motivoEstado = !code ? "Bing no devolvió el código de autorización" + (request.nextUrl.searchParams.get("error") ? ` (${request.nextUrl.searchParams.get("error")}: ${request.nextUrl.searchParams.get("error_description") ?? ""})` : "") : !state ? "Bing no devolvió el parámetro state" : "la cookie de seguridad no coincide (state)";
+    console.error(`[bing/callback] Estado/código inválido: ${motivoEstado}`);
+    const back = new URL("/dashboard/configuracion/conexiones?conexion=bing-webmaster", request.url);
+    back.searchParams.set("bing", "error");
+    back.searchParams.set("motivo", "estado");
+    back.searchParams.set("detalle", motivoEstado.slice(0, 200));
+    return NextResponse.redirect(back);
   }
   // El error real de Bing solo iba a `console.error`, y los logs de Vercel
   // rotan en minutos: en la práctica nunca se llegaba a leer y había que
@@ -90,6 +94,7 @@ export async function GET(request: NextRequest) {
     const destino = new URL("/dashboard/configuracion/conexiones?conexion=bing-webmaster", request.url);
     destino.searchParams.set("bing", "error");
     destino.searchParams.set("motivo", "token");
+    destino.searchParams.set("detalle", detalle.slice(0, 200));
     return NextResponse.redirect(destino);
   }
 }

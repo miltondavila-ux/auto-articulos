@@ -81,12 +81,19 @@ export default function BingWebmasterSection() {
     }
     load();
     if (bingParam === "error") {
-      setMessage({
-        text:
-          "No se pudo completar la conexión con Bing. Inténtalo de nuevo desde el botón de conexión; si se repite, avisa al administrador.",
-        type: "error",
-      });
+      const detalle = searchParams.get("detalle");
+      const base = "No se pudo completar la conexión con Bing. Inténtalo de nuevo desde el botón de conexión; si se repite, avisa al administrador.";
+      setMessage({ text: base, type: "error" });
       setConnecting(false);
+      // El motivo técnico (nunca lleva secretos) solo se le muestra a un administrador.
+      if (detalle) {
+        fetch("/api/me", { cache: "no-store" })
+          .then((res) => (res.ok ? res.json() : null))
+          .then((me) => {
+            if (me?.role === "admin") setMessage({ text: `${base} Detalle técnico (solo administradores): ${detalle}`, type: "error" });
+          })
+          .catch(() => undefined);
+      }
       router.replace("/dashboard/configuracion/conexiones?conexion=bing-webmaster");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -203,9 +210,11 @@ export default function BingWebmasterSection() {
       lead="Conexión administrada desde esta tarjeta. Conecta tu cuenta de Bing y elige aquí el sitio que usará SEO TOTAL."
       note="El sistema enviará tu sitemap a Bing todas las noches y procesará cada artículo publicado para acelerar su aparición en búsquedas."
     >
-      {!data?.connected && <ConnectionGuide steps={CONNECTION_GUIDES["bing-webmaster"].steps} ifFails={CONNECTION_GUIDES["bing-webmaster"].ifFails} />}
+      {data !== null && !data.connected && <ConnectionGuide steps={CONNECTION_GUIDES["bing-webmaster"].steps} ifFails={CONNECTION_GUIDES["bing-webmaster"].ifFails} />}
 
-      {!data?.connected ? (
+      {data === null ? (
+        <p style={{ color: "#6e6e73", fontSize: 14 }}>Cargando…</p>
+      ) : !data.connected ? (
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
           <a
             href="/api/search-integrations/bing/connect"
