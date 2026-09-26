@@ -371,6 +371,23 @@ Solo los administradores tienen acceso a este módulo:
 - **Tarjetas de resumen clicables:** en la pestaña "Accesos", las 5 tarjetas de arriba (Usuarios totales, En prueba, Activos, Conectados ahora, Publicaciones totales) no son solo informativas: al hacer clic en cualquiera, la lista de abajo se filtra automáticamente por ese criterio.
 - **Composio (/dashboard/composio):** conecta la plataforma con Composio, un servicio que más adelante permitirá a los clientes conectar sus cuentas de Google y Meta sin las restricciones de una app en prueba. Por ahora el módulo solo prepara la conexión: se pega la clave de API de proyecto de Composio (se comprueba con Composio antes de guardarse, se guarda cifrada y nunca se vuelve a mostrar completa), se registra el "auth config" de cada app (Search Console, Analytics, Facebook e Instagram, cada uno se comprueba antes de guardarse) y se pueden consultar las cuentas conectadas en el proyecto. Todavía no cambia la forma en que se conectan los clientes: sus conexiones actuales siguen funcionando igual. Al eliminar la clave también se eliminan los auth configs. También muestra **Vía de conexión por app**: una tabla con Search Console, Analytics, Facebook e Instagram, el interruptor Propia / Composio de cada una y cuántos clientes están conectados por cada vía. Por ahora el interruptor está bloqueado en «Propia» y no cambia nada para los clientes; el cambio de vía se activará en una fase posterior. La pantalla **Conexiones** (Configuración → Conexiones, /dashboard/configuracion/conexiones) reúne en un solo lugar todas las conexiones, con dos botones: **ANALÍTICAS** (Search Console, Analytics y Bing) y **DIFUSIÓN** (Business Profile, Facebook, Instagram, Threads, LinkedIn, Pinterest, Bluesky, Tumblr, Blogger y Dev.to). Es opt-in: aparece solo para los administradores y para las personas a las que se les ponga «Habilitado» en Administración → Usuarios → módulos («Conexión por Composio»); las demás siguen con «Indexación y SEO» y «Redes Sociales» sin cambios. Dentro de cada red conectable por Composio (Search Console, Analytics, Facebook e Instagram) se puede conectar, elegir y aprobar el sitio, la propiedad, la Página o la cuenta, probar la conexión y desconectarla; sus conexiones actuales no cambian. Composio no publica Stories de Facebook; las de Instagram están en prueba.
 
+Actualización (2026-09-25): si una cuenta ya tenía conectados Google Search
+Console o Google Analytics por la vía anterior (no por Composio), en Inicio
+puede aparecer un aviso rojo pidiendo reconectar: primero «PASO 1 DE 2 ·
+Google Search Console» («SOLICITUD DE ACTUALIZACIÓN: Debes reconectar Google
+Search Console mediante Conexiones») y, solo si esa cuenta también tenía
+Google Analytics conectado por la vía anterior, después «PASO 2 DE 2 ·
+Google Analytics» con el mismo tipo de aviso. El aviso incluye un botón
+**Reconectar ahora** que lleva directo a la pantalla de esa conexión dentro
+de Conexiones, donde además se indica «Debes reconectar ahora. Pulsa «Nueva
+conexión» y autoriza el acceso.». Mientras no se complete la reconexión, la
+conexión anterior sigue funcionando como respaldo. Al terminar la
+reconexión aparece una pantalla estática de **Conexión exitosa** con un
+único botón **Volver al Inicio**; una vez reconectada esa red, su aviso
+desaparece de Inicio. Además, ni Facebook ni Instagram por Composio generan
+o muestran Stories (ya no es solo Instagram "en prueba": ninguna de las dos
+las ofrece por esta vía, para evitar errores de publicación).
+
 ## Problemas frecuentes
 
 ### No puedo publicar
