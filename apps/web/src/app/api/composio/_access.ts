@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
+import { isMigrationApp } from "@/lib/composio-access";
 import { ConnectionError, canUseComposioModule, type ConnectingUser } from "@/lib/composio-connections";
 
 export const NO_STORE = { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" };
 
-const MIGRATION_APPS = new Set(["google_search_console", "google_analytics"]);
 
 /**
  * Persona con acceso pleno al módulo Composio. Se conserva para acciones que
@@ -29,7 +29,7 @@ export async function getComposioStatusUser(): Promise<ConnectingUser | null> {
  */
 export async function getComposioUserForApp(app: unknown): Promise<ConnectingUser | null> {
   const user = await getCurrentUser();
-  if (typeof app === "string" && MIGRATION_APPS.has(app)) return user;
+  if (isMigrationApp(app)) return user;
   return canUseComposioModule(user) ? user : null;
 }
 
