@@ -388,6 +388,22 @@ desaparece de Inicio. Además, ni Facebook ni Instagram por Composio generan
 o muestran Stories (ya no es solo Instagram "en prueba": ninguna de las dos
 las ofrece por esta vía, para evitar errores de publicación).
 
+Actualización (2026-09-26): en las pantallas de conexión de Search Console,
+Analytics, Facebook e Instagram, cuando hay que elegir el sitio, la propiedad,
+la Página o la cuenta, ahora se elige de una lista desplegable ordenada (solo
+se puede elegir una; la recomendada aparece primero y las que no se pueden
+elegir aparecen al final con el motivo). La pantalla de **Conexión exitosa**
+muestra el nombre y el código de lo que elegiste. En Search Console, al
+guardar, SEO TOTAL revisa si Google ya tiene el sitemap de tu sitio: si ya
+está, te lo indica; si no, lo envía y te lo confirma en esa misma pantalla (si
+no se pudo enviar en ese momento, se enviará en el envío diario). Con una
+conexión ya activa se ocultan los pasos de "Cómo hacerlo" y **Probar conexión**
+responde con un mensaje corto con tu propiedad, sin mostrar otras cuentas.
+Todas las pantallas de una conexión tienen el botón **Volver al menú de
+Conexiones**. Si algo falla, los mensajes se muestran en español y explican qué
+hacer; por ejemplo, si al conectar Google desmarcaste un permiso, se te pide
+volver a conectar y dejar marcadas todas las casillas.
+
 ## Problemas frecuentes
 
 ### No puedo publicar
