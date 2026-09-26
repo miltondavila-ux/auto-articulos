@@ -1705,3 +1705,13 @@ reservas liberadas. Estado final: ARCHIVADA.
   (solo `usuarios/page.tsx` y `api/admin/users/route.ts`) como cambio sin commit en el
   worktree `.codex/worktrees/produccion-validacion-composio`; se revierte con
   `git apply -R admin.patch`. Reservas mantenidas en esos dos archivos.
+
+## Claude - CONEXION DE GSC NO SE DESCONECTA — 2026-09-26
+
+- **Nombre exacto recibido:** `CONEXION DE GSC NO SE DESCONECTA` (cuenta afectada reportada: rosalia@diagonal3.com).
+- **Causa (triple auditoría de código):** `479ca92f` (2026-09-23) dejó `POST /api/composio/disconnect` con `getComposioUser()` (opt-in del módulo `conexion-composio`), mientras conectar/elegir/probar/opciones de GSC y GA quedaron abiertos vía `getComposioUserForApp`. Toda cuenta no admin sin el módulo recibe 403 al desconectar. Afecta a todas esas cuentas, no solo a una. Rol real de rosalia NO verificado (sin acceso a la base de producción).
+- **Fix:** `disconnect/route.ts` usa `getComposioUserForApp(body.app)`; regla extraída a `lib/composio-access.ts` con prueba. Manual actualizado. Sin migraciones.
+- **Rama / worktree:** `claude/gsc-no-se-desconecta` / `.worktrees/gsc-no-se-desconecta`, base `origin/main` `c07425e3`.
+- **Reservas:** `api/composio/_access.ts`, `api/composio/disconnect/route.ts`, `lib/composio-access*.ts`, `content/manual-usuario.ts` (se liberan al fusionar el PR).
+- **Pruebas:** `npm test` 70/70, `tsc` limpio, `next build` OK. Producción: sin desplegar; falta autorización de Milton y verificación posterior.
+- **Estado:** ACTIVO (PR abierto, pendiente de autorización).
