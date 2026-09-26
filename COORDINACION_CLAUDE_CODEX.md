@@ -9719,3 +9719,12 @@ Responsable: Claude (tarea programada diaria de propagación).
 **Falta (Facebook/Instagram por Composio):** ver «AUDITORÍA FACEBOOK/INSTAGRAM» en la rama `claude/composio-traspaso-8-mejoras`. Tras fusionar #227: definir variables de repo `COMPOSIO_PILOT_USERS_FACEBOOK` y `COMPOSIO_PILOT_USERS_INSTAGRAM` con el correo de Lorena (solo Milton), habilitar el módulo «Conexión por Composio» a Lorena, y probar con `gh workflow run worker-test.yml`. Sin tocar `COMPOSIO_CONSUMER_READY.*` ni `COMPOSIO_ROUTING_ENABLED` sin autorización de Milton. Desajuste conocido: la web oculta Stories con solo ver la conexión Composio ACTIVE, el worker decide por el resolver.
 
 **Nota:** el clasificador de Claude Code bloquea a Claude fusionar PRs y cambiar variables de Vercel; Milton debe fusionar o autorizar expresamente.
+
+## Claude - REPARACION DE ADMIN — 2026-09-26
+
+Tarea ACTIVA. Rediseño de `/dashboard/usuarios` estilo Apple sin perder
+funciones + culminar límites diarios de difusión (redes/blogs). Rama
+`claude/reparacion-admin`, worktree `.worktrees/reparacion-admin`. Reservados:
+`usuarios/page.tsx`, `api/admin/users/route.ts`. Sin migraciones. Se aprueba en
+localhost (`127.0.0.1:3001`) antes de cualquier push; capitanía se reclama solo
+al publicar.
