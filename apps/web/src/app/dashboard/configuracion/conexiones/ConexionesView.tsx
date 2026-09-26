@@ -14,7 +14,6 @@ import TumblrSection from "@/components/TumblrSection";
 import BlueskySection from "@/components/BlueskySection";
 import DevToSection from "@/components/DevToSection";
 import BloggerSection from "@/components/BloggerSection";
-import PasosAntesDeConectar from "@/components/PasosAntesDeConectar";
 import FacebookSection from "@/components/FacebookSection";
 import InstagramSection from "@/components/InstagramSection";
 import { ConnectionReturnNotice, ConnectionReturnSuccess, LEGACY_RETURN_NETWORKS, useConnectionReturn } from "@/components/ConnectionReturn";
@@ -284,12 +283,7 @@ export default function ConexionesView() {
           {solo("pinterest") && puede("pinterest") && <PinterestSection allowed={puede("pinterest")} />}
           {solo("bluesky") && puede("bluesky") && <BlueskySection allowed={puede("bluesky")} />}
           {solo("tumblr") && puede("tumblr") && <TumblrSection allowed={puede("tumblr")} />}
-          {solo("blogger") && puede("blogger") && (
-            <>
-              <PasosAntesDeConectar red="Blogger" />
-              <BloggerSection allowed={puede("blogger")} />
-            </>
-          )}
+          {solo("blogger") && puede("blogger") && <BloggerSection allowed={puede("blogger")} />}
           {solo("devto") && puede("devto") && <DevToSection allowed={puede("devto")} />}
         </div>
       )}

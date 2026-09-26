@@ -24,9 +24,9 @@ function oauthGuide(red: string, cuenta: string, cuartoPaso: string): Connection
 export const CONNECTION_GUIDES: Record<string, ConnectionGuideContent> = {
   threads: oauthGuide("Threads", "la cuenta de Threads que quieres usar", "Vuelve aquí y comprueba la pantalla de Conexión exitosa."),
   linkedin: oauthGuide("LinkedIn", "la cuenta de LinkedIn que quieres usar", "Vuelve aquí y comprueba la pantalla de Conexión exitosa."),
-  pinterest: oauthGuide("Pinterest", "la cuenta de Pinterest que quieres usar", "Elige el tablero donde se publicarán los Pins y pulsa Guardar."),
-  tumblr: oauthGuide("Tumblr", "la cuenta de Tumblr que quieres usar", "Elige el blog donde se publicará y pulsa Guardar."),
-  blogger: oauthGuide("Blogger", "la cuenta de Google que administra tu blog", "Elige el blog donde se publicará y pulsa Guardar."),
+  pinterest: oauthGuide("Pinterest", "la cuenta de Pinterest que quieres usar", "Elige el tablero donde se publicarán los Pins y pulsa Aprobar y guardar."),
+  tumblr: oauthGuide("Tumblr", "la cuenta de Tumblr que quieres usar", "Elige el blog donde se publicará y pulsa Aprobar y guardar."),
+  blogger: oauthGuide("Blogger", "la cuenta de Google que administra tu blog", "Elige el blog donde se publicará y pulsa Aprobar y guardar."),
   bluesky: {
     steps: [
       "Abre Bluesky en otra pestaña del mismo navegador y entra en Configuración → Privacidad y seguridad → Contraseñas de aplicación.",

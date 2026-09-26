@@ -18,7 +18,7 @@ export function classifyTechnicalError(raw: unknown): ErrorKind | null {
   const t = text.toLowerCase();
   if (!t) return null;
   if (t.includes("scope_insufficient") || t.includes("insufficient authentication scopes") || t.includes("insufficientpermissions") || /\(#200\)|pages_manage_posts|requires .*permission|permission.*required|missing permission/.test(t)) return "SCOPE";
-  if (t.includes("invalid_grant") || t.includes("unauthenticated") || t.includes("invalid credentials") || t.includes("token has been expired") || t.includes("error validating access token") || t.includes("session has expired") || t.includes("token expired") || t.includes("expired token") || /\(#190\)|\boauthexception\b/.test(t) || /\b401\b/.test(t)) return "EXPIRED";
+  if (t.includes("invalid_grant") || t.includes("unauthenticated") || t.includes("invalid credentials") || t.includes("token has been expired") || t.includes("error validating access token") || t.includes("session has expired") || t.includes("unauthorized") || t.includes("authentication failed") || t.includes("invalid access token") || t.includes("invalid_token") || t.includes("token expired") || t.includes("expired token") || /\(#190\)|\boauthexception\b/.test(t) || /\b401\b/.test(t)) return "EXPIRED";
   if (t.includes("could not find connected account") || (t.includes("connected account") && t.includes("not found"))) return "GONE";
   if (t.includes("permission_denied") || t.includes("does not have sufficient permission") || /\b403\b/.test(t)) return "NO_ACCESS";
   if (t.includes("quota") || t.includes("rate limit") || t.includes("resource_exhausted") || t.includes("too many") || /\(#(4|17|32|613)\)/.test(t) || /\b429\b/.test(t)) return "BUSY";

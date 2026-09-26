@@ -77,15 +77,16 @@ export function ConnectionGuide({ steps, ifFails }: { steps: string[]; ifFails?:
 }
 
 /** Caja verde «✓ Conexión activa» con lo conectado (cuenta, tablero, blog…). */
-export function ConnectionActiveBox({ label, value }: { label: string; value?: string | null }) {
+export function ConnectionActiveBox({ label, value, rows }: { label: string; value?: string | null; rows?: Array<{ label: string; value: string }> }) {
+  const all = [...(value ? [{ label, value }] : []), ...(rows ?? [])];
   return (
     <div style={{ marginTop: 10, padding: 14, borderRadius: 12, border: "1px solid rgba(26, 127, 55, 0.25)", background: "#f7fff9" }}>
       <strong style={{ display: "block", color: "#1a7f37", fontSize: 15 }}>✓ Conexión activa</strong>
-      {value && (
-        <p style={{ fontSize: 14, margin: "6px 0 0" }}>
-          <strong>{label}:</strong> {value}
+      {all.map((row) => (
+        <p key={row.label} style={{ fontSize: 14, margin: "6px 0 0" }}>
+          <strong>{row.label}:</strong> {row.value}
         </p>
-      )}
+      ))}
     </div>
   );
 }
