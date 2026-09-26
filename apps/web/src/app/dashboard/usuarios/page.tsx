@@ -1122,7 +1122,7 @@ export default function UsuariosPage() {
             </label>
             </div>
           </Section>
-          <Section title="Límites de uso para la creación de artículos">
+          <Section title="Límites de artículos">
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 16, marginTop: 14, alignItems: "start" }}>
             <label style={createFieldStyle}>
               Límite mensual de artículos
@@ -3015,7 +3015,7 @@ function UserCard({
           </Row>
         </Section>
 
-        <Section title="Redes sociales y blogs" note="Aprobación de cada red y cuántas publicaciones por día puede hacer esta cuenta en cada formato. Cada red que no tenga un valor guardado permite 1 por día; 0 la bloquea.">
+        <Section title="Difusión: redes sociales y blogs" note="Es el control de las publicaciones en redes y blogs: aprobación de cada red y cuántas publicaciones por día puede hacer esta cuenta en cada formato. Cada red que no tenga un valor guardado permite 1 por día; 0 la bloquea.">
           {SOCIAL_GROUPS.map((group) => (
             <div key={group.title} style={{ marginTop: 14 }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 12, fontWeight: 600, color: "#6e6e73", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 2 }}>
@@ -3108,7 +3108,7 @@ function UserCard({
           </Row>
         </Section>
 
-        <Section title="Límites de uso para la creación de artículos" note="Cuántos artículos puede crear esta cuenta: por mes, por día y por lote. Vacío = sin límite. Los límites de las redes sociales y los blogs están más arriba, en su propia sección.">
+        <Section title="Límites de artículos" note="Cuántos artículos puede crear esta cuenta: por mes, por día y por lote. Vacío = sin límite. Las publicaciones en redes y blogs tienen su propio control, en la sección Difusión.">
           <Row label="Límite mensual de artículos">
             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
               <input
