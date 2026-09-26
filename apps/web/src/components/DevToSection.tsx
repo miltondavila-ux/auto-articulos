@@ -1,17 +1,131 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { disabledStyle, h2Style, inputStyle, secondaryButtonStyle, sectionStyle } from "./dashboard-ui";
+import { ConnectionSuccess, disabledStyle, inputStyle, secondaryButtonStyle } from "./dashboard-ui";
+import { CONNECTION_LABELS, ConnectionActiveBox, ConnectionCard, ConnectionGuide, ConnectionMessage, ConnectionTestButton } from "./connection-ui";
+import { CONNECTION_GUIDES } from "@/lib/connection-guides";
+import { friendlyConnectionError } from "@/lib/composio-error-message";
+
+type Connection = { connected: boolean; username?: string };
 
 export default function DevToSection({ allowed = true }: { allowed?: boolean }) {
-  const [connection, setConnection] = useState<{ connected: boolean; username?: string } | null>(null);
-  const [apiKey, setApiKey] = useState(""); const [editing, setEditing] = useState(false); const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [message, setMessage] = useState("");
-  async function load() { setLoading(true); try { const r = await fetch(`/api/search-integrations/devto?_t=${Date.now()}`, { cache: "no-store" }); setConnection(r.ok ? await r.json() : { connected: false }); } catch { setConnection({ connected: false }); } finally { setLoading(false); } }
-  useEffect(() => { load(); }, []);
+  const [connection, setConnection] = useState<Connection | null>(null);
   const [username, setUsername] = useState("");
-  async function save() { if (!apiKey.trim()) { setMessage("Escribe la API key de DEV.to."); return; } setSaving(true); setMessage(""); try { const r = await fetch("/api/search-integrations/devto", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: username.trim(), apiKey: apiKey.trim() }) }); const result = await r.json(); if (!r.ok) { setMessage(result.error || "No se pudo conectar DEV.to."); return; } setMessage(result.username ? `DEV.to conectado como @${result.username}.` : "DEV.to conectado."); setApiKey(""); setEditing(false); await load(); } catch { setMessage("Error de conexión al guardar DEV.to."); } finally { setSaving(false); } }
-  async function disconnect() { if (!confirm("¿Deseas desconectar DEV.to?")) return; setSaving(true); try { await fetch("/api/search-integrations/devto", { method: "DELETE" }); setMessage("DEV.to desconectado."); await load(); } finally { setSaving(false); } }
-  void disconnect;
-    if (!allowed) return null;
-  return <section style={sectionStyle}><h2 style={{ ...h2Style, margin: 0 }}>DEV.to</h2><p className="lead-copy" style={{ fontSize: 13, margin: "4px 0 0" }}>Conecta la cuenta de DEV.to donde se publicarán tus artículos adaptados.</p><div style={{ marginTop: 14, padding: 16, border: "1px solid #d2d2d7", borderRadius: 14, background: "#fff", color: "#1d1d1f", fontSize: 13, lineHeight: 1.55 }}><strong style={{ fontSize: 14 }}>Cómo conectar DEV.to, paso a paso</strong><ol style={{ margin: "10px 0 0", paddingLeft: 20 }}><li>Si no tienes cuenta, créala en <a href="https://dev.to/enter" target="_blank" rel="noreferrer">dev.to/enter</a>. Si olvidaste tu acceso, usa <a href="https://dev.to/enter" target="_blank" rel="noreferrer">“Forgot password?”</a>.</li><li>En DEV.to abre tu foto de perfil → <strong>Settings</strong> → <strong>Extensions</strong> → <strong>API Keys</strong>.</li><li>Crea una clave nueva con el nombre <strong>SEO TOTAL</strong> y copia la API key completa.</li><li>Escribe tu nombre de usuario de DEV.to tal como aparece en tu perfil y pega la API key. No uses tu contraseña.</li><li>Pulsa <strong>Conectar DEV.to</strong>. La cuenta quedará asociada solo a tu usuario de SEO TOTAL.</li></ol><p style={{ margin: "10px 0 0" }}><strong>Si falla:</strong> revisa que copiaste la API key completa, sin espacios, y que pertenece al mismo usuario escrito arriba.</p></div>{loading ? <p className="muted" style={{ fontSize: 13, marginTop: 12 }}>Cargando...</p> : <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 14, paddingTop: 14 }}>{!connection?.connected || editing ? <div style={{ display: "grid", gap: 10 }}><label style={{ color: "#1d1d1f", fontSize: 12 }}>Usuario de DEV.to<input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="lorena" style={inputStyle} /></label><label style={{ color: "#1d1d1f", fontSize: 12 }}>API key de DEV.to<input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Pega aquí la API key, no la contraseña" style={inputStyle} /></label><div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><button onClick={save} disabled={saving} style={disabledStyle({ ...secondaryButtonStyle, background: "#1d1d1f", color: "#fff", border: "none" }, saving)}>{saving ? "Verificando..." : "Conectar DEV.to"}</button>{connection?.connected && <button onClick={() => setEditing(false)} className="secondary" style={secondaryButtonStyle}>Cancelar</button>}</div></div> : <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}><strong style={{ color: "#1d1d1f", fontSize: 13 }}>✓ Conexión activa{connection.username ? ` — @${connection.username}` : ""}</strong><button onClick={() => setEditing(true)} className="secondary" style={secondaryButtonStyle}>Cambiar cuenta</button><button onClick={disconnect} disabled={saving} className="secondary" style={secondaryButtonStyle}>Revocar conexión</button></div>}{message && <p className="notice" style={{ margin: "12px 0 0" }}>{message}</p>}</div>}</section>;
+  const [apiKey, setApiKey] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+  const [justConnected, setJustConnected] = useState<string | null>(null);
+
+  async function load() {
+    try {
+      const response = await fetch(`/api/search-integrations/devto?_t=${Date.now()}`, { cache: "no-store" });
+      setConnection(response.ok ? await response.json() : { connected: false });
+    } catch {
+      setConnection({ connected: false });
+    }
+  }
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function save() {
+    if (!apiKey.trim()) {
+      setMessage({ ok: false, text: "Pega la clave de DEV.to." });
+      return;
+    }
+    setSaving(true);
+    setMessage(null);
+    try {
+      const response = await fetch("/api/search-integrations/devto", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username.trim(), apiKey: apiKey.trim() }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setMessage({ ok: false, text: friendlyConnectionError(result.error, "No se pudo conectar DEV.to. Revisa los pasos e inténtalo de nuevo.") });
+        return;
+      }
+      setJustConnected(result.username ? `@${result.username}` : "DEV.to");
+      setApiKey("");
+      setEditing(false);
+      await load();
+    } catch {
+      setMessage({ ok: false, text: "No pudimos comunicarnos con el servicio. Inténtalo de nuevo en unos minutos." });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function disconnect() {
+    if (!window.confirm(CONNECTION_LABELS.disconnectConfirm)) return;
+    setSaving(true);
+    setMessage(null);
+    try {
+      const response = await fetch("/api/search-integrations/devto", { method: "DELETE" });
+      setMessage(response.ok ? { ok: true, text: "DEV.to desconectado." } : { ok: false, text: "No se pudo desconectar. Inténtalo de nuevo." });
+      await load();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!allowed) return null;
+  const connected = Boolean(connection?.connected);
+  const guide = CONNECTION_GUIDES.devto;
+
+  return (
+    <ConnectionCard
+      title="DEV.to"
+      state={connected ? "connected" : "disconnected"}
+      lead="Conexión administrada desde esta tarjeta. Conecta la cuenta de DEV.to donde se publicarán tus artículos adaptados."
+    >
+      {connection === null ? (
+        <p style={{ color: "#6e6e73", fontSize: 14 }}>Cargando…</p>
+      ) : justConnected ? (
+        <>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#1a7f37" }}>Conexión exitosa</span>
+          <ConnectionSuccess
+            title="DEV.to quedó conectado correctamente"
+            label="Cuenta conectada"
+            value={justConnected}
+            description="La configuración terminó correctamente. SEO TOTAL usará esta conexión desde ahora."
+          />
+        </>
+      ) : !connected || editing ? (
+        <>
+          <ConnectionGuide steps={guide.steps} ifFails={guide.ifFails} />
+          <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+            <label style={{ color: "#1d1d1f", fontSize: 12 }}>
+              Usuario de DEV.to
+              <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="tu-usuario" style={inputStyle} />
+            </label>
+            <label style={{ color: "#1d1d1f", fontSize: 12 }}>
+              Clave de DEV.to
+              <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Pega aquí la clave, no tu contraseña" style={inputStyle} />
+            </label>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button type="button" onClick={save} disabled={saving} style={disabledStyle({ ...secondaryButtonStyle, background: "#1d1d1f", color: "#fff", border: "none" }, saving)}>
+                {saving ? "Verificando…" : "Conectar"}
+              </button>
+              {connected && (
+                <button type="button" onClick={() => setEditing(false)} style={secondaryButtonStyle}>Cancelar</button>
+              )}
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <ConnectionActiveBox label="Cuenta conectada" value={connection?.username ? `@${connection.username}` : null} />
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+            <button type="button" onClick={() => setEditing(true)} disabled={saving} style={secondaryButtonStyle}>{CONNECTION_LABELS.change}</button>
+            <ConnectionTestButton network="devto" disabled={saving} />
+            <button type="button" onClick={disconnect} disabled={saving} style={{ ...secondaryButtonStyle, color: "#c62828" }}>{CONNECTION_LABELS.disconnect}</button>
+          </div>
+        </>
+      )}
+      {message && <ConnectionMessage ok={message.ok}>{message.text}</ConnectionMessage>}
+    </ConnectionCard>
+  );
 }
