@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { connectionReturnPath } from "@/lib/connection-return";
 import { prisma } from "@auto-articulos/db";
 import { encryptSecret } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
     !code
   ) {
     return NextResponse.redirect(
-      new URL("/dashboard/configuracion?google=error", request.url),
+      new URL(connectionReturnPath("google-search-console", "error"), request.url),
     );
   }
   try {
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
     return response;
   } catch {
     return NextResponse.redirect(
-      new URL("/dashboard/configuracion?google=error", request.url),
+      new URL(connectionReturnPath("google-search-console", "error"), request.url),
     );
   }
 }

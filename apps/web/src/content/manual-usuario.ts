@@ -421,6 +421,15 @@ enlace público; si no lo tiene, no se muestra. El aviso rojo de reconexión
 solo aparece para cuentas que ya tenían Search Console o Analytics conectados
 por la vía anterior; una cuenta nueva conecta desde el asistente inicial.
 
+Actualización (2026-09-26, 3): al volver de autorizar Threads, LinkedIn,
+Pinterest, Tumblr o Blogger, ahora regresas a la pantalla de esa conexión
+dentro de Conexiones. Si salió bien, en Threads y LinkedIn verás la pantalla
+de **Conexión exitosa** con el botón **Volver al Inicio**; en Pinterest,
+Tumblr y Blogger verás un aviso para elegir dónde se publicará. Si algo falla,
+aparece un aviso claro que te dice qué hacer. Los errores de publicación en
+**Historial** también se muestran en español y explican el paso a seguir (por
+ejemplo, volver a conectar la red cuando la autorización venció).
+
 ## Problemas frecuentes
 
 ### No puedo publicar

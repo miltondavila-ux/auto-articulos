@@ -17,6 +17,7 @@ import BloggerSection from "@/components/BloggerSection";
 import PasosAntesDeConectar from "@/components/PasosAntesDeConectar";
 import FacebookSection from "@/components/FacebookSection";
 import InstagramSection from "@/components/InstagramSection";
+import { ConnectionReturnNotice, ConnectionReturnSuccess, LEGACY_RETURN_NETWORKS, useConnectionReturn } from "@/components/ConnectionReturn";
 
 type Vista = "analiticas" | "difusion";
 type ConexionId = "google-search-console" | "google-analytics" | "bing-webmaster" | "instagram" | "facebook" | "threads" | "linkedin" | "pinterest" | "tumblr" | "bluesky" | "devto" | "blogger";
@@ -57,6 +58,8 @@ export default function ConexionesView() {
   const [modulosDeshabilitados, setModulosDeshabilitados] = useState<string[]>([]);
   const [permisos, setPermisos] = useState<Record<string, boolean>>({});
   const [configuradas, setConfiguradas] = useState<Record<string, boolean>>({});
+  const retorno = useConnectionReturn(conexion);
+  const soloExito = retorno === "connected" && conexion !== null && LEGACY_RETURN_NETWORKS[conexion]?.choice === null;
 
   useEffect(() => {
     const pedida = searchParams.get("vista");
@@ -234,7 +237,10 @@ export default function ConexionesView() {
       </div>}
       <p style={{ margin: "0 0 16px", fontSize: 13, color: "#6e6e73" }}>{VISTAS.find((v) => v.id === vista)?.ayuda}</p>
 
-      {vista === "analiticas" && (
+      {conexion && retorno && !soloExito && <ConnectionReturnNotice conexion={conexion} resultado={retorno} />}
+      {soloExito && conexion && <ConnectionReturnSuccess conexion={conexion} />}
+
+      {!soloExito && vista === "analiticas" && (
         <div style={columna}>
           {conexion === null && <section style={{ padding: 16, borderRadius: 14, background: "#f5f5f7", border: "1px solid #d2d2d7" }} aria-label="Migración guiada">
             <strong style={{ fontSize: 15, color: "#1d1d1f" }}>Actualiza tu conexión de Google</strong>
@@ -264,7 +270,7 @@ export default function ConexionesView() {
         </div>
       )}
 
-      {vista === "difusion" && (
+      {!soloExito && vista === "difusion" && (
         <div style={columna}>
           {conexion === null && <BusinessProfileSection />}
           {(permisos.threads || permisos.instagram || permisos.facebook || isAdmin || tieneModuloRedes) && (

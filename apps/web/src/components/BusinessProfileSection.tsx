@@ -187,7 +187,7 @@ export default function BusinessProfileSection() {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <p style={{ fontSize: 13, color: "#1d1d1f", margin: 0 }}>
-            ✓ Conectado a {postPeerConnected ? (postPeer?.accountName ?? "Google Business Profile mediante PostPeer") : (data?.locationTitle ?? data?.locationName)}
+            ✓ Conectado a {postPeerConnected ? (postPeer?.accountName ?? "Google Business Profile") : (data?.locationTitle ?? data?.locationName)}
           </p>
           {postPeerConnected && postPeer?.accountId && (
             <p style={{ fontSize: 12, color: "#6e6e73", margin: 0 }}>
