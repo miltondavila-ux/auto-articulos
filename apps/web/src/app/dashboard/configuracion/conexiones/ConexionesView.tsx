@@ -287,6 +287,16 @@ export default function ConexionesView() {
           {solo("devto") && puede("devto") && <DevToSection allowed={puede("devto")} />}
         </div>
       )}
+
+      {conexion && (
+        <button
+          type="button"
+          onClick={volverAConexiones}
+          style={{ marginTop: 20, padding: "10px 18px", borderRadius: 10, border: "1px solid #d2d2d7", background: "#fff", color: "#1d1d1f", cursor: "pointer", fontSize: 14, fontWeight: 600 }}
+        >
+          Volver al menú de Conexiones
+        </button>
+      )}
     </div>
   );
 }

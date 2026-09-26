@@ -136,7 +136,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [probe, setProbe] = useState<Record<string, string>>({});
-  const [found, setFound] = useState<Record<string, Array<{ label: string; detail: string | null }>>>({});
+  const [savedSelection, setSavedSelection] = useState<Record<string, string>>({});
   const [choices, setChoices] = useState<Record<string, Choices>>({});
   const [justSaved, setJustSaved] = useState<Record<string, boolean>>({});
   const [justCompleted, setJustCompleted] = useState<Record<string, boolean>>({});
@@ -223,14 +223,10 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
   async function test(app: string) {
     setBusy(app);
     setProbe((current) => ({ ...current, [app]: "" }));
-    setFound((current) => ({ ...current, [app]: [] }));
     try {
       const { ok, body } = await post("/api/composio/test", { app });
-      if (ok && Array.isArray(body.found)) setFound((current) => ({ ...current, [app]: body.found }));
       const text = ok
-        ? body.items !== null && body.items !== undefined
-          ? `La conexión respondió correctamente (${body.items} elemento${body.items === 1 ? "" : "s"}).`
-          : "La conexión respondió correctamente."
+        ? `Conexión correcta${connections?.find((c) => c.app === app)?.selection ? ` con ${connections.find((c) => c.app === app)?.selection}` : ""}.`
         : friendlyConnectionError(body.error, "La prueba no funcionó. Inténtalo de nuevo.");
       setProbe((current) => ({ ...current, [app]: `${ok ? "✓" : "✗"} ${text}` }));
     } finally {
@@ -241,6 +237,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
   async function approve(app: string) {
     const picked = choices[app]?.picked;
     if (!picked) return;
+    const pickedOption = choices[app]?.options.find((option) => option.id === picked);
     setBusy(app);
     setMessage(null);
     try {
@@ -254,6 +251,10 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
         return rest;
       });
       setJustSaved((current) => ({ ...current, [app]: true }));
+      if (pickedOption) {
+        const code = pickedOption.detail ? ` (${pickedOption.detail})` : "";
+        setSavedSelection((current) => ({ ...current, [app]: `${pickedOption.label}${code}` }));
+      }
       setMessage({ ok: true, text: "Elección aprobada y guardada." });
       await load();
     } finally {
@@ -334,7 +335,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
                 <ConnectionSuccess
                   title={SUCCESS_TITLE[connection.app] ?? "La conexión quedó lista"}
                   label={SUCCESS_SELECTION_LABEL[connection.app] ?? "Conectado con"}
-                  value={connection.selection}
+                  value={savedSelection[connection.app] ?? connection.selection}
                   description="La configuración terminó correctamente. SEO TOTAL usará esta conexión desde ahora."
                 />
               </section>
@@ -355,7 +356,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
                   Debes reconectar ahora. Pulsa «Nueva conexión» y autoriza el acceso.
                 </p>
               )}
-              {CONNECTION_STEPS[connection.app] && (
+              {CONNECTION_STEPS[connection.app] && !(connection.status === "ACTIVE" && connection.selection && !choice) && (
                 <div
                   role="note"
                   style={{ marginTop: 10, padding: "10px 0", borderTop: "1px solid #e5e5ea", color: "#1d1d1f", fontSize: 13, lineHeight: 1.5 }}
@@ -399,40 +400,42 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
                   {!choice.loading && !choice.error && choice.options.length === 0 && (
                     <p style={mutedStyle}>No se encontró nada para elegir en esta cuenta. Comprueba que sea la cuenta correcta.</p>
                   )}
-                  {choice.options.map((option) => (
-                    <label
-                      key={option.id}
-                      style={{
-                        display: "flex",
-                        gap: 10,
-                        alignItems: "flex-start",
-                        padding: "8px 0",
-                        opacity: option.selectable ? 1 : 0.55,
-                        cursor: option.selectable ? "pointer" : "not-allowed",
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name={`choice-${connection.app}`}
-                        checked={choice.picked === option.id}
-                        disabled={!option.selectable || busy !== null}
-                        onChange={() =>
-                          setChoices((current) => ({ ...current, [connection.app]: { ...choice, picked: option.id } }))
-                        }
-                        style={{ marginTop: 3 }}
-                      />
-                      <span style={{ fontSize: 14 }}>
-                        <strong>{option.label}</strong>
-                        {option.recommended && <span style={{ color: "#1a7f37", fontSize: 12 }}> · recomendado</span>}
-                        {option.detail && (
-                          <span style={{ display: "block", fontSize: 12, color: "#6e6e73", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", marginTop: 2 }}>
-                            {option.detail}
+                  {choice.options.length > 0 && (() => {
+                    const sorted = [...choice.options].sort(
+                      (x, y) =>
+                        Number(y.selectable) - Number(x.selectable) ||
+                        Number(Boolean(y.recommended)) - Number(Boolean(x.recommended)) ||
+                        x.label.localeCompare(y.label, "es"),
+                    );
+                    const pickedOption = choice.options.find((option) => option.id === choice.picked);
+                    return (
+                      <div>
+                        <select
+                          aria-label={CHOOSE_TITLE[connection.app]}
+                          value={choice.picked ?? ""}
+                          disabled={busy !== null}
+                          onChange={(event) =>
+                            setChoices((current) => ({ ...current, [connection.app]: { ...choice, picked: event.target.value || null } }))
+                          }
+                          style={{ width: "100%", maxWidth: 520, padding: "10px 12px", borderRadius: 10, border: "1px solid #d2d2d7", fontSize: 14, background: "#fff", color: "#1d1d1f" }}
+                        >
+                          <option value="">Elige una opción…</option>
+                          {sorted.map((option) => (
+                            <option key={option.id} value={option.id} disabled={!option.selectable}>
+                              {option.label}
+                              {option.recommended ? " · recomendado" : ""}
+                              {!option.selectable && option.reason ? ` — ${option.reason}` : ""}
+                            </option>
+                          ))}
+                        </select>
+                        {pickedOption?.detail && (
+                          <span style={{ display: "block", fontSize: 12, color: "#6e6e73", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", marginTop: 6 }}>
+                            {pickedOption.detail}
                           </span>
                         )}
-                        {option.reason && <span style={{ display: "block", fontSize: 12, color: "#9a6700" }}>{option.reason}</span>}
-                      </span>
-                    </label>
-                  ))}
+                      </div>
+                    );
+                  })()}
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 8 }}>
                     <button
                       type="button"
@@ -496,16 +499,6 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
                     </button>
                   )}
                 </div>
-              )}
-              {(found[connection.app] ?? []).length > 0 && (
-                <ul style={{ margin: "6px 0 0", paddingLeft: 18, fontSize: 12, color: "#6e6e73", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}>
-                  {found[connection.app].map((item, index) => (
-                    <li key={index}>
-                      <strong style={{ fontFamily: "inherit", color: "#1d1d1f" }}>{item.label}</strong>
-                      {item.detail ? ` — ${item.detail}` : ""}
-                    </li>
-                  ))}
-                </ul>
               )}
               {probe[connection.app] && (
                 <p
