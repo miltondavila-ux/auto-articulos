@@ -3608,3 +3608,54 @@ y 9 siguen pendientes de codificar.
 Estado: VERIFICADA (PR #224, `abb687dd`). PR #225 (`36ecd08`, mejoras 1, 2 y
 5): FUSIONADA A `main`, DEPLOYMENT/PRODUCCIÓN SIN CONFIRMACIÓN EXPLÍCITA EN
 COORDINACIÓN A LA FECHA DE ESTA ENTRADA.
+
+## Versión desplegada — 2026-09-26 — REPARACION DE ADMIN
+
+- **Commit:** `49860952` (PR #235, squash). Deployment de Producción de Vercel
+  `6680201412` en estado `success` para ese commit.
+- **Contenido:** rediseño de Administración (`/dashboard/usuarios`) estilo Apple;
+  guardado único por ficha; límites diarios de difusión por red y formato con
+  «hoy N»; validación 400 en `PATCH /api/admin/users`; manual actualizado.
+- **Migraciones:** ninguna. La columna `User.socialDailyLimits` (migración
+  `20260921140000`) ya existía en Producción: Milton ejecutó la consulta en
+  `information_schema` y devolvió fila.
+- **Triple auditoría en Producción:**
+  1. Integridad: `origin/main` = `49860952`; el diff contra `0445e0b2` son solo
+     `usuarios/page.tsx`, `api/admin/users/route.ts`, manual y 2 documentos.
+  2. Regresión: `/login` 200; sin sesión `/api/admin/users` 401; con sesión de usuario
+     normal (Lorena) `/dashboard` 200 y `/api/admin/users` 403 (control de acceso
+     intacto).
+  3. Funcional (con sesión de administrador, cuenta de pruebas Lorena Álvarez, 99
+     usuarios): las 5 pestañas cargan sin errores; la ficha muestra las 7 secciones,
+     16 formatos con límite y «hoy N»; `GET /api/admin/users` devuelve
+     `socialPublishedToday`; valor inválido → error claro sin llegar al servidor;
+     «Descartar» restaura; Editar/Eliminar llegan a su confirmación y se cancelan;
+     guardado real de `threads=2` → «Cambios guardados.» y confirmado en el servidor;
+     restaurado a `{}` (HTTP 200). El JavaScript servido contiene el texto nuevo y no
+     el antiguo «(JSON)». Regresión con sesión admin: `/dashboard`, `/publicar`,
+     `/oportunidades`, `/oportunidades-redes`, `/historial`, `/configuracion`,
+     `/publicaciones-en-curso`, `/como-funciona`, `/login` → 200.
+     **No probado:** «Acceder como», «Copiar credenciales» y guardar en «Editar»
+     (efectos sobre sesión/portapapeles/datos de una cuenta).
+  Nota: en Producción Lorena tenía `socialDailyLimits = {}` (sin backfill); el worker lo
+  interpreta como 1 por día, igual que la interfaz.
+- **Capitanía de migración:** liberada 2026-09-26.
+
+### Relleno de límites de difusión en Producción — 2026-09-26
+
+- La migración `20260921140000` solo se había aplicado en su parte de columna: las 99
+  cuentas tenían `socialDailyLimits = {}`. Milton ejecutó a mano en Supabase el `UPDATE`
+  de relleno (16 claves en 1, incluida `instagram-infografia`), acotado a filas en `{}`.
+- Verificado por Claude con `GET /api/admin/users` en Producción: 99 cuentas, 16 claves
+  cada una, ninguna con valor distinto de 1, ninguna vacía. Sin cambio de comportamiento
+  (el worker ya trataba «sin valor» como 1).
+
+### Renombrado de controles — 2026-09-26 — REPARACION DE ADMIN
+
+- **Commit:** `6dff79e2` (PR #237). Deployment de Producción `success`. Solo textos.
+- La ficha separa dos controles de cantidad: **«Límites de artículos»** (mes/día/lote de
+  creación) y **«Difusión: redes sociales y blogs»** (aprobaciones + publicaciones por
+  día). Renombrado también en el formulario de crear usuario y en el manual.
+- Verificado en Producción (sesión admin, cuenta de pruebas Lorena): secciones Cuenta,
+  Acceso, Difusión, Imágenes con IA, Límites de artículos, Acciones e Historial; 16
+  formatos de difusión; sin títulos antiguos. Sin migraciones. Capitanía liberada.

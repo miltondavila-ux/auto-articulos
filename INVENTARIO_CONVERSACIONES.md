@@ -1689,8 +1689,7 @@ reservas liberadas. Estado final: ARCHIVADA.
   `apps/web/src/content/manual-usuario.ts` (solo si el manual lo menciona).
 - **Migraciones:** ninguna prevista (la columna `socialDailyLimits` ya existe).
 
-- **Actualización 2026-09-26 (REPARACION DE ADMIN):** estado **PAUSADA — a la espera de
-  aprobación de Milton en localhost**. Rediseño estilo Apple de las 5 pestañas y de la
+- **Actualización 2026-09-26 (REPARACION DE ADMIN):** estado **CULMINADA (2026-09-26, ver cierre abajo)**. Rediseño estilo Apple de las 5 pestañas y de la
   ficha de usuario (secciones Cuenta, Acceso, Redes sociales y blogs, Imágenes con IA,
   Límites de uso para la creación de artículos, Acciones, Historial); guardado único
   «Guardar cambios/Descartar»; límites diarios de difusión por red y formato con
@@ -1705,3 +1704,34 @@ reservas liberadas. Estado final: ARCHIVADA.
   (solo `usuarios/page.tsx` y `api/admin/users/route.ts`) como cambio sin commit en el
   worktree `.codex/worktrees/produccion-validacion-composio`; se revierte con
   `git apply -R admin.patch`. Reservas mantenidas en esos dos archivos.
+
+### Cierre — Claude - REPARACION DE ADMIN — 2026-09-26
+
+```text
+IDENTIDAD: Claude - Sonnet 5 - REPARACION DE ADMIN
+PROYECTO: Administración (/dashboard/usuarios) estilo Apple + límites de difusión
+ESTADO FINAL: CULMINADA
+RAMA: claude/reparacion-admin (fusionada), claude/reparacion-admin-nombres (fusionada),
+      claude/reparacion-admin-cierre (solo documentación, PR #236)
+WORKTREE: .worktrees/reparacion-admin (a retirar tras fusionar #236)
+COMMIT BASE: 0445e0b2
+ÚLTIMO COMMIT: 6dff79e2 (código en Producción)
+ARCHIVOS MODIFICADOS: apps/web/src/app/dashboard/usuarios/page.tsx,
+  apps/web/src/app/api/admin/users/route.ts, apps/web/src/content/manual-usuario.ts,
+  COORDINACION_CLAUDE_CODEX.md, INVENTARIO_CONVERSACIONES.md, CONTROLADOR_DE_VERSIONES.md
+ARCHIVOS RESERVADOS: usuarios/page.tsx y api/admin/users/route.ts
+ARCHIVOS LIBERADOS: los mismos, 2026-09-26
+MIGRACIONES: ninguna en el código. Milton ejecutó a mano en Supabase el UPDATE de relleno de
+  socialDailyLimits (16 claves en 1); verificado: 99 cuentas, sin vacíos.
+PRUEBAS EJECUTADAS: npm test 61/61; tsc; next build; localhost (guardar límites,
+  aprobaciones, inválido, Descartar, límites de artículos/lote, confirmaciones);
+  Producción con sesión admin (5 pestañas, ficha, guardado real y restauración, regresión
+  de 9 rutas)
+PRODUCCIÓN/PREVIEW: PR #235 -> 49860952; PR #237 -> 6dff79e2; Vercel Production success
+ERRORES O BLOQUEOS: ninguno abierto
+TRABAJO PENDIENTE: no probados en Producción: «Acceder como», «Copiar credenciales»,
+  guardar en «Editar». Retirar worktree y ramas tras fusionar #236.
+SIGUIENTE ACCIÓN EXACTA: fusionar PR #236 (documentación)
+RESPONSABLE SIGUIENTE: Milton
+FECHA Y HORA DE LIBERACIÓN: 2026-09-26 (capitanía liberada con scripts/migration-coordinator.sh)
+```
