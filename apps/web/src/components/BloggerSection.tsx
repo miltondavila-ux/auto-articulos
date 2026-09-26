@@ -14,7 +14,7 @@ const BLOGGER: OAuthNetworkConfig = {
     secretLabel: "Client Secret",
     keys: { shown: "clientId", raw: "rawClientId", bodyId: "clientId", bodySecret: "clientSecret" },
   },
-  destination: { noun: "el blog", label: "Blog", listKey: "blogs", idField: "id", nameField: "name", savedIdKey: "blogId", savedNameKey: "blogName", patchKey: "blogId" },
+  destination: { noun: "el blog", label: "Blog", listKey: "blogs", idField: "id", nameField: "name", savedIdKey: "blogId", savedNameKey: "blogName", patchKey: "blogId", note: "Elige el blog de esta cuenta; los demás no se usarán." },
 };
 
 export default function BloggerSection({ allowed = true }: { allowed?: boolean }) {

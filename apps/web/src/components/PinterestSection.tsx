@@ -14,7 +14,7 @@ const PINTEREST: OAuthNetworkConfig = {
     secretLabel: "Client Secret",
     keys: { shown: "clientId", raw: "rawClientId", bodyId: "clientId", bodySecret: "clientSecret" },
   },
-  destination: { noun: "el tablero", label: "Tablero", listKey: "boards", idField: "id", nameField: "name", savedIdKey: "boardId", savedNameKey: "boardName", patchKey: "boardId" },
+  destination: { noun: "el tablero", label: "Tablero", listKey: "boards", idField: "id", nameField: "name", savedIdKey: "boardId", savedNameKey: "boardName", patchKey: "boardId", note: "Elige el tablero de esta cuenta; los demás no se usarán." },
 };
 
 export default function PinterestSection({ allowed = true }: { allowed?: boolean }) {

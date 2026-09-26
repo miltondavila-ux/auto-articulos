@@ -14,7 +14,7 @@ const TUMBLR: OAuthNetworkConfig = {
     secretLabel: "Consumer Secret",
     keys: { shown: "clientId", raw: "rawClientId", bodyId: "clientId", bodySecret: "clientSecret" },
   },
-  destination: { noun: "el blog", label: "Blog", listKey: "blogs", idField: "identifier", nameField: "title", savedIdKey: "blogIdentifier", savedNameKey: "blogTitle", patchKey: "blogIdentifier" },
+  destination: { noun: "el blog", label: "Blog", listKey: "blogs", idField: "identifier", nameField: "title", savedIdKey: "blogIdentifier", savedNameKey: "blogTitle", patchKey: "blogIdentifier", note: "Elige el blog de esta cuenta; los demás no se usarán." },
 };
 
 export default function TumblrSection({ allowed = true }: { allowed?: boolean }) {

@@ -16,7 +16,8 @@ import DevToSection from "@/components/DevToSection";
 import BloggerSection from "@/components/BloggerSection";
 import FacebookSection from "@/components/FacebookSection";
 import InstagramSection from "@/components/InstagramSection";
-import { ConnectionReturnNotice, ConnectionReturnSuccess, LEGACY_RETURN_NETWORKS, useConnectionReturn } from "@/components/ConnectionReturn";
+import { ConnectionReturnSuccess, LEGACY_RETURN_NETWORKS, useConnectionReturn } from "@/components/ConnectionReturn";
+import { ConnectionReturnContext } from "@/components/connection-return-context";
 
 type Vista = "analiticas" | "difusion";
 type ConexionId = "google-search-console" | "google-analytics" | "bing-webmaster" | "instagram" | "facebook" | "threads" | "linkedin" | "pinterest" | "tumblr" | "bluesky" | "devto" | "blogger" | "business-profile";
@@ -217,6 +218,7 @@ export default function ConexionesView() {
   const solo = (id: ConexionId) => conexion === null || conexion === id;
 
   return (
+    <ConnectionReturnContext.Provider value={{ conexion, resultado: retorno }}>
     <div>
       <ModuleIntro titulo={conexion ? nombres[conexion] : "Conexiones"}>
         <IntroP>
@@ -237,7 +239,6 @@ export default function ConexionesView() {
       </div>}
       <p style={{ margin: "0 0 16px", fontSize: 13, color: "#6e6e73" }}>{VISTAS.find((v) => v.id === vista)?.ayuda}</p>
 
-      {conexion && retorno && !soloExito && <ConnectionReturnNotice conexion={conexion} resultado={retorno} />}
       {soloExito && conexion && <ConnectionReturnSuccess conexion={conexion} />}
 
       {!soloExito && vista === "analiticas" && (
@@ -299,5 +300,6 @@ export default function ConexionesView() {
         </button>
       )}
     </div>
+    </ConnectionReturnContext.Provider>
   );
 }

@@ -3,13 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  sectionStyle,
-  h2Style,
   inputStyle,
   secondaryButtonStyle,
   buttonStyle,
 } from "./dashboard-ui";
-import { ConnectionGuide, ConnectionTestButton } from "./connection-ui";
+import { CONNECTION_SELECT_STYLE, ConnectionCard, ConnectionGuide, ConnectionTestButton } from "./connection-ui";
 import { CONNECTION_GUIDES } from "@/lib/connection-guides";
 
 type Site = { Url: string; IsVerified: boolean };
@@ -199,36 +197,40 @@ export default function BingWebmasterSection() {
   }
 
   return (
-    <section style={sectionStyle}>
-      <h2 style={h2Style}>Bing Webmaster Tools</h2>
-      <p className="lead-copy" style={{ margin: "0 0 16px 0" }}>
-        Conexión administrada desde esta tarjeta. Conecta tu cuenta de Bing y elige aquí el sitio que usará SEO TOTAL.
-      </p>
+    <ConnectionCard
+      title="Bing Webmaster Tools"
+      state={!data?.connected ? "disconnected" : tokenExpired ? "expired" : "connected"}
+      lead="Conexión administrada desde esta tarjeta. Conecta tu cuenta de Bing y elige aquí el sitio que usará SEO TOTAL."
+      note="El sistema enviará tu sitemap a Bing todas las noches y procesará cada artículo publicado para acelerar su aparición en búsquedas."
+    >
       {!data?.connected && <ConnectionGuide steps={CONNECTION_GUIDES["bing-webmaster"].steps} ifFails={CONNECTION_GUIDES["bing-webmaster"].ifFails} />}
 
       {!data?.connected ? (
-        <a
-          href="/api/search-integrations/bing/connect"
-          aria-disabled={connecting}
-          onClick={(e) => {
-            if (connecting) {
-              e.preventDefault();
-              return;
-            }
-            setConnecting(true);
-          }}
-          className="secondary"
-          style={{
-            ...secondaryButtonStyle,
-            display: "inline-block",
-            textDecoration: "none",
-            opacity: connecting ? 0.6 : 1,
-            pointerEvents: connecting ? "none" : "auto",
-            cursor: connecting ? "wait" : "pointer",
-          }}
-        >
-          {connecting ? "Conectando…" : "Nueva conexión"}
-        </a>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+          <a
+            href="/api/search-integrations/bing/connect"
+            aria-disabled={connecting}
+            onClick={(e) => {
+              if (connecting) {
+                e.preventDefault();
+                return;
+              }
+              setConnecting(true);
+            }}
+            style={{
+              ...buttonStyle,
+              marginTop: 0,
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              opacity: connecting ? 0.6 : 1,
+              pointerEvents: connecting ? "none" : "auto",
+              cursor: connecting ? "wait" : "pointer",
+            }}
+          >
+            {connecting ? "Conectando…" : "Nueva conexión"}
+          </a>
+        </div>
       ) : tokenExpired ? (
         <div
           style={{
@@ -272,7 +274,7 @@ export default function BingWebmasterSection() {
           <select
             value={siteUrl}
             onChange={(e) => setSiteUrl(e.target.value)}
-            style={inputStyle}
+            style={CONNECTION_SELECT_STYLE}
           >
             <option value="">Elige tu sitio verificado…</option>
             {data.sites.map((site) => (
@@ -337,7 +339,7 @@ export default function BingWebmasterSection() {
             </div>
           )}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button onClick={save} className="secondary" style={secondaryButtonStyle}>
+            <button onClick={save} style={{ ...buttonStyle, marginTop: 0 }}>
               Aprobar y guardar
             </button>
             {data.sitemapUrl && (
@@ -443,9 +445,6 @@ export default function BingWebmasterSection() {
           )}
         </p>
       )}
-      <p className="muted" style={{ fontSize: 12, marginTop: 14 }}>
-        El sistema enviará tu sitemap a Bing todas las noches y procesará cada artículo publicado para acelerar su aparición en búsquedas.
-      </p>
-    </section>
+    </ConnectionCard>
   );
 }

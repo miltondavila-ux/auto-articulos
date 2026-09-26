@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ConnectionSuccess, disabledStyle, inputStyle, secondaryButtonStyle } from "./dashboard-ui";
-import { CONNECTION_LABELS, ConnectionActiveBox, ConnectionCard, ConnectionGuide, ConnectionMessage, ConnectionTestButton } from "./connection-ui";
+import { ConnectionSuccess, buttonStyle, disabledStyle, inputStyle, secondaryButtonStyle } from "./dashboard-ui";
+import { CONNECTION_LABELS, ConnectionActions, ConnectionActiveBox, ConnectionCard, ConnectionGuide, ConnectionMessage } from "./connection-ui";
 import { CONNECTION_GUIDES } from "@/lib/connection-guides";
 import { friendlyConnectionError } from "@/lib/composio-error-message";
 
@@ -77,8 +77,9 @@ export default function BlueskySection({ allowed = true }: { allowed?: boolean }
 
   return (
     <ConnectionCard
+      id="bluesky"
       title="Bluesky"
-      state={connected ? "connected" : "disconnected"}
+      state={justConnected ? "success" : connected ? "connected" : "disconnected"}
       lead="Conexión administrada desde esta tarjeta. Conecta la cuenta de Bluesky donde se publicarán tus artículos."
       note="Publica un microresumen del artículo con su imagen y enlace."
     >
@@ -86,7 +87,6 @@ export default function BlueskySection({ allowed = true }: { allowed?: boolean }
         <p style={{ color: "#6e6e73", fontSize: 14 }}>Cargando…</p>
       ) : justConnected ? (
         <>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "#1a7f37" }}>Conexión exitosa</span>
           <ConnectionSuccess
             title="Bluesky quedó conectado correctamente"
             label="Cuenta conectada"
@@ -106,24 +106,25 @@ export default function BlueskySection({ allowed = true }: { allowed?: boolean }
               Contraseña de aplicación
               <input type="password" value={appPassword} onChange={(e) => setAppPassword(e.target.value)} placeholder="Pega aquí la contraseña de aplicación, no tu contraseña normal" style={inputStyle} />
             </label>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button type="button" onClick={save} disabled={saving} style={disabledStyle({ ...secondaryButtonStyle, background: "#1d1d1f", color: "#fff", border: "none" }, saving)}>
+          </div>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+              <button type="button" onClick={save} disabled={saving} style={disabledStyle({ ...buttonStyle, marginTop: 0 }, saving)}>
                 {saving ? "Verificando…" : "Conectar"}
               </button>
               {connected && (
                 <button type="button" onClick={() => setEditing(false)} style={secondaryButtonStyle}>Cancelar</button>
               )}
             </div>
-          </div>
         </>
       ) : (
         <>
           <ConnectionActiveBox label="Cuenta conectada" value={connection?.handle ? `@${connection.handle}` : null} />
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-            <button type="button" onClick={() => setEditing(true)} disabled={saving} style={secondaryButtonStyle}>{CONNECTION_LABELS.change}</button>
-            <ConnectionTestButton network="bluesky" disabled={saving} />
-            <button type="button" onClick={disconnect} disabled={saving} style={{ ...secondaryButtonStyle, color: "#c62828" }}>{CONNECTION_LABELS.disconnect}</button>
-          </div>
+          <ConnectionActions
+            network="bluesky"
+            disabled={saving}
+            change={<button type="button" onClick={() => setEditing(true)} disabled={saving} style={secondaryButtonStyle}>{CONNECTION_LABELS.change}</button>}
+            disconnect={<button type="button" onClick={disconnect} disabled={saving} style={{ ...secondaryButtonStyle, color: "#c62828" }}>{CONNECTION_LABELS.disconnect}</button>}
+          />
         </>
       )}
       {message && <ConnectionMessage ok={message.ok}>{message.text}</ConnectionMessage>}

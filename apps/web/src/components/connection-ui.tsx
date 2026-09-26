@@ -2,6 +2,7 @@
 
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { h2Style, secondaryButtonStyle, sectionStyle } from "@/components/dashboard-ui";
+import { useConnectionNotice } from "@/components/connection-return-context";
 
 /**
  * Piezas estándar de las pantallas de conexión de TODAS las redes (mismo patrón que
@@ -19,13 +20,26 @@ export const CONNECTION_LABELS = {
 
 const mutedStyle: CSSProperties = { color: "#6e6e73", fontSize: 14, lineHeight: 1.5 };
 
-export type ConnectionState = "connected" | "disconnected" | "pending" | "expired";
+/** Dropdown de elegir destino: el mismo de Search Console y Analytics. */
+export const CONNECTION_SELECT_STYLE: CSSProperties = {
+  width: "100%",
+  maxWidth: 520,
+  padding: "10px 12px",
+  borderRadius: 10,
+  border: "1px solid #d2d2d7",
+  fontSize: 14,
+  background: "#fff",
+  color: "#1d1d1f",
+};
+
+export type ConnectionState = "connected" | "disconnected" | "pending" | "expired" | "success";
 
 const STATE_LABEL: Record<ConnectionState, { text: string; color: string }> = {
   connected: { text: "Conectada", color: "#1a7f37" },
   disconnected: { text: "No conectada", color: "#6e6e73" },
   pending: { text: "Falta elegir el destino", color: "#9a6700" },
   expired: { text: "Autorización vencida", color: "#c62828" },
+  success: { text: "Conexión exitosa", color: "#1a7f37" },
 };
 
 /** Tarjeta: título + estado a la derecha + frase de apoyo + descripción de lo que hace. */
@@ -35,8 +49,10 @@ export function ConnectionCard({
   lead,
   note,
   badge,
+  id,
   children,
 }: {
+  id?: string;
   title: string;
   state: ConnectionState;
   lead: string;
@@ -45,6 +61,7 @@ export function ConnectionCard({
   children: ReactNode;
 }) {
   const status = STATE_LABEL[state];
+  const notice = useConnectionNotice(id);
   return (
     <section style={sectionStyle}>
       {badge && (
@@ -52,13 +69,21 @@ export function ConnectionCard({
           {badge}
         </span>
       )}
-      <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-        <h2 style={{ ...h2Style, marginBottom: 6 }}>{title}</h2>
-        <span style={{ fontSize: 13, fontWeight: 600, color: status.color }}>{status.text}</span>
-      </div>
+      <h2 style={h2Style}>{title}</h2>
       <p className="lead-copy" style={{ margin: "0 0 16px 0" }}>{lead}</p>
-      {note && <p style={{ ...mutedStyle, margin: "4px 0 0" }}>{note}</p>}
-      {children}
+      {notice && (
+        <p role="status" style={{ fontSize: 14, margin: "8px 0 0", color: notice.ok ? "#1a7f37" : "#c62828" }}>
+          {notice.text}
+        </p>
+      )}
+      {/* Mismo bloque interior que Search Console y Analytics: línea separadora + estado + nota + contenido. */}
+      <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid #e5e5ea" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+          <span style={{ fontSize: 13, fontWeight: state === "success" ? 700 : 600, color: status.color }}>{status.text}</span>
+        </div>
+        {note && state !== "success" && <p style={{ ...mutedStyle, margin: "4px 0 0" }}>{note}</p>}
+        {children}
+      </div>
     </section>
   );
 }
@@ -100,8 +125,7 @@ export function ConnectionMessage({ ok, children }: { ok: boolean; children: Rea
   );
 }
 
-/** Botón «Probar conexión» + resultado corto; llama a /api/search-integrations/{red}/test. */
-export function ConnectionTestButton({ network, disabled, endpoint }: { network: string; disabled?: boolean; endpoint?: string }) {
+function useConnectionTest(network: string, endpoint?: string) {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
   async function run() {
@@ -121,14 +145,65 @@ export function ConnectionTestButton({ network, disabled, endpoint }: { network:
       setBusy(false);
     }
   }
+  return { busy, result, run };
+}
+
+/** Resultado de «Probar conexión»: mismo párrafo que en Search Console y Analytics. */
+function ProbeResult({ result }: { result: { ok: boolean; text: string } | null }) {
+  if (!result) return null;
+  return (
+    <p role="status" style={{ fontSize: 13, marginTop: 10, color: result.ok ? "#1a7f37" : "#c62828" }}>
+      {result.ok ? "✓" : "✗"} {result.text}
+    </p>
+  );
+}
+
+/**
+ * Fila de acciones de una conexión activa, idéntica a la de Search Console y Analytics:
+ * Cambiar · Probar conexión · Nueva conexión · Desconectar, y el resultado de la prueba debajo.
+ */
+export function ConnectionActions({
+  network,
+  endpoint,
+  disabled,
+  change,
+  connect,
+  disconnect,
+}: {
+  network: string;
+  endpoint?: string;
+  disabled?: boolean;
+  change?: ReactNode;
+  connect?: ReactNode;
+  disconnect: ReactNode;
+}) {
+  const test = useConnectionTest(network, endpoint);
   return (
     <>
-      <button type="button" onClick={run} disabled={busy || disabled} style={secondaryButtonStyle}>
-        {busy ? "Probando…" : CONNECTION_LABELS.test}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+        {change}
+        <button type="button" onClick={test.run} disabled={test.busy || disabled} style={secondaryButtonStyle}>
+          {test.busy ? "Probando…" : CONNECTION_LABELS.test}
+        </button>
+        {connect}
+        {disconnect}
+      </div>
+      <ProbeResult result={test.result} />
+    </>
+  );
+}
+
+/** Botón «Probar conexión» suelto (pantallas con su propia fila de botones, como Bing). */
+export function ConnectionTestButton({ network, disabled, endpoint }: { network: string; disabled?: boolean; endpoint?: string }) {
+  const test = useConnectionTest(network, endpoint);
+  return (
+    <>
+      <button type="button" onClick={test.run} disabled={test.busy || disabled} style={secondaryButtonStyle}>
+        {test.busy ? "Probando…" : CONNECTION_LABELS.test}
       </button>
-      {result && (
-        <p role="status" style={{ flexBasis: "100%", fontSize: 13, margin: "6px 0 0", color: result.ok ? "#1a7f37" : "#c62828" }}>
-          {result.ok ? "✓" : "✗"} {result.text}
+      {test.result && (
+        <p role="status" style={{ flexBasis: "100%", fontSize: 13, margin: "6px 0 0", color: test.result.ok ? "#1a7f37" : "#c62828" }}>
+          {test.result.ok ? "✓" : "✗"} {test.result.text}
         </p>
       )}
     </>

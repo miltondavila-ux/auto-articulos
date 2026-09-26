@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { MENU_NAMES } from "@/lib/menu-names";
-import { buttonStyle, disabledStyle, inputStyle, secondaryButtonStyle } from "./dashboard-ui";
-import { CONNECTION_LABELS, ConnectionActiveBox, ConnectionCard, ConnectionGuide, ConnectionMessage, ConnectionTestButton } from "./connection-ui";
+import { buttonStyle, disabledStyle, secondaryButtonStyle } from "./dashboard-ui";
+import { CONNECTION_LABELS, CONNECTION_SELECT_STYLE, ConnectionActions, ConnectionActiveBox, ConnectionCard, ConnectionGuide, ConnectionMessage } from "./connection-ui";
 import { CONNECTION_GUIDES } from "@/lib/connection-guides";
 import { friendlyConnectionError } from "@/lib/composio-error-message";
 
@@ -118,6 +118,7 @@ export default function BusinessProfileSection() {
 
   return (
     <ConnectionCard
+      id="business-profile"
       title="Google Business Profile"
       state={state}
       lead="Conexión administrada desde esta tarjeta. Conecta la cuenta de Google que administra tu Perfil de Negocio."
@@ -133,15 +134,23 @@ export default function BusinessProfileSection() {
           </div>
         </>
       ) : needsLocation ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
+        <>
+        {guide && <ConnectionGuide steps={guide.steps} ifFails={guide.ifFails} />}
+        <div style={{ marginTop: 12, padding: "10px 0", borderTop: "1px solid #e5e5ea" }}>
           {data?.locationsLoaded && data.locations && data.locations.length > 0 ? (
             <>
-              <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>Elige la ficha donde se publicará</p>
-              <select value={selected} onChange={(e) => setSelected(e.target.value)} style={{ ...inputStyle, width: "100%", maxWidth: 520 }}>
+              <p style={{ fontSize: 14, fontWeight: 600, margin: "0 0 4px" }}>Elige la ficha donde se publicará</p>
+              <p style={{ color: "#6e6e73", fontSize: 14, lineHeight: 1.5, margin: "0 0 10px" }}>Elige la ficha de tu negocio; las demás no se usarán.</p>
+              <select aria-label="Elige la ficha" value={selected} onChange={(e) => setSelected(e.target.value)} style={CONNECTION_SELECT_STYLE}>
                 <option value="">Elige una opción…</option>
                 {[...data.locations].sort((a, b) => a.locationTitle.localeCompare(b.locationTitle, "es")).map((l) => <option key={l.locationName} value={l.locationName}>{l.locationTitle}</option>)}
               </select>
-              <div>
+              {selected && (
+                <span style={{ display: "block", fontSize: 12, color: "#6e6e73", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", marginTop: 6 }}>
+                  código {selected}
+                </span>
+              )}
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 8 }}>
                 <button type="button" onClick={save} disabled={saving || !selected} style={disabledStyle({ ...buttonStyle, marginTop: 0 }, saving || !selected)}>
                   {saving ? "Guardando…" : "Aprobar y guardar"}
                 </button>
@@ -161,10 +170,11 @@ export default function BusinessProfileSection() {
             </div>
           )}
           {data?.error && <ConnectionMessage ok={false}>{friendlyConnectionError(data.error, "No se pudieron consultar las fichas. Inténtalo de nuevo en unos minutos.")}</ConnectionMessage>}
-          <div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
             <button type="button" onClick={() => disconnect(false)} style={{ ...secondaryButtonStyle, color: "#c62828" }}>{CONNECTION_LABELS.disconnect}</button>
           </div>
         </div>
+        </>
       ) : (
         <>
           <ConnectionActiveBox
@@ -172,11 +182,12 @@ export default function BusinessProfileSection() {
             value={postPeerConnected ? (postPeer?.accountName ?? "Google Business Profile") : (data?.locationTitle ?? data?.locationName ?? null)}
             rows={accountRows}
           />
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-            <ConnectionTestButton network="business-profile" endpoint="/api/business-profile/test" />
-            <a href={postPeerConnected ? "/api/postpeer/connect" : "/api/business-profile/connect"} style={{ ...secondaryButtonStyle, textDecoration: "none", display: "inline-flex", alignItems: "center" }}>{CONNECTION_LABELS.connect}</a>
-            <button type="button" onClick={() => disconnect(postPeerConnected)} style={{ ...secondaryButtonStyle, color: "#c62828" }}>{CONNECTION_LABELS.disconnect}</button>
-          </div>
+          <ConnectionActions
+            network="business-profile"
+            endpoint="/api/business-profile/test"
+            connect={<a href={postPeerConnected ? "/api/postpeer/connect" : "/api/business-profile/connect"} style={{ ...buttonStyle, marginTop: 0, textDecoration: "none", display: "inline-flex", alignItems: "center" }}>{CONNECTION_LABELS.connect}</a>}
+            disconnect={<button type="button" onClick={() => disconnect(postPeerConnected)} style={{ ...secondaryButtonStyle, color: "#c62828" }}>{CONNECTION_LABELS.disconnect}</button>}
+          />
         </>
       )}
       {message && <ConnectionMessage ok={message.ok}>{message.text}</ConnectionMessage>}

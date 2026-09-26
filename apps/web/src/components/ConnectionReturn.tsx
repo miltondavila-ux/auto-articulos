@@ -2,17 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { ConnectionSuccess } from "@/components/dashboard-ui";
+import { ConnectionCard } from "@/components/connection-ui";
 
-export type ReturnResult = "connected" | "error" | "forbidden";
+import type { ReturnResult } from "@/components/connection-return-context";
+export type { ReturnResult } from "@/components/connection-return-context";
 
 /** Redes que se autorizan por su propia pantalla y vuelven a Conexiones con un resultado. */
-export const LEGACY_RETURN_NETWORKS: Record<string, { label: string; choice: string | null; accountField: string | null }> = {
-  threads: { label: "Threads", choice: null, accountField: "threadsUsername" },
-  linkedin: { label: "LinkedIn", choice: null, accountField: "linkedinUsername" },
-  pinterest: { label: "Pinterest", choice: "el tablero", accountField: null },
-  tumblr: { label: "Tumblr", choice: "el blog", accountField: null },
-  blogger: { label: "Blogger", choice: "el blog", accountField: null },
-  "business-profile": { label: "Google Business Profile", choice: null, accountField: null },
+export const LEGACY_RETURN_NETWORKS: Record<string, { label: string; lead: string; choice: string | null; accountField: string | null }> = {
+  threads: { label: "Threads", lead: "Conexión administrada desde esta tarjeta. Autoriza aquí la cuenta de Threads que usará SEO TOTAL.", choice: null, accountField: "threadsUsername" },
+  linkedin: { label: "LinkedIn", lead: "Conexión administrada desde esta tarjeta. Autoriza aquí la cuenta de LinkedIn que usará SEO TOTAL.", choice: null, accountField: "linkedinUsername" },
+  pinterest: { label: "Pinterest", lead: "", choice: "el tablero", accountField: null },
+  tumblr: { label: "Tumblr", lead: "", choice: "el blog", accountField: null },
+  blogger: { label: "Blogger", lead: "", choice: "el blog", accountField: null },
+  "business-profile": { label: "Google Business Profile", lead: "Conexión administrada desde esta tarjeta. Conecta la cuenta de Google que administra tu Perfil de Negocio.", choice: null, accountField: null },
 };
 
 /**
@@ -38,56 +40,47 @@ export function useConnectionReturn(conexion: string | null): ReturnResult | nul
 export function ConnectionReturnSuccess({ conexion }: { conexion: string }) {
   const network = LEGACY_RETURN_NETWORKS[conexion];
   const [account, setAccount] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
   useEffect(() => {
-    if (!network?.accountField) return;
-    fetch(`/api/search-integrations/${conexion}?_t=${Date.now()}`, { cache: "no-store" })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        const value = data?.[network.accountField as string] ?? data?.connection?.[network.accountField as string];
-        if (typeof value === "string" && value) setAccount(value.startsWith("@") ? value : `@${value}`);
-      })
-      .catch(() => {});
+    let cancelled = false;
+    async function find(): Promise<string | null> {
+      const get = async (url: string) => {
+        const res = await fetch(`${url}${url.includes("?") ? "&" : "?"}_t=${Date.now()}`, { cache: "no-store" }).catch(() => null);
+        return res && res.ok ? await res.json().catch(() => null) : null;
+      };
+      if (conexion === "business-profile") {
+        const postPeer = await get("/api/postpeer/status");
+        if (postPeer?.accountName) return String(postPeer.accountName);
+        const legacy = await get("/api/business-profile");
+        return legacy?.locationTitle ? String(legacy.locationTitle) : null;
+      }
+      const field = network?.accountField;
+      if (!field) return null;
+      const data = await get(`/api/search-integrations/${conexion}`);
+      const value = data?.[field] ?? data?.connection?.[field];
+      if (typeof value !== "string" || !value) return null;
+      return conexion === "threads" && !value.startsWith("@") ? `@${value}` : value;
+    }
+    find().then((value) => {
+      if (cancelled) return;
+      setAccount(value);
+      setReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [conexion, network]);
   if (!network) return null;
   return (
-    <section style={{ marginTop: 8 }}>
-      <span style={{ fontSize: 13, fontWeight: 700, color: "#1a7f37" }}>Conexión exitosa</span>
-      <ConnectionSuccess
-        title={`${network.label} quedó conectado correctamente`}
-        label="Cuenta conectada"
-        value={account}
-        description="La configuración terminó correctamente. SEO TOTAL usará esta conexión desde ahora."
-      />
-    </section>
-  );
-}
-
-/** Aviso para volver de autorizar: siguiente paso si salió bien, o explicación clara si no. */
-export function ConnectionReturnNotice({ conexion, resultado }: { conexion: string; resultado: ReturnResult }) {
-  const network = LEGACY_RETURN_NETWORKS[conexion];
-  if (!network) return null;
-  const ok = resultado === "connected";
-  const text =
-    resultado === "connected"
-      ? `Autorización completada. Ahora elige ${network.choice ?? "lo que usará SEO TOTAL"} y pulsa Guardar.`
-      : resultado === "forbidden"
-        ? `Tu cuenta no tiene ${network.label} habilitado. Pídele acceso al administrador.`
-        : `No se pudo completar la conexión con ${network.label}. Inténtalo de nuevo con el botón de conexión; si se repite, avisa al administrador.`;
-  return (
-    <p
-      role={ok ? "status" : "alert"}
-      style={{
-        margin: "0 0 16px",
-        padding: "12px 14px",
-        borderRadius: 10,
-        fontSize: 14,
-        fontWeight: 600,
-        border: ok ? "1px solid rgba(26,127,55,0.3)" : "1px solid rgba(215,0,21,0.3)",
-        background: ok ? "#f0fff4" : "#fff1f1",
-        color: ok ? "#1a7f37" : "#b00020",
-      }}
-    >
-      {text}
-    </p>
+    <ConnectionCard id={conexion} title={network.label} state="success" lead={network.lead}>
+      {ready && (
+        <ConnectionSuccess
+          title={`${network.label} quedó conectado correctamente`}
+          label="Cuenta conectada"
+          value={account}
+          description="La configuración terminó correctamente. SEO TOTAL usará esta conexión desde ahora."
+        />
+      )}
+    </ConnectionCard>
   );
 }

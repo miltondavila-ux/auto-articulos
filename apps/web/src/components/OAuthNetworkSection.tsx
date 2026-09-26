@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { ConnectionSuccess, buttonStyle, disabledStyle, inputStyle, secondaryButtonStyle, sectionStyle } from "./dashboard-ui";
-import { CONNECTION_LABELS, ConnectionActiveBox, ConnectionCard, ConnectionGuide, ConnectionMessage, ConnectionTestButton, type ConnectionState } from "./connection-ui";
+import { CONNECTION_LABELS, CONNECTION_SELECT_STYLE, ConnectionActions, ConnectionActiveBox, ConnectionCard, ConnectionGuide, ConnectionMessage, type ConnectionState } from "./connection-ui";
 import { CONNECTION_GUIDES } from "@/lib/connection-guides";
 import { friendlyConnectionError } from "@/lib/composio-error-message";
 
@@ -38,6 +38,8 @@ export interface OAuthNetworkConfig {
     savedIdKey: string;
     savedNameKey: string;
     patchKey: string;
+    /** Nota bajo el título al elegir (igual que en Search Console y Analytics). */
+    note: string;
   };
 }
 
@@ -127,7 +129,8 @@ export default function OAuthNetworkSection({ config, allowed = true, adminExtra
       }
       const options: Json[] = connection?.[dest.listKey] ?? [];
       const chosen = options.find((item) => item[dest.idField] === selected);
-      setSavedName(result[dest.savedNameKey] || chosen?.[dest.nameField] || null);
+      const name = result[dest.savedNameKey] || chosen?.[dest.nameField] || null;
+      setSavedName(name ? `${name} (código ${selected})` : null);
       setChoosing(false);
       await load();
     } catch {
@@ -162,15 +165,17 @@ export default function OAuthNetworkSection({ config, allowed = true, adminExtra
   const expired = connected && Boolean(connection?.isExpired);
   const savedDestId: string | null = dest ? connection?.[dest.savedIdKey] || null : null;
   const savedDestName: string | null = dest ? connection?.[dest.savedNameKey] || savedDestId : null;
-  const options: Array<{ id: string; label: string }> = dest
+  const options: Array<{ id: string; label: string; detail: string }> = dest
     ? ((connection?.[dest.listKey] as Json[] | undefined) ?? []).map((item) => ({
         id: String(item[dest.idField]),
         label: `${item[dest.nameField]}${item.privacy && String(item.privacy).toUpperCase() !== "PUBLIC" ? ` (${String(item.privacy).toLowerCase()})` : ""}`,
+        detail: `código ${item[dest.idField]}`,
       }))
     : [];
   const account: string | null = config.accountKey && connection?.[config.accountKey] ? `${config.accountPrefix ?? ""}${String(connection[config.accountKey])}` : null;
+  const pickedOption = options.find((option) => option.id === selected);
   const pendingDestination = Boolean(dest) && connected && !expired && !savedDestId;
-  const state: ConnectionState = !connected ? "disconnected" : expired ? "expired" : pendingDestination ? "pending" : "connected";
+  const state: ConnectionState = savedName ? "success" : !connected ? "disconnected" : expired ? "expired" : pendingDestination ? "pending" : "connected";
   const guide = CONNECTION_GUIDES[config.id];
   const connectLink = (
     <a href={`${base}/connect`} style={{ ...buttonStyle, marginTop: 0, textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
@@ -180,12 +185,11 @@ export default function OAuthNetworkSection({ config, allowed = true, adminExtra
 
   return (
     <>
-      <ConnectionCard title={config.title} state={state} lead={config.lead} note={config.note}>
+      <ConnectionCard id={config.id} title={config.title} state={state} lead={config.lead} note={config.note}>
         {loading && !connection ? (
           <p style={{ color: "#6e6e73", fontSize: 14 }}>Cargando…</p>
         ) : savedName ? (
           <>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#1a7f37" }}>Conexión exitosa</span>
             <ConnectionSuccess
               title={`${config.title} quedó conectado correctamente`}
               label={dest ? `${dest.label} conectado` : "Cuenta conectada"}
@@ -212,34 +216,43 @@ export default function OAuthNetworkSection({ config, allowed = true, adminExtra
           </>
         ) : (
           <>
-            {!pendingDestination && (
+            {!pendingDestination && !choosing && (
               <ConnectionActiveBox
                 label="Cuenta conectada"
                 value={account}
                 rows={dest && savedDestName ? [{ label: dest.label, value: savedDestName }] : undefined}
               />
             )}
+            {guide && dest && (pendingDestination || choosing) && <ConnectionGuide steps={guide.steps} ifFails={guide.ifFails} />}
             {dest && (pendingDestination || choosing) && (
               <div style={{ marginTop: 12, padding: "10px 0", borderTop: "1px solid #e5e5ea" }}>
                 <p style={{ fontSize: 14, fontWeight: 600, margin: "0 0 4px" }}>Elige {dest.noun} donde se publicará</p>
+                <p style={{ color: "#6e6e73", fontSize: 14, lineHeight: 1.5, margin: "0 0 10px" }}>{dest.note}</p>
                 {connection?.boardsError && <ConnectionMessage ok={false}>{connection.boardsError}</ConnectionMessage>}
                 {options.length === 0 ? (
                   <p style={{ color: "#6e6e73", fontSize: 14 }}>No se encontró nada para elegir en esta cuenta. Comprueba que sea la cuenta correcta.</p>
                 ) : (
+                  <div>
                   <select
                     aria-label={`Elige ${dest.noun}`}
                     value={selected}
                     disabled={saving}
                     onChange={(event) => setSelected(event.target.value)}
-                    style={{ ...inputStyle, width: "100%", maxWidth: 520 }}
+                    style={CONNECTION_SELECT_STYLE}
                   >
                     <option value="">Elige una opción…</option>
                     {[...options].sort((x, y) => x.label.localeCompare(y.label, "es")).map((option) => (
                       <option key={option.id} value={option.id}>{option.label}</option>
                     ))}
                   </select>
+                  {pickedOption && (
+                    <span style={{ display: "block", fontSize: 12, color: "#6e6e73", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", marginTop: 6 }}>
+                      {pickedOption.detail}
+                    </span>
+                  )}
+                  </div>
                 )}
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 8 }}>
                   <button type="button" onClick={approveDestination} disabled={saving || !selected} style={disabledStyle({ ...buttonStyle, marginTop: 0 }, saving || !selected)}>
                     {saving ? "Guardando…" : "Aprobar y guardar"}
                   </button>
@@ -249,14 +262,15 @@ export default function OAuthNetworkSection({ config, allowed = true, adminExtra
                 </div>
               </div>
             )}
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-              {dest && savedDestId && !choosing && (
+            <ConnectionActions
+              network={config.id}
+              disabled={saving}
+              change={dest && savedDestId && !choosing ? (
                 <button type="button" onClick={() => setChoosing(true)} disabled={saving} style={secondaryButtonStyle}>{CONNECTION_LABELS.change}</button>
-              )}
-              <ConnectionTestButton network={config.id} disabled={saving} />
-              {connectLink}
-              <button type="button" onClick={disconnect} disabled={saving} style={{ ...secondaryButtonStyle, color: "#c62828" }}>{CONNECTION_LABELS.disconnect}</button>
-            </div>
+              ) : null}
+              connect={connectLink}
+              disconnect={<button type="button" onClick={disconnect} disabled={saving} style={{ ...secondaryButtonStyle, color: "#c62828" }}>{CONNECTION_LABELS.disconnect}</button>}
+            />
           </>
         )}
         {message && <ConnectionMessage ok={message.ok}>{message.text}</ConnectionMessage>}
