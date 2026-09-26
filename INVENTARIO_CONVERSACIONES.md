@@ -1672,3 +1672,19 @@ reservas liberadas. Estado final: ARCHIVADA.
 - Estado: EN CURSO — PR #224 verificado en producción con usuario real; PR #225 fusionado a `main` sin
   confirmación explícita de deployment/Producción en Coordinación a esta fecha; mejoras 3, 4, 6, 7, 8 y
   9 sin capitán ni rama asignada todavía.
+
+### Claude - REPARACION DE ADMIN — 2026-09-26
+
+- **Nombre exacto (dado por Milton):** `REPARACION DE ADMIN`. Estado: **ACTIVO**.
+- **Problema:** la página de Administración (`/dashboard/usuarios`) creció sin orden
+  y no funciona bien; además el segmento de límites diarios de difusión (redes y
+  blogs) quedó sin culminar (hoy se edita como JSON crudo).
+- **Orden de Milton:** (1) rediseño estilo Apple, muy organizado, **sin perder
+  ninguna funcionalidad**; (2) culminar límites diarios de difusión; (3) aprobar
+  primero en localhost; nada a Producción sin su autorización.
+- **Rama / worktree:** `claude/reparacion-admin` / `.worktrees/reparacion-admin`,
+  base `origin/main` `0445e0b2`.
+- **Reservas:** `apps/web/src/app/dashboard/usuarios/page.tsx`,
+  `apps/web/src/app/api/admin/users/route.ts`,
+  `apps/web/src/content/manual-usuario.ts` (solo si el manual lo menciona).
+- **Migraciones:** ninguna prevista (la columna `socialDailyLimits` ya existe).
