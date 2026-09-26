@@ -3608,3 +3608,25 @@ y 9 siguen pendientes de codificar.
 Estado: VERIFICADA (PR #224, `abb687dd`). PR #225 (`36ecd08`, mejoras 1, 2 y
 5): FUSIONADA A `main`, DEPLOYMENT/PRODUCCIÓN SIN CONFIRMACIÓN EXPLÍCITA EN
 COORDINACIÓN A LA FECHA DE ESTA ENTRADA.
+
+## Versión desplegada — 2026-09-26 — REPARACION DE ADMIN
+
+- **Commit:** `49860952` (PR #235, squash). Deployment de Producción de Vercel
+  `6680201412` en estado `success` para ese commit.
+- **Contenido:** rediseño de Administración (`/dashboard/usuarios`) estilo Apple;
+  guardado único por ficha; límites diarios de difusión por red y formato con
+  «hoy N»; validación 400 en `PATCH /api/admin/users`; manual actualizado.
+- **Migraciones:** ninguna. La columna `User.socialDailyLimits` (migración
+  `20260921140000`) ya existía en Producción: Milton ejecutó la consulta en
+  `information_schema` y devolvió fila.
+- **Triple auditoría en Producción:**
+  1. Integridad: `origin/main` = `49860952`; el diff contra `0445e0b2` son solo
+     `usuarios/page.tsx`, `api/admin/users/route.ts`, manual y 2 documentos.
+  2. Regresión: `/login` 200; sin sesión `/api/admin/users` 401; con sesión de usuario
+     normal (Lorena) `/dashboard` 200 y `/api/admin/users` 403 (control de acceso
+     intacto).
+  3. Funcional: el JavaScript servido contiene «Límites de uso para la creación de
+     artículos» y no el texto antiguo «(JSON)». **NO verificado en Producción:** la
+     interfaz de Administración con sesión de administrador (guardar límites,
+     Descartar, pestañas) — sin sesión admin disponible; sí verificada en localhost.
+- **Capitanía de migración:** liberada 2026-09-26.
