@@ -40,5 +40,5 @@ export function friendlyConnectionError(raw: unknown, fallback: string): string 
   }
   // Solo se muestra texto que ya esté en español; cualquier mensaje técnico en inglés usa el respaldo.
   const looksSpanish = /[áéíóúñ¿¡]/i.test(text) || /\b(el|la|los|las|de|del|tu|tus|una|un|que|no|se|para|con|por|elige|intenta|conexión)\b/i.test(text);
-  return looksSpanish ? text : fallback;
+  return looksSpanish ? text.replace(/composio/gi, "el proveedor de conexiones") : fallback;
 }

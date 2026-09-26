@@ -15,8 +15,8 @@ import BlueskySection from "@/components/BlueskySection";
 import DevToSection from "@/components/DevToSection";
 import BloggerSection from "@/components/BloggerSection";
 import PasosAntesDeConectar from "@/components/PasosAntesDeConectar";
-import ComposioConnect from "@/components/ComposioConnect";
-import { h2Style, sectionStyle } from "@/components/dashboard-ui";
+import FacebookSection from "@/components/FacebookSection";
+import InstagramSection from "@/components/InstagramSection";
 
 type Vista = "analiticas" | "difusion";
 type ConexionId = "google-search-console" | "google-analytics" | "bing-webmaster" | "instagram" | "facebook" | "threads" | "linkedin" | "pinterest" | "tumblr" | "bluesky" | "devto" | "blogger";
@@ -148,8 +148,8 @@ export default function ConexionesView() {
       { id: "google-search-console", n: "01", title: "Google Search Console", text: "Conecta tu sitio para enviar el sitemap y revisar la indexación.", view: "analiticas" as Vista },
       { id: "google-analytics", n: "02", title: "Google Analytics", text: "Consulta las visitas y el rendimiento real de tus contenidos.", view: "analiticas" as Vista },
       { id: "bing-webmaster", n: "03", title: "Bing Webmaster Tools", text: "Ayuda a que tus artículos aparezcan también en Bing.", view: "analiticas" as Vista },
-      { id: "instagram", n: "04", title: "Instagram", text: "Publica imágenes, carruseles y Reels mediante Composio.", view: "difusion" as Vista },
-      { id: "facebook", n: "05", title: "Facebook", text: "Publica en la Página de Facebook seleccionada mediante Composio.", view: "difusion" as Vista },
+      { id: "instagram", n: "04", title: "Instagram", text: "Publica imágenes y contenido en tu cuenta profesional de Instagram.", view: "difusion" as Vista },
+      { id: "facebook", n: "05", title: "Facebook", text: "Publica en la Página de Facebook que elijas.", view: "difusion" as Vista },
       { id: "threads", n: "06", title: "Threads", text: "Conecta Threads con su integración propia.", view: "difusion" as Vista },
       { id: "linkedin", n: "07", title: "LinkedIn", text: "Publica artículos en tu perfil o página de LinkedIn.", view: "difusion" as Vista },
       { id: "pinterest", n: "08", title: "Pinterest", text: "Publica contenido visual en tus tableros de Pinterest.", view: "difusion" as Vista },
@@ -270,8 +270,8 @@ export default function ConexionesView() {
           {(permisos.threads || permisos.instagram || permisos.facebook || isAdmin || tieneModuloRedes) && (
             <>
             {solo("threads") && <ThreadsSection allowThreads={puede("threads")} allowInstagram={false} allowFacebook={false} isAdmin={isAdmin} showComposioSocial={false} />}
-            {solo("instagram") && puede("instagram") && <section style={sectionStyle}><h2 style={h2Style}>Instagram</h2><p className="lead-copy">Publica imágenes, carruseles y Reels en tu cuenta profesional mediante Composio.</p><ComposioConnect inline apps={["instagram"]} /></section>}
-            {solo("facebook") && puede("facebook") && <section style={sectionStyle}><h2 style={h2Style}>Facebook</h2><p className="lead-copy">Publica contenido en la Página de Facebook seleccionada mediante Composio.</p><ComposioConnect inline apps={["facebook"]} /></section>}
+            {solo("instagram") && puede("instagram") && <InstagramSection />}
+            {solo("facebook") && puede("facebook") && <FacebookSection />}
             </>
           )}
           {solo("linkedin") && puede("linkedin") && <LinkedInSection allowed={puede("linkedin")} />}

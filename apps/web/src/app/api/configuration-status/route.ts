@@ -353,12 +353,17 @@ export async function GET() {
     reconnectNotice === "all" ||
     reconnectNotice.split(",").map((id) => id.trim()).filter(Boolean).includes(userId);
 
+  // El aviso es solo para quien YA tenía Search Console por la vía anterior; una cuenta nueva,
+  // en su arranque inicial, conecta por el asistente y no debe ver «reconectar».
+  const hasLegacyGoogleSearchConsole = Boolean(googleIntegration?.siteUrl);
+  const needsSearchConsoleReconnect = hasLegacyGoogleSearchConsole && !hasActiveComposioSearchConsole;
+
   if (!showReconnectNotice) {
     // Aviso apagado: no se agrega ninguna solicitud de reconexión.
-  } else if (!hasActiveComposioSearchConsole) {
+  } else if (needsSearchConsoleReconnect) {
     checks.push({
       id: "google-search-console-reconnect",
-      label: "Reconectar Google Search Console por Composio",
+      label: "Reconectar Google Search Console",
       configured: false,
       required: false,
       section: "seo",
@@ -369,7 +374,7 @@ export async function GET() {
   } else if (hasLegacyGoogleAnalytics && !hasActiveComposioAnalytics) {
     checks.push({
       id: "google-analytics-reconnect",
-      label: "Reconectar Google Analytics por Composio",
+      label: "Reconectar Google Analytics",
       configured: false,
       required: false,
       section: "seo",
