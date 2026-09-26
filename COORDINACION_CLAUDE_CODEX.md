@@ -9701,3 +9701,21 @@ proyecto CONEXION COMPOSIO debería confirmarlo y completar esa entrada en `CONT
 si corresponde.
 
 Responsable: Claude (tarea programada diaria de propagación).
+
+### CONEXIÓN COMPOSIO · LOTE DE MEJORAS UX 3, 4, 6, 7, 8, 9, 10 + PILOTO REDES — 2026-09-26 — Claude
+
+**Prueba real en producción:** GSC y GA validados con Rafael Zuzolo y con Lorena Álvarez (aviso, reconexión, éxito, Inicio limpio). `COMPOSIO_RECONNECT_NOTICE=all` activo en Vercel (Production).
+
+**PRs abiertos, en este orden de fusión (apilados):**
+1. #226 — errores de conexión en español claro (mejora 10; traductor `friendlyConnectionError`, nunca muestra JSON ni inglés).
+2. #228 — mejoras 3 (dropdown ordenado, selección única), 6 (éxito con nombre y código), 7 («Probar conexión» corta, sin listar otras cuentas), 8 (botón «Volver al menú de Conexiones»), 9 (sin pasos si ya está activa).
+3. #229 — mejora 4 (sitemap al guardar la propiedad de GSC: «ya estaba en Google» / «Enviamos tu sitemap»; sin migración) + actualización del manual de usuario.
+4. #227 — workflows: pasan `COMPOSIO_PILOT_USERS_FACEBOOK/INSTAGRAM` al worker (independiente; sin variables el comportamiento no cambia).
+
+**Ya en `main`:** #224 (lote base), #225 (mejoras 1, 2 y 5).
+
+**Verificado en localhost:3001 (Lorena):** dropdown, éxito con nombre+código, sitemap en éxito, prueba con error claro, botón de volver, pasos ocultos. Tests `tsx --test`: 10 en verde. `tsc` web limpio. La llamada real a Google/Composio del sitemap solo se prueba en producción con una cuenta real.
+
+**Falta (Facebook/Instagram por Composio):** ver «AUDITORÍA FACEBOOK/INSTAGRAM» en la rama `claude/composio-traspaso-8-mejoras`. Tras fusionar #227: definir variables de repo `COMPOSIO_PILOT_USERS_FACEBOOK` y `COMPOSIO_PILOT_USERS_INSTAGRAM` con el correo de Lorena (solo Milton), habilitar el módulo «Conexión por Composio» a Lorena, y probar con `gh workflow run worker-test.yml`. Sin tocar `COMPOSIO_CONSUMER_READY.*` ni `COMPOSIO_ROUTING_ENABLED` sin autorización de Milton. Desajuste conocido: la web oculta Stories con solo ver la conexión Composio ACTIVE, el worker decide por el resolver.
+
+**Nota:** el clasificador de Claude Code bloquea a Claude fusionar PRs y cambiar variables de Vercel; Milton debe fusionar o autorizar expresamente.

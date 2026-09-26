@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { friendlyConnectionError } from "@/lib/composio-error-message";
+import { sitemapMessage, type SitemapOutcome } from "@/lib/composio-sitemap";
 import {
   sectionStyle,
   h2Style,
@@ -136,6 +137,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [probe, setProbe] = useState<Record<string, string>>({});
+  const [sitemapNote, setSitemapNote] = useState<Record<string, string>>({});
   const [savedSelection, setSavedSelection] = useState<Record<string, string>>({});
   const [choices, setChoices] = useState<Record<string, Choices>>({});
   const [justSaved, setJustSaved] = useState<Record<string, boolean>>({});
@@ -251,6 +253,8 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
         return rest;
       });
       setJustSaved((current) => ({ ...current, [app]: true }));
+      const note = sitemapMessage(body.sitemap as SitemapOutcome | null | undefined);
+      if (note) setSitemapNote((current) => ({ ...current, [app]: note }));
       if (pickedOption) {
         const code = pickedOption.detail ? ` (${pickedOption.detail})` : "";
         setSavedSelection((current) => ({ ...current, [app]: `${pickedOption.label}${code}` }));
@@ -336,7 +340,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
                   title={SUCCESS_TITLE[connection.app] ?? "La conexión quedó lista"}
                   label={SUCCESS_SELECTION_LABEL[connection.app] ?? "Conectado con"}
                   value={savedSelection[connection.app] ?? connection.selection}
-                  description="La configuración terminó correctamente. SEO TOTAL usará esta conexión desde ahora."
+                  description={`La configuración terminó correctamente. SEO TOTAL usará esta conexión desde ahora.${sitemapNote[connection.app] ? ` ${sitemapNote[connection.app]}` : ""}`}
                 />
               </section>
             );
