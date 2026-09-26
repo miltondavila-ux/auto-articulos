@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { connectionReturnPath } from "@/lib/connection-return";
 import { prisma } from "@auto-articulos/db";
 import { encryptSecret, exchangeCodeForThreadsTokens } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
 
   if (!(await canPublishToNetwork(userId, "threads")) || !state || state !== cookieStore.get(THREADS_STATE_COOKIE)?.value || !code) {
     return NextResponse.redirect(
-      new URL("/dashboard/configuracion?threads=error", request.url)
+      new URL(connectionReturnPath("threads", "error"), request.url)
     );
   }
 
@@ -44,14 +45,14 @@ export async function GET(request: NextRequest) {
     });
 
     const response = NextResponse.redirect(
-      new URL("/dashboard/configuracion?threads=connected", request.url)
+      new URL(connectionReturnPath("threads", "connected"), request.url)
     );
     response.cookies.delete(THREADS_STATE_COOKIE);
     return response;
   } catch (error) {
     console.error("Error en Threads OAuth callback:", error);
     return NextResponse.redirect(
-      new URL("/dashboard/configuracion?threads=error", request.url)
+      new URL(connectionReturnPath("threads", "error"), request.url)
     );
   }
 }

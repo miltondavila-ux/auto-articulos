@@ -27,6 +27,7 @@ import {
   composioFacebookPost,
   composioInstagramPost,
   methodFor,
+  friendlyPublishError,
 } from "@auto-articulos/shared";
 import { put } from "@vercel/blob";
 import sharp from "sharp";
@@ -1466,7 +1467,7 @@ export async function processNextSocialPublish(filterUserId?: string, filterArti
       where: { id: job.id },
       data: {
         status: "error",
-        errorLog: errorMsg,
+        errorLog: friendlyPublishError(errorMsg, job.platform),
         progressStage: "La publicación terminó con error",
         finishedAt: new Date(),
       },

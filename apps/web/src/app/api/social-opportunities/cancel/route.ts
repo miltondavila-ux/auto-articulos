@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     const userId = await getCurrentUserId();
     if (!(await canUseSocialModule(userId))) {
-      return NextResponse.json({ error: "Módulo reservado a administradores y Lorena." }, { status: 403 });
+      return NextResponse.json({ error: "Esta sección no está habilitada para tu cuenta. Pídele acceso al administrador." }, { status: 403 });
     }
     const { id } = await request.json();
     if (!id) return NextResponse.json({ error: "id es requerido" }, { status: 400 });

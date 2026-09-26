@@ -222,7 +222,7 @@ async function selectTrendingArticles(userId: string): Promise<ArticleCandidate[
       const query = async (start: string, finish: string, dimensions: string[]) => {
         if (resolvedGsc.source === "COMPOSIO") {
           if (!resolvedGsc.apiKey || !resolvedGsc.state.composio?.connectedAccountId || !resolvedGsc.state.composio.siteUrl) {
-            throw new Error("Search Console requiere reconectar la cuenta por Composio y seleccionar un sitio.");
+            throw new Error("Search Console requiere reconectar la cuenta y seleccionar un sitio.");
           }
           return composioQuerySearchAnalytics(
             { apiKey: resolvedGsc.apiKey, userId, connectedAccountId: resolvedGsc.state.composio.connectedAccountId },
@@ -423,7 +423,7 @@ async function getConnectedNetworks(userId: string) {
 export async function GET() {
   try {
     const userId = await getCurrentUserId();
-    if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Módulo reservado a administradores y Lorena." }, { status: 403 });
+    if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Esta sección no está habilitada para tu cuenta. Pídele acceso al administrador." }, { status: 403 });
     return NextResponse.json(await getConnectedNetworks(userId));
   } catch {
     return NextResponse.json({ error: "Error al consultar redes conectadas" }, { status: 500 });
@@ -433,7 +433,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const userId = await getCurrentUserId();
-    if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Módulo reservado a administradores y Lorena." }, { status: 403 });
+    if (!(await canUseSocialModule(userId))) return NextResponse.json({ error: "Esta sección no está habilitada para tu cuenta. Pídele acceso al administrador." }, { status: 403 });
     const body = await request.json().catch(() => ({})) as { networks?: string[] };
     const connected = await getConnectedNetworks(userId);
     const editorialUser = await prisma.user.findUnique({

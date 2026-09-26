@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { connectionReturnPath } from "@/lib/connection-return";
 import { prisma } from "@auto-articulos/db";
 import { encryptSecret, exchangeCodeForTumblrToken, getTumblrBlogs } from "@auto-articulos/shared";
 import { getCurrentUserId } from "@/lib/current-user";
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
   const state = request.nextUrl.searchParams.get("state");
   const code = request.nextUrl.searchParams.get("code");
   if (!(await canPublishToNetwork(userId, "tumblr")) || !state || state !== cookieStore.get(TUMBLR_STATE_COOKIE)?.value || !code) {
-    return NextResponse.redirect(new URL("/dashboard/configuracion?tumblr=error", request.url));
+    return NextResponse.redirect(new URL(connectionReturnPath("tumblr", "error"), request.url));
   }
   try {
     const credentials = await getStoredTumblrAppCredentials();
@@ -31,11 +32,11 @@ export async function GET(request: NextRequest) {
       create: { userId, blogIdentifier: firstBlog.identifier, blogTitle: firstBlog.title, accessTokenEncrypted: encryptSecret(tokens.access_token), refreshTokenEncrypted: tokens.refresh_token ? encryptSecret(tokens.refresh_token) : null, expiresAt: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : null },
       update: { blogIdentifier: firstBlog.identifier, blogTitle: firstBlog.title, accessTokenEncrypted: encryptSecret(tokens.access_token), refreshTokenEncrypted: tokens.refresh_token ? encryptSecret(tokens.refresh_token) : (previous?.refreshTokenEncrypted ?? null), expiresAt: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : null },
     });
-    const response = NextResponse.redirect(new URL("/dashboard/configuracion?tumblr=connected", request.url));
+    const response = NextResponse.redirect(new URL(connectionReturnPath("tumblr", "connected"), request.url));
     response.cookies.delete(TUMBLR_STATE_COOKIE);
     return response;
   } catch (error) {
     console.error("Error en Tumblr OAuth callback:", error);
-    return NextResponse.redirect(new URL("/dashboard/configuracion?tumblr=error", request.url));
+    return NextResponse.redirect(new URL(connectionReturnPath("tumblr", "error"), request.url));
   }
 }

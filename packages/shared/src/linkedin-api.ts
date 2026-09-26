@@ -364,3 +364,10 @@ export async function publishLinkedInPost(
 
   return { postId, postUrl };
 }
+
+/** Comprobación de solo lectura de la conexión: devuelve el perfil de LinkedIn. */
+export async function getLinkedInProfile(accessToken: string) {
+  const response = await fetch("https://api.linkedin.com/v2/userinfo", { headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store" });
+  if (!response.ok) throw new Error(`LinkedIn respondió ${response.status}: ${await response.text()}`);
+  return response.json() as Promise<{ sub?: string; name?: string }>;
+}

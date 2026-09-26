@@ -60,7 +60,7 @@ const APP_NOTES: Record<string, string> = {
   facebook:
     "Permite publicar en tu Página de Facebook desde SEO TOTAL. Las Stories no se ofrecen cuando esta conexión está activa.",
   instagram:
-    "Permite publicar imágenes, carruseles y Reels en tu cuenta Business o Creator. Las Stories no se ofrecen cuando esta conexión está activa.",
+    "Permite publicar imágenes con texto en tu cuenta Business o Creator de Instagram. Las Stories no se ofrecen cuando esta conexión está activa.",
 };
 
 const CHOOSE_TITLE: Record<string, string> = {
@@ -73,6 +73,12 @@ const CHOOSE_TITLE: Record<string, string> = {
 const CHOOSE_NOTE: Record<string, string> = {
   google_search_console:
     "Tu cuenta de SEO TOTAL trabaja con un solo dominio. Si tu cuenta de Google tiene varios sitios, elige el de esta cuenta; los demás no se usarán.",
+  google_analytics:
+    "Elige la propiedad que corresponde al sitio de esta cuenta; las demás no se usarán.",
+  facebook:
+    "Elige la Página de tu negocio, no tu perfil personal. SEO TOTAL publicará solo en la Página que elijas; las demás no se usarán.",
+  instagram:
+    "Solo aparecen las cuentas Business o Creator vinculadas a una Página de Facebook. SEO TOTAL publicará solo en la que elijas.",
 };
 
 const CONNECTION_STEPS: Record<string, string[]> = {
@@ -91,16 +97,18 @@ const CONNECTION_STEPS: Record<string, string[]> = {
     "Pulsa Probar conexión y comprueba el mensaje verde.",
   ],
   facebook: [
-    "Abre Facebook en otra pestaña y confirma que es tu cuenta personal administradora.",
-    "Pulsa Nueva conexión y autoriza el acceso.",
-    "Elige la Página de Facebook correcta, no tu perfil personal.",
-    "Pulsa Aprobar y guardar y después Probar conexión.",
+    "Abre Facebook en otra pestaña del mismo navegador.",
+    "Confirma que estás dentro de la cuenta personal que administra tu Página de negocio.",
+    "Pulsa Nueva conexión y autoriza el acceso solicitado.",
+    "Elige la Página correcta, no tu perfil personal, y pulsa Aprobar y guardar.",
+    "Pulsa Probar conexión y comprueba el mensaje verde.",
   ],
   instagram: [
-    "Abre Instagram en otra pestaña y confirma la cuenta Business o Creator correcta.",
-    "Pulsa Nueva conexión y autoriza el acceso desde Facebook si se solicita.",
-    "Elige la cuenta de Instagram correcta.",
-    "Pulsa Aprobar y guardar y después Probar conexión.",
+    "Abre Instagram y Facebook en otra pestaña del mismo navegador.",
+    "Confirma que tu cuenta de Instagram es Business o Creator y está vinculada a tu Página de Facebook.",
+    "Pulsa Nueva conexión y autoriza el acceso solicitado.",
+    "Elige la cuenta de Instagram correcta y pulsa Aprobar y guardar.",
+    "Pulsa Probar conexión y comprueba el mensaje verde.",
   ],
 };
 
@@ -113,9 +121,16 @@ const STATUS_LABEL: Record<Connection["status"], { text: string; color: string }
 };
 
 const RESULT_MESSAGE: Record<string, { ok: boolean; text: string }> = {
-  connected: { ok: true, text: "Autorización completada. Ahora elige y aprueba la propiedad que usará SEO TOTAL." },
+  connected: { ok: true, text: "Autorización completada. Ahora elige y aprueba lo que usará SEO TOTAL." },
   failed: { ok: false, text: "No se pudo completar la conexión. Inténtalo de nuevo." },
   invalid: { ok: false, text: "No se encontró esa conexión. Inicia la conexión desde aquí." },
+};
+
+const CHOSEN_NOUN: Record<string, string> = {
+  google_search_console: "el sitio",
+  google_analytics: "la propiedad",
+  facebook: "la Página",
+  instagram: "la cuenta de Instagram",
 };
 
 const SUCCESS_TITLE: Record<string, string> = {
@@ -185,7 +200,11 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
     const resultado = paramsFromCurrentUrl.get("resultado") ?? null;
     const appDeVuelta = paramsFromCurrentUrl.get("app") ?? null;
     if (resultado && RESULT_MESSAGE[resultado] && (!apps || !appDeVuelta || apps.includes(appDeVuelta))) {
-      setMessage(RESULT_MESSAGE[resultado]);
+      setMessage(
+        resultado === "connected" && appDeVuelta && CHOSEN_NOUN[appDeVuelta]
+          ? { ok: true, text: `Autorización completada. Ahora elige y aprueba ${CHOSEN_NOUN[appDeVuelta]} que usará SEO TOTAL.` }
+          : RESULT_MESSAGE[resultado],
+      );
       if (resultado === "connected" && appDeVuelta) {
         setJustCompleted((current) => ({ ...current, [appDeVuelta]: true }));
       }
@@ -267,7 +286,7 @@ export default function ComposioConnect({ apps, embedded = false, inline = false
   }
 
   async function disconnect(app: string) {
-    if (!window.confirm("¿Desconectar esta app? Se elimina la conexión en Composio.")) return;
+    if (!window.confirm("¿Desconectar esta conexión? Tendrás que volver a conectarla para usarla.")) return;
     setBusy(app);
     setMessage(null);
     try {

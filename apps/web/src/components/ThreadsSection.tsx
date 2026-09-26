@@ -1,330 +1,38 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import PasosAntesDeConectar from "@/components/PasosAntesDeConectar";
-import {
-  disabledStyle,
-  h2Style,
-  inputStyle,
-  secondaryButtonStyle,
-  sectionStyle,
-} from "./dashboard-ui";
 import ComposioConnect from "./ComposioConnect";
+import OAuthNetworkSection, { type OAuthNetworkConfig } from "./OAuthNetworkSection";
 
-interface ApiSettings {
-  configured: boolean;
-  appId: string | null;
-  rawAppId?: string;
-  isAdmin?: boolean;
-}
-
-interface ThreadsConnection {
-  connected: boolean;
-  threadsUsername?: string;
-  threadsUserId?: string;
-  isExpired?: boolean;
-}
-
-interface InstagramConnection {
-  connected: boolean;
-  instagramUsername?: string;
-  instagramBusinessAccountId?: string;
-  isExpired?: boolean;
-}
-
-interface FacebookPageConnection {
-  connected: boolean;
-  facebookPageName?: string;
-  isExpired?: boolean;
-}
-
-type CredentialType = "meta" | "threads" | "facebook";
+const THREADS: OAuthNetworkConfig = {
+  id: "threads",
+  title: "Threads",
+  lead: "Conexión administrada desde esta tarjeta. Autoriza aquí la cuenta de Threads que usará SEO TOTAL.",
+  note: "Publica tus artículos como publicaciones de Threads. Autorizas directamente en Meta; nunca vemos tu contraseña.",
+  accountKey: "threadsUsername",
+  accountPrefix: "@",
+  admin: {
+    title: "Credenciales de la aplicación",
+    help: "App ID y App Secret específicos del producto Threads.",
+    idLabel: "App ID",
+    secretLabel: "App Secret",
+    keys: { shown: "appId", raw: "rawAppId", bodyId: "appId", bodySecret: "appSecret" },
+  },
+};
 
 interface ThreadsSectionProps {
   allowThreads?: boolean;
+  /** Se conservan por compatibilidad con la página antigua; Instagram y Facebook se gestionan desde sus propias tarjetas. */
   allowInstagram?: boolean;
   allowFacebook?: boolean;
   isAdmin?: boolean;
   showComposioSocial?: boolean;
 }
 
-export default function ThreadsSection({ allowThreads = true, allowInstagram = true, allowFacebook = false, isAdmin = false, showComposioSocial = true }: ThreadsSectionProps) {
-  const [metaSettings, setMetaSettings] = useState<ApiSettings | null>(null);
-  const [threadsSettings, setThreadsSettings] = useState<ApiSettings | null>(null);
-  const [threadsConnection, setThreadsConnection] = useState<ThreadsConnection | null>(null);
-  const [instagramConnection, setInstagramConnection] = useState<InstagramConnection | null>(null);
-  const [facebookPageConnection, setFacebookPageConnection] = useState<FacebookPageConnection | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState<CredentialType | null>(null);
-  const [appId, setAppId] = useState("");
-  const [appSecret, setAppSecret] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [disconnecting, setDisconnecting] = useState<CredentialType | null>(null);
-  const [message, setMessage] = useState("");
-
-  // Instagram y Facebook se muestran y gestionan únicamente desde Composio;
-  // se conservan estos parámetros para no romper las llamadas existentes.
-  void allowInstagram;
-  void allowFacebook;
-  void instagramConnection;
-  void facebookPageConnection;
-
-  async function load() {
-    try {
-      setLoading(true);
-      const [metaResponse, threadsResponse, threadsConnectionResponse, instagramConnectionResponse, facebookPageResponse] = await Promise.all([
-        fetch("/api/search-integrations/instagram/settings"),
-        fetch("/api/search-integrations/threads/settings"),
-        fetch("/api/search-integrations/threads"),
-        fetch("/api/search-integrations/instagram"),
-        fetch("/api/search-integrations/facebook-pages"),
-      ]);
-      setMetaSettings(await metaResponse.json());
-      setThreadsSettings(await threadsResponse.json());
-      setThreadsConnection(
-        threadsConnectionResponse.ok
-          ? await threadsConnectionResponse.json()
-          : { connected: false },
-      );
-      setInstagramConnection(
-        instagramConnectionResponse.ok
-          ? await instagramConnectionResponse.json()
-          : { connected: false },
-      );
-      setFacebookPageConnection(facebookPageResponse.ok ? await facebookPageResponse.json() : { connected: false });
-    } catch {
-      setMetaSettings({ configured: false, appId: null });
-      setThreadsSettings({ configured: false, appId: null });
-      setThreadsConnection({ connected: false });
-      setInstagramConnection({ connected: false });
-      setFacebookPageConnection({ connected: false });
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  function startEditing(type: CredentialType) {
-    const current = type === "meta" ? metaSettings : threadsSettings;
-    setEditing(type);
-    setAppId(current?.rawAppId || "");
-    setAppSecret("");
-    setMessage("");
-  }
-
-  async function saveSettings() {
-    if (!editing || !appId.trim() || !appSecret.trim()) {
-      setMessage("Debes ingresar el App ID y el App Secret.");
-      return;
-    }
-
-    setSaving(true);
-    setMessage("");
-    const endpoint = editing === "meta"
-      ? "/api/search-integrations/instagram/settings"
-      : "/api/search-integrations/threads/settings";
-
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ appId: appId.trim(), appSecret: appSecret.trim() }),
-      });
-      const result = await response.json();
-      if (!response.ok) {
-        setMessage(result.error || "No se pudieron guardar las credenciales.");
-        return;
-      }
-
-      setMessage("Credenciales guardadas correctamente.");
-      setEditing(null);
-      setAppSecret("");
-      await load();
-    } catch {
-      setMessage("Error de conexión al guardar las credenciales.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function disconnect(type: CredentialType) {
-    const network = type === "meta" ? "Instagram" : type === "facebook" ? "Facebook Page" : "Threads";
-    if (!confirm(`¿Deseas desconectar ${network}?`)) return;
-
-    setDisconnecting(type);
-    setMessage("");
-    try {
-    const endpoint = type === "meta"
-      ? "/api/search-integrations/instagram"
-      : type === "facebook"
-      ? "/api/search-integrations/facebook-pages"
-      : "/api/search-integrations/threads";
-      const response = await fetch(endpoint, { method: "DELETE" });
-      if (!response.ok) throw new Error();
-      setMessage(`${network} fue desconectado.`);
-      await load();
-    } catch {
-      setMessage(`No se pudo desconectar ${network}.`);
-    } finally {
-      setDisconnecting(null);
-    }
-  }
-
-  function credentialBlock(
-    type: CredentialType,
-    title: string,
-    description: string,
-    settings: ApiSettings | null,
-  ) {
-    const isEditing = editing === type;
-
-    return (
-      <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 16, paddingTop: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-          <div>
-            <strong style={{ color: "#1d1d1f", fontSize: 14 }}>{title}</strong>
-            <p className="lead-copy" style={{ fontSize: 12, margin: "2px 0 0" }}>{description}</p>
-          </div>
-          <span
-            style={{
-              color: settings?.configured ? "#1d1d1f" : "#6e6e73",
-              fontSize: 12,
-              fontWeight: 600,
-            }}
-          >
-            {settings?.configured ? "✓ Configurada" : "Sin configurar"}
-          </span>
-        </div>
-
-        {isAdmin && settings?.isAdmin && !isEditing && (
-          <div style={{ marginTop: 12 }}>
-            {settings.configured && (
-              <p className="muted" style={{ fontSize: 13, marginBottom: 8 }}>App ID: {settings.appId}</p>
-            )}
-            <button onClick={() => startEditing(type)} className="secondary" style={secondaryButtonStyle}>
-              {settings.configured ? "Editar credenciales" : "Configurar credenciales"}
-            </button>
-          </div>
-        )}
-
-        {isAdmin && settings?.isAdmin && isEditing && (
-          <div style={{ display: "grid", gap: 12, marginTop: 14 }}>
-            <label style={{ color: "#1d1d1f", fontSize: 12, fontWeight: 500 }}>
-              App ID
-              <input value={appId} onChange={(event) => setAppId(event.target.value)} style={inputStyle} />
-            </label>
-            <label style={{ color: "#1d1d1f", fontSize: 12, fontWeight: 500 }}>
-              App Secret
-              <input type="password" value={appSecret} onChange={(event) => setAppSecret(event.target.value)} style={inputStyle} />
-            </label>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button
-                onClick={saveSettings}
-                disabled={saving}
-                style={{
-                  ...secondaryButtonStyle,
-                  background: "#1d1d1f",
-                  color: "#ffffff",
-                  border: "none",
-                }}
-              >
-                {saving ? "Guardando..." : "Guardar credenciales"}
-              </button>
-              <button onClick={() => setEditing(null)} className="secondary" style={secondaryButtonStyle}>Cancelar</button>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  function connectionStatus(connected: boolean, label: string, account?: string) {
-    return (
-      <span style={{ color: connected ? "#1d1d1f" : "#6e6e73", fontSize: 12, fontWeight: 600 }}>
-        {connected ? `✓ Conectado — ${label}${account ? ` (${account})` : ""}` : `○ No conectado — ${label}`}
-      </span>
-    );
-  }
-
+export default function ThreadsSection({ allowThreads = true, showComposioSocial = true }: ThreadsSectionProps) {
   return (
-    <section style={sectionStyle}>
-      <h2 style={{ ...h2Style, margin: 0 }}>Threads</h2>
-      <p className="lead-copy" style={{ fontSize: 13, margin: "4px 0 0" }}>
-        Conecta aquí tus cuentas para que el sistema pueda publicar en ellas.
-      </p>
-
-      {loading ? (
-        <p className="muted" style={{ fontSize: 13, marginTop: 12 }}>Cargando configuración...</p>
-      ) : (
-        <>
-          {/*
-            Credenciales de la plataforma, no de la persona usuaria: las
-            configura el administrador una sola vez para todo el sistema. A un
-            usuario normal no le sirven de nada y solo le hacen dudar de si
-            tiene que rellenar algo. Se muestran solo a administradores.
-          */}
-          {isAdmin && (
-            <>
-              {/* Instagram y Facebook se gestionan únicamente desde Composio. */}
-              {credentialBlock(
-                "threads",
-                "Threads API",
-                "Credenciales específicas del producto Threads.",
-                threadsSettings,
-              )}
-            </>
-          )}
-
-          <div style={{ display: "grid", gap: 8, marginTop: 16 }}>
-            {allowThreads && connectionStatus(Boolean(threadsConnection?.connected), "Threads", threadsConnection?.threadsUsername ? `@${threadsConnection.threadsUsername}` : undefined)}
-          </div>
-
-          {allowThreads && (
-          <div style={{ marginTop: 18 }}>
-            <PasosAntesDeConectar red="Threads" />
-
-            <strong style={{ color: "#1d1d1f", fontSize: 14 }}>Conectar cuentas</strong>
-            <p className="lead-copy" style={{ fontSize: 13, margin: "3px 0 12px" }}>
-              Autorizas directamente en Meta; nunca vemos tu contraseña.
-            </p>
-
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              {allowThreads && (threadsConnection?.connected ? (
-                <button
-                  onClick={() => disconnect("threads")}
-                  disabled={disconnecting === "threads"}
-                  className="secondary"
-                  style={disabledStyle(secondaryButtonStyle, disconnecting === "threads")}
-                >
-                  {disconnecting === "threads" ? "Desconectando..." : `Desconectar Threads${threadsConnection.threadsUsername ? ` (@${threadsConnection.threadsUsername})` : ""}`}
-                </button>
-              ) : (
-                <a
-                  href="/api/search-integrations/threads/connect"
-                  className="secondary"
-                  style={{ ...secondaryButtonStyle, textDecoration: "none", display: "inline-flex" }}
-                >
-                  Conectar Threads
-                </a>
-              ))}
-
-            </div>
-          </div>
-          )}
-        </>
-      )}
-
-      {!allowThreads && (
-        <p className="notice" style={{ marginTop: 16 }}>
-          Threads no está disponible para tu cuenta. Contacta al administrador para activarlo.
-        </p>
-      )}
-
-      {message && <p style={{ color: "#1d1d1f", fontSize: 13, marginTop: 10 }}>{message}</p>}
+    <>
+      <OAuthNetworkSection config={THREADS} allowed={allowThreads} />
       {showComposioSocial && <ComposioConnect inline showInactiveActions apps={["facebook", "instagram"]} />}
-    </section>
+    </>
   );
 }

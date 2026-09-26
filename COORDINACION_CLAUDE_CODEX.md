@@ -9752,3 +9752,20 @@ PR #230 fusionado en `main` (`0445e0b2`), Vercel Production `success`, verificad
 - #13 Historial: enlace real de Facebook; sin enlace conocido no se muestra el botón (Instagram queda sin enlace: el permalink exige una operación nueva de Composio fuera de la lista permitida).
 - Facebook e Instagram con el mismo patrón y UX que GSC/GA (tarjeta propia, 5 pasos, notas al elegir, mensajes de retorno, dropdown, éxito con nombre y código, probar conexión, volver al menú). Manual actualizado.
 Pendiente: permalink de Instagram; mensaje en historial de la vía usada; lanzamiento a todos los usuarios (decisión de Milton). Para el lanzamiento a todos considerar aviso de reconexión para quienes tengan Facebook/Instagram por la vía anterior.
+### REDES · ESTANDARIZACIÓN COMPLETA — 2026-09-26 — Claude
+Auditoría triple (INFORME_AUDITORIA_REDES_SOCIALES.md) ejecutada en 4 PRs apilados: #231 (retorno OAuth + errores), #232 (componentes + Bluesky/DEV.to), #233 (Threads/LinkedIn/Pinterest/Tumblr/Blogger), #234 (GBP + Bing). Fusionar en ese orden. Sin migración ni banderas. Falta prueba real con cuentas reales y decisión de Milton sobre fusionar.
+## Claude - REPARACION DE ADMIN — 2026-09-26
+
+Tarea ACTIVA. Rediseño de `/dashboard/usuarios` estilo Apple sin perder
+funciones + culminar límites diarios de difusión (redes/blogs). Rama
+`claude/reparacion-admin`, worktree `.worktrees/reparacion-admin`. Reservados:
+`usuarios/page.tsx`, `api/admin/users/route.ts`. Sin migraciones. Se aprueba en
+localhost (`127.0.0.1:3001`) antes de cualquier push; capitanía se reclama solo
+al publicar.
+
+
+### CIERRE · REDES ESTANDARIZADAS Y EN PRODUCCIÓN — 2026-09-26 — Claude
+PRs #231 (retorno de autorizaciones y errores claros) y #234 (componentes estándar + Threads/LinkedIn/Pinterest/Tumblr/Blogger/Bluesky/DEV.to/GBP/Bing con el patrón de GSC/GA; incluye #232 y #233, cerrados) fusionados en `main` (`a23f532d`). Vercel Production `success`. Sin migración ni cambio de banderas.
+Verificado en producción con las conexiones reales de Lorena Álvarez: las 10 tarjetas de Difusión en el patrón estándar; «Probar conexión» real OK en Tumblr, Blogger, Bluesky, DEV.to, LinkedIn y Google Business Profile. Threads responde 403 en la prueba porque a esa cuenta no se le activó «Publicar en Threads» en Administración (dato, no error; su tarjeta se muestra por la regla general del módulo).
+Auditoría visual medida (estilos y distancias) contra GSC/GA: tres auditorías consecutivas sin diferencias en estado conectado y sin conectar.
+Pendiente menor: DEV.to muestra «@» delante de un usuario que ya es un correo; permalink de Instagram en Historial; retirar la página antigua «Redes Sociales».

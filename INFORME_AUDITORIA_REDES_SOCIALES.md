@@ -72,3 +72,24 @@ Tarjeta con título y frase *«Conexión administrada desde esta tarjeta…»* �
 - No se tocó ninguna conexión ni permiso real: las pruebas de la pasada C fueron en la base local y los permisos de Lorena se restauraron.
 - Instagram sigue sin enlace en Historial (necesita una operación nueva de Composio no incluida en la lista permitida).
 - No se auditó la publicación real de cada red (solo su configuración y sus mensajes); Facebook e Instagram sí están validados en producción.
+
+---
+## 7. ESTADO DE EJECUCIÓN — 2026-09-26 (Claude)
+Todo se ejecutó en 5 PRs apilados (fusionar en este orden). Cada uno se probó en localhost antes de subirse y compila en Vercel. Ninguno tiene migración ni cambia banderas.
+
+| PR | Contenido | Hallazgos que cierra |
+|---|---|---|
+| #231 · Fase 1 | Retorno de las autorizaciones a Conexiones (éxito estático o aviso claro); clasificador único de errores (`friendly-error.ts`) en web, worker e Historial; fuera nombre de persona, PostPeer, JSON de LinkedIn, error crudo de Pinterest, `msg` de Instagram y jerga de Bing | 1, 2, 3 |
+| #232 · Fase 2 | Componentes estándar (`connection-ui.tsx`, guías de todas las redes); Bluesky y DEV.to con el patrón de GSC/GA; ruta «Probar conexión» | 4 (parcial), 5, 6, 7, 8, 9 en Bluesky/DEV.to, 12, 13 |
+| #233 · Fase 3 | `OAuthNetworkSection`: Threads, LinkedIn, Pinterest, Tumblr y Blogger con el patrón; Probar conexión para las cinco; bloque de administrador aparte | 4, 5, 6, 7, 8, 9, 10, 12, 14 |
+| #234 · Fase 3b | Google Business Profile con tarjeta propia (n.º 13) y Bing alineado; Probar conexión en ambos | 4, 11 |
+| #230 (ya en producción) | Facebook e Instagram con el patrón | — |
+
+**Resultado por red tras la ejecución:** las 12 conexiones + GBP siguen el mismo patrón (guía de 5 pasos, Nueva conexión, éxito estático, Probar conexión, Cambiar/Desconectar, Volver al menú, errores claros).
+
+**Pendiente / fuera de alcance:**
+- Instagram sin enlace en Historial (permalink necesita una operación nueva de Composio fuera de la lista permitida).
+- Error de publicación del artículo en Historial que incluye texto en inglés del sitio de destino («Please enter a valid email address.»): pertenece a la publicación del artículo, no a redes; conviene traducirlo aparte.
+- La página antigua «Redes Sociales» (`/dashboard/configuracion/redes-sociales`) sigue en el submenú y ahora muestra las mismas tarjetas; conviene retirarla o redirigirla a Conexiones.
+- Todo se probó en base local con conexiones de mentira; falta la prueba real de cada red con cuentas reales (Threads, LinkedIn, Pinterest, Tumblr, Blogger, Bluesky, DEV.to, GBP, Bing).
+- Otra sesión edita `admin/users/route.ts` y `dashboard/usuarios/page.tsx` en este mismo worktree (sin commitear); no se tocó.

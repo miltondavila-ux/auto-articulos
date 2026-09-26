@@ -368,11 +368,16 @@ Solo los administradores tienen acceso a este módulo:
 - **Visibilidad de Módulos:** Permite ocultar o activar módulos específicos de forma individual por usuario o de manera global para mantenimiento.
 - **Prompts:** además de los estilos de redacción de artículos, incluye el prompt del generador de imágenes con IA para redes sociales — es global (aplica a todas las cuentas), se edita ahí mismo y no necesita ningún cambio de código para actualizarse.
 - **PROMPT PUBLICACIONES PROPIAS:** en la misma pestaña Prompts está el prompt maestro con el que la IA crea títulos cuando un usuario elige "Crear con la IA del sistema" en **${MENU_NAMES.propios}**. Solo el administrador lo ve y lo edita; los usuarios no. Mientras esté vacío, esa opción aparece desactivada. Debajo de la caja se listan las variables que se pueden usar (por ejemplo, la del cliente tipo, el tema o las ubicaciones) y, al guardar, se avisa si escribiste alguna que no existe.
-- **Tarjetas de resumen clicables:** en la pestaña "Accesos", las 5 tarjetas de arriba (Usuarios totales, En prueba, Activos, Conectados ahora, Publicaciones totales) no son solo informativas: al hacer clic en cualquiera, la lista de abajo se filtra automáticamente por ese criterio.
+- **Cifras clicables:** debajo del título hay una fila con 5 cifras (Usuarios totales, En prueba, Activos, Conectados ahora, Publicaciones totales). Al hacer clic en cualquiera, la lista de la pestaña "Accesos a usuarios" se filtra automáticamente por ese criterio.
+- **Pestañas:** Accesos a usuarios, Creación de usuarios, Uso de la base de datos, Visibilidad de módulos y Prompts.
+- **Ficha de cada usuario:** al abrir una cuenta se ve en secciones: *Cuenta* (teléfono, dominio, servidor, credenciales, foto y logo), *Acceso* (rol, prueba gratuita y módulos), *Difusión: redes sociales y blogs*, *Imágenes con IA*, *Límites de artículos*, *Acciones de la cuenta* (Acceder como, Copiar credenciales, Editar, Eliminar) e *Historial*.
+- **Guardar cambios:** los permisos, la prueba gratuita, los créditos de imagen, los módulos y los límites de las redes se guardan juntos con la barra **Guardar cambios** que aparece abajo de la ficha cuando hay algo sin guardar. **Descartar** devuelve todo a como estaba. Los límites de artículos, el rol y el servidor tienen su propio botón Guardar junto al campo.
+- **Dos controles de cantidad, separados:** *Límites de artículos* (cuántos artículos puede crear la cuenta: por mes, por día y por lote) y *Difusión* (cuántas publicaciones por día en cada red y blog).
+- **Límites diarios de difusión (redes sociales y blogs):** en la sección *Difusión: redes sociales y blogs* cada red tiene su aprobación y, por cada formato (por ejemplo Instagram: Publicación, Carrusel, Reel, Story e Infografía), cuántas publicaciones puede hacer la cuenta por día. Si no hay un valor guardado, el límite es 1 por día; 0 bloquea ese formato. Junto a cada número se ve cuántas se han publicado hoy y avisa cuando el cupo del día está completo.
 - **Composio (/dashboard/composio):** conecta la plataforma con Composio, un servicio que más adelante permitirá a los clientes conectar sus cuentas de Google y Meta sin las restricciones de una app en prueba. Por ahora el módulo solo prepara la conexión: se pega la clave de API de proyecto de Composio (se comprueba con Composio antes de guardarse, se guarda cifrada y nunca se vuelve a mostrar completa), se registra el "auth config" de cada app (Search Console, Analytics, Facebook e Instagram, cada uno se comprueba antes de guardarse) y se pueden consultar las cuentas conectadas en el proyecto. Todavía no cambia la forma en que se conectan los clientes: sus conexiones actuales siguen funcionando igual. Al eliminar la clave también se eliminan los auth configs. También muestra **Vía de conexión por app**: una tabla con Search Console, Analytics, Facebook e Instagram, el interruptor Propia / Composio de cada una y cuántos clientes están conectados por cada vía. Por ahora el interruptor está bloqueado en «Propia» y no cambia nada para los clientes; el cambio de vía se activará en una fase posterior. La pantalla **Conexiones** (Configuración → Conexiones, /dashboard/configuracion/conexiones) reúne en un solo lugar todas las conexiones, con dos botones: **ANALÍTICAS** (Search Console, Analytics y Bing) y **DIFUSIÓN** (Business Profile, Facebook, Instagram, Threads, LinkedIn, Pinterest, Bluesky, Tumblr, Blogger y Dev.to). Es opt-in: aparece solo para los administradores y para las personas a las que se les ponga «Habilitado» en Administración → Usuarios → módulos («Conexión por Composio»); las demás siguen con «Indexación y SEO» y «Redes Sociales» sin cambios. Dentro de cada red conectable por Composio (Search Console, Analytics, Facebook e Instagram) se puede conectar, elegir y aprobar el sitio, la propiedad, la Página o la cuenta, probar la conexión y desconectarla; sus conexiones actuales no cambian. Composio no publica Stories de Facebook; las de Instagram están en prueba.
 
 Actualización (2026-09-25): si una cuenta ya tenía conectados Google Search
-Console o Google Analytics por la vía anterior (no por Composio), en Inicio
+Console o Google Analytics por la vía anterior (no por la nueva conexión), en Inicio
 puede aparecer un aviso rojo pidiendo reconectar: primero «PASO 1 DE 2 ·
 Google Search Console» («SOLICITUD DE ACTUALIZACIÓN: Debes reconectar Google
 Search Console mediante Conexiones») y, solo si esa cuenta también tenía
@@ -384,7 +389,7 @@ conexión» y autoriza el acceso.». Mientras no se complete la reconexión, la
 conexión anterior sigue funcionando como respaldo. Al terminar la
 reconexión aparece una pantalla estática de **Conexión exitosa** con un
 único botón **Volver al Inicio**; una vez reconectada esa red, su aviso
-desaparece de Inicio. Además, ni Facebook ni Instagram por Composio generan
+desaparece de Inicio. Además, ni Facebook ni Instagram con la nueva conexión generan
 o muestran Stories (ya no es solo Instagram "en prueba": ninguna de las dos
 las ofrece por esta vía, para evitar errores de publicación).
 
@@ -403,6 +408,53 @@ Todas las pantallas de una conexión tienen el botón **Volver al menú de
 Conexiones**. Si algo falla, los mensajes se muestran en español y explican qué
 hacer; por ejemplo, si al conectar Google desmarcaste un permiso, se te pide
 volver a conectar y dejar marcadas todas las casillas.
+
+Actualización (2026-09-26, 2): las pantallas de Facebook e Instagram dentro de
+Conexiones funcionan igual que las de Search Console y Analytics: una tarjeta
+con los pasos para conectar, la elección de la Página o de la cuenta en una
+lista desplegable, la pantalla de **Conexión exitosa** con el nombre y el
+código de lo que elegiste, **Probar conexión** y **Volver al menú de
+Conexiones**. Instagram publica imágenes con texto y Facebook publica en la
+Página que elijas; ninguna de las dos publica Stories. En **Historial**, el
+enlace **Ver en la red social** solo aparece cuando la publicación tiene un
+enlace público; si no lo tiene, no se muestra. El aviso rojo de reconexión
+solo aparece para cuentas que ya tenían Search Console o Analytics conectados
+por la vía anterior; una cuenta nueva conecta desde el asistente inicial.
+
+Actualización (2026-09-26, 3): al volver de autorizar Threads, LinkedIn,
+Pinterest, Tumblr o Blogger, ahora regresas a la pantalla de esa conexión
+dentro de Conexiones. Si salió bien, en Threads y LinkedIn verás la pantalla
+de **Conexión exitosa** con el botón **Volver al Inicio**; en Pinterest,
+Tumblr y Blogger verás un aviso para elegir dónde se publicará. Si algo falla,
+aparece un aviso claro que te dice qué hacer. Los errores de publicación en
+**Historial** también se muestran en español y explican el paso a seguir (por
+ejemplo, volver a conectar la red cuando la autorización venció).
+
+Actualización (2026-09-26, 4): Bluesky y DEV.to ahora siguen el mismo patrón
+que Search Console y Analytics: una tarjeta con los pasos de **Cómo hacerlo
+paso a paso**, el botón **Conectar**, la pantalla de **Conexión exitosa** al
+terminar y, cuando ya están conectadas, los botones **Cambiar**, **Probar
+conexión** y **Desconectar**. **Probar conexión** comprueba en el momento que
+la cuenta sigue funcionando y te responde con un mensaje corto; si algo falla,
+te dice qué hacer (por ejemplo, volver a conectar).
+
+Actualización (2026-09-26, 5): Threads, LinkedIn, Pinterest, Tumblr y Blogger
+siguen ahora el mismo patrón que Search Console y Analytics. Cada una tiene su
+tarjeta con **Cómo hacerlo paso a paso**, el botón **Nueva conexión**, la
+elección de dónde se publicará (tablero en Pinterest, blog en Tumblr y
+Blogger) con **Aprobar y guardar**, la pantalla de **Conexión exitosa** y, ya
+conectadas, los botones **Cambiar**, **Probar conexión** y **Desconectar**. Si
+la autorización venció, la tarjeta te lo dice y te pide pulsar **Nueva
+conexión** para renovarla. Los datos técnicos de la aplicación (claves) los ve
+y edita solo el administrador, en un bloque aparte.
+
+Actualización (2026-09-26, 6): **Google Business Profile** ahora tiene su propia
+tarjeta en Conexiones (Difusión) con el mismo patrón que las demás: **Cómo
+hacerlo paso a paso**, **Nueva conexión**, la pantalla de **Conexión exitosa**,
+**Probar conexión** y **Desconectar**. **Bing Webmaster Tools** también usa las
+mismas etiquetas y guía (**Nueva conexión**, **Aprobar y guardar**, **Probar
+conexión**, **Desconectar**); su envío nocturno de sitemap y su indexación no
+cambian.
 
 ## Problemas frecuentes
 

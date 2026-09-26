@@ -43,6 +43,7 @@ interface UserRow {
   monthlyArticleLimit: number | null;
   dailyArticleLimit: number | null;
   socialDailyLimits: Record<string, number>;
+  socialPublishedToday?: Record<string, number>;
   maxTitlesPerBatch: number;
   platformDomain: string;
   contentLanguage: string;
@@ -144,6 +145,114 @@ function Field({
       </div>
       <div>{children}</div>
     </div>
+  );
+}
+
+/** Fila de ajustes estilo Apple: etiqueta a la izquierda, control a la derecha, línea fina debajo. */
+function Row({
+  label,
+  hint,
+  stacked = false,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  stacked?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        gap: "8px 24px",
+        padding: "12px 0",
+        borderBottom: "1px solid #e5e5ea",
+      }}
+    >
+      <div style={{ flex: stacked ? "1 1 100%" : "1 1 200px", minWidth: 0 }}>
+        <div style={{ fontSize: 14, color: "#1d1d1f" }}>{label}</div>
+        {hint && <div style={{ fontSize: 12, color: "#6e6e73", marginTop: 2 }}>{hint}</div>}
+      </div>
+      <div style={{ flex: stacked ? "1 1 100%" : "1 1 280px", minWidth: 0, fontSize: 13, color: "#1d1d1f" }}>{children}</div>
+    </div>
+  );
+}
+
+/** Bloque con título y descripción corta; la estructura la dan la línea fina y el espacio en blanco. */
+function Section({
+  title,
+  note,
+  children,
+}: {
+  title: string;
+  note?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section style={{ marginTop: 28 }}>
+      <h3 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: "#1d1d1f", paddingBottom: 6, borderBottom: "1px solid #1d1d1f" }}>
+        {title}
+      </h3>
+      {note && <p style={{ margin: "8px 0 0", fontSize: 13, lineHeight: 1.5, color: "#6e6e73" }}>{note}</p>}
+      <div>{children}</div>
+    </section>
+  );
+}
+
+// Formatos de difusión con límite diario. La clave es la misma `platform`
+// que usa el worker (enforceSocialDailyLimit); una clave sin valor guardado
+// equivale a 1 por día.
+const SOCIAL_GROUPS: {
+  title: string;
+  networks: { id: string; label: string; formats: [string, string][] }[];
+}[] = [
+  {
+    title: "Redes sociales",
+    networks: [
+      {
+        id: "instagram",
+        label: "Instagram",
+        formats: [
+          ["instagram-post", "Publicación"],
+          ["instagram-carousel", "Carrusel"],
+          ["instagram-reel-image", "Reel con imagen"],
+          ["instagram-story", "Story"],
+          ["instagram-infografia", "Infografía"],
+        ],
+      },
+      {
+        id: "facebook",
+        label: "Facebook Pages",
+        formats: [
+          ["facebook-page", "Publicación en la Página"],
+          ["facebook-story", "Story"],
+        ],
+      },
+      { id: "threads", label: "Threads", formats: [["threads", "Publicación"]] },
+      { id: "x", label: "X (Twitter)", formats: [["x", "Publicación"]] },
+      { id: "linkedin", label: "LinkedIn", formats: [["linkedin", "Publicación"]] },
+      { id: "pinterest", label: "Pinterest", formats: [["pinterest", "Pin"]] },
+      { id: "bluesky", label: "Bluesky", formats: [["bluesky", "Publicación"]] },
+      { id: "google-business", label: "Google Business Profile", formats: [["google-business", "Publicación"]] },
+    ],
+  },
+  {
+    title: "Blogs",
+    networks: [
+      { id: "tumblr", label: "Tumblr", formats: [["tumblr", "Artículo"]] },
+      { id: "devto", label: "DEV.to", formats: [["devto", "Artículo"]] },
+      { id: "blogger", label: "Blogger", formats: [["blogger", "Artículo"]] },
+    ],
+  },
+];
+const SOCIAL_LIMIT_KEYS = SOCIAL_GROUPS.flatMap((g) => g.networks.flatMap((n) => n.formats.map(([key]) => key)));
+
+function socialLimitsToInputs(limits: Record<string, number> | undefined): Record<string, string> {
+  return Object.fromEntries(
+    SOCIAL_LIMIT_KEYS.map((key) => [key, String(Number.isInteger(limits?.[key]) ? limits?.[key] : 1)]),
   );
 }
 
@@ -831,47 +940,24 @@ export default function UsuariosPage() {
 
   return (
     <div style={{ maxWidth: 1120, margin: "0 auto" }}>
-      <section
-        className="panel"
-        style={{
-          ...sectionStyle,
-          padding: "20px 0 24px",
-          marginTop: 0,
-          marginBottom: 16,
-        }}
-      >
+      <header style={{ padding: "8px 0 20px" }}>
         <p className="eyebrow" style={{ margin: "0 0 4px" }}>
           Centro de Control
         </p>
-        <h1 style={{ margin: "0 0 6px", fontSize: 26, fontWeight: 600, color: "#1d1d1f", letterSpacing: "-0.03em" }}>
+        <h1 style={{ margin: 0, fontSize: 32, fontWeight: 600, color: "#1d1d1f", letterSpacing: "-0.03em" }}>
           Administración
         </h1>
-        <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
-          Desde aquí gestionas las cuentas de la plataforma: crear usuarios, cambiar sus contraseñas, ver cuánto consume cada uno y decidir a qué módulos y a qué redes sociales tiene acceso.
+        <p style={{ margin: "8px 0 0", maxWidth: 720, fontSize: 15, lineHeight: 1.55, color: "#6e6e73" }}>
+          Cuentas, accesos, límites, módulos y prompts de la plataforma, en un solo lugar.
         </p>
-        <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
-          El control de módulos tiene tres posturas por usuario: heredar lo que diga la configuración general, forzar que lo vea aunque esté oculto para todos, o forzar que no lo vea aunque esté visible.
-        </p>
-        <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "#1d1d1f" }}>
-          También está aquí el modo de mantenimiento, que oculta la plataforma a todo el mundo menos a los administradores mientras se trabaja en ella.
-        </p>
-        <p
-          className="lead-copy"
-          style={{
-            margin: 0,
-            maxWidth: 720,
-          }}
-        >
-          Supervisa la actividad de la plataforma, controla los accesos y administra la capacidad desde un solo lugar.
-        </p>
-      </section>
+      </header>
 
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
-          gap: 12,
-          marginBottom: 16,
+          display: "flex",
+          flexWrap: "wrap",
+          borderTop: "1px solid #d2d2d7",
+          borderBottom: "1px solid #d2d2d7",
         }}
       >
         {metrics.map((metric) => (
@@ -879,126 +965,58 @@ export default function UsuariosPage() {
             key={metric.label}
             type="button"
             onClick={metric.onClick}
-            className="row"
+            title={metric.detail}
             style={{
+              flex: "1 1 150px",
               display: "flex",
               flexDirection: "column",
               alignItems: "flex-start",
-              justifyContent: "flex-start",
-              width: "100%",
-              minHeight: "auto",
-              padding: "16px 18px",
-              borderRadius: 6,
-              background: "#ffffff",
+              padding: "14px 16px 14px 0",
+              background: "transparent",
+              border: "none",
               color: "#1d1d1f",
-              border: "1px solid #e5e5ea",
               textAlign: "left",
               fontFamily: "inherit",
               cursor: "pointer",
-              transition: "background 0.12s, border-color 0.12s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "#f5f5f7";
-              e.currentTarget.style.borderColor = "#c9c9cd";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "#ffffff";
-              e.currentTarget.style.borderColor = "#e5e5ea";
             }}
           >
-            <div style={{ fontSize: 12, fontWeight: 500, color: "#6e6e73" }}>
-              {metric.label}
-            </div>
-            <div
-              style={{
-                marginTop: 6,
-                fontSize: 24,
-                lineHeight: 1.1,
-                fontWeight: 600,
-                color: "#1d1d1f",
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
+            <span style={{ fontSize: 12, color: "#6e6e73" }}>{metric.label}</span>
+            <span style={{ marginTop: 4, fontSize: 26, lineHeight: 1.1, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
               {metric.value}
-            </div>
-            <div style={{ marginTop: 6, fontSize: 11, color: "#9a9a9e" }}>
-              {metric.detail}
-            </div>
+            </span>
           </button>
         ))}
       </div>
 
-      <div
+      <nav
         aria-label="Secciones de administración"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-          gap: 12,
-          marginBottom: 16,
-        }}
+        style={{ display: "flex", flexWrap: "wrap", gap: "0 28px", borderBottom: "1px solid #d2d2d7", marginBottom: 8 }}
       >
         {tabs.map((t) => (
           <button
             key={t.id}
             onClick={() => openSection(t.id)}
-            aria-pressed={tab === t.id}
+            aria-current={tab === t.id ? "page" : undefined}
             aria-controls="administracion-contenido"
-            className="row"
+            title={t.description}
             style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-              padding: 16,
-              textAlign: "left",
+              padding: "14px 0 12px",
+              background: "none",
+              border: "none",
+              borderBottom: tab === t.id ? "2px solid #1d1d1f" : "2px solid transparent",
+              marginBottom: -1,
               fontFamily: "inherit",
+              fontSize: 15,
+              fontWeight: tab === t.id ? 600 : 400,
+              color: tab === t.id ? "#1d1d1f" : "#6e6e73",
               cursor: "pointer",
-              borderRadius: 6,
-              border: tab === t.id ? "1px solid #1d1d1f" : "1px solid #e5e5ea",
-              background: "#ffffff",
-              color: "#1d1d1f",
-              boxShadow: "none",
             }}
           >
-            <span
-              style={{
-                display: "inline-flex",
-                padding: "2px 8px",
-                borderRadius: 6,
-                background: tab === t.id ? "#f5f5f7" : "#f5f5f7",
-                color: tab === t.id ? "#1d1d1f" : "#6e6e73",
-                fontSize: 10,
-                fontWeight: 600,
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-              }}
-            >
-              {t.eyebrow}
-            </span>
-            <span
-              style={{
-                display: "block",
-                marginTop: 8,
-                fontSize: 15,
-                fontWeight: 600,
-                color: "#1d1d1f",
-              }}
-            >
-              {t.label}
-            </span>
-            <span
-              className="muted"
-              style={{
-                display: "block",
-                marginTop: 4,
-                fontSize: 12,
-                lineHeight: 1.4,
-              }}
-            >
-              {t.description}
-            </span>
+            {t.label}
+            <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 400, color: "#86868b" }}>{t.eyebrow}</span>
           </button>
         ))}
-      </div>
+      </nav>
 
       {tab === "crear" && (
         <section id="administracion-contenido" style={sectionStyle}>
@@ -1010,13 +1028,10 @@ export default function UsuariosPage() {
           </p>
           <form
             onSubmit={handleCreate}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
-              gap: 12,
-              alignItems: "end",
-            }}
+            style={{ display: "block" }}
           >
+          <Section title="Datos de la persona">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 16, marginTop: 14, alignItems: "start" }}>
             <label style={createFieldStyle}>
               Nombre
               <input
@@ -1057,6 +1072,10 @@ export default function UsuariosPage() {
                 style={inputStyle}
               />
             </label>
+            </div>
+          </Section>
+          <Section title="Acceso a la plataforma">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 16, marginTop: 14, alignItems: "start" }}>
             <label style={createFieldStyle}>
               Contraseña temporal
               <input
@@ -1079,6 +1098,32 @@ export default function UsuariosPage() {
                 <option value="admin">Administrador</option>
               </select>
             </label>
+            <label style={createFieldStyle}>
+              Servidor de la plataforma
+              <select
+                value={platformDomain}
+                onChange={(e) =>
+                  setPlatformDomain(e.target.value as PlatformDomain)
+                }
+                style={inputStyle}
+              >
+                {PLATFORM_DOMAIN_VALUES.map((value) => (
+                  <option key={value} value={value}>
+                    {PLATFORM_SERVERS[value].label}
+                  </option>
+                ))}
+              </select>
+              <span style={{ fontSize: 11, color: "#6e6e73", marginTop: 4 }}>
+                Europa usa 10minuteswebsite.site, el resto del mundo
+                10minuteswebsite.net, y tagcrush.net es aparte (no depende de
+                geografía). Si te equivocas acá, el robot no podrá iniciar
+                sesión con esta cuenta.
+              </span>
+            </label>
+            </div>
+          </Section>
+          <Section title="Límites de artículos">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 16, marginTop: 14, alignItems: "start" }}>
             <label style={createFieldStyle}>
               Límite mensual de artículos
               <input
@@ -1115,33 +1160,13 @@ export default function UsuariosPage() {
                 style={inputStyle}
               />
             </label>
-            <label style={createFieldStyle}>
-              Servidor de la plataforma
-              <select
-                value={platformDomain}
-                onChange={(e) =>
-                  setPlatformDomain(e.target.value as PlatformDomain)
-                }
-                style={inputStyle}
-              >
-                {PLATFORM_DOMAIN_VALUES.map((value) => (
-                  <option key={value} value={value}>
-                    {PLATFORM_SERVERS[value].label}
-                  </option>
-                ))}
-              </select>
-              <span style={{ fontSize: 11, color: "#6e6e73", marginTop: 4 }}>
-                Europa usa 10minuteswebsite.site, el resto del mundo
-                10minuteswebsite.net, y tagcrush.net es aparte (no depende de
-                geografía). Si te equivocas acá, el robot no podrá iniciar
-                sesión con esta cuenta.
-              </span>
-            </label>
+            </div>
+          </Section>
             <button
               type="submit"
               disabled={creating}
               style={disabledStyle(
-                { ...buttonStyle, width: "100%", marginTop: 0 },
+                { ...buttonStyle, width: "auto", minWidth: 200, marginTop: 28 },
                 creating,
               )}
             >
@@ -1176,7 +1201,7 @@ export default function UsuariosPage() {
               gap: 8,
             }}
           >
-            <h2 style={h2Style}>Uso de la base de datos (Supabase)</h2>
+            <h2 style={h2Style}>Uso de la base de datos</h2>
             <button
               onClick={loadUsage}
               disabled={loadingUsage}
@@ -1241,7 +1266,7 @@ export default function UsuariosPage() {
                 style={{
                   display: "flex",
                   flexDirection: "column",
-                  gap: 10,
+                  gap: 0,
                   marginTop: 14,
                 }}
               >
@@ -1249,18 +1274,16 @@ export default function UsuariosPage() {
                   <details
                     key={row.userId}
                     style={{
-                      border: "1px solid #e5e5ea",
-                      borderRadius: 10,
-                      background: row.active ? "rgba(0, 0, 0, 0.06)" : "#fff",
+                      borderBottom: "1px solid #d2d2d7",
+                      background: "#fff",
                       color: "#1d1d1f",
-                      overflow: "hidden",
                     }}
                   >
                     <summary
                       style={{
                         cursor: "pointer",
                         listStyle: "none",
-                        padding: "12px 14px",
+                        padding: "12px 0",
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
@@ -1307,9 +1330,8 @@ export default function UsuariosPage() {
                     </summary>
                     <div
                       style={{
-                        padding: 14,
-                        borderTop: "1px solid #e5e5ea",
-                        background: "#f5f5f7",
+                        padding: "6px 0 16px",
+                        background: "#fff",
                         display: "grid",
                         gridTemplateColumns:
                           "repeat(auto-fit, minmax(140px, 1fr))",
@@ -1422,7 +1444,7 @@ export default function UsuariosPage() {
             style={{
               display: "flex",
               flexDirection: "column",
-              gap: 10,
+              gap: 0,
               marginTop: 12,
             }}
           >
@@ -1458,13 +1480,11 @@ export default function UsuariosPage() {
         <section id="administracion-contenido" style={sectionStyle}>
           <div
             style={{
-              marginBottom: 20,
-              padding: 16,
-              borderRadius: 14,
-              background: maintenanceEnabled ? "#fff4e5" : "#f5f5f7",
-              border: maintenanceEnabled
-                ? "1px solid rgba(255,149,0,.35)"
-                : "1px solid #e5e5ea",
+              marginBottom: 28,
+              padding: "16px 0",
+              background: maintenanceEnabled ? "#fff4e5" : "transparent",
+              borderTop: "1px solid #d2d2d7",
+              borderBottom: "1px solid #d2d2d7",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
@@ -1587,9 +1607,10 @@ export default function UsuariosPage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              gap: 12,
+              gridTemplateColumns: "1fr",
+              gap: 0,
               marginTop: 14,
+              borderTop: "1px solid #d2d2d7",
             }}
           >
             {SYSTEM_MODULES.map((mod) => {
@@ -1598,13 +1619,9 @@ export default function UsuariosPage() {
                 <div
                   key={mod.id}
                   style={{
-                    padding: 16,
-                    borderRadius: 12,
-                    background: isHidden ? "#fff4e5" : "#ffffff",
-                    border: isHidden
-                      ? "1px solid rgba(255, 149, 0, 0.3)"
-                      : "1px solid #e5e5ea",
-                    boxShadow: "none",
+                    padding: "16px 0",
+                    background: "#ffffff",
+                    borderBottom: "1px solid #d2d2d7",
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
@@ -1793,11 +1810,9 @@ export default function UsuariosPage() {
                 <div
                   key={p.id}
                   style={{
-                    padding: 16,
-                    borderRadius: 12,
-                    border: "1px solid #e4e9f1",
+                    padding: "16px 0",
+                    borderBottom: "1px solid #d2d2d7",
                     background: "#ffffff",
-                    boxShadow: "none",
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
@@ -2001,8 +2016,10 @@ function UserCard({
   const [dailyValue, setDailyValue] = useState(
     user.dailyArticleLimit === null ? "" : String(user.dailyArticleLimit),
   );
-  const [socialLimitsText, setSocialLimitsText] = useState(JSON.stringify(user.socialDailyLimits ?? {}, null, 2));
+  const [socialLimits, setSocialLimits] = useState<Record<string, string>>(() => socialLimitsToInputs(user.socialDailyLimits));
   const [socialLimitsError, setSocialLimitsError] = useState<string | null>(null);
+  const [savingSocialLimits, setSavingSocialLimits] = useState(false);
+  const [, setSocialLimitsSaved] = useState(false);
   const [savingDaily, setSavingDaily] = useState(false);
   const [batchValue, setBatchValue] = useState(String(user.maxTitlesPerBatch));
   const [savingBatch, setSavingBatch] = useState(false);
@@ -2066,16 +2083,14 @@ function UserCard({
   );
   const [savingPermissions, setSavingPermissions] = useState(false);
   const [permissionsError, setPermissionsError] = useState<string | null>(null);
-  const [permissionsSaved, setPermissionsSaved] = useState(false);
+  const [, setPermissionsSaved] = useState(false);
   const [moduleOverrides, setModuleOverrides] = useState<
     Record<string, "inherit" | "enabled" | "disabled">
   >(user.moduleOverrides ?? {});
   const [userDisabledModules, setUserDisabledModules] = useState<string[]>(
     user.disabledModules ?? [],
   );
-  const [savingUserModules, setSavingUserModules] = useState(false);
   const [userModulesError, setUserModulesError] = useState<string | null>(null);
-  const [userModulesSaved, setUserModulesSaved] = useState(false);
   const [impersonating, setImpersonating] = useState(false);
   const [impersonateError, setImpersonateError] = useState<string | null>(
     null,
@@ -2122,34 +2137,63 @@ function UserCard({
     JSON.stringify((userDisabledModules ?? []).slice().sort()) !==
     JSON.stringify((user.disabledModules ?? []).slice().sort());
 
-  async function handleSaveUserModules() {
-    setSavingUserModules(true);
-    setUserModulesError(null);
-    setUserModulesSaved(false);
-    try {
-      const res = await fetch("/api/admin/users", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: user.id,
-          moduleOverrides,
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setUserModulesError(
-          data.error ?? "No se pudieron guardar los módulos del usuario.",
-        );
-        return;
-      }
-      setUserModulesSaved(true);
-      setTimeout(() => setUserModulesSaved(false), 2500);
-      onUpdated();
-    } catch {
-      setUserModulesError("Error de conexión al guardar los módulos.");
-    } finally {
-      setSavingUserModules(false);
+  const savedSocialLimits = socialLimitsToInputs(user.socialDailyLimits);
+  const socialLimitsDirty = SOCIAL_LIMIT_KEYS.some((key) => socialLimits[key] !== savedSocialLimits[key]);
+  useEffect(() => {
+    setSocialLimits(socialLimitsToInputs(user.socialDailyLimits));
+  }, [user.socialDailyLimits]);
+
+  const permOf: Record<string, [boolean, (value: boolean) => void]> = {
+    instagram: [permInstagram, setPermInstagram],
+    facebook: [permFacebook, setPermFacebook],
+    threads: [permThreads, setPermThreads],
+    linkedin: [permLinkedIn, setPermLinkedIn],
+    pinterest: [permPinterest, setPermPinterest],
+    bluesky: [permBluesky, setPermBluesky],
+    "google-business": [permGoogleBusiness, setPermGoogleBusiness],
+    tumblr: [permTumblr, setPermTumblr],
+    devto: [permDevTo, setPermDevTo],
+    blogger: [permBlogger, setPermBlogger],
+  };
+
+  const anyDirty = permissionsDirty || userModulesDirty || socialLimitsDirty;
+  const savingAny = savingPermissions || savingSocialLimits;
+  const [savedAll, setSavedAll] = useState(false);
+
+  // Un único guardado por ficha: permisos, créditos, modalidad, módulos y
+  // límites de difusión viajan juntos para que nada quede a medias.
+  async function handleSaveAll() {
+    setSavedAll(false);
+    let ok = true;
+    if (permissionsDirty || userModulesDirty) ok = (await handleSavePermissions()) && ok;
+    if (socialLimitsDirty) ok = (await handleSaveSocialLimits()) && ok;
+    if (ok) {
+      setSavedAll(true);
+      setTimeout(() => setSavedAll(false), 2500);
     }
+  }
+
+  function handleDiscardAll() {
+    setSavedAll(false);
+    setPermInstagram(Boolean(user.allowInstagramPublishing));
+    setPermLinkedIn(Boolean(user.allowLinkedInPublishing));
+    setPermThreads(Boolean(user.allowThreadsPublishing));
+    setPermFacebook(Boolean(user.allowFacebookPublishing));
+    setPermPinterest(Boolean(user.allowPinterestPublishing));
+    setPermTumblr(Boolean(user.allowTumblrPublishing));
+    setPermBluesky(Boolean(user.allowBlueskyPublishing));
+    setPermDevTo(Boolean(user.allowDevToPublishing));
+    setPermBlogger(Boolean(user.allowBloggerPublishing));
+    setPermGoogleBusiness(Boolean(user.allowGoogleBusinessPublishing));
+    setPermAiImageGeneration(Boolean(user.aiImageGenerationEnabled));
+    setPermIsTrialSignup(Boolean(user.isTrialSignup));
+    setPermTrialUnlocked(Boolean(user.trialUnlocked));
+    setPermImageCredits(user.hasImageCredits !== false);
+    setModuleOverrides(user.moduleOverrides ?? {});
+    setSocialLimits(socialLimitsToInputs(user.socialDailyLimits));
+    setPermissionsError(null);
+    setUserModulesError(null);
+    setSocialLimitsError(null);
   }
 
   async function handleCopyCredentials() {
@@ -2190,15 +2234,40 @@ function UserCard({
     }
   }
 
-  async function handleSaveSocialLimits() {
+  async function handleSaveSocialLimits(): Promise<boolean> {
     setSocialLimitsError(null);
+    setSocialLimitsSaved(false);
+    const parsed: Record<string, number> = {};
+    for (const key of SOCIAL_LIMIT_KEYS) {
+      const raw = (socialLimits[key] ?? "").trim();
+      const n = Number(raw);
+      if (raw === "" || !Number.isInteger(n) || n < 0) {
+        setSocialLimitsError("Cada límite debe ser un número entero de 0 en adelante (0 bloquea esa red).");
+        return false;
+      }
+      parsed[key] = n;
+    }
+    setSavingSocialLimits(true);
     try {
-      const parsed = JSON.parse(socialLimitsText);
-      const response = await fetch("/api/admin/users", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: user.id, socialDailyLimits: parsed }) });
+      const response = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, socialDailyLimits: parsed }),
+      });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok) { setSocialLimitsError(result.error ?? "No se pudo guardar"); return; }
+      if (!response.ok) {
+        setSocialLimitsError(result.error ?? "No se pudieron guardar los límites.");
+        return false;
+      }
+      setSocialLimitsSaved(true);
       onUpdated();
-    } catch { setSocialLimitsError("Escribe un JSON válido, por ejemplo {\"instagram\":1,\"linkedin\":1}."); }
+      return true;
+    } catch {
+      setSocialLimitsError("No se pudo conectar. Inténtalo de nuevo.");
+      return false;
+    } finally {
+      setSavingSocialLimits(false);
+    }
   }
 
   async function handleSaveBatchLimit() {
@@ -2300,7 +2369,7 @@ function UserCard({
     }
   }
 
-  async function handleSavePermissions() {
+  async function handleSavePermissions(): Promise<boolean> {
     setSavingPermissions(true);
     setPermissionsError(null);
     setPermissionsSaved(false);
@@ -2333,7 +2402,7 @@ function UserCard({
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setPermissionsError(data.error ?? "No se pudieron guardar los permisos.");
-        return;
+        return false;
       }
       // Mantener la fila y el formulario sincronizados con el valor persistido.
       // En particular, el toggle de créditos no debe reaparecer como falso
@@ -2344,8 +2413,10 @@ function UserCard({
       setPermissionsSaved(true);
       setTimeout(() => setPermissionsSaved(false), 2500);
       onUpdated();
+      return true;
     } catch {
       setPermissionsError("No se pudieron guardar los permisos. Revisa tu conexión.");
+      return false;
     } finally {
       setSavingPermissions(false);
     }
@@ -2449,11 +2520,9 @@ function UserCard({
   return (
     <details
       style={{
-        border: "1px solid #e5e5ea",
-        borderRadius: 10,
+        borderBottom: "1px solid #d2d2d7",
         background: "#fff",
         color: "#1d1d1f",
-        overflow: "hidden",
       }}
     >
       <summary
@@ -2583,27 +2652,20 @@ function UserCard({
 
       <div
         style={{
-          padding: "14px",
-          borderTop: "1px solid #e5e5ea",
-          background: "#f5f5f7",
+          padding: "4px 20px 20px",
+          borderTop: "1px solid #d2d2d7",
+          background: "#ffffff",
         }}
       >
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
-            gap: 14,
-          }}
-        >
-          <Field label="Teléfono">{user.phone ?? "—"}</Field>
-
-          <Field label="Dominio Web Vinculado">
+        <Section title="Cuenta" note="Datos de contacto, sitio vinculado y la cuenta de 10minutesWebsite / Tagcrush de esta persona.">
+          <Row label="Teléfono">{user.phone ?? "—"}</Row>
+          <Row label="Creada">{new Date(user.createdAt).toLocaleDateString()}</Row>
+          <Row label="Dominio web vinculado">
             <span style={{ fontSize: 13, color: user.connectedDomain ? "#1d1d1f" : "#6e6e73", wordBreak: "break-all" }}>
               {user.connectedDomain ? `${user.connectedDomain}` : "Sin dominio vinculado"}
             </span>
-          </Field>
-
-          <Field label={`Cuenta ${platformProductName(user.platformDomain)}`}>
+          </Row>
+          <Row label={`Cuenta ${platformProductName(user.platformDomain)}`}>
             <span style={{ fontSize: 13, color: user.tenMinutesUsername ? "#1d1d1f" : "#6e6e73", wordBreak: "break-all" }}>
               {user.tenMinutesUsername ? `${user.tenMinutesUsername}` : "Sin credenciales guardadas"}
             </span>
@@ -2671,9 +2733,94 @@ function UserCard({
                 )}
               </div>
             )}
-          </Field>
+          </Row>
+          <Row label="Servidor" hint="Dónde vive la cuenta de esta persona.">
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <select
+                value={domainValue}
+                onChange={(e) =>
+                  setDomainValue(e.target.value as PlatformDomain)
+                }
+                disabled={savingDomain}
+                aria-label={`Servidor de ${user.email}`}
+                style={{ ...inputStyle, width: 150 }}
+              >
+                {PLATFORM_DOMAIN_VALUES.map((value) => (
+                  <option key={value} value={value}>
+                    {PLATFORM_SERVERS[value].label}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handleSaveDomain}
+                disabled={
+                  savingDomain ||
+                  domainValue === normalizePlatformDomain(user.platformDomain)
+                }
+                style={disabledStyle(
+                  { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
+                  savingDomain ||
+                    domainValue ===
+                      normalizePlatformDomain(user.platformDomain),
+                )}
+              >
+                {savingDomain ? "..." : "Guardar"}
+              </button>
+            </div>
+          </Row>
+          <Row label="Foto de perfil (URL)" hint="Se guarda al salir del campo.">
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input
+                type="text"
+                placeholder="https://..."
+                defaultValue={user.profilePhotoUrl ?? ""}
+                onBlur={async (e) => {
+                  const val = e.target.value.trim() || null;
+                  if (val !== user.profilePhotoUrl) {
+                    await fetch("/api/admin/users", {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ userId: user.id, profilePhotoUrl: val }),
+                    });
+                    onUpdated();
+                  }
+                }}
+                style={{ ...inputStyle, width: 200 }}
+              />
+            </div>
+          </Row>
+          <Row label="Logo del negocio (URL)" hint="Se guarda al salir del campo.">
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input
+                type="text"
+                placeholder="https://..."
+                defaultValue={user.businessLogoUrl ?? ""}
+                onBlur={async (e) => {
+                  const val = e.target.value.trim() || null;
+                  if (val !== user.businessLogoUrl) {
+                    await fetch("/api/admin/users", {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ userId: user.id, businessLogoUrl: val }),
+                    });
+                    onUpdated();
+                  }
+                }}
+                style={{ ...inputStyle, width: 200 }}
+              />
+            </div>
+          </Row>
+          <Row label="Aviso de contenido inteligente">
+            {user.opportunitiesDisclosureAcceptedAt
+              ? `Aceptado el ${new Date(
+                  user.opportunitiesDisclosureAcceptedAt,
+                ).toLocaleString("es-US")}`
+              : "Todavía no aceptado"}
+          </Row>
+        </Section>
 
-          <Field label="Rol">
+        <Section title="Acceso" note="Qué rol tiene, si está en prueba y qué módulos ve.">
+          <Row label="Rol">
             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
               <select
                 value={roleValue}
@@ -2705,114 +2852,12 @@ function UserCard({
                 {roleError}
               </div>
             )}
-          </Field>
-
-          <Field label="Permisos y estado de cuenta">
-            <div style={{ display: "grid", gap: 6 }}>
-              <label style={permissionLabelStyle}>
-                <input
-                  type="checkbox"
-                  checked={permInstagram}
-                  onChange={(e) => setPermInstagram(e.target.checked)}
-                  disabled={savingPermissions}
-                  style={{ accentColor: "#1d1d1f", width: 16, height: 16 }}
-                />
-                Publicar en Instagram
-              </label>
-              <label style={permissionLabelStyle}>
-                <input
-                  type="checkbox"
-                  checked={permLinkedIn}
-                  onChange={(e) => setPermLinkedIn(e.target.checked)}
-                  disabled={savingPermissions}
-                  style={{ accentColor: "#1d1d1f", width: 16, height: 16 }}
-                />
-                Publicar en LinkedIn
-              </label>
-              <label style={permissionLabelStyle}>
-                <input
-                  type="checkbox"
-                  checked={permThreads}
-                  onChange={(e) => setPermThreads(e.target.checked)}
-                  disabled={savingPermissions}
-                  style={{ accentColor: "#000000", width: 16, height: 16 }}
-                />
-                Publicar en Threads
-              </label>
-              <label style={permissionLabelStyle}>
-                <input
-                  type="checkbox"
-                  checked={permFacebook}
-                  onChange={(e) => setPermFacebook(e.target.checked)}
-                  disabled={savingPermissions}
-                  style={{ accentColor: "#1d1d1f", width: 16, height: 16 }}
-                />
-                Publicar en Facebook Pages
-              </label>
-              <label style={permissionLabelStyle}>
-                <input
-                  type="checkbox"
-                  checked={permPinterest}
-                  onChange={(e) => setPermPinterest(e.target.checked)}
-                  disabled={savingPermissions}
-                  style={{ accentColor: "#e60023", width: 16, height: 16 }}
-                />
-                Conectar y publicar en Pinterest
-              </label>
-              <label style={permissionLabelStyle}>
-                <input
-                  type="checkbox"
-                  checked={permTumblr}
-                  onChange={(e) => setPermTumblr(e.target.checked)}
-                  disabled={savingPermissions}
-                  style={{ accentColor: "#36465d", width: 16, height: 16 }}
-                />
-                Conectar y publicar en Tumblr
-              </label>
-              <label style={permissionLabelStyle}>
-                <input type="checkbox" checked={permBluesky} onChange={(e) => setPermBluesky(e.target.checked)} disabled={savingPermissions} style={{ accentColor: "#1d1d1f", width: 16, height: 16 }} />
-                Conectar y publicar en Bluesky
-              </label>
-              <label style={permissionLabelStyle}>
-                <input type="checkbox" checked={permDevTo} onChange={(e) => setPermDevTo(e.target.checked)} disabled={savingPermissions} style={{ accentColor: "#1d1d1f", width: 16, height: 16 }} />
-                Conectar y publicar artículos en DEV.to
-              </label>
-              <label style={permissionLabelStyle}>
-                <input type="checkbox" checked={permBlogger} onChange={(e) => setPermBlogger(e.target.checked)} disabled={savingPermissions} style={{ accentColor: "#1d1d1f", width: 16, height: 16 }} />
-                Conectar y publicar artículos en Blogger
-              </label>
-              <label style={permissionLabelStyle}>
-                <input type="checkbox" checked={permGoogleBusiness} onChange={(e) => setPermGoogleBusiness(e.target.checked)} disabled={savingPermissions} style={{ accentColor: "#4285f4", width: 16, height: 16 }} />
-                Conectar y publicar en Google Business Profile
-              </label>
-              <label style={permissionLabelStyle}>
-                <input
-                  type="checkbox"
-                  checked={permAiImageGeneration}
-                  onChange={(e) => setPermAiImageGeneration(e.target.checked)}
-                  disabled={savingPermissions}
-                  style={{ accentColor: "#1d1d1f", width: 16, height: 16 }}
-                />
-                Generador de imágenes con IA (Instagram Story/Reel)
-              </label>
-              <label style={permissionLabelStyle}>
-                <input
-                  type="checkbox"
-                  checked={permImageCredits}
-                  onChange={(e) => setPermImageCredits(e.target.checked)}
-                  disabled={savingPermissions}
-                  style={{ accentColor: "#ff9500", width: 16, height: 16 }}
-                />
-                Créditos de imagen disponibles ({platformProductName(user.platformDomain)})
-              </label>
-
+          </Row>
+          <Row label="Modalidad de acceso">
               <div
                 style={{
-                  marginTop: 6,
-                  padding: "8px 10px",
-                  borderRadius: 8,
-                  background: permIsTrialSignup ? "#fff4e5" : "#f5f5f7",
-                  border: `1px solid ${permIsTrialSignup ? "rgba(255, 149, 0, 0.3)" : "#e5e5ea"}`,
+                  padding: 0,
+                  background: "transparent",
                   display: "grid",
                   gap: 6,
                 }}
@@ -2884,37 +2929,12 @@ function UserCard({
                   </span>
                 )}
               </div>
-
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginTop: 4 }}>
-                <button
-                  onClick={handleSavePermissions}
-                  disabled={savingPermissions || (!permissionsDirty && !userModulesDirty)}
-                  style={disabledStyle(
-                    { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
-                    savingPermissions || !permissionsDirty,
-                  )}
-                >
-                  {savingPermissions ? "Guardando..." : "Guardar permisos y accesos"}
-                </button>
-                {permissionsSaved && (
-                  <span style={{ fontSize: 11, color: "#16803c" }}>
-                    Permisos guardados
-                  </span>
-                )}
-              </div>
-              {permissionsError && (
-                <div style={{ fontSize: 11, color: "#ff3b30" }}>
-                  {permissionsError}
-                </div>
-              )}
-            </div>
-          </Field>
-
-          <Field label="Acceso a módulos (esta cuenta)" filaCompleta>
+          </Row>
+          <Row label="Módulos de esta cuenta" hint="Pasa por encima del apagado global." stacked>
             <p style={{ margin: "0 0 8px", fontSize: 11, lineHeight: 1.5, color: "#6e6e73" }}>
               <strong>Dárselo a esta cuenta</strong> pasa por encima del apagado
               global: aunque el módulo esté oculto para todos, esta persona sí lo
-              verá. Se guarda con el botón <strong>Guardar permisos y accesos</strong> de arriba.
+              verá. Se guarda con <strong>Guardar cambios</strong>.
             </p>
             <div style={{ display: "grid", gap: 6 }}>
               {SYSTEM_MODULES.map((mod) => {
@@ -2967,7 +2987,7 @@ function UserCard({
                             [mod.id]: e.target.value as "inherit" | "enabled" | "disabled",
                           }))
                         }
-                        disabled={savingUserModules}
+                        disabled={savingPermissions}
                         style={{
                           flex: "1 1 220px",
                           maxWidth: 280,
@@ -2986,83 +3006,110 @@ function UserCard({
                   </label>
                 );
               })}
-              <div
-                style={{
-                  display: "flex",
-                  gap: 8,
-                  alignItems: "center",
-                  marginTop: 4,
-                }}
-              >
-                <button
-                  onClick={handleSaveUserModules}
-                  disabled={savingUserModules || !userModulesDirty}
-                  style={disabledStyle(
-                    { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
-                    savingUserModules || !userModulesDirty,
-                  )}
-                >
-                  {savingUserModules ? "Guardando..." : "Guardar módulos"}
-                </button>
-                {userModulesSaved && (
-                  <span style={{ fontSize: 11, color: "#16803c" }}>
-                    Módulos guardados
-                  </span>
-                )}
-              </div>
               {userModulesError && (
                 <div style={{ fontSize: 11, color: "#ff3b30" }}>
                   {userModulesError}
                 </div>
               )}
             </div>
-          </Field>
+          </Row>
+        </Section>
 
-          <Field label="Foto de perfil (URL)">
-            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <input
-                type="text"
-                placeholder="https://..."
-                defaultValue={user.profilePhotoUrl ?? ""}
-                onBlur={async (e) => {
-                  const val = e.target.value.trim() || null;
-                  if (val !== user.profilePhotoUrl) {
-                    await fetch("/api/admin/users", {
-                      method: "PATCH",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ userId: user.id, profilePhotoUrl: val }),
-                    });
-                    onUpdated();
-                  }
-                }}
-                style={{ ...inputStyle, width: 200 }}
-              />
+        <Section title="Difusión: redes sociales y blogs" note="Es el control de las publicaciones en redes y blogs: aprobación de cada red y cuántas publicaciones por día puede hacer esta cuenta en cada formato. Cada red que no tenga un valor guardado permite 1 por día; 0 la bloquea.">
+          {SOCIAL_GROUPS.map((group) => (
+            <div key={group.title} style={{ marginTop: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 12, fontWeight: 600, color: "#6e6e73", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 2 }}>
+                <span>{group.title}</span>
+                <span>Límites de uso</span>
+              </div>
+              {group.networks.map((network) => {
+                const perm = permOf[network.id];
+                return (
+                  <div key={network.id} style={{ borderBottom: "1px solid #e5e5ea", padding: "10px 0" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                      {perm ? (
+                        <label style={{ ...permissionLabelStyle, fontWeight: 600 }}>
+                          <input
+                            type="checkbox"
+                            checked={perm[0]}
+                            onChange={(e) => perm[1](e.target.checked)}
+                            disabled={savingPermissions}
+                            style={{ accentColor: "#1d1d1f", width: 16, height: 16 }}
+                          />
+                          {network.label}
+                        </label>
+                      ) : (
+                        <span style={{ fontSize: 13, fontWeight: 600 }}>{network.label}</span>
+                      )}
+                      <span style={{ fontSize: 12, color: "#6e6e73" }}>
+                        {perm ? (perm[0] ? "Aprobada" : "Sin aprobar") : "Se controla desde su conexión"}
+                      </span>
+                    </div>
+                    <div style={{ marginTop: 6, display: "grid", gap: 6 }}>
+                      {network.formats.map(([key, label]) => {
+                        const today = user.socialPublishedToday?.[key] ?? 0;
+                        const rawLimit = socialLimits[key] ?? "1";
+                        const limitNumber = Number(rawLimit);
+                        const reached = rawLimit !== "" && Number.isInteger(limitNumber) && today >= limitNumber;
+                        return (
+                          <div key={key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", paddingLeft: 24 }}>
+                            <span style={{ fontSize: 13, color: "#1d1d1f" }}>{label}</span>
+                            <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                              <span style={{ fontSize: 12, color: reached ? "#8a4b08" : "#6e6e73", fontVariantNumeric: "tabular-nums" }}>
+                                {reached ? "Cupo de hoy completo · " : ""}hoy {today}
+                              </span>
+                              <input
+                                type="number"
+                                min={0}
+                                step={1}
+                                value={rawLimit}
+                                onChange={(e) => setSocialLimits((prev) => ({ ...prev, [key]: e.target.value }))}
+                                aria-label={`Publicaciones por día en ${network.label}, ${label}`}
+                                style={{ ...inputStyle, width: 72, margin: 0 }}
+                              />
+                              <span style={{ fontSize: 12, color: "#6e6e73", width: 42 }}>por día</span>
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </Field>
+          ))}
+        </Section>
 
-          <Field label="Logo del negocio (URL)">
-            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <input
-                type="text"
-                placeholder="https://..."
-                defaultValue={user.businessLogoUrl ?? ""}
-                onBlur={async (e) => {
-                  const val = e.target.value.trim() || null;
-                  if (val !== user.businessLogoUrl) {
-                    await fetch("/api/admin/users", {
-                      method: "PATCH",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ userId: user.id, businessLogoUrl: val }),
-                    });
-                    onUpdated();
-                  }
-                }}
-                style={{ ...inputStyle, width: 200 }}
-              />
-            </div>
-          </Field>
+        <Section title="Imágenes con IA" note="Generador de imágenes y créditos en la plataforma.">
+          <Row label="Generador de imágenes con IA">
+            <span style={{ fontSize: 12, color: "#6e6e73", marginRight: 8 }}>Instagram Story y Reel</span>
+              <label style={permissionLabelStyle}>
+                <input
+                  type="checkbox"
+                  checked={permAiImageGeneration}
+                  onChange={(e) => setPermAiImageGeneration(e.target.checked)}
+                  disabled={savingPermissions}
+                  style={{ accentColor: "#1d1d1f", width: 16, height: 16 }}
+                />
+                Generador de imágenes con IA (Instagram Story/Reel)
+              </label>
+          </Row>
+          <Row label="Créditos de imagen">
+              <label style={permissionLabelStyle}>
+                <input
+                  type="checkbox"
+                  checked={permImageCredits}
+                  onChange={(e) => setPermImageCredits(e.target.checked)}
+                  disabled={savingPermissions}
+                  style={{ accentColor: "#ff9500", width: 16, height: 16 }}
+                />
+                Créditos de imagen disponibles ({platformProductName(user.platformDomain)})
+              </label>
+          </Row>
+        </Section>
 
-          <Field label="Límite mensual">
+        <Section title="Límites de artículos" note="Cuántos artículos puede crear esta cuenta: por mes, por día y por lote. Vacío = sin límite. Las publicaciones en redes y blogs tienen su propio control, en la sección Difusión.">
+          <Row label="Límite mensual de artículos">
             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
               <input
                 type="number"
@@ -3083,9 +3130,8 @@ function UserCard({
                 {saving ? "..." : "Guardar"}
               </button>
             </div>
-          </Field>
-
-          <Field label="Límite diario">
+          </Row>
+          <Row label="Límite diario de artículos">
             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
               <input
                 type="number"
@@ -3106,19 +3152,8 @@ function UserCard({
                 {savingDaily ? "..." : "Guardar"}
               </button>
             </div>
-          </Field>
-
-          <Field label="Límites diarios por red/blog (JSON)">
-            <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
-              <div>
-                <textarea value={socialLimitsText} onChange={(e) => setSocialLimitsText(e.target.value)} rows={5} style={{ ...inputStyle, width: 230, fontFamily: "monospace", fontSize: 12 }} />
-                {socialLimitsError && <div style={{ color: "#b91c1c", fontSize: 12, maxWidth: 230 }}>{socialLimitsError}</div>}
-              </div>
-              <button onClick={handleSaveSocialLimits} style={{ ...buttonStyle, padding: "4px 10px", fontSize: 12 }}>Guardar</button>
-            </div>
-          </Field>
-
-          <Field label="Máximo por lote">
+          </Row>
+          <Row label="Máximo de títulos por lote">
             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
               <input
                 type="number"
@@ -3144,55 +3179,10 @@ function UserCard({
                 {batchLimitError}
               </div>
             )}
-          </Field>
+          </Row>
+        </Section>
 
-          <Field label="Servidor">
-            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <select
-                value={domainValue}
-                onChange={(e) =>
-                  setDomainValue(e.target.value as PlatformDomain)
-                }
-                disabled={savingDomain}
-                aria-label={`Servidor de ${user.email}`}
-                style={{ ...inputStyle, width: 150 }}
-              >
-                {PLATFORM_DOMAIN_VALUES.map((value) => (
-                  <option key={value} value={value}>
-                    {PLATFORM_SERVERS[value].label}
-                  </option>
-                ))}
-              </select>
-              <button
-                onClick={handleSaveDomain}
-                disabled={
-                  savingDomain ||
-                  domainValue === normalizePlatformDomain(user.platformDomain)
-                }
-                style={disabledStyle(
-                  { ...buttonStyle, padding: "4px 10px", fontSize: 12 },
-                  savingDomain ||
-                    domainValue ===
-                      normalizePlatformDomain(user.platformDomain),
-                )}
-              >
-                {savingDomain ? "..." : "Guardar"}
-              </button>
-            </div>
-          </Field>
-
-          <Field label="Creado">
-            {new Date(user.createdAt).toLocaleDateString()}
-          </Field>
-
-          <Field label="Aviso de contenido inteligente">
-            {user.opportunitiesDisclosureAcceptedAt
-              ? `Aceptado el ${new Date(
-                  user.opportunitiesDisclosureAcceptedAt,
-                ).toLocaleString("es-US")}`
-              : "Todavía no aceptado"}
-          </Field>
-        </div>
+        <Section title="Acciones de la cuenta">
 
         <div
           style={{
@@ -3388,9 +3378,51 @@ function UserCard({
           </div>
         )}
 
-        <div style={{ marginTop: 14 }}>
+        </Section>
+
+        <Section title="Historial">
           <UserHistorial email={user.email} />
-        </div>
+        </Section>
+
+        {(anyDirty || savedAll || permissionsError || userModulesError || socialLimitsError) && (
+          <div
+            role="status"
+            style={{
+              position: "sticky",
+              bottom: 0,
+              marginTop: 24,
+              padding: "12px 0",
+              background: "#ffffff",
+              borderTop: "1px solid #1d1d1f",
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              gap: 12,
+            }}
+          >
+            <span style={{ flex: "1 1 200px", fontSize: 13, color: permissionsError || userModulesError || socialLimitsError ? "#ff3b30" : anyDirty ? "#8a4b08" : "#16803c" }}>
+              {permissionsError || userModulesError || socialLimitsError || (anyDirty ? "Tienes cambios sin guardar en esta cuenta." : "Cambios guardados.")}
+            </span>
+            {anyDirty && (
+              <>
+                <button
+                  onClick={handleDiscardAll}
+                  disabled={savingAny}
+                  style={disabledStyle({ ...secondaryButtonStyle, padding: "6px 14px", fontSize: 13 }, savingAny)}
+                >
+                  Descartar
+                </button>
+                <button
+                  onClick={handleSaveAll}
+                  disabled={savingAny}
+                  style={disabledStyle({ ...buttonStyle, padding: "6px 14px", fontSize: 13 }, savingAny)}
+                >
+                  {savingAny ? "Guardando..." : "Guardar cambios"}
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </details>
   );

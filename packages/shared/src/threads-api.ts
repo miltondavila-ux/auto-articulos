@@ -314,3 +314,10 @@ export async function publishThread(
     permalink,
   };
 }
+
+/** Comprobación de solo lectura de la conexión: devuelve el perfil de Threads. */
+export async function getThreadsProfile(accessToken: string) {
+  const response = await fetch(`https://graph.threads.net/v1.0/me?fields=id,username&access_token=${encodeURIComponent(accessToken)}`, { cache: "no-store" });
+  if (!response.ok) throw new Error(`Threads respondió ${response.status}: ${await response.text()}`);
+  return response.json() as Promise<{ id?: string; username?: string }>;
+}
