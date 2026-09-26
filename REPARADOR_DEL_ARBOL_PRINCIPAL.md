@@ -288,3 +288,22 @@ no es ancestro de `origin/main` (divergente, consistente con ser un squash apart
 commit, no se hizo reset/force-push ni deploy por esta nota — es solo un registro de que el patrón
 volvió a ocurrir y de cómo se resolvió esta vez, para que quede visible junto a los hallazgos
 anteriores del mismo tipo (2026-09-04, 2026-09-10, 2026-09-21).
+
+### Otra rama remota obsoleta sin borrar: `claude/composio-traspaso-8-mejoras` — 2026-09-26 (sin acción, solo señalado)
+
+Agregado por la tarea programada diaria de propagación (2026-09-26) al revisar
+`COORDINACION_CLAUDE_CODEX.md` (bloque "TRASPASO A NUEVA CONVERSACIÓN · CONEXIÓN COMPOSIO · 8 MEJORAS
+UX — 2026-09-25").
+
+Mismo patrón que el ya señalado el 2026-09-09 más arriba: la rama `claude/composio-traspaso-8-mejoras`
+sigue existiendo en el remoto aunque su contenido ya está fusionado en `main` (llegó ahí por
+squash-merge como el PR #225, commit `36ecd08`). Verificado con `git fetch origin
+claude/composio-traspaso-8-mejoras` + `git diff origin/claude/composio-traspaso-8-mejoras origin/main
+--stat`: la única diferencia restante entre la rama y `main` es una edición de 7 líneas en
+`COORDINACION_CLAUDE_CODEX.md` (contenido de coordinación agregado después en `main`, no código de la
+app) — el resto del código de la rama ya es idéntico al de `main`. Por eso `git merge-base
+--is-ancestor` no la marca como ancestro literal de `origin/main` (un squash-merge crea un commit
+nuevo, no conserva el historial original), pero no representa trabajo en riesgo ni una reserva activa.
+No se borró la rama en esta corrida (borrar ramas remotas no es una acción que esta tarea programada
+esté autorizada a tomar por su cuenta); queda para que Milton decida si vale la pena limpiarla, igual
+que las señaladas el 2026-09-09.

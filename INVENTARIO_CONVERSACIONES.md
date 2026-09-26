@@ -1638,3 +1638,37 @@ reservas liberadas. Estado final: ARCHIVADA.
 - Reservas: el lote sigue local a esta fecha, sin rama ni PR abiertos según Coordinación — no
   verificable contra git desde este entorno remoto.
 - Estado: EN CURSO — auditoría completa, pendiente de PR, Preview, revisión y despliegue.
+
+## Codex / Claude — CONEXION COMPOSIO — 2026-09-25
+
+- Continuación del programa `CONEXION COMPOSIO` (entrada anterior arriba, 2026-09-22). Codex hizo la
+  validación local de la transición GSC → GA uno-a-uno, una auditoría del camino de usuario completo,
+  una aclaratoria de UI (el wizard no debe mostrar la pantalla global de éxito; sin pantallas viejas
+  debajo de las nuevas), una triple auditoría final del localhost realmente activo, y una auditoría de
+  redes sociales bajo Composio (Facebook/Instagram sin Stories). Cerró con un traspaso operativo formal
+  a Claude ("TRASPASO A CLAUDE · CONEXIÓN COMPOSIO · ESTADO VIGENTE — 2026-09-25", en
+  `COORDINACION_CLAUDE_CODEX.md`).
+- Claude tomó el control, hizo pruebas visuales locales adicionales y liberó el lote como **PR #224**
+  (commit `abb687dd`, fusionado a `main`). Verificado en producción con prueba real de Milton usando el
+  usuario **Rafael Zuzolo**: flujo completo aviso GSC → reconexión → éxito → aviso GA → reconexión →
+  éxito → Inicio limpio — "Prueba muy exitosa". Detalle completo en `CONTROLADOR_DE_VERSIONES.md`,
+  entrada "Versión desplegada y verificada — 2026-09-25 — CONEXION COMPOSIO (avisos de reconexión
+  GSC/GA)".
+- Tras esa prueba real, Milton pidió 8 mejoras de UX (traspasadas a una nueva conversación de Claude:
+  "TRASPASO A NUEVA CONVERSACIÓN · CONEXIÓN COMPOSIO · 8 MEJORAS UX — 2026-09-25"). Las mejoras 1
+  (botón "Reconectar ahora"), 2 (mensaje y pulso en la pantalla de reconexión) y 5 (aviso de GA
+  distinto al de GSC, con etiqueta "PASO 2 DE 2") quedaron codificadas y fusionadas a `main` como
+  **PR #225** (commit `36ecd08`), en la rama `claude/composio-traspaso-8-mejoras`. Las mejoras 3, 4, 6,
+  7, 8 y un ítem adicional detectado por Claude (9: ocultar el paso a paso de conexión cuando ya está
+  "Conexión activa") siguen pendientes de codificar.
+- Verificación en vivo de esta misma corrida (tarea programada diaria de propagación, 2026-09-26):
+  `git fetch origin claude/composio-traspaso-8-mejoras` + `git diff origin/claude/composio-traspaso-8-mejoras
+  origin/main --stat` muestra que la única diferencia restante es la propia edición de
+  `COORDINACION_CLAUDE_CODEX.md` (7 líneas) — el código de esa rama ya está contenido en `main` (llegó
+  ahí vía squash-merge del PR #225, por eso `git merge-base --is-ancestor` no la marca como ancestro
+  literal aunque el contenido ya esté fusionado). **No queda ninguna reserva activa de archivos por
+  esta rama** para la Parte A de este documento; ver también `REPARADOR_DEL_ARBOL_PRINCIPAL.md` sobre
+  la rama remota obsoleta.
+- Estado: EN CURSO — PR #224 verificado en producción con usuario real; PR #225 fusionado a `main` sin
+  confirmación explícita de deployment/Producción en Coordinación a esta fecha; mejoras 3, 4, 6, 7, 8 y
+  9 sin capitán ni rama asignada todavía.
