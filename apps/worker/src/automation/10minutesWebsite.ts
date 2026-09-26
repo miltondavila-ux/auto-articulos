@@ -707,9 +707,9 @@ async function login(
   await page.getByText("Using your Email + Password", { exact: true }).click();
   await page.fill('input[name="email"]', username);
   await page.fill('input[name="password"]', credentials.password);
-  await page.getByRole("button", { name: "Login", exact: true }).click();
 
   try {
+    await page.getByRole("button", { name: "Login", exact: true }).click();
     await page.waitForSelector('a[href="user_buyer_seller_articles.php"]', {
       timeout: LOGIN_VERIFY_TIMEOUT_MS,
     });
