@@ -430,6 +430,32 @@ aparece un aviso claro que te dice qué hacer. Los errores de publicación en
 **Historial** también se muestran en español y explican el paso a seguir (por
 ejemplo, volver a conectar la red cuando la autorización venció).
 
+Actualización (2026-09-26, 4): Bluesky y DEV.to ahora siguen el mismo patrón
+que Search Console y Analytics: una tarjeta con los pasos de **Cómo hacerlo
+paso a paso**, el botón **Conectar**, la pantalla de **Conexión exitosa** al
+terminar y, cuando ya están conectadas, los botones **Cambiar**, **Probar
+conexión** y **Desconectar**. **Probar conexión** comprueba en el momento que
+la cuenta sigue funcionando y te responde con un mensaje corto; si algo falla,
+te dice qué hacer (por ejemplo, volver a conectar).
+
+Actualización (2026-09-26, 5): Threads, LinkedIn, Pinterest, Tumblr y Blogger
+siguen ahora el mismo patrón que Search Console y Analytics. Cada una tiene su
+tarjeta con **Cómo hacerlo paso a paso**, el botón **Nueva conexión**, la
+elección de dónde se publicará (tablero en Pinterest, blog en Tumblr y
+Blogger) con **Aprobar y guardar**, la pantalla de **Conexión exitosa** y, ya
+conectadas, los botones **Cambiar**, **Probar conexión** y **Desconectar**. Si
+la autorización venció, la tarjeta te lo dice y te pide pulsar **Nueva
+conexión** para renovarla. Los datos técnicos de la aplicación (claves) los ve
+y edita solo el administrador, en un bloque aparte.
+
+Actualización (2026-09-26, 6): **Google Business Profile** ahora tiene su propia
+tarjeta en Conexiones (Difusión) con el mismo patrón que las demás: **Cómo
+hacerlo paso a paso**, **Nueva conexión**, la pantalla de **Conexión exitosa**,
+**Probar conexión** y **Desconectar**. **Bing Webmaster Tools** también usa las
+mismas etiquetas y guía (**Nueva conexión**, **Aprobar y guardar**, **Probar
+conexión**, **Desconectar**); su envío nocturno de sitemap y su indexación no
+cambian.
+
 ## Problemas frecuentes
 
 ### No puedo publicar

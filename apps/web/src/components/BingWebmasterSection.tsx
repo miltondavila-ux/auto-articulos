@@ -3,13 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  sectionStyle,
-  h2Style,
   inputStyle,
   secondaryButtonStyle,
   buttonStyle,
 } from "./dashboard-ui";
-import PasosAntesDeConectar from "./PasosAntesDeConectar";
+import { CONNECTION_SELECT_STYLE, ConnectionCard, ConnectionGuide, ConnectionTestButton } from "./connection-ui";
+import { CONNECTION_GUIDES } from "@/lib/connection-guides";
 
 type Site = { Url: string; IsVerified: boolean };
 
@@ -119,6 +118,7 @@ export default function BingWebmasterSection() {
   }
 
   async function disconnect() {
+    if (!window.confirm("¿Desconectar esta conexión? Tendrás que volver a conectarla para usarla.")) return;
     await fetch("/api/search-integrations/bing", { method: "DELETE" });
     setMessage({
       text: "Bing Webmaster Tools desconectado.",
@@ -197,43 +197,40 @@ export default function BingWebmasterSection() {
   }
 
   return (
-    <section style={sectionStyle}>
-      <h2 style={h2Style}>Bing Webmaster Tools</h2>
-      <PasosAntesDeConectar red="Bing Webmaster Tools" />
-      <div className="row" style={{ padding: "12px 16px", marginBottom: 16, display: "none" }}>
-        <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 600, color: "#1d1d1f" }}>
-          Paso a paso para conectar:
-        </p>
-        <p className="lead-copy" style={{ margin: 0, fontSize: 13, lineHeight: 1.5 }}>
-          1. Abre una pestaña con <strong>Bing Webmaster Tools</strong> (sesión iniciada).<br />
-          2. Presiona <strong>"Conectar Bing Webmaster Tools"</strong> abajo.<br />
-          3. Acepta los permisos de Microsoft y la sincronización será automática.
-        </p>
-      </div>
+    <ConnectionCard
+      title="Bing Webmaster Tools"
+      state={!data?.connected ? "disconnected" : tokenExpired ? "expired" : "connected"}
+      lead="Conexión administrada desde esta tarjeta. Conecta tu cuenta de Bing y elige aquí el sitio que usará SEO TOTAL."
+      note="El sistema enviará tu sitemap a Bing todas las noches y procesará cada artículo publicado para acelerar su aparición en búsquedas."
+    >
+      {!data?.connected && <ConnectionGuide steps={CONNECTION_GUIDES["bing-webmaster"].steps} ifFails={CONNECTION_GUIDES["bing-webmaster"].ifFails} />}
 
       {!data?.connected ? (
-        <a
-          href="/api/search-integrations/bing/connect"
-          aria-disabled={connecting}
-          onClick={(e) => {
-            if (connecting) {
-              e.preventDefault();
-              return;
-            }
-            setConnecting(true);
-          }}
-          className="secondary"
-          style={{
-            ...secondaryButtonStyle,
-            display: "inline-block",
-            textDecoration: "none",
-            opacity: connecting ? 0.6 : 1,
-            pointerEvents: connecting ? "none" : "auto",
-            cursor: connecting ? "wait" : "pointer",
-          }}
-        >
-          {connecting ? "Conectando..." : "Conectar Bing Webmaster Tools"}
-        </a>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+          <a
+            href="/api/search-integrations/bing/connect"
+            aria-disabled={connecting}
+            onClick={(e) => {
+              if (connecting) {
+                e.preventDefault();
+                return;
+              }
+              setConnecting(true);
+            }}
+            style={{
+              ...buttonStyle,
+              marginTop: 0,
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              opacity: connecting ? 0.6 : 1,
+              pointerEvents: connecting ? "none" : "auto",
+              cursor: connecting ? "wait" : "pointer",
+            }}
+          >
+            {connecting ? "Conectando…" : "Nueva conexión"}
+          </a>
+        </div>
       ) : tokenExpired ? (
         <div
           style={{
@@ -247,23 +244,8 @@ export default function BingWebmasterSection() {
             Tu conexión con Bing venció
           </p>
           <p style={{ margin: "6px 0 12px", color: "#6e6e73", fontSize: 13, lineHeight: 1.5 }}>
-            Para reconectar:<br />
-            1. Abre tu cuenta de <strong>Bing Webmaster Tools</strong> en otra pestaña.<br />
-            2. Haz clic en <strong>"Reconectar Bing"</strong>.<br />
-            3. Al autorizar, tu sitio y sitemap seguirán guardados.
+            La autorización venció. Pulsa «Nueva conexión» para renovar el acceso; tu sitio y tu sitemap siguen guardados.
           </p>
-          {data.error && (
-            <p
-              style={{
-                margin: "0 0 10px",
-                color: "#6e6e73",
-                fontSize: 11,
-                fontFamily: "monospace",
-              }}
-            >
-              {data.error}
-            </p>
-          )}
           <a
             href="/api/search-integrations/bing/connect"
             aria-disabled={connecting}
@@ -284,7 +266,7 @@ export default function BingWebmasterSection() {
               pointerEvents: connecting ? "none" : "auto",
             }}
           >
-            {connecting ? "Conectando con Bing..." : "Reconectar Bing"}
+            {connecting ? "Conectando…" : "Nueva conexión"}
           </a>
         </div>
       ) : (
@@ -292,9 +274,9 @@ export default function BingWebmasterSection() {
           <select
             value={siteUrl}
             onChange={(e) => setSiteUrl(e.target.value)}
-            style={inputStyle}
+            style={CONNECTION_SELECT_STYLE}
           >
-            <option value="">Selecciona tu sitio verificado</option>
+            <option value="">Elige tu sitio verificado…</option>
             {data.sites.map((site) => (
               <option key={site.Url} value={site.Url}>
                 {site.Url}
@@ -357,8 +339,8 @@ export default function BingWebmasterSection() {
             </div>
           )}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button onClick={save} className="secondary" style={secondaryButtonStyle}>
-              Guardar sitio
+            <button onClick={save} style={{ ...buttonStyle, marginTop: 0 }}>
+              Aprobar y guardar
             </button>
             {data.sitemapUrl && (
               <button
@@ -370,8 +352,9 @@ export default function BingWebmasterSection() {
                 {sendingSitemap ? "Enviando..." : "Enviar sitemap ahora"}
               </button>
             )}
-            <button onClick={disconnect} className="secondary" style={secondaryButtonStyle}>
-              Desconectar Bing
+            <ConnectionTestButton network="bing" />
+            <button onClick={disconnect} className="secondary" style={{ ...secondaryButtonStyle, color: "#c62828" }}>
+              Desconectar
             </button>
           </div>
           <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 12, paddingTop: 14 }}>
@@ -462,9 +445,6 @@ export default function BingWebmasterSection() {
           )}
         </p>
       )}
-      <p className="muted" style={{ fontSize: 12, marginTop: 14 }}>
-        El sistema enviará tu sitemap a Bing todas las noches y procesará cada artículo publicado para acelerar su aparición en búsquedas.
-      </p>
-    </section>
+    </ConnectionCard>
   );
 }

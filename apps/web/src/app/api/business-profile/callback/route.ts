@@ -1,3 +1,4 @@
+import { connectionReturnPath } from "@/lib/connection-return";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@auto-articulos/db";
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
     !code
   ) {
     return NextResponse.redirect(
-      new URL("/dashboard/configuracion?businessProfile=error", request.url),
+      new URL(connectionReturnPath("business-profile", "error"), request.url),
     );
   }
   try {
@@ -54,16 +55,13 @@ export async function GET(request: NextRequest) {
       },
     });
     const response = NextResponse.redirect(
-      new URL(
-        "/dashboard/configuracion?businessProfile=connected",
-        request.url,
-      ),
+      new URL("/dashboard/configuracion/conexiones?conexion=business-profile&vista=difusion", request.url),
     );
     response.cookies.delete(BUSINESS_PROFILE_STATE_COOKIE);
     return response;
   } catch {
     return NextResponse.redirect(
-      new URL("/dashboard/configuracion?businessProfile=error", request.url),
+      new URL(connectionReturnPath("business-profile", "error"), request.url),
     );
   }
 }

@@ -9720,6 +9720,8 @@ Responsable: Claude (tarea programada diaria de propagación).
 
 **Nota:** el clasificador de Claude Code bloquea a Claude fusionar PRs y cambiar variables de Vercel; Milton debe fusionar o autorizar expresamente.
 
+### REDES · ESTANDARIZACIÓN COMPLETA — 2026-09-26 — Claude
+Auditoría triple (INFORME_AUDITORIA_REDES_SOCIALES.md) ejecutada en 4 PRs apilados: #231 (retorno OAuth + errores), #232 (componentes + Bluesky/DEV.to), #233 (Threads/LinkedIn/Pinterest/Tumblr/Blogger), #234 (GBP + Bing). Fusionar en ese orden. Sin migración ni banderas. Falta prueba real con cuentas reales y decisión de Milton sobre fusionar.
 ## Claude - REPARACION DE ADMIN — 2026-09-26
 
 Tarea ACTIVA. Rediseño de `/dashboard/usuarios` estilo Apple sin perder
