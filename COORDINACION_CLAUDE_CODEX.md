@@ -9719,3 +9719,6 @@ Responsable: Claude (tarea programada diaria de propagación).
 **Falta (Facebook/Instagram por Composio):** ver «AUDITORÍA FACEBOOK/INSTAGRAM» en la rama `claude/composio-traspaso-8-mejoras`. Tras fusionar #227: definir variables de repo `COMPOSIO_PILOT_USERS_FACEBOOK` y `COMPOSIO_PILOT_USERS_INSTAGRAM` con el correo de Lorena (solo Milton), habilitar el módulo «Conexión por Composio» a Lorena, y probar con `gh workflow run worker-test.yml`. Sin tocar `COMPOSIO_CONSUMER_READY.*` ni `COMPOSIO_ROUTING_ENABLED` sin autorización de Milton. Desajuste conocido: la web oculta Stories con solo ver la conexión Composio ACTIVE, el worker decide por el resolver.
 
 **Nota:** el clasificador de Claude Code bloquea a Claude fusionar PRs y cambiar variables de Vercel; Milton debe fusionar o autorizar expresamente.
+
+### REDES · ESTANDARIZACIÓN COMPLETA — 2026-09-26 — Claude
+Auditoría triple (INFORME_AUDITORIA_REDES_SOCIALES.md) ejecutada en 4 PRs apilados: #231 (retorno OAuth + errores), #232 (componentes + Bluesky/DEV.to), #233 (Threads/LinkedIn/Pinterest/Tumblr/Blogger), #234 (GBP + Bing). Fusionar en ese orden. Sin migración ni banderas. Falta prueba real con cuentas reales y decisión de Milton sobre fusionar.
