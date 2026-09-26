@@ -1715,3 +1715,5 @@ reservas liberadas. Estado final: ARCHIVADA.
 - **Reservas:** `api/composio/_access.ts`, `api/composio/disconnect/route.ts`, `lib/composio-access*.ts`, `content/manual-usuario.ts` (se liberan al fusionar el PR).
 - **Pruebas:** `npm test` 70/70, `tsc` limpio, `next build` OK. Producción: sin desplegar; falta autorización de Milton y verificación posterior.
 - **Estado:** ACTIVO (PR abierto, pendiente de autorización).
+
+- **Actualización 2026-09-26 (CONEXION DE GSC NO SE DESCONECTA — parte 2, elegir propiedad):** en la cuenta de Rosalia `selectedSiteDomain="Español"` (nombre de panel, no dominio); `composio-options.ts` lo usaba como bloqueo y dejaba las 134 propiedades no elegibles (108 por «trabaja con español», 26 por permiso). Fix: `lockableDomain()` — el bloqueo por dominio solo aplica si el valor es un dominio real; GSC y Analytics. Sin migraciones ni cambios de datos. Rama `claude/gsc-propiedades-sin-panel`. Reservas: `lib/composio-options.ts`, `lib/composio-options.test.ts`, `lib/composio-connections.ts`, `content/manual-usuario.ts`. Pruebas 71/71, tsc limpio, build OK. Pendiente: sugerencia «por parecido» (falta definir con qué se compara).

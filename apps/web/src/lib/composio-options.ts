@@ -55,6 +55,16 @@ function findArray(data: unknown, test: (item: Json) => boolean, depth = 0): Jso
   return null;
 }
 
+/**
+ * El dominio confirmado de la cuenta solo bloquea otros sitios cuando de verdad es un
+ * dominio. En algunas cuentas `selectedSiteDomain` guarda el nombre del panel de la
+ * plataforma (p. ej. «Español»): tratarlo como dominio bloquearía todas las propiedades.
+ */
+export function lockableDomain(value: string | null | undefined): string | null {
+  const domain = normalizeDomain(value ?? "");
+  return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(domain) ? domain : null;
+}
+
 export function optionsForSearchConsole(data: unknown, confirmedDomain: string | null): SelectionOption[] {
   const sites = findArray(data, (item) => typeof item.siteUrl === "string") ?? [];
   const options = sites.map((site): SelectionOption => {

@@ -445,7 +445,7 @@ elección de dónde se publicará (tablero en Pinterest, blog en Tumblr y
 Blogger) con **Aprobar y guardar**, la pantalla de **Conexión exitosa** y, ya
 conectadas, los botones **Cambiar**, **Probar conexión** y **Desconectar**. Si
 la autorización venció, la tarjeta te lo dice y te pide pulsar **Nueva
-conexión** para renovarla. **Google Search Console** y **Google Analytics** se pueden conectar, cambiar y **Desconectar** desde cualquier cuenta activa, sin permiso especial del administrador. Los datos técnicos de la aplicación (claves) los ve
+conexión** para renovarla. **Google Search Console** y **Google Analytics** se pueden conectar, cambiar y **Desconectar** desde cualquier cuenta activa, sin permiso especial del administrador. Si tu cuenta tiene guardado el nombre de un panel (por ejemplo «Español») en lugar de un dominio, la lista de Search Console y de Analytics muestra todas tus propiedades con permiso de propietario o usuario completo, y tú eliges la tuya; si tiene un dominio real, solo se puede elegir el sitio que coincide con él. Los datos técnicos de la aplicación (claves) los ve
 y edita solo el administrador, en un bloque aparte.
 
 Actualización (2026-09-26, 6): **Google Business Profile** ahora tiene su propia
