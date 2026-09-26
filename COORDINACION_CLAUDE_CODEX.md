@@ -9744,3 +9744,11 @@ Piloto Lorena (`lorenalvarez30@gmail.com`, userId `cms8cv2f40000x3xauyqqeenc`), 
 - Generación: solo `facebook-page` e `instagram-post`, sin Stories.
 - El worker normal (cada 5 min) tomó las publicaciones antes que `worker-test.yml`; para confirmar la vía se usan los Logs de Composio.
 Pendientes: #11 (aviso a usuarios nuevos), #12 (no mostrar «Composio» al cliente), #13 (enlace del Historial), mensaje en historial que indique la vía usada. Ampliar a más usuarios o cambiar `COMPOSIO_CONSUMER_READY.facebook/instagram` solo con autorización de Milton.
+
+### LOTE PENDIENTES 11/12/13 + PARIDAD FACEBOOK/INSTAGRAM — 2026-09-26 — Claude
+PR #230 fusionado en `main` (`0445e0b2`), Vercel Production `success`, verificado en pantalla real de Lorena.
+- #11 aviso rojo solo para quien tenía Search Console por la vía anterior.
+- #12 el cliente ya no ve «Composio» (UI, errores, manual); permanecen el menú y el módulo de Administración.
+- #13 Historial: enlace real de Facebook; sin enlace conocido no se muestra el botón (Instagram queda sin enlace: el permalink exige una operación nueva de Composio fuera de la lista permitida).
+- Facebook e Instagram con el mismo patrón y UX que GSC/GA (tarjeta propia, 5 pasos, notas al elegir, mensajes de retorno, dropdown, éxito con nombre y código, probar conexión, volver al menú). Manual actualizado.
+Pendiente: permalink de Instagram; mensaje en historial de la vía usada; lanzamiento a todos los usuarios (decisión de Milton). Para el lanzamiento a todos considerar aviso de reconexión para quienes tengan Facebook/Instagram por la vía anterior.
