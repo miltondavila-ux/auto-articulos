@@ -443,6 +443,14 @@ la autorización venció, la tarjeta te lo dice y te pide pulsar **Nueva
 conexión** para renovarla. Los datos técnicos de la aplicación (claves) los ve
 y edita solo el administrador, en un bloque aparte.
 
+Actualización (2026-09-26, 6): **Google Business Profile** ahora tiene su propia
+tarjeta en Conexiones (Difusión) con el mismo patrón que las demás: **Cómo
+hacerlo paso a paso**, **Nueva conexión**, la pantalla de **Conexión exitosa**,
+**Probar conexión** y **Desconectar**. **Bing Webmaster Tools** también usa las
+mismas etiquetas y guía (**Nueva conexión**, **Aprobar y guardar**, **Probar
+conexión**, **Desconectar**); su envío nocturno de sitemap y su indexación no
+cambian.
+
 ## Problemas frecuentes
 
 ### No puedo publicar

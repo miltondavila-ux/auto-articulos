@@ -1,14 +1,11 @@
 "use client";
 
-import { MENU_NAMES } from "@/lib/menu-names";
 import { useEffect, useState } from "react";
-import PasosAntesDeConectar from "@/components/PasosAntesDeConectar";
-import {
-  sectionStyle,
-  h2Style,
-  inputStyle,
-  secondaryButtonStyle,
-} from "./dashboard-ui";
+import { MENU_NAMES } from "@/lib/menu-names";
+import { buttonStyle, disabledStyle, inputStyle, secondaryButtonStyle } from "./dashboard-ui";
+import { CONNECTION_LABELS, ConnectionActiveBox, ConnectionCard, ConnectionGuide, ConnectionMessage, ConnectionTestButton } from "./connection-ui";
+import { CONNECTION_GUIDES } from "@/lib/connection-guides";
+import { friendlyConnectionError } from "@/lib/composio-error-message";
 
 type LocationOption = {
   accountName: string;
@@ -34,13 +31,15 @@ type PostPeerStatus = {
   lastError?: string | null;
 };
 
+const linkButton = { ...buttonStyle, marginTop: 0, textDecoration: "none", display: "inline-flex", alignItems: "center" } as const;
+
 export default function BusinessProfileSection() {
   const [data, setData] = useState<BusinessProfileData | null>(null);
   const [postPeer, setPostPeer] = useState<PostPeerStatus | null>(null);
   const [selected, setSelected] = useState("");
   const [saving, setSaving] = useState(false);
   const [loadingLocations, setLoadingLocations] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [retrySeconds, setRetrySeconds] = useState<number | null>(null);
 
   async function load(searchLocations = false) {
@@ -77,131 +76,110 @@ export default function BusinessProfileSection() {
       });
     }, 1000);
     return () => window.clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [retrySeconds]);
 
   useEffect(() => {
     void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function save() {
     const option = data?.locations?.find((l) => l.locationName === selected);
     if (!option) return;
     setSaving(true);
+    setMessage(null);
     const res = await fetch("/api/business-profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(option),
     });
     const value = await res.json().catch(() => ({}));
-    setMessage(res.ok ? "Ubicación de Google Business Profile guardada." : (value.error ?? "No se pudo guardar."));
+    setMessage(res.ok ? { ok: true, text: "Ficha de Google Business Profile guardada." } : { ok: false, text: friendlyConnectionError(value.error, "No se pudo guardar la ficha. Inténtalo de nuevo.") });
     setSaving(false);
     if (res.ok) void load();
   }
 
-  async function disconnect() {
-    await fetch("/api/business-profile", { method: "DELETE" });
-    setMessage("Google Business Profile desconectado.");
-    void load();
-  }
-
-  async function disconnectPostPeer() {
-    await fetch("/api/postpeer/disconnect", { method: "POST" });
-    setMessage("Conexión de Google Business Profile desconectada.");
+  async function disconnect(postPeerConnection: boolean) {
+    if (!window.confirm(CONNECTION_LABELS.disconnectConfirm)) return;
+    setMessage(null);
+    await fetch(postPeerConnection ? "/api/postpeer/disconnect" : "/api/business-profile", { method: postPeerConnection ? "POST" : "DELETE" });
+    setMessage({ ok: true, text: "Google Business Profile desconectado." });
     void load();
   }
 
   const postPeerConnected = postPeer?.status === "ACTIVE";
   const connected = Boolean(data?.connected || postPeerConnected);
+  const needsLocation = Boolean(data?.connected && data.needsLocation && !postPeerConnected);
+  const state = !connected ? "disconnected" : needsLocation ? "pending" : "connected";
+  const guide = CONNECTION_GUIDES["business-profile"];
+  const accountRows: Array<{ label: string; value: string }> = [];
+  if (postPeerConnected && postPeer?.accountId) accountRows.push({ label: "Código de la cuenta", value: postPeer.accountId });
 
   return (
-    <section style={sectionStyle}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-          flexWrap: "wrap",
-        }}
-      >
-        <h2 style={{ ...h2Style, margin: 0 }}>Google Business Profile</h2>
-        {!connected && (
-          <span
-            style={{
-              color: "#6e6e73",
-              fontWeight: 700,
-              fontSize: 12,
-              letterSpacing: ".04em",
-            }}
-          >
-            PENDIENTE
-          </span>
-        )}
-      </div>
-      <p className="lead-copy" style={{ margin: "0 0 14px 0" }}>
-        Cuando el sistema detecte una oportunidad para Google Business Profile en {MENU_NAMES.redes}, preparará una publicación con el formato permitido por Google, imagen y enlace al artículo. No se publicará cada artículo automáticamente.
-      </p>
-      {!connected ? (
-        <div>
-          <button type="button" onClick={() => { window.location.href = "/api/postpeer/connect"; }} className="secondary" style={secondaryButtonStyle}>
-            Conectar Google Business Profile
-          </button>
-          <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>
-            Conecta la cuenta de Google que administra tu Perfil de Negocio. La conexión la gestiona PostPeer.
-          </p>
-          <PasosAntesDeConectar
-            red="Google Business Profile"
-            extra={<li style={{ marginBottom: 8 }}><strong>Comprueba que tu ficha está verificada por Google.</strong>{" "}Una ficha sin verificar no puede recibir publicaciones.</li>}
-          />
-        </div>
-      ) : data?.connected && data.needsLocation ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {data.locationsLoaded && data.locations && data.locations.length > 0 ? (
+    <ConnectionCard
+      title="Google Business Profile"
+      state={state}
+      lead="Conexión administrada desde esta tarjeta. Conecta la cuenta de Google que administra tu Perfil de Negocio."
+      note={`Cuando el sistema detecte una oportunidad para Google Business Profile en ${MENU_NAMES.redes}, preparará una publicación con el formato permitido por Google, imagen y enlace al artículo. No se publicará cada artículo automáticamente.`}
+    >
+      {data === null ? (
+        <p style={{ color: "#6e6e73", fontSize: 14 }}>Cargando…</p>
+      ) : !connected ? (
+        <>
+          {guide && <ConnectionGuide steps={guide.steps} ifFails={guide.ifFails} />}
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+            <a href="/api/postpeer/connect" style={linkButton}>{CONNECTION_LABELS.connect}</a>
+          </div>
+        </>
+      ) : needsLocation ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
+          {data?.locationsLoaded && data.locations && data.locations.length > 0 ? (
             <>
-              <select value={selected} onChange={(e) => setSelected(e.target.value)} style={inputStyle}>
-                <option value="">Selecciona la ficha donde deseas publicar</option>
-                {data.locations.map((l) => <option key={l.locationName} value={l.locationName}>{l.locationTitle}</option>)}
+              <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>Elige la ficha donde se publicará</p>
+              <select value={selected} onChange={(e) => setSelected(e.target.value)} style={{ ...inputStyle, width: "100%", maxWidth: 520 }}>
+                <option value="">Elige una opción…</option>
+                {[...data.locations].sort((a, b) => a.locationTitle.localeCompare(b.locationTitle, "es")).map((l) => <option key={l.locationName} value={l.locationName}>{l.locationTitle}</option>)}
               </select>
-              <button onClick={save} disabled={saving || !selected} className="secondary" style={secondaryButtonStyle}>
-                {saving ? "Guardando..." : "Guardar ficha"}
-              </button>
+              <div>
+                <button type="button" onClick={save} disabled={saving || !selected} style={disabledStyle({ ...buttonStyle, marginTop: 0 }, saving || !selected)}>
+                  {saving ? "Guardando…" : "Aprobar y guardar"}
+                </button>
+              </div>
             </>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <p style={{ fontSize: 13, color: "#6e6e73", margin: 0 }}>
-                {retrySeconds ? `Google está preparando la consulta. Podrás buscar fichas en ${retrySeconds} segundos.` : data.locationsLoaded ? "No encontramos fichas administradas por esta cuenta de Google." : "Tu cuenta está conectada. Busca las fichas disponibles para elegir dónde publicar."}
+                {retrySeconds ? `Google está preparando la consulta. Podrás buscar fichas en ${retrySeconds} segundos.` : data?.locationsLoaded ? "No encontramos fichas administradas por esta cuenta de Google." : "Tu cuenta está conectada. Busca las fichas disponibles para elegir dónde publicar."}
               </p>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <button type="button" onClick={() => void load(true)} disabled={loadingLocations} className="secondary" style={{ ...secondaryButtonStyle, opacity: loadingLocations ? 0.55 : 1 }}>
-                  {loadingLocations ? "Buscando fichas..." : retrySeconds ? "Espera para buscar fichas" : "Buscar fichas disponibles"}
+                <button type="button" onClick={() => void load(true)} disabled={loadingLocations} style={{ ...secondaryButtonStyle, opacity: loadingLocations ? 0.55 : 1 }}>
+                  {loadingLocations ? "Buscando fichas…" : retrySeconds ? "Espera para buscar fichas" : "Buscar fichas disponibles"}
                 </button>
-                <button type="button" onClick={() => { window.location.href = "/api/business-profile/connect"; }} className="secondary" style={secondaryButtonStyle}>
-                  Conectar otra cuenta
-                </button>
+                <a href="/api/business-profile/connect" style={{ ...secondaryButtonStyle, textDecoration: "none", display: "inline-flex", alignItems: "center" }}>{CONNECTION_LABELS.connect}</a>
               </div>
             </div>
           )}
-          {data.error && <p style={{ color: "#ff3b30", fontSize: 12 }}>{data.error}</p>}
-          <button onClick={disconnect} className="secondary" style={secondaryButtonStyle}>Desconectar</button>
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <p style={{ fontSize: 13, color: "#1d1d1f", margin: 0 }}>
-            ✓ Conectado a {postPeerConnected ? (postPeer?.accountName ?? "Google Business Profile") : (data?.locationTitle ?? data?.locationName)}
-          </p>
-          {postPeerConnected && postPeer?.accountId && (
-            <p style={{ fontSize: 12, color: "#6e6e73", margin: 0 }}>
-              Identificador de Google Business Profile: {postPeer.accountId}
-            </p>
-          )}
+          {data?.error && <ConnectionMessage ok={false}>{friendlyConnectionError(data.error, "No se pudieron consultar las fichas. Inténtalo de nuevo en unos minutos.")}</ConnectionMessage>}
           <div>
-            <button onClick={postPeerConnected ? disconnectPostPeer : disconnect} className="secondary" style={secondaryButtonStyle}>
-              Desconectar
-            </button>
+            <button type="button" onClick={() => disconnect(false)} style={{ ...secondaryButtonStyle, color: "#c62828" }}>{CONNECTION_LABELS.disconnect}</button>
           </div>
         </div>
+      ) : (
+        <>
+          <ConnectionActiveBox
+            label={postPeerConnected ? "Cuenta conectada" : "Ficha"}
+            value={postPeerConnected ? (postPeer?.accountName ?? "Google Business Profile") : (data?.locationTitle ?? data?.locationName ?? null)}
+            rows={accountRows}
+          />
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+            <ConnectionTestButton network="business-profile" endpoint="/api/business-profile/test" />
+            <a href={postPeerConnected ? "/api/postpeer/connect" : "/api/business-profile/connect"} style={{ ...secondaryButtonStyle, textDecoration: "none", display: "inline-flex", alignItems: "center" }}>{CONNECTION_LABELS.connect}</a>
+            <button type="button" onClick={() => disconnect(postPeerConnected)} style={{ ...secondaryButtonStyle, color: "#c62828" }}>{CONNECTION_LABELS.disconnect}</button>
+          </div>
+        </>
       )}
-      {message && <p style={{ fontSize: 13, color: "#1d1d1f", marginTop: 10 }}>{message}</p>}
-    </section>
+      {message && <ConnectionMessage ok={message.ok}>{message.text}</ConnectionMessage>}
+    </ConnectionCard>
   );
 }

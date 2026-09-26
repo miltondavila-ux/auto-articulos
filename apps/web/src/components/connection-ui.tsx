@@ -101,14 +101,14 @@ export function ConnectionMessage({ ok, children }: { ok: boolean; children: Rea
 }
 
 /** Botón «Probar conexión» + resultado corto; llama a /api/search-integrations/{red}/test. */
-export function ConnectionTestButton({ network, disabled }: { network: string; disabled?: boolean }) {
+export function ConnectionTestButton({ network, disabled, endpoint }: { network: string; disabled?: boolean; endpoint?: string }) {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
   async function run() {
     setBusy(true);
     setResult(null);
     try {
-      const response = await fetch(`/api/search-integrations/${network}/test`, { method: "POST", cache: "no-store" });
+      const response = await fetch(endpoint ?? `/api/search-integrations/${network}/test`, { method: "POST", cache: "no-store" });
       const body = await response.json().catch(() => ({}));
       if (response.ok && body.ok) {
         setResult({ ok: true, text: `Conexión correcta${body.account ? ` con ${body.account}` : ""}.` });

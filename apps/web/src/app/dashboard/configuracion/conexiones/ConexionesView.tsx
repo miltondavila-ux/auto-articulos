@@ -19,7 +19,7 @@ import InstagramSection from "@/components/InstagramSection";
 import { ConnectionReturnNotice, ConnectionReturnSuccess, LEGACY_RETURN_NETWORKS, useConnectionReturn } from "@/components/ConnectionReturn";
 
 type Vista = "analiticas" | "difusion";
-type ConexionId = "google-search-console" | "google-analytics" | "bing-webmaster" | "instagram" | "facebook" | "threads" | "linkedin" | "pinterest" | "tumblr" | "bluesky" | "devto" | "blogger";
+type ConexionId = "google-search-console" | "google-analytics" | "bing-webmaster" | "instagram" | "facebook" | "threads" | "linkedin" | "pinterest" | "tumblr" | "bluesky" | "devto" | "blogger" | "business-profile";
 
 const VISTAS: { id: Vista; label: string; ayuda: string }[] = [
   { id: "analiticas", label: "ANALÍTICAS", ayuda: "Leen datos y ayudan a que aparezcas en los buscadores." },
@@ -152,13 +152,14 @@ export default function ConexionesView() {
       { id: "bing-webmaster", n: "03", title: "Bing Webmaster Tools", text: "Ayuda a que tus artículos aparezcan también en Bing.", view: "analiticas" as Vista },
       { id: "instagram", n: "04", title: "Instagram", text: "Publica imágenes y contenido en tu cuenta profesional de Instagram.", view: "difusion" as Vista },
       { id: "facebook", n: "05", title: "Facebook", text: "Publica en la Página de Facebook que elijas.", view: "difusion" as Vista },
-      { id: "threads", n: "06", title: "Threads", text: "Conecta Threads con su integración propia.", view: "difusion" as Vista },
+      { id: "threads", n: "06", title: "Threads", text: "Publica tus artículos en tu cuenta de Threads.", view: "difusion" as Vista },
       { id: "linkedin", n: "07", title: "LinkedIn", text: "Publica artículos en tu perfil o página de LinkedIn.", view: "difusion" as Vista },
       { id: "pinterest", n: "08", title: "Pinterest", text: "Publica contenido visual en tus tableros de Pinterest.", view: "difusion" as Vista },
       { id: "tumblr", n: "09", title: "Tumblr", text: "Publica artículos y contenido en tu blog de Tumblr.", view: "difusion" as Vista },
       { id: "bluesky", n: "10", title: "Bluesky", text: "Comparte tus publicaciones en Bluesky.", view: "difusion" as Vista },
       { id: "devto", n: "11", title: "DEV.to", text: "Publica artículos técnicos en tu cuenta de DEV.to.", view: "difusion" as Vista },
       { id: "blogger", n: "12", title: "Blogger", text: "Publica artículos en tu blog de Blogger.", view: "difusion" as Vista },
+      { id: "business-profile", n: "13", title: "Google Business Profile", text: "Publica novedades en la ficha de tu negocio en Google.", view: "difusion" as Vista },
     ];
     const grupos: { vista: Vista; titulo: string; descripcion: string }[] = [
       { vista: "analiticas", titulo: "Analíticas", descripcion: "Conexiones que leen datos y ayudan a posicionar tu sitio." },
@@ -211,7 +212,7 @@ export default function ConexionesView() {
 
   const nombres: Record<ConexionId, string> = {
     "google-search-console": "Google Search Console", "google-analytics": "Google Analytics", "bing-webmaster": "Bing Webmaster Tools",
-    instagram: "Instagram", facebook: "Facebook", threads: "Threads", linkedin: "LinkedIn", pinterest: "Pinterest", tumblr: "Tumblr", bluesky: "Bluesky", devto: "DEV.to", blogger: "Blogger",
+    instagram: "Instagram", facebook: "Facebook", threads: "Threads", linkedin: "LinkedIn", pinterest: "Pinterest", tumblr: "Tumblr", bluesky: "Bluesky", devto: "DEV.to", blogger: "Blogger", "business-profile": "Google Business Profile",
   };
   const solo = (id: ConexionId) => conexion === null || conexion === id;
 
@@ -271,7 +272,7 @@ export default function ConexionesView() {
 
       {!soloExito && vista === "difusion" && (
         <div style={columna}>
-          {conexion === null && <BusinessProfileSection />}
+          {solo("business-profile") && <BusinessProfileSection />}
           {(permisos.threads || permisos.instagram || permisos.facebook || isAdmin || tieneModuloRedes) && (
             <>
             {solo("threads") && <ThreadsSection allowThreads={puede("threads")} allowInstagram={false} allowFacebook={false} isAdmin={isAdmin} showComposioSocial={false} />}

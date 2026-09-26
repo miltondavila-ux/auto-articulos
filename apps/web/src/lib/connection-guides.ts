@@ -27,6 +27,26 @@ export const CONNECTION_GUIDES: Record<string, ConnectionGuideContent> = {
   pinterest: oauthGuide("Pinterest", "la cuenta de Pinterest que quieres usar", "Elige el tablero donde se publicarán los Pins y pulsa Aprobar y guardar."),
   tumblr: oauthGuide("Tumblr", "la cuenta de Tumblr que quieres usar", "Elige el blog donde se publicará y pulsa Aprobar y guardar."),
   blogger: oauthGuide("Blogger", "la cuenta de Google que administra tu blog", "Elige el blog donde se publicará y pulsa Aprobar y guardar."),
+  "bing-webmaster": {
+    steps: [
+      "Abre Bing Webmaster Tools en otra pestaña del mismo navegador.",
+      "Confirma que estás dentro de la cuenta de Microsoft que administra tu sitio.",
+      "Pulsa Nueva conexión y autoriza el acceso solicitado.",
+      "Elige tu sitio verificado, revisa la dirección del sitemap y pulsa Aprobar y guardar.",
+      PROBAR,
+    ],
+    ifFails: "revisa que tu sitio esté verificado en Bing Webmaster Tools y vuelve a intentarlo.",
+  },
+  "business-profile": {
+    steps: [
+      "Abre Google en otra pestaña del mismo navegador.",
+      "Confirma que estás dentro de la cuenta de Google que administra tu Perfil de Negocio y que tu ficha está verificada.",
+      "Pulsa Nueva conexión y autoriza el acceso solicitado.",
+      "Vuelve aquí y comprueba la pantalla de Conexión exitosa.",
+      PROBAR,
+    ],
+    ifFails: "una ficha sin verificar no puede recibir publicaciones; verifícala en Google y vuelve a intentarlo.",
+  },
   bluesky: {
     steps: [
       "Abre Bluesky en otra pestaña del mismo navegador y entra en Configuración → Privacidad y seguridad → Contraseñas de aplicación.",

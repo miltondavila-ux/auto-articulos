@@ -12,6 +12,7 @@ export const LEGACY_RETURN_NETWORKS: Record<string, { label: string; choice: str
   pinterest: { label: "Pinterest", choice: "el tablero", accountField: null },
   tumblr: { label: "Tumblr", choice: "el blog", accountField: null },
   blogger: { label: "Blogger", choice: "el blog", accountField: null },
+  "business-profile": { label: "Google Business Profile", choice: null, accountField: null },
 };
 
 /**
