@@ -9648,3 +9648,56 @@ Responsable: Claude (tarea programada diaria de propagación).
 - **PENDIENTE #9 (Claude, 2026-09-25):** con «Conexión activa» la pantalla dedicada sigue mostrando «Cómo hacerlo paso a paso» (5 pasos de conectar). Ocultar esos pasos cuando ya está conectada. Aplica a GSC y GA.
 
 - **Capitán de migración:** Claude (Composio 8 mejoras) — lote mejoras 1,2,5 (solo UI, sin migración). Nadie más ejecuta Prisma hasta su liberación.
+
+## Claude (tarea programada diaria de propagación) — 2026-09-26
+
+Punto de partida: la última entrada firmada por esta misma tarea era la del 2026-09-25 (commit
+`3a67f20`). Se revisó el diff de `COORDINACION_CLAUDE_CODEX.md` entre `3a67f20` y `origin/main` actual
+(`36ecd08`): 2 commits nuevos, ambos del proyecto `CONEXION COMPOSIO` — PR #224 (`abb687dd`, 453 líneas:
+validación local de la transición GSC→GA, auditoría del camino de usuario, aclaratoria de UI wizard vs.
+Conexiones, triple auditoría final de localhost, auditoría de redes sociales bajo Composio, traspaso
+formal de Codex a Claude, y liberación/verificación en producción con el usuario real Rafael Zuzolo) y
+PR #225 (`36ecd08`, 42 líneas: interruptor `COMPOSIO_RECONNECT_NOTICE`, liberación de PR #224, lista de
+9 pendientes de UX pedidos por Milton, y el avance de Claude codificando las mejoras 1, 2 y 5).
+
+Propagado por documento:
+
+- `CONTROLADOR_DE_VERSIONES.md`: agregada la entrada "Versión desplegada y verificada — 2026-09-25 —
+  CONEXION COMPOSIO (avisos de reconexión GSC/GA)", con el detalle de PR #224 (verificado en producción
+  con Rafael Zuzolo) y una nota sobre PR #225 (mejoras 1, 2 y 5 fusionadas a `main`, sin confirmación
+  explícita de deployment/Producción en Coordinación a esta fecha).
+- `apps/web/src/content/manual-usuario.ts`: agregado un párrafo nuevo (sin editar el existente)
+  describiendo, para el bot de ayuda, el aviso rojo secuencial de reconexión GSC→GA con botón
+  "Reconectar ahora", la pantalla de "Conexión exitosa" con botón "Volver al Inicio", y la aclaración de
+  que ni Facebook ni Instagram por Composio ofrecen Stories (ya no solo Instagram "en prueba"). Los
+  textos exactos ("SOLICITUD DE ACTUALIZACIÓN...", "PASO 1 DE 2"/"PASO 2 DE 2", "Debes reconectar
+  ahora...", "Volver al Inicio") se verificaron contra el código real ya fusionado en `main`
+  (`apps/web/src/app/dashboard/page.tsx`, `ComposioConnect.tsx`, `dashboard-ui.tsx`), no solo transcritos
+  de este documento.
+- `INVENTARIO_CONVERSACIONES.md`: agregada una entrada nueva en la Parte B ("Codex / Claude — CONEXION
+  COMPOSIO — 2026-09-25") resumiendo ambos PR y el traspaso de las 8 mejoras. Verificado en vivo que la
+  rama `claude/composio-traspaso-8-mejoras` (mencionada como "sin subir aún" en la propia entrada de
+  origen) ya no representa una reserva activa: su contenido llegó a `main` por squash-merge (PR #225);
+  no se agregó ninguna fila nueva a la Parte A porque no queda ninguna reserva de archivo vigente por
+  este lote.
+- `REPARADOR_DEL_ARBOL_PRINCIPAL.md`: agregada una nota señalando `claude/composio-traspaso-8-mejoras`
+  como otra rama remota obsoleta sin borrar (mismo patrón ya documentado el 2026-09-09), sin tomar
+  ninguna acción destructiva.
+- `TO-DO.md`: sin cambios. Se evaluaron los 9 "PENDIENTE" de UX de Composio (botón visible, mensaje de
+  reconexión, dropdown de propiedades, aviso de sitemap, aviso de GA distinto, éxito de GA con nombre y
+  código, "probar conexión" acotado, botón "volver al menú", ocultar pasos si ya está conectado) y se
+  decidió NO copiarlos aquí: a diferencia de una idea suelta, ya están tracked activamente dentro de
+  `COORDINACION_CLAUDE_CODEX.md` como parte del proyecto `CONEXION COMPOSIO` con su propio capitán de
+  migración declarado ("Claude (Composio 8 mejoras)"), y 3 de los 9 ya se codificaron y fusionaron el
+  mismo día (mejoras 1, 2 y 5, PR #225). Duplicarlos en el buzón de ideas sueltas de Milton los
+  presentaría como si nadie los tuviera asignados, cuando sí los tiene. Si en una corrida futura ese
+  proyecto se cierra sin haber completado las mejoras 3, 4, 6, 7, 8 o 9, y sin que quede un capitán
+  activo, ahí sí correspondería moverlos a "Pendientes" de este archivo.
+
+No hubo ninguna acción destructiva, migración ni deploy ejecutados por esta tarea. Una sola duda para
+Milton: Coordinación no deja explícito si PR #225 (mejoras 1, 2 y 5) ya está confirmado en Producción
+con el mismo detalle que PR #224 (deployment/Vercel/dominio/producción verificada) — quien retome el
+proyecto CONEXION COMPOSIO debería confirmarlo y completar esa entrada en `CONTROLADOR_DE_VERSIONES.md`
+si corresponde.
+
+Responsable: Claude (tarea programada diaria de propagación).
