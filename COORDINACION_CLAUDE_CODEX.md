@@ -4746,6 +4746,15 @@ manual que alimenta al asistente.
   deployment y después una única prueba productiva controlada. Si desaparece de
   la cola sin Historial confirmado, revisar logs y no repetir publicación.
 
+### Deployment confirmado — 2026-09-22
+
+- PR #211 fue fusionado en `origin/main` como `9afbdd35ef2207c3095dda412a9be7fc7402cd6e`.
+- Vercel registró deployment `Production` exitoso para ese SHA a las 11:10:40Z.
+- URL de deployment: `https://auto-articulos-4fr57reak-luna-portex-intelligence.vercel.app`.
+- Verificación superficial: `https://seototal.lasolucionweb.com/dashboard/historial`
+  respondió HTTP 307, redirección normal al login. No se activó la bandera de
+  prueba ni se publicó contenido.
+
 ## Cierre Codex — WIZARD CULMINA EN BING — 2026-09-20
 
 Solicitud: retirar Bing Webmaster Tools del wizard inicial y, al completar
